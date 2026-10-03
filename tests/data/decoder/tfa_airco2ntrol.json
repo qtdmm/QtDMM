@@ -1,0 +1,88 @@
+{
+  "decoder": "TfaAirControl",
+  "comment": "Text lines as HidHoltekDevice frames them from the sensor's records (see src/device/transports/hidholtek.h). Raw values: CO2 812 ppm = 0x032C, 4712 = 21.35 degC (4712/16 - 273.15), 4520 = 45.20 %rH. Built from the record layout, not from a QtDMM capture.",
+  "tests": [
+    {
+      "comment": "CO2 812 ppm (address 0x50)",
+      "hex": "35 30 20 38 31 32 0A",
+      "expected": {
+        "dval": 812.0,
+        "val": "812",
+        "unit": "ppm",
+        "special": "CO2",
+        "id": 0,
+        "showBar": true
+      }
+    },
+    {
+      "comment": "temperature 21.35 degC (address 0x42, raw 4712 = 1/16 K)",
+      "hex": "34 32 20 34 37 31 32 0A",
+      "expected": {
+        "dval": 21.35,
+        "val": "21.35",
+        "unit": "C",
+        "special": "TE",
+        "id": 1,
+        "showBar": false,
+        "port": "temperature"
+      }
+    },
+    {
+      "comment": "relative humidity 45.20 % (address 0x41, raw 4520 = 1/100 %)",
+      "hex": "34 31 20 34 35 32 30 0A",
+      "expected": {
+        "dval": 45.2,
+        "val": "45.20",
+        "unit": "%",
+        "special": "RH",
+        "id": 2,
+        "showBar": false,
+        "port": "relative_humidity"
+      }
+    }
+  ]
+}
+{
+  "decoder": "TfaAirControl",
+  "comment": "Text lines as HidHoltekDevice frames them from the sensor's records (see src/device/transports/hidholtek.h). Raw values: CO2 812 ppm = 0x032C, 4712 = 21.35 degC (4712/16 - 273.15), 4520 = 45.20 %rH. Built from the record layout, not from a QtDMM capture.",
+  "tests": [
+    {
+      "comment": "CO2 812 ppm (address 0x50)",
+      "hex": "35 30 20 38 31 32 0A",
+      "expected": {
+        "dval": 812.0,
+        "val": "812",
+        "unit": "ppm",
+        "special": "CO2",
+        "id": 0,
+        "showBar": true
+      }
+    },
+    {
+      "comment": "temperature 21.35 degC (address 0x42, raw 4712 = 1/16 K)",
+      "hex": "34 32 20 34 37 31 32 0A",
+      "expected": {
+        "dval": 21.35,
+        "val": "21.35",
+        "unit": "C",
+        "special": "TE",
+        "id": 1,
+        "showBar": false,
+        "port": "temperature"
+      }
+    },
+    {
+      "comment": "relative humidity 45.20 % (address 0x41, raw 4520 = 1/100 %)",
+      "hex": "34 31 20 34 35 32 30 0A",
+      "expected": {
+        "dval": 45.2,
+        "val": "45.20",
+        "unit": "%",
+        "special": "RH",
+        "id": 2,
+        "showBar": false,
+        "port": "relative_humidity"
+      }
+    }
+  ]
+}

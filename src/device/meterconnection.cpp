@@ -27,6 +27,7 @@
 
 #include "device/meterconnection.h"
 #include "device/transports/hidserial.h"
+#include "device/transports/hidholtek.h"
 #include "device/transports/calc.h"
 #ifdef QTDMM_WITH_BLE
 #include "device/transports/ble.h"
@@ -204,7 +205,7 @@ bool MeterConnection::openPort()
   if (m_portHandler->port() && !m_portHandler->port()->open(QIODevice::ReadWrite))
   {
     if (m_portType == Transport::PortType::Calc || m_portType == Transport::PortType::RFC2217
-        || m_portType == Transport::PortType::Ble || m_portType == Transport::PortType::BleGatt)
+        || m_portType == Transport::PortType::HidHoltek || m_portType == Transport::PortType::Ble || m_portType == Transport::PortType::BleGatt)
     {
       // the formula did not parse / the address or key is malformed; the device says where
       m_error = m_portHandler->port()->errorString();
@@ -257,6 +258,8 @@ bool MeterConnection::openPort()
     connect(rfc, &RFC2217SerialDevice::finished, this, [this, rfc] { portLost(rfc, rfc->errorString()); });
   else if (auto *hid = dynamic_cast<HIDSerialDevice *>(port))
     connect(hid, &HIDSerialDevice::finished, this, [this, hid] { portLost(hid, QString()); });
+  else if (auto *htk = dynamic_cast<HidHoltekDevice *>(port))
+    connect(htk, &HidHoltekDevice::finished, this, [this, htk] { portLost(htk, QString()); });
   else if (auto *sig = dynamic_cast<SigrokDevice *>(port))
     connect(sig, &SigrokDevice::finished, this, [this, sig] { portLost(sig, QString()); });
 #ifdef QTDMM_WITH_BLE

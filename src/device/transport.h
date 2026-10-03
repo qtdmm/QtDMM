@@ -9,7 +9,8 @@ class SharedStateManager;
 /// Owns the QIODevice a meter is talked to through and hides which kind it is.
 ///
 /// The concrete devices live in src/device/transports/: a real serial port
-/// (SerialDevice), a USB HID cable (HIDSerialDevice), a serial port shared
+/// (SerialDevice), a USB HID cable (HIDSerialDevice), a Holtek HID sensor
+/// (HidHoltekDevice), a serial port shared
 /// over the network (RFC2217SerialDevice), sigrok-cli as a data source
 /// (SigrokDevice) and a formula over other instances' readings
 /// (CalcDevice). MeterConnection only ever sees the QIODevice returned by port().
@@ -18,7 +19,7 @@ class Transport : public QObject
     Q_OBJECT
 public:
     /// The kinds of port; the settings file stores them by name (str2portType()).
-    enum class PortType { None, Serial, Hid, Sigrok, RFC2217, Calc, Ble, BleGatt };
+    enum class PortType { None, Serial, Hid, HidHoltek, Sigrok, RFC2217, Calc, Ble, BleGatt };
 
     explicit Transport(QObject *parent = Q_NULLPTR) : QObject(parent) {}
     /// Creates the device object for @p type (closing any previous one). The
@@ -42,7 +43,7 @@ public:
     bool        init();
     bool        isOpen() const { return m_port != Q_NULLPTR && m_port->isOpen(); };
 
-    /// "serial", "hid", "sigrok", "rfc2217", "calc" or "ble" (case-insensitive) to PortType.
+    /// "serial", "hid", "hidholtek", "sigrok", "rfc2217", "calc" or "ble" (case-insensitive) to PortType.
     static PortType str2portType(const QString str);
 private:
     QIODevice *m_port   = Q_NULLPTR;

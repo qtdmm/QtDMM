@@ -100,7 +100,7 @@ if (BUILD_TESTING)
 
 	## HID cable chips: report layouts and chip detection, no hardware needed
 	set( TEST_HID test_hid)
-	add_executable(${TEST_HID} MACOSX_BUNDLE tests/test_hid.cpp src/device/transports/hidserial.cpp src/device/dmmdecoder.cpp src/device/protocols.cpp src/core/siprefix.cpp ${DECODER_FILES})
+	add_executable(${TEST_HID} MACOSX_BUNDLE tests/test_hid.cpp src/device/transports/hidserial.cpp src/device/transports/hidreader.cpp src/device/transports/hidholtek.cpp src/device/dmmdecoder.cpp src/device/protocols.cpp src/core/siprefix.cpp ${DECODER_FILES})
 	target_include_directories(${TEST_HID} PRIVATE src)
 	target_link_libraries(${TEST_HID} PRIVATE Qt::Core ${HIDAPI_TARGET})
 	add_test(NAME hid_cable COMMAND ${TEST_HID} "${CMAKE_SOURCE_DIR}/tests/data/hid_cables.json")
@@ -109,7 +109,7 @@ if (BUILD_TESTING)
 	## against a fake RFC 2217 server; needs the whole port stack
 	set( TEST_DMM test_dmm)
 	add_executable(${TEST_DMM} MACOSX_BUNDLE tests/test_dmm.cpp src/device/meterconnection.cpp src/device/framereader.cpp src/device/transport.cpp
-		src/device/transports/serial.cpp src/device/transports/hidserial.cpp src/device/transports/rfc2217serial.cpp src/device/transports/sigrok.cpp
+		src/device/transports/serial.cpp src/device/transports/hidserial.cpp src/device/transports/hidreader.cpp src/device/transports/hidholtek.cpp src/device/transports/rfc2217serial.cpp src/device/transports/sigrok.cpp
 		src/device/transports/calc.cpp src/core/calcexpr.cpp src/service/sharedstatemanager.cpp src/device/dmmdecoder.cpp src/device/protocols.cpp src/core/siprefix.cpp ${DECODER_FILES})
 	target_include_directories(${TEST_DMM} PRIVATE src)
 	target_link_libraries(${TEST_DMM} PRIVATE Qt6::Widgets Qt6::SerialPort Qt::Network Qt::Core ${HIDAPI_TARGET})

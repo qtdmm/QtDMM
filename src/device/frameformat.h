@@ -67,6 +67,7 @@ public:
     VictronBLE,
     UniTiDMM,
     UniTUT61Plus,
+    TfaAirControl,
     EndOfList              // new stuff always before!
   };
 

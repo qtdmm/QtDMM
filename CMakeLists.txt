@@ -18,15 +18,15 @@ file(GLOB TRANSLATIONS CONFIGURE_DEPENDS assets/translations/${PROJECT_NAME}_*.t
 file(GLOB DECODER_HEADER_FILES CONFIGURE_DEPENDS src/device/decoders/*.h )
 file(GLOB UI_FILES CONFIGURE_DEPENDS src/ui/forms/*.ui)
 file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS src/*.cpp src/*.h )
-file(GLOB XPM_FILES CONFIGURE_DEPENDS assets/icons/app/*.xpm )
+file(GLOB ICON_FILES CONFIGURE_DEPENDS assets/icons/app/*.png )
 
 
 ## generate resources.qrc so you can't forget to add the icons and translations.
 ## It lives in the build directory with absolute paths: the source tree stays
 ## untouched, and several build directories don't overwrite each other's file.
-list(SORT XPM_FILES)
+list(SORT ICON_FILES)
 set(RES_CONTENT "    <qresource prefix=\"/Symbols\">\n")
-foreach(file_path IN LISTS XPM_FILES)
+foreach(file_path IN LISTS ICON_FILES)
 	get_filename_component(base_name "${file_path}" NAME)
 	set(RES_CONTENT "${RES_CONTENT}        <file alias=\"${base_name}\">${file_path}</file>\n")
 endforeach()

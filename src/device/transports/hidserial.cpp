@@ -1,8 +1,5 @@
 #include "device/transports/hidserial.h"
 
-// Low-level trace of the HID cable, enabled by --debug
-Q_LOGGING_CATEGORY(lcHid, "qtdmm.hid", QtWarningMsg)
-
 // The chips this driver knows, by USB id. The Hoitek HE2325U is the CH9325's
 // predecessor with the same protocol.
 namespace
@@ -202,34 +199,6 @@ HIDSerialDevice::HIDSerialDevice(const DmmDecoder::DMMInfo info, QString device,
   // thread's event loop while it waits for the quit
   connect(m_reader, &HidReader::finished, m_thread, &QThread::quit, Qt::DirectConnection);
   m_thread->start();
-}
-
-// ---------------------------------------------------------------------------
-
-HidReader::HidReader(hid_device *handle)
-  : m_handle(handle)
-{
-}
-
-void HidReader::run()
-{
-  unsigned char buf[64];
-  while (!m_stop.load())
-  {
-    // the timeout keeps stop() effective even when the cable sends nothing
-    // (CP2110/CH9329 send no idle reports)
-    const int res = hid_read_timeout(m_handle, buf, sizeof(buf), 100);
-    if (res < 0)
-    {
-      Q_EMIT readError(QString::fromWCharArray(hid_error(m_handle)));
-      break;
-    }
-    if (res > 0)
-      Q_EMIT report(QByteArray(reinterpret_cast<const char *>(buf), res));
-  }
-  hid_close(m_handle);
-  m_handle = Q_NULLPTR;
-  Q_EMIT finished();
 }
 
 // ---------------------------------------------------------------------------

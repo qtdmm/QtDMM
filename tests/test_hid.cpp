@@ -10,6 +10,7 @@
 #include <cstring>
 
 #include "device/transports/hidserial.h"
+#include "device/transports/hidholtek.h"
 
 static int failed = 0;
 
@@ -160,6 +161,29 @@ int main(int argc, char **argv)
         r = HIDSerialDevice::ch9325ConfigReport(t["baud"].toInt(), t["bits"].toInt());
       check(r == hex(t["expect"]), QString("config %1 %2: %3").arg(t["chip"].toString()).arg(t["baud"].toInt()).arg(r.toHex(' ')));
     }
+  }
+
+  // --- 3e. the Holtek sensor (TFA AIRCO2NTROL): record layout and line framing ---
+  {
+    HidHoltekDevice::Record r;
+    const QByteArray co2 = QByteArray::fromHex("50 03 2C 7F 0D 00 00 00");   // 0x032C = 812 ppm, sum 0x7F
+    check(HidHoltekDevice::parseReport(co2, r) && r.address == 0x50 && r.raw == 812, "Holtek: CO2 record");
+    const QByteArray temp = QByteArray::fromHex("42 12 68 BC 0D 00 00 00"); // 0x1268 = 4712
+    check(HidHoltekDevice::parseReport(temp, r) && r.address == 0x42 && r.raw == 4712, "Holtek: temperature record");
+    QByteArray bad = co2;
+    bad[3] = 0x00;
+    check(!HidHoltekDevice::parseReport(bad, r), "Holtek: bad checksum is rejected");
+    check(!HidHoltekDevice::parseReport(QByteArray::fromHex("50 03"), r), "Holtek: 2-byte report is too short");
+    check(HidHoltekDevice::parseReport(QByteArray::fromHex("50 03 2C"), r) && r.raw == 812, "Holtek: 3-byte report carries no checksum");
+    check(HidHoltekDevice::formatLine(0x50, 812) == "50 812\n", "Holtek: CO2 line");
+    check(HidHoltekDevice::formatLine(0x41, 4520) == "41 4520\n", "Holtek: humidity line");
+    check(HidHoltekDevice::formatLine(0x0a, 7) == "0a 7\n", "Holtek: address is two hex digits");
+    check(HidHoltekDevice::pathForEntry("HIDHOLTEK 0x04d9:0xa052 /dev/hidraw3") == "/dev/hidraw3", "Holtek: path split off");
+    check(HidHoltekDevice::pathForEntry("/dev/hidraw3") == "/dev/hidraw3", "Holtek: bare path kept");
+    DmmDecoder::DMMInfo info;
+    HidHoltekDevice dev(info, "HIDHOLTEK 0x04d9:0xa052 /nonexistent/hidraw99");
+    check(!dev.open(QIODevice::ReadWrite), "Holtek: open() fails without a device");
+    check(!dev.errorString().isEmpty(), "Holtek: a failed open() says why");
   }
 
   // --- 4. a device object without hardware reports itself closed ---

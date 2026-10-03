@@ -1,6 +1,7 @@
 #include "device/transport.h"
 #include "device/transports/serial.h"
 #include "device/transports/hidserial.h"
+#include "device/transports/hidholtek.h"
 #include "device/transports/rfc2217serial.h"
 #include "device/transports/sigrok.h"
 #include "device/transports/calc.h"
@@ -19,6 +20,7 @@ bool Transport::create(const DmmDecoder::DMMInfo spec, PortType t, QString devic
   {
     case PortType::Serial: m_port = new SerialDevice(spec, device);      break;
     case PortType::Hid:    m_port = new HIDSerialDevice(spec, device);   break;
+    case PortType::HidHoltek: m_port = new HidHoltekDevice(spec, device); break;
     case PortType::Sigrok: m_port = new SigrokDevice(spec,device);       break;
     case PortType::RFC2217:m_port = new RFC2217SerialDevice(spec,device);break;
     case PortType::Calc:   m_port = new CalcDevice(spec, device, m_state); break;
@@ -63,6 +65,7 @@ Transport::PortType Transport::str2portType(const QString str)
 {
   if (str.toLower() == "serial")  return PortType::Serial;
   if (str.toLower() == "hid")     return PortType::Hid;
+  if (str.toLower() == "hidholtek") return PortType::HidHoltek;
   if (str.toLower() == "sigrok")  return PortType::Sigrok;
   if (str.toLower() == "rfc2217") return PortType::RFC2217;
   if (str.toLower() == "calc")    return PortType::Calc;
@@ -88,6 +91,7 @@ QStringList Transport::availablePorts()
   QStringList portlist;
   SerialDevice::availablePorts(portlist);
   HIDSerialDevice::availablePorts(portlist);
+  HidHoltekDevice::availablePorts(portlist);
   RFC2217SerialDevice::availablePorts(portlist);
   SigrokDevice::availablePorts(portlist);
 

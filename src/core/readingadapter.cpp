@@ -40,6 +40,7 @@ struct Meaning
 Meaning meaning(const QString &base, const QString &mode, FrameFormat::DataFormat format)
 {
   const bool victron = format == FrameFormat::VictronBLE;
+  const bool tfa = format == FrameFormat::TfaAirControl;
 
   if (mode == QLatin1String("DI"))
     return { Quantity::Voltage, QStringLiteral("V") };
@@ -87,6 +88,8 @@ Meaning meaning(const QString &base, const QString &mode, FrameFormat::DataForma
       Meaning m{ r.quantity, QString::fromUtf8(r.unit) };
       if (victron && m.quantity == Quantity::DutyCycle)
         m.quantity = Quantity::StateOfCharge;
+      if (tfa && m.quantity == Quantity::DutyCycle)   // the % of the TFA sensor is humidity
+        m.quantity = Quantity::RelativeHumidity;
       if (victron && m.quantity == Quantity::Time)
         m.quantity = Quantity::TimeToGo;
       return m;
@@ -126,6 +129,7 @@ bool hasRange(Quantity q)
   {
     case Quantity::Unknown:
     case Quantity::Temperature:
+    case Quantity::RelativeHumidity:
     case Quantity::DutyCycle:
     case Quantity::StateOfCharge:
     case Quantity::TimeToGo:

@@ -617,7 +617,7 @@ void MainWindow::on_action_About_triggered()
 {
   QMessageBox about(this);
   about.setWindowTitle(tr("About QtDMM"));
-  about.setIconPixmap(QPixmap(":/Symbols/icon.xpm"));
+  about.setIconPixmap(QPixmap(":/Symbols/qtdmm_64.png"));
   about.setTextFormat(Qt::RichText);
   about.setText(tr("<h2>QtDMM %1</h2>"
                    "<p>A readout and transient recorder for digital multimeters.</p>"

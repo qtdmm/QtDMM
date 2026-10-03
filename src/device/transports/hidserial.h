@@ -3,20 +3,9 @@
 #include <QtCore>
 #include <QIODevice>
 #include <QThread>
-#include <atomic>
 
-// Distro packages (Debian, FreeBSD ports) install hidapi.h below hidapi/; the
-// hidapi CMake target (Windows via FetchContent) and Homebrew put it top-level.
-#if __has_include(<hidapi/hidapi.h>)
-  #include <hidapi/hidapi.h>
-#else
-  #include <hidapi.h>
-#endif
-
+#include "device/transports/hidreader.h"
 #include "device/dmmdecoder.h"
-#include <QLoggingCategory>
-
-Q_DECLARE_LOGGING_CATEGORY(lcHid)
 
 /// A meter behind a USB HID "serial" cable.
 ///
@@ -45,34 +34,6 @@ Q_DECLARE_LOGGING_CATEGORY(lcHid)
 /// readData()/bytesAvailable() with readyRead(). The line configuration
 /// (feature reports) is sent in the constructor, so a cable that refuses it
 /// fails open() at once.
-/// The blocking hidapi read loop, living in its own thread. It owns the
-/// handle from the moment run() starts until the loop ends, so hid_close()
-/// happens exactly once, in the thread that reads. Reports go to
-/// HIDSerialDevice as queued signals; nothing is shared.
-class HidReader : public QObject
-{
-  Q_OBJECT
-public:
-  HidReader(hid_device *handle);
-  /// Ends the loop at its next timeout (100 ms); thread-safe.
-  void stop() { m_stop.store(true); }
-
-public Q_SLOTS:
-  void run();
-
-Q_SIGNALS:
-  /// One input report as read from the cable.
-  void report(const QByteArray &raw);
-  /// hid_read failed (cable unplugged); the loop has ended.
-  void readError(const QString &what);
-  /// The loop has ended and the handle is closed.
-  void finished();
-
-private:
-  hid_device *m_handle;
-  std::atomic<bool> m_stop{false};
-};
-
 class HIDSerialDevice : public QIODevice {
     Q_OBJECT
 public:

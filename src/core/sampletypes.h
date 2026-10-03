@@ -72,7 +72,8 @@ enum class Quantity : quint16
   Energy = 1000,        ///< Wh (newer libsigrok has it, under another number)
   ElectricCharge,       ///< Ah (dito)
   StateOfCharge,        ///< % of a battery (Victron)
-  TimeToGo              ///< remaining time of a battery (Victron)
+  TimeToGo,             ///< remaining time of a battery (Victron)
+  CarbonDioxide
 };
 
 /// State and mode of a value, a bit mask after libsigrok's sr_mqflag, plus

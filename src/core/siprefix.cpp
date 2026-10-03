@@ -50,6 +50,9 @@ double factor(const QString &prefix)
 
 Split split(const QString &unit)
 {
+  // "ppm" (CO2 sensors) is a unit of its own, not pico-"pm"
+  if (unit == QLatin1String("ppm"))
+    return {QString(), unit};
   if (unit.size() > 1 && isPrefix(unit.left(1)))
     return {unit.left(1), unit.mid(1)};
   return {QString(), unit};
