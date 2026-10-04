@@ -44,6 +44,12 @@ void applyIcons()
     QIcon::setThemeName(builtIn);
     QIcon::setFallbackThemeName(QString());
   }
+  // Qt reads each theme once and keeps it, with the fallback of that moment:
+  // the window looks symbols up before the settings set one, and hicolor -
+  // where Qt adds the fallback, as every desktop theme ends there - stayed
+  // without it (QtDMM's own symbols showed only their text under System).
+  // New search paths make Qt read the themes again.
+  QIcon::setThemeSearchPaths(QIcon::themeSearchPaths());
   // icons from fromTheme() look the theme up again when painted
   for (QWidget *w : QApplication::allWidgets())
     w->update();
