@@ -269,7 +269,7 @@ MainWindow::MainWindow(QCommandLineParser &parser, QWidget *parent)
        "<p>Each reading against the next one: noise widens the cloud across the diagonal, "
        "drift stretches it along it. SD1 and SD2 put both in numbers.</p></body></html>"));
   // the graph keeps its action from the .ui (toolbar button with Ctrl+G)
-  action_Graph->setShortcuts({QKeySequence("Ctrl+G"), QKeySequence("Ctrl+3")});
+  action_Graph->setShortcuts({QKeySequence("Ctrl+3")});
   bindWindowAction(action_Graph, m_graphWin);
 
   // the sidebar "Devices" at the left: My devices, a click switches
@@ -369,7 +369,7 @@ MainWindow::MainWindow(QCommandLineParser &parser, QWidget *parent)
 
   m_titleBars = new QAction(tr("&Hide title bars"), this);
   m_titleBars->setCheckable(true);
-  m_titleBars->setShortcut(QKeySequence("Ctrl+L"));
+  m_titleBars->setShortcut(QKeySequence("F10"));
   m_titleBars->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">Hide title bars</span></p>"
                                "<p>Windows without title bar sit flush next to each other. Right-click the display "
                                "or the meter for the window's menu; Ctrl+drag moves a window, in the arranged modes onto "
@@ -763,9 +763,7 @@ void MainWindow::createActions()
 // so their shortcuts would be dead - adding them to the window fixes that.
 void MainWindow::createExtraActions()
 {
-  // Ctrl+C is the historical Connect key; Ctrl+D is the one that does not
-  // fight the copy reflex.
-  action_Connect->setShortcuts({QKeySequence("Ctrl+C"), QKeySequence("Ctrl+D")});
+  action_Connect->setShortcuts({QKeySequence("Ctrl+D")});
 
   m_fullScreen = new QAction(tr("&Full screen"), this);
   m_fullScreen->setCheckable(true);
@@ -1139,8 +1137,6 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
     menu.addSeparator();
     m_poincare->addMenuActions(&menu);
   }
-  menu.addSeparator();
-  menu.addMenu(m_arrangeMenu);
   QAction *chosen = menu.exec(globalPos);
   if (chosen == hide)
     win->hide();

@@ -184,7 +184,7 @@
     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Settings&lt;/span&gt;&lt;/p&gt;&lt;p&gt;The settings: appearance, graph, recording, alarms and the SCPI server. The meter is set up with Add device.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="shortcut">
-    <string notr="true">F2</string>
+    <string notr="true">F8</string>
    </property>
    <property name="iconVisibleInMenu">
     <bool>true</bool>
@@ -270,7 +270,7 @@
     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Reset min/max values&lt;/span&gt;&lt;/p&gt;&lt;p&gt;The min/max values in the display will be reset. You can activate this option at any time. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="shortcut">
-    <string notr="true">Ctrl+R</string>
+    <string notr="true">F4</string>
    </property>
    <property name="iconVisibleInMenu">
     <bool>true</bool>
@@ -284,7 +284,7 @@
     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Device settings&lt;/span&gt;&lt;/p&gt;&lt;p&gt;The settings of the device in use, as Settings... in its context menu in the sidebar. Without a device: Add device.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="shortcut">
-    <string notr="true">Shift+F2</string>
+    <string notr="true">Shift+F8</string>
    </property>
    <property name="iconVisibleInMenu">
     <bool>true</bool>
@@ -304,7 +304,7 @@
     <string>Start recording</string>
    </property>
    <property name="whatsThis">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Start recording&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Asks for the length and starts a recording. A start at a clock time or at a threshold is set under Settings, Recording (Ctrl+F2).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Start recording&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Asks for the length and starts a recording. A start at a clock time or at a threshold is set under Settings, Recording (Ctrl+F8).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="shortcut">
     <string notr="true">Ctrl+S</string>
@@ -347,7 +347,7 @@
     <string>Start recording</string>
    </property>
    <property name="whatsThis">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Record&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Starts a recording: the graph is cleared and fills from now on, until the recording length or until you press the button again (a red square while it records). The recording then stands in the graph to zoom, save and export. Press F2 to set the recording length and the start options.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Record&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Starts a recording: the graph is cleared and fills from now on, until the recording length or until you press the button again (a red square while it records). The recording then stands in the graph to zoom, save and export. Press F8 to set the recording length and the start options.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="shortcut">
     <string notr="true">Space</string>
@@ -404,7 +404,7 @@
     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Settings&lt;/span&gt;&lt;/p&gt;&lt;p&gt;The settings: appearance, graph, recording, alarms and the SCPI server. The meter is set up with Add device.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="shortcut">
-    <string notr="true">Ctrl+F2</string>
+    <string notr="true">Ctrl+F8</string>
    </property>
    <property name="iconVisibleInMenu">
     <bool>true</bool>

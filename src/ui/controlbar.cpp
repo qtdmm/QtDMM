@@ -14,6 +14,7 @@
 namespace
 {
 constexpr int kGap = 6;   // between groups and rows
+constexpr int kBottomMargin = 6;  // below the last row
 
 // A key in a colour of its own: darker while pressed or on, faded while off
 QString keyColour(const QColor &face, const QColor &text)
@@ -107,6 +108,7 @@ ControlBar::ControlBar(QWidget *parent) :
     m_groups << group;
   }
   setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+
   setConnected(false);
 }
 
@@ -142,22 +144,40 @@ void ControlBar::showReading(const Reading &reading)
 
 int ControlBar::layoutGroups(int width, bool apply) const
 {
-  int x = 0, y = 0, rowHeight = 0;
-  for (QWidget *g : m_groups)
-  {
-    const QSize s = g->sizeHint();
-    if (x > 0 && x + s.width() > width)
+    const int gap = 2 * kGap;
+    int y = 0;
+    int i = 0;
+    const int n = m_groups.size();
+    while (i < n)
     {
-      x = 0;
-      y += rowHeight + kGap;
-      rowHeight = 0;
+        // evaluate row from group i
+        int rowWidth = 0, rowHeight = 0, j = i;
+        while (j < n)
+        {
+            const QSize s = m_groups[j]->sizeHint();
+            const int w = rowWidth + (j > i ? gap : 0) + s.width();
+            if (j > i && w > width)
+                break;
+            rowWidth = w;
+            rowHeight = qMax(rowHeight, s.height());
+            ++j;
+        }
+        if (apply)
+        {
+            int x = qMax(0, (width - rowWidth) / 2);
+            for (int k = i; k < j; ++k)
+            {
+                const QSize s = m_groups[k]->sizeHint();
+                m_groups[k]->setGeometry(x, y, s.width(), s.height());
+                x += s.width() + gap;
+            }
+        }
+        y += rowHeight;
+        if (j < n)
+            y += kGap;
+        i = j;
     }
-    if (apply)
-      g->setGeometry(x, y, s.width(), s.height());
-    x += s.width() + 2 * kGap;
-    rowHeight = qMax(rowHeight, s.height());
-  }
-  return y + rowHeight;
+    return y + kBottomMargin;
 }
 
 int ControlBar::heightForWidth(int width) const
