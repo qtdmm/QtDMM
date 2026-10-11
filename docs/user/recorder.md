@@ -42,7 +42,7 @@ and importing a file ask first when the readings viewed are not saved yet:
 
 ## Sampling
 
-**Settings → Recording** (Ctrl+F2) sets:
+**Settings → Recording** (Ctrl+F8) sets:
 
 - **Sample every** — the grid of the [export](#export-and-import), in
   tenths of a second, seconds, minutes, hours or days: one row per
@@ -67,8 +67,8 @@ The vertical axis is in the unit that suits its range - mV for an axis up to
 
 Three ways to start, chosen under **Start** on the Recording page:
 
-- **By hand** — *Record* in the toolbar (Space), Ctrl+S and Ctrl+X, or the
-  graph's right-click menu.
+- **By hand** — *Record* in the toolbar (Space) or the graph's right-click
+  menu.
 - **At a clock time** — recording begins at the given time of day.
 - **At a threshold** — recording begins when the reading crosses a
   threshold, rising above it or falling below it. The threshold is drawn

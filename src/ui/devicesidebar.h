@@ -75,6 +75,7 @@ public Q_SLOTS:
 protected:
   void        dropEvent(QDropEvent *event) override;
   void        contextMenuEvent(QContextMenuEvent *event) override;
+  void        keyPressEvent(QKeyEvent *event) override;
 
 private:
   void        updateMarks();

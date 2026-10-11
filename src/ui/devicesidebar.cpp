@@ -50,7 +50,7 @@ DeviceSidebar::DeviceSidebar(DeviceLibrary *library, QWidget *parent)
   setRootIsDecorated(true);
   setDragDropMode(QAbstractItemView::InternalMove);
   setSelectionMode(QAbstractItemView::SingleSelection);
-  // renamed through the context menu only: F2 is Settings, wherever the focus is
+  // renamed with F2 (keyPressEvent) or the context menu, not by a click
   setEditTriggers(QAbstractItemView::NoEditTriggers);
   // only the node takes entries: they cannot become children of each other
   invisibleRootItem()->setFlags(Qt::ItemIsEnabled);
@@ -295,6 +295,23 @@ void DeviceSidebar::dropEvent(QDropEvent *event)
   const int index = int(deviceIds().indexOf(id));
   if (!id.isEmpty() && index >= 0)
     m_library->move(id, index);
+}
+
+void DeviceSidebar::keyPressEvent(QKeyEvent *event)
+{
+  // F2 renames the device or the stopped instance, also from the device
+  // line below an instance
+  QTreeWidgetItem *item = currentItem();
+  if (item && item->parent() && item->parent()->parent() == m_instances)
+    item = item->parent();
+  if (event->key() == Qt::Key_F2 && event->modifiers() == Qt::NoModifier && item
+      && (item->flags() & Qt::ItemIsEditable))
+  {
+    editItem(item, 0);
+    event->accept();
+    return;
+  }
+  QTreeWidget::keyPressEvent(event);
 }
 
 void DeviceSidebar::instanceMenu(QTreeWidgetItem *item, const QPoint &pos)

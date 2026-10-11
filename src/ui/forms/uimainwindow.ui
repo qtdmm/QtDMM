@@ -224,7 +224,7 @@
     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Connect to the Multimeter&lt;/span&gt;&lt;/p&gt;&lt;p&gt;This will establish the serial connection to the dmm. If not connected the serial port is free and can be used by other software.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="shortcut">
-    <string notr="true">Ctrl+C</string>
+    <string notr="true">F3</string>
    </property>
    <property name="iconVisibleInMenu">
     <bool>true</bool>
@@ -253,7 +253,7 @@
     <bool>true</bool>
    </property>
    <property name="shortcut">
-    <string notr="true">Ctrl+G</string>
+    <string notr="true">Ctrl+3</string>
    </property>
   </action>
   <action name="action_Reset">
@@ -306,9 +306,6 @@
    <property name="whatsThis">
     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Start recording&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Asks for the length and starts a recording. A start at a clock time or at a threshold is set under Settings, Recording (Ctrl+F8).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
-   <property name="shortcut">
-    <string notr="true">Ctrl+S</string>
-   </property>
    <property name="iconVisibleInMenu">
     <bool>true</bool>
    </property>
@@ -328,9 +325,6 @@
    </property>
    <property name="whatsThis">
     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Stop recording&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Stops the recording, however it was started.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-   </property>
-   <property name="shortcut">
-    <string notr="true">Ctrl+X</string>
    </property>
    <property name="iconVisibleInMenu">
     <bool>true</bool>

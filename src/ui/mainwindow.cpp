@@ -268,8 +268,7 @@ MainWindow::MainWindow(QCommandLineParser &parser, QWidget *parent)
     tr("<html><head/><body><p><span style=\" font-weight:600;\">Poincaré plot</span></p>"
        "<p>Each reading against the next one: noise widens the cloud across the diagonal, "
        "drift stretches it along it. SD1 and SD2 put both in numbers.</p></body></html>"));
-  // the graph keeps its action from the .ui (toolbar button with Ctrl+G)
-  action_Graph->setShortcuts({QKeySequence("Ctrl+3")});
+  // the graph keeps its action from the .ui (toolbar button with Ctrl+3)
   bindWindowAction(action_Graph, m_graphWin);
 
   // the sidebar "Devices" at the left: My devices, a click switches
@@ -741,7 +740,7 @@ void MainWindow::createActions()
   connect(action_Import, SIGNAL(triggered()), m_wid, SLOT(importSLOT()));
   connect(action_Export, SIGNAL(triggered()), m_wid, SLOT(exportSLOT()));
   connect(action_Configure, SIGNAL(triggered()), m_wid, SLOT(configSLOT()));
-  // Shift+F2: the settings of the device in use, as its context menu in the sidebar
+  // Shift+F8: the settings of the device in use, as its context menu in the sidebar
   connect(action_ConfigureDMM, &QAction::triggered, this, [this]
   {
     if (m_wid->devices()->find(m_wid->currentDevice()))
@@ -763,8 +762,6 @@ void MainWindow::createActions()
 // so their shortcuts would be dead - adding them to the window fixes that.
 void MainWindow::createExtraActions()
 {
-  action_Connect->setShortcuts({QKeySequence("Ctrl+D")});
-
   m_fullScreen = new QAction(tr("&Full screen"), this);
   m_fullScreen->setCheckable(true);
   m_fullScreen->setShortcut(QKeySequence("F11"));
@@ -789,11 +786,11 @@ void MainWindow::createExtraActions()
                                "report or a chat.</p></body></html>"));
   connect(m_copyImage, &QAction::triggered, m_wid->graph(), &GraphWidget::copyImageSLOT);
 
-  // Space (Record) toggles the recorder; Start (Ctrl+S) and Stop (Ctrl+X)
-  // have no button of their own any more
+  // Space (Record) toggles the recorder; Start and Stop have neither a
+  // button nor a key of their own any more
   addActions({action_Configure, action_ConfigureDMM, action_Direct_help, action_Help, action_Quit,
               m_displayAction, m_meterAction, m_readingsAction, m_poincareAction, m_titleBars,
-              m_fullScreen, m_zoomIn, m_zoomOut, m_zoomFit, m_copyImage, action_Start, action_Stop});
+              m_fullScreen, m_zoomIn, m_zoomOut, m_zoomFit, m_copyImage});
 }
 
 void MainWindow::addShortcutsToToolTips()

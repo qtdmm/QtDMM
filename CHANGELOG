@@ -40,7 +40,9 @@
   records; old tool tips (export as tab separated list, F2 for the recorder options) describe what QtDMM does now
 - Record works right after a meter is connected by Add device, the sidebar or the start; it stayed off until
   Connect was clicked by hand
-- Sidebar: F2 opens the settings there too (it renamed the device); Rename is in the context menu
+- Shortcuts in function keys: F3 Connect, F4 reset min/max, F8 settings (Shift+F8 the device, Ctrl+F8
+  Recording), F10 title bars; Ctrl+C only copies, Ctrl+D, Ctrl+S, Ctrl+X, Ctrl+G, Ctrl+L and Ctrl+R are gone
+- Sidebar: F2 renames the selected device or stopped instance, as Rename in the context menu
 - Graph: the vertical axis takes its prefix from its range, not from the last reading; a meter switching
   between V and mV turned the whole axis to mV with labels like 1.6e+04
 - Analog meter: MIN and MAX with no more digits than the display has, and from another range in a prefix of

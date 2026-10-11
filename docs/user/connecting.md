@@ -39,7 +39,7 @@ sigrok and *Simulated / calculated* skip step 2.
 ## Choosing the device by hand
 
 Step 3 of [Add device](#add-device) and **Settings...** of a device in the
-sidebar (Shift+F2 for the one in use) hold the settings of the meter:
+sidebar (Shift+F8 for the one in use) hold the settings of the meter:
 
 1. Pick the **vendor** in the first box. The second box then lists only that
    vendor's models. *All vendors* shows the complete list; *Manual settings*
@@ -104,7 +104,7 @@ as a service, is on [Meters over the network](remote-bridge.md).
 
 ## Connecting
 
-Click **Connect** (Ctrl+C) in the toolbar. QtDMM connects on its own at
+Click **Connect** (F3) in the toolbar. QtDMM connects on its own at
 start-up once a meter has been chosen in the settings; a fresh instance
 waits for you to configure one. The status line at the bottom shows what is
 happening:
@@ -132,7 +132,7 @@ AUTO at the left (lit while the meter ranges by itself, off in a manual
 range), AC, DC, diode, continuity and HOLD (an H in a square) at the right;
 for AC+DC a "+" lights between AC and DC. Unlit ones stay faintly visible,
 like on the meter itself. Then the bar graph and, below the value, the minimum
-and maximum since the last **Reset** (Ctrl+R), each as the meter showed it
+and maximum since the last **Reset** (F4), each as the meter showed it
 ("MIN 221.18 mV" stays so when the meter has moved on to V). A range change
 (mV to V, kΩ to MΩ) keeps them; they start afresh when the meter switches to
 another function (V DC to Ω, DC to AC, °C to °F). An overload changes
@@ -212,7 +212,7 @@ the layout it had when it was closed. Switched off, it starts with the
 layout it had when the option was switched off, or with the workspace
 loaded last.
 
-**Hide title bars** (Ctrl+L) takes the title bars away so the windows sit
+**Hide title bars** (F10) takes the title bars away so the windows sit
 flush next to each other - the default for the arranged modes. Right-click
 the display or the meter for its window menu (hide the window, title bar on
 or off); in *Free* mode Ctrl+drag moves a window without title bar. Window

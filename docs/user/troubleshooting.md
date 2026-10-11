@@ -101,7 +101,7 @@ The formula names an instance that is not running, or one that has not
 delivered a reading for three seconds (*No current value from instance
 ...*), or whose meter shows an overload itself. The status line names the
 variable; the *Formula* group in the settings of the device (*Settings...*
-in the sidebar, Shift+F2) lists all variables
+in the sidebar, Shift+F8) lists all variables
 with their current values and the running instances. Remember that instance
 names with a hyphen are written with an underscore in formulas. *Formula
 error at position n* means the formula does not parse; the position is
@@ -109,7 +109,7 @@ counted from 1.
 
 ## Readings look right on the meter but wrong in QtDMM
 
-Check the model of the device (*Settings...* in the sidebar, Shift+F2) — several meters share a protocol and
+Check the model of the device (*Settings...* in the sidebar, Shift+F8) — several meters share a protocol and
 differ only in range or resolution, and a near match can decode with a wrong
 factor. If the model is right and a specific range or function still decodes
 wrongly, please report it with the meter model and, if possible, the debug
