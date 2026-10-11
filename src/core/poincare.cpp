@@ -4,9 +4,34 @@
 
 #include <cmath>
 
+#include "core/siprefix.h"
+
 namespace
 {
 const double kSqrt2 = std::sqrt(2.0);
+
+// 1, 2 or 5 times a power of ten, at least @p v
+double niceStep(double v)
+{
+  if (!(v > 0) || !std::isfinite(v))
+    return 1;
+  const double decade = std::pow(10.0, std::floor(std::log10(v)));
+  for (double m : { 1.0, 2.0, 5.0, 10.0 })
+    if (m * decade >= v * (1 - 1e-12))
+      return m * decade;
+  return 10 * decade;
+}
+
+// one digit of the display text: "1.234" with the prefix "m" is 1e-6
+double digitOf(const Reading &r)
+{
+  const int dot = int(r.text.indexOf(QLatin1Char('.')));
+  int decimals = 0;
+  if (dot >= 0)
+    while (dot + 1 + decimals < r.text.size() && r.text.at(dot + 1 + decimals).isDigit())
+      ++decimals;
+  return std::pow(10.0, -decimals) * SiPrefix::factor(r.prefix);
+}
 }
 
 bool PoincareSeries::feed(const Reading &r)
@@ -35,6 +60,7 @@ bool PoincareSeries::feed(const Reading &r)
     m_broken = false;
   }
   m_values.append({ r.value, m_run });
+  m_resolution = digitOf(r);
   if (m_values.size() > m_capacity)
     m_values.remove(0, m_values.size() - m_capacity);
   return reset;
@@ -51,6 +77,7 @@ void PoincareSeries::clear()
   m_broken = false;
   m_port = PortKey();
   m_baseUnit.clear();
+  m_resolution = 0;
 }
 
 void PoincareSeries::setCapacity(int values)
@@ -113,4 +140,18 @@ PoincareSeries::Stats PoincareSeries::stats() const
   s.sd1 = std::sqrt(varD / (s.count - 1));
   s.sd2 = std::sqrt(varS / (s.count - 1));
   return s;
+}
+
+PoincareSeries::Axis PoincareSeries::axis(double lo, double hi, double resolution)
+{
+  double span = hi - lo;
+  // all alike: not a span of 1e-12 (pV at a meter showing 0.000 V) but
+  // the digits the meter shows
+  if (!(span > 0))
+    span = resolution > 0 ? 10 * resolution : hi != 0 ? std::abs(hi) * 1e-3 : 1;
+  Axis a;
+  a.step = niceStep(span * 1.16 / 5);
+  a.lo = std::floor((lo - span * 0.08) / a.step) * a.step;
+  a.hi = std::ceil((hi + span * 0.08) / a.step) * a.step;
+  return a;
 }

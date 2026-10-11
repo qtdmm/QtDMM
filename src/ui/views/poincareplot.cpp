@@ -18,18 +18,6 @@
 
 namespace
 {
-// 1, 2 or 5 times a power of ten, at least @p v
-double niceStep(double v)
-{
-  if (!(v > 0) || !std::isfinite(v))
-    return 1;
-  const double decade = std::pow(10.0, std::floor(std::log10(v)));
-  for (double m : { 1.0, 2.0, 5.0, 10.0 })
-    if (m * decade >= v * (1 - 1e-12))
-      return m * decade;
-  return 10 * decade;
-}
-
 // units that take no SI prefix on the axis
 bool plainUnit(const QString &unit)
 {
@@ -51,6 +39,7 @@ PoincarePlot::PoincarePlot(QWidget *parent) :
       m_shown = m_series.pairs();
       m_stats = m_series.stats();
       m_unit = m_series.unit();
+      m_resolution = m_series.resolution();
     }
     update();
   });
@@ -248,12 +237,10 @@ void PoincarePlot::render(QPainter &p, const QRect &area)
     lo = qMin(lo, qMin(q.x, q.y));
     hi = qMax(hi, qMax(q.x, q.y));
   }
-  double span = hi - lo;
-  if (span <= 0)
-    span = qMax(std::abs(hi) * 1e-3, 1e-12);
-  const double step = niceStep(span * 1.16 / 5);
-  lo = std::floor((lo - span * 0.08) / step) * step;
-  hi = std::ceil((hi + span * 0.08) / step) * step;
+  const PoincareSeries::Axis axis = PoincareSeries::axis(lo, hi, m_resolution);
+  lo = axis.lo;
+  hi = axis.hi;
+  const double step = axis.step;
   m_lo = lo;
   m_hi = hi;
   const double scale = plot.width() / (hi - lo);

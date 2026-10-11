@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 // PoincareSeries on its own: the pairs, SD1 and SD2, gaps, port changes,
-// capacity and lag.
+// capacity, lag and the axis.
 #include <QCoreApplication>
 #include <QDebug>
 #include <cmath>
@@ -134,6 +134,26 @@ int main(int argc, char **argv)
     check(k.lag() == PoincareSeries::kMaxLag, "lag: at most kMaxLag");
     k.clear();
     check(k.valueCount() == 0 && k.pairs().isEmpty() && std::isnan(k.stats().sd1), "clear");
+  }
+
+  {
+    // a meter at 0: the axis follows the display, not 1e-12
+    PoincareSeries z;
+    z.feed(reading(0, "0.0", "mV"));
+    check(near(z.resolution(), 1e-4), QString("resolution of 0.0 mV: %1").arg(z.resolution()));
+    const PoincareSeries::Axis a = PoincareSeries::axis(0, 0, z.resolution());
+    check(a.lo < 0 && a.hi > 0 && a.hi - a.lo >= 1e-4 && a.hi - a.lo <= 1e-2 && a.step >= 1e-4,
+          QString("axis at 0: %1 .. %2 step %3").arg(a.lo).arg(a.hi).arg(a.step));
+    z.feed(reading(1.234, "1.234", "V"));
+    check(near(z.resolution(), 1e-3), "resolution of 1.234 V");
+    const PoincareSeries::Axis b = PoincareSeries::axis(1.234, 1.234, z.resolution());
+    check(b.lo < 1.234 && b.hi > 1.234 && b.hi - b.lo <= 0.1, QString("axis at 1.234: %1 .. %2").arg(b.lo).arg(b.hi));
+    const PoincareSeries::Axis c = PoincareSeries::axis(0, 0, 0);
+    check(c.lo < 0 && c.hi > 0 && c.step > 1e-3, "axis at 0 without a resolution");
+    const PoincareSeries::Axis d = PoincareSeries::axis(1, 3, 1e-3);
+    check(d.lo <= 1 && d.hi >= 3 && near(d.step, 0.5), QString("axis 1..3: step %1").arg(d.step));
+    z.clear();
+    check(z.resolution() == 0, "clear: no resolution");
   }
 
   if (failed)

@@ -43,6 +43,8 @@
 - Shortcuts in function keys: F3 Connect, F4 reset min/max, F8 settings (Shift+F8 the device, Ctrl+F8
   Recording), F10 title bars; Ctrl+C only copies, Ctrl+D, Ctrl+S, Ctrl+X, Ctrl+G, Ctrl+L and Ctrl+R are gone
 - Sidebar: F2 renames the selected device or stopped instance, as Rename in the context menu
+- Poincaré plot: a meter showing the same value all the time (0.0 mV) got an axis of 1e-12 with endless
+  decimals; the axis now spans ten digits of the display around it
 - Graph: the vertical axis takes its prefix from its range, not from the last reading; a meter switching
   between V and mV turned the whole axis to mV with labels like 1.6e+04
 - Analog meter: MIN and MAX with no more digits than the display has, and from another range in a prefix of
