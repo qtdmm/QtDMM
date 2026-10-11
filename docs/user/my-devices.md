@@ -13,7 +13,7 @@ recorder and alarms stay with the window. An older `devices.conf` with more
 in it is tidied up when QtDMM starts.
 
 The window remembers which entry it uses. **Settings...** of an entry in
-the sidebar changes the entry (Shift+F2: the one in use); the window that
+the sidebar changes the entry (Shift+F8: the one in use); the window that
 uses it takes the change at once.
 
 ## The sidebar

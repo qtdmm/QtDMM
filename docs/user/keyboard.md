@@ -11,19 +11,17 @@ share the space differently.
 
 | Key | Action |
 |---|---|
-| Ctrl+C or Ctrl+D | Connect / disconnect the meter |
-| Ctrl+S | Start the recorder |
-| Ctrl+X | Stop the recorder |
+| F3 | Connect / disconnect the meter |
 | Space | Record: start the recorder, or stop it when it is running |
 | Ctrl+Del | Clear the recording |
-| Ctrl+R | Reset the min/max memory |
+| F4 | Reset the min/max memory |
 | Ctrl+E | Export the recording as CSV |
 | Ctrl+I | Import a CSV file |
 | Ctrl+P | Print the graph |
 | Ctrl+Shift+C | Copy the graph as an image to the clipboard |
-| F2 | Settings |
-| Shift+F2 | Settings of the device in use (without one: Add device) |
-| Ctrl+F2 | Settings, Recording page |
+| F8 | Settings |
+| Shift+F8 | Settings of the device in use (without one: Add device) |
+| Ctrl+F8 | Settings, Recording page |
 | F9 | Show or hide the sidebar with My devices and the instances |
 | Ctrl+M | Open the menu |
 | F1 | This handbook |
@@ -36,10 +34,10 @@ share the space differently.
 |---|---|
 | Ctrl+1 | Show / hide the digital display |
 | Ctrl+2 | Show / hide the analog meter |
-| Ctrl+3 or Ctrl+G | Show / hide the graph |
+| Ctrl+3 | Show / hide the graph |
 | Ctrl+4 | Show / hide the readings table |
 | Ctrl+5 | Show / hide the Poincaré plot |
-| Ctrl+L | Hide / show the title bars of the windows |
+| F10 | Hide / show the title bars of the windows |
 | F11 | Full screen on / off |
 
 ## Graph
@@ -89,6 +87,5 @@ While the table has the focus:
 
 ## Sidebar
 
-F2 opens the settings here too; a device or a stopped instance is renamed
-through its context menu (**Rename**).
-
+F8 opens the settings here too; F2 renames the selected device or stopped
+instance (also through its context menu, **Rename**).

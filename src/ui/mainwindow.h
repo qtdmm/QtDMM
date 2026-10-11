@@ -215,7 +215,7 @@ protected:
   void        createActions();
   /// Menu-only actions and their shortcuts (the window has no menu bar).
   void        createExtraActions();
-  /// Appends the shortcut to every action's tooltip: "Start (Ctrl+S)".
+  /// Appends the shortcut to every action's tooltip: "Record (Space)".
   void        addShortcutsToToolTips();
   /// Adds @p view as an MDI window with @p title (@p role: MdiArranger::Role;
   /// @p name identifies it in the settings).

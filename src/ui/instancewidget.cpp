@@ -114,7 +114,7 @@ InstanceWidget::InstanceWidget(QString instance_id, QString config_path, QWidget
     m_settings->setString("Windows/graph-variant",
                           v < 0 ? QString() : GraphWidget::variantName(static_cast<GraphWidget::ColorVariant>(v)));
   });
-  connect(ui_graph, SIGNAL(configure()), this, SLOT(configSLOT()));
+  connect(ui_graph, &GraphWidget::configure, this, [this] { openConfig(SettingsDialog::Graph); });
   connect(ui_graph, &GraphWidget::clearRequested, this, &InstanceWidget::clearSLOT);
   connect(ui_graph, SIGNAL(exportData()), this, SLOT(exportSLOT()));
   connect(ui_graph, SIGNAL(importData()), this, SLOT(importSLOT()));
@@ -344,9 +344,20 @@ void InstanceWidget::helpSLOT()
 
 void InstanceWidget::configSLOT()
 {
+  // opened plainly it starts on General, not on the page left last time;
+  // already open, it stays where it is
+  if (!m_configDlg->isVisible())
+    m_configDlg->showPage(SettingsDialog::General);
+  openConfig();
+}
+
+void InstanceWidget::openConfig(int page)
+{
   // the meter goes on reading, and a recording on recording: the dialog
   // has no meter page any more (it disconnected for that, and stopped a
   // recording)
+  if (page >= 0)
+    m_configDlg->showPage(SettingsDialog::PageType(page));
   m_configDlg->show();
   m_configDlg->raise();
 }
@@ -450,8 +461,7 @@ void InstanceWidget::syncDevice()
 
 void InstanceWidget::configRecorderSLOT()
 {
-  configSLOT();
-  m_configDlg->showPage(SettingsDialog::Recorder);
+  openConfig(SettingsDialog::Recorder);
 }
 
 void InstanceWidget::applySLOT()

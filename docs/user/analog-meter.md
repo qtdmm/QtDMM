@@ -24,7 +24,7 @@ how the scale is laid out:
 
 - **Automatic** — zero at the left; as soon as a clearly negative reading
   arrives the scale switches to centre zero (−FS … 0 … +FS) and stays there
-  until you reset the min/max memory (Ctrl+R) or the meter switches to another function (V DC to Ω,
+  until you reset the min/max memory (F4) or the meter switches to another function (V DC to Ω,
   DC to AC); a range change (mV to V) keeps it, the values are shown in the current range.
 - **Zero left** and **Centre zero** fix one layout.
 
@@ -37,7 +37,7 @@ page lets you move it.
 in the unit of the scale and with as many decimals as the multimeter shows.
 The current value is what the needle and the digital display show. The
 min/max memory is also marked on the scale: a small red triangle at the minimum, a green one at
-the maximum; *Reset* (Ctrl+R) clears both. The **OL** lamp lights and the
+the maximum; *Reset* (F4) clears both. The **OL** lamp lights and the
 needle rests against the right stop while the meter reports overload; **HOLD**
 appears while the meter's hold function is active.
 

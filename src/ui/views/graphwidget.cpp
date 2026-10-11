@@ -1250,22 +1250,6 @@ void GraphWidget::handleChartMousePress(QMouseEvent *ev)
   {
     m_popup->clear();
 
-    if (m_connected)
-    {
-      QAction *action = new QAction(tr("Disconnect"), m_popup);
-      action->setProperty("ID", IDDisconnect);
-      m_popup->addAction(action);
-      //m_popup->insertItem( tr("Disconnect"), IDDisconnect );
-    }
-    else
-    {
-      QAction *action = new QAction(tr("Connect"), m_popup);
-      action->setProperty("ID", IDConnect);
-      m_popup->addAction(action);
-      //m_popup->insertItem( tr("Connect"), IDConnect );
-    }
-    m_popup->addSeparator();
-
     if (m_store->isRunning())
     {
       QAction *action = new QAction(tr("Stop recording"), m_popup);

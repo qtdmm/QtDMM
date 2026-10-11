@@ -69,6 +69,7 @@ private:
   QVector<PoincareSeries::Pair> m_shown;   ///< the pairs drawn (frozen while held)
   PoincareSeries::Stats m_stats;
   QString     m_unit;
+  double      m_resolution = 0;
   bool        m_hold = false;
   bool        m_ellipse = true;
   Settings   *m_cfg = nullptr;

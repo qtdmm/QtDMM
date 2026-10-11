@@ -37,6 +37,14 @@ public:
     double sd2 = 0;     ///< spread along it: std((y + x) / sqrt 2)
   };
 
+  /// One scale for both axes: grid lines every @c step from @c lo to @c hi.
+  struct Axis
+  {
+    double lo = 0;
+    double hi = 1;
+    double step = 0.5;
+  };
+
   static constexpr int kDefaultCapacity = 500;
   static constexpr int kMaxLag = 10;
 
@@ -59,6 +67,13 @@ public:
   Stats       stats() const;
   /// The unit of the values ("V", "Ω"); empty before the first one.
   QString     unit() const { return m_unit; }
+  /// One digit of the display in the unit of the values ("0.001" for
+  /// "1.234 V"); 0 before the first value.
+  double      resolution() const { return m_resolution; }
+
+  /// The axis for values from @p lo to @p hi, with some room. All values
+  /// alike (a meter at 0) give ten digits of @p resolution around them.
+  static Axis axis(double lo, double hi, double resolution);
 
 private:
   struct Value
@@ -75,4 +90,5 @@ private:
   PortKey m_port;             ///< invalid until a reading with a known quantity
   QString m_baseUnit;
   QString m_unit;
+  double  m_resolution = 0;
 };

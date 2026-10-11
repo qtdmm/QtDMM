@@ -12,3 +12,7 @@ site/
 # Python bytecode (tools/qtdmm-bridge tests)
 __pycache__/
 *.pyc
+
+#kdevelop
+.kdev4/
+*.kdev4

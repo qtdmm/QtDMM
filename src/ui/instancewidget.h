@@ -164,7 +164,7 @@ public Q_SLOTS:
   void        stopSLOT();
   /// Back to Live from View: unsaved readings are offered for export first.
   void        liveSLOT();
-  /// Opens the settings dialog on its first page.
+  /// Opens the settings dialog on General (already open: where it is).
   void        configSLOT();
   /// Opens the settings dialog on the recording page.
   void        configRecorderSLOT();
@@ -178,6 +178,8 @@ public Q_SLOTS:
   void        applySLOT();
 
 protected:
+  /// Shows the settings dialog, on @p page (a SettingsDialog::PageType) unless -1.
+  void        openConfig(int page = -1);
   void        applyMeterStyle();   ///< style, ballistics, red zone from the settings
   MeterController *m_ctl;
   SettingsDialog  *m_configDlg;
