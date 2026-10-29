@@ -386,5 +386,19 @@ int main(int argc, char **argv)
     check(lead->state() == RecordingStore::View, "stopped");
   }
 
+  // the session deleted with meters open: they go first, and what follows
+  // their end (AlarmService) finds the session without them, not freed
+  {
+    auto *gone = new DeviceSession;
+    gone->setInstanceId("gone");
+    gone->setConfigDir(dir.path());
+    MeterController *one = gone->open(sim);
+    QList<qsizetype> seen;
+    if (one)
+      QObject::connect(one, &QObject::destroyed, [&seen, gone] { seen << gone->controllers().size(); });
+    delete gone;
+    check(one && seen == QList<qsizetype>{ 0 }, "session deleted: its meters first, it lists none while they go");
+  }
+
   return failed == 0 ? 0 : 1;
 }

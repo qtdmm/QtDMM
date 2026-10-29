@@ -24,6 +24,11 @@ DeviceSession::DeviceSession(QObject *parent)
   installScpi();
 }
 
+DeviceSession::~DeviceSession()
+{
+  qDeleteAll(std::exchange(m_opened, {}));
+}
+
 void DeviceSession::setConfigDir(const QString &dir)
 {
   delete m_library;

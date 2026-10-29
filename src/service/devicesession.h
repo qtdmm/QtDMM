@@ -44,6 +44,9 @@ class DeviceSession : public QObject
   Q_OBJECT
 public:
   explicit DeviceSession(QObject *parent = nullptr);
+  /// The meters go first, while the session is whole: what follows their
+  /// destroyed() (AlarmService) may still ask controllers().
+  ~DeviceSession() override;
 
   ServiceHost *host() const { return m_host; }
   /// "My devices" in @p dir (Settings::configDir()), for open(id).
