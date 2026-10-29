@@ -56,6 +56,7 @@
 #include "ui/views/readingswidget.h"
 #include "ui/dialogs/sourcesdlg.h"
 #include "core/settings.h"
+#include "core/alarm.h"
 #include "ui/alarmbar.h"
 #include "ui/alarmservice.h"
 #include "ui/mdiarranger.h"
@@ -2395,12 +2396,16 @@ bool MainWindow::loadWorkspaceFile(const QString &file)
                                QMessageBox::Discard | QMessageBox::Cancel, QMessageBox::Cancel) != QMessageBox::Discard)
     return false;
   // a device gone from My devices comes back from the copy, under its id:
-  // the views name it so
+  // the views name it so. A file may come from anyone: its alarms run no
+  // program here (and keep the port open), the user sets them again
   QStringList restored;
+  bool programsLeft = false;
   for (const MyDevice &d : ws->devices)
     if (!lib->find(d.id) && lib->add(d.name, d.keys, d.id) == d.id)
     {
-      lib->setRules(d.id, d.alarms, d.limitTest);
+      bool removed = false;
+      lib->setRules(d.id, Alarm::listWithoutPrograms(d.alarms, &removed), d.limitTest);
+      programsLeft = programsLeft || removed;
       restored << d.name;
     }
   // the window's device of a file before 26.4: connected first
@@ -2437,6 +2442,8 @@ bool MainWindow::loadWorkspaceFile(const QString &file)
   QString text = tr("Workspace loaded from %1").arg(QDir::toNativeSeparators(file));
   if (!restored.isEmpty())
     text += "; " + tr("back in My devices: %1").arg(restored.join(", "));
+  if (programsLeft)
+    text += "; " + tr("the programs of their alarms were left out, set them again in Alarms...");
   Q_EMIT m_wid->error(text);
   return true;
 }

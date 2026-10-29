@@ -115,6 +115,23 @@ QList<Alarm> Alarm::listFromJson(const QString &json)
   return list;
 }
 
+QString Alarm::listWithoutPrograms(const QString &json, bool *removed)
+{
+  if (removed)
+    *removed = false;
+  if (json.isEmpty())
+    return json;
+  QList<Alarm> alarms = listFromJson(json);
+  for (Alarm &a : alarms)
+  {
+    if (removed && !a.command.trimmed().isEmpty())
+      *removed = true;
+    a.command.clear();
+    a.disconnect = false;
+  }
+  return listToJson(alarms);
+}
+
 QString Alarm::listToJson(const QList<Alarm> &alarms)
 {
   QJsonArray arr;
