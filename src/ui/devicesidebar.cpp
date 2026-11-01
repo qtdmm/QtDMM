@@ -131,7 +131,7 @@ DeviceSidebar::DeviceSidebar(DeviceLibrary *library, QWidget *parent)
   m_open->setFlags(Qt::ItemIsEnabled | Qt::ItemIsDropEnabled);
   m_open->setFont(0, bold);
   m_open->setFirstColumnSpanned(true);
-  m_open->setToolTip(0, tr("The devices this window reads: its own and those opened beside it."));
+  m_open->setToolTip(0, tr("The devices this window reads: each has its front panel and records with the others."));
   m_open->setExpanded(true);
   m_services = new QTreeWidgetItem(this, { tr("Services") });
   m_services->setFlags(Qt::ItemIsEnabled);

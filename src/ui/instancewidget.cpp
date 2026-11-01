@@ -30,6 +30,7 @@
 #include "ui/dialogs/recordlengthdlg.h"
 #include "ui/alarmsound.h"
 #include "ui/instancewidget.h"
+#include <QPointer>
 #include "device/transports/serial.h"
 #include "core/devicelibrary.h"
 #include "device/dmmdecoder.h"
@@ -180,7 +181,6 @@ InstanceWidget::InstanceWidget(QString instanceId, QString configPath, DeviceSes
   });
   connect(ui_graph, &GraphWidget::info, this, &InstanceWidget::info);
   connect(ui_graph, &GraphWidget::error, this, &InstanceWidget::error);
-  connect(ui_graph, &GraphWidget::running, this, &InstanceWidget::runningSLOT);
   connect(ui_graph, &GraphWidget::stateChanged, this, &InstanceWidget::recorderState);
   connect(ui_graph, &GraphWidget::liveRequested, this, &InstanceWidget::liveSLOT);
   // OK and Apply take the settings over; the meter stays as it is - the
@@ -358,10 +358,14 @@ bool InstanceWidget::closeWin()
   return keepUnsavedData(tr("If you quit now it will be lost."), tr("Quit without saving"));
 }
 
-bool InstanceWidget::keepUnsavedData(const QString &text, const QString &discard)
+bool InstanceWidget::keepUnsavedData(const QString &reason, const QString &discard)
 {
-  if (!ui_graph->dirty() || !m_configDlg->generalPage()->alertUnsavedData())
+  // the recording is the session's: any meter's not saved, or a file loaded
+  // into the graph
+  const QStringList unsaved = m_session->unsavedRecordings();
+  if ((unsaved.isEmpty() && !ui_graph->dirty()) || !m_configDlg->generalPage()->alertUnsavedData())
     return true;
+  const QString text = unsaved.isEmpty() ? reason : tr("Not saved: %1.").arg(unsaved.join(", ")) + ' ' + reason;
 
   QMessageBox question;
   question.setWindowTitle(tr("QtDMM: Unsaved data"));
@@ -388,7 +392,37 @@ bool InstanceWidget::keepUnsavedData(const QString &text, const QString &discard
   switch (question.exec())
   {
     case QMessageBox::Yes:
-      return ui_graph->exportDataSLOT();
+    {
+      // the session's recording, stopped first: all its meters into the
+      // file, as QTDMM:RECord:SAVE writes it; else (a file loaded) the
+      // graph's export
+      if (!unsaved.isEmpty() && m_session->isRecording())
+        m_session->stopRecording();
+      QPointer<MeterController> lead = m_session->lead();
+      if (!unsaved.isEmpty() && lead && lead->recorder()->state() == RecordingStore::View && lead->recorder()->count() > 0)
+      {
+        bool raw = false;
+        const QString file = ui_graph->askExportFile(&raw);
+        QString err;
+        if (file.isEmpty())
+          return false;
+        // the dialog runs events: SCPI may have closed it meanwhile
+        if (!lead)
+        {
+          Q_EMIT error(tr("Export failed: the device was closed meanwhile"));
+          return false;
+        }
+        if (!lead->writeRecording(file, raw, &err))
+        {
+          Q_EMIT error(tr("Export failed: %1").arg(err));
+          return false;
+        }
+      }
+      else if (!ui_graph->exportDataSLOT())
+        return false;
+      // one not in that file (it recorded apart): asked again
+      return m_session->unsavedRecordings().isEmpty() || keepUnsavedData(reason, discard);
+    }
 
     case QMessageBox::No:
       break;
@@ -582,7 +616,7 @@ void InstanceWidget::clearSLOT()
   if (!keepUnsavedData(tr("Clear deletes it."), tr("Clear without saving")))
     return;
   // an empty view is nothing to look at: Live again
-  if (ui_graph->store()->state() == RecordingStore::View)
+  if (recordingState() == RecordingStore::View)
     ui_graph->liveSLOT();
   else
     ui_graph->clearSLOT();
@@ -590,20 +624,26 @@ void InstanceWidget::clearSLOT()
 
 void InstanceWidget::liveSLOT()
 {
-  if (ui_graph->store()->state() != RecordingStore::View)
+  if (recordingState() != RecordingStore::View)
   {
-    Q_EMIT recorderState(int(ui_graph->store()->state()));   // the button shows the state again
+    Q_EMIT recorderState(recordingState());   // the button shows the state again
     return;
   }
   if (keepUnsavedData(tr("Live clears it."), tr("Live without saving")))
     ui_graph->liveSLOT();
   else
-    Q_EMIT recorderState(int(ui_graph->store()->state()));
+    Q_EMIT recorderState(recordingState());
+}
+
+int InstanceWidget::recordingState() const
+{
+  const MeterController *lead = m_session->lead();
+  return int(lead ? lead->recorder()->state() : ui_graph->store()->state());
 }
 
 bool InstanceWidget::confirmRecording()
 {
-  if (ui_graph->store()->state() != RecordingStore::View)
+  if (recordingState() != RecordingStore::View)
     return true;
   return keepUnsavedData(tr("A new recording clears it."), tr("Record without saving"));
 }
@@ -705,11 +745,6 @@ void InstanceWidget::readConfig()
   Q_EMIT useTextLabel(gui->useTextLabel());
   Q_EMIT iconSet(gui->iconSet());
   Q_EMIT showDisplay(gui->showDisplay());
-}
-
-void InstanceWidget::runningSLOT(bool on)
-{
-  Q_EMIT running(on);
 }
 
 void InstanceWidget::showAlertColor()

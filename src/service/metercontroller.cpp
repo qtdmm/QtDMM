@@ -422,6 +422,15 @@ QString MeterController::saveRecording(const QString &name, bool raw)
   const QString path = dir + '/' + (QFileInfo(name).suffix().isEmpty() ? name + ".csv" : name);
   if (QFileInfo::exists(path))
     return "-257,File name error; exists already: " + QFileInfo(path).fileName();
+  QString error;
+  if (!QDir().mkpath(dir) || !writeRecording(path, raw, &error))
+    return "-250,Mass storage error; " + (error.isEmpty() ? dir : error);
+  Q_EMIT info(tr("SCPI: recording saved as %1").arg(QDir::toNativeSeparators(path)));
+  return {};
+}
+
+bool MeterController::writeRecording(const QString &path, bool raw, QString *error)
+{
   QList<int> extras;
   for (int i = 0; i < m_recorder->extraCount(); ++i)
     extras << i;
@@ -437,11 +446,7 @@ QString MeterController::saveRecording(const QString &name, bool raw)
     for (int id : std::as_const(ids))
       foreign << RecordingStore::Foreign{ store, id, other->deviceName() };
   }
-  QString error;
-  if (!QDir().mkpath(dir) || !m_recorder->write(path, &error, raw, extras, foreign, m_deviceName))
-    return "-250,Mass storage error; " + (error.isEmpty() ? dir : error);
-  Q_EMIT info(tr("SCPI: recording saved as %1").arg(QDir::toNativeSeparators(path)));
-  return {};
+  return m_recorder->write(path, error, raw, extras, foreign, m_deviceName);
 }
 
 int MeterController::valueCount() const

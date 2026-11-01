@@ -56,6 +56,9 @@ struct Alarm
   static Alarm fromJson(const QJsonObject &o);
   static QList<Alarm> listFromJson(const QString &json);
   static QString listToJson(const QList<Alarm> &alarms);
+  /// The alarms of @p json from a file of someone else (a workspace): no
+  /// program, the port kept open; @p removed tells whether one had a program.
+  static QString listWithoutPrograms(const QString &json, bool *removed = nullptr);
 
   /// How messages name an alarm: "Alarm High voltage" for a name of its
   /// own, but just "Alarm 1" for the default names, which already start

@@ -26,7 +26,7 @@ class ValueFeed : public QObject
 public:
   explicit ValueFeed(DeviceSession *session, QObject *parent = nullptr);
 
-  /// Follows @p value; the window's meter for an empty source.
+  /// Follows @p value; nothing for an empty source.
   void        setValue(const ValueRef &value);
   ValueRef    value() const { return m_value; }
   /// The meter that has value() now, nullptr while it is not open.

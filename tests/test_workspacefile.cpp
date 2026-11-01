@@ -43,7 +43,7 @@ int main(int argc, char **argv)
     MyDevice a;
     a.id = "a";
     a.name = "Sim A";
-    a.keys = { { "DMM/model", "QtDMM Simulated meter" } };
+    a.keys = { { "DMM/model", "QtDMM Simulated meter" }, { "Port settings/ble-key", "00112233445566778899aabbccddeeff" } };
     a.limitTest = R"({"enabled":true,"lower":1,"upper":2})";
     ws.devices = { b, a };
     ws.keys = { { "Windows/arrange", "left" }, { "Windows/layout", "V(0.5:display,0.5:graph)" },
@@ -83,6 +83,9 @@ int main(int argc, char **argv)
               && same(back->device("b")->alarms, b.alarms) && same(back->device("a")->limitTest, a.limitTest)
               && back->device("a")->alarms.isEmpty(),
             "v2: the copies of the devices with their rules");
+      check(back->device("a") && !back->device("a")->keys.contains("Port settings/ble-key")
+              && back->device("a")->keys.value("DMM/model") == "QtDMM Simulated meter",
+            "v2: a device's key stays out of the file");
     }
   }
 

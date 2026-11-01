@@ -73,7 +73,7 @@ DeviceSettingsDlg::DeviceSettingsDlg(const QString &name, QWidget *parent)
   // Connect at the bottom left, set up by setConnect()
   m_connect = new QPushButton(QIcon::fromTheme("network-connect"), tr("&Connect"), this);
   m_connect->setObjectName("ui_connect");
-  m_connect->setToolTip(tr("Reads it beside this window's device: recorded with it, in formulas and over SCPI"));
+  m_connect->setToolTip(tr("Reads it beside the devices connected: recorded with them, in formulas and over SCPI"));
   m_connect->hide();
   connect(buttons, &QDialogButtonBox::accepted, this, &QDialog::accept);
   connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);

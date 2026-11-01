@@ -34,7 +34,7 @@ class ServiceHost;
 /// one time base (RecordingStore::startAt()), with its sample time, and
 /// stop with it, whatever started or stopped it (Record, a trigger, the
 /// length, SCPI). A recording keeps its lead until it ends. INITiate and
-/// ABORt on any meter go to the window's Record (setRecordingRequests(),
+/// ABORt on any meter go to the window's Record button (setRecordingRequests(),
 /// its questions first), with no window to the session. A recording not saved
 /// (QTDMM:RECord:SAVE) is overwritten by the next.
 /// A recording started from a graph takes only the meters whose values it
@@ -44,6 +44,9 @@ class DeviceSession : public QObject
   Q_OBJECT
 public:
   explicit DeviceSession(QObject *parent = nullptr);
+  /// The meters go first, while the session is whole: what follows their
+  /// destroyed() (AlarmService) may still ask controllers().
+  ~DeviceSession() override;
 
   ServiceHost *host() const { return m_host; }
   /// "My devices" in @p dir (Settings::configDir()), for open(id).
@@ -53,17 +56,14 @@ public:
   /// sigrok-cli for the meters read through it ("Port settings/sigrok_exe").
   void        setSigrokExe(const QString &exe) { m_sigrokExe = exe; }
 
-  /// The window's meter: counted as open, never closed here.
   /// Opens and connects the entry @p id of "My devices". Null and the
   /// reason in @p error (a SCPI error, "<code>,<text>", in English) when it
   /// is unknown, already open or does not connect.
   MeterController *open(const QString &id, QString *error = nullptr);
   /// The same with the entry's keys and name given.
   MeterController *open(const QString &id, const QVariantMap &keys, const QString &name, QString *error = nullptr);
-  /// Closes a meter open() opened; false (and why) for the window's or one not open.
+  /// Closes a meter open() opened; false (and why) for one not open.
   bool        close(const QString &id, QString *error = nullptr);
-  /// The window is about to use the entry @p id: a meter open here with it
-  /// is closed (the port is the window's), with a message.
 
   /// @name The session's recording
   /// @{
@@ -75,7 +75,7 @@ public:
   void        setRecordingSetup(const RecordingStore::Setup &setup);
   const RecordingStore::Setup &recordingSetup() const { return m_setup; }
   /// The meter whose store leads: the recording's while one runs, else the
-  /// one of the trigger value, else the first (the window's); null with none.
+  /// one of the trigger value, else the first opened; null with none.
   MeterController *lead() const;
   void        startRecording();
   void        stopRecording();
@@ -84,21 +84,24 @@ public:
   /// Clears the recording; one that runs goes on.
   void        clearRecording();
   bool        isRecording() const;
+  /// The meters whose recording is not saved (stopped and not exported, or
+  /// still running), by name; @p id only that one of My devices.
+  QStringList unsavedRecordings(const QString &id = QString()) const;
   /// @}
 
-  /// The next recording of the window takes, of the meters here, only those
+  /// The next recording takes, of the meters here, only those
   /// of @p sources (MeterController::source(): a graph's values), also one
   /// opened while it runs; the recording after takes all again.
   void        setRecordingScope(const QStringList &sources);
   /// The next recording takes all of them (a start that did not come).
   void        clearRecordingScope() { m_nextScope.reset(); }
 
-  /// The window's meter first, then those of open() in their order.
+  /// The meters open() opened, in their order.
   QList<MeterController *> controllers() const;
   /// The meter whose readings come from @p source (MeterController::source()).
   MeterController *controller(const QString &source) const;
-  /// The meter of @p value: the window's for an empty source, nullptr while
-  /// that meter is not open.
+  /// The meter of @p value; nullptr for an empty source or while that meter
+  /// is not open.
   MeterController *controller(const ValueRef &value) const;
   /// What a calculated value of this process reads (CalcDevice): the main
   /// value of each meter here by its name in My devices, as a variable
@@ -118,6 +121,9 @@ Q_SIGNALS:
   void        closing(MeterController *ctl);
   /// After the controller is gone.
   void        closed(const QString &source);
+  /// A meter's store changed its state (Live, Record, View): isRecording()
+  /// and unsavedRecordings() may have changed.
+  void        recordingStateChanged();
   /// For the status bar: a meter could not be opened, or was closed for the window.
   void        error(const QString &text);
   /// For the status bar: a message of a meter here ("recording saved as ...").
@@ -153,7 +159,7 @@ private:
   QPointer<MeterController> m_running;   ///< the lead of the recording that runs
   std::optional<QStringList> m_nextScope;
   std::optional<QStringList> m_scope;
-  /// Whether @p ctl records with the window's recording that runs.
+  /// Whether @p ctl records with the recording that runs.
   bool        inScope(const MeterController *ctl) const;
   QString     m_instanceId = "default";
   QString     m_sigrokExe = "sigrok-cli";

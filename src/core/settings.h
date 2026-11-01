@@ -68,6 +68,8 @@ public:
   void           clear();
   /// Removes @p name from the file at once (and a staged write of it).
   void           remove(const QString &name);
+  /// The keys stored in @p group ("Windows"), as "Windows/<key>".
+  QStringList    keysIn(const QString &group) const;
   /// Writes the saved values to the file and reads what other processes
   /// changed there meanwhile; without it
   /// QSettings keeps answering from its cache.

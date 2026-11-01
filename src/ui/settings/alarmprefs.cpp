@@ -73,15 +73,15 @@ AlarmPrefs::AlarmPrefs(QWidget *parent) : SettingsPage(parent)
   });
 
   auto *buttons = new QHBoxLayout;
-  auto *add = new QPushButton(tr("&Add..."), this);
+  m_add = new QPushButton(tr("&Add..."), this);
   m_edit = new QPushButton(tr("&Edit..."), this);
   m_remove = new QPushButton(tr("&Remove"), this);
   m_edit->setEnabled(false);
   m_remove->setEnabled(false);
-  connect(add, &QPushButton::clicked, this, &AlarmPrefs::add);
+  connect(m_add, &QPushButton::clicked, this, &AlarmPrefs::add);
   connect(m_edit, &QPushButton::clicked, this, &AlarmPrefs::edit);
   connect(m_remove, &QPushButton::clicked, this, &AlarmPrefs::remove);
-  buttons->addWidget(add);
+  buttons->addWidget(m_add);
   buttons->addWidget(m_edit);
   buttons->addWidget(m_remove);
   buttons->addStretch(1);
@@ -148,17 +148,23 @@ void AlarmPrefs::defaultsSLOT()
   const QString shown = m_devices.value(m_current).source;
   if (m_source)
     m_devices = m_source();
+  // no device connected: alarms belong to one, nothing to edit here
+  const bool none = m_source && m_devices.isEmpty();
   if (m_devices.isEmpty() || !m_source)
   {
     m_devices = { Device() };
-    m_devices[0].alarms = Alarm::listFromJson(m_cfg->getString("Alarms/list"));
+    if (!none)
+      m_devices[0].alarms = Alarm::listFromJson(m_cfg->getString("Alarms/list"));
   }
+  m_add->setEnabled(!none);
+  m_list->setEnabled(!none);
+  m_empty->setText(none ? tr("Alarms belong to a device: connect one first.") : tr("No alarms yet. Add one with Add..."));
   m_devices[0].units = m_units;
   m_devices[0].valueNames = m_valueNames;
   m_changed.clear();
   m_device->clear();
   for (const Device &d : std::as_const(m_devices))
-    m_device->addItem(d.name.isEmpty() ? tr("This window's device") : d.name);
+    m_device->addItem(d.name);
   m_device->setVisible(m_devices.size() > 1);
   m_deviceLabel->setVisible(m_devices.size() > 1);
   m_current = 0;

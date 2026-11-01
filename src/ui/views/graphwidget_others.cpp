@@ -303,7 +303,7 @@ QPen GraphWidget::otherPen(int i) const
               Qt::RoundJoin);
 }
 
-// Colours of their own, apart from the window meter's values: another
+// Colours of their own, apart from the graph meter's values: another
 // meter, another hue; the line style still says which of its values.
 QColor GraphWidget::otherColor(int i) const
 {

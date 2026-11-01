@@ -62,8 +62,8 @@ class QMdiSubWindow;
 /// MDI area with four windows - LCD display, analog meter, graph (InstanceWidget)
 /// and readings table - placed by an MdiArranger.
 ///
-/// The meters of the process are in a DeviceSession: the window's and those
-/// opened beside it (sidebar "Open devices", --also, SCPI); they record
+/// The meters of the process are in a DeviceSession (sidebar "Connected
+/// devices", --connect, SCPI), each with its front panel; they record
 /// together.
 class MainWindow : public QMainWindow, private Ui::UIMainWindow
 {
@@ -164,6 +164,9 @@ protected:
   QHash<QString, int> m_panelLcd;
   /// Opens the entries of m_pendingOpen.
   void        openPending();
+  /// Before device @p id is closed: true when its recording is saved, or
+  /// the user discards it after @p text.
+  bool        keepRecordingOf(const QString &id, const QString &text);
   /// The front panel windows.
   QList<QMdiSubWindow *> panelWindows() const { return m_panelWins.values(); }
   /// Whether @p win shows an instrument: a front panel or the analog meter.
@@ -249,6 +252,7 @@ protected:
   QMenu      *m_recentMenu = nullptr;   ///< Arrange > Recent workspaces
   QMenu      *m_designMenu;
   bool        m_restoring = false;   ///< restoreWindows() is setting the actions
+  QStringList m_openingPending;   ///< openPending(): the meters still to come, a view's among them waits
   /// The panel windows make room for the keys (FrontPanel::keysHeight()).
   void        updateControls();
   // Window size (package 26.2, 4a): the window starts at the size its
@@ -300,10 +304,9 @@ protected:
   /// The context menu of the sidebar's row of @p value (ValueMenu).
   void        valueMenu(const ValueRef &value, const QPoint &globalPos);
   /// @name The readings table's meters
-  /// The meters in it, the window's like the others (m_tableMeters; none
-  /// chosen: all connected). More than the window's: the table logs the
-  /// readings of all of them in its own store, in the order they come, with
-  /// the Device column; the window's alone: its recorder's readings.
+  /// The meters in it (m_tableMeters; none chosen: all connected). The
+  /// table logs the readings of all of them in its own store, in the order
+  /// they come, with the Device column.
   /// @{
   QStringList m_tableMeters;   ///< sources ("device:<id>"); empty: all connected
   /// The meters the table shows now: m_tableMeters, or all connected.

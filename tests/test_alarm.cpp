@@ -286,6 +286,23 @@ int main(int argc, char **argv)
           "JSON: another meter's value as text");
   }
 
+  // --- alarms from someone else's file: no program, the port kept open ---
+  {
+    Alarm run;
+    run.name = "Fridge";
+    run.command = "touch /tmp/marker";
+    run.disconnect = true;
+    Alarm quiet;
+    quiet.name = "Quiet";
+    bool removed = false;
+    const QList<Alarm> back = Alarm::listFromJson(Alarm::listWithoutPrograms(Alarm::listToJson({ run, quiet }), &removed));
+    check(removed && back.size() == 2 && back[0].name == "Fridge" && back[0].command.isEmpty() && !back[0].disconnect,
+          "file alarms: the program and the disconnect left out, the alarm kept");
+    Alarm::listWithoutPrograms(Alarm::listToJson({ quiet }), &removed);
+    check(!removed && Alarm::listWithoutPrograms(QString(), &removed).isEmpty() && !removed,
+          "file alarms: none with a program, none at all: nothing said");
+  }
+
   // --- the name in messages: default names already say "Alarm" ---
   check(Alarm::title("Alarm 1") == "Alarm 1", "default name is not doubled: " + Alarm::title("Alarm 1"));
   check(Alarm::title("High voltage") == "Alarm High voltage", "own name gets the word: " + Alarm::title("High voltage"));

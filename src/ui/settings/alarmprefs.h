@@ -14,8 +14,8 @@ class QPushButton;
 /// Settings page "Alarms": the alarms of each open meter, chosen at the
 /// top (with more than one), with add / edit / remove (AlarmDlg edits one).
 /// The alarms are the meter's (MeterController::setAlarms()), kept with its
-/// entry in "My devices" or, for a window meter without one, in the window's
-/// settings (Alarms/list); the page itself keeps only Alarms/blink.
+/// entry in "My devices"; without a meter connected there is nothing to edit.
+/// The page itself keeps only Alarms/blink.
 class AlarmPrefs : public SettingsPage
 {
   Q_OBJECT
@@ -23,41 +23,41 @@ public:
   /// An open meter on the page.
   struct Device
   {
-    QString source;              ///< MeterController::source(); empty: the window's meter
+    QString source;              ///< MeterController::source(); empty: none (no meter connected)
     QString name;
     QList<Alarm> alarms;
-    QMap<int, QString> units;    ///< base unit by value id (the window's: setValueUnit())
-    QStringList valueNames;      ///< as setValueNames() (the window's: setValueNames())
+    QMap<int, QString> units;    ///< base unit by value id
+    QStringList valueNames;      ///< as setValueNames()
   };
 
   explicit AlarmPrefs(QWidget *parent = nullptr);
   /// The open meters and their alarms as they are, read on every reload of
-  /// the page; the window's meter first. Without, the window's alarms come
-  /// from Alarms/list.
+  /// the page. Without (a page alone, the tests), the alarms come from
+  /// Alarms/list.
   void        setDevices(const std::function<QList<Device>()> &devices) { m_source = devices; }
   /// Where Apply and OK put a list edited: to the meter @p source
-  /// (Device::source). Without, the window's go to Alarms/list.
+  /// (Device::source). Without, they go to Alarms/list.
   void        setApply(const std::function<void(const QString &source, const QList<Alarm> &alarms)> &apply)
   {
     m_apply = apply;
   }
-  /// The window's meter's alarms on the page.
+  /// The first meter's alarms on the page.
   QList<Alarm> alarms() const { return m_devices.value(0).alarms; }
   /// The meter @p source as it is now (its units and value names for
   /// AlarmDlg); empty when it is not open.
   Device      device(const QString &source) const;
   /// The name of a new alarm, the @p number th: "Alarm 3".
   static QString alarmName(int number) { return tr("Alarm %1").arg(number); }
-  /// Shows the alarms of the meter @p source (empty: the window's).
+  /// Shows the alarms of the meter @p source (empty: the first).
   void        setCurrentDevice(const QString &source);
   /// The display and the analog meter blink while they show an alarm's colour (Alarms/blink).
   bool blink() const;
   /// Base unit of the current reading, shown next to the thresholds; empty
   /// before the first reading (the labels go without a unit).
   void setUnit(const QString &unit) { setValueUnit(0, unit); }
-  /// The same for value @p id of the window's meter (Reading::id).
+  /// The same for value @p id of the first meter (Reading::id).
   void setValueUnit(int id, const QString &unit);
-  /// The names of the window's meter's values ("1: CO2 (ppm)" ...), one
+  /// The names of the first meter's values ("1: CO2 (ppm)" ...), one
   /// each; with more than one an alarm chooses the value it watches.
   void setValueNames(const QStringList &names);
 
@@ -76,16 +76,16 @@ private:
 
   std::function<QList<Device>()> m_source;
   std::function<void(const QString &, const QList<Alarm> &)> m_apply;
-  QList<Device> m_devices;          ///< never empty, the window's first
+  QList<Device> m_devices;          ///< never empty: without devices one without a source
   int m_current = 0;
   QSet<QString> m_changed;          ///< sources edited
-  QMap<int, QString> m_units;       ///< the window's meter's, by value id
-  QStringList m_valueNames;         ///< the window's meter's
+  QMap<int, QString> m_units;       ///< the first meter's, by value id
+  QStringList m_valueNames;         ///< the first meter's
   class QComboBox *m_device;        ///< which meter; hidden with one
   QLabel *m_deviceLabel;
   QListWidget *m_list;
   QLabel *m_empty;   ///< the hint in the empty list
-  QPushButton *m_edit, *m_remove;
+  QPushButton *m_add, *m_edit, *m_remove;
   class QCheckBox *m_blink;
 };
 

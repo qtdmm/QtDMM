@@ -56,6 +56,7 @@
 #include "ui/views/readingswidget.h"
 #include "ui/dialogs/sourcesdlg.h"
 #include "core/settings.h"
+#include "core/alarm.h"
 #include "ui/alarmbar.h"
 #include "ui/alarmservice.h"
 #include "ui/mdiarranger.h"
@@ -192,7 +193,14 @@ MainWindow::MainWindow(QCommandLineParser &parser, QWidget *parent)
   createExtraActions();
   createShortcuts(workspace);
 
-  connect(m_wid, &InstanceWidget::running, this, &MainWindow::runningSLOT);
+  // the recording is the session's, whichever meter the graph shows
+  connect(m_session, &DeviceSession::recordingStateChanged, this, [this]
+  {
+    if (m_session->isRecording() != m_running)
+      runningSLOT(m_session->isRecording());
+    else
+      updateRecorderActions();
+  });
   connect(m_wid, &InstanceWidget::recorderState, this, &MainWindow::updateRecorderActions);
 
   // Record while a meter is connected
@@ -397,14 +405,17 @@ void MainWindow::createViews()
   connect(m_session, &DeviceSession::opened, this, &MainWindow::addPanel);
   // a meter of the table opened again: its readings come in again
   // an empty view takes the meter connected: the graph its main value, the
-  // analog meter and the Poincaré plot it when theirs is not connected
+  // analog meter and the Poincaré plot it when theirs is not connected -
+  // while the workspace's meters open one by one only when none was chosen
   connect(m_session, &DeviceSession::opened, this, [this](MeterController *ctl)
   {
+    auto free = [this](const ValueRef &v)
+    { return !m_session->controller(v) && !m_openingPending.contains(v.source.section(':', 1)); };
     if (m_wid->graph()->values().isEmpty())
       m_wid->graph()->setValues({ ValueRef(0, ctl->source()) });
-    if (!m_session->controller(m_wid->meterValue()))
+    if (free(m_wid->meterValue()))
       m_wid->setMeterValue(ValueRef(0, ctl->source()));
-    if (!m_session->controller(m_wid->poincareValue()))
+    if (free(m_wid->poincareValue()))
       m_wid->setPoincareValue(ValueRef(0, ctl->source()));
   });
   // a meter opened or closed: in the table when it shows all, else only its readings to it
@@ -525,12 +536,25 @@ void MainWindow::setPanelLcdVariant(const QString &source, std::optional<int> va
     applyLcdLook(panelOf(win));
 }
 
+bool MainWindow::keepRecordingOf(const QString &id, const QString &text)
+{
+  const QStringList unsaved = m_session->unsavedRecordings(id);
+  if (unsaved.isEmpty())
+    return true;
+  return QMessageBox::question(this, tr("QtDMM: Unsaved data"), tr("%1: %2").arg(unsaved.first(), text),
+                               QMessageBox::Discard | QMessageBox::Cancel, QMessageBox::Cancel)
+         == QMessageBox::Discard;
+}
+
 void MainWindow::openPending()
 {
   const QStringList ids = std::exchange(m_pendingOpen, {});
-  for (const QString &id : ids)
-    if (!m_session->controller("device:" + id))
-      openBeside(id);
+  {
+    const QScopedValueRollback<QStringList> opening(m_openingPending, ids);
+    for (const QString &id : ids)
+      if (!m_session->controller("device:" + id))
+        openBeside(id);
+  }
   updateEmptyStart();
   // a layout naming panels takes once they are there
   if (!m_pendingLayout.isEmpty() && m_arranger->setLayoutText(m_pendingLayout))
@@ -577,7 +601,8 @@ void MainWindow::createSidebar()
   connect(m_sidebar, &DeviceSidebar::openBesideRequested, this, &MainWindow::openBeside);
   connect(m_sidebar, &DeviceSidebar::closeRequested, this, [this](const QString &id)
   {
-    m_session->close(id);
+    if (keepRecordingOf(id, tr("Closing it discards its recording, which is not saved.")))
+      m_session->close(id);
   });
   connect(m_sidebar, &DeviceSidebar::frontPanelRequested, this, [this](const QString &id)
   {
@@ -730,8 +755,8 @@ QList<QAction *> MainWindow::createArrangeMenu()
   QAction *loadWs = m_arrangeMenu->addAction(QIcon::fromTheme("document-open"), tr("L&oad workspace..."));
   loadWs->setObjectName("action_LoadWorkspace");
   loadWs->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">Load workspace</span></p>"
-                          "<p>Takes a set-up saved with <i>Save workspace</i>: the window's device and the "
-                          "devices open beside it (others close), which windows are shown with which values, the "
+                          "<p>Takes a set-up saved with <i>Save workspace</i>: the devices connected (others "
+                          "close), which windows are shown with which values, the "
                           "arrangement, title bars, toolbar, design and the size of the main window. A device "
                           "missing in My devices is added back from the file.</p></body></html>"));
   connect(loadWs, &QAction::triggered, this, &MainWindow::loadWorkspace);
@@ -743,8 +768,8 @@ QList<QAction *> MainWindow::createArrangeMenu()
   saveWs->setObjectName("action_SaveWorkspace");
   saveWs->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">Save workspace</span></p>"
                           "<p>Writes the set-up to a file, under a name and a description, with a picture of "
-                          "the windows: the window's device and the devices open beside it (a copy of their "
-                          "entries in My devices), which windows are shown with which values, the arrangement, "
+                          "the windows: the devices connected (a copy of their entries in My devices), which "
+                          "windows are shown with which values, the arrangement, "
                           "title bars, toolbar, design and the size of the main window.</p></body></html>"));
   connect(saveWs, &QAction::triggered, this, &MainWindow::saveWorkspace);
   m_autoSaveLayout = m_arrangeMenu->addAction(tr("Save layout on e&xit"));
@@ -1203,7 +1228,7 @@ void MainWindow::startSLOT()
     return;
   if (!m_wid->askRecordingLength())
     return;
-  // the meters open beside it follow (DeviceSession)
+  // all meters connected record, the leading one sets the pace (DeviceSession)
   m_wid->startSLOT();
 }
 
@@ -1232,7 +1257,8 @@ void MainWindow::connectSLOT(bool on)
 
 void MainWindow::updateRecorderActions()
 {
-  const RecordingStore::State state = m_wid->graph()->store()->state();
+  const MeterController *lead = m_session->lead();
+  const RecordingStore::State state = (lead ? lead->recorder() : m_wid->graph()->store())->state();
   const bool recording = state == RecordingStore::Record;
   action_Record->setEnabled(recording ? action_Stop->isEnabled() : action_Start->isEnabled());
   action_Record->setIcon(QIcon(new RecordIconEngine(recording)));
@@ -1644,9 +1670,7 @@ void MainWindow::editSources(ValueMenu::View view)
   {
     case ValueMenu::View::Graph:
       name = tr("Graph");
-      // the window's meter by an empty source, as the dialog lists it
-      for (const ValueRef &v : graph->values())
-        chosen << (graph->isBase(v) ? ValueRef(v.id) : v);
+      chosen = graph->values();   // each with its meter's source, as the dialog lists them
       break;
     case ValueMenu::View::Table:
       name = tr("Readings table");
@@ -1932,8 +1956,15 @@ void MainWindow::deviceSettings(const QString &id, bool settingsTab)
   if (DeviceLibrary::entryKeys(keys) == device->keys)
     return;   // nothing changed: the meter stays connected, the recording too
   m_wid->devices()->update(id, keys);
-  // a device connected takes them at once: connected anew, its panel stays as it was
-  if (MeterController *ctl = m_session->controller("device:" + id))
+  // a device connected takes them at once: connected anew, its panel stays
+  // as it was; its recording not saved: only when asked, else next time
+  MeterController *ctl = m_session->controller("device:" + id);
+  if (ctl && !keepRecordingOf(id, tr("The changes connect it anew, which discards its recording, which is not saved.")))
+  {
+    statusBar()->showMessage(tr("%1: the changes take effect when it is connected next").arg(ctl->deviceName()), 6000);
+    return;
+  }
+  if (ctl)
   {
     if (QMdiSubWindow *win = m_panelWins.value(ctl->source()))
     {
@@ -2068,6 +2099,18 @@ void MainWindow::saveWindows()
       cfg->setString(key, value.toString());
   });
   cfg->setBool("Windows/user-sized", m_userSized);
+  // the front panels of devices no longer connected: their keys go
+  // (an id may have '-' in it: those kept are compared whole)
+  const QStringList open = cfg->getString("Windows/open-devices").split(' ', Qt::SkipEmptyParts);
+  auto kept = [&open](const QString &key)
+  {
+    return std::any_of(open.cbegin(), open.cend(), [&key](const QString &id)
+    { return key.startsWith("Windows/panel-" + id + '-') || key == "Windows/geometry-panel-" + id; });
+  };
+  for (const QString &key : cfg->keysIn("Windows"))
+    if ((key.startsWith(QLatin1String("Windows/panel-")) || key.startsWith(QLatin1String("Windows/geometry-panel-")))
+        && !kept(key))
+      cfg->remove(key);
 }
 
 void MainWindow::applyWorkspace(const WorkspaceGet &get)
@@ -2395,12 +2438,20 @@ bool MainWindow::loadWorkspaceFile(const QString &file)
                                QMessageBox::Discard | QMessageBox::Cancel, QMessageBox::Cancel) != QMessageBox::Discard)
     return false;
   // a device gone from My devices comes back from the copy, under its id:
-  // the views name it so
-  QStringList restored;
+  // the views name it so. A file may come from anyone: its alarms run no
+  // program here (and keep the port open), the user sets them again
+  QStringList restored, keyless;
+  bool programsLeft = false;
   for (const MyDevice &d : ws->devices)
     if (!lib->find(d.id) && lib->add(d.name, d.keys, d.id) == d.id)
     {
-      lib->setRules(d.id, d.alarms, d.limitTest);
+      bool removed = false;
+      lib->setRules(d.id, Alarm::listWithoutPrograms(d.alarms, &removed), d.limitTest);
+      programsLeft = programsLeft || removed;
+      // a Victron reads with its key, which no file has
+      if (d.keys.value("Port settings/device").toString().startsWith(QLatin1String("ble "))
+          && d.keys.value("Port settings/ble-key").toString().isEmpty())
+        keyless << d.name;
       restored << d.name;
     }
   // the window's device of a file before 26.4: connected first
@@ -2437,6 +2488,10 @@ bool MainWindow::loadWorkspaceFile(const QString &file)
   QString text = tr("Workspace loaded from %1").arg(QDir::toNativeSeparators(file));
   if (!restored.isEmpty())
     text += "; " + tr("back in My devices: %1").arg(restored.join(", "));
+  if (programsLeft)
+    text += "; " + tr("the programs of their alarms were left out, set them again in Alarms...");
+  if (!keyless.isEmpty())
+    text += "; " + tr("%1 without its key: enter it in the device settings").arg(keyless.join(", "));
   Q_EMIT m_wid->error(text);
   return true;
 }

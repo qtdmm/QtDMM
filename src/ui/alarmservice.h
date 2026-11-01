@@ -20,7 +20,7 @@ class QWidget;
 /// the desktop: their sounds (each rule its own, AlarmSound), the popup,
 /// raising the window, and one banner for all of them. The controllers
 /// judge the readings and run the programs; this follows each one the
-/// session has (DeviceSession::opened, the window's meter included).
+/// session has (DeviceSession::opened).
 class AlarmService : public QObject
 {
   Q_OBJECT

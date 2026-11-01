@@ -139,7 +139,7 @@ public:
 Q_SIGNALS:
   /// Info and settings of the entry @p id: its double click, its menu.
   void        settingsRequested(const QString &id);
-  /// Connect the entry @p id beside this window's device (its menu,
+  /// Connect the entry @p id beside the devices connected (its menu,
   /// DeviceSession::open()).
   void        openBesideRequested(const QString &id);
   /// Close the open device @p id (OpenDevice::id).

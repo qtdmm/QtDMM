@@ -71,11 +71,11 @@ public:
   /// the caller logs into it).
   void setStore(RecordingStore *store);
   /// The Device column: the rows' meters (LoggedReading::source) by @p name,
-  /// shown while @p on (readings of more than one meter). @p own is the
-  /// window's meter: its values are those of an empty source (ValueRef).
+  /// shown while @p on (readings of more than one meter). @p own is a meter
+  /// whose values go by an empty source (ValueRef); none since 26.4.
   void setDevices(bool on, const QString &own, std::function<QString(const QString &source)> name);
   bool hasDevices() const { return m_devices; }
-  /// The value of row @p row; the window's meter's by an empty source.
+  /// The value of row @p row; @p own's (setDevices()) by an empty source.
   ValueRef valueOf(int row) const;
   /// The table shows row @p row: its value is not hidden.
   bool rowShown(int row) const { return !m_hidden.contains(valueOf(row)); }
@@ -116,7 +116,7 @@ public:
   /// out too, the export and the store keep them.
   QSet<ValueRef> hiddenValues() const { return m_hidden; }
   void setValueHidden(const ValueRef &value, bool hidden);
-  /// The window's meter's value @p id.
+  /// Value @p id with an empty source.
   void setValueHidden(int id, bool hidden) { setValueHidden(ValueRef(id), hidden); }
   /// Whether a value other than the main one has come: the Number column.
   bool hasOtherValues() const { return m_otherValues; }
