@@ -86,6 +86,8 @@ public:
     VoltcraftVC880,
     VoltcraftVC890,
     UniTUT171,
+    UniTUT8802,
+    UniTUT8803,
     EndOfList              // new stuff always before!
   };
 

@@ -31,7 +31,7 @@ PREFIX_FACTOR = {
     "p": 1e-12, "n": 1e-9, "µ": 1e-6, "u": 1e-6, "m": 1e-3,
     "k": 1e3, "M": 1e6, "G": 1e9, "T": 1e12,
 }
-BASE_UNITS = {"V", "A", "Ohm", "F", "Hz", "%", "°C", "°F", "C", "dF", "RPM", "D", "S", "s", "W", "VA", "lx", "fc"}
+BASE_UNITS = {"V", "A", "Ohm", "F", "Hz", "%", "°C", "°F", "C", "dF", "RPM", "D", "S", "s", "W", "VA", "lx", "fc", "H"}
 # A displayed value is digits, sign, point and spaces; any letter marks an
 # overload/underload display (0L. .0L 0.L UL . L0. OL UL ...) with no number.
 OVERLOAD = re.compile(r"[A-Za-z]")
