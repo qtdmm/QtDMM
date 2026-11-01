@@ -299,8 +299,9 @@ int main(int argc, char **argv)
     check(removed && back.size() == 2 && back[0].name == "Fridge" && back[0].command.isEmpty() && !back[0].disconnect,
           "file alarms: the program and the disconnect left out, the alarm kept");
     Alarm::listWithoutPrograms(Alarm::listToJson({ quiet }), &removed);
-    check(!removed && Alarm::listWithoutPrograms(QString(), &removed).isEmpty() && !removed,
-          "file alarms: none with a program, none at all: nothing said");
+    check(!removed, "file alarms: none with a program: nothing said");
+    const bool none = Alarm::listWithoutPrograms(QString(), &removed).isEmpty();
+    check(none && !removed, "file alarms: none at all: nothing said");
   }
 
   // --- the name in messages: default names already say "Alarm" ---

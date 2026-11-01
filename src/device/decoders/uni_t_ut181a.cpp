@@ -87,12 +87,13 @@ Unit unitOf(QString raw, int family)
     u.base = "dF";
   else
   {
-    static const char *const bases[] = { "~", "Hz", "V", "A", "S", "F", "s" };
-    for (const char *b : bases)
-      if (raw.endsWith(QLatin1String(b)) && raw.size() - int(strlen(b)) <= 1)
+    static const QLatin1String bases[] = { QLatin1String("~"), QLatin1String("Hz"), QLatin1String("V"), QLatin1String("A"),
+                                           QLatin1String("S"), QLatin1String("F"), QLatin1String("s") };
+    for (const QLatin1String b : bases)
+      if (raw.endsWith(b) && raw.size() - b.size() <= 1)
       {
-        u.base = b[0] == '~' ? QStringLiteral("Ohm") : QString::fromLatin1(b);
-        u.prefix = raw.left(raw.size() - int(strlen(b)));
+        u.base = b == QLatin1String("~") ? QStringLiteral("Ohm") : QString(b);
+        u.prefix = raw.left(raw.size() - b.size());
         if (u.prefix == QLatin1String("u"))
           u.prefix = QStringLiteral("µ");
         break;
