@@ -357,15 +357,14 @@ bool InstanceWidget::closeWin()
   return keepUnsavedData(tr("If you quit now it will be lost."), tr("Quit without saving"));
 }
 
-bool InstanceWidget::keepUnsavedData(QString text, const QString &discard)
+bool InstanceWidget::keepUnsavedData(const QString &reason, const QString &discard)
 {
   // the recording is the session's: any meter's not saved, or a file loaded
   // into the graph
   const QStringList unsaved = m_session->unsavedRecordings();
   if ((unsaved.isEmpty() && !ui_graph->dirty()) || !m_configDlg->generalPage()->alertUnsavedData())
     return true;
-  if (!unsaved.isEmpty())
-    text = tr("Not saved: %1.").arg(unsaved.join(", ")) + ' ' + text;
+  const QString text = unsaved.isEmpty() ? reason : tr("Not saved: %1.").arg(unsaved.join(", ")) + ' ' + reason;
 
   QMessageBox question;
   question.setWindowTitle(tr("QtDMM: Unsaved data"));
@@ -392,7 +391,28 @@ bool InstanceWidget::keepUnsavedData(QString text, const QString &discard)
   switch (question.exec())
   {
     case QMessageBox::Yes:
-      return ui_graph->exportDataSLOT();
+    {
+      // a recording stopped: all its meters into the file, as
+      // QTDMM:RECord:SAVE writes it; else (a file loaded) the graph's export
+      MeterController *lead = m_session->lead();
+      if (!unsaved.isEmpty() && lead && lead->recorder()->state() == RecordingStore::View && lead->recorder()->count() > 0)
+      {
+        bool raw = false;
+        const QString file = ui_graph->askExportFile(&raw);
+        QString err;
+        if (file.isEmpty())
+          return false;
+        if (!lead->writeRecording(file, raw, &err))
+        {
+          Q_EMIT error(tr("Export failed: %1").arg(err));
+          return false;
+        }
+      }
+      else if (!ui_graph->exportDataSLOT())
+        return false;
+      // one not in that file (it recorded apart): asked again
+      return m_session->unsavedRecordings().isEmpty() || keepUnsavedData(reason, discard);
+    }
 
     case QMessageBox::No:
       break;

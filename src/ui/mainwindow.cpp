@@ -2100,10 +2100,16 @@ void MainWindow::saveWindows()
   });
   cfg->setBool("Windows/user-sized", m_userSized);
   // the front panels of devices no longer connected: their keys go
+  // (an id may have '-' in it: those kept are compared whole)
   const QStringList open = cfg->getString("Windows/open-devices").split(' ', Qt::SkipEmptyParts);
-  static const QRegularExpression panelKey("^Windows/(geometry-)?panel-([^-]+)-?");
+  auto kept = [&open](const QString &key)
+  {
+    return std::any_of(open.cbegin(), open.cend(), [&key](const QString &id)
+    { return key.startsWith("Windows/panel-" + id + '-') || key == "Windows/geometry-panel-" + id; });
+  };
   for (const QString &key : cfg->keysIn("Windows"))
-    if (const QRegularExpressionMatch m = panelKey.match(key); m.hasMatch() && !open.contains(m.captured(2)))
+    if ((key.startsWith(QLatin1String("Windows/panel-")) || key.startsWith(QLatin1String("Windows/geometry-panel-")))
+        && !kept(key))
       cfg->remove(key);
 }
 
@@ -2434,7 +2440,7 @@ bool MainWindow::loadWorkspaceFile(const QString &file)
   // a device gone from My devices comes back from the copy, under its id:
   // the views name it so. A file may come from anyone: its alarms run no
   // program here (and keep the port open), the user sets them again
-  QStringList restored;
+  QStringList restored, keyless;
   bool programsLeft = false;
   for (const MyDevice &d : ws->devices)
     if (!lib->find(d.id) && lib->add(d.name, d.keys, d.id) == d.id)
@@ -2442,6 +2448,10 @@ bool MainWindow::loadWorkspaceFile(const QString &file)
       bool removed = false;
       lib->setRules(d.id, Alarm::listWithoutPrograms(d.alarms, &removed), d.limitTest);
       programsLeft = programsLeft || removed;
+      // a Victron reads with its key, which no file has
+      if (d.keys.value("Port settings/device").toString().startsWith(QLatin1String("ble "))
+          && d.keys.value("Port settings/ble-key").toString().isEmpty())
+        keyless << d.name;
       restored << d.name;
     }
   // the window's device of a file before 26.4: connected first
@@ -2480,6 +2490,8 @@ bool MainWindow::loadWorkspaceFile(const QString &file)
     text += "; " + tr("back in My devices: %1").arg(restored.join(", "));
   if (programsLeft)
     text += "; " + tr("the programs of their alarms were left out, set them again in Alarms...");
+  if (!keyless.isEmpty())
+    text += "; " + tr("%1 without its key: enter it in the device settings").arg(keyless.join(", "));
   Q_EMIT m_wid->error(text);
   return true;
 }

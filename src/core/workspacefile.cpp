@@ -283,7 +283,7 @@ bool WorkspaceFile::write(const QString &path, QString *error) const
       o.insert("name", d->name);
       QJsonObject k;
       // a file is passed on: no secret of the device in it (a Victron's key
-      // stays in My devices; one added from the file asks for it)
+      // stays in My devices; one added from the file needs it entered again)
       for (auto it = d->keys.cbegin(); it != d->keys.cend(); ++it)
         if (it.key() != QLatin1String("Port settings/ble-key"))
           k.insert(it.key(), it.value().toString());

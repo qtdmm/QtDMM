@@ -69,8 +69,11 @@ public:
   /// a file name only, a new one; CSV without a suffix. Empty, or the SCPI
   /// error ("<code>,<text>", English) why not.
   QString     saveRecording(const QString &name, bool raw);
+  /// Writes the recording with all values of this meter and of those that
+  /// recorded with it to @p path (CSV, .xlsx, .ods); they count as saved then.
+  bool        writeRecording(const QString &path, bool raw, QString *error = nullptr);
   /// The meters whose recordings saveRecording() writes along (DeviceSession:
-  /// those that recorded with the window's), their names before the columns.
+  /// those that recorded with this one), their names before the columns.
   void        setRecordedWith(std::function<QList<MeterController *>()> meters) { m_recordedWith = std::move(meters); }
   /// The meter's display count (DMMInfo::display), for the range and the
   /// bar graph of the readings.

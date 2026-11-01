@@ -214,7 +214,7 @@ protected:
   /// @p discard is the button that drops them): export first, drop or
   /// cancel. True when the caller may go on - nothing unsaved, exported or
   /// dropped; false for Cancel or a failed export.
-  bool        keepUnsavedData(QString text, const QString &discard);
+  bool        keepUnsavedData(const QString &reason, const QString &discard);
   /// The session's recording state (RecordingStore::State): the leading meter's, else the graph store's.
   int         recordingState() const;
   DeviceLibrary *m_devices;

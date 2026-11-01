@@ -94,7 +94,13 @@ bool GraphWidget::exportDataSLOT()
     Q_EMIT error(tr("Nothing to export: the graph's meter has no readings; show a value of the meter that recorded"));
     return false;
   }
-  QDir path;
+  bool raw = false;
+  const QString fn = askExportFile(&raw);
+  return !fn.isEmpty() && exportCsvFile(fn, raw);
+}
+
+QString GraphWidget::askExportFile(bool *raw)
+{
   QFileInfo fileInfo(m_cfg->getString("QtDMM/LastUsesPath"));
   QStringList validSuffixes = { "csv", "xlsx", "ods" };
   QString fnSuffix = validSuffixes.contains(fileInfo.suffix()) ? fileInfo.suffix() : "csv";
@@ -107,12 +113,13 @@ bool GraphWidget::exportDataSLOT()
                                     csvFilter + ";;" + xlsxFilter + ";;" + odsFilter + ";;" + rawFilter, &filter);
 
   if (fn.isNull())
-    return false;
+    return QString();
   // the chosen filter decides when no suffix was typed
   if (QFileInfo(fn).suffix().isEmpty())
     fn += filter == xlsxFilter ? ".xlsx" : filter == odsFilter ? ".ods" : ".csv";
-
-  return exportCsvFile(fn, filter == rawFilter);
+  *raw = filter == rawFilter;
+  m_cfg->setString("QtDMM/LastUsesPath", QDir().absoluteFilePath(fn));
+  return fn;
 }
 
 bool GraphWidget::exportCsvFile(const QString &fileName, bool raw)

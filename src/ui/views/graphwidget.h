@@ -534,6 +534,9 @@ public Q_SLOTS:
   void             recordingSetupChanged();
   /// Export with a file dialog; returns false when cancelled or failed.
   bool             exportDataSLOT();
+  /// The export's file dialog: the file chosen (with its suffix), empty when
+  /// cancelled; @p raw for "every reading".
+  QString          askExportFile(bool *raw);
   void             importDataSLOT();
   void             connectSLOT(bool on) { m_connected = on; }
 
