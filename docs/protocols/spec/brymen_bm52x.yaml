@@ -1,14 +1,16 @@
 protocol: BrymenBM52x
 decoder: src/device/decoders/brymen_bm52x.cpp
-devices: [Brymen BM525s]
+devices: [Brymen BM525s, Minipa ET-2615A]
 frames_per_reading: 1
 sources:
   - docs/protocols/spec/brymen_bm52x.yaml   # synthetic, see note below
+  - "ablage/dmm-tools/crates/dmm-lib/tests/golden/bm52x/ (dmm-tools, GPL-3.0-or-later: frames of a real Brymen BM525s (Minipa ET-2615A) over the BU-86X, issue #36, @SidineiSantosSousa, 2026-10)"
 
 # SYNTHETIC vectors encoded from the layout of libsigrok's bm52x.c (segments
 # bgcpafed with the decimal point in bit 4, unit and prefix bits in bytes
-# 13/14, model id in bytes 16..19, AUTO/HOLD in byte 20). No capture from a
-# real meter exists yet - replace when one arrives.
+# 13/14, model id in bytes 16..19, AUTO/HOLD in byte 20). The vectors after
+# them are frames of a real BM525s (Minipa ET-2615A), captured for dmm-tools (#36);
+# their readings are the ones dmm-tools' golden files give.
 vectors:
   - source_line: "DC 1.234 V AUTO"
     bytes: 00 20 00 B0 CB E9 E4 00 00 00 00 00 00 00 20 00 52 52 52 52 10 00 00 00
@@ -45,3 +47,55 @@ vectors:
     bytes: 00 00 80 00 A0 BF BF 00 00 00 00 00 00 00 40 00 52 52 52 52 10 00 00 00
     reading: {value: "-10.0", unit: "dBm", range_mode: "auto"}
     expect: {special: "PO", dval: -10.0}
+  - source_line: 'AC+DC mV on the main display, AC mV on the small one - captured: 2026-10-28 from a Brymen BM525s (Minipa ET-2615A) over BU-86X (issue #36, @SidineiSantosSousa, 0.9.0 6749b6a report, step acdcmv).'
+    bytes: 00 30 00 A0 A0 B0 ED 40 A0 A0 B0 ED 90 00 60 00 52 52 52 52 10 00 00 00
+    reading: {coupling: ACDC, range_mode: auto, unit: mV, value: '111.9'}
+    expect: {id2: 1, unit2: mV, val2: '111.9'}
+  - source_line: 'AutoCheck idle: Auto on the main display, LoZ lit - captured: 2026-10-28 from a Brymen BM525s (Minipa ET-2615A) over BU-86X (issue #36, @SidineiSantosSousa, 0.9.0 6749b6a report, step autocheck).'
+    bytes: 00 00 10 EE 23 47 63 00 00 00 00 00 00 00 00 00 52 52 52 52 10 00 00 00
+    reading: {range_mode: auto, shown: none, unit: '', value: Auto}
+  - source_line: 'AutoCheck on a 9 V battery: LoZ DC V, Auto on the small display - captured: 2026-10-28 from a Brymen BM525s (Minipa ET-2615A) over BU-86X (issue #36, @SidineiSantosSousa, 0.9.0 6749b6a report, step autocheck_dc).'
+    bytes: 00 20 10 FF ED ED E4 00 EE 23 47 63 00 00 20 06 52 52 52 52 1F 00 00 00
+    reading: {coupling: DC, range_mode: auto, unit: V, value: '8.994'}
+  - source_line: 'AutoCheck Ω while it autoranges: dashes and a point beside kΩ, LoZ lit - captured: 2026-10-28 from a Brymen BM525s (Minipa ET-2615A) over BU-86X (issue #36, @SidineiSantosSousa, 0.9.0 6749b6a report, step autocheck_ohm).'
+    bytes: 00 00 10 50 40 40 40 00 EE 23 47 63 00 A0 00 FC 52 52 52 52 1F 00 00 00
+    reading: {range_mode: auto, shown: none, unit: kOhm, value: '----'}   # all four digits dashes (dmm-tools shows three)
+  - source_line: 'Capacitance, leads open - captured: 2026-10-28 from a Brymen BM525s (Minipa ET-2615A) over BU-86X (issue #36, @SidineiSantosSousa, 0.9.0 6749b6a report, step cap).'
+    bytes: 00 00 00 AF BF AF A0 00 00 00 00 00 00 00 09 00 52 52 52 52 10 00 00 00
+    reading: {range_mode: auto, unit: nF, value: '0.01'}
+  - source_line: 'CREST MIN (P-MIN) at DC V - captured: 2026-10-28 from a Brymen BM525s (Minipa ET-2615A) over BU-86X (issue #36, @SidineiSantosSousa, 0.9.0 6749b6a report, step crest_min).'
+    bytes: 00 28 80 DB CB 6D E9 00 00 00 00 00 00 00 20 00 52 52 52 52 50 00 00 00
+    reading: {coupling: DC, range_mode: auto, unit: V, value: '-2.253'}
+  - source_line: 'DC mA, leads open - captured: 2026-10-28 from a Brymen BM525s (Minipa ET-2615A) over BU-86X (issue #36, @SidineiSantosSousa, 0.9.0 6749b6a report, step dcma).'
+    bytes: 00 20 00 AF BF AF A0 00 00 00 00 00 00 00 50 0C 52 52 52 52 10 00 00 00
+    reading: {coupling: DC, range_mode: auto, unit: mA, value: '0.01'}
+  - source_line: 'DC V held: H lit - captured: 2026-10-28 from a Brymen BM525s (Minipa ET-2615A) over BU-86X (issue #36, @SidineiSantosSousa, 0.9.0 6749b6a report, step hold).'
+    bytes: 00 20 80 B0 CB E4 ED 00 00 00 00 00 00 00 20 07 52 52 52 52 9F 00 00 00
+    reading: {coupling: DC, flags: [HOLD], range_mode: auto, unit: V, value: '-1.249'}
+  - source_line: 'DC V, leads reversed on a battery: the minus sign lit - captured: 2026-10-28 from a Brymen BM525s (Minipa ET-2615A) over BU-86X (issue #36, @SidineiSantosSousa, 0.9.0 6749b6a report, step dcv_negative).'
+    bytes: 00 20 80 CB B0 ED ED 00 00 00 00 00 00 00 20 07 52 52 52 52 1F 00 00 00
+    reading: {coupling: DC, range_mode: auto, unit: V, value: '-21.99'}
+  - source_line: 'Diode, leads open: .0L with diod on the small display - captured: 2026-10-28 from a Brymen BM525s (Minipa ET-2615A) over BU-86X (issue #36, @SidineiSantosSousa, 0.9.0 6749b6a report, step diode).'
+    bytes: 00 00 00 10 AF 07 00 00 E3 20 63 E3 00 00 20 00 52 52 52 52 00 00 00 00
+    reading: {function: diode, range_mode: manual, unit: V, value: OL}
+    expect: {val: ' OL '}
+  - source_line: 'Hz on the main display, AC V on the small one (report II from byte 10) - captured: 2026-10-28 from a Brymen BM525s (Minipa ET-2615A) over BU-86X (issue #36, @SidineiSantosSousa, 0.9.0 6749b6a report, step hz_acv).'
+    bytes: 00 00 00 ED ED FD A8 40 B0 CB E9 E4 10 10 00 00 52 52 52 52 10 00 00 00
+    reading: {range_mode: auto, unit: Hz, value: '999.7'}
+    expect: {id2: 1, unit2: V, val2: '1.234'}
+  - source_line: 'Ω through the body, autoranged to MΩ - captured: 2026-10-28 from a Brymen BM525s (Minipa ET-2615A) over BU-86X (issue #36, @SidineiSantosSousa, 0.9.0 6749b6a report, step ohm_body).'
+    bytes: 00 00 00 BF EF EF E4 00 00 00 00 00 00 60 00 0C 52 52 52 52 1F 00 00 00
+    reading: {range_mode: auto, unit: MOhm, value: '0.884'}
+  - source_line: 'Ω with the leads open: .0L beside MΩ - captured: 2026-10-28 from a Brymen BM525s (Minipa ET-2615A) over BU-86X (issue #36, @SidineiSantosSousa, 0.9.0 6749b6a report, step ohm_ol).'
+    bytes: 00 00 00 00 BF 07 00 00 00 00 00 00 00 60 00 FC 52 52 52 52 1F 00 00 00
+    reading: {range_mode: auto, unit: MOhm, value: OL}
+    expect: {val: ' OL '}
+  - source_line: 'REC MAX-MIN: the dash between MAX and MIN lit, no AVG - captured: 2026-10-28 from a Brymen BM525s (Minipa ET-2615A) over BU-86X (issue #36, @SidineiSantosSousa, 0.9.0 6749b6a report, step rec_max_min).'
+    bytes: 00 2D 00 BF AF AF A0 00 00 00 00 00 00 00 20 06 52 52 52 52 30 00 00 00
+    reading: {coupling: DC, range_mode: auto, unit: V, value: '0.001'}
+  - source_line: 'T1 switched to °F - captured: 2026-10-28 from a Brymen BM525s (Minipa ET-2615A) over BU-86X (issue #36, @SidineiSantosSousa, 0.9.0 6749b6a report, step temp_unit).'
+    bytes: 00 00 01 AF A8 CB 4E 00 00 00 00 00 00 00 00 00 52 52 52 52 00 00 00 00
+    reading: {range_mode: manual, unit: dF, value: '72'}
+  - source_line: 'T1 with no thermocouple: dashes beside °C - captured: 2026-10-28 from a Brymen BM525s (Minipa ET-2615A) over BU-86X (issue #36, @SidineiSantosSousa, 0.9.0 6749b6a report, step t1_open).'
+    bytes: 00 00 01 40 40 40 0F 00 00 00 00 00 00 00 00 00 52 52 52 52 00 00 00 00
+    reading: {range_mode: manual, shown: none, unit: C, value: '---'}

@@ -1,14 +1,16 @@
 protocol: BrymenBM82x
 decoder: src/device/decoders/brymen_bm52x.cpp
-devices: [Brymen BM829s]
+devices: [Brymen BM829s, Brymen BM827s, Minipa ET-2517A]
 frames_per_reading: 1
 sources:
   - docs/protocols/spec/brymen_bm82x.yaml   # synthetic, see note below
+  - "ablage/dmm-tools/crates/dmm-lib/tests/golden/bm82x/ (dmm-tools, GPL-3.0-or-later: frames of a real Brymen BM827s (Minipa ET-2517A) over the BU-86X, issue #35, @SidineiSantosSousa, 2026-10)"
 
 # SYNTHETIC vectors encoded from the layout of libsigrok's bm52x.c (segments
 # bgcpafed with the decimal point in bit 4, unit and prefix bits in bytes
-# 13/14, model id in bytes 16..19, AUTO/HOLD in byte 20). No capture from a
-# real meter exists yet - replace when one arrives.
+# 13/14, model id in bytes 16..19, AUTO/HOLD in byte 20). The vectors after
+# them are frames of a real BM827s (Minipa ET-2517A), captured for dmm-tools (#35);
+# their readings are the ones dmm-tools' golden files give.
 vectors:
   - source_line: "DC 1.234 V AUTO"
     bytes: 00 20 00 B0 CB E9 E4 00 00 00 00 00 00 00 20 00 82 82 82 82 10 00 00 00
@@ -45,3 +47,68 @@ vectors:
     bytes: 00 00 80 00 A0 BF BF 00 00 00 00 00 00 00 40 00 82 82 82 82 10 00 00 00
     reading: {value: "-10.0", unit: "dBm", range_mode: "auto"}
     expect: {special: "PO", dval: -10.0}
+  - source_line: 'AC A with the leads open and the red lead in A, Hz on the small display - captured: 2026-10-28 from a Brymen BM827s (Minipa ET-2517A) over BU-86X (issue #35, @SidineiSantosSousa, 0.9.0 6749b6a report, step aca).'
+    bytes: 00 10 00 BF AF AF 6F 00 BF AF AF AF 00 01 10 0C 82 82 82 82 10 00 00 00
+    reading: {coupling: AC, range_mode: auto, unit: A, value: '0.006'}
+    expect: {id2: 1, unit2: Hz, val2: '0.000'}
+  - source_line: 'AC mV on the main display, Hz on the small one - captured: 2026-10-28 from a Brymen BM827s (Minipa ET-2517A) over BU-86X (issue #35, @SidineiSantosSousa, 0.9.0 6749b6a report, step acmv).'
+    bytes: 00 10 00 A0 B0 A8 CB 00 6D FD ED AF 00 01 60 0C 82 82 82 82 1F 00 00 00
+    reading: {coupling: AC, range_mode: auto, unit: mV, value: '11.72'}
+    expect: {id2: 1, unit2: Hz, val2: '59.90'}
+  - source_line: 'AC µA with the leads open, Hz on the small display - captured: 2026-10-28 from a Brymen BM827s (Minipa ET-2517A) over BU-86X (issue #35, @SidineiSantosSousa, 0.9.0 6749b6a report, step acua).'
+    bytes: 00 10 00 AF AF BF CB 00 BF AF AF AF 00 01 90 0C 82 82 82 82 10 00 00 00
+    reading: {coupling: AC, range_mode: auto, unit: uA, value: '0.2'}
+    expect: {id2: 1, unit2: Hz, val2: '0.000'}
+  - source_line: 'Capacitance with the leads open, nF - captured: 2026-10-28 from a Brymen BM827s (Minipa ET-2517A) over BU-86X (issue #35, @SidineiSantosSousa, 0.9.0 6749b6a report, step cap).'
+    bytes: 00 00 00 AF BF AF 6D 00 00 00 00 00 00 00 09 00 82 82 82 82 10 00 00 00
+    reading: {range_mode: auto, unit: nF, value: '0.05'}
+  - source_line: 'CREST on MIN: C and MIN lit, a negative peak - captured: 2026-10-28 from a Brymen BM827s (Minipa ET-2517A) over BU-86X (issue #35, @SidineiSantosSousa, 0.9.0 6749b6a report, step crest_min).'
+    bytes: 00 28 80 BF EF A0 ED 00 00 00 00 00 00 00 20 00 82 82 82 82 50 00 00 00
+    reading: {coupling: DC, range_mode: auto, unit: V, value: '-0.819'}
+  - source_line: 'DC A with the leads open and the red lead in A: A alone, no prefix - captured: 2026-10-28 from a Brymen BM827s (Minipa ET-2517A) over BU-86X (issue #35, @SidineiSantosSousa, 0.9.0 6749b6a report, step dca).'
+    bytes: 00 20 00 BF AF AF A0 00 00 00 00 00 00 00 10 0C 82 82 82 82 10 00 00 00
+    reading: {coupling: DC, range_mode: auto, unit: A, value: '0.001'}
+  - source_line: 'DC mA with the leads open, 60.00 mA range - captured: 2026-10-28 from a Brymen BM827s (Minipa ET-2517A) over BU-86X (issue #35, @SidineiSantosSousa, 0.9.0 6749b6a report, step dcma).'
+    bytes: 00 20 00 AF BF AF AF 00 00 00 00 00 00 00 50 0C 82 82 82 82 10 00 00 00
+    reading: {coupling: DC, range_mode: auto, unit: mA, value: '0'}
+  - source_line: 'DC µA with the leads open, 600.0 µA range: µ (17.7) lit with A - captured: 2026-10-28 from a Brymen BM827s (Minipa ET-2517A) over BU-86X (issue #35, @SidineiSantosSousa, 0.9.0 6749b6a report, step dcua).'
+    bytes: 00 20 00 AF AF BF A0 00 00 00 00 00 00 00 90 0C 82 82 82 82 10 00 00 00
+    reading: {coupling: DC, range_mode: auto, unit: uA, value: '0.1'}
+  - source_line: 'DC V reading negative, the leads reversed on a DC source, AC V on the small display - captured: 2026-10-27 from a Brymen BM827s (Minipa ET-2517A) over BU-86X (issue #35, @SidineiSantosSousa, 0.9.0 6749b6a report, step dcv_negative).'
+    bytes: 00 20 80 CB B0 ED ED 40 AF BF AF A8 10 00 20 00 82 82 82 82 10 00 00 00
+    reading: {coupling: DC, range_mode: auto, unit: V, value: '-21.99'}
+    expect: {id2: 1, unit2: V, val2: '00.07'}
+  - source_line: 'DC V with △ (REL) lit - captured: 2026-10-27 from a Brymen BM827s (Minipa ET-2517A) over BU-86X (issue #35, @SidineiSantosSousa, 0.9.0 6749b6a report, step rel).'
+    bytes: 00 20 40 BF AF AF AF 00 00 00 00 00 00 00 20 06 82 82 82 82 10 00 00 00
+    reading: {coupling: DC, range_mode: auto, unit: V, value: '0'}
+  - source_line: 'Diode with the leads open: .0L, diod on the small display - captured: 2026-10-28 from a Brymen BM827s (Minipa ET-2517A) over BU-86X (issue #35, @SidineiSantosSousa, 0.9.0 6749b6a report, step diode).'
+    bytes: 00 00 00 10 AF 07 00 00 E3 20 63 E3 00 00 20 00 82 82 82 82 00 00 00 00
+    reading: {function: diode, range_mode: manual, unit: V, value: OL}
+    expect: {val: ' OL '}
+  - source_line: 'Hz on the main display at mains frequency, AC mV on the small one - captured: 2026-10-28 from a Brymen BM827s (Minipa ET-2517A) over BU-86X (issue #35, @SidineiSantosSousa, 0.9.0 6749b6a report, step hz_acmv).'
+    bytes: 00 00 00 6F BF AF A0 40 A0 DB 6F A0 90 10 00 00 82 82 82 82 10 00 00 00
+    reading: {range_mode: auto, unit: Hz, value: '60.01'}
+    expect: {id2: 1, unit2: mV, val2: '12.61'}
+  - source_line: 'Hz on the main display, AC V on the small one, leads open - captured: 2026-10-27 from a Brymen BM827s (Minipa ET-2517A) over BU-86X (issue #35, @SidineiSantosSousa, 0.9.0 6749b6a report, step hz_acv).'
+    bytes: 00 00 00 BF AF AF AF 40 BF E9 6F E4 10 10 00 00 82 82 82 82 10 00 00 00
+    reading: {range_mode: auto, unit: Hz, value: '0'}
+    expect: {id2: 1, unit2: V, val2: '0.364'}
+  - source_line: 'nS with the leads open - captured: 2026-10-28 from a Brymen BM827s (Minipa ET-2517A) over BU-86X (issue #35, @SidineiSantosSousa, 0.9.0 6749b6a report, step ns).'
+    bytes: 00 00 00 AF BF AF 6D 00 00 00 00 00 00 00 0A 00 82 82 82 82 00 00 00 00
+    reading: {range_mode: manual, unit: nS, value: '0.05'}
+  - source_line: 'Ω across a body, MΩ - captured: 2026-10-27 from a Brymen BM827s (Minipa ET-2517A) over BU-86X (issue #35, @SidineiSantosSousa, 0.9.0 6749b6a report, step ohm_body).'
+    bytes: 00 00 00 B0 6D 6D EF 00 00 00 00 00 00 60 00 0C 82 82 82 82 1F 00 00 00
+    reading: {range_mode: auto, unit: MOhm, value: '1.558'}
+  - source_line: 'Ω with the leads open: 0L in MΩ - captured: 2026-10-27 from a Brymen BM827s (Minipa ET-2517A) over BU-86X (issue #35, @SidineiSantosSousa, 0.9.0 6749b6a report, step ohm_ol).'
+    bytes: 00 00 00 00 BF 07 00 00 00 00 00 00 00 60 00 FC 82 82 82 82 1F 00 00 00
+    reading: {range_mode: auto, unit: MOhm, value: OL}
+    expect: {val: ' OL '}
+  - source_line: 'REC on MAX-MIN: R, MAX, MIN and the dash lit, dashes on the small display - captured: 2026-10-28 from a Brymen BM827s (Minipa ET-2517A) over BU-86X (issue #35, @SidineiSantosSousa, 0.9.0 6749b6a report, step rec_max_min).'
+    bytes: 00 2D 00 BF AF 6F AF 40 50 40 40 40 10 00 20 00 82 82 82 82 30 00 00 00
+    reading: {coupling: DC, range_mode: auto, unit: V, value: '0.06'}
+  - source_line: 'T1 in °F, a type-K thermocouple at room temperature - captured: 2026-10-28 from a Brymen BM827s (Minipa ET-2517A) over BU-86X (issue #35, @SidineiSantosSousa, 0.9.0 6749b6a report, step temp_unit).'
+    bytes: 00 00 01 AF A8 AF 4E 00 00 00 00 00 00 00 00 00 82 82 82 82 00 00 00 00
+    reading: {range_mode: manual, unit: dF, value: '70'}
+  - source_line: 'T1 with no thermocouple: dashes beside °C - captured: 2026-10-28 from a Brymen BM827s (Minipa ET-2517A) over BU-86X (issue #35, @SidineiSantosSousa, 0.9.0 6749b6a report, step t1_open).'
+    bytes: 00 00 01 40 40 40 0F 00 00 00 00 00 00 00 00 00 82 82 82 82 00 00 00 00
+    reading: {range_mode: manual, shown: none, unit: C, value: '---'}
