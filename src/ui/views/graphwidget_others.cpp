@@ -141,7 +141,7 @@ GraphWidget::ValueAxis GraphWidget::otherValueSide(const ValueRef &value) const
 {
   for (const OtherCurve &c : m_otherCurves)
     if (c.value == value && c.shown)
-      return c.right ? AxisRight : AxisLeft;
+      return axisOfSide(c.side);
   return AxisAuto;
 }
 
@@ -233,19 +233,24 @@ bool GraphWidget::rebuildOtherCurves()
     if (!meter.isEmpty())
       c.name = c.name.isEmpty() ? meter : meter + " · " + c.name;
     // its axis: the one chosen if its unit fits there, else the left one
-    // in its unit, else the right one when free
+    // in its unit, else the right one, else the third one when free
     const ValueAxis chosen = otherValueAxis(c.value);
-    const bool fitsLeft = c.unit.isEmpty() || c.unit == left || (free && left.isEmpty());
-    const bool fitsRight = !c.unit.isEmpty() && (m_unit2.isEmpty() || m_unit2 == c.unit);
-    if (chosen == AxisLeft ? fitsLeft : chosen == AxisRight ? fitsRight : fitsLeft || fitsRight)
-      c.right = chosen == AxisRight || (chosen == AxisAuto && !fitsLeft);
+    auto fits = [&](int side)
+    {
+      if (side == 0)
+        return c.unit.isEmpty() || c.unit == left || (free && left.isEmpty());
+      const QString &unit = m_right[size_t(side - 1)].unit;
+      return !c.unit.isEmpty() && (unit.isEmpty() || unit == c.unit);
+    };
+    if (chosen != AxisAuto ? fits(sideOf(chosen)) : fits(0) || fits(1) || fits(2))
+      c.side = chosen != AxisAuto ? sideOf(chosen) : fits(0) ? 0 : fits(1) ? 1 : 2;
     else
     {
       c.line->setVisible(false);
       continue;
     }
-    if (c.right)
-      m_unit2 = c.unit;
+    if (c.side > 0)
+      m_right[size_t(c.side - 1)].unit = c.unit;
     else if (left.isEmpty())
       left = c.unit;
     c.shown = true;
@@ -271,12 +276,12 @@ bool GraphWidget::rebuildOtherCurves()
       p.rx() += shift;
       if (!std::isfinite(p.y()))
         continue;
-      if (c.right)
-        growScale(p.y(), m_scale2Min, m_scale2Max);
+      if (c.side > 0)
+        growSide(c.side, p.y());
       else if (m_autoScale)
         leftGrew = growScale(p.y(), m_scaleMin, m_scaleMax) || leftGrew;
     }
-    c.line->setAxes({ m_xAxis, c.right ? m_yAxis2 : m_yAxis });
+    c.line->setAxes({ m_xAxis, yAxisOf(c.side) });
     c.line->setPen(otherPen(i));
     c.line->setVisible(true);
     c.line->replace(points);

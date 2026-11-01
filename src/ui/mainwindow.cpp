@@ -2214,7 +2214,8 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
       const QString side = entry.mid(colon + 1);
       m_wid->graph()->setValueAxis(valueOf(entry.left(colon)),
                                    side == "left" ? GraphWidget::AxisLeft
-                                   : side == "right" ? GraphWidget::AxisRight : GraphWidget::AxisAuto);
+                                   : side == "right" ? GraphWidget::AxisRight
+                                   : side == "third" ? GraphWidget::AxisThird : GraphWidget::AxisAuto);
     }
   }
   // the graph's values, of any meter: "0@device:a 2@device:a 0@device:b";
@@ -2339,7 +2340,10 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
   QStringList axes;
   for (const ValueRef &v : std::as_const(withAxis))
     if (graph->valueAxis(v) != GraphWidget::AxisAuto)
-      axes << QString("%1:%2").arg(v.toString(), graph->valueAxis(v) == GraphWidget::AxisLeft ? "left" : "right");
+    {
+      const GraphWidget::ValueAxis axis = graph->valueAxis(v);
+      axes << QString("%1:%2").arg(v.toString(), axis == GraphWidget::AxisLeft ? "left" : axis == GraphWidget::AxisRight ? "right" : "third");
+    }
   set("Windows/graph-value-axes", axes.join(' '));
 }
 

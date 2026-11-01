@@ -322,9 +322,12 @@ void GraphWidget::applyThemeColors()
   updateStateLabel();
   m_chart->setPlotAreaBackgroundBrush(plot);
   m_chart->setPlotAreaBackgroundVisible(plot.style() != Qt::NoBrush);
-  m_yAxis2->setLabelsBrush(labels);
-  m_y2Title->setBrush(labels);
-  m_yAxis2->setLinePen(line);
+  for (SideAxis &side : m_right)
+  {
+    side.axis->setLabelsBrush(labels);
+    side.axis->setLinePen(line);
+  }
+  updateRightAxis();   // the titles: the colours of their curves
   for (QValueAxis *axis : { m_xAxis, m_yAxis })
   {
     axis->setGridLinePen(grid);

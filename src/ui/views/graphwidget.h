@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <array>
+
 #include <QtGui>
 #include <QtWidgets>
 #include <QPrinter>
@@ -291,8 +293,10 @@ public:
   /// A curve for each series of the store's other values
   /// (RecordingStore::extra(), a second display), in a colour of its own.
   /// A value in the main value's unit shares its axis; the first other unit
-  /// gets an axis on the right with a scale of its own; values in a third
-  /// unit are not drawn (yet). A legend names the curves. They are off until
+  /// gets an axis on the right with a scale of its own, a third unit a third
+  /// axis outside it; values in a fourth unit are not drawn. The titles of
+  /// the right axes are in the colour of their first curve. A legend names
+  /// the curves. They are off until
   /// switched on (the sidebar's value menu, kept per window as
   /// Windows/graph-shown-values): the graph shows the main value, as it
   /// always did. The store records them all the same.
@@ -304,26 +308,35 @@ public:
   /// The first segment of the curve of extra(@p i) (for the tests).
   QLineSeries     *extraCurve(int i) const { return m_extraCurves[size_t(i)].series; }
   bool             extraCurveShown(int i) const { return m_extraCurves[size_t(i)].shown; }
-  bool             extraCurveOnRight(int i) const { return m_extraCurves[size_t(i)].right; }
-  QValueAxis      *rightAxis() const { return m_yAxis2; }
+  bool             extraCurveOnRight(int i) const { return m_extraCurves[size_t(i)].side == 1; }
+  /// The axis of curve @p i: 0 left, 1 right, 2 the third axis.
+  int              extraCurveSide(int i) const { return m_extraCurves[size_t(i)].side; }
+  QValueAxis      *rightAxis() const { return m_right[0].axis; }
+  /// The third axis, outside the right one.
+  QValueAxis      *thirdAxis() const { return m_right[1].axis; }
   /// The left axis' title, "[mV]".
   QString          leftAxisTitle() const { return m_yTitle->text(); }
   /// Its title, "[°C]" (empty while it is hidden).
-  QString          rightAxisTitle() const { return m_y2Title->isVisible() ? m_y2Title->text() : QString(); }
+  QString          rightAxisTitle() const { return sideTitle(1); }
+  QString          thirdAxisTitle() const { return sideTitle(2); }
+  /// The colour of the right (1) or third (2) axis' title.
+  QColor           sideTitleColor(int side) const { return m_right[size_t(side - 1)].title->brush().color(); }
   /// The legend's text, empty while there is only the main value.
   QString          legendText() const;
   /// Value @p id on or off (0 the main value; the sidebar's value menu).
   /// Each change sets the view afresh: axes, scales and prefixes from the
   /// curves shown; the recording is not touched. At most two units are
-  /// drawn: a value in a third one waits until another goes off, or until
+  /// drawn: a value in a fourth one waits until another goes off, or until
   /// an axis is chosen for it (setValueAxis()).
   void             setValueShown(int id, bool shown);
-  /// The axis of a value (the sidebar's value menu): Left or Right puts it
-  /// there - a unit the axis has already joins it, another one takes the
-  /// axis, and the curves of the old unit on it go off (notice()). Auto, for
-  /// the layouts from before: the first unit left, the second right, a unit
-  /// there already on its axis. The main value is always on the left.
-  enum ValueAxis { AxisAuto, AxisLeft, AxisRight };
+  /// The axis of a value (the sidebar's value menu): Left, Right or Third
+  /// puts it there - a unit the axis has already joins it, another one takes
+  /// the axis; the curves of the old unit on it move to a free right axis
+  /// when they are on Auto, else they go off (notice()). Auto, for the
+  /// layouts from before: the first unit left, the second right, the third
+  /// on the third axis, a unit there already on its axis. The main value is
+  /// always on the left.
+  enum ValueAxis { AxisAuto, AxisLeft, AxisRight, AxisThird };
   void             setValueAxis(int id, ValueAxis axis);
   ValueAxis        valueAxis(int id) const { return id <= 0 ? AxisLeft : m_valueAxes.value(id, AxisAuto); }
   /// Whether value @p id is drawn: switched on and its unit on an axis.
@@ -385,7 +398,8 @@ public:
   void             otherStoresChanged();
   int              otherCurveCount() const { return int(m_otherCurves.size()); }
   bool             otherCurveShown(int i) const { return m_otherCurves[size_t(i)].shown; }
-  bool             otherCurveOnRight(int i) const { return m_otherCurves[size_t(i)].right; }
+  bool             otherCurveOnRight(int i) const { return m_otherCurves[size_t(i)].side == 1; }
+  int              otherCurveSide(int i) const { return m_otherCurves[size_t(i)].side; }
   /// The points of curve @p i as drawn, in this store's seconds.
   QList<QPointF>   otherCurvePoints(int i) const { return m_otherCurves[size_t(i)].points; }
   /// @}
@@ -696,7 +710,7 @@ protected:
     QLineSeries *series = nullptr;   ///< the first segment
     std::unique_ptr<GapLine> line;
     int  tail = 0;                   ///< points the newest bucket gave (see m_tailData)
-    bool right = false;              ///< on the right axis
+    int  side = 0;                   ///< its axis: 0 left, 1 right, 2 third
     bool shown = false;              ///< drawn: an axis has its unit, not hidden
     QList<QPointF> points;           ///< as drawn, for the band (m_curvePts)
   };
@@ -708,7 +722,7 @@ protected:
     QPointer<RecordingStore> store;   ///< nullptr while its meter is not open
     QLineSeries *series = nullptr;
     std::unique_ptr<GapLine> line;
-    bool         right = false;
+    int          side = 0;   ///< as ExtraCurve::side
     bool         shown = false;
     QString      unit;
     QString      name;    ///< in the legend: the meter's name and the value's
@@ -744,11 +758,28 @@ protected:
   void             onOtherReadings();
   QColor           otherColor(int i) const;
   QPen             otherPen(int i) const;
-  QValueAxis      *m_yAxis2 = nullptr;   ///< the right axis: the first unit other than the main one
-  QString          m_unit2;              ///< its unit; empty while it is hidden
-  QGraphicsSimpleTextItem *m_y2Title = nullptr;   ///< its title above it, as m_yTitle
-  double           m_scale2Min = 1e40;
-  double           m_scale2Max = -1e40;
+  /// The axes on the right: [0] the right one, the first unit other than
+  /// the main one; [1] the third, outside it, the next unit.
+  struct SideAxis
+  {
+    QValueAxis              *axis = nullptr;
+    QString                  unit;              ///< empty while it is hidden
+    QGraphicsSimpleTextItem *title = nullptr;   ///< above it, as m_yTitle
+    double                   scaleMin = 1e40;
+    double                   scaleMax = -1e40;
+  };
+  std::array<SideAxis, 2> m_right;
+  /// The y axis of side @p side (0 left, 1 right, 2 third).
+  QValueAxis      *yAxisOf(int side) const { return side == 0 ? m_yAxis : m_right[size_t(side - 1)].axis; }
+  /// Grows the scale of the right axis @p side by @p v; true when it grew.
+  bool             growSide(int side, double v);
+  void             resetSideScales();
+  QString          sideTitle(int side) const;
+  /// The colour of the first curve on side @p side: this meter's lowest
+  /// value there, else the first other meter's curve; the labels' without.
+  QColor           sideColor(int side) const;
+  static int       sideOf(ValueAxis axis) { return axis == AxisRight ? 1 : axis == AxisThird ? 2 : 0; }
+  static ValueAxis axisOfSide(int side) { return side == 1 ? AxisRight : side == 2 ? AxisThird : AxisLeft; }
   QSet<int>        m_shownValues;        ///< the meter's other values switched on
   QMap<int, ValueAxis> m_valueAxes;      ///< setValueAxis(), missing: AxisAuto
   bool             m_mainShown = true;   ///< the main value's curve, setValueShown(0)
@@ -764,7 +795,8 @@ protected:
   /// The integration curve (line and points) on @p axis.
   void             integralOnAxis(QAbstractAxis *axis);
   void             updateLegend();
-  /// The right axis from m_scale2Min/Max, with the left axis' tick count.
+  /// The right axes from their scales, with the left axis' tick count;
+  /// their titles in the colour of their first curve.
   void             updateRightAxis();
   /// The drawn points of readings first..last of @p series, thinned per bucket
   /// (see the comment at the definition); returns the number of points.

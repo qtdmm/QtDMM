@@ -40,6 +40,7 @@
 
 ### GUI
 
+- **A third axis in the graph** — a third unit gets an axis of its own outside the right one (a voltage left, a temperature right, a frequency on the third), automatically or chosen in the value menu (**Graph ▸ Third axis**); the right axes' titles are in the colour of their curves. A value pushed off the right axis moves to the third one when it is free.
 - **OWON, EEVblog, Minipa and AOPUTTRIVER meters get their own colours in the device pictures** — they showed the grey generic symbol.
 - **New designs: Light Metal and Dark Metal** — the digital display, the analog meter and the table stand on brushed metal, light or dark; the sidebar is light grey or near black, everything else (workspace, graph, Poincaré plot) is as in Light or Dark. In the Design menu and on the Appearance page of the Preferences.
 - **The window has no device of its own** — My devices is the cupboard, *Connect* takes a device out (its dot shows it), *Close* or dragging it back puts it away; every device connected is alike, with its front panel, recording, alarms and SCPI name. Without a device the window shows **Add device** and **Connect a device from My devices**. The device settings are in each device's info (Shift+F8: the active one's); the window's settings no longer hold a meter.

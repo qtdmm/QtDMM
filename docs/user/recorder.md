@@ -177,14 +177,16 @@ were; the integration curve carries on across a gap.
   recorded with the main value on the same time axis. Each value has a
   colour of its own; a legend at the top left names the curves. A value in
   the main value's unit shares its axis, the first other unit gets an axis
-  on the right with a scale of its own. At most two units are drawn at a
-  time: putting a value in a third unit on an axis switches off the curves
-  of the unit there. When the second display
+  on the right with a scale of its own, a third unit a third axis outside
+  it. The titles of the right axes ([°C], [Hz]) are in the colour of their
+  first curve, so it is clear which axis is whose. At most three units are
+  drawn at a time: putting a value in a fourth unit on an axis switches off
+  the curves of the unit there. When the second display
   changes what it shows (Hz to %), its curve ends and a new one begins; the
   recording goes on. The other values are off at first, so the graph shows
   the main value as before: the menu of a value in the sidebar (**Graph**,
   see [The meter's values](my-devices.md#the-meters-values)) puts each of
-  them on the left or right axis or switches it off - the main value too. Without it the left axis takes the unit of the
+  them on the left, right or third axis or switches it off - the main value too. Without it the left axis takes the unit of the
   next value shown (the temperature of a CO2 meter, say), and the reference
   line, the band and the cursors' level lines follow it: they are of the
   value on the left axis. The trigger line belongs to the main value and

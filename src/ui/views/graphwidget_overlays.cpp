@@ -65,7 +65,7 @@ int GraphWidget::drawnExtra(int id, qint64 t, bool leftOnly) const
   {
     const RecordingSeries &s = m_store->extra(i);
     const ExtraCurve &c = m_extraCurves[size_t(i)];
-    const int j = s.id == id && c.shown && !(leftOnly && c.right) ? s.holding(t) : -1;
+    const int j = s.id == id && c.shown && !(leftOnly && c.side > 0) ? s.holding(t) : -1;
     if (j >= 0 && s.at(j).t >= bestT)
     {
       best = i;

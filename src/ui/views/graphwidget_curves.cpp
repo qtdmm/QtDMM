@@ -390,29 +390,35 @@ void GraphWidget::onAppended(bool shifted)
 void GraphWidget::rebuildExtras()
 {
   const int n = m_store->extraCount();
-  // the units: the main value's on the left; on the right the unit of the
-  // lowest value in another one (by number, not by which came first), its
-  // newest series. The integrated value has its axis also while it is hidden
-  // A value with the right axis chosen has the say there, in any unit
+  // the units: the main value's on the left; on the right axes the units of
+  // the lowest values in others (by number, not by which came first), their
+  // newest series - a value with the axis chosen has the say there first,
+  // in any unit. The integrated value has its axis also while it is hidden
   const QString main = leftUnit();
-  m_unit2.clear();
-  int unit2Id = INT_MAX;
-  bool fixed = false;
+  QMap<int, QString> units;   // the values on an axis, by number: their newest unit
   for (int i = 0; i < n; ++i)
   {
     const RecordingSeries &s = m_store->extra(i);
     const bool onAxis = m_shownValues.contains(s.id) || (m_intValueId > 0 && s.id == m_intValueId);
-    if (!onAxis || s.unit.isEmpty())
+    if (onAxis && !s.unit.isEmpty())
+      units[s.id] = s.unit;
+  }
+  for (SideAxis &a : m_right)
+    a.unit.clear();
+  for (auto it = units.cbegin(); it != units.cend(); ++it)
+    if (const int side = sideOf(valueAxis(it.key())); side > 0 && m_right[size_t(side - 1)].unit.isEmpty())
+      m_right[size_t(side - 1)].unit = it.value();
+  for (auto it = units.cbegin(); it != units.cend(); ++it)
+  {
+    if (valueAxis(it.key()) != AxisAuto || it.value() == main || it.value() == m_right[0].unit
+        || it.value() == m_right[1].unit)
       continue;
-    const bool right = valueAxis(s.id) == AxisRight;
-    if (fixed && !right)
-      continue;
-    if ((right && (!fixed || s.id <= unit2Id)) || (!right && s.unit != main && s.id <= unit2Id))
-    {
-      unit2Id = s.id;
-      m_unit2 = s.unit;
-      fixed = right;
-    }
+    for (SideAxis &a : m_right)
+      if (a.unit.isEmpty())
+      {
+        a.unit = it.value();
+        break;
+      }
   }
 
   while (int(m_extraCurves.size()) < n)
@@ -426,8 +432,7 @@ void GraphWidget::rebuildExtras()
     m_extraCurves.push_back(std::move(c));
   }
 
-  m_scale2Min = 1e40;
-  m_scale2Max = -1e40;
+  resetSideScales();
   bool leftGrew = false;
   for (int i = 0; i < int(m_extraCurves.size()); ++i)
   {
@@ -443,21 +448,28 @@ void GraphWidget::rebuildExtras()
     }
     const RecordingSeries &s = m_store->extra(i);
     // a series without a unit yet (only gaps) goes with the main one
+    // the axis chosen, on Auto the first one that has its unit
     const ValueAxis axis = valueAxis(s.id);
-    const bool fitsLeft = axis != AxisRight && (s.unit.isEmpty() || s.unit == main);
-    const bool fitsRight = axis != AxisLeft && !s.unit.isEmpty() && s.unit == m_unit2;
-    c.right = fitsRight && (axis == AxisRight || !fitsLeft);
-    c.shown = m_shownValues.contains(s.id) && (fitsLeft || c.right);
-    c.line->setAxes({ m_xAxis, c.right ? m_yAxis2 : m_yAxis });
+    auto fits = [&](int side)
+    {
+      if (axis != AxisAuto && sideOf(axis) != side)
+        return false;
+      return side == 0 ? s.unit.isEmpty() || s.unit == main
+                       : !s.unit.isEmpty() && s.unit == m_right[size_t(side - 1)].unit;
+    };
+    c.side = axis != AxisAuto ? sideOf(axis) : fits(0) ? 0 : fits(1) ? 1 : fits(2) ? 2 : 0;
+    const bool fitted = fits(c.side);
+    c.shown = m_shownValues.contains(s.id) && fitted;
+    c.line->setAxes({ m_xAxis, yAxisOf(fitted ? c.side : 0) });
     c.line->setPen(extraPen(s.id));
     c.line->setVisible(c.shown);
     if (!c.shown)
     {
-      // the right axis also scales a hidden value integrated there
-      if (c.right && s.id == m_intValueId)
+      // a right axis also scales a hidden value integrated there
+      if (fitted && c.side > 0 && s.id == m_intValueId)
         for (int j = 0; j < s.count(); ++j)
           if (std::isfinite(s.at(j).value))
-            growScale(s.at(j).value, m_scale2Min, m_scale2Max);
+            growSide(c.side, s.at(j).value);
       continue;
     }
     QList<QPointF> points;
@@ -474,8 +486,8 @@ void GraphWidget::rebuildExtras()
     for (const QPointF &p : std::as_const(points))
       if (std::isfinite(p.y()))
       {
-        if (c.right)
-          growScale(p.y(), m_scale2Min, m_scale2Max);
+        if (c.side > 0)
+          growSide(c.side, p.y());
         else if (m_autoScale)
           leftGrew = growScale(p.y(), m_scaleMin, m_scaleMax) || leftGrew;
       }
@@ -506,8 +518,8 @@ void GraphWidget::rebuildOtherIntegral()
     const RecordingSeries &s = m_store->extra(i);
     if (s.id != m_intValueId || s.isEmpty())
       continue;
-    if (i < int(m_extraCurves.size()) && m_extraCurves[size_t(i)].right)
-      axis = m_yAxis2;
+    if (i < int(m_extraCurves.size()) && m_extraCurves[size_t(i)].side > 0)
+      axis = yAxisOf(m_extraCurves[size_t(i)].side);
     if (!m_showIntegration)
       continue;
     if (!points.isEmpty())
@@ -551,7 +563,7 @@ void GraphWidget::onExtraAppended(int i)
   if (!c.shown)
   {
     const double v = s.last().value;
-    if (c.right && s.id == m_intValueId && std::isfinite(v) && growScale(v, m_scale2Min, m_scale2Max))
+    if (c.side > 0 && s.id == m_intValueId && std::isfinite(v) && growSide(c.side, v))
       updateRightAxis();
     return;
   }
@@ -566,9 +578,9 @@ void GraphWidget::onExtraAppended(int i)
   c.points.append(points);
   const double v = s.last().value;
   bool grew = false;
-  if (std::isfinite(v) && c.right)
+  if (std::isfinite(v) && c.side > 0)
   {
-    if (growScale(v, m_scale2Min, m_scale2Max))
+    if (growSide(c.side, v))
       updateRightAxis();
   }
   else if (std::isfinite(v) && m_autoScale && growScale(v, m_scaleMin, m_scaleMax))
@@ -578,7 +590,7 @@ void GraphWidget::onExtraAppended(int i)
     grew = true;   // the reference line and the band with it
   }
   // what follows the value of the left axis, as onAppended() for the main one
-  if (s.id == referenceId() && !c.right && !grew)
+  if (s.id == referenceId() && c.side == 0 && !grew)
   {
     if (m_referenceKind == RefMean || m_referenceKind == RefMin || m_referenceKind == RefMax)
       updateReferenceLine();
@@ -756,25 +768,50 @@ GraphWidget::ValueAxis GraphWidget::valueSide(int id) const
     return m_mainShown ? AxisLeft : AxisAuto;
   for (int i = m_store->extraCount() - 1; i >= 0; --i)
     if (i < int(m_extraCurves.size()) && m_store->extra(i).id == id && m_extraCurves[size_t(i)].shown)
-      return m_extraCurves[size_t(i)].right ? AxisRight : AxisLeft;
+      return axisOfSide(m_extraCurves[size_t(i)].side);
   return AxisAuto;
+}
+
+QColor GraphWidget::sideColor(int side) const
+{
+  int lowest = INT_MAX;
+  for (int i = 0; m_store && i < m_store->extraCount() && i < int(m_extraCurves.size()); ++i)
+    if (m_extraCurves[size_t(i)].shown && m_extraCurves[size_t(i)].side == side)
+      lowest = qMin(lowest, m_store->extra(i).id);
+  if (lowest != INT_MAX)
+    return valueColor(lowest);
+  for (int i = 0; i < int(m_otherCurves.size()); ++i)
+    if (m_otherCurves[size_t(i)].shown && m_otherCurves[size_t(i)].side == side)
+      return otherColor(i);
+  return m_stateColor.isValid() ? m_stateColor : m_xAxis->labelsBrush().color();
 }
 
 void GraphWidget::makeRoom(int id, ValueAxis axis, bool chosenOnly)
 {
   const QString unit = valueUnitOf(id);
-  const QString taken = axis == AxisRight ? m_unit2 : leftUnit();
+  const int side = sideOf(axis);
+  const QString taken = side == 0 ? leftUnit() : m_right[size_t(side - 1)].unit;
   if (unit.isEmpty() || taken.isEmpty() || taken == unit)
     return;
+  // a curve on Auto pushed off a right axis moves to the other one when that
+  // is free (or freed by this value) or has its unit already
+  const int other = side == 1 ? 2 : 1;
+  bool otherTaken = false;
+  for (int i = 0; side > 0 && i < m_store->extraCount() && i < int(m_extraCurves.size()); ++i)
+    if (m_store->extra(i).id != id && m_extraCurves[size_t(i)].shown && m_extraCurves[size_t(i)].side == other)
+      otherTaken = true;
+  for (const OtherCurve &c : m_otherCurves)
+    otherTaken = otherTaken || (side > 0 && c.shown && c.side == other);
+  const QString otherUnit = m_right[size_t(other - 1)].unit;
   // the values drawn on that axis now, in the other unit
   QStringList names;
-  auto off = [&](int other, const QString &name)
+  auto off = [&](int value, const QString &name)
   {
     names << name;
-    if (other == 0)
+    if (value == 0)
       m_mainShown = false;
     else
-      m_shownValues.remove(other);
+      m_shownValues.remove(value);
   };
   if (axis == AxisLeft && m_mainShown && id != 0)
     off(0, curveName(m_store->series(), m_store->unit()));
@@ -783,24 +820,27 @@ void GraphWidget::makeRoom(int id, ValueAxis axis, bool chosenOnly)
   {
     const RecordingSeries &s = m_store->extra(i);
     const ExtraCurve &c = m_extraCurves[size_t(i)];
-    if (s.id != id && !done.contains(s.id) && c.shown && c.right == (axis == AxisRight) && s.unit != unit
-        && (!chosenOnly || valueAxis(s.id) == axis))
+    if (s.id == id || done.contains(s.id) || !c.shown || c.side != side || s.unit == unit
+        || (chosenOnly && valueAxis(s.id) != axis))
+      continue;
+    done.insert(s.id);
+    if (side > 0 && valueAxis(s.id) == AxisAuto && (!otherTaken || otherUnit == s.unit))
     {
-      done.insert(s.id);
-      off(s.id, curveName(s, s.unit));
+      otherTaken = true;   // it takes the other axis
+      continue;
     }
+    off(s.id, curveName(s, s.unit));
   }
+  static const char *const sides[] = { QT_TR_NOOP("left"), QT_TR_NOOP("right"), QT_TR_NOOP("third") };
   if (!names.isEmpty())
     Q_EMIT notice(tr("%1 off: the %2 axis shows %3 now")
-                    .arg(names.join(QStringLiteral(", ")), axis == AxisRight ? tr("right") : tr("left"),
-                         SiPrefix::displayText(unit)));
+                    .arg(names.join(QStringLiteral(", ")), tr(sides[side]), SiPrefix::displayText(unit)));
 }
 
 void GraphWidget::refreshValues()
 {
   // the view afresh: the left unit may be another one now
-  m_scale2Min = 1e40;
-  m_scale2Max = -1e40;
+  resetSideScales();
   updateSeriesAppearance();   // the curves, then rebuildExtras()
   showUnit();
   if (m_autoScale)
@@ -824,7 +864,7 @@ int GraphWidget::referenceId() const
   {
     const RecordingSeries &s = m_store->extra(i);
     const ValueAxis axis = valueAxis(s.id);
-    if (!m_shownValues.contains(s.id) || s.unit.isEmpty() || axis == AxisRight || (fixed && axis != AxisLeft))
+    if (!m_shownValues.contains(s.id) || s.unit.isEmpty() || sideOf(axis) > 0 || (fixed && axis != AxisLeft))
       continue;
     if (lowest < 0 || s.id < lowest || (axis == AxisLeft && !fixed))
     {
@@ -848,7 +888,7 @@ int GraphWidget::referenceOther() const
   if (referenceId() >= 0)
     return -1;
   for (int i = 0; i < int(m_otherCurves.size()); ++i)
-    if (m_otherCurves[size_t(i)].shown && !m_otherCurves[size_t(i)].right && m_otherCurves[size_t(i)].store)
+    if (m_otherCurves[size_t(i)].shown && m_otherCurves[size_t(i)].side == 0 && m_otherCurves[size_t(i)].store)
       return i;
   return -1;
 }
@@ -879,7 +919,7 @@ QList<QPointF> GraphWidget::referencePoints() const
   for (int i = 0; id > 0 && i < m_store->extraCount() && i < int(m_extraCurves.size()); ++i)
   {
     const ExtraCurve &c = m_extraCurves[size_t(i)];
-    if (m_store->extra(i).id == id && c.shown && !c.right && !c.points.isEmpty())
+    if (m_store->extra(i).id == id && c.shown && c.side == 0 && !c.points.isEmpty())
       parts << &c.points;
   }
   if (parts.size() == 1)

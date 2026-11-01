@@ -1982,6 +1982,12 @@ int main(int argc, char **argv)
     check(!graph.otherCurveShown(1) && graph.otherValueSide(ValueRef(1, "device:b")) == GraphWidget::AxisAuto
             && notices.size() == 1,
           "its V chosen on the right beside A: not drawn, a notice");
+    // the third axis is free: there it is drawn, in its own scale
+    graph.setOtherValueAxis(ValueRef(1, "device:b"), GraphWidget::AxisThird);
+    check(graph.otherCurveShown(1) && graph.otherCurveSide(1) == 2 && graph.thirdAxisTitle() == "[V]"
+            && graph.otherValueSide(ValueRef(1, "device:b")) == GraphWidget::AxisThird
+            && graph.sideTitleColor(2) == graph.otherValueColor(ValueRef(1, "device:b")),
+          "its V chosen on the third axis: drawn there, the title in its colour, got " + graph.thirdAxisTitle());
     graph.setOtherValueAxis(ValueRef(1, "device:b"), GraphWidget::AxisLeft);
     check(graph.otherValueSide(ValueRef(1, "device:b")) == GraphWidget::AxisLeft
             && graph.otherValueColor(ValueRef(1, "device:b")).isValid(),
@@ -2116,9 +2122,15 @@ int main(int argc, char **argv)
             && graph.rightAxis()->min() <= 20.1 && graph.rightAxis()->max() >= 24.9,
           QString("right axis [°C] %1..%2").arg(graph.rightAxis()->min()).arg(graph.rightAxis()->max()));
     check(graph.extraCurveShown(volts) && !graph.extraCurveOnRight(volts), "V: with the main value on the left");
-    check(!graph.extraCurveShown(hertz), "Hz: a third unit, not drawn");
+    check(graph.extraCurveShown(hertz) && graph.extraCurveSide(hertz) == 2 && graph.thirdAxis()->isVisible()
+            && graph.thirdAxisTitle() == "[Hz]" && graph.thirdAxis()->min() <= 50 && graph.thirdAxis()->max() >= 50,
+          QString("Hz: a third unit, on the third axis %1").arg(graph.thirdAxisTitle()));
+    // the right axes' titles in their curves' colours: which is whose
+    check(graph.sideTitleColor(1) == graph.extraCurve(celsius)->pen().color()
+            && graph.sideTitleColor(2) == graph.extraCurve(hertz)->pen().color(),
+          QString("axis titles in the curves' colours: %1 %2").arg(graph.sideTitleColor(1).name(), graph.sideTitleColor(2).name()));
     const QString legend = graph.legendText();
-    check(legend.contains("Temperature") && legend.contains("°C") && !legend.contains("Hz"),
+    check(legend.contains("Temperature") && legend.contains("°C") && legend.contains("Hz"),
           "legend names the curves drawn: " + legend);
     check(legend.contains("Battery voltage (V)"), "the meter's own name of a value in the legend: " + legend);
     check(graph.extraCurve(celsius)->pen().color() != graph.extraCurve(volts)->pen().color(),
@@ -2188,7 +2200,7 @@ int main(int argc, char **argv)
     // a time cursor shows the other values drawn there
     graph.setTimeCursor(0, 2000);
     check(graph.timeCursorText().contains("°C") && graph.timeCursorText().contains("500 mV")
-            && !graph.timeCursorText().contains("Hz"),
+            && graph.timeCursorText().contains("50 Hz"),
           "time cursor with the other values: " + graph.timeCursorText());
     // a picture to look at: QTDMM_SHOT=<dir>
     if (qEnvironmentVariableIsSet("QTDMM_SHOT"))
@@ -2203,11 +2215,14 @@ int main(int argc, char **argv)
 
     // hidden: °C goes, Hz gets the right axis
     graph.setValueShown(1, false);
-    check(!graph.extraCurveShown(celsius) && graph.extraCurveShown(hertz) && graph.rightAxisTitle() == "[Hz]",
-          "°C hidden: Hz on the right axis");
+    check(!graph.extraCurveShown(celsius) && graph.extraCurveShown(hertz) && graph.rightAxisTitle() == "[Hz]"
+            && !graph.thirdAxis()->isVisible(),
+          "°C hidden: Hz on the right axis, no third");
     check(graph.shownValues() == (QList<int>{ 2, 3 }), "shown values: 2 3");
     graph.setValueShown(1, true);
-    check(graph.extraCurveShown(celsius) && !graph.extraCurveShown(hertz), "°C shown again");
+    check(graph.extraCurveShown(celsius) && graph.extraCurveSide(celsius) == 1 && graph.extraCurveShown(hertz)
+            && graph.extraCurveSide(hertz) == 2,
+          "°C shown again: right, Hz on the third axis");
 
     // a line style by the value's number, in every design: overlapping
     // curves are all seen, also in phosphor's one hue
@@ -2370,8 +2385,9 @@ int main(int argc, char **argv)
     int celsius = -1, percent = -1;
     for (int i = 0; i < graph.store()->extraCount(); ++i)
       (graph.store()->extra(i).id == 1 ? celsius : percent) = i;
-    check(celsius >= 0 && percent >= 0 && graph.extraCurveShown(celsius) && !graph.extraCurveShown(percent),
-          "three units: ppm and °C drawn, % waits for an axis");
+    check(celsius >= 0 && percent >= 0 && graph.extraCurveShown(celsius) && graph.extraCurveSide(celsius) == 1
+            && graph.extraCurveShown(percent) && graph.extraCurveSide(percent) == 2 && graph.thirdAxisTitle() == "[%]",
+          "three units: ppm left, °C right, % on the third axis");
     graph.setValueShown(0, false);
     check(!graph.mainShown() && graph.leftUnit() == "°C" && graph.leftAxisTitle() == "[°C]",
           "main hidden: the left axis is °C, got " + graph.leftAxisTitle());
@@ -2380,7 +2396,7 @@ int main(int argc, char **argv)
           "main hidden: °C left, % right, got " + graph.rightAxisTitle());
     QValueAxis *left = nullptr;
     for (QAbstractAxis *a : graph.findChild<QChartView *>()->chart()->axes(Qt::Vertical))
-      if (a != graph.rightAxis())
+      if (a != graph.rightAxis() && a != graph.thirdAxis())
         left = qobject_cast<QValueAxis *>(a);
     check(left && left->min() <= 22.0 && left->max() >= 22.39 && left->max() < 100,
           QString("main hidden: the left scale is the temperature's, %1..%2").arg(left ? left->min() : 0).arg(left ? left->max() : 0));
@@ -2410,9 +2426,9 @@ int main(int argc, char **argv)
     feed.value(600);   // the main value goes on: not on the left axis now
     check(left && left->max() < 100, "main hidden: its readings do not widen the scale");
     graph.setValueShown(0, true);
-    check(graph.leftAxisTitle() == "[ppm]" && !graph.extraCurveShown(percent) && left && left->max() >= 600
-            && graph.referenceShown(),
-          "main back: ppm left again, % waits, the scale has its values, got " + graph.leftAxisTitle());
+    check(graph.leftAxisTitle() == "[ppm]" && graph.extraCurveSide(celsius) == 1 && graph.extraCurveSide(percent) == 2
+            && left && left->max() >= 600 && graph.referenceShown(),
+          "main back: ppm left again, °C right, % third, the scale has its values, got " + graph.leftAxisTitle());
   }
 
   // --- 7l4. an axis chosen per value (the sidebar's value menu): it takes
@@ -2445,14 +2461,23 @@ int main(int argc, char **argv)
     check(graph.valueSide(1) == GraphWidget::AxisRight && graph.valueSide(3) == GraphWidget::AxisLeft
             && graph.valueSide(2) == GraphWidget::AxisAuto,
           "axes: the side each is drawn on, none for one off");
-    // the temperature to the right: the current goes off, with a notice
+    // the temperature to the right: the current (automatic) moves to the
+    // third axis, nothing goes off
     graph.setValueAxis(2, GraphWidget::AxisRight);
     graph.setValueShown(2, true);
-    check(graph.valueDrawn(2) && !graph.valueDrawn(1) && !graph.shownValues().contains(1)
-            && graph.rightAxisTitle() == QString::fromUtf8("[°C]") && graph.valueDrawn(0) && graph.valueDrawn(3),
-          "axes: °C right, the current off, got " + graph.rightAxisTitle());
-    check(notices.size() == 1 && notices.first().first().toString().contains("right"),
+    check(graph.valueDrawn(2) && graph.valueDrawn(1) && graph.valueSide(1) == GraphWidget::AxisThird
+            && graph.rightAxisTitle() == QString::fromUtf8("[°C]") && graph.thirdAxisTitle() == "[A]"
+            && graph.valueDrawn(0) && graph.valueDrawn(3) && notices.isEmpty(),
+          "axes: °C right, the current on the third axis, got " + graph.rightAxisTitle() + " " + graph.thirdAxisTitle());
+    // a fourth unit has no axis: chosen for the third, the current goes off
+    feed.other(4, 0.5, "Hz", Quantity::Frequency);
+    graph.setValueAxis(4, GraphWidget::AxisThird);
+    graph.setValueShown(4, true);
+    check(graph.valueDrawn(4) && graph.thirdAxisTitle() == "[Hz]" && !graph.valueDrawn(1) && !graph.shownValues().contains(1),
+          "axes: Hz on the third axis, the current off, got " + graph.thirdAxisTitle());
+    check(notices.size() == 1 && notices.first().first().toString().contains("third"),
           "axes: a notice of what went off, got " + (notices.isEmpty() ? QString() : notices.first().first().toString()));
+    graph.setValueShown(4, false);
     // the current to the left: both voltages go off, the left axis is A
     graph.setValueAxis(1, GraphWidget::AxisLeft);
     graph.setValueShown(1, true);

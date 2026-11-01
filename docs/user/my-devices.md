@@ -85,11 +85,13 @@ shows which value - right-click a value:
   follows it) or on the small line below it. The value that had the place goes where
   this one was, or off the display when this one was not on it.
 - **Analog meter** - the value the needle shows (one).
-- **Graph** ▸ **Off**, **Left axis**, **Right axis** - the value's curve
-  off or on that axis. A value in the unit the axis has already joins it
-  (two voltages on the left, a current on the right); one in another unit
-  takes the axis over, and the curves of the old unit there go off - the
-  status line says which. The main value is always on the left. A value of
+- **Graph** ▸ **Off**, **Left axis**, **Right axis**, **Third axis** - the
+  value's curve off or on that axis; the third axis sits outside the right
+  one. A value in the unit the axis has already joins it (two voltages on
+  the left, a current on the right); one in another unit takes the axis
+  over: the curves of the old unit there move to the other right axis when
+  they are on automatic and it is free, else they go off - the status line
+  says which. The main value is always on the left. A value of
   another device joins an axis in its unit; one with no room there is not
   drawn, and the status line says so.
 - **Poincaré plot** - the value the plot takes (one).
