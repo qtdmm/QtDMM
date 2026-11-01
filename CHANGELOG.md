@@ -40,6 +40,7 @@
 
 ### GUI
 
+- **OWON, EEVblog, Minipa and AOPUTTRIVER meters get their own colours in the device pictures** — they showed the grey generic symbol.
 - **New designs: Light Metal and Dark Metal** — the digital display, the analog meter and the table stand on brushed metal, light or dark; the sidebar is light grey or near black, everything else (workspace, graph, Poincaré plot) is as in Light or Dark. In the Design menu and on the Appearance page of the Preferences.
 - **The window has no device of its own** — My devices is the cupboard, *Connect* takes a device out (its dot shows it), *Close* or dragging it back puts it away; every device connected is alike, with its front panel, recording, alarms and SCPI name. Without a device the window shows **Add device** and **Connect a device from My devices**. The device settings are in each device's info (Shift+F8: the active one's); the window's settings no longer hold a meter.
 - **Views go by their values** — the graph draws from the store of the device of its first value (without any an empty one); the readings table lists the devices it is given, all connected when none is chosen; an empty view takes the device connected. The window keeps the graph's and the table's choice with the devices (`Windows/graph-values`, `Windows/table-devices`), the analog meter's and the Poincaré plot's value with its device; the keys from before are still read.
