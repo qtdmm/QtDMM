@@ -1,0 +1,49 @@
+protocol: VoltcraftVC890
+decoder: src/device/decoders/voltcraft_vc8x0.cpp
+devices: [Voltcraft VC-890]
+frames_per_reading: 1
+unit_map:                      # spec spelling -> what the decoder emits
+  "u": "µ"
+sources:
+  - "ablage/dmm-tools/docs/research/vc890/reverse-engineered-protocol.md (dmm-tools, GPL-3.0-or-later: from Voltcraft's PC software DMSShare.dll, the manuals and Conrad's VC890 protocol; no meter on dmm-tools' bench)"
+
+# CP2110 cable, 9600 8N1; polled: AB CD 03 5E 01 D9, after the result frame
+# AB CD 04 FF 00 02 7B that Voltcraft's software sends around each exchange.
+# Live frame, 66 bytes: AB CD 3F 01, function (00 AC V, 01 AC V low-pass,
+# 02 DC V, 03 AC+DC V, 04 DC mV, 05 Hz, 06 %, 07 Ohm, 08 continuity, 09 diode,
+# 0A F, 0B C, 0C F, 0D/0E DC/AC uA, 0F/10 mA, 11/12 A), range ('0'-based,
+# 6/60/600 ladders), main display 7 ASCII, the other displays, status 56-63
+# (57 REL AVG MIN MAX, 58 HOLD MANUAL OL1 OL2), BE16 sum of bytes 0-63.
+#
+# The vectors are SYNTHETIC: frames built from the spec's layout, the
+# displays and functions of dmm-tools' unit tests where named. No capture of
+# a real meter exists; they test the decoder's reading of the spec.
+vectors:
+  - source_line: "DC V 12.345 on the 60 V range (dmm-tools parse_dcv)"
+    bytes: AB CD 3F 01 02 31 20 31 32 2E 33 34 35 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 00 00 00 00 00 00 00 08 98
+    reading: {value: "12.345", unit: "V", range_mode: "auto"}
+    expect: {special: "DC"}
+  - source_line: "AC V 1.2345 on the 6 V range (parse_acv)"
+    bytes: AB CD 3F 01 00 30 20 31 2E 32 33 34 35 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 00 00 00 00 00 00 00 08 95
+    reading: {value: "1.2345", unit: "V", range_mode: "auto"}
+    expect: {special: "AC"}
+  - source_line: "AC V low-pass 230.1"
+    bytes: AB CD 3F 01 01 30 20 20 32 33 30 2E 31 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 00 00 00 00 00 00 00 08 7D
+    reading: {value: "230.1", unit: "V", range_mode: "auto"}
+    expect: {special: "AC"}
+  - source_line: "12.345 kOhm on the 60 kOhm range (parse_resistance)"
+    bytes: AB CD 3F 01 07 32 20 31 32 2E 33 34 35 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 00 00 00 00 00 00 00 08 9E
+    reading: {value: "12.345", unit: "kOhm", range_mode: "auto"}
+    expect: {special: "OH"}
+  - source_line: "DC uA -123.45 on the 600 uA range"
+    bytes: AB CD 3F 01 0D 30 2D 31 32 33 2E 34 35 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 04 00 00 00 00 00 00 00 08 B3
+    reading: {value: "-123.45", unit: "uA", range_mode: "auto"}
+    expect: {special: "DC"}
+  - source_line: "4.700 uF on the 6 uF range, REL"
+    bytes: AB CD 3F 01 0A 32 20 20 34 2E 37 30 30 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 01 00 00 00 00 00 00 08 8E
+    reading: {value: "4.700", unit: "uF", range_mode: "auto"}
+    expect: {special: "CA"}
+  - source_line: "Ohm OL by the OL1 bit"
+    bytes: AB CD 3F 01 07 35 20 20 20 20 20 4F 4C 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 00 04 00 00 00 00 00 08 93
+    reading: {value: "OL", unit: "MOhm", range_mode: "auto"}
+    expect: {special: "OH", val: "OL"}

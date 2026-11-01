@@ -1,0 +1,61 @@
+protocol: VoltcraftVC880
+decoder: src/device/decoders/voltcraft_vc8x0.cpp
+devices: [Voltcraft VC-880, Voltcraft VC650BT]
+frames_per_reading: 1
+unit_map:                      # spec spelling -> what the decoder emits
+  "u": "µ"
+sources:
+  - "ablage/dmm-tools/docs/research/vc880/reverse-engineered-protocol.md (dmm-tools, GPL-3.0-or-later: from Voltcraft's PC software DMSShare.dll, the manuals and Conrad's VC890 protocol; no meter on dmm-tools' bench)"
+
+# CP2110 cable, 9600 8N1; the meter streams once its PC key is pressed (§1, §6).
+# Live frame, 39 bytes (§4): AB CD 24 01, function (§4.1: 00 DC V, 01 AC+DC V,
+# 02 DC mV, 03 Hz, 04 %, 05 AC V, 06 Ohm, 07 diode, 08 continuity, 09 F,
+# 0A C, 0B F, 0C/0D DC/AC uA, 0E/0F mA, 10/11 A, 12 AC V low-pass), range
+# ('0'-based, §4.2: with the function the unit), main display 7 ASCII,
+# sub 1 and 2 (7 each), bar (3), status 30-36 (§4.3: 31 REL AVG MIN MAX,
+# 32 HOLD MANUAL OL1 OL2, 33 bit 3 low battery), BE16 sum of bytes 0-36.
+#
+# The vectors are SYNTHETIC: frames built from the spec's layout, the
+# displays and functions of dmm-tools' unit tests where named. No capture of
+# a real meter exists; they test the decoder's reading of the spec.
+vectors:
+  - source_line: "DC V 12.345 on the 40 V range (dmm-tools parse_dcv)"
+    bytes: AB CD 24 01 00 31 20 31 32 2E 33 34 35 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 00 00 00 00 00 00 05 3B
+    reading: {value: "12.345", unit: "V", range_mode: "auto"}
+    expect: {special: "DC"}
+  - source_line: "AC V 1.234 on the 4 V range (parse_acv)"
+    bytes: AB CD 24 01 05 30 20 20 31 2E 32 33 34 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 00 00 00 00 00 00 05 2A
+    reading: {value: "1.234", unit: "V", range_mode: "auto"}
+    expect: {special: "AC"}
+  - source_line: "12.345 kOhm on the 40 kOhm range (parse_resistance)"
+    bytes: AB CD 24 01 06 32 20 31 32 2E 33 34 35 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 00 00 00 00 00 00 05 42
+    reading: {value: "12.345", unit: "kOhm", range_mode: "auto"}
+    expect: {special: "OH"}
+  - source_line: "12.345 nF on the 40 nF range (parse_capacitance_nf)"
+    bytes: AB CD 24 01 09 30 20 31 32 2E 33 34 35 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 00 00 00 00 00 00 05 43
+    reading: {value: "12.345", unit: "nF", range_mode: "auto"}
+    expect: {special: "CA"}
+  - source_line: "1.2345 kHz on the 4 kHz range (parse_frequency_khz)"
+    bytes: AB CD 24 01 03 32 20 31 2E 32 33 34 35 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 00 00 00 00 00 00 05 3F
+    reading: {value: "1.2345", unit: "kHz", range_mode: "auto"}
+    expect: {special: "HZ"}
+  - source_line: "23.45 C (parse_temperature)"
+    bytes: AB CD 24 01 0A 30 20 20 32 33 2E 34 35 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 00 00 00 00 00 00 05 33
+    reading: {value: "23.45", unit: "C", range_mode: "auto"}
+    expect: {special: "TE"}
+  - source_line: "Ohm OL by the display (parse_overload_display_string)"
+    bytes: AB CD 24 01 06 30 20 20 20 20 20 4F 4C 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 00 00 00 00 00 00 05 2E
+    reading: {value: "OL", unit: "Ohm", range_mode: "auto"}
+    expect: {special: "OH", val: "OL"}
+  - source_line: "DC V -12.34, the sign in the display (parse_negative_value)"
+    bytes: AB CD 24 01 00 31 20 2D 31 32 2E 33 34 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 04 00 00 00 00 00 00 05 37
+    reading: {value: "-12.34", unit: "V", range_mode: "auto"}
+    expect: {special: "DC"}
+  - source_line: "DC mV 123.45, HOLD and manual range"
+    bytes: AB CD 24 01 02 30 20 31 32 33 2E 34 35 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 00 03 00 00 00 00 05 3F
+    reading: {value: "123.45", unit: "mV", range_mode: "manual", flags: [HOLD]}
+    expect: {special: "DC"}
+  - source_line: "DC uA 123.45 on the 400 uA range"
+    bytes: AB CD 24 01 0C 30 20 31 32 33 2E 34 35 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 00 00 00 00 00 00 05 46
+    reading: {value: "123.45", unit: "uA", range_mode: "auto"}
+    expect: {special: "DC"}

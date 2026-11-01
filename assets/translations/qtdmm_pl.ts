@@ -1031,13 +1031,13 @@
     </message>
     <message>
         <location filename="../../src/ui/controlbar.cpp" line="44"/>
-        <location filename="../../src/ui/controlbar.cpp" line="186"/>
+        <location filename="../../src/ui/controlbar.cpp" line="187"/>
         <source>NCV/PEAK</source>
         <translation>NCV/PEAK</translation>
     </message>
     <message>
         <location filename="../../src/ui/controlbar.cpp" line="44"/>
-        <location filename="../../src/ui/controlbar.cpp" line="187"/>
+        <location filename="../../src/ui/controlbar.cpp" line="188"/>
         <source>Non-contact voltage; held, peak capture (AC V and AC A)</source>
         <translation>Bezdotykowy wykrywacz napięcia; przytrzymany: wartość szczytowa (AC V i AC A)</translation>
     </message>
@@ -1187,12 +1187,12 @@
         <translation>Przytrzymaj klawisz, aby wyjść, jak na mierniku.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="186"/>
+        <location filename="../../src/ui/controlbar.cpp" line="187"/>
         <source>NCV</source>
         <translation>NCV</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="187"/>
+        <location filename="../../src/ui/controlbar.cpp" line="188"/>
         <source>Non-contact voltage</source>
         <translation>Napięcie bezdotykowe</translation>
     </message>
@@ -1734,67 +1734,67 @@
 <context>
     <name>DeviceType</name>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="175"/>
+        <location filename="../../src/device/devicetype.cpp" line="177"/>
         <source>Handheld multimeter</source>
         <translation>Multimetr ręczny</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="176"/>
+        <location filename="../../src/device/devicetype.cpp" line="178"/>
         <source>Bench multimeter</source>
         <translation>Multimetr stacjonarny</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="177"/>
+        <location filename="../../src/device/devicetype.cpp" line="179"/>
         <source>Clamp meter</source>
         <translation>Miernik cęgowy</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="178"/>
+        <location filename="../../src/device/devicetype.cpp" line="180"/>
         <source>Thermometer</source>
         <translation>Termometr</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="179"/>
+        <location filename="../../src/device/devicetype.cpp" line="181"/>
         <source>Luxmeter</source>
         <translation>Luksomierz</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="180"/>
+        <location filename="../../src/device/devicetype.cpp" line="182"/>
         <source>Air quality meter</source>
         <translation>Miernik jakości powietrza</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="181"/>
+        <location filename="../../src/device/devicetype.cpp" line="183"/>
         <source>Sound level meter</source>
         <translation>Miernik poziomu dźwięku</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="182"/>
+        <location filename="../../src/device/devicetype.cpp" line="184"/>
         <source>Anemometer</source>
         <translation>Anemometr</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="183"/>
+        <location filename="../../src/device/devicetype.cpp" line="185"/>
         <source>Battery monitor</source>
         <translation>Monitor baterii</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="184"/>
+        <location filename="../../src/device/devicetype.cpp" line="186"/>
         <source>Solar charge controller</source>
         <translation>Regulator ładowania solarnego</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="185"/>
+        <location filename="../../src/device/devicetype.cpp" line="187"/>
         <source>Inverter</source>
         <translation>Falownik</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="186"/>
+        <location filename="../../src/device/devicetype.cpp" line="188"/>
         <source>Virtual meter</source>
         <translation>Miernik wirtualny</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="187"/>
+        <location filename="../../src/device/devicetype.cpp" line="189"/>
         <source>Generic</source>
         <translation>Ogólny</translation>
     </message>
@@ -1802,47 +1802,47 @@
 <context>
     <name>Discovery</name>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="107"/>
-        <source>UNI-T UT61B+, UT61D+, UT61E+, UT161 or UT181A</source>
-        <translation>UNI-T UT61B+, UT61D+, UT61E+, UT161 lub UT181A</translation>
+        <location filename="../../src/device/discovery/discovery.cpp" line="109"/>
+        <source>UNI-T UT61B+, UT61D+, UT61E+, UT161, UT181A or Voltcraft VC-880, VC-890</source>
+        <translation>UNI-T UT61B+, UT61D+, UT61E+, UT161, UT181A lub Voltcraft VC-880, VC-890</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="108"/>
-        <source>Switch the meter on; it sends as soon as the cable is plugged in.</source>
-        <translation>Włącz miernik; wysyła dane, gdy tylko kabel jest podłączony.</translation>
+        <location filename="../../src/device/discovery/discovery.cpp" line="110"/>
+        <source>Switch the meter on; it sends as soon as the cable is plugged in. A UT181A only with SETUP &gt; Communication ON, again after every power-on; a Voltcraft VC-880 or VC-890 after its PC key.</source>
+        <translation>Włącz miernik; wysyła dane, gdy tylko kabel jest podłączony. UT181A tylko z SETUP &gt; Communication ON, ponownie po każdym włączeniu; Voltcraft VC-880 lub VC-890 po naciśnięciu klawisza PC.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="118"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="122"/>
         <source>UNI-T meter with the UT-D04 cable</source>
         <translation>Miernik UNI-T z kablem UT-D04</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="119"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="123"/>
         <source>Press RS232 (or PC) on the meter, else it sends nothing.</source>
         <translation>Naciśnij RS232 (lub PC) na mierniku, inaczej nic nie wysyła.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="128"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="132"/>
         <source>Brymen BM52x, BM82x or BM86x</source>
         <translation>Brymen BM52x, BM82x lub BM86x</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="129"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="133"/>
         <source>Put the IR adapter on the meter and switch its PC link on.</source>
         <translation>Załóż adapter IR na miernik i włącz jego łącze z PC.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="132"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="136"/>
         <source>TFA AIRCO2NTROL CO2 monitor</source>
         <translation>Monitor CO2 TFA AIRCO2NTROL</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="184"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="188"/>
         <source>No access: %1 belongs to %2:%3</source>
         <translation>Brak dostępu: %1 należy do %2:%3</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="189"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="193"/>
         <source>A udev rule lets you open the cable. The packages of QtDMM install one; for the AppImage or Flatpak, put this line into /etc/udev/rules.d/70-qtdmm.rules:
 
 %1
@@ -1859,7 +1859,7 @@ następnie załaduj ją i podłącz kabel ponownie:
 sudo udevadm control --reload-rules &amp;&amp; sudo udevadm trigger</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="197"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="201"/>
         <source>Serial ports belong to the group %1. Add yourself to it:
 
 sudo usermod -aG %1 $USER
@@ -1872,68 +1872,68 @@ sudo usermod -aG %1 $USER
 a potem wyloguj się i zaloguj ponownie.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="229"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="233"/>
         <source>%1 cable · %2</source>
         <translation>Kabel %1 · %2</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="267"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="271"/>
         <source>Serial port</source>
         <translation>Port szeregowy</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="267"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="271"/>
         <source>USB-serial adapter (%1)</source>
         <translation>Adapter USB-szeregowy (%1)</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="269"/>
-        <location filename="../../src/device/discovery/discovery.cpp" line="297"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="273"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="301"/>
         <source>Which meter is on it, QtDMM cannot tell yet: choose the model.</source>
         <translation>QtDMM nie wie jeszcze, jaki miernik jest podłączony: wybierz model.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="295"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="299"/>
         <source>qtdmm-bridge on %1</source>
         <translation>qtdmm-bridge na %1</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="339"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="343"/>
         <source>No Bluetooth adapter found (or the Bluetooth service is not running).</source>
         <translation>Nie znaleziono adaptera Bluetooth (lub usługa Bluetooth nie działa).</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="343"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="347"/>
         <source>Bluetooth is switched off.</source>
         <translation>Bluetooth jest wyłączony.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="345"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="349"/>
         <source>This build of QtDMM has no Bluetooth.</source>
         <translation>Ta wersja QtDMM nie ma Bluetooth.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="384"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="388"/>
         <source>Victron device</source>
         <translation>Urządzenie Victron</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="384"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="388"/>
         <source>Victron %1</source>
         <translation>Victron %1</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="385"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="389"/>
         <source>The device key is in the VictronConnect app: Product info, Instant readout.</source>
         <translation>Klucz urządzenia jest w aplikacji VictronConnect: Informacje o produkcie, Instant readout.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="411"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="415"/>
         <source>Bluetooth meter</source>
         <translation>Miernik Bluetooth</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="412"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="416"/>
         <source>Switch Bluetooth on at the meter.</source>
         <translation>Włącz Bluetooth w mierniku.</translation>
     </message>
@@ -1941,12 +1941,12 @@ a potem wyloguj się i zaloguj ponownie.</translation>
 <context>
     <name>FoldButton</name>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="319"/>
+        <location filename="../../src/ui/controlbar.cpp" line="320"/>
         <source>Show controls</source>
         <translation>Pokaż przyciski</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="319"/>
+        <location filename="../../src/ui/controlbar.cpp" line="320"/>
         <source>Hide controls</source>
         <translation>Ukryj przyciski</translation>
     </message>
@@ -4749,6 +4749,16 @@ Czy multimetr jest podłączony i włączony?</translation>
         <source>AB CD frames of any length with float values, streamed once asked (UNI-T UT181A, UT-D09 cable or UT-D07B adapter)</source>
         <translation>Ramki AB CD o dowolnej długości z wartościami zmiennoprzecinkowymi, wysyłane na żądanie (UNI-T UT181A, kabel UT-D09 lub adapter UT-D07B)</translation>
     </message>
+    <message>
+        <location filename="../../src/device/protocols.cpp" line="64"/>
+        <source>39 bytes, streamed (Voltcraft VC-880, VC650BT, CP2110 USB cable)</source>
+        <translation>39 bajtów, strumieniowo (Voltcraft VC-880, VC650BT, kabel USB CP2110)</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/protocols.cpp" line="65"/>
+        <source>66 bytes, polled (Voltcraft VC-890, CP2110 USB cable)</source>
+        <translation>66 bajtów, odpytywany (Voltcraft VC-890, kabel USB CP2110)</translation>
+    </message>
 </context>
 <context>
     <name>QObject</name>
@@ -6860,6 +6870,14 @@ Następnie wyloguj się i zaloguj ponownie, aby członkostwo w grupie zaczęło 
         <location filename="../../src/device/victronble.cpp" line="125"/>
         <source>AC current</source>
         <translation>Prąd AC</translation>
+    </message>
+</context>
+<context>
+    <name>Voltcraft</name>
+    <message>
+        <location filename="../../src/device/decoders/voltcraft_vc8x0.cpp" line="37"/>
+        <source>Low-pass</source>
+        <translation>Dolnoprzepustowy</translation>
     </message>
 </context>
 <context>

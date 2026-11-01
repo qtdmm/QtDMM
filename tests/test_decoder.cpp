@@ -321,6 +321,23 @@ int main(int argc, char **argv)
       ucheck(u->keyRequest("minmax") == DecoderUT181A::command(0x04, QByteArray::fromHex("01")), "MAX/MIN on");
     }
 
+    // the Voltcraft VC-880/890 (dmm-tools vc880 spec §5, vc890 spec): keys
+    // AB CD 03 <cmd> <BE sum>; the VC-880 streams, the VC-890 is polled with
+    // 5E after a result frame FF 00, which also goes before its keys
+    {
+      const FrameFormat::DataFormat vc880 = FrameFormat::VoltcraftVC880, vc890 = FrameFormat::VoltcraftVC890;
+      const char *ack = "abcd04ff00027b";
+      expect(vc880, "hold", "abcd034a01c5");
+      expect(vc880, "minmax_off", "abcd034301be");
+      expect(vc890, "hold", "abcd04ff00027babcd034a01c5");
+      if (!DmmDecoder::getInstance(vc880)->pollRequest().isEmpty()
+          || DmmDecoder::getInstance(vc890)->pollRequest() != QByteArray::fromHex(ack) + QByteArray::fromHex("abcd035e01d9"))
+      {
+        qWarning() << "VC-880 streams, the VC-890 is polled after FF 00";
+        ++problems;
+      }
+    }
+
     // the HoldPeak HP-570C-APP: the FS9721 frame in two notifications of 7
     // bytes. A lost first half must not glue the second half of the frame
     // before to the next one; the ring wraps as the reader's does.
