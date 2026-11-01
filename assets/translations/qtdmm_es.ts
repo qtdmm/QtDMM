@@ -3116,118 +3116,123 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
 <context>
     <name>InstanceWidget</name>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="370"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="371"/>
         <source>QtDMM: Unsaved data</source>
         <translation>QtDMM: datos sin guardar</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="385"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="386"/>
         <source>Export data first</source>
         <translation>Exportar primero</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="357"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="358"/>
         <source>Quit without saving</source>
         <translation>Salir sin guardar</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="120"/>
-        <location filename="../../src/ui/instancewidget.cpp" line="514"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="121"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="524"/>
         <source>Value %1</source>
         <translation>Valor %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="357"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="358"/>
         <source>If you quit now it will be lost.</source>
         <translation>Si sale ahora se perderán.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="367"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="368"/>
         <source>Not saved: %1.</source>
         <translation>Sin guardar: %1.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="371"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="372"/>
         <source>&lt;font size=+2&gt;&lt;b&gt;Unsaved data&lt;/b&gt;&lt;/font&gt;&lt;p&gt;You still have unsaved measured data in memory. %1&lt;p&gt;Do you want to export your unsaved data first?</source>
         <translation>&lt;font size=+2&gt;&lt;b&gt;Datos sin guardar&lt;/b&gt;&lt;/font&gt;&lt;p&gt;Todavía hay mediciones sin guardar en memoria. %1&lt;p&gt;¿Desea exportarlas antes?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="407"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="412"/>
+        <source>Export failed: the device was closed meanwhile</source>
+        <translation>Error al exportar: el aparato se cerró mientras tanto</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/instancewidget.cpp" line="417"/>
         <source>Export failed: %1</source>
         <translation>Error al exportar: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="516"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="526"/>
         <source>%1 · %2</source>
         <translation>%1 · %2</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="588"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="598"/>
         <source>Loading a file replaces it.</source>
         <translation>Cargar un archivo las reemplaza.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="588"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="598"/>
         <source>Load without saving</source>
         <translation>Cargar sin guardar</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="606"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="616"/>
         <source>Clear deletes it.</source>
         <translation>Vaciar las borra.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="606"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="616"/>
         <source>Clear without saving</source>
         <translation>Vaciar sin guardar</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="622"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="632"/>
         <source>Live clears it.</source>
         <translation>En vivo las borra.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="622"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="632"/>
         <source>Live without saving</source>
         <translation>En vivo sin guardar</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="638"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="648"/>
         <source>A new recording clears it.</source>
         <translation>Una grabación nueva las borra.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="638"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="648"/>
         <source>Record without saving</source>
         <translation>Grabar sin guardar</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="646"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="656"/>
         <source>It starts now. A recording at %1 starts by itself from Live.</source>
         <translation>Empieza ahora. Una grabación a las %1 empieza sola desde En vivo.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="648"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="658"/>
         <source>It starts now. A recording at the threshold starts by itself from Live.</source>
         <translation>Empieza ahora. Una grabación en el umbral empieza sola desde En vivo.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="730"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="740"/>
         <source>Automatic start at %1</source>
         <translation>Inicio automático a las %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="732"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="742"/>
         <source>Raising threshold %1</source>
         <translation>Umbral ascendente %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="734"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="744"/>
         <source>Falling threshold %1</source>
         <translation>Umbral descendente %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="819"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="829"/>
         <source>Meter</source>
         <translation>Medidor</translation>
     </message>

@@ -30,6 +30,7 @@
 #include "ui/dialogs/recordlengthdlg.h"
 #include "ui/alarmsound.h"
 #include "ui/instancewidget.h"
+#include <QPointer>
 #include "device/transports/serial.h"
 #include "core/devicelibrary.h"
 #include "device/dmmdecoder.h"
@@ -392,9 +393,12 @@ bool InstanceWidget::keepUnsavedData(const QString &reason, const QString &disca
   {
     case QMessageBox::Yes:
     {
-      // a recording stopped: all its meters into the file, as
-      // QTDMM:RECord:SAVE writes it; else (a file loaded) the graph's export
-      MeterController *lead = m_session->lead();
+      // the session's recording, stopped first: all its meters into the
+      // file, as QTDMM:RECord:SAVE writes it; else (a file loaded) the
+      // graph's export
+      if (!unsaved.isEmpty() && m_session->isRecording())
+        m_session->stopRecording();
+      QPointer<MeterController> lead = m_session->lead();
       if (!unsaved.isEmpty() && lead && lead->recorder()->state() == RecordingStore::View && lead->recorder()->count() > 0)
       {
         bool raw = false;
@@ -402,6 +406,12 @@ bool InstanceWidget::keepUnsavedData(const QString &reason, const QString &disca
         QString err;
         if (file.isEmpty())
           return false;
+        // the dialog runs events: SCPI may have closed it meanwhile
+        if (!lead)
+        {
+          Q_EMIT error(tr("Export failed: the device was closed meanwhile"));
+          return false;
+        }
         if (!lead->writeRecording(file, raw, &err))
         {
           Q_EMIT error(tr("Export failed: %1").arg(err));
