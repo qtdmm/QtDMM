@@ -50,6 +50,8 @@ Type ofProtocol(FrameFormat::DataFormat protocol)
     case FrameFormat::Sigrok:
     case FrameFormat::GDM703Continuous:
     case FrameFormat::Fluke45:
+    case FrameFormat::UniTUT8802:
+    case FrameFormat::UniTUT8803:
       return BenchDmm;
     case FrameFormat::UniTUT32x:
     case FrameFormat::MastechMS6514:

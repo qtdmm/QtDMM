@@ -1,0 +1,65 @@
+protocol: UniTUT8802
+decoder: src/device/decoders/uni_t_ut8802.cpp
+devices: [Uni-Trend UT8802, Uni-Trend UT8802N]
+frames_per_reading: 1
+unit_map:                      # spec spelling -> what the decoder emits
+  "u": "µ"
+sources:
+  - "ablage/dmm-tools/docs/research/uci-bench-family/reverse-engineered-protocol.md (dmm-tools, GPL-3.0-or-later: from UNI-T's UCI SDK uci.dll and its programming manual; no meter read there yet)"
+
+# CP2110 inside the meter, 9600 8N1; the meter streams unasked (§2.2).
+# Frame (§3.1), 8 bytes, no sum: AC, the dial position (§3.3: function and
+# range in one code, 01 200mV DC ... 2D MHz; the range gives the prefix),
+# five BCD digits (§3.2: byte 4 low nibble first, then byte 3 high, low,
+# byte 2 high, low; 0A as 0, 0C "L"), byte 5 low nibble the digits after
+# the point, byte 6 not read, byte 7 the status (§3.5: bit 0 MIN, 1 MAX,
+# 2 manual range, 3 REL, 4 HOLD, 5 over range, 6 OL, 7 minus).
+#
+# The vectors are SYNTHETIC: frames built from the spec's layout, the
+# readings of dmm-tools' unit tests where named. No capture of a real meter
+# exists; they test the decoder's reading of the spec.
+vectors:
+  - source_line: "DC V 12.345 on the 20 V position (dmm-tools parse_dcv)"
+    bytes: AC 04 45 23 01 03 00 00
+    reading: {value: "12.345", unit: "V", range_mode: "auto"}
+    expect: {special: "DC"}
+  - source_line: "123.4 mV on the 200 mV position (millivolt_range_reports_millivolts)"
+    bytes: AC 01 34 12 00 01 00 00
+    reading: {value: "123.4", unit: "mV", range_mode: "auto"}
+    expect: {special: "DC"}
+  - source_line: "-0.1500 V, the minus in the status byte (parse_negative)"
+    bytes: AC 03 00 15 00 04 00 80
+    reading: {value: "-0.1500", unit: "V", range_mode: "auto"}
+    expect: {special: "DC"}
+  - source_line: "0.1234 kOhm on the 2 kOhm position, manual range (parse_resistance)"
+    bytes: AC 1A 34 12 00 04 00 04
+    reading: {value: "0.1234", unit: "kOhm", range_mode: "manual"}
+    expect: {special: "OH"}
+  - source_line: "OL on the 200 MOhm position, status bit 6 (overload_from_status_bit)"
+    bytes: AC 1F 00 00 00 00 00 40
+    reading: {value: "OL", unit: "MOhm", range_mode: "auto"}
+    expect: {special: "OH", val: "OL"}
+  - source_line: "AC V 230.1 with HOLD (parse_hold_flag)"
+    bytes: AC 0B 01 23 00 01 00 10
+    reading: {value: "230.1", unit: "V", range_mode: "auto", flags: [HOLD]}
+    expect: {special: "AC"}
+  - source_line: "5.00 mA DC with REL (parse_rel_flag)"
+    bytes: AC 12 00 05 00 02 00 08
+    reading: {value: "5.00", unit: "mA", range_mode: "auto"}
+    expect: {special: "DC"}
+  - source_line: "1.000 A DC with MAX (parse_max_min_flags)"
+    bytes: AC 16 00 10 00 03 00 02
+    reading: {value: "1.000", unit: "A", range_mode: "auto"}
+    expect: {special: "DC"}
+  - source_line: "47.00 nF on the nF position (capacitance_units_carry_the_range_decade)"
+    bytes: AC 27 00 47 00 02 00 00
+    reading: {value: "47.00", unit: "nF", range_mode: "auto"}
+    expect: {special: "CA"}
+  - source_line: "0.1000 MHz on the MHz position (frequency_units_carry_the_range_decade)"
+    bytes: AC 2D 00 10 00 04 00 00
+    reading: {value: "0.1000", unit: "MHz", range_mode: "auto"}
+    expect: {special: "HZ"}
+  - source_line: "AC V 0.0000 on the 2 V position (zero_reading_dp3)"
+    bytes: AC 09 00 00 00 04 00 00
+    reading: {value: "0.0000", unit: "V", range_mode: "auto"}
+    expect: {special: "AC"}
