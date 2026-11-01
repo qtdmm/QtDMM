@@ -1,0 +1,66 @@
+protocol: BrymenBM78xBT
+decoder: src/device/decoders/brymen_bm78xbt.cpp
+devices: [Brymen BM788BT, Brymen BM787BT]
+frames_per_reading: 1
+unit_map:                      # spec spelling -> what the decoder emits
+  "u": "µ"
+sources:
+  - "ablage/dmm-tools/docs/research/bm78xbt/reverse-engineered-protocol.md (dmm-tools, GPL-3.0-or-later: from Brymen's published protocol document r4, Brymen's app and the manuals; no meter read there yet)"
+
+# Bluetooth LE: service 0003CDD0-0000-1000-8000-00805f9b0131, readings
+# notified on CDD5, commands written to CDD4 (§2). The meter streams after
+# Verify Connection Password 0x0151 (§3, §7): FF 01 20 01 01, the address
+# least significant octet first, 51 01 01, 00 00 00 00 (0000), CRC, FF 03.
+# Output (§4): a 24-byte information packet, a 32-byte reading packet,
+# three zero blocks. Reading packet (§6.2): FF 02 20 05, data set (3),
+# channel, RTC (6), Flag0 (CREST, REL, HOLD, AUTO, AUTO-HOLD, ASCII),
+# Flag1 (sign, OL, RECORD, MAX, MIN, AVG), Flag2, device type, main
+# function, reserved, sub function (§6.5: AC, DC, AC+DC, Hz of the volt and
+# current mains), count 24-bit LE signed, digits before the point (0 none),
+# prefix (signed power of ten), unit (§6.4), digit count, CRC-16/MODBUS of
+# [2..27] low byte first, FF 03.
+#
+# The vectors are SYNTHETIC: the spec's worked example 1 and 2 (§10) and
+# frames built from the layout. No capture of a real meter exists; they
+# test the decoder's reading of the spec.
+vectors:
+  - source_line: "-1.2345 V DC, autorange: negative count and sign flag (§10 example 1)"
+    bytes: FF 02 20 05 01 00 00 01 FA 78 85 03 3A 35 10 40 00 01 03 00 01 C7 CF FF 01 00 02 05 76 C3 FF 03
+    reading: {value: "-1.2345", unit: "V", range_mode: "auto"}
+    expect: {special: "DC"}
+  - source_line: "The information packet before it, as a notification brings both (§10 example 2 and 1)"
+    bytes: FF 01 18 04 01 02 66 55 44 33 22 11 00 00 00 00 04 00 00 01 FC 94 FF 03 FF 02 20 05 01 00 00 01 FA 78 85 03 3A 35 10 40 00 01 03 00 01 C7 CF FF 01 00 02 05 76 C3 FF 03
+    reading: {value: "-1.2345", unit: "V", range_mode: "auto"}
+    expect: {special: "DC"}
+  - source_line: "230.12 V AC, 3 digits before the point of 5"
+    bytes: FF 02 20 05 01 00 00 01 FA 78 85 03 3A 35 10 00 00 01 03 00 00 E4 59 00 03 00 02 05 53 97 FF 03
+    reading: {value: "230.12", unit: "V", range_mode: "auto"}
+    expect: {special: "AC"}
+  - source_line: "47.000 kOhm with HOLD, manual range, prefix 3"
+    bytes: FF 02 20 05 01 00 00 01 FA 78 85 03 3A 35 20 00 00 01 0D 00 00 98 B7 00 02 03 04 05 5A 87 FF 03
+    reading: {value: "47.000", unit: "kOhm", range_mode: "manual", flags: [HOLD]}
+    expect: {special: "OH"}
+  - source_line: "Resistance OL (Flag1 bit 5), prefix 6"
+    bytes: FF 02 20 05 01 00 00 01 FA 78 85 03 3A 35 10 20 00 01 0D 00 00 00 00 00 02 06 04 05 07 98 FF 03
+    reading: {value: "OL", unit: "MOhm", range_mode: "auto"}
+    expect: {special: "OH", val: "OL"}
+  - source_line: "12.345 mA DC with REL and MAX, prefix -3"
+    bytes: FF 02 20 05 01 00 00 01 FA 78 85 03 3A 35 50 18 00 01 06 00 01 39 30 00 02 FD 03 05 77 BB FF 03
+    reading: {value: "12.345", unit: "mA", range_mode: "auto"}
+    expect: {special: "DC"}
+  - source_line: "4.700 nF, prefix -9"
+    bytes: FF 02 20 05 01 00 00 01 FA 78 85 03 3A 35 10 00 00 01 0E 00 00 5C 12 00 02 F7 06 05 47 13 FF 03
+    reading: {value: "4.700", unit: "nF", range_mode: "auto"}
+    expect: {special: "CA"}
+  - source_line: "Temperature T1 23.5 C, 3 digits"
+    bytes: FF 02 20 05 01 00 00 01 FA 78 85 03 3A 35 10 00 00 01 0C 00 00 EB 00 00 02 00 14 03 1F F0 FF 03
+    reading: {value: "23.5", unit: "C", range_mode: "auto"}
+    expect: {special: "TE"}
+  - source_line: "EF field strength, the text --- (ASCII flag, code 5)"
+    bytes: FF 02 20 05 01 00 00 01 FA 78 85 03 3A 35 04 00 00 01 22 00 00 05 00 00 00 00 00 05 EB CF FF 03
+    reading: {value: "---", unit: "", range_mode: "manual", shown: "none"}
+    expect: {special: "NCV", val: "---"}
+  - source_line: "-12.34 mV DC by the sign flag alone, the count positive"
+    bytes: FF 02 20 05 01 00 00 01 FA 78 85 03 3A 35 10 40 00 01 04 00 01 D2 04 00 03 FD 02 05 17 FF FF 03
+    reading: {value: "-12.34", unit: "mV", range_mode: "auto"}
+    expect: {special: "DC"}

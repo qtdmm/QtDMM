@@ -57,6 +57,8 @@ public:
                                    ///< service UUIDs come too late or not at all
     QBluetoothUuid info;           ///< a characteristic read once on connecting, the meter's
                                    ///< device information (info(), infoRead()); null: none
+    QByteArray (*helloFor)(const QString &address) = nullptr;   ///< hello made for the meter's
+                                   ///< address instead (a login that names it); null: hello
     /// True when a device seen in a scan, with @p name, @p services and the
     /// company ids of its manufacturer data, is one of these.
     bool matches(const QString &name, const QList<QBluetoothUuid> &services,

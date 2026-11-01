@@ -89,6 +89,7 @@ public:
     UniTUT8802,
     UniTUT8803,
     Eevblog121GW,
+    BrymenBM78xBT,
     EndOfList              // new stuff always before!
   };
 

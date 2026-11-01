@@ -1,6 +1,7 @@
 // Copyright (c) 2026 The QtDMM developers
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "device/transports/blegatt.h"
+#include "device/decoders/brymen_bm78xbt.h"
 #include "device/transports/ble.h"
 
 #include <QBluetoothAddress>
@@ -59,6 +60,13 @@ constexpr quint16 kAicareCompany = 0xFFAC;
 // 121GW spec §2, from UEi's app)
 const QBluetoothUuid k121gwService(QStringLiteral("0bd51666-e7cb-469b-8e4d-2742f1ba77cc"));
 const QBluetoothUuid k121gwChar(QStringLiteral("e7add780-b042-4876-aae1-112855353cc1"));
+
+// Brymen's BM78xBT: readings notified on CDD5, commands written to CDD4;
+// the meter streams after the login (dmm-tools BM78xBT spec §2, §3, from
+// Brymen's protocol document)
+const QBluetoothUuid kBrymenService(QStringLiteral("0003cdd0-0000-1000-8000-00805f9b0131"));
+const QBluetoothUuid kBrymenNotify(QStringLiteral("0003cdd5-0000-1000-8000-00805f9b0131"));
+const QBluetoothUuid kBrymenWrite(QStringLiteral("0003cdd4-0000-1000-8000-00805f9b0131"));
 
 // connecting and finding the characteristics takes a second or two; a
 // meter that is switched off or out of range never answers
@@ -119,6 +127,14 @@ std::optional<BleGattDevice::Profile> BleGattDevice::profile(FrameFormat::DataFo
       return Profile{ kFff0Service, kFff4, { kFff3 }, { "BDM" }, QByteArray(), true, false, 0, kFff2 };
     case FrameFormat::Eevblog121GW:
       return Profile{ k121gwService, k121gwChar, { k121gwChar }, { "121GW" } };
+    case FrameFormat::BrymenBM78xBT:
+    {
+      // advertised as "BM78xBT" unless renamed, without the service; the
+      // login names the meter's address
+      Profile p{ kBrymenService, kBrymenNotify, { kBrymenWrite }, { "BM78" } };
+      p.helloFor = &DecoderBM78xBT::login;
+      return p;
+    }
     default:
       return std::nullopt;
   }
@@ -400,8 +416,9 @@ void BleGattDevice::setReady()
   if (m_connectTimeout)
     m_connectTimeout->stop();
   qCDebug(lcBle) << m_address << "ready";
-  if (!m_profile->hello.isEmpty())
-    sendCommand(m_profile->hello);
+  const QByteArray hello = m_profile->helloFor ? m_profile->helloFor(m_address) : m_profile->hello;
+  if (!hello.isEmpty())
+    sendCommand(hello);
   sendPoll();   // the reader's poll from before is still waiting
 }
 
