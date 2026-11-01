@@ -81,6 +81,7 @@ public:
     ZotekBLE,
     VC820BLE,
     OwonBLE,
+    OwonBLE15,
     EndOfList              // new stuff always before!
   };
 

@@ -159,6 +159,7 @@ void MeterConnection::initDecoder( FrameFormat::DataFormat df)
     m_decoder = DmmDecoder::getInstance(df);
     m_readerThread->setDecoder(m_decoder);
   }
+  m_decoder->setModel(m_dmmInfo.model);
 }
 
 

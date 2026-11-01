@@ -174,6 +174,9 @@ public:
   /// (ZotekBLE: the layout, modelsFromFrame()) or its device information
   /// (OwonBLE: modelsFromInfo()).
   virtual bool tellsModel() const { return false; }
+  /// The meter chosen (DMMInfo::model), for a protocol whose models read a
+  /// frame differently; set before the first frame, from the GUI thread.
+  virtual void setModel(const QString &model) { Q_UNUSED(model); }
   /// The models (DMMInfo::name) a meter that sent @p frame can be; empty
   /// when the frames do not tell (tellsModel()).
   virtual QStringList modelsFromFrame(const QByteArray &frame) const { Q_UNUSED(frame); return {}; }

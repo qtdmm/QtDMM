@@ -107,6 +107,7 @@ std::optional<BleGattDevice::Profile> BleGattDevice::profile(FrameFormat::DataFo
       // Qt's search hears it on some machines only while bluetoothctl scans
       return Profile{ kFfb0Service, kFfb0Notify, { kFfb0Write }, { "FS9721" }, QByteArray(), false, true, kAicareCompany };
     case FrameFormat::OwonBLE:
+    case FrameFormat::OwonBLE15:
       // "BDM" unless the user renamed the meter; the model is in 0xFFF2
       return Profile{ kFff0Service, kFff4, { kFff3 }, { "BDM" }, QByteArray(), true, false, 0, kFff2 };
     default:

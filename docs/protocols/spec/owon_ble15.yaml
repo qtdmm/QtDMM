@@ -1,0 +1,144 @@
+protocol: OwonBLE15
+decoder: src/device/decoders/owon_ble.cpp
+devices: [OWON CMS101, OWON CMS061, Uni-Trend UT217B, Uni-Trend UT217A, OWON OW65B, OWON OW67B, OWON OW69B, Voltcraft VC871, Voltcraft VC891, Voltcraft VC915, Voltcraft VC925 PV]
+frames_per_reading: 1
+unit_map:                      # spec spelling -> what the decoder emits
+  "u": "µ"
+sources:
+  - "ablage/dmm-tools/docs/research/owon/reverse-engineered-protocol.md (dmm-tools, GPL-3.0-or-later: §10, from OWON's app iMeter 1.2.4 and Voltcraft's VC800 VC900 app; VC871 captures §14.5; no meter on dmm-tools' bench)"
+
+# Advertising, GATT, model code (0xFFF2 byte 0: 101 CMS101, 61 CMS061,
+# 65 OW65, 67 OW67, 69 OW69, 87 VC871, 89 VC891, 91 VC915, 92 VC925) and
+# keys as the 6-byte meters (owon_ble.yaml). A frame is five 24-bit
+# little-endian words, no header, length or checksum (§10.2):
+#   0-2  main function/range: bits 0-2 decimal point (6 UL, 7 OL), 3-5
+#        prefix (p n u m - k M G), 6-10 function (0-13 as the 6-byte frame,
+#        14 W, 15 VA, 16 PF, 17 4-20 mA %, 18 Ah, 19 time s, 20 Wh, 21 V,
+#        22 A, 23 AC+DC V, 24 motor, 25 W/m2, 26 angle, 27 compass,
+#        28 HV DC, 29 HV AC), 12 sub-display present; bits 16-23 0xF0
+#   3-5  main reading: bits 0-18 magnitude, 20-22 status (1 OL, 2 UL, 3 HI,
+#        4 LO, 5 a number, 6-7 none), 23 sign
+#   6-8, 9-11  the sub-display's function/range and reading, read only
+#        with bit 12
+#   12-14 status: bits 0-5 HOLD REL AUTO low-battery MIN MAX, 6 AVG,
+#        8 LoZ, 9 LPF, 10 PEAK, 13-15 AC/DC/USB power, 16 Err, 17 inrush,
+#        18 scope (not charted)
+# A frame ending in FF is skipped. On the VC871 under REL, MAX or MIN the
+# sub-display takes the main function (§10.7).
+#
+# The vectors are the 28 VC871 frames of §14.5 (community captures), with
+# the readings dmm-tools' tests give them; the VC871's sub-display rule is
+# not used by them (no REL/MIN/MAX).
+vectors:
+  - source_line: "VC871 Capacitance UL MF (§14.5 frame 1)"
+    bytes: 76 01 F0 F6 00 00 A1 09 F0 F6 00 00 04 00 00
+    reading: {value: "UL", unit: "MF", range_mode: "auto", shown: "none"}
+    expect: {special: "CA"}
+  - source_line: "VC871 DC V -1.0054 V HOLD (§14.5 frame 2)"
+    bytes: 24 00 F0 46 27 80 A1 09 F0 46 27 80 05 00 00
+    reading: {value: "-1.0054", unit: "V", range_mode: "auto", flags: [HOLD]}
+    expect: {special: "DC"}
+  - source_line: "VC871 DC V OL mV (§14.5 frame 3)"
+    bytes: 1F 00 F0 19 11 11 A2 09 F0 00 00 00 04 00 00
+    reading: {value: "OL", unit: "mV", range_mode: "auto"}
+    expect: {special: "DC", val: "OL"}
+  - source_line: "VC871 °C 24.9 °C, sub °F 76.8 °F (§14.5 frame 4)"
+    bytes: 21 12 F0 F9 00 00 61 1A F0 00 03 00 00 00 00
+    reading: {value: "24.9", unit: "C", range_mode: "manual"}
+    expect: {special: "TE", val2: "76.8", unit2: "dF", id2: 1}
+  - source_line: "VC871 AC power W 0.0 W, sub VA 0.0 VA (§14.5 frame 5)"
+    bytes: A1 13 F0 00 00 00 E1 1B F0 00 00 00 00 20 00
+    reading: {value: "0.0", unit: "W", range_mode: "manual"}
+    expect: {val2: "0.0", unit2: "VA", id2: 1}
+  - source_line: "VC871 USB power Wh 0 Wh, sub Time 0 s (§14.5 frame 6)"
+    bytes: 20 15 F0 00 00 00 E0 1C F0 00 00 00 00 80 00
+    reading: {value: "0", unit: "Wh", range_mode: "manual"}
+    expect: {val2: "0", unit2: "s", id2: 1}
+  - source_line: "VC871 DC V 0.5409 V (§14.5 frame 7)"
+    bytes: 24 00 F0 21 15 00 A1 09 F0 21 15 00 04 00 00
+    reading: {value: "0.5409", unit: "V", range_mode: "auto"}
+    expect: {special: "DC"}
+  - source_line: "VC871 DC V 540.74 mV (§14.5 frame 8)"
+    bytes: 1A 00 F0 3A D3 00 A2 09 F0 00 00 00 04 00 00
+    reading: {value: "540.74", unit: "mV", range_mode: "auto"}
+    expect: {special: "DC"}
+  - source_line: "VC871 AC V 57.1 mV, sub Hz 0.00 Hz (§14.5 frame 9)"
+    bytes: 59 10 F0 3B 02 00 A2 19 F0 00 00 00 00 00 00
+    reading: {value: "57.1", unit: "mV", range_mode: "manual"}
+    expect: {special: "AC", val2: "0.00", unit2: "Hz", id2: 1}
+  - source_line: "VC871 Ω 369.7 kΩ (§14.5 frame 10)"
+    bytes: 29 01 F0 71 0E 00 A2 09 F0 00 00 00 04 00 00
+    reading: {value: "369.7", unit: "kOhm", range_mode: "auto"}
+    expect: {special: "OH"}
+  - source_line: "VC871 Diode 0.5507 V (§14.5 frame 11)"
+    bytes: A4 02 F0 83 15 00 A2 09 F0 00 00 00 00 00 00
+    reading: {value: "0.5507", unit: "V", range_mode: "manual"}
+    expect: {special: "DI"}
+  - source_line: "VC871 Capacitance 0.0694 nF (§14.5 frame 12)"
+    bytes: 4C 01 F0 B6 02 00 A2 09 F0 00 00 00 04 00 00
+    reading: {value: "0.0694", unit: "nF", range_mode: "auto"}
+    expect: {special: "CA"}
+  - source_line: "VC871 Hz 50.003 Hz, sub Duty 44.71 % (§14.5 frame 13)"
+    bytes: A3 11 F0 53 C3 00 E2 19 F0 77 11 00 04 00 00
+    reading: {value: "50.003", unit: "Hz", range_mode: "auto"}
+    expect: {special: "HZ", val2: "44.71", unit2: "%", id2: 1}
+  - source_line: "VC871 Duty % 52.42 %, sub Hz 50.838 Hz (§14.5 frame 14)"
+    bytes: E2 11 F0 7A 14 00 A3 19 F0 96 C6 00 04 00 00
+    reading: {value: "52.42", unit: "%", range_mode: "auto"}
+    expect: {special: "DU", val2: "50.838", unit2: "Hz", id2: 1}
+  - source_line: "VC871 °C 22.6 °C, sub °F 72.8 °F (§14.5 frame 15)"
+    bytes: 21 12 F0 E2 00 00 61 1A F0 D8 02 00 00 00 00
+    reading: {value: "22.6", unit: "C", range_mode: "manual"}
+    expect: {special: "TE", val2: "72.8", unit2: "dF", id2: 1}
+  - source_line: "VC871 °F 78.3 °F, sub °C 25.7 °C (§14.5 frame 16)"
+    bytes: 61 12 F0 0F 03 00 21 1A F0 01 01 00 00 00 00
+    reading: {value: "78.3", unit: "dF", range_mode: "manual"}
+    expect: {special: "TE", val2: "25.7", unit2: "C", id2: 1}
+  - source_line: "VC871 DC A -1592.6 µA (§14.5 frame 17)"
+    bytes: 91 00 F0 36 3E 80 21 0A F0 7E 0A 00 04 00 00
+    reading: {value: "-1592.6", unit: "uA", range_mode: "auto"}
+    expect: {special: "DC"}
+  - source_line: "VC871 AC A 167.2 µA, sub Hz 0.00 Hz (§14.5 frame 18)"
+    bytes: D1 10 F0 88 06 00 A2 19 F0 00 00 00 04 00 00
+    reading: {value: "167.2", unit: "uA", range_mode: "auto"}
+    expect: {special: "AC", val2: "0.00", unit2: "Hz", id2: 1}
+  - source_line: "VC871 DC A -1.680 mA (§14.5 frame 19)"
+    bytes: 9B 00 F0 90 06 80 A2 09 F0 00 00 00 04 00 00
+    reading: {value: "-1.680", unit: "mA", range_mode: "auto"}
+    expect: {special: "DC"}
+  - source_line: "VC871 AC A 0.98 mA, sub Hz 0.00 Hz (§14.5 frame 20)"
+    bytes: DA 10 F0 62 00 00 A2 19 F0 00 00 00 04 00 00
+    reading: {value: "0.98", unit: "mA", range_mode: "auto"}
+    expect: {special: "AC", val2: "0.00", unit2: "Hz", id2: 1}
+  - source_line: "VC871 DC A 0.2893 A (§14.5 frame 21)"
+    bytes: A4 00 F0 4D 0B 00 A2 09 F0 00 00 00 04 00 00
+    reading: {value: "0.2893", unit: "A", range_mode: "auto"}
+    expect: {special: "DC"}
+  - source_line: "VC871 AC A 0.078 A, sub Hz 0.00 Hz (§14.5 frame 22)"
+    bytes: E3 10 F0 4E 00 00 A2 19 F0 00 00 00 04 00 00
+    reading: {value: "0.078", unit: "A", range_mode: "auto"}
+    expect: {special: "AC", val2: "0.00", unit2: "Hz", id2: 1}
+  - source_line: "VC871 AC power W 473.8 W, sub VA 0.0 VA (§14.5 frame 23)"
+    bytes: A1 13 F0 82 12 00 E1 1B F0 00 00 00 00 20 00
+    reading: {value: "473.8", unit: "W", range_mode: "manual"}
+    expect: {val2: "0.0", unit2: "VA", id2: 1}
+  - source_line: "VC871 Power factor -0.001, sub Hz 0.0 Hz (§14.5 frame 24)"
+    bytes: 23 14 F0 01 00 80 A1 19 F0 00 00 00 00 30 00
+    reading: {value: "-0.001", unit: "cosphi", range_mode: "manual"}
+    expect: {val2: "0.0", unit2: "Hz", id2: 1}
+  - source_line: "VC871 USB power V 0.00 V, sub A 0.29 A (§14.5 frame 25)"
+    bytes: 62 15 F0 00 00 00 A2 1D F0 1D 00 00 00 80 00
+    reading: {value: "0.00", unit: "V", range_mode: "manual"}
+    expect: {special: "DC", val2: "0.29", unit2: "A", id2: 1}
+  - source_line: "VC871 USB power Ah 0 mAh, sub Time 0 s (§14.5 frame 26)"
+    bytes: 98 14 F0 00 00 00 E0 1C F0 00 00 00 00 80 00
+    reading: {value: "0", unit: "mAh", range_mode: "manual"}
+    expect: {val2: "0", unit2: "s", id2: 1}
+  - source_line: "VC871 AC power V 0.4 V, sub AC A 0.0 A (§14.5 frame 27)"
+    bytes: 61 15 F0 04 00 00 E1 18 F0 00 00 00 00 20 00
+    reading: {value: "0.4", unit: "V", range_mode: "manual"}
+    expect: {special: "AC", val2: "0.0", unit2: "A", id2: 1}
+  - source_line: "VC871 DC A 0.000 A (§14.5 frame 28)"
+    bytes: A3 00 F0 00 00 00 A2 09 F0 00 00 00 04 00 01
+    reading: {value: "0.000", unit: "A", range_mode: "auto"}
+    expect: {special: "DC"}

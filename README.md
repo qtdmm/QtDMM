@@ -263,13 +263,19 @@ meter working, please report it on the
 | Metex | universal system 9160 | Bench multimeter | Metex KS57C2016 | `Metex14` | 1200 7N2 | DTR | 4000 |
 | Metravi | PRO Solar-1 ¹ | Handheld multimeter | - | `AppaDmm` | Bluetooth LE | - | 6000 |
 | Metrel | MD9015 ¹ | Handheld multimeter | FS9721 LP3 | `VC820Continuous` | 2400 8N1 | DTR | 4000 |
+| OWON | B33 ¹ | Handheld multimeter | - | `OwonBLE` | Bluetooth LE | - | 4000 |
 | OWON | B33T+ ¹ | Handheld multimeter | - | `OwonBLE` | Bluetooth LE | - | 4000 |
 | OWON | B35T+ ¹ | Handheld multimeter | - | `OwonBLE` | Bluetooth LE | - | 6000 |
 | OWON | B41T+ ¹ | Handheld multimeter | - | `OwonBLE` | Bluetooth LE | - | 22000 |
 | OWON | CM2100B | Clamp meter | - | `OwonBLE` | Bluetooth LE | - | 20000 |
+| OWON | CMS061 ¹ | Handheld multimeter | - | `OwonBLE15` | Bluetooth LE | - | 20000 |
+| OWON | CMS101 ¹ | Handheld multimeter | - | `OwonBLE15` | Bluetooth LE | - | 20000 |
 | OWON | OW16B ¹ | Handheld multimeter | - | `OwonBLE` | Bluetooth LE | - | 6000 |
 | OWON | OW18B ¹ | Handheld multimeter | - | `OwonBLE` | Bluetooth LE | - | 6000 |
 | OWON | OW18E ¹ | Handheld multimeter | - | `OwonBLE` | Bluetooth LE | - | 20000 |
+| OWON | OW65B ¹ | Handheld multimeter | - | `OwonBLE15` | Bluetooth LE | - | 6000 |
+| OWON | OW67B ¹ | Handheld multimeter | - | `OwonBLE15` | Bluetooth LE | - | 60000 |
+| OWON | OW69B ¹ | Handheld multimeter | - | `OwonBLE15` | Bluetooth LE | - | 60000 |
 | PCE | PCE-DM32 ¹ | Handheld multimeter | FS9721 LP3 | `VC820Continuous` | 2400 8N1 | DTR | 4000 |
 | PeakTech | 2025 ¹ | Handheld multimeter | FS9922-DMM4 | `QM1537Continuous` | 2400 8N1 | DTR | 4000 |
 | PeakTech | 3315 | Handheld multimeter | ES51962 | `CyrustekES51962` | 2400 7N1 | DTR | 4000 |
@@ -322,6 +328,8 @@ meter working, please report it on the
 | Uni-Trend | UT161D ¹ | Handheld multimeter | - | `UniTUT61Plus` | Bluetooth LE | - | 6000 |
 | Uni-Trend | UT161E ¹ | Handheld multimeter | - | `UniTUT61Plus` | Bluetooth LE | - | 22000 |
 | Uni-Trend | UT202BT | Clamp meter | - | `UniTUT202BT` | Bluetooth LE | - | 10000 |
+| Uni-Trend | UT217A ¹ | Handheld multimeter | - | `OwonBLE15` | Bluetooth LE | - | 20000 |
+| Uni-Trend | UT217B ¹ | Handheld multimeter | - | `OwonBLE15` | Bluetooth LE | - | 20000 |
 | Uni-Trend | UT30A ¹ | Handheld multimeter | FS9721 LP3 | `VC820Continuous` | 2400 8N1 | DTR | 4000 |
 | Uni-Trend | UT30E ¹ | Handheld multimeter | FS9721 LP3 | `VC820Continuous` | 2400 8N1 | DTR | 4000 |
 | Uni-Trend | UT321 ¹ | Thermometer | - | `UniTUT32x` | 2400 8N1 | - | 9999 |
@@ -396,6 +404,10 @@ meter working, please report it on the
 | Voltcraft | VC 940 | Handheld multimeter | - | `VC940Continuous` | 2400 7O1 | DTR | 40000 |
 | Voltcraft | VC 950 ¹ | Handheld multimeter | - | `Appa500` | 9600 8N1 | - | 50000 |
 | Voltcraft | VC 960 | Handheld multimeter | - | `VC940Continuous` | 2400 7O1 | DTR | 40000 |
+| Voltcraft | VC871 ¹ | Handheld multimeter | - | `OwonBLE15` | Bluetooth LE | - | 60000 |
+| Voltcraft | VC891 ¹ | Handheld multimeter | - | `OwonBLE15` | Bluetooth LE | - | 60000 |
+| Voltcraft | VC915 ¹ | Handheld multimeter | - | `OwonBLE15` | Bluetooth LE | - | 20000 |
+| Voltcraft | VC925 PV ¹ | Handheld multimeter | - | `OwonBLE15` | Bluetooth LE | - | 20000 |
 | Wintex | TD2200 | Handheld multimeter | ES51922 | `CyrustekES51922` | 19200 7N1 | DTR | 22000 |
 | ZOTEK | ZT-300AB ¹ | Handheld multimeter | - | `ZotekBLE` | Bluetooth LE | - | 6000 |
 | ZOTEK | ZT-5566SE ¹ | Bench multimeter | - | `ZotekBLE` | Bluetooth LE | - | 20000 |
@@ -409,9 +421,9 @@ meter working, please report it on the
 - **Generic DTM0660 4000 count, DTM0660 6000 count, DTM0660 8000 count**: the DTM0660 chip has a UART, but meters built on it (Victor VC921 and similar) ship without an interface: an IR LED with a 100 Ω resistor goes on the chip's TX pin and the RS232 bit in the 24C02 EEPROM has to be set - [eevblog: hacking the Victor VC-921](https://www.eevblog.com/forum/testgear/hacking-the-victor-vc-921/). PeakTech 3415 and Velleman DVM4100 use the same chip but come with a cable and need no change.
 - **Vichy VC99**: the FS9922-DMM4 chip sends the display at 2400 baud on an unused pin; a wire or IR LED has to be soldered to it and *REL* held to start the output - [Hackaday](https://hackaday.com/2010/11/30/unlocking-rs232-serial-comm-on-a-multimeter/), [David Pilling](https://www.davidpilling.com/wiki/index.php/VC99).
 
-290 devices across 55 vendors.
+302 devices across 55 vendors.
 
-By type: Handheld multimeter 213, Bench multimeter 28, Clamp meter 25, Thermometer 6, Air quality meter 5, Generic 4, Luxmeter 3, Battery monitor 2, Solar charge controller 2, Inverter 1, Sound level meter 1.
+By type: Handheld multimeter 225, Bench multimeter 28, Clamp meter 25, Thermometer 6, Air quality meter 5, Generic 4, Luxmeter 3, Battery monitor 2, Solar charge controller 2, Inverter 1, Sound level meter 1.
 
 ## Command line
 
