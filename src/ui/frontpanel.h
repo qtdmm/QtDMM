@@ -22,9 +22,8 @@ class ValueFeed;
 ///
 /// The panel shows the meter of value() (ValueFeed): its readings, min/max
 /// and staleness on the LCD, its key states on the keys; a click on a key
-/// goes to that meter. Each meter open in the process has one (MainWindow),
-/// the window's meter the one InstanceWidget feeds further (the value
-/// choice). The LCD takes the colour of its meter's raised alarm, under it
+/// goes to that meter. Each meter open in the process has one (MainWindow).
+/// The LCD takes the colour of its meter's raised alarm, under it
 /// the PASS/FAIL test's green or red, and the verdict on the value it shows.
 class FrontPanel : public QWidget
 {

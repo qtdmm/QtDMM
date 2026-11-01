@@ -257,7 +257,8 @@ each device's entry in My devices, with its alarms and PASS/FAIL test: an
 entry that is there wins (a port changed since), one that is missing - on
 another computer, or deleted - is added back from the copy. Its alarms
 come back without their programs (a file may come from anyone): set them
-again under *Alarms...* if you want them. Workspaces of
+again under *Alarms...* if you want them. A Victron device's key is not
+written to the file; enter it again in the device's settings. Workspaces of
 QtDMM 26.2 to 26.4 before this (layout only) are still read; their
 window's device is connected first.
 

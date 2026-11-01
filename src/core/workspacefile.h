@@ -30,10 +30,11 @@ public:
   QString     description;
   int         width = 0;      ///< the main window's size, 0: none
   int         height = 0;
-  /// The window's device (its id in My devices); empty: none of them.
+  /// The window's device of a file before 26.4 (its id in My devices),
+  /// connected first; empty: none.
   QString     windowDevice;
-  /// Copies of the devices' entries in My devices: the window's, then
-  /// those beside it ("Windows/open-devices") in their order.
+  /// Copies of the devices' entries in My devices, those connected
+  /// ("Windows/open-devices") in their order; without secrets (ble-key).
   QList<MyDevice> devices;
   /// The window's keys (storeWorkspace()).
   QVariantMap keys;

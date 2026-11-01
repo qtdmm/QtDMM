@@ -9,15 +9,14 @@
 #include "core/reading.h"
 
 /// Which value a view, an alarm or the graph follows: the value @c id of the
-/// meter @c source (Reading::source). An empty source is the window's own
-/// meter, which is all there is until several meters share a process.
+/// meter @c source (Reading::source). An empty source is no meter; before
+/// 26.4 it was the window's own (settings of then are moved to its entry).
 ///
-/// Stored as text: the own meter's value as the bare number it always was
-/// ("1"), so old settings load and older versions still read new ones;
-/// another meter's as "1@device:ab12cd34".
+/// Stored as text: "1@device:ab12cd34"; a bare number ("1") is a value
+/// without a meter, as settings from before 26.4 wrote it.
 struct ValueRef
 {
-  QString source;   ///< Reading::source; empty = the window's own meter
+  QString source;   ///< Reading::source; empty = none
   int     id = 0;   ///< 0 = main value, 1..3 = secondary values
 
   ValueRef() = default;

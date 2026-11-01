@@ -166,6 +166,16 @@ void Settings::remove(const QString &name)
   m_qsettings->remove(name);
 }
 
+QStringList Settings::keysIn(const QString &group) const
+{
+  QStringList keys;
+  m_qsettings->beginGroup(group);
+  for (const QString &key : m_qsettings->childKeys())
+    keys << group + '/' + key;
+  m_qsettings->endGroup();
+  return keys;
+}
+
 void Settings::sync()
 {
   m_qsettings->sync();

@@ -755,8 +755,8 @@ QList<QAction *> MainWindow::createArrangeMenu()
   QAction *loadWs = m_arrangeMenu->addAction(QIcon::fromTheme("document-open"), tr("L&oad workspace..."));
   loadWs->setObjectName("action_LoadWorkspace");
   loadWs->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">Load workspace</span></p>"
-                          "<p>Takes a set-up saved with <i>Save workspace</i>: the window's device and the "
-                          "devices open beside it (others close), which windows are shown with which values, the "
+                          "<p>Takes a set-up saved with <i>Save workspace</i>: the devices connected (others "
+                          "close), which windows are shown with which values, the "
                           "arrangement, title bars, toolbar, design and the size of the main window. A device "
                           "missing in My devices is added back from the file.</p></body></html>"));
   connect(loadWs, &QAction::triggered, this, &MainWindow::loadWorkspace);
@@ -768,8 +768,8 @@ QList<QAction *> MainWindow::createArrangeMenu()
   saveWs->setObjectName("action_SaveWorkspace");
   saveWs->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">Save workspace</span></p>"
                           "<p>Writes the set-up to a file, under a name and a description, with a picture of "
-                          "the windows: the window's device and the devices open beside it (a copy of their "
-                          "entries in My devices), which windows are shown with which values, the arrangement, "
+                          "the windows: the devices connected (a copy of their entries in My devices), which "
+                          "windows are shown with which values, the arrangement, "
                           "title bars, toolbar, design and the size of the main window.</p></body></html>"));
   connect(saveWs, &QAction::triggered, this, &MainWindow::saveWorkspace);
   m_autoSaveLayout = m_arrangeMenu->addAction(tr("Save layout on e&xit"));
@@ -1228,7 +1228,7 @@ void MainWindow::startSLOT()
     return;
   if (!m_wid->askRecordingLength())
     return;
-  // the meters open beside it follow (DeviceSession)
+  // all meters connected record, the leading one sets the pace (DeviceSession)
   m_wid->startSLOT();
 }
 
@@ -2099,6 +2099,12 @@ void MainWindow::saveWindows()
       cfg->setString(key, value.toString());
   });
   cfg->setBool("Windows/user-sized", m_userSized);
+  // the front panels of devices no longer connected: their keys go
+  const QStringList open = cfg->getString("Windows/open-devices").split(' ', Qt::SkipEmptyParts);
+  static const QRegularExpression panelKey("^Windows/(geometry-)?panel-([^-]+)-?");
+  for (const QString &key : cfg->keysIn("Windows"))
+    if (const QRegularExpressionMatch m = panelKey.match(key); m.hasMatch() && !open.contains(m.captured(2)))
+      cfg->remove(key);
 }
 
 void MainWindow::applyWorkspace(const WorkspaceGet &get)

@@ -282,8 +282,11 @@ bool WorkspaceFile::write(const QString &path, QString *error) const
     {
       o.insert("name", d->name);
       QJsonObject k;
+      // a file is passed on: no secret of the device in it (a Victron's key
+      // stays in My devices; one added from the file asks for it)
       for (auto it = d->keys.cbegin(); it != d->keys.cend(); ++it)
-        k.insert(it.key(), it.value().toString());
+        if (it.key() != QLatin1String("Port settings/ble-key"))
+          k.insert(it.key(), it.value().toString());
       o.insert("keys", k);
       const QJsonValue alarms = ruleToJson(d->alarms);
       if (!alarms.isUndefined())
