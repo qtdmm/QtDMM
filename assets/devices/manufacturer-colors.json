@@ -817,6 +817,67 @@
         "handheld_dmm",
         "clamp_meter"
       ]
+    },
+    "aoputtriver": {
+      "name": "AOPUTTRIVER",
+      "match": [
+        "AOPUTTRIVER"
+      ],
+      "url": "https://www.aoputtriver.com/",
+      "example_device": "AP-570C-APP",
+      "colors": {
+        "primary": "#005EFE",
+        "secondary": "#2C2C2C"
+      },
+      "types": [
+        "clamp_meter"
+      ]
+    },
+    "eevblog": {
+      "name": "EEVblog",
+      "match": [
+        "EEVblog"
+      ],
+      "url": "https://www.eevblog.com/",
+      "example_device": "121GW",
+      "colors": {
+        "primary": "#089FE4",
+        "secondary": "#585E6F"
+      },
+      "types": [
+        "handheld_dmm"
+      ]
+    },
+    "minipa": {
+      "name": "Minipa",
+      "match": [
+        "Minipa"
+      ],
+      "url": "https://www.minipa.com.br/",
+      "example_device": "ET-2517A",
+      "colors": {
+        "primary": "#2C79B5",
+        "secondary": "#474346"
+      },
+      "types": [
+        "handheld_dmm"
+      ]
+    },
+    "owon": {
+      "name": "OWON",
+      "match": [
+        "OWON"
+      ],
+      "url": "https://www.owon.com.hk/",
+      "example_device": "B35T+",
+      "colors": {
+        "primary": "#1A5ECD",
+        "secondary": "#5A5E5F"
+      },
+      "types": [
+        "handheld_dmm",
+        "clamp_meter"
+      ]
     }
   },
   "notes": [
