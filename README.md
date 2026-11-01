@@ -179,12 +179,12 @@ meter working, please report it on the
 | Brymen | BM255 ¹ | Handheld multimeter | Brymen BM25x | `BrymenBM25x` | 9600 8N1 | DTR RTS | 6000 |
 | Brymen | BM257 ¹ | Handheld multimeter | Brymen BM25x | `BrymenBM25x` | 9600 8N1 | DTR RTS | 6000 |
 | Brymen | BM521s ¹ | Handheld multimeter | Brymen BM52x (BU-86X) | `BrymenBM52x` | USB-HID (BU-86X) | - | 6000 |
-| Brymen | BM525s ¹ | Handheld multimeter | Brymen BM52x (BU-86X) | `BrymenBM52x` | USB-HID (BU-86X) | - | 6000 |
+| Brymen | BM525s | Handheld multimeter | Brymen BM52x (BU-86X) | `BrymenBM52x` | USB-HID (BU-86X) | - | 6000 |
 | Brymen | BM787BT ¹ | Handheld multimeter | - | `BrymenBM78xBT` | Bluetooth LE | - | 60000 |
 | Brymen | BM788BT ¹ | Handheld multimeter | - | `BrymenBM78xBT` | Bluetooth LE | - | 60000 |
 | Brymen | BM821s ¹ | Handheld multimeter | Brymen BM82x (BU-86X) | `BrymenBM82x` | USB-HID (BU-86X) | - | 6000 |
 | Brymen | BM822s ¹ | Handheld multimeter | Brymen BM82x (BU-86X) | `BrymenBM82x` | USB-HID (BU-86X) | - | 6000 |
-| Brymen | BM827s ¹ | Handheld multimeter | Brymen BM82x (BU-86X) | `BrymenBM82x` | USB-HID (BU-86X) | - | 6000 |
+| Brymen | BM827s | Handheld multimeter | Brymen BM82x (BU-86X) | `BrymenBM82x` | USB-HID (BU-86X) | - | 6000 |
 | Brymen | BM829s ¹ | Handheld multimeter | Brymen BM82x (BU-86X) | `BrymenBM82x` | USB-HID (BU-86X) | - | 6000 |
 | Brymen | BM867s ¹ | Handheld multimeter | Brymen BM86x (BU-86X) | `BrymenBM86x` | USB-HID (BU-86X) | - | 50000 |
 | Brymen | BM869s | Handheld multimeter | Brymen BM86x (BU-86X) | `BrymenBM86x` | USB-HID (BU-86X) | - | 50000 |
@@ -266,6 +266,8 @@ meter working, please report it on the
 | Metex | universal system 9160 | Bench multimeter | Metex KS57C2016 | `Metex14` | 1200 7N2 | DTR | 4000 |
 | Metravi | PRO Solar-1 ¹ | Handheld multimeter | - | `AppaDmm` | Bluetooth LE | - | 6000 |
 | Metrel | MD9015 ¹ | Handheld multimeter | FS9721 LP3 | `VC820Continuous` | 2400 8N1 | DTR | 4000 |
+| Minipa | ET-2517A | Handheld multimeter | Brymen BM82x (BU-86X) | `BrymenBM82x` | USB-HID (BU-86X) | - | 6000 |
+| Minipa | ET-2615A | Handheld multimeter | Brymen BM52x (BU-86X) | `BrymenBM52x` | USB-HID (BU-86X) | - | 6000 |
 | OWON | B33 ¹ | Handheld multimeter | - | `OwonBLE` | Bluetooth LE | - | 4000 |
 | OWON | B33T+ ¹ | Handheld multimeter | - | `OwonBLE` | Bluetooth LE | - | 4000 |
 | OWON | B35T+ ¹ | Handheld multimeter | - | `OwonBLE` | Bluetooth LE | - | 6000 |
@@ -438,9 +440,9 @@ meter working, please report it on the
 - **Generic DTM0660 4000 count, DTM0660 6000 count, DTM0660 8000 count**: the DTM0660 chip has a UART, but meters built on it (Victor VC921 and similar) ship without an interface: an IR LED with a 100 Ω resistor goes on the chip's TX pin and the RS232 bit in the 24C02 EEPROM has to be set - [eevblog: hacking the Victor VC-921](https://www.eevblog.com/forum/testgear/hacking-the-victor-vc-921/). PeakTech 3415 and Velleman DVM4100 use the same chip but come with a cable and need no change.
 - **Vichy VC99**: the FS9922-DMM4 chip sends the display at 2400 baud on an unused pin; a wire or IR LED has to be soldered to it and *REL* held to start the output - [Hackaday](https://hackaday.com/2010/11/30/unlocking-rs232-serial-comm-on-a-multimeter/), [David Pilling](https://www.davidpilling.com/wiki/index.php/VC99).
 
-319 devices across 56 vendors.
+321 devices across 57 vendors.
 
-By type: Handheld multimeter 237, Bench multimeter 33, Clamp meter 25, Thermometer 6, Air quality meter 5, Generic 4, Luxmeter 3, Battery monitor 2, Solar charge controller 2, Inverter 1, Sound level meter 1.
+By type: Handheld multimeter 239, Bench multimeter 33, Clamp meter 25, Thermometer 6, Air quality meter 5, Generic 4, Luxmeter 3, Battery monitor 2, Solar charge controller 2, Inverter 1, Sound level meter 1.
 
 ## Command line
 

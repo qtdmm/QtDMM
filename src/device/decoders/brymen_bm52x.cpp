@@ -1,9 +1,12 @@
 #include "device/decoders/brymen_bm52x.h"
 
 // Brymen BM52x / BM82x over the BU-86X adapter (libsigrok "brymen-bm52x",
-// "brymen-bm82x", "hid/bu86x"). "*": not confirmed on hardware.
+// "brymen-bm82x", "hid/bu86x"). "*": not confirmed on hardware. A Minipa
+// ET-2615A (BM525s) and ET-2517A (BM827s) were, by their captures for
+// dmm-tools (issues #35, #36), now the real vectors of the specs.
 static const bool registered = []() {
-  DmmDecoder::addConfig({"Brymen", "BM525s *", "", 0, FrameFormat::BrymenBM52x, 8, 1, 1, 0, 6000, 0, 0, 0, "", "", 2});
+  DmmDecoder::addConfig({"Brymen", "BM525s", "", 0, FrameFormat::BrymenBM52x, 8, 1, 1, 0, 6000, 0, 0, 0, "", "", 2});
+  DmmDecoder::addConfig({"Minipa", "ET-2615A", "", 0, FrameFormat::BrymenBM52x, 8, 1, 1, 0, 6000, 0, 0, 0, "", "", 2});
   DmmDecoder::addConfig({"Brymen", "BM829s *", "", 0, FrameFormat::BrymenBM82x, 8, 1, 1, 0, 6000, 0, 0, 0, "", "", 2});
   // the same meters under other names, and their smaller siblings
   // (HKJ's TestController device list, "BrymenDMM": protocol 525 or 829)
@@ -11,7 +14,8 @@ static const bool registered = []() {
   DmmDecoder::addConfig({"Elma", "BM525s *", "", 0, FrameFormat::BrymenBM52x, 8, 1, 1, 0, 6000, 0, 0, 0, "", "", 2});
   DmmDecoder::addConfig({"Brymen", "BM821s *", "", 0, FrameFormat::BrymenBM82x, 8, 1, 1, 0, 6000, 0, 0, 0, "", "", 2});
   DmmDecoder::addConfig({"Brymen", "BM822s *", "", 0, FrameFormat::BrymenBM82x, 8, 1, 1, 0, 6000, 0, 0, 0, "", "", 2});
-  DmmDecoder::addConfig({"Brymen", "BM827s *", "", 0, FrameFormat::BrymenBM82x, 8, 1, 1, 0, 6000, 0, 0, 0, "", "", 2});
+  DmmDecoder::addConfig({"Brymen", "BM827s", "", 0, FrameFormat::BrymenBM82x, 8, 1, 1, 0, 6000, 0, 0, 0, "", "", 2});
+  DmmDecoder::addConfig({"Minipa", "ET-2517A", "", 0, FrameFormat::BrymenBM82x, 8, 1, 1, 0, 6000, 0, 0, 0, "", "", 2});
   DmmDecoder::addConfig({"Elma", "BM821s *", "", 0, FrameFormat::BrymenBM82x, 8, 1, 1, 0, 6000, 0, 0, 0, "", "", 2});
   DmmDecoder::addConfig({"Elma", "BM829s *", "", 0, FrameFormat::BrymenBM82x, 8, 1, 1, 0, 6000, 0, 0, 0, "", "", 2});
   DmmDecoder::addConfig({"Greenlee", "DM-810A *", "", 0, FrameFormat::BrymenBM82x, 8, 1, 1, 0, 6000, 0, 0, 0, "", "", 2});
@@ -114,13 +118,12 @@ std::optional<DmmDecoder::DmmResponse> DecoderBrymenBM52x::decode(const QByteArr
   const bool isDiode = second == "diod";
   QString text = digits(&buf[2], 0x80, &tempUnit);
   const bool overload = text.contains("0L") || text.contains("0.L");
-  const bool noTemp = text == "---C" || text == "---F" || text == "---";
   const bool isDb = (buf[6] & 0x10) != 0;
   bool mainMilli = (buf[14] & 0x40) != 0;
 
   const bool dc = (buf[1] & 0x20) != 0;
   const bool ac = (buf[1] & 0x10) != 0;
-  QString unit, special = dc ? "DC" : (ac ? "AC" : "");
+  QString unit, special = dc && ac ? "ACDC" : dc ? "DC" : (ac ? "AC" : "");
   if (buf[14] & 0x20)      { unit = "V"; if (isDiode) special = "DI"; }
   else if (buf[14] & 0x10) { unit = "A"; }
   else if (buf[14] & 0x01) { unit = "F"; special = "CA"; }
@@ -132,9 +135,8 @@ std::optional<DmmDecoder::DmmResponse> DecoderBrymenBM52x::decode(const QByteArr
   else if (buf[14] & 0x04) { unit = "%"; special = "DU"; }
   else if ((buf[2] & 0x09) && !tempUnit.isNull())
   {
-    if (noTemp)
-      return std::nullopt;
-    unit = tempUnit; special = "TE";
+    unit = tempUnit == 'F' ? "dF" : "C";
+    special = "TE";
   }
   if (isDb)
     mainMilli = false;
@@ -149,12 +151,27 @@ std::optional<DmmDecoder::DmmResponse> DecoderBrymenBM52x::decode(const QByteArr
 
   bool ok = false;
   const double value = text.toDouble(&ok);
-  if (!ok && !overload)
-    return std::nullopt;
-  m_result.main().val = overload ? QStringLiteral(" OL ") : text;
   m_result.main().unit = prefix + unit;
   m_result.main().special = special;
-  m_result.main().dval = ok && !overload ? value * prefixFactor(prefix) : 0.0;
+  if (overload)
+  {
+    m_result.main().val = QStringLiteral(" OL ");
+    m_result.main().dval = 0.0;
+  }
+  else if (!ok)
+  {
+    // no reading: dashes (a thermocouple missing, a range or function
+    // being changed, also beside a lit unit), a lone point, "Auto" while
+    // AutoCheck waits (dmm-tools, captures of a BM827s and a BM525s)
+    text.remove('.');
+    m_result.main().val = text.isEmpty() ? QStringLiteral("----") : text;
+    m_result.main().noValue = true;
+  }
+  else
+  {
+    m_result.main().val = text;
+    m_result.main().dval = value * prefixFactor(prefix);
+  }
 
   // --- secondary display ---
   const QString text2 = digits(&buf[7], 0x20, nullptr);
@@ -168,7 +185,7 @@ std::optional<DmmDecoder::DmmResponse> DecoderBrymenBM52x::decode(const QByteArr
     else if (buf[13] & 0x02) unit2 = "Ohm";
     else if (buf[12] & 0x02) unit2 = "S";
     else if (buf[12] & 0x01) unit2 = "F";
-    else if (buf[7] & 0x06)  unit2 = tempUnit.isNull() ? QString() : QString(tempUnit);
+    else if (buf[7] & 0x06)  unit2 = tempUnit.isNull() ? QString() : tempUnit == 'F' ? "dF" : "C";
     else if (buf[13] & 0x01) unit2 = "Hz";
     else if (buf[11] & 0x08) unit2 = "%";
     QString prefix2;
