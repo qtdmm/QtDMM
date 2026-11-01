@@ -1,0 +1,79 @@
+protocol: UniTUT181A
+decoder: src/device/decoders/uni_t_ut181a.cpp
+devices: [Uni-Trend UT181A, Uni-Trend UT181A (UT-D07B Bluetooth)]
+frames_per_reading: 1
+unit_map:                      # spec spelling -> what the decoder emits
+  "u": "µ"
+sources:
+  - "ablage/dmm-tools/docs/research/ut181/reverse-engineered-protocol.md (dmm-tools, GPL-3.0-or-later: from UNI-T's PC software and community work, confirmed on two meters, issue #5 and PR #8)"
+  - "ablage/dmm-tools/crates/dmm-lib/tests/golden/ut181a/ (the meters' payloads; the frames below wrap them in header, length and sum)"
+
+# AB CD, a 16-bit LE length (payload + 2), the payload, a 16-bit LE sum of
+# the length bytes and the payload (§3). Payload type 0x02 is a measurement
+# (§5): misc (bits 1-2 aux present, 4-6 format 0 normal, 1 REL, 2 MIN/MAX,
+# 4 PEAK, 7 HOLD), misc2 (bit 0 AUTO), mode word LE (family in the high
+# byte, §6), range, then the values - float32 LE in the displayed unit, a
+# precision byte (bit 0 OL, bit 1 -OL, both over 0.0 no reading, bits 4-7
+# decimals) and an 8-byte unit string (§8: VDC, mVac+dc, k~ = kOhm, B0 43 =
+# degree C). Normal: main, aux1, aux2; REL: relative, reference, absolute;
+# MIN/MAX: current, max, average, min (5 bytes, the last three with 4 bytes
+# of seconds) and one unit; PEAK: max, min. The stream starts with
+# SET_MONITOR AB CD 04 00 05 01 0A 00; the meter answers each command with
+# a type 0x01 frame ("OK"/"ER"), not a reading.
+#
+# All vectors are real UT181A payloads (dmm-tools' golden tests, captured
+# by @diego351 and @alexander-magon); the readings below follow §5 and §8,
+# their aux values agree with what the golden files give.
+vectors:
+  - source_line: "Hz with no reading yet, the frame after a range switch (both overload bits over 0.0) - captured from a real UT181A (issue #5, @diego351, 2026-09-27)"
+    bytes: AB CD 21 00 02 08 00 11 71 01 00 00 00 00 33 48 7A 00 00 10 00 00 00 00 00 00 00 48 7A 00 00 00 00 00 00 75 02
+    reading: {value: "----", unit: "Hz", range_mode: "manual", shown: "none"}
+    expect: {special: "HZ"}
+  - source_line: "mV AC+DC, the reading the RMS sum of its AC and DC parts, 600mV range - captured from a real UT181A (issue #5, @diego351, 2026-09-27)"
+    bytes: AB CD 2F 00 02 06 01 41 21 02 A6 26 09 44 20 6D 56 61 63 2B 64 63 00 D3 08 09 44 20 6D 56 41 43 00 00 00 00 36 DB B4 C1 20 6D 56 44 43 00 00 00 00 CD 0A
+    reading: {value: "548.60", unit: "mV", range_mode: "auto"}
+    expect: {special: "ACDC", val2: "548.14", unit2: "mV", id2: 1}
+  - source_line: "Resistance with the leads open, overload on the 60MΩ range (+OL bit with the out-of-range float) - captured from a real UT181A (issue #5, @diego351, 2026-09-27)"
+    bytes: AB CD 21 00 02 08 01 11 51 06 36 D5 7B 42 31 4D 7E 00 43 00 64 63 00 04 EB 8B 42 4D 7E 00 43 00 00 00 00 2C 07
+    reading: {value: "OL", unit: "MOhm", range_mode: "auto"}
+    expect: {special: "OH", val: "OL"}
+  - source_line: "Temperature with two thermocouples, T1 on the main display and T2 alongside it - captured from a real UT181A (issue #5, @diego351, 2026-09-02)"
+    bytes: AB CD 22 00 02 02 01 11 42 01 F0 ED CA 41 10 B0 43 00 43 00 00 00 00 26 FC C4 41 10 B0 43 00 00 00 00 00 5A 2D 08
+    reading: {value: "25.4", unit: "C", range_mode: "auto"}
+    expect: {special: "TE", val2: "24.6", unit2: "C", id2: 1}
+  - source_line: "Temperature °F, T1 - T2 with both thermocouples beside it - captured from a real UT181A (issue #5, @diego351, 2026-09-27)"
+    bytes: AB CD 2F 00 02 06 01 31 43 01 00 76 79 3F 10 B0 46 00 43 00 63 00 00 52 99 A3 42 10 B0 46 00 00 00 00 00 00 66 A6 A1 42 10 B0 46 00 00 00 2B 64 63 44 0A
+    reading: {value: "1.0", unit: "dF", range_mode: "auto"}
+    expect: {special: "TE", val2: "81.8", unit2: "dF", id2: 1}
+  - source_line: "µA AC Hz with no signal: 0.00 Hz and the period overloaded, 600µA range - captured from a real UT181A (issue #5, @diego351, 2026-09-27)"
+    bytes: AB CD 3B 00 02 0E 01 21 82 01 89 6F DE 3D 20 75 41 41 43 00 64 63 00 00 00 00 00 20 48 7A 00 00 00 9C B4 33 00 00 00 00 A1 6D 73 00 43 00 00 64 63 00 00 00 00 75 41 41 43 00 00 00 00 4E 0B
+    reading: {value: "0.11", unit: "uA", range_mode: "auto"}
+    expect: {special: "AC", val2: "0.00", unit2: "Hz", id2: 1}
+  - source_line: "µA DC Peak with the peak maximum in and the minimum still blank, 600µA range - captured from a real UT181A (issue #5, @diego351, 2026-09-27)"
+    bytes: AB CD 22 00 02 42 00 31 81 01 95 B4 B3 3F 10 75 41 44 43 00 64 63 00 00 00 00 00 13 75 41 44 43 00 9C B4 33 3B 08
+    reading: {value: "1.4", unit: "uA", range_mode: "manual"}
+    expect: {special: "DC", val2: "----", unit2: "µA", id2: 1}
+  - source_line: "V AC dBm, the voltage and the 600 Ω reference beside it, 6V range - captured from a real UT181A (issue #5, @diego351, 2026-09-27)"
+    bytes: AB CD 3B 00 02 0E 01 61 11 01 7B 72 BD C0 20 64 42 6D 00 00 64 63 00 02 9A C8 3E 40 56 41 43 00 00 00 00 00 00 00 16 44 00 7E 00 00 43 00 00 00 00 57 69 CA 3E 56 41 43 00 00 00 00 00 9C 0B
+    reading: {value: "-5.92", unit: "dBm", range_mode: "auto"}
+    expect: {val2: "0.3918", unit2: "V", id2: 1}
+  - source_line: "V AC with the Hz secondary display on mains, 600V range - captured from a real UT181A (issue #5)"
+    bytes: AB CD 3B 00 02 0E 03 21 11 03 52 38 6F 43 20 56 41 43 00 00 00 00 00 F6 08 48 42 20 48 7A 00 00 00 00 00 5A D5 F8 9F 41 20 6D 73 00 43 00 00 00 00 3D 06 71 43 56 41 43 00 00 00 00 00 3E 0B
+    reading: {value: "239.22", unit: "V", range_mode: "auto"}
+    expect: {special: "AC", val2: "50.01", unit2: "Hz", id2: 1}
+  - source_line: "V DC in COMP, INNER window 1 V to 3 V, reading outside it (FAIL), 6V range - captured from a real UT181A (issue #5, @diego351, 2026-09-27)"
+    bytes: AB CD 2C 00 02 08 10 11 31 01 68 C3 57 3B 40 56 44 43 00 10 00 00 00 82 2F F5 BC 56 44 43 00 00 00 80 FC 00 01 04 00 00 40 40 00 00 80 3F 72 09
+    reading: {value: "0.0033", unit: "V", range_mode: "manual"}
+    expect: {special: "DC"}
+  - source_line: "V DC in MIN/MAX a second in (maximum set at 0 s, minimum at 1 s), 6V range - captured from a real UT181A (issue #5, @diego351, 2026-09-27)"
+    bytes: AB CD 30 00 02 2F 00 11 31 01 9B 39 51 39 40 01 C4 82 3B 40 00 00 00 00 DF 81 C8 3A 40 01 00 00 00 9B 39 51 39 40 01 00 00 00 56 44 43 00 2B 64 63 00 15 0A
+    reading: {value: "0.0002", unit: "V", range_mode: "manual"}
+    expect: {special: "DC", val2: "0.0040", unit2: "V", id2: 1}
+  - source_line: "V DC with the leads open, 6V range, bargraph but no sub-display - captured from a real UT181A (issue #5 / PR #8, @alexander-magon, 2026-04-07)"
+    bytes: AB CD 21 00 02 08 01 11 31 01 AF 73 D1 38 40 56 44 43 00 00 00 00 00 60 A2 23 BC 56 44 43 00 00 00 00 00 75 06
+    reading: {value: "0.0001", unit: "V", range_mode: "auto"}
+    expect: {special: "DC"}
+  - source_line: "V DC in REL, reference 2.8 mV taken with the meter's own REL key, 6V range - captured from a real UT181A (issue #5, @diego351, 2026-09-27)"
+    bytes: AB CD 3B 00 02 1E 00 12 31 01 6F 12 83 BB 40 56 44 43 00 40 00 00 00 67 12 37 3B 40 56 44 43 00 00 9B D7 0F 35 EB 9C BA 40 56 44 43 00 00 2B 64 63 A2 E3 37 BE 56 44 43 00 00 00 00 00 20 0F
+    reading: {value: "-0.0040", unit: "V", range_mode: "manual"}
+    expect: {special: "DC", val2: "0.0028", unit2: "V", id2: 1}

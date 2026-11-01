@@ -60,6 +60,7 @@ const std::vector<ProtocolInfo> &protocols()
     { FrameFormat::VC820BLE,              "VC820BLE",              QT_TRANSLATE_NOOP("Protocols", "14 bytes binary, streamed over Bluetooth LE (FS9721, HoldPeak HP-570C-APP)"), "FS9721 LP3", "Bluetooth LE", make<DecoderVC820> },
     { FrameFormat::OwonBLE,               "OwonBLE",               QT_TRANSLATE_NOOP("Protocols", "6 bytes binary, streamed over Bluetooth LE (OWON B35T+, B41T+, OW18E, CM2100B)"), "", "Bluetooth LE", make<DecoderOwon> },
     { FrameFormat::OwonBLE15,             "OwonBLE15",             QT_TRANSLATE_NOOP("Protocols", "15 bytes binary, streamed over Bluetooth LE (OWON CMS101, OW65B-OW69B, Voltcraft VC871-VC925 PV)"), "", "Bluetooth LE", make<DecoderOwon15> },
+    { FrameFormat::UniTUT181A,            "UniTUT181A",            QT_TRANSLATE_NOOP("Protocols", "AB CD frames of any length with float values, streamed once asked (UNI-T UT181A, UT-D09 cable or UT-D07B adapter)"), "", "Bluetooth LE", make<DecoderUT181A> },
   };
   return table;
 }

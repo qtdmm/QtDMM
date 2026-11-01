@@ -13,6 +13,7 @@
 #include "device/dmmdecoder.h"
 #include "device/protocols.h"
 #include "device/decoders/uni_t_ienv.h"
+#include "device/decoders/uni_t_ut181a.h"
 #include "core/readingadapter.h"
 
 // The second value of a frame, as the golden data names it (dval2, val2,
@@ -273,6 +274,51 @@ int main(int argc, char **argv)
           ++length;
       }
       ocheck(values == 3, "six lost bytes: the frames after them still read");
+    }
+
+    // the UT181A (dmm-tools UT181 spec §3, §4): commands framed and summed,
+    // SET_MONITOR while no measurement came, the replies skipped, frames of
+    // any length found after garbage, the keys by the last mode
+    {
+      const FrameFormat::DataFormat ut = FrameFormat::UniTUT181A;
+      auto u = DmmDecoder::getInstance(ut);
+      auto ucheck = [&](bool ok, const char *what)
+      {
+        if (!ok)
+        {
+          qWarning() << "UT181A:" << what;
+          ++problems;
+        }
+      };
+      ucheck(u->pollRequest() == QByteArray::fromHex("abcd040005010a00"), "SET_MONITOR 1 before the first measurement");
+      expect(ut, "hold", "abcd0400125a7000");
+      expect(ut, "auto", "abcd04000200 0600");
+      expect(ut, "minmax_off", "abcd040004000800");
+      ucheck(!u->decode(QByteArray::fromHex("abcd0500014f4ba000"), 0), "the OK reply: no reading");
+      // V DC 0.0001 V (PR #8), behind three bytes of garbage, byte by byte
+      const QByteArray vdc = QByteArray::fromHex("abcd2100020801113101af73d1384056444300000000"
+                                                 "0060a223bc56444300000000007506");
+      const QByteArray stream = QByteArray::fromHex("123456") + vdc + vdc;
+      char fifo[FIFO_LENGTH] = {};
+      size_t length = 0;
+      int values = 0;
+      for (char c : stream)
+      {
+        fifo[length] = c;
+        if (u->checkFormat(fifo, length))
+        {
+          const auto r = u->decode(QByteArray(fifo, int(length) + 1), 0);
+          values += r && r->main().val == "0.0001" && r->main().special == "DC" ? 1 : 0;
+          length = 0;
+        }
+        else
+          ++length;
+      }
+      ucheck(values == 2, "frames of any length found, garbage before them dropped");
+      ucheck(u->pollRequest().isEmpty(), "no SET_MONITOR while measurements come");
+      // REL: the mode word's last nibble, 0x3111 -> 0x3112; MAX/MIN on
+      ucheck(u->keyRequest("rel") == DecoderUT181A::command(0x01, QByteArray::fromHex("1231")), "REL: SET_MODE 0x3112");
+      ucheck(u->keyRequest("minmax") == DecoderUT181A::command(0x04, QByteArray::fromHex("01")), "MAX/MIN on");
     }
 
     // the HoldPeak HP-570C-APP: the FS9721 frame in two notifications of 7

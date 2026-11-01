@@ -787,52 +787,52 @@
 <context>
     <name>BleGattDevice</name>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="147"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="148"/>
         <source>No Bluetooth address configured.</source>
         <translation>Aucune adresse Bluetooth configurée.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="152"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="153"/>
         <source>This meter does not use a Bluetooth LE connection.</source>
         <translation>Ce multimètre n&apos;utilise pas de connexion Bluetooth LE.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="235"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="236"/>
         <source>The meter %1 closed the Bluetooth connection.</source>
         <translation>Le multimètre %1 a fermé la connexion Bluetooth.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="239"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="240"/>
         <source>Bluetooth: %1</source>
         <translation>Bluetooth : %1</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="166"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="167"/>
         <source>No answer from %1 - is the meter on and its Bluetooth switched on?</source>
         <translation>Pas de réponse de %1 - le multimètre est-il allumé et son Bluetooth activé ?</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="300"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="301"/>
         <source>%1 does not offer the expected Bluetooth service - is it the right meter?</source>
         <translation>%1 n&apos;offre pas le service Bluetooth attendu - est-ce le bon multimètre ?</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="306"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="307"/>
         <source>Could not open the Bluetooth service of %1.</source>
         <translation>Impossible d&apos;ouvrir le service Bluetooth de %1.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="329"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="330"/>
         <source>Bluetooth service error %1 on %2.</source>
         <translation>Erreur %1 du service Bluetooth sur %2.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="350"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="351"/>
         <source>%1 has no notify characteristic.</source>
         <translation>%1 n&apos;a pas de caractéristique de notification.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="364"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="365"/>
         <source>%1 has no writable characteristic.</source>
         <translation>%1 n&apos;a pas de caractéristique inscriptible.</translation>
     </message>
@@ -1734,67 +1734,67 @@
 <context>
     <name>DeviceType</name>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="174"/>
+        <location filename="../../src/device/devicetype.cpp" line="175"/>
         <source>Handheld multimeter</source>
         <translation>Multimètre portable</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="175"/>
+        <location filename="../../src/device/devicetype.cpp" line="176"/>
         <source>Bench multimeter</source>
         <translation>Multimètre de table</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="176"/>
+        <location filename="../../src/device/devicetype.cpp" line="177"/>
         <source>Clamp meter</source>
         <translation>Pince ampèremétrique</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="177"/>
+        <location filename="../../src/device/devicetype.cpp" line="178"/>
         <source>Thermometer</source>
         <translation>Thermomètre</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="178"/>
+        <location filename="../../src/device/devicetype.cpp" line="179"/>
         <source>Luxmeter</source>
         <translation>Luxmètre</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="179"/>
+        <location filename="../../src/device/devicetype.cpp" line="180"/>
         <source>Air quality meter</source>
         <translation>Mesureur de qualité de l&apos;air</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="180"/>
+        <location filename="../../src/device/devicetype.cpp" line="181"/>
         <source>Sound level meter</source>
         <translation>Sonomètre</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="181"/>
+        <location filename="../../src/device/devicetype.cpp" line="182"/>
         <source>Anemometer</source>
         <translation>Anémomètre</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="182"/>
+        <location filename="../../src/device/devicetype.cpp" line="183"/>
         <source>Battery monitor</source>
         <translation>Contrôleur de batterie</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="183"/>
+        <location filename="../../src/device/devicetype.cpp" line="184"/>
         <source>Solar charge controller</source>
         <translation>Régulateur de charge solaire</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="184"/>
+        <location filename="../../src/device/devicetype.cpp" line="185"/>
         <source>Inverter</source>
         <translation>Onduleur</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="185"/>
+        <location filename="../../src/device/devicetype.cpp" line="186"/>
         <source>Virtual meter</source>
         <translation>Appareil virtuel</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="186"/>
+        <location filename="../../src/device/devicetype.cpp" line="187"/>
         <source>Generic</source>
         <translation>Générique</translation>
     </message>
@@ -1803,8 +1803,8 @@
     <name>Discovery</name>
     <message>
         <location filename="../../src/device/discovery/discovery.cpp" line="107"/>
-        <source>UNI-T UT61B+, UT61D+, UT61E+ or UT161</source>
-        <translation>UNI-T UT61B+, UT61D+, UT61E+ ou UT161</translation>
+        <source>UNI-T UT61B+, UT61D+, UT61E+, UT161 or UT181A</source>
+        <translation>UNI-T UT61B+, UT61D+, UT61E+, UT161 ou UT181A</translation>
     </message>
     <message>
         <location filename="../../src/device/discovery/discovery.cpp" line="108"/>
@@ -3132,7 +3132,7 @@ Pas de permission ? Le capteur a besoin d’une règle udev pour l’ID USB %1:%
     </message>
     <message>
         <location filename="../../src/ui/instancewidget.cpp" line="121"/>
-        <location filename="../../src/ui/instancewidget.cpp" line="524"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="500"/>
         <source>Value %1</source>
         <translation>Valeur %1</translation>
     </message>
@@ -3152,87 +3152,87 @@ Pas de permission ? Le capteur a besoin d’une règle udev pour l’ID USB %1:%
         <translation>&lt;font size=+2&gt;&lt;b&gt;Données non enregistrées&lt;/b&gt;&lt;/font&gt;&lt;p&gt;Des mesures non enregistrées sont encore en mémoire. %1&lt;p&gt;Voulez-vous d&apos;abord les exporter ?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="412"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="587"/>
         <source>Export failed: the device was closed meanwhile</source>
         <translation>Échec de l&apos;export : l&apos;appareil a été fermé entre-temps</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="417"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="593"/>
         <source>Export failed: %1</source>
         <translation>Échec de l&apos;export : %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="526"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="502"/>
         <source>%1 · %2</source>
         <translation>%1 · %2</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="598"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="601"/>
         <source>Loading a file replaces it.</source>
         <translation>Charger un fichier les remplace.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="598"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="601"/>
         <source>Load without saving</source>
         <translation>Charger sans enregistrer</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="616"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="619"/>
         <source>Clear deletes it.</source>
         <translation>Vider les efface.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="616"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="619"/>
         <source>Clear without saving</source>
         <translation>Vider sans enregistrer</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="632"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="635"/>
         <source>Live clears it.</source>
         <translation>Le direct les efface.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="632"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="635"/>
         <source>Live without saving</source>
         <translation>Direct sans enregistrer</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="648"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="651"/>
         <source>A new recording clears it.</source>
         <translation>Un nouvel enregistrement les efface.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="648"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="651"/>
         <source>Record without saving</source>
         <translation>Enregistrer sans sauvegarder</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="656"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="659"/>
         <source>It starts now. A recording at %1 starts by itself from Live.</source>
         <translation>Il démarre maintenant. Un enregistrement à %1 démarre de lui-même depuis le Direct.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="658"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="661"/>
         <source>It starts now. A recording at the threshold starts by itself from Live.</source>
         <translation>Il démarre maintenant. Un enregistrement au seuil démarre de lui-même depuis le Direct.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="740"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="743"/>
         <source>Automatic start at %1</source>
         <translation>Démarrage automatique à %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="742"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="745"/>
         <source>Raising threshold %1</source>
         <translation>Seuil montant %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="744"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="747"/>
         <source>Falling threshold %1</source>
         <translation>Seuil descendant %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/instancewidget.cpp" line="829"/>
+        <location filename="../../src/ui/instancewidget.cpp" line="832"/>
         <source>Meter</source>
         <translation>Multimètre</translation>
     </message>
@@ -4741,6 +4741,11 @@ Le multimètre est-il branché et allumé ?</translation>
         <location filename="../../src/device/protocols.cpp" line="62"/>
         <source>15 bytes binary, streamed over Bluetooth LE (OWON CMS101, OW65B-OW69B, Voltcraft VC871-VC925 PV)</source>
         <translation>15 octets binaires, diffusés par Bluetooth LE (OWON CMS101, OW65B-OW69B, Voltcraft VC871-VC925 PV)</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/protocols.cpp" line="63"/>
+        <source>AB CD frames of any length with float values, streamed once asked (UNI-T UT181A, UT-D09 cable or UT-D07B adapter)</source>
+        <translation>Trames AB CD de longueur variable avec valeurs flottantes, diffusées sur demande (UNI-T UT181A, câble UT-D09 ou adaptateur UT-D07B)</translation>
     </message>
 </context>
 <context>
@@ -6666,6 +6671,39 @@ Puis déconnectez-vous et reconnectez-vous pour que l&apos;appartenance au group
         <location filename="../../src/ui/forms/uisettingsdialog.ui" line="108"/>
         <source>Resets the page shown to QtDMM&apos;s defaults; OK or Apply keeps them.</source>
         <translation>Rétablit les valeurs par défaut de QtDMM sur la page affichée ; OK ou Appliquer les conserve.</translation>
+    </message>
+</context>
+<context>
+    <name>UT181A</name>
+    <message>
+        <location filename="../../src/device/decoders/uni_t_ut181a.cpp" line="220"/>
+        <source>Reference</source>
+        <translation>Référence</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/uni_t_ut181a.cpp" line="221"/>
+        <source>Absolute</source>
+        <translation>Absolue</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/uni_t_ut181a.cpp" line="236"/>
+        <source>Max</source>
+        <translation>Max</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/uni_t_ut181a.cpp" line="237"/>
+        <source>Min</source>
+        <translation>Min</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/uni_t_ut181a.cpp" line="238"/>
+        <source>Average</source>
+        <translation>Moyenne</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/uni_t_ut181a.cpp" line="248"/>
+        <source>Peak min</source>
+        <translation>Crête min</translation>
     </message>
 </context>
 <context>

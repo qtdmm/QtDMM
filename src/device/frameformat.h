@@ -82,6 +82,7 @@ public:
     VC820BLE,
     OwonBLE,
     OwonBLE15,
+    UniTUT181A,
     EndOfList              // new stuff always before!
   };
 
