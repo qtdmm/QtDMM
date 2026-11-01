@@ -13,6 +13,7 @@
 #include "device/dmmdecoder.h"
 #include "device/protocols.h"
 #include "device/decoders/uni_t_ienv.h"
+#include "device/decoders/brymen_bm78xbt.h"
 #include "device/decoders/uni_t_ut181a.h"
 #include "core/readingadapter.h"
 
@@ -342,6 +343,16 @@ int main(int argc, char **argv)
       expect(gw, "minmax_off", "f438363836");
       expect(gw, "lamp", "f438353835");
       expect(gw, "peak_off", "f430343034");
+    }
+
+    // the Brymen BM78xBT login (dmm-tools BM78xBT spec §10 example 3): the
+    // address least significant octet first, password 0000, CRC low first
+    if (DecoderBM78xBT::login("11:22:33:44:55:66")
+          != QByteArray::fromHex("ff0120010166554433221151010100000000000000000000000000004543ff03")
+        || DecoderBM78xBT::login("{0000-uuid}").mid(5, 6) != QByteArray(6, '\0'))
+    {
+      qWarning() << "BM78xBT: login 0x0151 as the spec's example, zeros without an address";
+      ++problems;
     }
 
     // the Voltcraft VC-880/890 (dmm-tools vc880 spec §5, vc890 spec): keys
