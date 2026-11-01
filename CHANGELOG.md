@@ -27,6 +27,7 @@
 
 - **AOPUTTRIVER AP-570C-APP no longer marked as untried** — it is the HoldPeak HP-570C-APP under another name, which a user confirmed in 26.3.
 - **USB-HID cables keep their udev link** — Add device's search and the saving of a device now take the link in `/dev/qtdmm/` (UT-D04 and similar cables, the TFA CO2 monitor) instead of `/dev/hidrawN`, which changes with every plug; a serial adapter found is saved under `/dev/serial/by-id/` as before. An entry saved with `/dev/hidrawN` gets the link when Add device finds it again.
+- **OWON's 15-byte Bluetooth meters** — OWON CMS101 and CMS061 clamps (UNI-T UT217B/A), OW65B, OW67B and OW69B, Voltcraft VC871, VC891, VC915 and VC925 PV, with the sub-display as second value, power, energy, 4-20 mA, AC+DC, motor, solar and high-voltage functions, and the keys of OWON's app; Add device tells them by their model code. Also the OWON B33. After dmm-tools' protocol work (A. Cellerier, GPL-3.0-or-later); not tried on a meter yet (*).
 - **OWON meters over Bluetooth LE** — tried on the CM2100B clamp (all keys and ranges); the B33T+, B35T+, B41T+, OW16B, OW18B and OW18E are built much the same but not tried yet. All of them with OL, NCV, HOLD, REL, MIN/MAX and low battery, and the keys of OWON's app under the display. Add device asks the meter which model it is.
 
 ### GUI

@@ -40,6 +40,7 @@ Type ofProtocol(FrameFormat::DataFormat protocol)
     case FrameFormat::Appa500:
     case FrameFormat::ZotekBLE:
     case FrameFormat::OwonBLE:
+    case FrameFormat::OwonBLE15:
       return HandheldDmm;
     case FrameFormat::Voltcraft15Continuous:
     case FrameFormat::Sigrok:

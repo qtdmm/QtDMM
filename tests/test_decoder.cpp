@@ -209,6 +209,72 @@ int main(int argc, char **argv)
       ocheck(values == 3, "a lost byte: the two frames after it still read");
     }
 
+    // the OWON 15-byte meters (dmm-tools OWON spec §10): the model codes of
+    // both frames from either decoder, the keys, HOLD held as 09 01, the
+    // VC871's sub-display under REL, a frame ending in FF and the scope
+    // skipped, frames found again after six lost bytes
+    {
+      const FrameFormat::DataFormat owon15 = FrameFormat::OwonBLE15;
+      auto o = DmmDecoder::getInstance(owon15);
+      auto o6 = DmmDecoder::getInstance(FrameFormat::OwonBLE);
+      auto ocheck = [&](bool ok, const char *what)
+      {
+        if (!ok)
+        {
+          qWarning() << "OWON 15:" << what;
+          ++problems;
+        }
+      };
+      expect(owon15, "lamp", "0901");
+      expect(owon15, "peak", "0801");
+      expect(owon15, "select2", "0501");
+      ocheck(o->modelsFromInfo(QByteArray::fromHex("57")) == QStringList({ "Voltcraft VC871 *" })
+               && o6->modelsFromInfo(QByteArray::fromHex("57")) == QStringList({ "Voltcraft VC871 *" }),
+             "code 87: the VC871, from either decoder");
+      const QStringList cms = o->modelsFromInfo(QByteArray::fromHex("65"));
+      ocheck(cms.size() == 2 && cms.contains("OWON CMS101 *") && cms.contains("Uni-Trend UT217B *"), "code 101: CMS101 or UT217B");
+      ocheck(o->modelsFromInfo(QByteArray::fromHex("21")) == QStringList({ "OWON B33 *", "OWON B33T+ *" }), "code 33: B33 or B33T+");
+      ocheck(o->hasKey("peak", "VC871 *") && o->hasKey("select2", "OW69B *") && !o->hasKey("lamp", "VC915 *")
+               && !o->hasKey("peak", "OW65B *") && o->hasKey("select2", "CMS101 *"),
+             "keys per model: PEAK on the OW67/69 family, no light on the VC915, Hz/duty on the CMS");
+      // DC V 1.0054, sub Hz 2.91 (dp 2), REL and AUTO
+      const QByteArray rel = QByteArray::fromHex("2410f0462700a201f0230100060000");
+      o->setModel("OW67B *");
+      const auto own = o->decode(rel, 0);
+      ocheck(own && own->main().val == "1.0054" && (own->main().states & SampleFlag::Relative)
+               && own->channels.value(1).unit == "Hz" && own->channels.value(1).val == "2.91",
+             "OW67B under REL: the sub-display its own function");
+      o->setModel("VC871 *");
+      const auto follows = o->decode(rel, 0);
+      ocheck(follows && follows->channels.value(1).special == "DC" && follows->channels.value(1).unit == "V"
+               && follows->channels.value(1).val == "2.91" && !follows->channels.value(1).name.isEmpty(),
+             "VC871 under REL: the sub-display takes the main function, named");
+      o->setModel(QString());
+      const QByteArray frame = QByteArray::fromHex("2400f0462780a109f0462780050000");   // DC -1.0054 V, HOLD
+      QByteArray filler = frame;
+      filler[14] = char(0xFF);
+      QByteArray scope = frame;
+      scope[14] = 0x04;
+      ocheck(!o->decode(filler, 0) && !o->decode(scope, 0), "a frame ending in FF and the scope's: no reading");
+      const QByteArray stream = frame + frame.mid(6) + frame + frame;
+      char fifo[FIFO_LENGTH] = {};
+      size_t length = 0;
+      int values = 0;
+      for (char c : stream)
+      {
+        fifo[length] = c;
+        if (o->checkFormat(fifo, length))
+        {
+          const auto r = o->decode(QByteArray(fifo + length - 14, 15), 0);
+          values += r && r->main().val == "-1.0054" && r->hold ? 1 : 0;
+          length = 0;
+        }
+        else
+          ++length;
+      }
+      ocheck(values == 3, "six lost bytes: the frames after them still read");
+    }
+
     // the HoldPeak HP-570C-APP: the FS9721 frame in two notifications of 7
     // bytes. A lost first half must not glue the second half of the frame
     // before to the next one; the ring wraps as the reader's does.
