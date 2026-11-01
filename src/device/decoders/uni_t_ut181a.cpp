@@ -178,15 +178,32 @@ bool DecoderUT181A::checkFormat(const char *data, size_t idx)
   return false;
 }
 
-std::optional<DmmDecoder::DmmResponse> DecoderUT181A::decode(const QByteArray &data, int id)
+QByteArray DecoderUT181A::payloadOf(const QByteArray &data)
 {
   const auto *b = reinterpret_cast<const unsigned char *>(data.constData());
   int p = 0;
   while (p + 7 <= data.size() && !frameAt(b, p, int(data.size())))
     ++p;
   if (p + 7 > data.size())
-    return std::nullopt;
-  const QByteArray d = data.mid(p + 4, data.size() - p - 6);   // the payload
+    return QByteArray();
+  return data.mid(p + 4, data.size() - p - 6);
+}
+
+bool DecoderUT181A::silent() const
+{
+  QMutexLocker locker(&m_lock);
+  return !m_lastMeasurement.isValid() || m_lastMeasurement.elapsed() >= 2000;
+}
+
+void DecoderUT181A::heard()
+{
+  QMutexLocker locker(&m_lock);
+  m_lastMeasurement.start();
+}
+
+std::optional<DmmDecoder::DmmResponse> DecoderUT181A::decode(const QByteArray &data, int id)
+{
+  const QByteArray d = payloadOf(data);
   // only the measurements; the replies to commands ("OK", "ER") are skipped
   if (d.size() < kValues + kShort || quint8(d[0]) != kMeasurement)
     return std::nullopt;
@@ -271,10 +288,7 @@ std::optional<DmmDecoder::DmmResponse> DecoderUT181A::decode(const QByteArray &d
 QByteArray DecoderUT181A::pollRequest() const
 {
   // the stream on (SET_MONITOR 1) while none comes
-  QMutexLocker locker(&m_lock);
-  if (m_lastMeasurement.isValid() && m_lastMeasurement.elapsed() < 2000)
-    return QByteArray();
-  return command(0x05, QByteArray(1, '\x01'));
+  return silent() ? command(0x05, QByteArray(1, '\x01')) : QByteArray();
 }
 
 QByteArray DecoderUT181A::keyRequest(const QString &key) const

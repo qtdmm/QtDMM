@@ -54,6 +54,16 @@ public:
   /// A command frame: @p opcode and its @p data, framed and summed.
   static QByteArray command(quint8 opcode, const QByteArray &data = QByteArray());
 
+protected:
+  /// The payload of the frame in @p data (bytes before it skipped); empty
+  /// when there is none.
+  static QByteArray payloadOf(const QByteArray &data);
+  /// True while no measurement came for two seconds: the stream is to be
+  /// asked for (again).
+  bool silent() const;
+  /// A measurement came: the stream runs.
+  void heard();
+
 private:
   /// What the keys need of the last measurement, written by decode() in
   /// the reader's thread, read by pollRequest()/keyRequest() in the GUI's.

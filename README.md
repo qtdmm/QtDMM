@@ -327,6 +327,10 @@ meter working, please report it on the
 | Uni-Trend | UT161B ¹ | Handheld multimeter | - | `UniTUT61Plus` | Bluetooth LE | - | 6000 |
 | Uni-Trend | UT161D ¹ | Handheld multimeter | - | `UniTUT61Plus` | Bluetooth LE | - | 6000 |
 | Uni-Trend | UT161E ¹ | Handheld multimeter | - | `UniTUT61Plus` | Bluetooth LE | - | 22000 |
+| Uni-Trend | UT171A ¹ | Handheld multimeter | - | `UniTUT171` | 9600 8N1 | - | 40000 |
+| Uni-Trend | UT171B ¹ | Handheld multimeter | - | `UniTUT171` | 9600 8N1 | - | 60000 |
+| Uni-Trend | UT171B/C (UT-D07B Bluetooth) ¹ | Handheld multimeter | - | `UniTUT171` | Bluetooth LE | - | 60000 |
+| Uni-Trend | UT171C ¹ | Handheld multimeter | - | `UniTUT171` | 9600 8N1 | - | 60000 |
 | Uni-Trend | UT181A (UT-D07B Bluetooth) ¹ | Handheld multimeter | - | `UniTUT181A` | Bluetooth LE | - | 60000 |
 | Uni-Trend | UT181A ¹ | Handheld multimeter | - | `UniTUT181A` | 9600 8N1 | - | 60000 |
 | Uni-Trend | UT202BT | Clamp meter | - | `UniTUT202BT` | Bluetooth LE | - | 10000 |
@@ -426,9 +430,9 @@ meter working, please report it on the
 - **Generic DTM0660 4000 count, DTM0660 6000 count, DTM0660 8000 count**: the DTM0660 chip has a UART, but meters built on it (Victor VC921 and similar) ship without an interface: an IR LED with a 100 Ω resistor goes on the chip's TX pin and the RS232 bit in the 24C02 EEPROM has to be set - [eevblog: hacking the Victor VC-921](https://www.eevblog.com/forum/testgear/hacking-the-victor-vc-921/). PeakTech 3415 and Velleman DVM4100 use the same chip but come with a cable and need no change.
 - **Vichy VC99**: the FS9922-DMM4 chip sends the display at 2400 baud on an unused pin; a wire or IR LED has to be soldered to it and *REL* held to start the output - [Hackaday](https://hackaday.com/2010/11/30/unlocking-rs232-serial-comm-on-a-multimeter/), [David Pilling](https://www.davidpilling.com/wiki/index.php/VC99).
 
-307 devices across 55 vendors.
+311 devices across 55 vendors.
 
-By type: Handheld multimeter 230, Bench multimeter 28, Clamp meter 25, Thermometer 6, Air quality meter 5, Generic 4, Luxmeter 3, Battery monitor 2, Solar charge controller 2, Inverter 1, Sound level meter 1.
+By type: Handheld multimeter 234, Bench multimeter 28, Clamp meter 25, Thermometer 6, Air quality meter 5, Generic 4, Luxmeter 3, Battery monitor 2, Solar charge controller 2, Inverter 1, Sound level meter 1.
 
 ## Command line
 

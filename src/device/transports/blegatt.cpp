@@ -77,6 +77,7 @@ std::optional<BleGattDevice::Profile> BleGattDevice::profile(FrameFormat::DataFo
       return Profile{ kIsscService, kIsscNotify, { kIsscWrite, kIsscWriteFallback }, { "UT60BT" } };
     case FrameFormat::UniTUT61Plus:   // UT161 built in; UT61B+/D+/E+ through the UT-D07B adapter
     case FrameFormat::UniTUT181A:     // through the UT-D07B adapter
+    case FrameFormat::UniTUT171:      // the UT171B/C through the UT-D07B adapter
       return Profile{ kIsscService, kIsscNotify, { kIsscWrite, kIsscWriteFallback }, { "UT161", "UT-D07" } };
     case FrameFormat::UniTiENV:
       // the UT353BT advertises as "UT353BT" (esphome_uni_trend_sound_meter);
