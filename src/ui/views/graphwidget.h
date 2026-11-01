@@ -537,6 +537,8 @@ public Q_SLOTS:
   /// The export's file dialog: the file chosen (with its suffix), empty when
   /// cancelled; @p raw for "every reading".
   QString          askExportFile(bool *raw);
+  /// A file is viewed (importCsvFile()), not a recording.
+  bool             showsFile() const { return !m_sourceFile.isEmpty(); }
   void             importDataSLOT();
   void             connectSLOT(bool on) { m_connected = on; }
 

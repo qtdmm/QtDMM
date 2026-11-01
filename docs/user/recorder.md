@@ -198,8 +198,9 @@ were; the integration curve carries on across a gap.
   value) on the left axis, the first value of another device there is the
   left axis' value: the overview, the reference line, the cursor levels
   and the PASS/FAIL band are then that device's; the triggers are the main value's; the integration curve can
-  take value 2 (see *Integration* below). The export has the values that
-  are switched on (see [Export and import](#export-and-import)).
+  take value 2 (see *Integration* below). The export of a recording has all
+  values of every device that recorded, also those switched off here (see
+  [Export and import](#export-and-import)).
 - **Mouse wheel** zooms the time axis; the **middle button** drags it. On the
   keyboard: Ctrl++ / Ctrl+- zoom, Ctrl+0 shows the whole recording, after a
   click into the graph also `+`, `-`, `0`, the arrow keys, Home and End (see
@@ -305,7 +306,7 @@ where the test was off. On the grid a step with a FAIL in it is FAIL, even
 when the other readings in it passed. A file read back shows the verdicts
 again.
 
-The other values of the meter that the graph shows (see above) follow, three columns each - `value 2;unit 2;status 2`, then
+The other values of the meter follow, three columns each - `value 2;unit 2;status 2`, then
 `value 3` ... - on the same rows. On the grid each is the mean over the step
 like the main value; with *CSV, every reading* there is a row at every
 reading of any of the values, and each value holds until its next one. Before
@@ -320,10 +321,12 @@ timestamp;time (s);value;unit;status;value 2;unit 2;status 2
 Since 26.4 every column is named after its device, the graph's first
 device too: `Sim A: value;Sim A: unit;Sim A: status`, its second value
 `Sim A: value 2` ..., its PASS/FAIL verdict `Sim A: limit`; the values of
-the other devices the graph shows follow the same way (`Sim B: value` ...).
-Their recordings count as saved then. `QTDMM:RECord:SAVE` at the meter
-that leads the recording writes all values of the devices that recorded
-with it. Files without the names (before 26.4) are read as before.
+the other devices follow the same way (`Sim B: value` ...). A recording is
+written whole: every device that recorded with all its values, whichever
+the graph shows - as `QTDMM:RECord:SAVE` at the meter that leads it writes
+it - and all of them count as saved then. *Export* while live, or of a file
+viewed, writes what the graph has. Files without the names (before 26.4)
+are read as before.
 
 ```
 timestamp;time (s);value;unit;status;Sim B: value;Sim B: unit;Sim B: status

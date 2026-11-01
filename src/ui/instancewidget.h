@@ -217,6 +217,9 @@ protected:
   bool        keepUnsavedData(const QString &reason, const QString &discard);
   /// The session's recording state (RecordingStore::State): the leading meter's, else the graph store's.
   int         recordingState() const;
+  /// Export with a file dialog: the session's recording with every meter
+  /// that recorded, else what the graph shows; false when cancelled or failed.
+  bool        exportRecording();
   DeviceLibrary *m_devices;
   QString     m_instanceId;
   QString     m_configPath;   ///< --config-dir, passed on to new instances

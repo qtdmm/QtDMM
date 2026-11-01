@@ -392,37 +392,13 @@ bool InstanceWidget::keepUnsavedData(const QString &reason, const QString &disca
   switch (question.exec())
   {
     case QMessageBox::Yes:
-    {
-      // the session's recording, stopped first: all its meters into the
-      // file, as QTDMM:RECord:SAVE writes it; else (a file loaded) the
-      // graph's export
+      // a recording still running stopped first, so it goes into the file
       if (!unsaved.isEmpty() && m_session->isRecording())
         m_session->stopRecording();
-      QPointer<MeterController> lead = m_session->lead();
-      if (!unsaved.isEmpty() && lead && lead->recorder()->state() == RecordingStore::View && lead->recorder()->count() > 0)
-      {
-        bool raw = false;
-        const QString file = ui_graph->askExportFile(&raw);
-        QString err;
-        if (file.isEmpty())
-          return false;
-        // the dialog runs events: SCPI may have closed it meanwhile
-        if (!lead)
-        {
-          Q_EMIT error(tr("Export failed: the device was closed meanwhile"));
-          return false;
-        }
-        if (!lead->writeRecording(file, raw, &err))
-        {
-          Q_EMIT error(tr("Export failed: %1").arg(err));
-          return false;
-        }
-      }
-      else if (!ui_graph->exportDataSLOT())
+      if (!exportRecording())
         return false;
       // one not in that file (it recorded apart): asked again
       return m_session->unsavedRecordings().isEmpty() || keepUnsavedData(reason, discard);
-    }
 
     case QMessageBox::No:
       break;
@@ -590,7 +566,34 @@ void InstanceWidget::zoomedSLOT()
 
 void InstanceWidget::exportSLOT()
 {
-  ui_graph->exportDataSLOT();
+  exportRecording();
+}
+
+bool InstanceWidget::exportRecording()
+{
+  // the session's recording: every meter that recorded with all its values,
+  // as QTDMM:RECord:SAVE writes it; a file viewed or Live: what the graph has
+  QPointer<MeterController> lead = m_session->lead();
+  if (ui_graph->showsFile() || !lead || lead->recorder()->state() != RecordingStore::View
+      || lead->recorder()->count() <= 0)
+    return ui_graph->exportDataSLOT();
+  bool raw = false;
+  const QString file = ui_graph->askExportFile(&raw);
+  if (file.isEmpty())
+    return false;
+  // the dialog runs events: SCPI may have closed it meanwhile
+  if (!lead)
+  {
+    Q_EMIT error(tr("Export failed: the device was closed meanwhile"));
+    return false;
+  }
+  QString err;
+  if (!lead->writeRecording(file, raw, &err))
+  {
+    Q_EMIT error(tr("Export failed: %1").arg(err));
+    return false;
+  }
+  return true;
 }
 
 void InstanceWidget::importSLOT()
