@@ -14,10 +14,16 @@ static const bool registered = []() {
   DmmDecoder::addConfig({"Uni-Trend", "UT161B *", "", 0, FrameFormat::UniTUT61Plus, 8, 1, 1, 0, 6000, 0, 0, 0});
   DmmDecoder::addConfig({"Uni-Trend", "UT161D *", "", 0, FrameFormat::UniTUT61Plus, 8, 1, 1, 0, 6000, 0, 0, 0});
   DmmDecoder::addConfig({"Uni-Trend", "UT161E *", "", 0, FrameFormat::UniTUT61Plus, 8, 1, 1, 0, 22000, 0, 0, 0});
+  // and over the UT-D09 USB cable as the UT61+ (dmm-tools); the UT161E's
+  // frames there are real (dmm-tools issue #7), now vectors of the spec
+  DmmDecoder::addConfig({"Uni-Trend", "UT161E (UT-D09 USB)", "", 9600, FrameFormat::UniTUT61Plus, 8, 1, 1, 0, 22000, 0, 0, 0});
+  DmmDecoder::addConfig({"Uni-Trend", "UT161D (UT-D09 USB) *", "", 9600, FrameFormat::UniTUT61Plus, 8, 1, 1, 0, 6000, 0, 0, 0});
+  DmmDecoder::addConfig({"Uni-Trend", "UT161B (UT-D09 USB) *", "", 9600, FrameFormat::UniTUT61Plus, 8, 1, 1, 0, 6000, 0, 0, 0});
   // UT61B+/D+/E+ (per ut61xpy): the USB cable UT-D09 is a USB-HID UART (both
   // revisions, CP2110 and CH9329) at 9600 8N1; the UT-D07B Bluetooth adapter
-  // carries the same frames over the same GATT service as the UT60BT
-  DmmDecoder::addConfig({"Uni-Trend", "UT61E+ *", "", 9600, FrameFormat::UniTUT61Plus, 8, 1, 1, 0, 22000, 0, 0, 0});
+  // carries the same frames over the same GATT service as the UT60BT. The
+  // UT61E+ on the cable: real frames (dmm-tools' captures) are vectors now
+  DmmDecoder::addConfig({"Uni-Trend", "UT61E+", "", 9600, FrameFormat::UniTUT61Plus, 8, 1, 1, 0, 22000, 0, 0, 0});
   DmmDecoder::addConfig({"Uni-Trend", "UT61D+ *", "", 9600, FrameFormat::UniTUT61Plus, 8, 1, 1, 0, 6000, 0, 0, 0});
   DmmDecoder::addConfig({"Uni-Trend", "UT61B+ *", "", 9600, FrameFormat::UniTUT61Plus, 8, 1, 1, 0, 6000, 0, 0, 0});
   DmmDecoder::addConfig({"Uni-Trend", "UT61E+ (UT-D07B Bluetooth) *", "", 0, FrameFormat::UniTUT61Plus, 8, 1, 1, 0, 22000, 0, 0, 0});
@@ -86,13 +92,15 @@ constexpr int kFunctionCount = int(sizeof(kFunctions) / sizeof(kFunctions[0]));
 // ranges - the vendor tables funOl_UT61E+/D+/B+ and funOl_UT161E/D/B agree
 // with each other and with ut61xpy: the V positions start in volts (2.2 V
 // resp. 6 V), the mA position stays in mA, CAP is nF up to range 1, Hz is
-// Hz up to range 1. Function 25 (AC/DC) is the DC V position that
-// alternates DC and AC readings - flags C bit 3 marks the AC ones.
+// Hz up to range 1. The function says AC or DC; only where it does not
+// (25 AC/DC, the DC V position that alternates DC and AC readings, and the
+// AC+DC current) flags C bit 3 marks the AC ones - real UT61E+ and UT161E
+// frames leave it clear in AC V and AC A (dmm-tools' captures).
 const Function kFunctions61Plus[] = {
-  /*  0 */ { "ACV",    "",    "V",   { "" } },
-  /*  1 */ { "ACmV",   "",    "V",   { "m" } },
-  /*  2 */ { "DCV",    "",    "V",   { "" } },
-  /*  3 */ { "DCmV",   "",    "V",   { "m" } },
+  /*  0 */ { "ACV",    "AC",    "V",   { "" } },
+  /*  1 */ { "ACmV",   "AC",    "V",   { "m" } },
+  /*  2 */ { "DCV",    "DC",    "V",   { "" } },
+  /*  3 */ { "DCmV",   "DC",    "V",   { "m" } },
   /*  4 */ { "Hz",     "HZ",  "Hz",  { "", "", "k", "k", "k", "M", "M", "M" } },
   /*  5 */ { "%",      "DU",  "%",   { "" } },
   /*  6 */ { "OHM",    "OH",  "Ohm", { "", "k", "k", "k", "M", "M", "M" } },
@@ -101,23 +109,23 @@ const Function kFunctions61Plus[] = {
   /*  9 */ { "CAP",    "CA",  "F",   { "n", "n", "µ", "µ", "µ", "m", "m", "m" } },
   /* 10 */ { "°C",     "TE",  "C",   { "" } },
   /* 11 */ { "°F",     "TE",  "dF",  { "" } },
-  /* 12 */ { "DCuA",   "",    "A",   { "µ" } },
-  /* 13 */ { "ACuA",   "",    "A",   { "µ" } },
-  /* 14 */ { "DCmA",   "",    "A",   { "m" } },
-  /* 15 */ { "ACmA",   "",    "A",   { "m" } },
-  /* 16 */ { "DCA",    "",    "A",   { "" } },
-  /* 17 */ { "ACA",    "",    "A",   { "" } },
+  /* 12 */ { "DCuA",   "DC",    "A",   { "µ" } },
+  /* 13 */ { "ACuA",   "AC",    "A",   { "µ" } },
+  /* 14 */ { "DCmA",   "DC",    "A",   { "m" } },
+  /* 15 */ { "ACmA",   "AC",    "A",   { "m" } },
+  /* 16 */ { "DCA",    "DC",    "A",   { "" } },
+  /* 17 */ { "ACA",    "AC",    "A",   { "" } },
   /* 18 */ { "HFE",    "HFE", "",    { "" } },
   /* 19 */ { "Live",   "NCV", "",    { "" } },
   /* 20 */ { "NCV",    "NCV", "",    { "" } },
-  /* 21 */ { "LozV",   "",    "V",   { "" } },
-  /* 22 */ { "ACA",    "",    "A",   { "" } },
-  /* 23 */ { "DCA",    "",    "A",   { "" } },
-  /* 24 */ { "LPF",    "",    "V",   { "" } },
+  /* 21 */ { "LozV",   "AC",    "V",   { "" } },
+  /* 22 */ { "ACA",    "AC",    "A",   { "" } },
+  /* 23 */ { "DCA",    "DC",    "A",   { "" } },
+  /* 24 */ { "LPF",    "AC",    "V",   { "" } },
   /* 25 */ { "AC/DC",  "",    "V",   { "" } },
-  /* 26 */ { "LPF",    "",    "V",   { "" } },
+  /* 26 */ { "LPF",    "AC",    "V",   { "" } },
   /* 27 */ { "AC+DC",  "",    "A",   { "" } },
-  /* 28 */ { "LPF",    "",    "V",   { "" } },
+  /* 28 */ { "LPF",    "AC",    "V",   { "" } },
   /* 29 */ { "AC+DC2", "",    "A",   { "" } },
   /* 30 */ { "INRUSH", "",    "V",   { "" } },
 };
@@ -335,6 +343,7 @@ DmmDecoder::DmmResponse DecoderUniTiDMM::displayed(const unsigned char *f, const
     // NCV strength bar ("EF", "----"), no number: show it as it is
     m_result.main().val = text;
     m_result.main().dval = 0;
+    m_result.main().noValue = true;
     return m_result;
   }
   m_result.main().val = text;
