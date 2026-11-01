@@ -55,6 +55,11 @@ const QBluetoothUuid kFfb0Notify(quint16(0xFFB2));
 const QBluetoothUuid kFfb0Write(quint16(0xFFB1));
 constexpr quint16 kAicareCompany = 0xFFAC;
 
+// the EEVblog 121GW: one characteristic, indicated and written (dmm-tools
+// 121GW spec §2, from UEi's app)
+const QBluetoothUuid k121gwService(QStringLiteral("0bd51666-e7cb-469b-8e4d-2742f1ba77cc"));
+const QBluetoothUuid k121gwChar(QStringLiteral("e7add780-b042-4876-aae1-112855353cc1"));
+
 // connecting and finding the characteristics takes a second or two; a
 // meter that is switched off or out of range never answers
 constexpr int kConnectTimeoutMs = 20000;
@@ -112,6 +117,8 @@ std::optional<BleGattDevice::Profile> BleGattDevice::profile(FrameFormat::DataFo
     case FrameFormat::OwonBLE15:
       // "BDM" unless the user renamed the meter; the model is in 0xFFF2
       return Profile{ kFff0Service, kFff4, { kFff3 }, { "BDM" }, QByteArray(), true, false, 0, kFff2 };
+    case FrameFormat::Eevblog121GW:
+      return Profile{ k121gwService, k121gwChar, { k121gwChar }, { "121GW" } };
     default:
       return std::nullopt;
   }
@@ -381,7 +388,10 @@ void BleGattDevice::onServiceState()
       setReady();
   });
   qCDebug(lcBle) << m_address << "subscribing";
-  m_service->writeDescriptor(cccd, QLowEnergyCharacteristic::CCCDEnableNotification);
+  // indications where the characteristic has no notifications (the 121GW)
+  m_service->writeDescriptor(cccd, (notify.properties() & QLowEnergyCharacteristic::Notify)
+                                       ? QLowEnergyCharacteristic::CCCDEnableNotification
+                                       : QLowEnergyCharacteristic::CCCDEnableIndication);
 }
 
 void BleGattDevice::setReady()

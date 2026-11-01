@@ -88,6 +88,7 @@ public:
     UniTUT171,
     UniTUT8802,
     UniTUT8803,
+    Eevblog121GW,
     EndOfList              // new stuff always before!
   };
 
