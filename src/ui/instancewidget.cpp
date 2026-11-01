@@ -180,7 +180,6 @@ InstanceWidget::InstanceWidget(QString instanceId, QString configPath, DeviceSes
   });
   connect(ui_graph, &GraphWidget::info, this, &InstanceWidget::info);
   connect(ui_graph, &GraphWidget::error, this, &InstanceWidget::error);
-  connect(ui_graph, &GraphWidget::running, this, &InstanceWidget::runningSLOT);
   connect(ui_graph, &GraphWidget::stateChanged, this, &InstanceWidget::recorderState);
   connect(ui_graph, &GraphWidget::liveRequested, this, &InstanceWidget::liveSLOT);
   // OK and Apply take the settings over; the meter stays as it is - the
@@ -358,10 +357,15 @@ bool InstanceWidget::closeWin()
   return keepUnsavedData(tr("If you quit now it will be lost."), tr("Quit without saving"));
 }
 
-bool InstanceWidget::keepUnsavedData(const QString &text, const QString &discard)
+bool InstanceWidget::keepUnsavedData(QString text, const QString &discard)
 {
-  if (!ui_graph->dirty() || !m_configDlg->generalPage()->alertUnsavedData())
+  // the recording is the session's: any meter's not saved, or a file loaded
+  // into the graph
+  const QStringList unsaved = m_session->unsavedRecordings();
+  if ((unsaved.isEmpty() && !ui_graph->dirty()) || !m_configDlg->generalPage()->alertUnsavedData())
     return true;
+  if (!unsaved.isEmpty())
+    text = tr("Not saved: %1.").arg(unsaved.join(", ")) + ' ' + text;
 
   QMessageBox question;
   question.setWindowTitle(tr("QtDMM: Unsaved data"));
@@ -582,7 +586,7 @@ void InstanceWidget::clearSLOT()
   if (!keepUnsavedData(tr("Clear deletes it."), tr("Clear without saving")))
     return;
   // an empty view is nothing to look at: Live again
-  if (ui_graph->store()->state() == RecordingStore::View)
+  if (recordingState() == RecordingStore::View)
     ui_graph->liveSLOT();
   else
     ui_graph->clearSLOT();
@@ -590,20 +594,26 @@ void InstanceWidget::clearSLOT()
 
 void InstanceWidget::liveSLOT()
 {
-  if (ui_graph->store()->state() != RecordingStore::View)
+  if (recordingState() != RecordingStore::View)
   {
-    Q_EMIT recorderState(int(ui_graph->store()->state()));   // the button shows the state again
+    Q_EMIT recorderState(recordingState());   // the button shows the state again
     return;
   }
   if (keepUnsavedData(tr("Live clears it."), tr("Live without saving")))
     ui_graph->liveSLOT();
   else
-    Q_EMIT recorderState(int(ui_graph->store()->state()));
+    Q_EMIT recorderState(recordingState());
+}
+
+int InstanceWidget::recordingState() const
+{
+  const MeterController *lead = m_session->lead();
+  return int(lead ? lead->recorder()->state() : ui_graph->store()->state());
 }
 
 bool InstanceWidget::confirmRecording()
 {
-  if (ui_graph->store()->state() != RecordingStore::View)
+  if (recordingState() != RecordingStore::View)
     return true;
   return keepUnsavedData(tr("A new recording clears it."), tr("Record without saving"));
 }
@@ -705,11 +715,6 @@ void InstanceWidget::readConfig()
   Q_EMIT useTextLabel(gui->useTextLabel());
   Q_EMIT iconSet(gui->iconSet());
   Q_EMIT showDisplay(gui->showDisplay());
-}
-
-void InstanceWidget::runningSLOT(bool on)
-{
-  Q_EMIT running(on);
 }
 
 void InstanceWidget::showAlertColor()

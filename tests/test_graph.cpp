@@ -222,6 +222,11 @@ int main(int argc, char **argv)
     check(back.importCsvFile(tmpDir.path() + "/values_shown.csv") && back.store()->extraCount() == 1
             && back.store()->extra(0).unit == "Hz" && back.store()->extra(0).count() == 19,
           "import: value 2 comes back as a series");
+    // shown again, so the file goes out as it came in
+    check(back.valueShown(ValueRef(1, back.baseSource())), "import: value 2 shown");
+    const QString again = tmpDir.path() + "/values_again.csv";
+    check(back.exportCsvFile(again) && readFile(again).section('\n', 0, 0) == shown.value(0),
+          "import, export: the same columns, " + readFile(again).section('\n', 0, 0));
   }
 
   // --- 3b. time buttons (All / 1 min / 5 min / 30 min) top right ---

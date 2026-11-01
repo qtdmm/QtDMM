@@ -126,8 +126,6 @@ public:
   QString     configPath() const { return m_configPath; }
 
 Q_SIGNALS:
-  /// Recording started/stopped (graph state).
-  void        running(bool);
   /// The recorder is in View, Live or Recording now (RecordingStore::State).
   void        recorderState(int state);
   /// Message for the status bar's info field.
@@ -165,8 +163,6 @@ public Q_SLOTS:
   void        printSLOT();
   void        exportSLOT();
   void        importSLOT();
-  /// Graph started/stopped recording.
-  void        runningSLOT(bool);
   /// Settings dialog OK/Apply: re-reads the configuration (readConfig()).
   void        applySLOT();
 
@@ -218,7 +214,9 @@ protected:
   /// @p discard is the button that drops them): export first, drop or
   /// cancel. True when the caller may go on - nothing unsaved, exported or
   /// dropped; false for Cancel or a failed export.
-  bool        keepUnsavedData(const QString &text, const QString &discard);
+  bool        keepUnsavedData(QString text, const QString &discard);
+  /// The session's recording state (RecordingStore::State): the leading meter's, else the graph store's.
+  int         recordingState() const;
   DeviceLibrary *m_devices;
   QString     m_instanceId;
   QString     m_configPath;   ///< --config-dir, passed on to new instances

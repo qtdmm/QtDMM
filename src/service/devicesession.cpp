@@ -42,6 +42,7 @@ void DeviceSession::watchRecording(MeterController *ctl)
   {
     if (ctl == lead())
       followLead(state);
+    Q_EMIT recordingStateChanged();
   });
   connect(ctl->recorder(), &RecordingStore::cleared, this, [this, ctl]
   {
@@ -114,6 +115,19 @@ bool DeviceSession::isRecording() const
 {
   const MeterController *ctl = lead();
   return ctl && ctl->recorder()->isRunning();
+}
+
+QStringList DeviceSession::unsavedRecordings(const QString &id) const
+{
+  QStringList names;
+  for (const MeterController *ctl : m_opened)
+  {
+    const RecordingStore *store = ctl->recorder();
+    if ((id.isEmpty() || ctl->deviceId() == id)
+        && (store->isRunning() || (store->state() == RecordingStore::View && store->dirty())))
+      names << ctl->deviceName();
+  }
+  return names;
 }
 
 void DeviceSession::followLead(int state)
@@ -333,6 +347,7 @@ bool DeviceSession::close(const QString &id, QString *error)
       delete ctl;
       applySetup();
       Q_EMIT closed(source);
+      Q_EMIT recordingStateChanged();
       return true;
     }
   if (error)

@@ -164,6 +164,9 @@ protected:
   QHash<QString, int> m_panelLcd;
   /// Opens the entries of m_pendingOpen.
   void        openPending();
+  /// Before device @p id is closed: true when its recording is saved, or
+  /// the user discards it after @p text.
+  bool        keepRecordingOf(const QString &id, const QString &text);
   /// The front panel windows.
   QList<QMdiSubWindow *> panelWindows() const { return m_panelWins.values(); }
   /// Whether @p win shows an instrument: a front panel or the analog meter.
@@ -249,6 +252,7 @@ protected:
   QMenu      *m_recentMenu = nullptr;   ///< Arrange > Recent workspaces
   QMenu      *m_designMenu;
   bool        m_restoring = false;   ///< restoreWindows() is setting the actions
+  QStringList m_openingPending;   ///< openPending(): the meters still to come, a view's among them waits
   /// The panel windows make room for the keys (FrontPanel::keysHeight()).
   void        updateControls();
   // Window size (package 26.2, 4a): the window starts at the size its

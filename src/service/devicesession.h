@@ -87,6 +87,9 @@ public:
   /// Clears the recording; one that runs goes on.
   void        clearRecording();
   bool        isRecording() const;
+  /// The meters whose recording is not saved (stopped and not exported, or
+  /// still running), by name; @p id only that one of My devices.
+  QStringList unsavedRecordings(const QString &id = QString()) const;
   /// @}
 
   /// The next recording of the window takes, of the meters here, only those
@@ -121,6 +124,9 @@ Q_SIGNALS:
   void        closing(MeterController *ctl);
   /// After the controller is gone.
   void        closed(const QString &source);
+  /// A meter's store changed its state (Live, Record, View): isRecording()
+  /// and unsavedRecordings() may have changed.
+  void        recordingStateChanged();
   /// For the status bar: a meter could not be opened, or was closed for the window.
   void        error(const QString &text);
   /// For the status bar: a message of a meter here ("recording saved as ...").

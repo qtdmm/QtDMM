@@ -88,6 +88,12 @@ void GraphWidget::print(QPrinter *prt, const QString &title, const QString &comm
 
 bool GraphWidget::exportDataSLOT()
 {
+  // the export goes by the graph's meter: without its readings nothing to write
+  if (m_store->count() <= 0)
+  {
+    Q_EMIT error(tr("Nothing to export: the graph's meter has no readings; show a value of the meter that recorded"));
+    return false;
+  }
   QDir path;
   QFileInfo fileInfo(m_cfg->getString("QtDMM/LastUsesPath"));
   QStringList validSuffixes = { "csv", "xlsx", "ods" };
@@ -173,7 +179,11 @@ bool GraphWidget::importCsvFile(const QString &fileName)
   m_sourceDevice = rec->device;
   // this meter's columns into the store, another meter's into one of its own
   m_store->load(RecordingFile::devicePart(*rec, rec->device));
+  // all its values shown, so a new export writes them again
+  for (int i = 0; i < m_store->extraCount(); ++i)
+    setValueShown(m_store->extra(i).id, true);
   setFileStores(*rec);
+  Q_EMIT valuesChanged();
   updateStateLabel();
 
   setScale(true, true, 0, 0);

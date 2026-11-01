@@ -193,7 +193,14 @@ MainWindow::MainWindow(QCommandLineParser &parser, QWidget *parent)
   createExtraActions();
   createShortcuts(workspace);
 
-  connect(m_wid, &InstanceWidget::running, this, &MainWindow::runningSLOT);
+  // the recording is the session's, whichever meter the graph shows
+  connect(m_session, &DeviceSession::recordingStateChanged, this, [this]
+  {
+    if (m_session->isRecording() != m_running)
+      runningSLOT(m_session->isRecording());
+    else
+      updateRecorderActions();
+  });
   connect(m_wid, &InstanceWidget::recorderState, this, &MainWindow::updateRecorderActions);
 
   // Record while a meter is connected
@@ -398,14 +405,17 @@ void MainWindow::createViews()
   connect(m_session, &DeviceSession::opened, this, &MainWindow::addPanel);
   // a meter of the table opened again: its readings come in again
   // an empty view takes the meter connected: the graph its main value, the
-  // analog meter and the Poincaré plot it when theirs is not connected
+  // analog meter and the Poincaré plot it when theirs is not connected -
+  // while the workspace's meters open one by one only when none was chosen
   connect(m_session, &DeviceSession::opened, this, [this](MeterController *ctl)
   {
+    auto free = [this](const ValueRef &v)
+    { return !m_session->controller(v) && !m_openingPending.contains(v.source.section(':', 1)); };
     if (m_wid->graph()->values().isEmpty())
       m_wid->graph()->setValues({ ValueRef(0, ctl->source()) });
-    if (!m_session->controller(m_wid->meterValue()))
+    if (free(m_wid->meterValue()))
       m_wid->setMeterValue(ValueRef(0, ctl->source()));
-    if (!m_session->controller(m_wid->poincareValue()))
+    if (free(m_wid->poincareValue()))
       m_wid->setPoincareValue(ValueRef(0, ctl->source()));
   });
   // a meter opened or closed: in the table when it shows all, else only its readings to it
@@ -526,12 +536,25 @@ void MainWindow::setPanelLcdVariant(const QString &source, std::optional<int> va
     applyLcdLook(panelOf(win));
 }
 
+bool MainWindow::keepRecordingOf(const QString &id, const QString &text)
+{
+  const QStringList unsaved = m_session->unsavedRecordings(id);
+  if (unsaved.isEmpty())
+    return true;
+  return QMessageBox::question(this, tr("QtDMM: Unsaved data"), tr("%1: %2").arg(unsaved.first(), text),
+                               QMessageBox::Discard | QMessageBox::Cancel, QMessageBox::Cancel)
+         == QMessageBox::Discard;
+}
+
 void MainWindow::openPending()
 {
   const QStringList ids = std::exchange(m_pendingOpen, {});
-  for (const QString &id : ids)
-    if (!m_session->controller("device:" + id))
-      openBeside(id);
+  {
+    const QScopedValueRollback<QStringList> opening(m_openingPending, ids);
+    for (const QString &id : ids)
+      if (!m_session->controller("device:" + id))
+        openBeside(id);
+  }
   updateEmptyStart();
   // a layout naming panels takes once they are there
   if (!m_pendingLayout.isEmpty() && m_arranger->setLayoutText(m_pendingLayout))
@@ -578,7 +601,8 @@ void MainWindow::createSidebar()
   connect(m_sidebar, &DeviceSidebar::openBesideRequested, this, &MainWindow::openBeside);
   connect(m_sidebar, &DeviceSidebar::closeRequested, this, [this](const QString &id)
   {
-    m_session->close(id);
+    if (keepRecordingOf(id, tr("Closing it discards its recording, which is not saved.")))
+      m_session->close(id);
   });
   connect(m_sidebar, &DeviceSidebar::frontPanelRequested, this, [this](const QString &id)
   {
@@ -1233,7 +1257,8 @@ void MainWindow::connectSLOT(bool on)
 
 void MainWindow::updateRecorderActions()
 {
-  const RecordingStore::State state = m_wid->graph()->store()->state();
+  const MeterController *lead = m_session->lead();
+  const RecordingStore::State state = (lead ? lead->recorder() : m_wid->graph()->store())->state();
   const bool recording = state == RecordingStore::Record;
   action_Record->setEnabled(recording ? action_Stop->isEnabled() : action_Start->isEnabled());
   action_Record->setIcon(QIcon(new RecordIconEngine(recording)));
@@ -1645,9 +1670,7 @@ void MainWindow::editSources(ValueMenu::View view)
   {
     case ValueMenu::View::Graph:
       name = tr("Graph");
-      // the window's meter by an empty source, as the dialog lists it
-      for (const ValueRef &v : graph->values())
-        chosen << (graph->isBase(v) ? ValueRef(v.id) : v);
+      chosen = graph->values();   // each with its meter's source, as the dialog lists them
       break;
     case ValueMenu::View::Table:
       name = tr("Readings table");
@@ -1933,8 +1956,15 @@ void MainWindow::deviceSettings(const QString &id, bool settingsTab)
   if (DeviceLibrary::entryKeys(keys) == device->keys)
     return;   // nothing changed: the meter stays connected, the recording too
   m_wid->devices()->update(id, keys);
-  // a device connected takes them at once: connected anew, its panel stays as it was
-  if (MeterController *ctl = m_session->controller("device:" + id))
+  // a device connected takes them at once: connected anew, its panel stays
+  // as it was; its recording not saved: only when asked, else next time
+  MeterController *ctl = m_session->controller("device:" + id);
+  if (ctl && !keepRecordingOf(id, tr("The changes connect it anew, which discards its recording, which is not saved.")))
+  {
+    statusBar()->showMessage(tr("%1: the changes take effect when it is connected next").arg(ctl->deviceName()), 6000);
+    return;
+  }
+  if (ctl)
   {
     if (QMdiSubWindow *win = m_panelWins.value(ctl->source()))
     {
