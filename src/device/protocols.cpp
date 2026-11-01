@@ -61,6 +61,8 @@ const std::vector<ProtocolInfo> &protocols()
     { FrameFormat::OwonBLE,               "OwonBLE",               QT_TRANSLATE_NOOP("Protocols", "6 bytes binary, streamed over Bluetooth LE (OWON B35T+, B41T+, OW18E, CM2100B)"), "", "Bluetooth LE", make<DecoderOwon> },
     { FrameFormat::OwonBLE15,             "OwonBLE15",             QT_TRANSLATE_NOOP("Protocols", "15 bytes binary, streamed over Bluetooth LE (OWON CMS101, OW65B-OW69B, Voltcraft VC871-VC925 PV)"), "", "Bluetooth LE", make<DecoderOwon15> },
     { FrameFormat::UniTUT181A,            "UniTUT181A",            QT_TRANSLATE_NOOP("Protocols", "AB CD frames of any length with float values, streamed once asked (UNI-T UT181A, UT-D09 cable or UT-D07B adapter)"), "", "Bluetooth LE", make<DecoderUT181A> },
+    { FrameFormat::VoltcraftVC880,        "VoltcraftVC880",        QT_TRANSLATE_NOOP("Protocols", "39 bytes, streamed (Voltcraft VC-880, VC650BT, CP2110 USB cable)"), "ES51966A", "", make<DecoderVC8x0> },
+    { FrameFormat::VoltcraftVC890,        "VoltcraftVC890",        QT_TRANSLATE_NOOP("Protocols", "66 bytes, polled (Voltcraft VC-890, CP2110 USB cable)"), "ES51997P", "", make<DecoderVC8x0> },
   };
   return table;
 }

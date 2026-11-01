@@ -100,13 +100,16 @@ std::optional<Families::Family> Families::forUsb(quint16 vid, quint16 pid)
   const QString id = ids(vid, pid);
   if (id == "10c4:ea80" || id == "1a86:e429")
   {
-    // the UT-D09 cable: the protocol of the UT61+ series, or the UT181A's
+    // the UT-D09 cable: the protocol of the UT61+ series, or the UT181A's;
+    // Voltcraft's VC-880 and VC-890 cables have the same CP2110
     QStringList models;
-    for (const QString &m : Families::models(FrameFormat::UniTUT61Plus, true) + Families::models(FrameFormat::UniTUT181A, true))
+    for (const QString &m : Families::models(FrameFormat::UniTUT61Plus, true) + Families::models(FrameFormat::UniTUT181A, true)
+                              + Families::models(FrameFormat::VoltcraftVC880, true) + Families::models(FrameFormat::VoltcraftVC890, true))
       models << m;
-    return Family { QCoreApplication::translate("Discovery", "UNI-T UT61B+, UT61D+, UT61E+, UT161 or UT181A"), "UT-D09",
+    return Family { QCoreApplication::translate("Discovery", "UNI-T UT61B+, UT61D+, UT61E+, UT161, UT181A or Voltcraft VC-880, VC-890"), "UT-D09",
                     QCoreApplication::translate("Discovery", "Switch the meter on; it sends as soon as the cable is plugged in. "
-                                                                  "A UT181A only with SETUP > Communication ON, again after every power-on."), "HID",
+                                                                  "A UT181A only with SETUP > Communication ON, again after every power-on; "
+                                                                  "a Voltcraft VC-880 or VC-890 after its PC key."), "HID",
                     likeliestFirst(models, "Uni-Trend UT61E+ *") };
   }
   if (id == "1a86:e008" || id == "04fa:2490")

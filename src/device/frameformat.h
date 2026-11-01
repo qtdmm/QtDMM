@@ -83,6 +83,8 @@ public:
     OwonBLE,
     OwonBLE15,
     UniTUT181A,
+    VoltcraftVC880,
+    VoltcraftVC890,
     EndOfList              // new stuff always before!
   };
 
