@@ -100,11 +100,11 @@ std::optional<Families::Family> Families::forUsb(quint16 vid, quint16 pid)
   const QString id = ids(vid, pid);
   if (id == "10c4:ea80" || id == "1a86:e429")
   {
-    // the UT-D09 cable: the protocol of the UT61+ series
+    // the UT-D09 cable: the protocol of the UT61+ series, or the UT181A's
     QStringList models;
-    for (const QString &m : Families::models(FrameFormat::UniTUT61Plus, true))
+    for (const QString &m : Families::models(FrameFormat::UniTUT61Plus, true) + Families::models(FrameFormat::UniTUT181A, true))
       models << m;
-    return Family { QCoreApplication::translate("Discovery", "UNI-T UT61B+, UT61D+, UT61E+ or UT161"), "UT-D09",
+    return Family { QCoreApplication::translate("Discovery", "UNI-T UT61B+, UT61D+, UT61E+, UT161 or UT181A"), "UT-D09",
                     QCoreApplication::translate("Discovery", "Switch the meter on; it sends as soon as the cable is plugged in."), "HID",
                     likeliestFirst(models, "Uni-Trend UT61E+ *") };
   }
