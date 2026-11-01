@@ -45,7 +45,7 @@ int main(int argc, char **argv)
   check(offered(AddDeviceDlg::Cable, "Uni-Trend UT61E"), "UT61E is a cable meter");
   check(offered(AddDeviceDlg::Bluetooth, "Victron SmartShunt"), "SmartShunt is Bluetooth");
   check(offered(AddDeviceDlg::Bluetooth, "Uni-Trend UT61E+ (UT-D07B Bluetooth) *"), "UT61E+ with UT-D07B is Bluetooth");
-  check(offered(AddDeviceDlg::Cable, "Uni-Trend UT61E+ *"), "UT61E+ with its cable is a cable meter");
+  check(offered(AddDeviceDlg::Cable, "Uni-Trend UT61E+"), "UT61E+ with its cable is a cable meter");
   check(offered(AddDeviceDlg::Sigrok, "Keysight 34465A (sigrok) *"), "34465A is sigrok");
   check(offered(AddDeviceDlg::Simulated, "QtDMM Calculated value"), "calculated value is simulated");
 

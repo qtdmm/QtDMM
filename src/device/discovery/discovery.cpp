@@ -113,7 +113,7 @@ std::optional<Families::Family> Families::forUsb(quint16 vid, quint16 pid)
                     QCoreApplication::translate("Discovery", "Switch the meter on; it sends as soon as the cable is plugged in. "
                                                                   "A UT171 or UT181A only with SETUP > Communication ON, the UT181A again after every power-on; "
                                                                   "a Voltcraft VC-880 or VC-890 after its PC key."), "HID",
-                    likeliestFirst(models, "Uni-Trend UT61E+ *") };
+                    likeliestFirst(models, "Uni-Trend UT61E+") };
   }
   if (id == "1a86:e008" || id == "04fa:2490")
   {

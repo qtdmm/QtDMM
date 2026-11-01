@@ -64,11 +64,11 @@ int main(int argc, char **argv)
     const auto d09 = Families::forUsb(0x10c4, 0xea80);
     const auto d09b = Families::forUsb(0x1a86, 0xe429);
     check(d09 && d09b && d09->cable == "UT-D09" && d09->portType == "HID" && !d09->models.isEmpty()
-            && d09->models.first() == "Uni-Trend UT61E+ *" && d09->models == d09b->models,
+            && d09->models.first() == "Uni-Trend UT61E+" && d09->models == d09b->models,
           "UT-D09: the UT61+ family, UT61E+ first: " + (d09 ? d09->models.join(", ") : QString()));
     const auto d04 = Families::forUsb(0x1a86, 0xe008);
     check(d04 && d04->cable == "UT-D04" && d04->models.size() > 5 && d04->models.first() == "Uni-Trend UT61E"
-            && !d04->models.contains("Uni-Trend UT61E+ *") && d04->hint.contains("RS232"),
+            && !d04->models.contains("Uni-Trend UT61E+") && d04->hint.contains("RS232"),
           "UT-D04: the serial UNI-T meters, UT61E first: " + (d04 ? d04->models.join(", ") : QString()));
     check(Families::forUsb(0x04fa, 0x2490).has_value(), "UT-D04 with the Hoitek chip");
     const auto bu86x = Families::forUsb(0x0820, 0x0001);
