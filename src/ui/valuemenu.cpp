@@ -84,14 +84,15 @@ void ValueMenu::fill(QMenu *menu, const Target &target, const ValueRef &value)
   const GraphWidget::ValueAxis chosen = graph->valueAxis(ref);
   const std::pair<GraphWidget::ValueAxis, QString> choices[] = { { GraphWidget::AxisAuto, tr("&Off") },
                                                                  { GraphWidget::AxisLeft, tr("&Left axis") },
-                                                                 { GraphWidget::AxisRight, tr("&Right axis") } };
+                                                                 { GraphWidget::AxisRight, tr("&Right axis") },
+                                                                 { GraphWidget::AxisThird, tr("&Third axis") } };
   for (const auto &[axis, text] : choices)
   {
     const bool off = axis == GraphWidget::AxisAuto;
     // another meter's value without room: the axis chosen for it
     QAction *a = checkable(curves, text, off ? !shown : shown && (side != GraphWidget::AxisAuto ? side : chosen) == axis);
     sides->addAction(a);
-    if (graph->isBase(ref) && id == 0 && axis == GraphWidget::AxisRight)
+    if (graph->isBase(ref) && id == 0 && axis != GraphWidget::AxisAuto && axis != GraphWidget::AxisLeft)
     {
       a->setEnabled(false);
       a->setToolTip(tr("The main value is on the left axis"));

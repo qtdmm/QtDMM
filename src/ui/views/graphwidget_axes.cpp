@@ -414,10 +414,20 @@ void GraphWidget::placeYTitle()
   // the top tick label is centred on the plot's top edge: stay above it
   const double labelHalf = QFontMetricsF(m_yAxis->labelsFont()).height() / 2;
   m_yTitle->setPos(qMax(2.0, plot.left() - text.width() - 4), plot.top() - labelHalf - text.height() - 1);
-  // the right one left-aligned with its axis line
-  if (m_y2Title)
-    m_y2Title->setPos(qMin(plot.right() + 4, m_chart->size().width() - m_y2Title->boundingRect().width() - 2),
-                      plot.top() - labelHalf - m_y2Title->boundingRect().height() - 1);
+  // the right one left-aligned with its axis line; the third one, the
+  // outermost axis, at the right edge, the right one ending before it
+  if (!m_right[0].title)
+    return;
+  const double width = m_chart->size().width();
+  QGraphicsSimpleTextItem *right = m_right[0].title, *third = m_right[1].title;
+  double end = width - 2;
+  if (third->isVisible())
+  {
+    third->setPos(width - third->boundingRect().width() - 2, plot.top() - labelHalf - third->boundingRect().height() - 1);
+    end = third->x() - 6;
+  }
+  right->setPos(qMin(plot.right() + 4, end - right->boundingRect().width()),
+                plot.top() - labelHalf - right->boundingRect().height() - 1);
 }
 
 void GraphWidget::setScale(bool autoScale, bool includeZero, double min, double max)
@@ -447,7 +457,7 @@ void GraphWidget::setScale(bool autoScale, bool includeZero, double min, double 
     for (int i = 0; i < m_store->extraCount() && i < int(m_extraCurves.size()); ++i)
     {
       const ExtraCurve &c = m_extraCurves[size_t(i)];
-      if (!c.shown || c.right)
+      if (!c.shown || c.side != 0)
         continue;
       const RecordingSeries &x = m_store->extra(i);
       for (int j = 0; j < x.count(); ++j)
@@ -456,7 +466,7 @@ void GraphWidget::setScale(bool autoScale, bool includeZero, double min, double 
     }
     for (const OtherCurve &c : m_otherCurves)
       for (const QPointF &p : c.points)
-        if (c.shown && !c.right && std::isfinite(p.y()))
+        if (c.shown && c.side == 0 && std::isfinite(p.y()))
           growScale(p.y(), m_scaleMin, m_scaleMax);
   }
 
@@ -464,48 +474,72 @@ void GraphWidget::setScale(bool autoScale, bool includeZero, double min, double 
   updateThresholdLinePositions();
 }
 
+bool GraphWidget::growSide(int side, double v)
+{
+  SideAxis &a = m_right[size_t(side - 1)];
+  return growScale(v, a.scaleMin, a.scaleMax);
+}
+
+void GraphWidget::resetSideScales()
+{
+  for (SideAxis &a : m_right)
+  {
+    a.scaleMin = 1e40;
+    a.scaleMax = -1e40;
+  }
+}
+
+QString GraphWidget::sideTitle(int side) const
+{
+  const SideAxis &a = m_right[size_t(side - 1)];
+  return a.title->isVisible() ? a.title->text() : QString();
+}
+
 void GraphWidget::updateRightAxis()
 {
-  const bool on = !m_unit2.isEmpty();
-  m_yAxis2->setVisible(on);
-  m_y2Title->setVisible(on);
-  if (!on)
+  for (int k = 0; k < int(m_right.size()); ++k)
   {
-    placeTimeBar();
-    return;
+    SideAxis &a = m_right[size_t(k)];
+    const bool on = !a.unit.isEmpty();
+    a.axis->setVisible(on);
+    a.title->setVisible(on);
+    if (!on)
+      continue;
+    double min = a.scaleMin, max = a.scaleMax;
+    if (m_includeZero)
+    {
+      min = qMin(min, 0.0);
+      max = qMax(max, 0.0);
+    }
+    if (!std::isfinite(min) || !std::isfinite(max) || !(max >= min) || min > 1e39)
+    {
+      min = 0;
+      max = 1;
+    }
+    else if (max == min)
+    {
+      const double half = min == 0 ? 1.0 : std::abs(min) * 0.1;
+      min -= half;
+      max += half;
+    }
+    // its ticks on the left axis' grid lines: the same count, a round step
+    const int ticks = qMax(2, m_yAxis->tickCount());
+    const double step = niceStep((max - min) / (ticks - 1));
+    const double first = std::floor(min / step + 1e-9) * step;
+    double top = first + (ticks - 1) * step;
+    double s = step;
+    while (top < max - s * 1e-9)
+    {
+      s = niceStep(s * 1.01);
+      top = std::floor(min / s + 1e-9) * s + (ticks - 1) * s;
+    }
+    const double from = std::floor(min / s + 1e-9) * s;
+    a.axis->setTickCount(ticks);
+    a.axis->setRange(from, from + (ticks - 1) * s);
+    a.title->setText(QString("[%1]").arg(SiPrefix::displayText(a.unit)));
+    // in the colour of its first curve: which axis is whose, with three
+    a.title->setBrush(sideColor(k + 1));
   }
-  double min = m_scale2Min, max = m_scale2Max;
-  if (m_includeZero)
-  {
-    min = qMin(min, 0.0);
-    max = qMax(max, 0.0);
-  }
-  if (!std::isfinite(min) || !std::isfinite(max) || !(max >= min) || min > 1e39)
-  {
-    min = 0;
-    max = 1;
-  }
-  else if (max == min)
-  {
-    const double half = min == 0 ? 1.0 : std::abs(min) * 0.1;
-    min -= half;
-    max += half;
-  }
-  // its ticks on the left axis' grid lines: the same count, a round step
-  const int ticks = qMax(2, m_yAxis->tickCount());
-  const double step = niceStep((max - min) / (ticks - 1));
-  const double first = std::floor(min / step + 1e-9) * step;
-  double top = first + (ticks - 1) * step;
-  double s = step;
-  while (top < max - s * 1e-9)
-  {
-    s = niceStep(s * 1.01);
-    top = std::floor(min / s + 1e-9) * s + (ticks - 1) * s;
-  }
-  const double from = std::floor(min / s + 1e-9) * s;
-  m_yAxis2->setTickCount(ticks);
-  m_yAxis2->setRange(from, from + (ticks - 1) * s);
-  m_y2Title->setText(QString("[%1]").arg(SiPrefix::displayText(m_unit2)));
   placeYTitle();
   placeTimeBar();
   if (m_intValueId > 0)

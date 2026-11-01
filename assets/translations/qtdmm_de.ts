@@ -2474,32 +2474,32 @@ und melden Sie sich danach ab und wieder an.</translation>
         <translation></translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget.cpp" line="236"/>
+        <location filename="../../src/ui/views/graphwidget.cpp" line="240"/>
         <source>All</source>
         <translation>Alles</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget.cpp" line="236"/>
+        <location filename="../../src/ui/views/graphwidget.cpp" line="240"/>
         <source>1 min</source>
         <translation>1 min</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget.cpp" line="236"/>
+        <location filename="../../src/ui/views/graphwidget.cpp" line="240"/>
         <source>5 min</source>
         <translation>5 min</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget.cpp" line="237"/>
+        <location filename="../../src/ui/views/graphwidget.cpp" line="241"/>
         <source>30 min</source>
         <translation>30 min</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget.cpp" line="247"/>
+        <location filename="../../src/ui/views/graphwidget.cpp" line="251"/>
         <source>Show the whole recording, growing with it</source>
         <translation>Die ganze Aufnahme zeigen, das Fenster wächst mit</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget.cpp" line="248"/>
+        <location filename="../../src/ui/views/graphwidget.cpp" line="252"/>
         <source>Show the last %1</source>
         <translation>Die letzten %1 zeigen</translation>
     </message>
@@ -2514,43 +2514,43 @@ und melden Sie sich danach ab und wieder an.</translation>
         <translation>[min]</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget.cpp" line="637"/>
+        <location filename="../../src/ui/views/graphwidget.cpp" line="646"/>
         <source>● REC %1</source>
         <translation>● REC %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget.cpp" line="638"/>
+        <location filename="../../src/ui/views/graphwidget.cpp" line="647"/>
         <source>● REC %1 / %2</source>
         <translation>● REC %1 / %2</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget.cpp" line="647"/>
+        <location filename="../../src/ui/views/graphwidget.cpp" line="656"/>
         <source>%1 · %2</source>
         <translation>%1 · %2</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget.cpp" line="648"/>
+        <location filename="../../src/ui/views/graphwidget.cpp" line="657"/>
         <source>Recording of %1 · %2</source>
         <translation>Aufnahme vom %1 · %2</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget.cpp" line="725"/>
+        <location filename="../../src/ui/views/graphwidget.cpp" line="734"/>
         <source>%1 left</source>
         <translation>noch %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget.cpp" line="729"/>
+        <location filename="../../src/ui/views/graphwidget.cpp" line="738"/>
         <location filename="../../src/ui/views/graphwidget_input.cpp" line="113"/>
         <source>Live</source>
         <translation>Live</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget.cpp" line="735"/>
+        <location filename="../../src/ui/views/graphwidget.cpp" line="744"/>
         <source>Stopped</source>
         <translation>Angehalten</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget.cpp" line="732"/>
+        <location filename="../../src/ui/views/graphwidget.cpp" line="741"/>
         <source>Recording</source>
         <translation>Aufnahme</translation>
     </message>
@@ -2580,7 +2580,7 @@ und melden Sie sich danach ab und wieder an.</translation>
         <translation>Alarm</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget.cpp" line="631"/>
+        <location filename="../../src/ui/views/graphwidget.cpp" line="640"/>
         <source>Live paused</source>
         <translation>Live pausiert</translation>
     </message>
@@ -2823,19 +2823,24 @@ und melden Sie sich danach ab und wieder an.</translation>
         <translation>Diagramm nach %1 geschrieben</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_curves.cpp" line="794"/>
+        <location filename="../../src/ui/views/graphwidget_curves.cpp" line="836"/>
         <source>%1 off: the %2 axis shows %3 now</source>
         <translation>%1 aus: die %2 Achse zeigt jetzt %3</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_curves.cpp" line="795"/>
+        <location filename="../../src/ui/views/graphwidget_curves.cpp" line="834"/>
         <source>right</source>
         <translation>rechte</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_curves.cpp" line="795"/>
+        <location filename="../../src/ui/views/graphwidget_curves.cpp" line="834"/>
         <source>left</source>
         <translation>linke</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/graphwidget_curves.cpp" line="834"/>
+        <source>third</source>
+        <translation>dritte</translation>
     </message>
     <message>
         <location filename="../../src/ui/views/graphwidget_others.cpp" line="137"/>
@@ -3802,7 +3807,7 @@ Keine Berechtigung? Der Sensor braucht eine udev-Regel für die USB-ID %1:%2.</t
         <location filename="../../src/ui/mainwindow.cpp" line="544"/>
         <location filename="../../src/ui/mainwindow.cpp" line="654"/>
         <location filename="../../src/ui/mainwindow.cpp" line="1831"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="2419"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2423"/>
         <source>%1: %2</source>
         <translation>%1: %2</translation>
     </message>
@@ -4017,32 +4022,32 @@ Keine Berechtigung? Der Sensor braucht eine udev-Regel für die USB-ID %1:%2.</t
         <translation>%1 verbunden</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2437"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2441"/>
         <source>The workspace closes %1, its recording is not saved.</source>
         <translation>Der Arbeitsbereich trennt %1, die Aufnahme ist nicht gespeichert.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2490"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2494"/>
         <source>back in My devices: %1</source>
         <translation>wieder in Meine Geräte: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2492"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2496"/>
         <source>the programs of their alarms were left out, set them again in Alarms...</source>
         <translation>die Programme ihrer Alarme wurden weggelassen, bitte unter Alarme... neu setzen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2494"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2498"/>
         <source>%1 without its key: enter it in the device settings</source>
         <translation>%1 ohne Schlüssel: bitte in den Geräte-Einstellungen eingeben</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2790"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2794"/>
         <source>Active: %1</source>
         <translation>Aktiv: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2791"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2795"/>
         <source>Connect, Reset and the device settings act on this device; a click on another front panel makes that one active</source>
         <translation>Verbinden, Zurücksetzen und die Geräteeinstellungen wirken auf dieses Gerät; ein Klick auf eine andere Frontplatte macht diese aktiv</translation>
     </message>
@@ -4229,49 +4234,49 @@ Keine Berechtigung? Der Sensor braucht eine udev-Regel für die USB-ID %1:%2.</t
         <translation>Die Batterie des Geräts ist schwach.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2366"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2370"/>
         <source>Save workspace</source>
         <translation>Arbeitsbereich speichern</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2367"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="2407"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2371"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2411"/>
         <source>QtDMM workspace (*.%1)</source>
         <translation>QtDMM-Arbeitsbereich (*.%1)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2391"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2395"/>
         <source>QtDMM: Save workspace</source>
         <translation>QtDMM: Arbeitsbereich speichern</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2391"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2395"/>
         <source>Could not write %1.</source>
         <translation>%1 konnte nicht geschrieben werden.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2398"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2402"/>
         <source>Workspace saved to %1</source>
         <translation>Arbeitsbereich gespeichert in %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2406"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2410"/>
         <source>Load workspace</source>
         <translation>Arbeitsbereich laden</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2419"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="2436"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2423"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2440"/>
         <source>QtDMM: Load workspace</source>
         <translation>QtDMM: Arbeitsbereich laden</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2488"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2492"/>
         <source>Workspace loaded from %1</source>
         <translation>Arbeitsbereich geladen aus %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2552"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2556"/>
         <source>&amp;Clear list</source>
         <translation>Liste &amp;leeren</translation>
     </message>
@@ -6851,7 +6856,7 @@ Melden Sie sich anschließend ab und wieder an, damit die neue Gruppenzugehörig
         <translation>&amp;Aus</translation>
     </message>
     <message>
-        <location filename="../../src/ui/valuemenu.cpp" line="121"/>
+        <location filename="../../src/ui/valuemenu.cpp" line="122"/>
         <source>&amp;Poincaré plot</source>
         <translation>&amp;Poincaré-Diagramm</translation>
     </message>
@@ -6891,27 +6896,32 @@ Melden Sie sich anschließend ab und wieder an, damit die neue Gruppenzugehörig
         <translation>&amp;Rechte Achse</translation>
     </message>
     <message>
-        <location filename="../../src/ui/valuemenu.cpp" line="97"/>
+        <location filename="../../src/ui/valuemenu.cpp" line="88"/>
+        <source>&amp;Third axis</source>
+        <translation>&amp;Dritte Achse</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/valuemenu.cpp" line="98"/>
         <source>The main value is on the left axis</source>
         <translation>Der Hauptwert liegt auf der linken Achse</translation>
     </message>
     <message>
-        <location filename="../../src/ui/valuemenu.cpp" line="130"/>
+        <location filename="../../src/ui/valuemenu.cpp" line="131"/>
         <source>Readings &amp;table</source>
         <translation>&amp;Messwerttabelle</translation>
     </message>
     <message>
-        <location filename="../../src/ui/valuemenu.cpp" line="131"/>
+        <location filename="../../src/ui/valuemenu.cpp" line="132"/>
         <source>Show this value&apos;s readings in the readings table</source>
         <translation>Die Messwerte dieses Werts in der Messwerttabelle zeigen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/valuemenu.cpp" line="142"/>
+        <location filename="../../src/ui/valuemenu.cpp" line="143"/>
         <source>&amp;New alarm...</source>
         <translation>&amp;Neuer Alarm...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/valuemenu.cpp" line="145"/>
+        <location filename="../../src/ui/valuemenu.cpp" line="146"/>
         <source>Li&amp;mits...</source>
         <translation>G&amp;renzen...</translation>
     </message>

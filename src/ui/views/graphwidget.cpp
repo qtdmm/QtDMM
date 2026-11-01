@@ -120,21 +120,25 @@ GraphWidget::GraphWidget(QWidget *parent, Settings *settings) :
   m_yAxis->setLabelsBrush(Qt::transparent);
   m_yAxis->setLabelFormat("%.4g");
   m_defaultAxisLine = m_yAxis->linePenColor();
-  // the right axis for the other values in another unit; hidden until one
-  // comes. Its grid would be a second one: off
-  m_yAxis2 = new QValueAxis();
-  m_chart->addAxis(m_yAxis2, Qt::AlignRight);
-  m_yAxis2->setLabelFormat("%.4g");
-  m_yAxis2->setGridLineVisible(false);
-  m_yAxis2->setMinorGridLineVisible(false);
-  m_yAxis2->setVisible(false);
+  // the right axes for the other values in other units, the third one
+  // outside (added after it); hidden until one comes. Their grids would be
+  // more: off
   m_yTitle = new QGraphicsSimpleTextItem(m_chart);
   m_yTitle->setFont(m_xAxis->titleFont());
   m_yTitle->setBrush(m_xAxis->titleBrush());
-  m_y2Title = new QGraphicsSimpleTextItem(m_chart);
-  m_y2Title->setFont(m_xAxis->titleFont());
-  m_y2Title->setBrush(m_xAxis->titleBrush());
-  m_y2Title->setVisible(false);
+  for (SideAxis &side : m_right)
+  {
+    side.axis = new QValueAxis();
+    m_chart->addAxis(side.axis, Qt::AlignRight);
+    side.axis->setLabelFormat("%.4g");
+    side.axis->setGridLineVisible(false);
+    side.axis->setMinorGridLineVisible(false);
+    side.axis->setVisible(false);
+    side.title = new QGraphicsSimpleTextItem(m_chart);
+    side.title->setFont(m_xAxis->titleFont());
+    side.title->setBrush(m_xAxis->titleBrush());
+    side.title->setVisible(false);
+  }
   connect(m_chart, &QChart::plotAreaChanged, this, [this](const QRectF &)
   {
     placeYTitle();
@@ -381,10 +385,15 @@ void GraphWidget::placeTimeBar()
   if (!m_timeBar)
     return;
   m_timeBar->adjustSize();
-  // with a right axis its title takes the corner: the buttons end at the plot
+  // with a right axis its title takes the corner: the buttons end at the
+  // plot, and before the titles of the right axes
   int right = m_chartView->width() - 6;
-  if (m_y2Title && m_y2Title->isVisible())
-    right = qMin(right, m_chartView->mapFromScene(m_chart->plotArea().topRight()).x());
+  for (const SideAxis &side : m_right)
+    if (side.title && side.title->isVisible())
+    {
+      right = qMin(right, m_chartView->mapFromScene(m_chart->plotArea().topRight()).x());
+      right = qMin(right, m_chartView->mapFromScene(side.title->scenePos()).x() - 4);
+    }
   m_timeBar->move(right - m_timeBar->width(), 3);
   m_timeBar->raise();
 }
