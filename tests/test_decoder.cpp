@@ -334,6 +334,16 @@ int main(int argc, char **argv)
       }
     }
 
+    // the EEVblog 121GW (dmm-tools 121GW spec §11.1): F4 and the code twice
+    // as ASCII hex; never the long 1ms PEAK, which switches Bluetooth off
+    {
+      const FrameFormat::DataFormat gw = FrameFormat::Eevblog121GW;
+      expect(gw, "range", "f430313031");
+      expect(gw, "minmax_off", "f438363836");
+      expect(gw, "lamp", "f438353835");
+      expect(gw, "peak_off", "f430343034");
+    }
+
     // the Voltcraft VC-880/890 (dmm-tools vc880 spec §5, vc890 spec): keys
     // AB CD 03 <cmd> <BE sum>; the VC-880 streams, the VC-890 is polled with
     // 5E after a result frame FF 00, which also goes before its keys

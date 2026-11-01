@@ -66,6 +66,7 @@ const std::vector<ProtocolInfo> &protocols()
     { FrameFormat::UniTUT171,             "UniTUT171",             QT_TRANSLATE_NOOP("Protocols", "AB CD frames with float values, streamed after a connect command (UNI-T UT171A/B/C, UT-D09 cable or UT-D07B adapter)"), "", "Bluetooth LE", make<DecoderUT171> },
     { FrameFormat::UniTUT8802,            "UniTUT8802",            QT_TRANSLATE_NOOP("Protocols", "8 bytes from AC, BCD digits, no checksum (UNI-T UT8802 bench meter, CP2110 USB)"), "", "", make<DecoderUT8802> },
     { FrameFormat::UniTUT8803,            "UniTUT8803",            QT_TRANSLATE_NOOP("Protocols", "21 bytes from AB CD, ASCII display (UNI-T UT8803 bench meter with LCR, CP2110 USB)"), "", "", make<DecoderUT8803> },
+    { FrameFormat::Eevblog121GW,          "Eevblog121GW",          QT_TRANSLATE_NOOP("Protocols", "19 bytes from F2 with an XOR check, main and secondary display (EEVblog 121GW, Bluetooth LE)"), "", "Bluetooth LE", make<Decoder121GW> },
   };
   return table;
 }

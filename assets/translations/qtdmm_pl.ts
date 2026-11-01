@@ -2,6 +2,35 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="pl_PL">
 <context>
+    <name>121GW</name>
+    <message>
+        <location filename="../../src/device/decoders/eevblog_121gw.cpp" line="42"/>
+        <source>LoZ</source>
+        <translation>LoZ</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/eevblog_121gw.cpp" line="114"/>
+        <location filename="../../src/device/decoders/eevblog_121gw.cpp" line="117"/>
+        <source>Internal temperature</source>
+        <translation>Temperatura wewnętrzna</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/eevblog_121gw.cpp" line="119"/>
+        <source>Battery</source>
+        <translation>Bateria</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/eevblog_121gw.cpp" line="121"/>
+        <source>Burden voltage</source>
+        <translation>Napięcie obciążenia</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/eevblog_121gw.cpp" line="175"/>
+        <source>Low-pass</source>
+        <translation>Dolnoprzepustowy</translation>
+    </message>
+</context>
+<context>
     <name>AddDeviceDlg</name>
     <message>
         <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="30"/>
@@ -787,52 +816,52 @@
 <context>
     <name>BleGattDevice</name>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="149"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="156"/>
         <source>No Bluetooth address configured.</source>
         <translation>Nie ustawiono adresu Bluetooth.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="154"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="161"/>
         <source>This meter does not use a Bluetooth LE connection.</source>
         <translation>Ten miernik nie używa połączenia Bluetooth LE.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="237"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="244"/>
         <source>The meter %1 closed the Bluetooth connection.</source>
         <translation>Miernik %1 zamknął połączenie Bluetooth.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="241"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="248"/>
         <source>Bluetooth: %1</source>
         <translation>Bluetooth: %1</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="168"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="175"/>
         <source>No answer from %1 - is the meter on and its Bluetooth switched on?</source>
         <translation>Brak odpowiedzi od %1 - czy miernik jest włączony i ma włączony Bluetooth?</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="302"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="309"/>
         <source>%1 does not offer the expected Bluetooth service - is it the right meter?</source>
         <translation>%1 nie oferuje oczekiwanej usługi Bluetooth - czy to właściwy miernik?</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="308"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="315"/>
         <source>Could not open the Bluetooth service of %1.</source>
         <translation>Nie można otworzyć usługi Bluetooth urządzenia %1.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="331"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="338"/>
         <source>Bluetooth service error %1 on %2.</source>
         <translation>Błąd usługi Bluetooth %1 na %2.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="352"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="359"/>
         <source>%1 has no notify characteristic.</source>
         <translation>%1 nie ma charakterystyki powiadomień.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="366"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="373"/>
         <source>%1 has no writable characteristic.</source>
         <translation>%1 nie ma zapisywalnej charakterystyki.</translation>
     </message>
@@ -1031,13 +1060,13 @@
     </message>
     <message>
         <location filename="../../src/ui/controlbar.cpp" line="44"/>
-        <location filename="../../src/ui/controlbar.cpp" line="187"/>
+        <location filename="../../src/ui/controlbar.cpp" line="188"/>
         <source>NCV/PEAK</source>
         <translation>NCV/PEAK</translation>
     </message>
     <message>
         <location filename="../../src/ui/controlbar.cpp" line="44"/>
-        <location filename="../../src/ui/controlbar.cpp" line="188"/>
+        <location filename="../../src/ui/controlbar.cpp" line="189"/>
         <source>Non-contact voltage; held, peak capture (AC V and AC A)</source>
         <translation>Bezdotykowy wykrywacz napięcia; przytrzymany: wartość szczytowa (AC V i AC A)</translation>
     </message>
@@ -1187,12 +1216,12 @@
         <translation>Przytrzymaj klawisz, aby wyjść, jak na mierniku.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="187"/>
+        <location filename="../../src/ui/controlbar.cpp" line="188"/>
         <source>NCV</source>
         <translation>NCV</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="188"/>
+        <location filename="../../src/ui/controlbar.cpp" line="189"/>
         <source>Non-contact voltage</source>
         <translation>Napięcie bezdotykowe</translation>
     </message>
@@ -1734,67 +1763,67 @@
 <context>
     <name>DeviceType</name>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="180"/>
+        <location filename="../../src/device/devicetype.cpp" line="181"/>
         <source>Handheld multimeter</source>
         <translation>Multimetr ręczny</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="181"/>
+        <location filename="../../src/device/devicetype.cpp" line="182"/>
         <source>Bench multimeter</source>
         <translation>Multimetr stacjonarny</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="182"/>
+        <location filename="../../src/device/devicetype.cpp" line="183"/>
         <source>Clamp meter</source>
         <translation>Miernik cęgowy</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="183"/>
+        <location filename="../../src/device/devicetype.cpp" line="184"/>
         <source>Thermometer</source>
         <translation>Termometr</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="184"/>
+        <location filename="../../src/device/devicetype.cpp" line="185"/>
         <source>Luxmeter</source>
         <translation>Luksomierz</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="185"/>
+        <location filename="../../src/device/devicetype.cpp" line="186"/>
         <source>Air quality meter</source>
         <translation>Miernik jakości powietrza</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="186"/>
+        <location filename="../../src/device/devicetype.cpp" line="187"/>
         <source>Sound level meter</source>
         <translation>Miernik poziomu dźwięku</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="187"/>
+        <location filename="../../src/device/devicetype.cpp" line="188"/>
         <source>Anemometer</source>
         <translation>Anemometr</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="188"/>
+        <location filename="../../src/device/devicetype.cpp" line="189"/>
         <source>Battery monitor</source>
         <translation>Monitor baterii</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="189"/>
+        <location filename="../../src/device/devicetype.cpp" line="190"/>
         <source>Solar charge controller</source>
         <translation>Regulator ładowania solarnego</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="190"/>
+        <location filename="../../src/device/devicetype.cpp" line="191"/>
         <source>Inverter</source>
         <translation>Falownik</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="191"/>
+        <location filename="../../src/device/devicetype.cpp" line="192"/>
         <source>Virtual meter</source>
         <translation>Miernik wirtualny</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="192"/>
+        <location filename="../../src/device/devicetype.cpp" line="193"/>
         <source>Generic</source>
         <translation>Ogólny</translation>
     </message>
@@ -1941,12 +1970,12 @@ a potem wyloguj się i zaloguj ponownie.</translation>
 <context>
     <name>FoldButton</name>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="320"/>
+        <location filename="../../src/ui/controlbar.cpp" line="321"/>
         <source>Show controls</source>
         <translation>Pokaż przyciski</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="320"/>
+        <location filename="../../src/ui/controlbar.cpp" line="321"/>
         <source>Hide controls</source>
         <translation>Ukryj przyciski</translation>
     </message>
@@ -4773,6 +4802,11 @@ Czy multimetr jest podłączony i włączony?</translation>
         <location filename="../../src/device/protocols.cpp" line="68"/>
         <source>21 bytes from AB CD, ASCII display (UNI-T UT8803 bench meter with LCR, CP2110 USB)</source>
         <translation>21 bajtów od AB CD, wyświetlacz ASCII (multimetr stołowy UNI-T UT8803 z LCR, CP2110 USB)</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/protocols.cpp" line="69"/>
+        <source>19 bytes from F2 with an XOR check, main and secondary display (EEVblog 121GW, Bluetooth LE)</source>
+        <translation>19 bajtów od F2 z kontrolą XOR, wyświetlacz główny i pomocniczy (EEVblog 121GW, Bluetooth LE)</translation>
     </message>
 </context>
 <context>

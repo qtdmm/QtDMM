@@ -45,6 +45,7 @@ Type ofProtocol(FrameFormat::DataFormat protocol)
     case FrameFormat::UniTUT171:
     case FrameFormat::VoltcraftVC880:
     case FrameFormat::VoltcraftVC890:
+    case FrameFormat::Eevblog121GW:
       return HandheldDmm;
     case FrameFormat::Voltcraft15Continuous:
     case FrameFormat::Sigrok:

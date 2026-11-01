@@ -1,0 +1,73 @@
+protocol: Eevblog121GW
+decoder: src/device/decoders/eevblog_121gw.cpp
+devices: [EEVblog 121GW]
+frames_per_reading: 1
+unit_map:                      # spec spelling -> what the decoder emits
+  "u": "µ"
+sources:
+  - "ablage/dmm-tools/docs/research/121gw/reverse-engineered-protocol.md (dmm-tools, GPL-3.0-or-later: from EEVblog's BLE packet documents V1/V2, EEVblog's and UEi's apps and the manual; two community packets from real meters, §15.5)"
+
+# Bluetooth LE: service 0bd51666-e7cb-469b-8e4d-2742f1ba77cc, one
+# characteristic e7add780-b042-4876-aae1-112855353cc1, indicated (§2).
+# Packet (§4, §5), 19 bytes: F2, identity (4), main mode (bits 7-6 value
+# bits 17-16, bits 4-0 mode 0-24, §6.1), main range (bit 7 OFL, 6 minus,
+# 5 C, 4 F, 3-0 range, §6.2), main value BE, sub mode (§7.1: 0-24, 100+
+# settings and figures), sub range (OFL, minus, k, Hz, point), sub value
+# BE, bar (2), annunciators (§9: 15 C, 1kHz, 1ms, DC/AC, AUTO, APO, BAT;
+# 16 F, BT, arrow, REL, dBm, MIN/MAX; 17 TEST, MEM, A-HOLD/HOLD, sub AC/DC),
+# XOR of bytes 0-17. Real meters send bytes 1-18 per indication, without
+# F2 (§15.4): the vectors below are those 18 bytes, one with F2 before.
+#
+# The first two vectors are the community packets of §15.5 (captured on
+# real meters, F2 prepended there and dropped here); the next four are the
+# spec's worked examples (§13, constructed); the rest SYNTHETIC, built from
+# the tables (§6-9).
+vectors:
+  - source_line: "Duty 0.0 % with the internal temperature 27.9 C, APO, BT - a real 121GW's packet quoted in sigrok's eev121gw.c (§15.5)"
+    bytes: 17 84 21 21 08 00 00 00 64 01 01 17 12 37 02 40 00 7D
+    reading: {value: "0.0", unit: "%", range_mode: "manual"}
+    expect: {special: "DU", val2: "27.9", unit2: "C", id2: 1}
+  - source_line: "Resistance OFL on the 50 MOhm range, internal temperature 25.8 C - a real 121GW's packet from 121gwcli (§15.5)"
+    bytes: 17 85 43 21 09 86 00 00 64 01 01 02 01 21 06 40 00 8D
+    reading: {value: "OL", unit: "MOhm", range_mode: "auto"}
+    expect: {special: "OH", val: "OL", val2: "25.8", unit2: "C", id2: 1}
+  - source_line: "1.2345 V DC, AUTO, BT, internal temperature 24.3 (§13 example 1), with the F2 before"
+    bytes: F2 12 61 23 45 01 00 30 39 64 01 00 F3 00 00 0C 40 00 35
+    reading: {value: "1.2345", unit: "V", range_mode: "auto"}
+    expect: {special: "DC", val2: "24.3", unit2: "C", id2: 1}
+  - source_line: "87.654 Hz, an 18-bit value (§13 example 2)"
+    bytes: 12 61 23 45 46 00 56 66 00 00 00 00 00 00 04 40 00 D5
+    reading: {value: "87.654", unit: "Hz", range_mode: "auto"}
+    expect: {special: "HZ"}
+  - source_line: "Resistance OFL on the 50 MOhm range (§13 example 3)"
+    bytes: 12 61 23 45 09 86 00 00 00 00 00 00 00 00 04 40 00 2C
+    reading: {value: "OL", unit: "MOhm", range_mode: "auto"}
+    expect: {special: "OH", val: "OL"}
+  - source_line: "-12.345 mV DC (§13 example 4)"
+    bytes: 12 61 23 45 03 40 30 39 00 00 00 00 00 00 0C 40 00 E1
+    reading: {value: "-12.345", unit: "mV", range_mode: "auto"}
+    expect: {special: "DC"}
+  - source_line: "1.638 mV AC with 62.97 Hz beside it (the reading 121gwcli's README decodes, §15.5)"
+    bytes: 12 61 23 45 04 00 06 66 06 12 18 99 00 00 14 40 00 42
+    reading: {value: "1.638", unit: "mV", range_mode: "auto"}
+    expect: {special: "AC", val2: "62.97", unit2: "Hz", id2: 1}
+  - source_line: "23.012 V AC with HOLD (byte 17 bits 3-2 = 2)"
+    bytes: 12 61 23 45 02 01 59 E4 00 00 00 00 00 00 14 40 08 05
+    reading: {value: "23.012", unit: "V", range_mode: "auto", flags: [HOLD]}
+    expect: {special: "AC"}
+  - source_line: "Thermocouple 72.3 F (byte 6 bit 4), manual"
+    bytes: 12 61 23 45 05 10 02 D3 00 00 00 00 00 00 00 40 00 63
+    reading: {value: "72.3", unit: "dF", range_mode: "manual"}
+    expect: {special: "TE"}
+  - source_line: "12.345 VA AC on range 2, the current 45.67 mA beside it"
+    bytes: 12 61 23 45 0F 02 30 39 12 02 11 D7 00 00 10 40 00 65
+    reading: {value: "12.345", unit: "VA", range_mode: "manual"}
+    expect: {special: "AC"}
+  - source_line: "12.345 mA DC with REL and MAX"
+    bytes: 12 61 23 45 13 01 30 39 00 00 00 00 00 00 0C 51 00 A1
+    reading: {value: "12.345", unit: "mA", range_mode: "auto"}
+    expect: {special: "DC"}
+  - source_line: "0.470 uF on the 1 uF range"
+    bytes: 12 61 23 45 0C 02 01 D6 00 00 00 00 00 00 04 40 00 7A
+    reading: {value: "0.470", unit: "uF", range_mode: "auto"}
+    expect: {special: "CA"}
