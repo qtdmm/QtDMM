@@ -321,6 +321,19 @@ int main(int argc, char **argv)
       ucheck(u->keyRequest("minmax") == DecoderUT181A::command(0x04, QByteArray::fromHex("01")), "MAX/MIN on");
     }
 
+    // the UT171 (dmm-tools UT171 spec §4.3): the UT181A's framing, connect
+    // while no measurement came, no keys
+    {
+      auto u = DmmDecoder::getInstance(FrameFormat::UniTUT171);
+      const bool before = u->pollRequest() == QByteArray::fromHex("abcd04000a010f00");
+      const bool read = u->decode(QByteArray::fromHex("abcd1100 02000102011f854541 0000 00000000 4101"), 0).has_value();
+      if (!before || !read || !u->pollRequest().isEmpty() || u->hasKey("hold", "UT171A *"))
+      {
+        qWarning() << "UT171: connect before the first measurement, none after it, no keys";
+        ++problems;
+      }
+    }
+
     // the Voltcraft VC-880/890 (dmm-tools vc880 spec §5, vc890 spec): keys
     // AB CD 03 <cmd> <BE sum>; the VC-880 streams, the VC-890 is polled with
     // 5E after a result frame FF 00, which also goes before its keys

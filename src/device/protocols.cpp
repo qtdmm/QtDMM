@@ -63,6 +63,7 @@ const std::vector<ProtocolInfo> &protocols()
     { FrameFormat::UniTUT181A,            "UniTUT181A",            QT_TRANSLATE_NOOP("Protocols", "AB CD frames of any length with float values, streamed once asked (UNI-T UT181A, UT-D09 cable or UT-D07B adapter)"), "", "Bluetooth LE", make<DecoderUT181A> },
     { FrameFormat::VoltcraftVC880,        "VoltcraftVC880",        QT_TRANSLATE_NOOP("Protocols", "39 bytes, streamed (Voltcraft VC-880, VC650BT, CP2110 USB cable)"), "ES51966A", "", make<DecoderVC8x0> },
     { FrameFormat::VoltcraftVC890,        "VoltcraftVC890",        QT_TRANSLATE_NOOP("Protocols", "66 bytes, polled (Voltcraft VC-890, CP2110 USB cable)"), "ES51997P", "", make<DecoderVC8x0> },
+    { FrameFormat::UniTUT171,             "UniTUT171",             QT_TRANSLATE_NOOP("Protocols", "AB CD frames with float values, streamed after a connect command (UNI-T UT171A/B/C, UT-D09 cable or UT-D07B adapter)"), "", "Bluetooth LE", make<DecoderUT171> },
   };
   return table;
 }
