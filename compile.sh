@@ -155,6 +155,9 @@ then
 	# appimagetool looks the metadata up by the desktop file's name (the
 	# application id), as .appdata.xml
 	mv AppDir/usr/share/metainfo/io.github.qtdmm.qtdmm.metainfo.xml AppDir/usr/share/metainfo/io.github.qtdmm.qtdmm.appdata.xml
+	# appimagetool (since 2026-10-31) wants a PNG at the top of the AppDir for
+	# .DirIcon, the SVG linuxdeploy puts there no longer does
+	cp AppDir/usr/share/icons/hicolor/128x128/apps/io.github.qtdmm.qtdmm.png AppDir/ || exit 1
 	# a build host without FUSE (containers, CI) runs the tools extracted
 	export APPIMAGE_EXTRACT_AND_RUN=1
 	[ -n "${QTDMM_QT_DIR}" ] && QMAKE="${QMAKE:-${QTDMM_QT_DIR}/bin/qmake}"
