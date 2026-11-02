@@ -1,0 +1,614 @@
+{
+ "source": "manual (spec sheet photo)",
+ "device": "cm2100b",
+ "models": [
+  "OWON CM2100B"
+ ],
+ "model": "CM2100B",
+ "tables": [
+  {
+   "input_impedance": null,
+   "notes": [
+    "Display: 20000 counts (max reading 19999)",
+    "VFC = Variable Frequency Converter (low-pass filter mode)",
+    "True RMS; frequency range 40Hz–1000Hz",
+    "AC accuracy valid 5%–100% of range",
+    "Auto range not available for current"
+   ],
+   "overload_protection": null,
+   "page": null,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "3%+10",
+       "freq_range": "40Hz~1kHz"
+      },
+      {
+       "accuracy": "4%+10",
+       "freq_range": "VFC"
+      }
+     ],
+     "range": "2.000A",
+     "resolution": "1mA"
+    }
+   ],
+   "table": "AC Current"
+  },
+  {
+   "input_impedance": null,
+   "notes": [
+    "Display: 20000 counts (max reading 19999)",
+    "VFC = Variable Frequency Converter (low-pass filter mode)",
+    "True RMS; frequency range 40Hz–1000Hz",
+    "AC accuracy valid 5%–100% of range",
+    "Auto range not available for current"
+   ],
+   "overload_protection": null,
+   "page": null,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "2.5%+5",
+       "freq_range": "40Hz~1kHz"
+      },
+      {
+       "accuracy": "4%+10",
+       "freq_range": "VFC"
+      }
+     ],
+     "range": "20.00A",
+     "resolution": "10mA"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "2.5%+5",
+       "freq_range": "40Hz~1kHz"
+      },
+      {
+       "accuracy": "4%+10",
+       "freq_range": "VFC"
+      }
+     ],
+     "range": "100.0A",
+     "resolution": "0.1A"
+    }
+   ],
+   "table": "AC Current"
+  },
+  {
+   "input_impedance": "≥10MΩ",
+   "notes": [
+    "Display: 20000 counts (max reading 19999)",
+    "VFC = Variable Frequency Converter (low-pass filter mode)",
+    "True RMS; frequency range 40Hz–1000Hz",
+    "AC accuracy valid 5%–100% of range",
+    ">600V: warning beep"
+   ],
+   "overload_protection": "600V",
+   "page": null,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.8%+10",
+       "freq_range": "40Hz~1kHz"
+      },
+      {
+       "accuracy": "4%+3",
+       "freq_range": "VFC"
+      }
+     ],
+     "range": "2.0000V",
+     "resolution": "0.1mV"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.8%+10",
+       "freq_range": "40Hz~1kHz"
+      },
+      {
+       "accuracy": "4%+3",
+       "freq_range": "VFC"
+      }
+     ],
+     "range": "20.000V",
+     "resolution": "1mV"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.8%+10",
+       "freq_range": "40Hz~1kHz"
+      },
+      {
+       "accuracy": "4%+3",
+       "freq_range": "VFC"
+      }
+     ],
+     "range": "200.00V",
+     "resolution": "10mV"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.8%+10",
+       "freq_range": "40Hz~1kHz"
+      },
+      {
+       "accuracy": "4%+3",
+       "freq_range": "VFC"
+      }
+     ],
+     "range": "600.0V",
+     "resolution": "0.1V"
+    }
+   ],
+   "table": "AC Voltage"
+  },
+  {
+   "input_impedance": null,
+   "notes": [
+    "Display: 20000 counts (max reading 19999)",
+    "Press ZERO before DC current measurement",
+    "Auto range not available for current"
+   ],
+   "overload_protection": null,
+   "page": null,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "2%+8",
+       "freq_range": null
+      }
+     ],
+     "range": "2.000A",
+     "resolution": "1mA"
+    }
+   ],
+   "table": "DC Current"
+  },
+  {
+   "input_impedance": null,
+   "notes": [
+    "Display: 20000 counts (max reading 19999)",
+    "Press ZERO before DC current measurement",
+    "Auto range not available for current"
+   ],
+   "overload_protection": null,
+   "page": null,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "2%+3",
+       "freq_range": null
+      }
+     ],
+     "range": "20.00A",
+     "resolution": "10mA"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "2%+3",
+       "freq_range": null
+      }
+     ],
+     "range": "100.0A",
+     "resolution": "0.1A"
+    }
+   ],
+   "table": "DC Current"
+  },
+  {
+   "input_impedance": "≥10MΩ",
+   "notes": [
+    "Display: 20000 counts (max reading 19999)",
+    ">600V: warning beep"
+   ],
+   "overload_protection": "600V",
+   "page": null,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.7%+10",
+       "freq_range": null
+      }
+     ],
+     "range": "200.00mV",
+     "resolution": "0.01mV"
+    }
+   ],
+   "table": "DC Voltage"
+  },
+  {
+   "input_impedance": "≥10MΩ",
+   "notes": [
+    "Display: 20000 counts (max reading 19999)",
+    ">600V: warning beep"
+   ],
+   "overload_protection": "600V",
+   "page": null,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.5%+5",
+       "freq_range": null
+      }
+     ],
+     "range": "2.0000V",
+     "resolution": "0.1mV"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.5%+5",
+       "freq_range": null
+      }
+     ],
+     "range": "20.000V",
+     "resolution": "1mV"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.5%+5",
+       "freq_range": null
+      }
+     ],
+     "range": "200.00V",
+     "resolution": "10mV"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.5%+5",
+       "freq_range": null
+      }
+     ],
+     "range": "600.0V",
+     "resolution": "0.1V"
+    }
+   ],
+   "table": "DC Voltage"
+  },
+  {
+   "input_impedance": null,
+   "notes": [
+    "Display: 20000 counts (max reading 19999)",
+    "Auto range",
+    "Subtract test lead resistance from reading",
+    "Input voltage must not exceed 60V DC / 30V AC in this function"
+   ],
+   "overload_protection": "600V",
+   "page": null,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.8%+10",
+       "freq_range": null
+      }
+     ],
+     "range": "200.00Ω",
+     "resolution": "0.01Ω"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.5%+10",
+       "freq_range": null
+      }
+     ],
+     "range": "2.0000kΩ",
+     "resolution": "0.1Ω"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.5%+10",
+       "freq_range": null
+      }
+     ],
+     "range": "20.000kΩ",
+     "resolution": "1Ω"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.5%+10",
+       "freq_range": null
+      }
+     ],
+     "range": "200.00kΩ",
+     "resolution": "10Ω"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.5%+10",
+       "freq_range": null
+      }
+     ],
+     "range": "2.0000MΩ",
+     "resolution": "100Ω"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "1%+10",
+       "freq_range": null
+      }
+     ],
+     "range": "20.000MΩ",
+     "resolution": "1kΩ"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "5.0%+10",
+       "freq_range": null
+      }
+     ],
+     "range": "200.00MΩ",
+     "resolution": "10kΩ"
+    }
+   ],
+   "table": "Resistance"
+  },
+  {
+   "input_impedance": null,
+   "notes": [
+    "Display: 20000 counts (max reading 19999)",
+    "AC accuracy valid 5%–100% of range",
+    "Subtract test lead capacitance (use REL/ZERO)",
+    "20.00mF range: measurement takes >30 s",
+    "Input voltage must not exceed 60V DC / 30V AC in this function"
+   ],
+   "overload_protection": "600V",
+   "page": null,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "4.0%+10",
+       "freq_range": null
+      }
+     ],
+     "range": "2.000nF",
+     "resolution": "1pF"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "3.0%+10",
+       "freq_range": null
+      }
+     ],
+     "range": "20.00nF",
+     "resolution": "10pF"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "3.0%+10",
+       "freq_range": null
+      }
+     ],
+     "range": "200.0nF",
+     "resolution": "100pF"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "3.0%+10",
+       "freq_range": null
+      }
+     ],
+     "range": "2.000µF",
+     "resolution": "1nF"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "3.0%+10",
+       "freq_range": null
+      }
+     ],
+     "range": "20.00µF",
+     "resolution": "10nF"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "3.0%+10",
+       "freq_range": null
+      }
+     ],
+     "range": "200.0µF",
+     "resolution": "100nF"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "3.0%+10",
+       "freq_range": null
+      }
+     ],
+     "range": "2.000mF",
+     "resolution": "1µF"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "3.0%+10",
+       "freq_range": null
+      }
+     ],
+     "range": "20.00mF",
+     "resolution": "10µF"
+    }
+   ],
+   "table": "Capacitance"
+  },
+  {
+   "input_impedance": "≥10MΩ",
+   "notes": [
+    "Display: 20000 counts (max reading 19999)",
+    "Input signal: 1Hz–20MHz, ≥1V rms",
+    "Typical waveform: rectangular or sine"
+   ],
+   "overload_protection": "600V",
+   "page": null,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.1%+5",
+       "freq_range": null
+      }
+     ],
+     "range": "200.00Hz",
+     "resolution": "0.01Hz"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.1%+5",
+       "freq_range": null
+      }
+     ],
+     "range": "2.0000kHz",
+     "resolution": "0.1Hz"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.1%+5",
+       "freq_range": null
+      }
+     ],
+     "range": "20.000kHz",
+     "resolution": "1Hz"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.1%+5",
+       "freq_range": null
+      }
+     ],
+     "range": "200.00kHz",
+     "resolution": "10Hz"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.1%+5",
+       "freq_range": null
+      }
+     ],
+     "range": "2.0000MHz",
+     "resolution": "100Hz"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.1%+5",
+       "freq_range": null
+      }
+     ],
+     "range": "20.000MHz",
+     "resolution": "1kHz"
+    }
+   ],
+   "table": "Frequency"
+  },
+  {
+   "input_impedance": "≥10MΩ",
+   "notes": [
+    "Display: 20000 counts (max reading 19999)",
+    "Typical: Vrms = 1V, f = 1kHz",
+    "Typical waveform: rectangular"
+   ],
+   "overload_protection": "600V",
+   "page": null,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "1.2%+3",
+       "freq_range": null
+      }
+     ],
+     "range": "0.1%~99.9%",
+     "resolution": "0.1%"
+    }
+   ],
+   "table": "Duty Ratio"
+  },
+  {
+   "input_impedance": "≥10MΩ",
+   "notes": [
+    "Display: 20000 counts (max reading 19999)",
+    "Typical waveform: rectangular"
+   ],
+   "overload_protection": "600V",
+   "page": null,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "2.5%+3",
+       "freq_range": "≥1kHz"
+      }
+     ],
+     "range": "0.1%~99.9%",
+     "resolution": "0.1%"
+    }
+   ],
+   "table": "Duty Ratio"
+  },
+  {
+   "input_impedance": null,
+   "notes": [
+    "Buzzer sounds continuously at ≤50Ω",
+    "Input voltage must not exceed 60V DC / 30V AC in this function"
+   ],
+   "overload_protection": "600V",
+   "page": null,
+   "ranges": [
+    {
+     "accuracy": [],
+     "range": "Continuity",
+     "resolution": null
+    }
+   ],
+   "table": "Continuity and Diode"
+  },
+  {
+   "input_impedance": null,
+   "notes": [
+    "Shows approximate forward voltage; no accuracy specified in manual",
+    "Input voltage must not exceed 60V DC / 30V AC in this function"
+   ],
+   "overload_protection": "600V",
+   "page": null,
+   "ranges": [
+    {
+     "accuracy": [],
+     "range": "Diode",
+     "resolution": null
+    }
+   ],
+   "table": "Continuity and Diode"
+  }
+ ]
+}
