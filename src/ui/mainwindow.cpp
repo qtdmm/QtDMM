@@ -306,7 +306,7 @@ void MainWindow::createViews()
   // meters they are given (see InstanceWidget)
 
   m_meter = new AnalogMeter(this);
-  m_wid->setMeter(m_meter);
+  m_wid->addMeter(m_meter);
   m_meterWin = addView(m_meter, tr("Analog meter"), MdiArranger::Instrument, "meter");
   // no cell bigger than the instrument can fill
   m_arranger->setContentAspect(m_meterWin, AnalogMeter::kMinAspect, AnalogMeter::kMaxAspect);

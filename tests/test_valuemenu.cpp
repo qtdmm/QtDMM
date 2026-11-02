@@ -17,6 +17,7 @@
 #include "ui/frontpanel.h"
 #include "ui/instancewidget.h"
 #include "ui/valuemenu.h"
+#include "ui/views/analogmeter.h"
 #include "ui/views/graphwidget.h"
 #include "ui/views/lcdwidget.h"
 #include "testutil.h"
@@ -46,7 +47,9 @@ int main(int argc, char **argv)
                                       {"DMM/virtual-max", "0.25"}, {"DMM/virtual-values", 2}});
   DeviceSession session;
   session.setConfigDir(dir.path());
+  AnalogMeter meter;   // outlives the window's MeterView
   InstanceWidget wid("vm", dir.path(), &session);
+  wid.addMeter(&meter);
   MeterController *ctl = session.open(b);
   check(ctl != nullptr, "Sim B open");
   if (!ctl)
