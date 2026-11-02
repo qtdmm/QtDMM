@@ -45,6 +45,7 @@ class MeterController;
 class LcdWidget;
 class HelpDlg;
 class AnalogMeter;
+class MeterView;
 class ReadingsWidget;
 class PoincarePlot;
 class AlarmBar;
@@ -169,7 +170,7 @@ protected:
   bool        keepRecordingOf(const QString &id, const QString &text);
   /// The front panel windows.
   QList<QMdiSubWindow *> panelWindows() const { return m_panelWins.values(); }
-  /// Whether @p win shows an instrument: a front panel or the analog meter.
+  /// Whether @p win shows an instrument: a front panel or an analog meter.
   bool        isInstrument(const QMdiSubWindow *win) const;
   /// @name The active device: the meter of the front panel used last
   /// Connect, Reset min/max and Device settings act on it; the first meter
@@ -189,6 +190,24 @@ protected:
   void        applyFrame(QWidget *view);
   /// @}
   AnalogMeter   *m_meter;
+  /// @name More analog meters
+  /// The first (m_meter, "meter") is always there, shown or hidden; more
+  /// ("meter-2", ...) come from the menu, each with its value and style,
+  /// and go when closed.
+  /// @{
+  QList<QMdiSubWindow *> m_moreMeters;
+  QAction    *m_newMeterAction = nullptr;
+  /// A window with another analog meter showing @p value, numbered
+  /// @p number (the next free one for 0); not shown yet.
+  QMdiSubWindow *addMeterWindow(const ValueRef &value, int number = 0);
+  /// Another analog meter for @p value, shown and placed.
+  void        newMeter(const ValueRef &value);
+  void        removeMeterWindow(QMdiSubWindow *win);
+  /// The analog meter in @p win, nullptr for another window.
+  MeterView  *meterViewOf(const QMdiSubWindow *win) const;
+  /// The windows of all analog meters, the first one first.
+  QList<QMdiSubWindow *> meterWindows() const { return QList<QMdiSubWindow *>{ m_meterWin } + m_moreMeters; }
+  /// @}
   ReadingsWidget *m_readings;
   PoincarePlot *m_poincare;
   AlarmBar   *m_alarmBar;
@@ -322,7 +341,8 @@ protected:
   /// shown brings it in (its other values hidden), its last one hidden takes it out.
   void        setTableShown(const ValueRef &value, bool shown);
   /// "Sources..." of a view: the values of the open meters it shows.
-  void        editSources(ValueMenu::View view);
+  /// For View::Meter the analog meter @p meter, nullptr for the first.
+  void        editSources(ValueMenu::View view, MeterView *meter = nullptr);
   QAction    *m_graphSources = nullptr;   ///< in the graph's menu, with more than one meter
   QAction    *m_tableSources = nullptr;   ///< in the table's menu, the same
   /// A meter's name by its source, also after it was closed.

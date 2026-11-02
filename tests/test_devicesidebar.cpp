@@ -162,6 +162,7 @@ int main(int argc, char **argv)
             && DeviceSpecs::html(hp).contains("FCC ID") && !DeviceSpecs::html(hp).contains("dmm-tools"),
           "HP-570C-APP: from its manual, not dmm-tools");
     check(DeviceSpecs::html(DeviceSpecs::find("CMT", "3503 *")).contains("Cosinus"), "CMT 3503: from its data sheet");
+    check(DeviceSpecs::html(DeviceSpecs::find("OWON", "CM2100B")).contains("100.0A"), "CM2100B: from its spec sheet");
     // Connect at the bottom left: only once set up, greyed while connected
     check(dlg.connectButton()->isHidden(), "no Connect without setConnect()");
     bool connected = false;

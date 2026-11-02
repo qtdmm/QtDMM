@@ -31,6 +31,7 @@
 #include "core/limittest.h"
 #include "core/reading.h"
 #include "core/valueref.h"
+#include "ui/meterview.h"
 #include "ui/dialogs/printdlg.h"
 #include "ui/settings/recorderprefs.h"
 
@@ -72,17 +73,17 @@ public:
   /// The settings dialog: its pages hold what MainWindow reads (the window
   /// at exit, the analog meter's style, the shown display, the keys).
   SettingsDialog *settingsDialog() const { return m_configDlg; }
-  /// The analog meter's style from its context menu (0 dark, 1 ivory):
-  /// shown at once, saved, and the Appearance page follows.
-  void        setMeterStyle(int style);
   /// The active device (MainWindow), the one the settings' Alarms page
   /// shows first: its source.
   void        setActiveSource(const QString &source) { m_activeSource = source; }
   /// The settings' Alarms page with the alarms of the meter @p source
   /// (MeterController::source()).
   void        openAlarms(const QString &source);
-  /// The analog meter to feed; created and docked by MainWindow.
-  void        setMeter(AnalogMeter *);
+  /// An analog meter to feed (created and docked by MainWindow), with the
+  /// settings' look; removeMeter() before its window goes.
+  MeterView  *addMeter(AnalogMeter *meter);
+  void        removeMeter(MeterView *view);
+  const QList<MeterView *> &meters() const { return m_meters; }
   /// The Poincaré plot (MainWindow owns and feeds it), for its value.
   void        setPoincare(PoincarePlot *plot);
   /// Table model that gets every reading (MainWindow owns it).
@@ -91,9 +92,7 @@ public:
   /// The sidebar's value menu (ValueMenu), kept with the window layout:
   /// a meter's value (ValueFeed), "no value" while the meter is not connected.
   /// @{
-  void        setMeterValue(const ValueRef &value);
   void        setPoincareValue(const ValueRef &value);
-  ValueRef    meterValue() const { return m_meterValue; }
   ValueRef    poincareValue() const { return m_poincareValue; }
   /// @}
   /// The limit test's band to the graph and the analog meter (they draw it
@@ -169,16 +168,13 @@ public Q_SLOTS:
 protected:
   /// Shows the settings dialog, on @p page (a SettingsDialog::PageType) unless -1.
   void        openConfig(int page = -1);
-  void        applyMeterStyle();   ///< style, ballistics, red zone from the settings
+  /// The analog meters' settings: style, needle inertia, red zone, scale, blinking.
+  MeterView::Look meterLook() const;
   DeviceSession   *m_session;
-  ValueFeed       *m_meterFeed = nullptr;     ///< the analog meter's
   ValueFeed       *m_poincareFeed = nullptr;  ///< the Poincaré plot's
   SettingsDialog  *m_configDlg;
   qtdmm::PrintDlg *m_printDlg;
   QPrinter    m_printer;
-  QColor      m_alertColor;   ///< the raised alarm's colour for the analog meter, invalid when none
-  QMetaObject::Connection m_alertLink;   ///< the alarm colour of the analog meter's meter
-  QMetaObject::Connection m_meterLimitLink;   ///< the limit test of the analog meter's meter
   /// The graph's store while no meter has it: empty, Live (time axis only).
   RecordingStore *m_emptyStore = nullptr;
   QPointer<MeterController> m_graphBase;   ///< the meter of the graph's store, nullptr: m_emptyStore
@@ -192,18 +188,12 @@ protected:
   /// The alarms' thresholds of the graph's meter, for its reference line to snap to.
   void        applyAlarmThresholds();
   QMetaObject::Connection m_graphLimitLink;   ///< of the meter of the graph's left axis
-  bool        m_alertBlink = false;   ///< Alarms/blink
-  bool        m_alertPhase = true;    ///< blinking: the colour shown now
-  QTimer     *m_alertTimer = nullptr;
   QString     m_activeSource;   ///< setActiveSource()
   bool        m_consoleLogging = false;   ///< setConsoleLogging()
-  /// The analog meter in the alarm's colour (or its own in the dark phase
-  /// of the blinking).
-  void        showAlertColor();
-  AnalogMeter   *m_meter;
+  QList<MeterView *> m_meters;
+  int         m_meterStyle = -1;   ///< the settings' style last applied, -1 before the first
   PoincarePlot  *m_poincare = nullptr;
   QPointer<ReadingsModel> m_readingLog;
-  ValueRef    m_meterValue;
   ValueRef    m_poincareValue;
   /// The values chosen to the views.
   void        applyValueChoice();

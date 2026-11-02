@@ -37,6 +37,7 @@
 #include "device/protocols.h"
 #include "ui/controlbar.h"
 #include "ui/frontpanel.h"
+#include "ui/meterview.h"
 #include "ui/views/graphwidget.h"
 #include "ui/settings/settingsdialog.h"
 #include "ui/devicesettings.h"
@@ -63,17 +64,14 @@
 
 
 
-InstanceWidget::InstanceWidget(QString instanceId, QString configPath, DeviceSession *session, QWidget *parent) :  QFrame(parent),
-  m_meter(nullptr)
+InstanceWidget::InstanceWidget(QString instanceId, QString configPath, DeviceSession *session, QWidget *parent) :  QFrame(parent)
 {
   setupUi(this);
   setWindowIcon(QPixmap(":/Symbols/icon.xpm"));
 
   m_session = session;
   // the views' values: of a meter of the session
-  m_meterFeed = new ValueFeed(session, this);
   m_poincareFeed = new ValueFeed(session, this);
-  m_meterFeed->setValue(ValueRef());
   m_poincareFeed->setValue(ValueRef());
   connect(session, &DeviceSession::error, this, &InstanceWidget::error);
   connect(session, &DeviceSession::info, this, &InstanceWidget::info);
@@ -223,36 +221,6 @@ InstanceWidget::InstanceWidget(QString instanceId, QString configPath, DeviceSes
       m_graphLimitLink = connect(ctl, &MeterController::limitTestChanged, this, &InstanceWidget::applyLimitBands);
     applyLimitBands();
   });
-  // the analog meter in the colour of an alarm of the meter it shows,
-  // blinking if wanted, with that meter's PASS/FAIL band; the banner and the beep stay, the colour is never
-  // the only sign
-  m_alertTimer = new QTimer(this);
-  m_alertTimer->setInterval(500);
-  connect(m_alertTimer, &QTimer::timeout, this, [this]
-  {
-    m_alertPhase = !m_alertPhase;
-    showAlertColor();
-  });
-  auto followMeter = [this](const MeterController *ctl)
-  {
-    disconnect(m_alertLink);
-    disconnect(m_meterLimitLink);
-    if (ctl)
-      m_meterLimitLink = connect(ctl, &MeterController::limitTestChanged, this, &InstanceWidget::applyLimitBands);
-    applyLimitBands();
-    m_alertColor = ctl ? ctl->alertColor() : QColor();
-    m_alertPhase = true;
-    if (ctl)
-      m_alertLink = connect(ctl, &MeterController::alertColorChanged, this, [this](const QColor &color)
-      {
-        m_alertColor = color;
-        m_alertPhase = true;
-        showAlertColor();
-      });
-    showAlertColor();
-  };
-  connect(m_meterFeed, &ValueFeed::controllerChanged, this, followMeter);
-  followMeter(m_meterFeed->controller());
   // a recording asked for by a meter (SCPI INITiate, an alarm's program):
   // as the Record button, with its questions
   m_session->setRecordingRequests([this](bool start)
@@ -289,23 +257,18 @@ void InstanceWidget::setConsoleLogging(bool on)
     ctl->dmm()->setConsoleLogging(on);
 }
 
-void InstanceWidget::setMeter(AnalogMeter *meter)
+MeterView *InstanceWidget::addMeter(AnalogMeter *meter)
 {
-  m_meter = meter;
-  connect(m_meterFeed, &ValueFeed::reading, meter, &AnalogMeter::showReading);
-  connect(m_meterFeed, &ValueFeed::staleChanged, meter, &AnalogMeter::setStale);
-  // the memory of the value it shows, whichever the LCD follows
-  connect(m_meterFeed, &ValueFeed::valueMinMaxChanged, meter, &AnalogMeter::showValueMinMax);
-  connect(m_meterFeed, &ValueFeed::controllerChanged, meter, [meter](const MeterController *ctl)
-  {
-    meter->reset();
-    meter->clearMinMax();
-    // the scale of the meter that has the value
-    if (ctl)
-      meter->setDisplayCounts(ctl->dmm()->dmmInfo().display);
-  });
-  applyValueChoice();
-  applyLimitBands();
+  auto *view = new MeterView(m_session, meter, this);
+  view->setLook(meterLook());
+  m_meters << view;
+  return view;
+}
+
+void InstanceWidget::removeMeter(MeterView *view)
+{
+  m_meters.removeOne(view);
+  delete view;
 }
 
 void InstanceWidget::setPoincare(PoincarePlot *plot)
@@ -317,12 +280,6 @@ void InstanceWidget::setPoincare(PoincarePlot *plot)
   applyValueChoice();
 }
 
-void InstanceWidget::setMeterValue(const ValueRef &value)
-{
-  m_meterValue = value;
-  applyValueChoice();
-}
-
 void InstanceWidget::setPoincareValue(const ValueRef &value)
 {
   m_poincareValue = value;
@@ -331,15 +288,7 @@ void InstanceWidget::setPoincareValue(const ValueRef &value)
 
 void InstanceWidget::applyValueChoice()
 {
-  m_meterFeed->setValue(m_meterValue);
   m_poincareFeed->setValue(m_poincareValue);
-  if (m_meter)
-  {
-    const int id = m_meterFeed->value().id;
-    m_meter->setValueId(id);
-    if (const MeterController *ctl = m_meterFeed->controller(); ctl && !ctl->valueMinMax(id).isEmpty())
-      m_meter->showValueMinMax(id, ctl->valueMinMax(id).minimum(), ctl->valueMinMax(id).maximum());
-  }
   if (m_poincare)
     m_poincare->setValueId(m_poincareFeed->value().id);
 }
@@ -535,8 +484,6 @@ void InstanceWidget::configScpiSLOT()
 void InstanceWidget::applySLOT()
 {
   readConfig();
-  m_alertBlink = m_configDlg->alarmPage()->blink();
-  showAlertColor();
   ui_graph->setAlertUnsaved(m_configDlg->generalPage()->alertUnsavedData());
   applyScpi();
   Q_EMIT configChanged();
@@ -723,15 +670,15 @@ void InstanceWidget::readConfig()
 
   ui_graph->setLineStyle(graph->lineMode(), graph->pointMode(), graph->intLineMode(), graph->intPointMode());
 
-  if (m_meter)
+  // a style chosen on the page Appearance: for all analog meters again
+  const MeterView::Look look = meterLook();
+  const bool restyle = m_meterStyle >= 0 && look.style != m_meterStyle;
+  m_meterStyle = look.style;
+  for (MeterView *view : std::as_const(m_meters))
   {
-    // the scale of the meter that has the value
-    if (const MeterController *shown = m_meterFeed->controller())
-      m_meter->setDisplayCounts(shown->dmm()->dmmInfo().display);
-    applyMeterStyle();
-    m_meter->setScaleMode(static_cast<AnalogMeter::ScaleMode>(
-      gui->meterScaleMode() == 1 ? AnalogMeter::Unipolar :
-      gui->meterScaleMode() == 2 ? AnalogMeter::Bipolar : AnalogMeter::Auto));
+    if (restyle)
+      view->setStyle(-1);
+    view->setLook(look);
   }
 
   ui_graph->setLine(graph->lineWidth(), graph->intLineWidth());
@@ -748,22 +695,6 @@ void InstanceWidget::readConfig()
   Q_EMIT useTextLabel(gui->useTextLabel());
   Q_EMIT iconSet(gui->iconSet());
   Q_EMIT showDisplay(gui->showDisplay());
-}
-
-void InstanceWidget::showAlertColor()
-{
-  const bool blinking = m_alertColor.isValid() && m_alertBlink;
-  if (blinking && !m_alertTimer->isActive())
-    m_alertTimer->start();
-  else if (!blinking)
-  {
-    m_alertTimer->stop();
-    m_alertPhase = true;
-  }
-  // the analog meter takes the alarm's colour alone (not the limit test's),
-  // its needle stays easy to follow against the green band
-  if (m_meter)
-    m_meter->setAlertColor(m_alertPhase ? m_alertColor : QColor());
 }
 
 void InstanceWidget::openAlarms(const QString &source)
@@ -785,31 +716,19 @@ void InstanceWidget::applyLimitBands()
   }
   else
     ui_graph->setLimits(-1);
-  // the analog meter: the test of the meter whose value it shows
-  if (const MeterController *ctl = m_meterFeed->controller(); m_meter && ctl)
-  {
-    const LimitTest &shown = ctl->limitTest();
-    m_meter->setLimits(shown.enabled && shown.value.source.isEmpty() ? shown.value.id : -1, shown.low(), shown.high());
-  }
-  else if (m_meter)
-    m_meter->setLimits(-1);
 }
 
-void InstanceWidget::setMeterStyle(int style)
+MeterView::Look InstanceWidget::meterLook() const
 {
-  m_configDlg->guiPage()->setMeterStyle(style);
-  m_settings->setInt("Meter/style", style);
-  applyMeterStyle();
-}
-
-void InstanceWidget::applyMeterStyle()
-{
-  if (!m_meter)
-    return;
-  AnalogMeterStyle style = m_configDlg->guiPage()->meterStyle() == 1 ? AnalogMeterStyle::ivory() : AnalogMeterStyle::dark();
-  style.ballistics = m_configDlg->guiPage()->meterBallistics();
-  style.redZoneFrom = m_configDlg->guiPage()->meterRedZone() / 100.0;
-  m_meter->setStyle(style);
+  const GuiPrefs *gui = m_configDlg->guiPage();
+  MeterView::Look look;
+  look.style = gui->meterStyle();
+  look.ballistics = gui->meterBallistics();
+  look.redZone = gui->meterRedZone();
+  look.scaleMode = gui->meterScaleMode() == 1 ? AnalogMeter::Unipolar
+                   : gui->meterScaleMode() == 2 ? AnalogMeter::Bipolar : AnalogMeter::Auto;
+  look.blink = m_configDlg->alarmPage()->blink();
+  return look;
 }
 
 QString InstanceWidget::takeOldDevice()

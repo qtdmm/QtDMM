@@ -29,6 +29,7 @@
 
 #include "ui/mainwindow.h"
 #include "ui/frameclock.h"
+#include "ui/meterview.h"
 #include "ui/dialogs/helpdlg.h"
 #include "ui/dialogs/devicesettingsdlg.h"
 #include "ui/devicesettings.h"
@@ -306,8 +307,9 @@ void MainWindow::createViews()
   // meters they are given (see InstanceWidget)
 
   m_meter = new AnalogMeter(this);
-  m_wid->setMeter(m_meter);
-  m_meterWin = addView(m_meter, tr("Analog meter"), MdiArranger::Instrument, "meter");
+  m_meter->setWindowTitle(tr("Analog meter"));
+  m_wid->addMeter(m_meter);
+  m_meterWin = addView(m_meter, m_meter->windowTitle(), MdiArranger::Instrument, "meter");
   // no cell bigger than the instrument can fill
   m_arranger->setContentAspect(m_meterWin, AnalogMeter::kMinAspect, AnalogMeter::kMaxAspect);
 
@@ -366,6 +368,17 @@ void MainWindow::createViews()
        "<p>Every reading the meter sent, one row each, with time, mode and range - "
        "the raw protocol of the session next to the graph. Copy rows to a "
        "spreadsheet or export them as CSV.</p></body></html>"));
+  m_newMeterAction = new QAction(QIcon::fromTheme("qtdmm-meter"), tr("Add ana&log meter"), this);
+  m_newMeterAction->setObjectName("action_NewMeter");
+  m_newMeterAction->setWhatsThis(
+    tr("<html><head/><body><p><span style=\" font-weight:600;\">Add analog meter</span></p>"
+       "<p>Another analog meter window, for a value of the active device at first. Pick its value "
+       "in the device's value menu or with Sources in its window menu; closing it removes it.</p></body></html>"));
+  connect(m_newMeterAction, &QAction::triggered, this, [this]
+  {
+    const MeterController *ctl = activeController();
+    newMeter(ctl ? ValueRef(0, ctl->source()) : ValueRef());
+  });
   m_poincareAction = windowAction(m_poincareWin, tr("Poi&ncaré plot"), "Ctrl+5", "qtdmm-poincare",
     tr("<html><head/><body><p><span style=\" font-weight:600;\">Poincaré plot</span></p>"
        "<p>Each reading against the next one: noise widens the cloud across the diagonal, "
@@ -413,8 +426,9 @@ void MainWindow::createViews()
     { return !m_session->controller(v) && !m_openingPending.contains(v.source.section(':', 1)); };
     if (m_wid->graph()->values().isEmpty())
       m_wid->graph()->setValues({ ValueRef(0, ctl->source()) });
-    if (free(m_wid->meterValue()))
-      m_wid->setMeterValue(ValueRef(0, ctl->source()));
+    for (MeterView *meter : m_wid->meters())
+      if (free(meter->value()))
+        meter->setValue(ValueRef(0, ctl->source()));
     if (free(m_wid->poincareValue()))
       m_wid->setPoincareValue(ValueRef(0, ctl->source()));
   });
@@ -500,9 +514,61 @@ void MainWindow::removePanel(const QString &source)
   m_arranger->arrange();
 }
 
+QMdiSubWindow *MainWindow::addMeterWindow(const ValueRef &value, int number)
+{
+  if (number < 2)
+  {
+    QStringList taken;
+    for (const QMdiSubWindow *w : std::as_const(m_moreMeters))
+      taken << w->objectName();
+    for (number = 2; taken.contains(QString("meter-%1").arg(number)); ++number) {}
+  }
+  auto *meter = new AnalogMeter(this);
+  meter->setWindowTitle(tr("Analog meter %1").arg(number));
+  m_wid->addMeter(meter)->setValue(value);
+  QMdiSubWindow *win = addView(meter, meter->windowTitle(), MdiArranger::Instrument, QString("meter-%1").arg(number));
+  m_arranger->setContentAspect(win, AnalogMeter::kMinAspect, AnalogMeter::kMaxAspect);
+  meter->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(meter, &QWidget::customContextMenuRequested, this, [this, meter, win](const QPoint &pos)
+  {
+    windowMenu(win, meter->mapToGlobal(pos));
+  });
+  applyFrame(meter);
+  m_moreMeters << win;
+  return win;
+}
+
+void MainWindow::newMeter(const ValueRef &value)
+{
+  QMdiSubWindow *win = addMeterWindow(value);
+  win->show();
+  m_mdi->setActiveSubWindow(win);
+  growFor(win);
+  m_arranger->arrange();
+}
+
+void MainWindow::removeMeterWindow(QMdiSubWindow *win)
+{
+  if (!m_moreMeters.removeOne(win))
+    return;
+  m_wid->removeMeter(meterViewOf(win));
+  m_grown.remove(win->widget());
+  m_grown.remove(win);
+  delete win;
+  m_arranger->arrange();
+}
+
+MeterView *MainWindow::meterViewOf(const QMdiSubWindow *win) const
+{
+  for (MeterView *view : m_wid->meters())
+    if (win && view->meter() == win->widget())
+      return view;
+  return nullptr;
+}
+
 bool MainWindow::isInstrument(const QMdiSubWindow *win) const
 {
-  return win == m_meterWin || panelOf(win);
+  return meterViewOf(win) || panelOf(win);
 }
 
 FrontPanel *MainWindow::panelOf(const QMdiSubWindow *win)
@@ -1160,8 +1226,8 @@ void MainWindow::createShortcuts(const QList<QAction *> &workspace)
   for (QAction *a : { action_Live, action_Clear, m_zoomIn, m_zoomOut, m_zoomFit, m_copyImage, action_Export,
                       action_Import, action_Print })
     m_shortcuts->add(a, recording);
-  for (QAction *a : { m_sidebarAction, m_displayAction, m_meterAction, action_Graph, m_readingsAction,
-                      m_poincareAction, m_titleBars, m_toolbars, m_fullScreen })
+  for (QAction *a : { m_sidebarAction, m_displayAction, m_meterAction, m_newMeterAction, action_Graph,
+                      m_readingsAction, m_poincareAction, m_titleBars, m_toolbars, m_fullScreen })
     m_shortcuts->add(a, windows);
   for (QAction *a : workspace)
     m_shortcuts->add(a, windows);
@@ -1323,6 +1389,7 @@ void MainWindow::on_action_Menu_triggered()
     m_menu->addAction(action_Graph);
     m_menu->addAction(m_displayAction);
     m_menu->addAction(m_meterAction);
+    m_menu->addAction(m_newMeterAction);
     m_menu->addAction(m_readingsAction);
     m_menu->addAction(m_poincareAction);
     m_menu->addMenu(m_arrangeMenu);
@@ -1431,6 +1498,13 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
   if (event->type() == QEvent::Close)
     if (auto *win = qobject_cast<QMdiSubWindow *>(watched))
     {
+      // an analog meter added goes; not inside its own event
+      if (m_moreMeters.contains(win))
+        QTimer::singleShot(0, this, [this, w = QPointer<QMdiSubWindow>(win)]
+        {
+          if (w)
+            removeMeterWindow(w);
+        });
       win->hide();
       event->ignore();
       return true;
@@ -1458,7 +1532,9 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
 {
   QMenu menu(this);
-  QAction *hide = menu.addAction(tr("&Hide window"));
+  MeterView *meter = meterViewOf(win);
+  const bool added = m_moreMeters.contains(win);
+  QAction *hide = menu.addAction(added ? tr("&Close window") : tr("&Hide window"));
   FrontPanel *panel = panelOf(win);
   if (panel && panel->keysSupported())
   {
@@ -1502,29 +1578,37 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
     addRulesMenu(&menu, panel->controller());
   }
   // the value of an open meter it shows
-  if ((win == m_meterWin || win == m_poincareWin) && m_session->controllers().size() > 1)
-    connect(menu.addAction(tr("S&ources...")), &QAction::triggered, this, [this, win]
+  if ((meter || win == m_poincareWin) && m_session->controllers().size() > 1)
+    connect(menu.addAction(tr("S&ources...")), &QAction::triggered, this, [this, meter]
     {
-      editSources(win == m_meterWin ? ValueMenu::View::Meter : ValueMenu::View::Poincare);
+      editSources(meter ? ValueMenu::View::Meter : ValueMenu::View::Poincare, meter);
     });
-  if (win == m_meterWin)
+  if (meter)
   {
+    // this meter's own, the settings' until one is picked
     QMenu *style = menu.addMenu(tr("Meter &style"));
     const std::pair<int, QString> styles[] = { { 0, tr("&Dark studio") }, { 1, tr("Classic &ivory") } };
     for (const auto &[s, text] : styles)
     {
       QAction *a = style->addAction(text);
       a->setCheckable(true);
-      a->setChecked(m_wid->settingsDialog()->guiPage()->meterStyle() == s);
-      connect(a, &QAction::triggered, this, [this, s = s] { m_wid->setMeterStyle(s); });
+      a->setChecked(meter->shownStyle() == s);
+      connect(a, &QAction::triggered, meter, [meter, s = s] { meter->setStyle(s); });
     }
+    // another one, first with the same value
+    connect(menu.addAction(m_newMeterAction->text()), &QAction::triggered, this,
+            [this, meter] { newMeter(meter->value()); });
   }
   if (win == m_poincareWin)
   {
     menu.addSeparator();
     m_poincare->addMenuActions(&menu);
   }
-  if (menu.exec(globalPos) == hide)
+  if (menu.exec(globalPos) != hide)
+    return;
+  if (added)
+    removeMeterWindow(win);
+  else
     win->hide();
 }
 
@@ -1645,8 +1729,10 @@ static QString readingText(const Reading &r)
   return QString("%1 %2%3 %4").arg(value.left(8), prefix, r.baseUnit, couplingText(r.port.defining)).trimmed();
 }
 
-void MainWindow::editSources(ValueMenu::View view)
+void MainWindow::editSources(ValueMenu::View view, MeterView *meter)
 {
+  if (!meter)
+    meter = meterViewOf(m_meterWin);
   // the open meters with their values
   QList<SourcesDlg::Meter> meters;
   QList<ValueRef> all;
@@ -1679,8 +1765,8 @@ void MainWindow::editSources(ValueMenu::View view)
           chosen << v;
       break;
     case ValueMenu::View::Meter:
-      name = tr("Analog meter");
-      chosen << m_wid->meterValue();
+      name = meter->meter()->windowTitle();
+      chosen << meter->value();
       break;
     default:
       name = tr("Poincaré plot");
@@ -1720,8 +1806,9 @@ void MainWindow::editSources(ValueMenu::View view)
       break;
     }
     case ValueMenu::View::Meter:
-      m_wid->setMeterValue(picked.first());
-      m_meterAction->setChecked(true);
+      meter->setValue(picked.first());
+      if (meter == meterViewOf(m_meterWin))
+        m_meterAction->setChecked(true);
       break;
     default:
       m_wid->setPoincareValue(picked.first());
@@ -2161,6 +2248,20 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
     else
       m_panelStates.insert(id, state);
   }
+  // the analog meters: the first one's style ("" for the settings'), the
+  // ones added ("2 3") with their values and styles; before the layout,
+  // which names their windows
+  const auto styleOf = [](const QVariant &v) { return v.toString().isEmpty() ? -1 : v.toInt(); };
+  meterViewOf(m_meterWin)->setStyle(styleOf(get("Windows/meter-style", QString())));
+  for (QMdiSubWindow *w : QList<QMdiSubWindow *>(m_moreMeters))
+    removeMeterWindow(w);
+  for (const QString &number : get("Windows/meters", QString()).toString().split(' ', Qt::SkipEmptyParts))
+  {
+    const QString key = "Windows/meter-" + number;
+    QMdiSubWindow *win = addMeterWindow(valueOf(get(key + "-value", QString()).toString()), number.toInt());
+    meterViewOf(win)->setStyle(styleOf(get(key + "-style", QString())));
+    win->show();
+  }
   const QString layout = get("Windows/layout", QString()).toString();
   if (!m_arranger->setLayoutText(layout))
   {
@@ -2174,14 +2275,14 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
   if (free)
   {
     QMap<QString, QString> geometry;
-    for (QMdiSubWindow *w : { m_meterWin, m_graphWin, m_readingsWin, m_poincareWin })
+    for (QMdiSubWindow *w : meterWindows() + QList<QMdiSubWindow *>{ m_graphWin, m_readingsWin, m_poincareWin })
       geometry[w->objectName()] = get("Windows/geometry-" + w->objectName(), QString()).toString();
     // once the window is shown and the area has its size: the automatic
     // layout for a start, then the stored positions on top of it
     QTimer::singleShot(0, this, [this, geometry]
     {
       m_arranger->arrangeNow();
-      for (QMdiSubWindow *w : { m_meterWin, m_graphWin, m_readingsWin, m_poincareWin })
+      for (QMdiSubWindow *w : meterWindows() + QList<QMdiSubWindow *>{ m_graphWin, m_readingsWin, m_poincareWin })
       {
         const QStringList g = geometry.value(w->objectName()).split(' ');
         if (g.size() == 4)
@@ -2198,7 +2299,7 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
   m_wid->graph()->setMinimapVisible(get("Windows/graph-minimap", true).toBool());
   m_wid->graph()->setEnvelopeVisible(get("Windows/graph-envelope", false).toBool());
   // "1@device:ab12cd34" (ValueRef)
-  m_wid->setMeterValue(valueOf(get("Windows/meter-value", 0).toString()));
+  meterViewOf(m_meterWin)->setValue(valueOf(get("Windows/meter-value", 0).toString()));
   m_wid->setPoincareValue(valueOf(get("Windows/poincare-value", 0).toString()));
   // the axis of each value in the graph, "1@device:a:right 0@device:b:left";
   // before 26.4 the window's meter by its id alone ("1:right"); missing: automatic
@@ -2280,7 +2381,7 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
   set("Windows/toolbar-hidden", m_toolbars->isChecked());
   set("Windows/design", Designs::name(Designs::current()));
   if (m_arranger->mode() == MdiArranger::Free)
-    for (QMdiSubWindow *w : QList<QMdiSubWindow *>{ m_meterWin, m_graphWin, m_readingsWin, m_poincareWin }
+    for (QMdiSubWindow *w : meterWindows() + QList<QMdiSubWindow *>{ m_graphWin, m_readingsWin, m_poincareWin }
                             + panelWindows())
     {
       const QRect g = w->geometry();
@@ -2318,7 +2419,18 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
   set("Windows/graph-reference", m_wid->graph()->referenceSetting());
   set("Windows/graph-minimap", m_wid->graph()->minimapVisible());
   set("Windows/graph-envelope", m_wid->graph()->envelopeVisible());
-  set("Windows/meter-value", m_wid->meterValue().toString());
+  set("Windows/meter-value", meterViewOf(m_meterWin)->value().toString());
+  const auto styleText = [](int style) { return style < 0 ? QString() : QString::number(style); };
+  set("Windows/meter-style", styleText(meterViewOf(m_meterWin)->style()));
+  QStringList meters;
+  for (QMdiSubWindow *w : std::as_const(m_moreMeters))
+  {
+    const QString number = w->objectName().section('-', 1);
+    meters << number;
+    set("Windows/meter-" + number + "-value", meterViewOf(w)->value().toString());
+    set("Windows/meter-" + number + "-style", styleText(meterViewOf(w)->style()));
+  }
+  set("Windows/meters", meters.join(' '));
   set("Windows/poincare-value", m_wid->poincareValue().toString());
   GraphWidget *graph = m_wid->graph();
   QStringList shown;
@@ -2725,8 +2837,9 @@ void MainWindow::setDesign(int design)
   // (metal in Silver and Brushed metal) shows around them. The front
   // panels, not the LCDs: the meters' keys below them stand on the same sheet
   const QBrush frame = Designs::frameBrush(d);
-  for (QWidget *view : { static_cast<QWidget *>(m_meter), static_cast<QWidget *>(m_readings) })
-    applyFrame(view);
+  for (QMdiSubWindow *win : meterWindows())
+    applyFrame(win->widget());
+  applyFrame(m_readings);
   for (QMdiSubWindow *win : std::as_const(m_panelWins))
     applyFrame(win->widget());
   const Designs::GraphColors g = Designs::graphColors(d);
