@@ -248,11 +248,6 @@ int GuiPrefs::meterScaleMode() const
   return ui_meterScale->currentIndex();
 }
 
-void GuiPrefs::setMeterStyle(int style)
-{
-  ui_meterStyle->setCurrentIndex(qBound(0, style, 1));
-}
-
 int GuiPrefs::meterStyle() const
 {
   return ui_meterStyle->currentIndex();

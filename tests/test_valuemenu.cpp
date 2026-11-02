@@ -110,12 +110,26 @@ int main(int argc, char **argv)
     QMenu *menu = menuFor(ValueRef(1, source));
     action(menu, { "&Analog meter" })->trigger();
     action(menu, { "&Poincaré plot" })->trigger();
-    check(wid.meterValue() == ValueRef(1, source) && wid.poincareValue() == ValueRef(1, source),
+    check(wid.meters().first()->value() == ValueRef(1, source) && wid.poincareValue() == ValueRef(1, source),
           "analog meter and Poincaré plot show it");
     delete menu;
     menu = menuFor(ValueRef(1, source));
     check(action(menu, { "&Analog meter" })->isChecked(), "the menu says so");
     delete menu;
+    // a second analog meter: a submenu by the windows' titles, each its own value
+    AnalogMeter second;
+    second.setWindowTitle("Analog meter 2");
+    MeterView *view = wid.addMeter(&second);
+    menu = menuFor(ValueRef(0, source));
+    action(menu, { "&Analog meter", "Analog meter 2" })->trigger();
+    check(view->value() == ValueRef(0, source) && wid.meters().first()->value() == ValueRef(1, source),
+          "the second analog meter shows it, the first keeps its own");
+    delete menu;
+    menu = menuFor(ValueRef(0, source));
+    check(action(menu, { "&Analog meter", "Analog meter 2" })->isChecked(), "the submenu says so");
+    delete menu;
+    wid.removeMeter(view);
+    check(wid.meters().size() == 1, "removed again");
   }
   // 5. the rules on a value: a new alarm, the limits, by its ValueRef
   {

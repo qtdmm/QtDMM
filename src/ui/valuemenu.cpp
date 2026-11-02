@@ -68,12 +68,21 @@ void ValueMenu::fill(QMenu *menu, const Target &target, const ValueRef &value)
       show(View::Lcd, source);
     });
   }
-  QObject::connect(checkable(menu, tr("&Analog meter"), wid->meterValue() == ref), &QAction::triggered, menu,
-                   [wid, ref, show]
+  // the analog meters: one entry, with more than one a submenu by their windows
+  const QList<MeterView *> &meters = wid->meters();
+  QMenu *meterMenu = meters.size() > 1 ? menu->addMenu(tr("&Analog meter")) : menu;
+  for (MeterView *view : meters)
   {
-    wid->setMeterValue(ref);
-    show(View::Meter, ref.source);
-  });
+    const QString text = meters.size() > 1 ? view->meter()->windowTitle() : tr("&Analog meter");
+    QObject::connect(checkable(meterMenu, text, view->value() == ref), &QAction::triggered, menu,
+                     [view, ref, show, first = view == meters.first()]
+    {
+      view->setValue(ref);
+      // the others go when closed: they are on screen
+      if (first)
+        show(View::Meter, ref.source);
+    });
+  }
   // the graph: off, or on an axis. A unit the axis has already joins it,
   // another one takes its place there (GraphWidget::setValueAxis())
   GraphWidget *graph = wid->graph();

@@ -271,17 +271,6 @@ void InstanceWidget::removeMeter(MeterView *view)
   delete view;
 }
 
-void InstanceWidget::setMeterValue(const ValueRef &value)
-{
-  if (!m_meters.isEmpty())
-    m_meters.first()->setValue(value);
-}
-
-ValueRef InstanceWidget::meterValue() const
-{
-  return m_meters.isEmpty() ? ValueRef() : m_meters.first()->value();
-}
-
 void InstanceWidget::setPoincare(PoincarePlot *plot)
 {
   m_poincare = plot;
@@ -681,8 +670,16 @@ void InstanceWidget::readConfig()
 
   ui_graph->setLineStyle(graph->lineMode(), graph->pointMode(), graph->intLineMode(), graph->intPointMode());
 
+  // a style chosen on the page Appearance: for all analog meters again
+  const MeterView::Look look = meterLook();
+  const bool restyle = m_meterStyle >= 0 && look.style != m_meterStyle;
+  m_meterStyle = look.style;
   for (MeterView *view : std::as_const(m_meters))
-    view->setLook(meterLook());
+  {
+    if (restyle)
+      view->setStyle(-1);
+    view->setLook(look);
+  }
 
   ui_graph->setLine(graph->lineWidth(), graph->intLineWidth());
 
@@ -719,14 +716,6 @@ void InstanceWidget::applyLimitBands()
   }
   else
     ui_graph->setLimits(-1);
-}
-
-void InstanceWidget::setMeterStyle(int style)
-{
-  m_configDlg->guiPage()->setMeterStyle(style);
-  m_settings->setInt("Meter/style", style);
-  for (MeterView *view : std::as_const(m_meters))
-    view->setLook(meterLook());
 }
 
 MeterView::Look InstanceWidget::meterLook() const

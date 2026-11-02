@@ -73,9 +73,6 @@ public:
   /// The settings dialog: its pages hold what MainWindow reads (the window
   /// at exit, the analog meter's style, the shown display, the keys).
   SettingsDialog *settingsDialog() const { return m_configDlg; }
-  /// The analog meter's style from its context menu (0 dark, 1 ivory):
-  /// shown at once, saved, and the Appearance page follows.
-  void        setMeterStyle(int style);
   /// The active device (MainWindow), the one the settings' Alarms page
   /// shows first: its source.
   void        setActiveSource(const QString &source) { m_activeSource = source; }
@@ -95,9 +92,7 @@ public:
   /// The sidebar's value menu (ValueMenu), kept with the window layout:
   /// a meter's value (ValueFeed), "no value" while the meter is not connected.
   /// @{
-  void        setMeterValue(const ValueRef &value);
   void        setPoincareValue(const ValueRef &value);
-  ValueRef    meterValue() const;   ///< of the first analog meter
   ValueRef    poincareValue() const { return m_poincareValue; }
   /// @}
   /// The limit test's band to the graph and the analog meter (they draw it
@@ -196,6 +191,7 @@ protected:
   QString     m_activeSource;   ///< setActiveSource()
   bool        m_consoleLogging = false;   ///< setConsoleLogging()
   QList<MeterView *> m_meters;
+  int         m_meterStyle = -1;   ///< the settings' style last applied, -1 before the first
   PoincarePlot  *m_poincare = nullptr;
   QPointer<ReadingsModel> m_readingLog;
   ValueRef    m_poincareValue;

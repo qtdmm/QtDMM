@@ -10,6 +10,18 @@ Switch it on and off with **Analog meter** in the toolbar or in the menu
 display (see [Window layout](connecting.md#window-layout)); the dial, scale
 and lettering scale with the window.
 
+## More analog meters
+
+**Add analog meter** in the menu opens another analog meter window, for the
+main value of the active device at first; in an analog meter's right-click
+menu it opens one with the same value as that meter. Each one shows its own
+value, of any connected device, and has its own style. Choose the value in the
+value menu of the sidebar (**Analog meter** then lists the windows, *Analog
+meter 2*, *Analog meter 3*, ...) or with **Sources...** in the meter's
+right-click menu. **Close window** in that menu (or the X in its title bar)
+removes an added meter; the first one is only hidden, as before. The window
+layout and workspaces keep the added meters with their values and styles.
+
 ## The scale
 
 The scale is drawn in the unit the multimeter shows, prefix included, and its
@@ -53,8 +65,9 @@ value counts as gone.
 ## Style
 
 Two colour schemes are available: a dark studio dial with a white scale and needle, and
-a classic ivory dial with black lettering (the default). Choose one with **Meter style** in the
-meter's right-click menu, or on the *Appearance* settings page.
+a classic ivory dial with black lettering (the default). **Meter style** in a
+meter's right-click menu sets it for that meter only; the *Appearance* settings
+page sets it for all of them.
 
 For a meter with more than one value, the right-click menu of the value in
 the sidebar chooses the one the needle shows (**Analog meter**, see

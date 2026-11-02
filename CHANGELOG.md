@@ -40,6 +40,7 @@
 
 ### GUI
 
+- **More than one analog meter** — **Add analog meter** in the menu (or in an analog meter's right-click menu) opens another analog meter window, each with its own value of any connected device and its own style; the value menu then has **Analog meter ▸** with one entry per window. Closing an added one removes it; the window layout keeps them. *Meter style* in the right-click menu now applies to that meter only, the *Appearance* page sets it for all.
 - **A third axis in the graph** — a third unit gets an axis of its own outside the right one (a voltage left, a temperature right, a frequency on the third), automatically or chosen in the value menu (**Graph ▸ Third axis**); the right axes' titles are in the colour of their curves. A value pushed off the right axis moves to the third one when it is free.
 - **OWON, EEVblog, Minipa and AOPUTTRIVER meters get their own colours in the device pictures** — they showed the grey generic symbol.
 - **New designs: Light Metal and Dark Metal** — the digital display, the analog meter and the table stand on brushed metal, light or dark; the sidebar is light grey or near black, everything else (workspace, graph, Poincaré plot) is as in Light or Dark. In the Design menu and on the Appearance page of the Preferences.
