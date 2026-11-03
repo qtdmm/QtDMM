@@ -744,7 +744,6 @@ void MainWindow::createSidebar()
   connect(m_sidebar, &DeviceSidebar::settingsRequested, this, [this](const QString &id) { deviceSettings(id); });
   connect(m_sidebar, &DeviceSidebar::valueMenuRequested, this, &MainWindow::valueMenu);
   connect(m_sidebar, &DeviceSidebar::viewsHighlightRequested, this, &MainWindow::pointToViews);
-  m_sidebar->setValueMenuFiller([this](QMenu *menu, const ValueRef &value) { fillValueMenu(menu, value); });
   connect(m_wid->graph(), &GraphWidget::notice, this, [this](const QString &text)
   {
     statusBar()->showMessage(text, 5000);
@@ -813,6 +812,11 @@ void MainWindow::createSidebar()
   connect(m_sidebar, &DeviceSidebar::removeWorkspaceRequested, this, [this](const QString &file)
   {
     recentWorkspaces().remove(file);
+    updateRecentWorkspaces();
+  });
+  connect(m_sidebar, &DeviceSidebar::favoriteRequested, this, [this](const QString &file, bool on)
+  {
+    recentWorkspaces().setFavorite(file, on);
     updateRecentWorkspaces();
   });
   // the readings of the others change all the time
@@ -923,6 +927,8 @@ QList<QAction *> MainWindow::createArrangeMenu()
                           "windows are shown with which values, the arrangement, "
                           "title bars, toolbar, design and the size of the main window.</p></body></html>"));
   connect(saveWs, &QAction::triggered, this, &MainWindow::saveWorkspace);
+  // the same at the sidebar's Recent benches
+  m_sidebar->setWorkspaceActions({ loadWs, saveWs });
   m_autoSaveLayout = m_arrangeMenu->addAction(tr("Save layout on e&xit"));
   m_autoSaveLayout->setCheckable(true);
   m_autoSaveLayout->setChecked(true);
@@ -2137,8 +2143,6 @@ DeviceSidebar::Value MainWindow::otherValueRow(const MeterController *ctl, int i
   {
     row.name = ctl->valueName(id);
     row.text = readingText(r);
-    // as the graph's legend names it, the unit is in the reading
-    row.shortName = QString(row.name).remove(QRegularExpression("\\s*\\([^)]*\\)$"));
   }
   const ValueRef value(id, ctl->source());
   // a curve where one sees it
@@ -2148,12 +2152,22 @@ DeviceSidebar::Value MainWindow::otherValueRow(const MeterController *ctl, int i
   if (QMdiSubWindow *win = m_panelWins.value(ctl->source()); win && !win->isHidden())
     if (const FrontPanel *panel = panelOf(win))
       row.onPanel = panel->value().id == id || panel->secondaries().contains(id);
+  if (row.color.isValid())
+    row.views << m_graphWin->windowTitle();
+  if (row.onPanel)
+    row.views << m_panelWins.value(ctl->source())->windowTitle();
   for (QMdiSubWindow *win : meterWindows())
     if (const MeterView *meter = meterViewOf(win); meter && !win->isHidden() && meter->value() == value)
+    {
       ++row.meters;
+      row.views << win->windowTitle();
+    }
   for (QMdiSubWindow *win : poincareWindows())
     if (const PoincareView *plot = poincareViewOf(win); plot && !win->isHidden() && plot->value() == value)
+    {
       ++row.poincares;
+      row.views << win->windowTitle();
+    }
   return row;
 }
 
@@ -2173,18 +2187,9 @@ void MainWindow::updateOpenDevices()
     row.name = ctl->deviceName();
     row.current = ctl == activeController();
     row.connected = ctl->dmm()->isWanted();
-    // disconnected: says so, not its last reading
+    // the dot green while readings come in; why none come is on the front panel
     const Reading &r = ctl->lastReading();
-    if (!row.connected)
-      row.value = tr("disconnected");
-    // no frames (yet): why, instead of an old reading
-    else if (const QString state = ctl->dmm()->shortState(); !state.isEmpty())
-      row.value = state;
-    else if (r.msecs > 0)
-    {
-      row.value = readingText(r);
-      row.active = now - r.msecs < 3000;
-    }
+    row.active = row.connected && ctl->dmm()->shortState().isEmpty() && r.msecs > 0 && now - r.msecs < 3000;
     // its values, with what the graph shows
     for (int value = 0; value < ctl->valueCount(); ++value)
       row.values << otherValueRow(ctl, value);
@@ -2903,13 +2908,16 @@ RecentFiles MainWindow::recentWorkspaces() const
 
 void MainWindow::updateRecentWorkspaces()
 {
-  const QStringList files = recentWorkspaces().list().mid(0, m_wid->settings()->getInt("Sidebar/recent-workspaces", 10));
+  // the favourites first, then the others used last
+  const RecentFiles recent = recentWorkspaces();
+  const QStringList files = recent.shown(m_wid->settings()->getInt("Sidebar/recent-workspaces", 10));
+  const QStringList favorites = recent.favorites();
   // their names and pictures from the files
   QList<DeviceSidebar::Workspace> rows;
   for (const QString &file : files)
   {
     const std::optional<WorkspaceFile> ws = QFileInfo::exists(file) ? WorkspaceFile::read(file) : std::nullopt;
-    rows.append({ file, ws ? ws->name : QString(), ws ? workspaceTooltip(file, *ws) : QString() });
+    rows.append({ file, ws ? ws->name : QString(), ws ? workspaceTooltip(file, *ws) : QString(), favorites.contains(file) });
   }
   m_sidebar->setWorkspaces(rows);
   m_recentMenu->clear();

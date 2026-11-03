@@ -280,11 +280,12 @@ layout it had when the option was switched off, or with the bench
 loaded last.
 
 **Recent benches** in the same menu lists the benches loaded or saved
-last by their names, newest first; the tooltip shows the description, the
-picture and the file. **Clear list** empties it. The node **Saved benches** at
+last by their names, favourites first, then newest first; the tooltip shows
+the description, the picture and the file. **Clear list** empties it but for
+the favourites. The node **Recent benches** at
 the top of the sidebar shows the same list, folded at the start, with the
 name of the bench in use at its right: a double click or Enter loads one, its context menu also opens its folder or takes
-it off the list. A file that is gone is grey. The list is shared by all
+it off the list; its star makes it a favourite (see [My devices](my-devices.md)). A file that is gone is grey. The list is shared by all
 QtDMM windows; how many it shows is set under **Preferences** >
 **Appearance** > **Recent benches** (10, *none* hides it).
 

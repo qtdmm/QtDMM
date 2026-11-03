@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
 
-#include <functional>
-
 #include <QTimer>
 #include <QTreeWidget>
 #include <QVariant>
@@ -13,27 +11,28 @@
 class DeviceLibrary;
 
 /// The sidebar "Devices": the node "My devices" with the entries of the
-/// DeviceLibrary in their order: the cupboard. A click does nothing; one
-/// connected is bold with a dot, green while its readings come in. The
+/// DeviceLibrary in their order: the cupboard, each with its picture. A click
+/// does nothing; one on the bench is bold. The
 /// context menu has Info and settings (also a double click), Rename (in
 /// place), Connect and Remove; dragging an entry changes the order, dragged
 /// onto "Open devices" it connects.
 ///
-/// The node "Open devices" (shown as connected devices) lists the meters of
-/// the process (MainWindow gives them with setOpenDevices()) with their
-/// reading; the active one (the meter of the front panel used last) in bold,
-/// one not connected greyed. Their context menu shows the front panel (also
-/// a double click), connects or disconnects, and closes; dragged back onto
-/// My devices one closes. For a meter with more than one value, a row for
-/// each value with its reading; its context menu says which window shows it
-/// where.
+/// The node "Open devices" (shown as Bench) lists the meters of the process
+/// (MainWindow gives them with setOpenDevices()) with a dot, green while
+/// readings come in; the active one (the meter
+/// of the front panel used last) in bold, one not connected greyed. No
+/// readings and no states: the front panels have them. Their context menu shows the front panel
+/// (also a double click), connects or disconnects, and closes; dragged back
+/// onto My devices one closes. Below each meter a row for each of its values,
+/// its name with the unit and the marks of where it is shown; its context
+/// menu says which window shows it where, dragged onto a view it shows there.
 ///
 /// The node "Services" shows what this window offers to other programs
 /// (setServices()): the SCPI server and HiSLIP, with their port or "off";
 /// a double click or the context menu opens their settings, the menu also
 /// copies the address.
 ///
-/// The node "Workspaces" on top lists the workspace files used last
+/// The node "Workspaces" (shown as Recent benches) on top lists the workspace files used last
 /// (setWorkspaces()) by their names, folded at the start and hidden while
 /// there are none; at its right the name of the workspace in use
 /// (setCurrentWorkspace()). A double click or Enter loads one, the context
@@ -46,13 +45,13 @@ public:
   struct Value
   {
     int     id = 0;         ///< Reading::id, 0 the main value
-    QString name;           ///< "Current DC (A)", "Value 2" before a reading; the row's tooltip
-    QString text;           ///< its reading with the unit, "OL"
+    QString name;           ///< shown: "Current DC (A)", "Value 2" before a reading
+    QString text;           ///< its reading with the unit, "OL" (the device's info, not the sidebar)
     QColor  color;          ///< its curve's colour while the graph shows it, else invalid
-    QString shortName;      ///< shown in the row ("Voltage DC"); name when empty
     bool    onPanel = false;   ///< on its device's front panel, big or small
     int     meters = 0;        ///< the needle meters showing it
     int     poincares = 0;     ///< the Poincaré plots showing it
+    QStringList views;      ///< the windows showing it, for the marks' tooltip
   };
 
   /// One row of the node "Open devices".
@@ -60,9 +59,8 @@ public:
   {
     QString id;             ///< the entry of My devices, or MeterController::source()
     QString name;
-    QString value;          ///< its reading, "OL", "" before one
     bool    active = false; ///< readings come in
-    QList<Value> values;    ///< with more than one: a row each below the device
+    QList<Value> values;    ///< a row each below the device
     bool    current = false; ///< the active device: the toolbar acts on it
     bool    connected = true; ///< its connection is wanted (MeterConnection::isWanted())
   };
@@ -74,6 +72,7 @@ public:
     QString file;
     QString name;           ///< empty: the file's name without the suffix
     QString tooltip;        ///< empty: the path
+    bool    favorite = false;   ///< starred: first, never drops out of the list
   };
   struct Service
   {
@@ -105,22 +104,19 @@ public:
   QTreeWidgetItem *openItem(const QString &id) const;
 
   /// The rows of the meter's values below @p parent, after its first
-  /// @p first children; none for one value.
+  /// @p first children, also for a single one.
   /// Their context menu is valueMenuRequested().
   void        fillValues(QTreeWidgetItem *parent, int first, const QList<Value> &values);
   /// The row of value @p id of the open device @p device (OpenDevice::id),
   /// nullptr when there is none.
   QTreeWidgetItem *valueItem(int id, const QString &device) const;
-  /// The value a row of the open devices stands for: a value row, or the row
-  /// of a device with one value (its main value), by "device:<id>". Invalid
-  /// source "-" for none.
+  /// The value a value row stands for, by "device:<id>". Invalid source "-"
+  /// for any other row.
   ValueRef    valueOf(const QTreeWidgetItem *item) const;
   /// What a drag out of the sidebar carries for the window: a value of an
   /// open device (ValueRef::toString()) or an entry of My devices (its id).
   static constexpr const char *kValueMime = "application/x-qtdmm-value";
   static constexpr const char *kDeviceMime = "application/x-qtdmm-device";
-  /// Fills the submenu "Value" of a device with one value (ValueMenu).
-  void        setValueMenuFiller(std::function<void(QMenu *, const ValueRef &)> filler) { m_valueFiller = std::move(filler); }
 
   /// The services of this window, in this order.
   void        setServices(const QList<Service> &services);
@@ -134,6 +130,8 @@ public:
   void        setCurrentWorkspace(const QString &name, const QString &tooltip = QString());
   /// The node "Workspaces".
   QTreeWidgetItem *workspacesNode() const { return m_workspaces; }
+  /// The context menu of the node: load and save a bench, as in Arrange.
+  void        setWorkspaceActions(const QList<QAction *> &actions) { m_workspaceActions = actions; }
 
   /// Shown at the start: as the user left it (@p stored, invalid when never
   /// set), else with two devices or more.
@@ -172,6 +170,8 @@ Q_SIGNALS:
   void        workspaceRequested(const QString &path);
   /// Take @p path off the list of workspaces used last.
   void        removeWorkspaceRequested(const QString &path);
+  /// Make @p path a favourite (@p on) or no more: its star, its menu.
+  void        favoriteRequested(const QString &path, bool on);
 
 public Q_SLOTS:
   /// The entries anew from the library.
@@ -208,8 +208,8 @@ private:
   QTreeWidgetItem *m_open = nullptr;
   QTreeWidgetItem *m_services = nullptr;
   QList<OpenDevice> m_openList;   ///< as last set: coloured anew with another design
-  std::function<void(QMenu *, const ValueRef &)> m_valueFiller;   ///< setValueMenuFiller()
   QList<Service>   m_serviceList;
   QList<Workspace> m_workspaceList;
+  QList<QAction *> m_workspaceActions;   ///< setWorkspaceActions()
   bool             m_filling = false;
 };

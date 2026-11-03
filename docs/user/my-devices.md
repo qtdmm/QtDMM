@@ -23,8 +23,7 @@ device); a device connected takes the change at once.
 window, with the node **My devices** (folded at the start: the devices in
 use are under **Bench**; unfold it to take out another). Each entry has a small picture of its
 kind of instrument (handheld, clamp, bench meter, ...) in its maker's
-colours. A device connected is bold, with a dot that is green while its
-readings come in and grey when none has come for three seconds. A click on
+colours. A device on the bench is bold. A click on
 a device does nothing: **Connect** in its context menu, the button
 **Connect** in its info (a double click), or dragging it onto **Connected
 devices** or onto the windows connects it (see below).
@@ -36,7 +35,9 @@ devices has entries, **Connect a device from My devices**, which opens the
 sidebar.
 
 Below My devices the node **Bench** lists the meters this
-QtDMM reads with their current reading, in the order they were connected.
+QtDMM reads, in the order they were connected, each with a dot that is
+green while its readings come in and grey when none has come for three
+seconds. The readings and why none come are on the front panels, not here.
 The active device is in bold, one disconnected is grey. A double click or
 *Show front panel* in the context menu brings its front panel back;
 *Info and settings...* there opens its entry of My devices (all its values
@@ -62,28 +63,30 @@ the same when it is loaded. **Services** shows what this window offers to other
 programs: the [SCPI server and HiSLIP](scpi-server.md) with their port, or
 *off*.
 
-Above My devices, folded at the start, the node **Saved benches** lists the
+Above My devices, folded at the start, the node **Recent benches** lists the
 benches loaded or saved last by their names, the one in use at its right;
 a double click loads one (see
 [Window layout](connecting.md#window-layout)). Without any it is hidden.
+The star at the right of one (or *Favourite* in its context menu) makes it
+a favourite: favourites stand first, do not count to the number of recent
+benches shown and never drop off the list; *Remove from list* takes one off
+all the same, *Clear list* keeps them. The context menu of the node itself
+loads or saves a bench, as **Arrange** does.
 
 ### The meter's values
 
-For a meter with more than one value (a second display, the CO2,
-temperature and humidity of the TFA AirCO2ntrol, the voltage, current and
-state of charge of a Victron) each device has a row for each
-value below it in **Bench**: its name and its reading, in a column of its
-own width so the names do not move with it (the device's own row has the
-reading only while its values are folded).
-A device with one value has the same menu in its own row, under **Value**. The name is
-the one the meter gives the value (a Victron's *Battery voltage*), else
-the name in the graph's legend (*Voltage DC*); the tooltip has its number
-and the full name. At the end of the row, marks show where the value is
-shown: a stroke in its curve's colour while the graph draws it (the rows are
-the graph's legend as well), then the symbols of its front panel, of each
-needle meter and Poincaré plot with it. A click on the marks frames those
-windows for a moment. A device with one value has them in its own row. This is where you say which window
-shows which value - right-click a value:
+Each device has a row for each of its values below it in **Bench** - one
+for a simple meter, several for a second display, the CO2, temperature and
+humidity of the TFA AirCO2ntrol or the voltage, current and state of charge
+of a Victron: its name with the unit, *Carbon dioxide (ppm)* (*Value 1*
+until the first reading). The tooltip has its number. A double click shows
+the device's front panel. At the end of the row, marks show where the value
+is shown: a stroke in its curve's colour while the graph draws it (the rows
+are the graph's legend as well), then the symbol of its front panel, of the
+needle meters and of the Poincaré plots with it - one of each kind, the
+tooltip names the windows. A click on the marks frames those windows for a
+moment. This is where you say which window shows which value - right-click
+a value:
 
 - **LCD** ▸ **Main value**, **Secondary value left**, **Secondary value
   right** - the place on the device's front panel: big (the min/max memory

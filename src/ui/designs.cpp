@@ -11,6 +11,7 @@
 #include <QEvent>
 #include <QPixmap>
 #include <QProxyStyle>
+#include <qdrawutil.h>
 #include <QStyle>
 #include <QStyleFactory>
 #include <QStyleOption>
@@ -120,17 +121,30 @@ QPalette silverPalette()
   return p;
 }
 
-// Fusion edges a check box or radio button with the window colour a bit
-// darker: on the dark menus and dialogs an empty one was hardly there. The
-// dark design gives them a light edge.
-class DarkIndicatorStyle : public QProxyStyle
+// Fusion with the designs' menus (below) and, in the dark ones, a light
+// edge on check boxes and radio buttons: Fusion edges them with the window
+// colour a bit darker, on the dark menus and dialogs an empty one was
+// hardly there.
+class DesignStyle : public QProxyStyle
 {
 public:
-  using QProxyStyle::QProxyStyle;
+  explicit DesignStyle(bool dark) : QProxyStyle(QStringLiteral("Fusion")), m_dark(dark) {}
   void drawPrimitive(PrimitiveElement element, const QStyleOption *option, QPainter *painter,
                      const QWidget *widget) const override
   {
-    if (element != PE_IndicatorCheckBox && element != PE_IndicatorRadioButton)
+    // a context menu stood out from the side bar and the windows by its
+    // shadow only, and without a compositor there is none: a background a
+    // step away from the window's and a frame. Its items, highlight and text
+    // stay Fusion's
+    if (element == PE_PanelMenu)
+    {
+      const QColor window = option->palette.color(QPalette::Window);
+      const QColor frame = option->palette.color(m_dark ? QPalette::Light : QPalette::Mid);
+      const QBrush back(m_dark ? window.lighter(125) : window.darker(106));
+      qDrawPlainRect(painter, option->rect, frame, 1, &back);
+      return;
+    }
+    if (!m_dark || (element != PE_IndicatorCheckBox && element != PE_IndicatorRadioButton))
     {
       QProxyStyle::drawPrimitive(element, option, painter, widget);
       return;
@@ -147,6 +161,9 @@ public:
     copy.palette.setColor(QPalette::Window, QColor(0xb4, 0xb4, 0xba));
     QProxyStyle::drawPrimitive(element, &copy, painter, widget);
   }
+
+private:
+  bool m_dark;
 };
 
 bool isDark(Designs::Design d)
@@ -260,10 +277,7 @@ void Designs::apply(Design d)
   {
     // native styles (Windows, macOS) take no palette; Fusion does
     // QApplication owns the style, the proxy its base style
-    if (isDark(d))
-      QApplication::setStyle(new DarkIndicatorStyle(QStringLiteral("Fusion")));
-    else
-      QApplication::setStyle(QStringLiteral("Fusion"));
+    QApplication::setStyle(new DesignStyle(isDark(d)));
     QApplication::setPalette(isDark(d) ? darkPalette() : silverPalette());
     if (isDark(d))
       qApp->setStyleSheet(QString(kDarkSheet) + (d == DarkMetal ? kDarkMetalSheet : ""));
