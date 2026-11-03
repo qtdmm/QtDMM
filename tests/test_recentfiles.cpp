@@ -46,6 +46,25 @@ int main()
   first.add("relative.qtdmm-workspace");
   check(QDir::isAbsolutePath(first.list().value(0)), "a relative path kept absolute");
 
+  // favourites: first, not counted, never dropped, cleared only one by one
+  {
+    RecentFiles r(file);
+    r.clear();
+    const QString a = QDir(dir.path()).filePath("a.qtdmm-workspace");
+    const QString b = QDir(dir.path()).filePath("b.qtdmm-workspace");
+    const QString c = QDir(dir.path()).filePath("c.qtdmm-workspace");
+    r.add(a);
+    r.add(b);
+    r.add(c);
+    r.setFavorite(a, true);
+    check(second.isFavorite(a) && !second.isFavorite(b), "a favourite, for the other instance too");
+    check(r.shown(1) == QStringList({ a, c }), "shown: the favourite first, then one other: " + r.shown(1).join(", "));
+    r.clear();
+    check(r.shown(10) == QStringList({ a }), "Clear list keeps the favourite");
+    r.remove(a);
+    check(r.favorites().isEmpty() && r.shown(10).isEmpty(), "removed: no favourite any more");
+  }
+
   if (failed)
     qWarning() << failed << "check(s) failed";
   else

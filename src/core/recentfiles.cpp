@@ -38,6 +38,40 @@ void RecentFiles::remove(const QString &path)
   QStringList l = list();
   l.removeAll(clean(path));
   store(l);
+  setFavorite(path, false);
+}
+
+QStringList RecentFiles::favorites() const
+{
+  if (m_file.isEmpty())
+    return m_memoryFavorites;
+  return QSettings(m_file, QSettings::IniFormat).value(favoritesKey()).toStringList();
+}
+
+bool RecentFiles::isFavorite(const QString &path) const
+{
+  return favorites().contains(clean(path));
+}
+
+void RecentFiles::setFavorite(const QString &path, bool on)
+{
+  QStringList l = favorites();
+  const QString p = clean(path);
+  if (l.contains(p) == on)
+    return;
+  if (on)
+    l << p;
+  else
+    l.removeAll(p);
+  storeFavorites(l);
+}
+
+QStringList RecentFiles::shown(int max) const
+{
+  const QStringList fav = favorites();
+  QStringList others = list();
+  others.removeIf([&fav](const QString &f) { return fav.contains(f); });
+  return fav + others.mid(0, qMax(0, max));
 }
 
 void RecentFiles::clear()
@@ -52,6 +86,21 @@ QStringList RecentFiles::added(QStringList list, const QString &path, int max)
   while (list.size() > qMax(0, max))
     list.removeLast();
   return list;
+}
+
+void RecentFiles::storeFavorites(const QStringList &list)
+{
+  if (m_file.isEmpty())
+  {
+    m_memoryFavorites = list;
+    return;
+  }
+  QSettings s(m_file, QSettings::IniFormat);
+  if (list.isEmpty())
+    s.remove(favoritesKey());
+  else
+    s.setValue(favoritesKey(), list);
+  s.sync();
 }
 
 void RecentFiles::store(const QStringList &list)

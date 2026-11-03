@@ -42,15 +42,15 @@ int main(int argc, char **argv)
   check(bench && bench->toolTip(0).contains("/dev/ttyUSB0"), "the place in the tooltip: " + bench->toolTip(0));
   check(bench && !(bench->flags() & Qt::ItemIsDropEnabled), "an entry takes no other");
   const QImage plain = sidebar.deviceItem(tfa)->icon(0).pixmap(16).toImage();
-  sidebar.setOpenDevices({ DeviceSidebar::OpenDevice { tfa, "TFA", "800 ppm", true } });
-  check(sidebar.deviceItem(tfa)->font(0).bold() && !bench->font(0).bold(), "the one connected is bold");
+  sidebar.setOpenDevices({ DeviceSidebar::OpenDevice { tfa, "TFA", true } });
+  check(sidebar.deviceItem(tfa)->font(0).bold() && !bench->font(0).bold(), "the one on the bench is bold");
   {
-    // the dot: green while readings come in, grey when they stop
+    // no dot here (the bench has it): the picture stays as it was
     const QImage on = sidebar.deviceItem(tfa)->icon(0).pixmap(16).toImage();
-    sidebar.setOpenDevices({ DeviceSidebar::OpenDevice { tfa, "TFA", "800 ppm", false } });
+    sidebar.setOpenDevices({ DeviceSidebar::OpenDevice { tfa, "TFA", false } });
     const QImage off = sidebar.deviceItem(tfa)->icon(0).pixmap(16).toImage();
-    check(on != plain && on != off && off != plain, "the dot: green, grey, none when not connected");
-    sidebar.setOpenDevices({ DeviceSidebar::OpenDevice { tfa, "TFA", "800 ppm", true } });
+    check(on == plain && off == plain && !plain.isNull(), "My devices: its picture, no dot");
+    sidebar.setOpenDevices({ DeviceSidebar::OpenDevice { tfa, "TFA", true } });
   }
 
   // 2. a click on a device does nothing (its menu connects it); a double
@@ -177,9 +177,9 @@ int main(int argc, char **argv)
   //    click shows the front panel, the others closed by their menu
   {
     QList<DeviceSidebar::OpenDevice> rows;
-    rows << DeviceSidebar::OpenDevice { "w", "Bench UT61E", "12.01 V DC", true }
-         << DeviceSidebar::OpenDevice { "p", "Power", "", false }
-         << DeviceSidebar::OpenDevice { "u", "PSU", "OL", true };
+    rows << DeviceSidebar::OpenDevice { "w", "Bench UT61E", true }
+         << DeviceSidebar::OpenDevice { "p", "Power", false }
+         << DeviceSidebar::OpenDevice { "u", "PSU", true };
     rows[0].current = true;
     rows[1].connected = false;
     sidebar.setOpenDevices(rows);
@@ -193,46 +193,57 @@ int main(int argc, char **argv)
     rows[2].current = true;
     sidebar.setOpenDevices(rows);
     check(!own->font(0).bold() && sidebar.openItem("u")->font(0).bold(), "another active one bold");
-    // one value in the graph: its curve's colour beside the device's dot, none without
+    // one value: a row of its own with the curve's colour, none without;
+    // the device's row has no marks
     {
       auto curveAt = [&](const QString &id)
       {
         // the marks of where it is shown: the curve's stroke first
-        const QImage marks = sidebar.openItem(id)->data(2, Qt::UserRole + 5).value<QPixmap>().toImage();
+        const QImage marks = sidebar.valueItem(0, id)->data(2, Qt::UserRole + 5).value<QPixmap>().toImage();
         return marks.isNull() ? QColor(Qt::transparent) : marks.pixelColor(marks.height() / 2, marks.height() / 2);
       };
       rows[2].values = { DeviceSidebar::Value { 0, "Voltage DC (V)", "OL", QColor(Qt::magenta) } };
+      rows[2].values.first().views = { "Graph" };
       sidebar.setOpenDevices(rows);
-      check(curveAt("u") == QColor(Qt::magenta) && sidebar.openItem("u")->toolTip(0).contains("In the graph")
-              && sidebar.openItem("u")->childCount() == 0,
-            "one value in the graph: its colour on the device's row");
+      check(sidebar.openItem("u")->childCount() == 1 && curveAt("u") == QColor(Qt::magenta)
+              && sidebar.openItem("u")->data(2, Qt::UserRole + 5).isNull(),
+            "one value in the graph: its colour on its own row");
+      check(sidebar.valueItem(0, "u")->text(0) == "Voltage DC (V)" && sidebar.valueItem(0, "u")->text(1).isEmpty(),
+            "the name with the unit, no reading");
+      check(sidebar.valueItem(0, "u")->toolTip(2).contains("Graph") && !sidebar.valueItem(0, "u")->toolTip(0).contains("OL"),
+            "the windows in the marks' tooltip, no reading in any");
       rows[2].values.first().color = QColor();
       sidebar.setOpenDevices(rows);
       check(curveAt("u").alpha() == 0, "not in the graph: no colour");
+      // a double click on the value row shows its device's front panel
+      QSignalSpy panel(&sidebar, &DeviceSidebar::frontPanelRequested);
+      Q_EMIT sidebar.itemDoubleClicked(sidebar.valueItem(0, "u"), 0);
+      check(panel.size() == 1 && panel.first().first().toString() == "u", "double click on a value: the front panel");
     }
     // a double click shows its front panel
     QSignalSpy panel(&sidebar, &DeviceSidebar::frontPanelRequested);
     Q_EMIT sidebar.itemDoubleClicked(sidebar.openItem("u"), 0);
     check(panel.size() == 1 && panel.first().first().toString() == "u", "double click: its front panel");
-    check(own && own->text(0) == "Bench UT61E" && own->text(1) == "12.01 V DC", "name and reading");
+    check(own && own->text(0) == "Bench UT61E" && own->text(1).isEmpty() && p->text(1).isEmpty(),
+          "the name, no reading, no state");
     check(p && !(p->flags() & Qt::ItemIsEditable) && !(own->flags() & Qt::ItemIsEditable), "not renamed here");
     check(sidebar.openNode()->flags() & Qt::ItemIsDropEnabled, "an entry may be dropped onto the open devices");
 
-    // the values change in place, the items stay
-    rows[0].value = "12.02 V DC";
+    // a change in place, the items stay
+    rows[0].name = "Bench";
     sidebar.setOpenDevices(rows);
-    check(sidebar.openItem("p") == p && own->text(1) == "12.02 V DC", "updated in place");
+    check(sidebar.openItem("p") == p && own->text(0) == "Bench", "updated in place");
     rows.removeAt(1);
     sidebar.setOpenDevices(rows);
     check(!sidebar.openItem("p") && sidebar.openNode()->childCount() == 2, "closed one gone");
   }
 
-  // 7b. the values below each open device: a row each with the reading,
+  // 7b. the values below each open device: a row each with its name,
   //     the curve's colour while in the graph, the menu per value
   {
     QList<DeviceSidebar::OpenDevice> rows;
-    rows << DeviceSidebar::OpenDevice { "w", "Victron SmartShunt", "13.29 V DC", true, {} }
-         << DeviceSidebar::OpenDevice { "u", "Bench", "OL", false, {} };
+    rows << DeviceSidebar::OpenDevice { "w", "Victron SmartShunt", true, {} }
+         << DeviceSidebar::OpenDevice { "u", "Bench", false, {} };
     const QList<DeviceSidebar::Value> values { { 0, "Voltage DC", "13.29 V", QColor("#3b82f6") },
                                                { 1, "Current DC", "-14.9 A", QColor() },
                                                { 2, "Value 3", "", QColor() } };
@@ -245,14 +256,14 @@ int main(int argc, char **argv)
     const ValueRef beside = sidebar.valueOf(sidebar.valueItem(2, "u"));
     check(beside == ValueRef(2, "device:u"), "a value beside it by its source: " + beside.toString());
     check(sidebar.valueOf(sidebar.valueItem(1, "w")) == ValueRef(1, "device:w"), "each by its source");
-    check(sidebar.valueOf(own).source == "-", "a device row with value rows is no value");
+    check(sidebar.valueOf(own).source == "-", "a device row is no value");
     QTreeWidgetItem *current = sidebar.valueItem(1, "w");
-    check(current && current->text(0) == "Current DC" && current->text(1) == "-14.9 A", "the row of value 2");
+    check(current && current->text(0) == "Current DC" && current->text(1).isEmpty(), "the row of value 2, no reading");
     auto marked = [](const QTreeWidgetItem *item) { return !item->data(2, Qt::UserRole + 5).isNull(); };
     check(marked(sidebar.valueItem(0, "w")) && !marked(current), "the graph's values say so");
-    rows[0].values[1].text = "-15.0 A";
+    rows[0].values[1].color = QColor(Qt::red);
     sidebar.setOpenDevices(rows);
-    check(sidebar.valueItem(1, "w") == current && current->text(1) == "-15.0 A", "the reading in place");
+    check(sidebar.valueItem(1, "w") == current && marked(current), "the marks in place");
     own->setExpanded(false);
     sidebar.setOpenDevices(rows);
     check(!own->isExpanded(), "folded away it stays so");
@@ -266,14 +277,10 @@ int main(int argc, char **argv)
     check(menuFor == 1, QString("the menu of value 2, got %1").arg(menuFor));
     rows[0].values = values.mid(0, 1);
     sidebar.setOpenDevices(rows);
-    check(own->childCount() == 0 && !sidebar.valueItem(0, "w"), "one value: no rows");
-    check(sidebar.valueOf(own) == ValueRef(0, "device:w"), "one value: the device row is its main value");
-    // where the row is short: unit and coupling, the full name in the tooltip
-    rows[0].values = values;
-    rows[0].values[1].shortName = "A DC";
-    sidebar.setOpenDevices(rows);
-    check(sidebar.valueItem(1, "w")->text(0) == "A DC" && sidebar.valueItem(1, "w")->toolTip(0) == "Value 2: Current DC",
-          "the short name in the row, the number and the full one in the tooltip");
+    check(own->childCount() == 1 && sidebar.valueItem(0, "w"), "one value: a row of its own");
+    check(sidebar.valueOf(own).source == "-" && sidebar.valueOf(sidebar.valueItem(0, "w")) == ValueRef(0, "device:w"),
+          "one value: its row is the value, not the device's");
+    check(sidebar.valueItem(0, "w")->toolTip(0) == "Value 1: Voltage DC", "the number in the tooltip");
   }
 
   // 7c. dragged between the nodes: an entry onto the connected devices
@@ -285,7 +292,7 @@ int main(int argc, char **argv)
       using DeviceSidebar::dropEvent;
     };
     DropSidebar drops(&library);
-    drops.setOpenDevices({ DeviceSidebar::OpenDevice { "u", "PSU", "OL", true } });
+    drops.setOpenDevices({ DeviceSidebar::OpenDevice { "u", "PSU", true } });
     drops.devicesNode()->setExpanded(true);
     drops.resize(400, 800);
     drops.show();
@@ -314,9 +321,9 @@ int main(int argc, char **argv)
     QTreeWidgetItem *node = sidebar.servicesNode();
     check(node->childCount() == 2, "two services");
     QTreeWidgetItem *s = node->child(0);
-    check(s->text(0) == "SCPI" && s->text(1) == "5025" && s->data(1, Qt::UserRole).toString() == "localhost:5025",
-          "SCPI row: " + s->text(1));
-    check(node->child(1)->text(1) == "off", "HiSLIP off");
+    check(s->text(0) == "SCPI" && s->text(2) == "5025" && s->data(1, Qt::UserRole).toString() == "localhost:5025",
+          "SCPI row: " + s->text(2));
+    check(node->child(1)->text(2) == "off", "HiSLIP off");
     check(!(s->flags() & Qt::ItemIsEditable) && !(node->flags() & Qt::ItemIsDropEnabled), "not renamed, no drops");
     int settings = 0;
     QObject::connect(&sidebar, &DeviceSidebar::serviceSettingsRequested, [&] { ++settings; });
@@ -325,7 +332,7 @@ int main(int argc, char **argv)
     hislip.running = true;
     hislip.value = "4880";
     sidebar.setServices({ scpi, hislip });
-    check(node->child(0) == s && node->child(1)->text(1) == "4880", "updated in place");
+    check(node->child(0) == s && node->child(1)->text(2) == "4880", "updated in place");
     sidebar.setServices({ scpi });
     check(node->childCount() == 1, "one less");
   }
@@ -347,10 +354,12 @@ int main(int argc, char **argv)
     sidebar.setWorkspaces({ { file.fileName(), "Bench test", "<b>Bench test</b>" }, { gone, {}, {} } });
     check(node->child(0)->text(0) == "Bench test" && node->child(0)->toolTip(0) == "<b>Bench test</b>",
           "a workspace's name and its tooltip");
-    sidebar.setCurrentWorkspace("Bench test");
-    check(node->text(1) == "Bench test" && !node->isFirstColumnSpanned(), "the workspace in use at the right of the node");
+    sidebar.setCurrentWorkspace("Bench test", "<b>Bench test</b>");
+    check(sidebar.openNode()->text(0) == "Bench · Bench test" && node->text(1).isEmpty()
+            && sidebar.openNode()->toolTip(0) == "<b>Bench test</b>",
+          "the workspace in use after Bench, not at the recent ones: " + sidebar.openNode()->text(0));
     sidebar.setCurrentWorkspace(QString());
-    check(node->text(1).isEmpty() && node->isFirstColumnSpanned(), "none in use: the node across");
+    check(sidebar.openNode()->text(0) == "Bench", "none in use: Bench alone");
     check(node->child(1)->toolTip(0).contains("not found"), "a gone one says so");
     check(!(node->flags() & Qt::ItemIsDropEnabled) && !(node->child(0)->flags() & Qt::ItemIsDragEnabled),
           "no drag and drop");
