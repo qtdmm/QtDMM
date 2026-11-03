@@ -221,7 +221,7 @@ maximized gets its room when the window comes back to its size. The window title
 [My devices](my-devices.md) blinks green while readings come in and turns
 grey when none has come for three seconds.
 
-**Arrange** in the toolbar (and in the menu) chooses how the windows are
+**Arrange** in the toolbar (in the menu while the toolbar is hidden) chooses how the windows are
 placed:
 
 - **Displays on top** (the default): display and meter share a strip at the

@@ -16,9 +16,10 @@ class InstanceWidget;
 /// sidebar, or the row of a meter with one value): which window shows it,
 /// and where. One entry per kind of view - LCD as the main value or on the
 /// left or right of the small line of the meter's front panel (a choice
-/// takes the place, the value there swaps with it), Analog meter (one
-/// value), Graph shown or not and on which axis, Poincaré plot (one value),
-/// Readings table. A choice opens the window it is for.
+/// takes the place, the value there swaps with it), Graph shown or not and
+/// on which axis, Readings table, and a new analog meter for it. A choice
+/// opens the window it is for. The analog meters and the Poincaré plot
+/// choose their value in their own menu (MainWindow::addValueChoice()).
 ///
 /// The LCD places go to the meter's FrontPanel, the other views get the
 /// value by its ValueRef (InstanceWidget).
@@ -26,7 +27,7 @@ class ValueMenu
 {
   Q_DECLARE_TR_FUNCTIONS(ValueMenu)
 public:
-  enum class View { Lcd, Meter, Poincare, Graph, Table };
+  enum class View { Lcd, Graph, Table };
 
   /// What the menu acts on.
   struct Target
@@ -43,6 +44,8 @@ public:
     /// for it (at the end of the menu, when given).
     std::function<void(const ValueRef &)> addAlarm;
     std::function<void(const ValueRef &)> editLimits;
+    /// A new analog meter showing the value (none: no entry).
+    std::function<void(const ValueRef &)> newMeter;
   };
 
   /// Fills @p menu for @p value of an open meter.

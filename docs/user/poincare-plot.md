@@ -52,10 +52,8 @@ Right-click into the plot:
 - **Clear** - starts afresh.
 - **Save image...** - the plot as PNG or SVG.
 
-For a meter with more than one value the one plotted is chosen in the
-sidebar (**Poincaré plot** in the menu of a value, see
-[The meter's values](my-devices.md#the-meters-values)); another one starts
-afresh. Kept with the window layout.
+**Value** in its right-click menu chooses the value plotted, of any
+connected device; another one starts afresh. Kept with the window layout.
 
 Distance, points and the ellipse are kept with the other settings of the
 window.

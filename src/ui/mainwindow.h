@@ -309,6 +309,7 @@ protected:
   QLabel     *m_info;
   QLabel     *m_limitCount;   ///< PASS/FAIL count, while the limit test is on
   QMenu      *m_menu;
+  QAction    *m_arrangeEntry = nullptr;   ///< Arrange in m_menu, shown while the toolbar is hidden
   HelpDlg    *m_helpDlg;
   QString     m_configId;
 
@@ -344,8 +345,11 @@ protected:
   /// shown brings it in (its other values hidden), its last one hidden takes it out.
   void        setTableShown(const ValueRef &value, bool shown);
   /// "Sources..." of a view: the values of the open meters it shows.
-  /// For View::Meter the analog meter @p meter, nullptr for the first.
-  void        editSources(ValueMenu::View view, MeterView *meter = nullptr);
+  /// "Sources..." of the graph or the readings table (several values).
+  void        editSources(ValueMenu::View view);
+  /// "Value" in the menu of a view of one value (analog meter, Poincaré
+  /// plot): the values of the open meters, @p shown ticked; @p choose takes one.
+  void        addValueChoice(QMenu *menu, const ValueRef &shown, const std::function<void(const ValueRef &)> &choose);
   QAction    *m_graphSources = nullptr;   ///< in the graph's menu, with more than one meter
   QAction    *m_tableSources = nullptr;   ///< in the table's menu, the same
   /// A meter's name by its source, also after it was closed.
