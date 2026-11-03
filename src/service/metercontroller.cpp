@@ -463,11 +463,12 @@ QString MeterController::valueName(int id) const
 int MeterController::valueCount() const
 {
   const int seen = m_lastReadings.isEmpty() ? 0 : m_lastReadings.lastKey() + 1;
-  return qBound(1, qMax(seen, m_dmm->dmmInfo().valueCount()), kMaxValues);
+  return qBound(1, qMax(seen, qMax(m_valueCount, m_dmm->dmmInfo().valueCount())), kMaxValues);
 }
 
 void MeterController::setValueCount(int count)
 {
+  m_valueCount = count;
   m_scpiDevice->setChannelCount(count);
 }
 

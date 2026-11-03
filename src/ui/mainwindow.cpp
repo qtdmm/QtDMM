@@ -656,7 +656,8 @@ void MainWindow::applyLcdLook(FrontPanel *panel)
   if (ctl)
   {
     const DmmDecoder::DMMInfo &info = ctl->dmm()->dmmInfo();
-    lcd->setDisplayMode(info.display, gui->showMinMax(), gui->showBar(), info.valueCount());
+    // the controller's count: the Simulated meter's values are not the model's
+    lcd->setDisplayMode(info.display, gui->showMinMax(), gui->showBar(), ctl->valueCount());
   }
 }
 
