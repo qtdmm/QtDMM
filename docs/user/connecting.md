@@ -112,8 +112,9 @@ waits for you to configure one. The status line at the bottom shows what is
 happening:
 
 - *Connecting …* — the port is open, waiting for the first frame.
-- *Connected /dev/ttyUSB0* — readings arrive; the display and the recorder are
-  live.
+- *connected (USB)* — readings arrive; the display and the recorder are
+  live. The way (USB, serial port, Bluetooth, network) is in the status
+  line, the port in its tooltip. Without a device the status line is empty.
 - *Timeout on device …* — the port is open but nothing has arrived for three
   seconds. Check that the meter is switched on, that its RS-232 output is
   enabled (many meters have a button or menu entry for it), and DTR/RTS. With
@@ -212,12 +213,15 @@ show and hide them. A fresh QtDMM starts as a
 compact instrument with display and meter only; starting a recording shows
 the graph.
 
-The first start sizes the main window for what it shows. When you switch on
+The first start opens the main window at 800×600 (at most 84 % of the
+screen); the views fill it. When you switch on
 the graph or the table for the first time, the window grows to make room -
 down for the graph, to the right for the table - up to most of the screen;
 it never shrinks by itself. Once you have sized or snapped the window
 yourself, it keeps your size. A view switched on while the window is
-maximized gets its room when the window comes back to its size. The window title names the configured meter; in the sidebar its dot in
+maximized gets its room when the window comes back to its size. Showing or
+hiding the sidebar (**Devices**, F9) widens or narrows the window by its
+width, so the views keep their arrangement; maximized, they share the room. The window title names the configured meter; in the sidebar its dot in
 [My devices](my-devices.md) blinks green while readings come in and turns
 grey when none has come for three seconds.
 

@@ -1024,7 +1024,14 @@ void MainWindow::createStatusBar()
     m_error->setText(firstLine);
     m_error->setToolTip(text.contains('\n') ? text : QString());
   });
-  connect(m_wid, &InstanceWidget::info, m_info, &QLabel::setText);
+  connect(m_wid, &InstanceWidget::info, this, [this](const QString &text)
+  {
+    // without a device the graph's Live time says nothing
+    if (m_session->controllers().isEmpty() && m_wid->graph()->store()->state() == RecordingStore::Live)
+      return;
+    m_info->setText(text.section('\n', 0, 0));
+    m_info->setToolTip(text.section('\n', 1));
+  });
   connect(m_wid, &InstanceWidget::useTextLabel, this, &MainWindow::setUseTextLabel);
   connect(m_wid, &InstanceWidget::iconSet, this, [](const QString &set)
           { Designs::setIconSet(Designs::iconSetFromName(set)); });
@@ -1074,9 +1081,15 @@ void MainWindow::placeWindow()
     for (QMdiSubWindow *w : { m_graphWin, m_readingsWin, m_poincareWin })
       if (m_grown.contains(w))
         start += growthFor(w);
+    // at least 800×600 at the first start, the views fill it; they grow
+    // it once they need more
+    m_content = start;
+    start = start.expandedTo(QSize(800, 600));
     const QRect av = screen()->availableGeometry();
     resize(qMin(start.width(), int(av.width() * 0.84)), qMin(start.height(), int(av.height() * 0.84)));
   }
+  if (!m_content.isValid())
+    m_content = size();
   m_expectSize = size();
 }
 
@@ -1086,6 +1099,13 @@ void MainWindow::updateEmptyStart()
   m_emptyConnect->setVisible(!m_wid->devices()->list().isEmpty());
   if (empty)
   {
+    // the last device closed: its messages go with it
+    if (m_emptyStart->isHidden())
+      for (QLabel *l : { m_error, m_info })
+      {
+        l->clear();
+        l->setToolTip(QString());
+      }
     m_emptyStart->setGeometry(m_mdi->rect());
     m_emptyStart->raise();
   }
@@ -1796,8 +1816,21 @@ void MainWindow::addAlarm(const ValueRef &value)
 
 void MainWindow::showSidebar(bool show)
 {
+  // the views keep their room and their arrangement: the window grows by
+  // the sidebar's width and shrinks again, unless it fills the screen
+  const bool keep = isVisible() && !isMaximized() && !isFullScreen() && show != m_sidebarDock->isVisible();
+  const int before = m_mdi->width();
   m_sidebarDock->setVisible(show);
   m_sidebarAction->setChecked(show);
+  if (keep)
+  {
+    layout()->activate();
+    const int dw = before - m_mdi->width();
+    const int maxW = screen()->availableGeometry().width() - (frameGeometry().width() - width());
+    m_content.rwidth() += dw;
+    if (dw != 0)
+      resizeOnScreen(QSize(qMin(width() + dw, maxW), height()));
+  }
   updateOpenDevices();
 }
 
@@ -2960,11 +2993,16 @@ void MainWindow::autoGrow(const QSize &delta)
   const double limit = QGuiApplication::platformName().startsWith("wayland") ? 0.70 : 0.84;
   const int maxW = int(av.width() * limit), maxH = int(av.height() * limit);
   const QSize s = size();
-  const QSize n(qMax(s.width(), qMin(s.width() + delta.width(), maxW)),
-                qMax(s.height(), qMin(s.height() + delta.height(), maxH)));
-  if (n == s)
-    return;
-  const QSize frameExtra = frameGeometry().size() - s;
+  m_content += delta;
+  const QSize n(qMax(s.width(), qMin(m_content.width(), maxW)), qMax(s.height(), qMin(m_content.height(), maxH)));
+  if (n != s)
+    resizeOnScreen(n);
+}
+
+void MainWindow::resizeOnScreen(const QSize &n)
+{
+  const QRect av = screen()->availableGeometry();
+  const QSize frameExtra = frameGeometry().size() - size();
   m_expectSize = n;
   resize(n);
   // stay on screen: move up/left when the grown frame would stick out

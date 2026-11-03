@@ -78,7 +78,7 @@ int main(int argc, char **argv)
   check(waitFor([&] { return dmm.linkState() == MeterConnection::LinkState::Connected; }, 2000),
         QString("Connected after the first frame (is %1)").arg(name(dmm.linkState())));
   check(readings >= 1, "reading emitted");
-  check(dmm.errorString().startsWith("Connected"), "status text: " + dmm.errorString());
+  check(dmm.errorString().startsWith("connected (network)\n127.0.0.1:"), "status text: " + dmm.errorString());
 
   // --- 2. frames stop -> Timeout; frames resume -> Connected ---
   check(waitFor([&] { return dmm.linkState() == MeterConnection::LinkState::Timeout; }, 3000),

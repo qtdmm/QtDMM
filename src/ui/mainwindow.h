@@ -302,6 +302,7 @@ protected:
   bool        m_growEnabled = false; ///< off until the window is on screen
   QSize       m_expectSize;          ///< the size we asked for last
   QSize       m_pendingGrow{0, 0};   ///< growth asked for while maximized
+  QSize       m_content;             ///< what the views need; the window may be bigger (the first start)
   bool        m_wasFull = false;     ///< maximized or full screen before the last state change
   bool        m_unmaximizing = false;   ///< back from maximized, the size settling
   QSet<QObject *> m_grown;           ///< views the window already grew for
@@ -311,6 +312,8 @@ protected:
   /// Grows the window by @p delta within the limits, moving it up/left when
   /// the frame would stick out of the screen.
   void        autoGrow(const QSize &delta);
+  /// Resizes to @p size, moving up/left when the frame would stick out.
+  void        resizeOnScreen(const QSize &size);
   /// A view was shown: grow for it once per session.
   void        growFor(QMdiSubWindow *win);
   QAction    *m_fullScreen;

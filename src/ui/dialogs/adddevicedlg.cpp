@@ -21,6 +21,27 @@ namespace
 {
 const QSize kTileSize(180, 120);
 const QSize kTargetSize(230, 140);
+
+// the picture of what a find can be, when all its models share maker and
+// kind; else none (the symbol of the way)
+QIcon symbolOf(const QStringList &models, QSize box, qreal dpr)
+{
+  QString vendor;
+  DeviceType::Type type = DeviceType::Type();
+  bool first = true;
+  for (const QString &model : models)
+    for (const DmmDecoder::DMMInfo &info : DmmDecoder::getDeviceConfigurations())
+    {
+      if (!DmmDecoder::sameModel(model, info.name))
+        continue;
+      if (!first && (info.vendor != vendor || DeviceType::of(info) != type))
+        return QIcon();
+      vendor = info.vendor;
+      type = DeviceType::of(info);
+      first = false;
+    }
+  return first ? QIcon() : QIcon(DeviceSymbol::pixmap(vendor, type, box, dpr));
+}
 }
 
 AddDeviceDlg::AddDeviceDlg(DeviceLibrary *library, QWidget *parent)
@@ -391,7 +412,8 @@ void AddDeviceDlg::addCandidate(const Candidate &c)
     text += '\n' + inUse;
   if (!c.problem.isEmpty())
     text += '\n' + c.problem;
-  auto *item = new QListWidgetItem(QIcon::fromTheme(icons[c.kind]), text);
+  const QIcon symbol = symbolOf(c.models, m_cards->iconSize(), devicePixelRatioF());
+  auto *item = new QListWidgetItem(symbol.isNull() ? QIcon::fromTheme(icons[c.kind]) : symbol, text);
   item->setData(Qt::UserRole, c.key);
   if (!c.problem.isEmpty())
     item->setForeground(palette().color(QPalette::Disabled, QPalette::Text));
@@ -457,6 +479,10 @@ void AddDeviceDlg::startProbe(int row)
         for (const QString &m : models)
           names << QString(m).remove(" *");
         f.hint = tr("Its first reading says: %1.").arg(names.join(tr(" or ")));
+        const QIcon symbol = symbolOf(models, m_cards->iconSize(), devicePixelRatioF());
+        for (int i = 0; i < m_cards->count() && !symbol.isNull(); ++i)
+          if (m_cards->item(i)->data(Qt::UserRole).toString() == key)
+            m_cards->item(i)->setIcon(symbol);
       }
     }
     m_probe->deleteLater();

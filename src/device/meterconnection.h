@@ -129,7 +129,8 @@ protected:
   /// Platform-specific advice when the port cannot be opened for lack of
   /// permission (the dialout/dialer group on Unix).
   QString               permissionHint() const;
-  /// Status bar text while readings arrive.
+  /// Status bar text while readings arrive: "connected (USB)", the port on a
+  /// second line for the tooltip.
   QString               connectedMessage() const;
   /// Status bar text for a silent port (with the HID hint where it applies).
   QString               timeoutMessage() const;
