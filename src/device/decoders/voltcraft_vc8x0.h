@@ -42,7 +42,8 @@ public:
   static QByteArray command(quint8 cmd, const QByteArray &data = QByteArray());
 
 private:
-  bool m_vc890;
-  int  m_length;     ///< the whole live frame
-  int  m_statusAt;   ///< the first status byte in the frame
+  static constexpr int kMaxLength = 66;   ///< the VC890's live frame
+  const bool m_vc890;
+  const int  m_length;     ///< the whole live frame
+  const int  m_statusAt;   ///< the first status byte in the frame
 };
