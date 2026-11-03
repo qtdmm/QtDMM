@@ -2842,7 +2842,7 @@ void MainWindow::setDesign(int design)
   const QBrush frame = Designs::frameBrush(d);
   for (QMdiSubWindow *win : meterWindows())
     applyFrame(win->widget());
-  applyFrame(m_readings);
+  applyFrame(m_readings, false);
   for (QMdiSubWindow *win : std::as_const(m_panelWins))
     applyFrame(win->widget());
   const Designs::GraphColors g = Designs::graphColors(d);
@@ -2862,9 +2862,10 @@ void MainWindow::setDesign(int design)
   m_wid->settingsDialog()->guiPage()->setDesign(Designs::name(d));
 }
 
-void MainWindow::applyFrame(QWidget *view)
+void MainWindow::applyFrame(QWidget *view, bool instrument)
 {
-  const QBrush frame = Designs::frameBrush(Designs::current());
+  const Designs::Design design = Designs::current();
+  const QBrush frame = instrument && design == Designs::Silver ? Designs::areaBrush(design) : Designs::frameBrush(design);
   const bool own = frame.style() != Qt::NoBrush;
   QPalette pal = view->palette();
   pal.setBrush(QPalette::Window, own ? frame : QApplication::palette().window());
