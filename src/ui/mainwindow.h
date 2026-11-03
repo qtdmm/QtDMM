@@ -46,6 +46,7 @@ class LcdWidget;
 class HelpDlg;
 class AnalogMeter;
 class MeterView;
+class PoincareView;
 class ReadingsWidget;
 class PoincarePlot;
 class AlarmBar;
@@ -193,23 +194,37 @@ protected:
   void        applyFrame(QWidget *view, bool instrument = true);
   /// @}
   AnalogMeter   *m_meter;
-  /// @name More analog meters
-  /// The first (m_meter, "meter") is always there, shown or hidden; more
-  /// ("meter-2", ...) come from the menu, each with its value and style,
-  /// and go when closed.
+  /// @name Added analog meters and Poincaré plots
+  /// The first of each (m_meter "meter", m_poincare "poincare") is always
+  /// there, shown or hidden; more ("meter-2", "poincare-2", ...) come from
+  /// the menu, each with its value (a meter also its style), and go when
+  /// closed.
   /// @{
-  QList<QMdiSubWindow *> m_moreMeters;
+  enum class Added { Meter, Poincare };
+  QList<QMdiSubWindow *> m_added;
   QAction    *m_newMeterAction = nullptr;
-  /// A window with another analog meter showing @p value, numbered
+  QAction    *m_newPoincareAction = nullptr;
+  /// A window with another view of @p kind showing @p value, numbered
   /// @p number (the next free one for 0); not shown yet.
-  QMdiSubWindow *addMeterWindow(const ValueRef &value, int number = 0);
-  /// Another analog meter for @p value, shown and placed.
-  void        newMeter(const ValueRef &value);
-  void        removeMeterWindow(QMdiSubWindow *win);
-  /// The analog meter in @p win, nullptr for another window.
+  QMdiSubWindow *addViewWindow(Added kind, const ValueRef &value, int number = 0);
+  /// Another view of @p kind for @p value, shown and placed.
+  void        newView(Added kind, const ValueRef &value);
+  void        newMeter(const ValueRef &value) { newView(Added::Meter, value); }
+  void        removeAddedWindow(QMdiSubWindow *win);
+  /// The analog meter or Poincaré plot in @p win, nullptr for another window.
   MeterView  *meterViewOf(const QMdiSubWindow *win) const;
-  /// The windows of all analog meters, the first one first.
-  QList<QMdiSubWindow *> meterWindows() const { return QList<QMdiSubWindow *>{ m_meterWin } + m_moreMeters; }
+  PoincareView *poincareViewOf(const QMdiSubWindow *win) const;
+  /// The windows of all analog meters or Poincaré plots, the first one first.
+  QList<QMdiSubWindow *> meterWindows() const;
+  QList<QMdiSubWindow *> poincareWindows() const;
+  /// The readings table or a Poincaré plot: a window of the column on the right.
+  bool        isColumn(const QMdiSubWindow *win) const;
+  /// @p value dragged out of the sidebar and dropped at @p pos of the area:
+  /// onto a view (analog meter, Poincaré plot, graph, readings table, the
+  /// big line of its device's front panel), or a menu of new views.
+  void        dropValue(const ValueRef &value, const QPoint &pos);
+  /// The design's colours for @p plot.
+  void        applyPoincareColors(PoincarePlot *plot);
   /// @}
   ReadingsWidget *m_readings;
   PoincarePlot *m_poincare;
@@ -347,7 +362,7 @@ protected:
   /// "Sources..." of a view: the values of the open meters it shows.
   /// "Sources..." of a view; for View::Meter the analog meter @p meter,
   /// nullptr for the first.
-  void        editSources(ValueMenu::View view, MeterView *meter = nullptr);
+  void        editSources(ValueMenu::View view, MeterView *meter = nullptr, PoincareView *plot = nullptr);
   QAction    *m_graphSources = nullptr;   ///< in the graph's menu, with more than one meter
   QAction    *m_tableSources = nullptr;   ///< in the table's menu, the same
   /// A meter's name by its source, also after it was closed.

@@ -38,6 +38,7 @@
 #include "ui/controlbar.h"
 #include "ui/frontpanel.h"
 #include "ui/meterview.h"
+#include "ui/poincareview.h"
 #include "ui/views/graphwidget.h"
 #include "ui/settings/settingsdialog.h"
 #include "ui/devicesettings.h"
@@ -71,8 +72,6 @@ InstanceWidget::InstanceWidget(QString instanceId, QString configPath, DeviceSes
 
   m_session = session;
   // the views' values: of a meter of the session
-  m_poincareFeed = new ValueFeed(session, this);
-  m_poincareFeed->setValue(ValueRef());
   connect(session, &DeviceSession::error, this, &InstanceWidget::error);
   connect(session, &DeviceSession::info, this, &InstanceWidget::info);
   m_instanceId = instanceId;
@@ -271,30 +270,17 @@ void InstanceWidget::removeMeter(MeterView *view)
   delete view;
 }
 
-void InstanceWidget::setPoincare(PoincarePlot *plot)
+PoincareView *InstanceWidget::addPoincare(PoincarePlot *plot)
 {
-  m_poincare = plot;
-  connect(m_poincareFeed, &ValueFeed::reading, plot, &PoincarePlot::addReading);
-  connect(m_poincareFeed, &ValueFeed::staleChanged, plot, &PoincarePlot::setStale);
-  connect(m_poincareFeed, &ValueFeed::controllerChanged, plot, &PoincarePlot::clear);
-  connect(m_poincareFeed, &ValueFeed::captionChanged, plot, &PoincarePlot::setCaption);
-  connect(m_poincareFeed, &ValueFeed::noticeChanged, plot, &PoincarePlot::setNotice);
-  plot->setCaption(m_poincareFeed->caption());
-  plot->setNotice(m_poincareFeed->notice());
-  applyValueChoice();
+  auto *view = new PoincareView(m_session, plot, this);
+  m_poincares << view;
+  return view;
 }
 
-void InstanceWidget::setPoincareValue(const ValueRef &value)
+void InstanceWidget::removePoincare(PoincareView *view)
 {
-  m_poincareValue = value;
-  applyValueChoice();
-}
-
-void InstanceWidget::applyValueChoice()
-{
-  m_poincareFeed->setValue(m_poincareValue);
-  if (m_poincare)
-    m_poincare->setValueId(m_poincareFeed->value().id);
+  m_poincares.removeOne(view);
+  delete view;
 }
 
 void InstanceWidget::setReadingLog(ReadingsModel *log)

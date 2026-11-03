@@ -112,6 +112,10 @@ public:
   /// of a device with one value (its main value), by "device:<id>". Invalid
   /// source "-" for none.
   ValueRef    valueOf(const QTreeWidgetItem *item) const;
+  /// What a drag out of the sidebar carries for the window: a value of an
+  /// open device (ValueRef::toString()) or an entry of My devices (its id).
+  static constexpr const char *kValueMime = "application/x-qtdmm-value";
+  static constexpr const char *kDeviceMime = "application/x-qtdmm-device";
   /// Fills the submenu "Value" of a device with one value (ValueMenu).
   void        setValueMenuFiller(std::function<void(QMenu *, const ValueRef &)> filler) { m_valueFiller = std::move(filler); }
 
@@ -168,6 +172,7 @@ public Q_SLOTS:
   void        fill();
 
 protected:
+  QMimeData  *mimeData(const QList<QTreeWidgetItem *> &items) const override;
   void        dragMoveEvent(QDragMoveEvent *event) override;
   void        dropEvent(QDropEvent *event) override;
   void        contextMenuEvent(QContextMenuEvent *event) override;

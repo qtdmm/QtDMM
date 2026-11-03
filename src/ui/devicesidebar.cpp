@@ -12,6 +12,7 @@
 #include <QHeaderView>
 #include <QKeyEvent>
 #include <QMenu>
+#include <QMimeData>
 #include <QMessageBox>
 #include <QPainter>
 #include <QTimer>
@@ -284,7 +285,8 @@ void DeviceSidebar::fillValues(QTreeWidgetItem *parent, int first, const QList<V
     if (!item)
     {
       item = new QTreeWidgetItem(parent);
-      item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+      // dragged onto a view of the window (mimeData())
+      item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDragEnabled);
       item->setTextAlignment(1, Qt::AlignRight | Qt::AlignVCenter);
     }
     item->setData(0, kValueId, value.id);
@@ -525,14 +527,34 @@ void DeviceSidebar::dragMoveEvent(QDragMoveEvent *event)
   // between the nodes: connect or close; within "Connected devices": nothing
   const QTreeWidgetItem *from = nodeOf(currentItem());
   const QTreeWidgetItem *to = nodeOf(itemAt(event->position().toPoint()));
-  if (from == m_open && to == m_open)
+  // a value row goes onto the views only
+  if ((from == m_open && to == m_open) || currentItem()->data(0, kValueId).isValid())
     event->ignore();
   else if ((from == m_devices && to == m_open && !isConnected(idOf(currentItem()))) || (from == m_open && to == m_devices))
     event->accept();
 }
 
+QMimeData *DeviceSidebar::mimeData(const QList<QTreeWidgetItem *> &items) const
+{
+  QMimeData *data = QTreeWidget::mimeData(items);
+  if (!data || items.size() != 1)
+    return data;
+  // for the window: a value onto a view, an entry of My devices to connect
+  QTreeWidgetItem *item = items.first();
+  if (const ValueRef value = valueOf(item); value.source != QLatin1String("-"))
+    data->setData(kValueMime, value.toString().toUtf8());
+  else if (nodeOf(item) == m_devices && item != m_addItem && !idOf(item).isEmpty())
+    data->setData(kDeviceMime, idOf(item).toUtf8());
+  return data;
+}
+
 void DeviceSidebar::dropEvent(QDropEvent *event)
 {
+  if (currentItem() && currentItem()->data(0, kValueId).isValid())
+  {
+    event->ignore();
+    return;
+  }
   const QTreeWidgetItem *from = nodeOf(currentItem());
   const QTreeWidgetItem *to = nodeOf(itemAt(event->position().toPoint()));
   if (from == m_open || to == m_open)

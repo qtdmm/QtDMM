@@ -43,6 +43,7 @@ class SettingsDialog;
 class Settings;
 class AnalogMeter;
 class PoincarePlot;
+class PoincareView;
 class ReadingsModel;
 struct Alarm;
 class DeviceLibrary;
@@ -84,17 +85,13 @@ public:
   MeterView  *addMeter(AnalogMeter *meter);
   void        removeMeter(MeterView *view);
   const QList<MeterView *> &meters() const { return m_meters; }
-  /// The Poincaré plot (MainWindow owns and feeds it), for its value.
-  void        setPoincare(PoincarePlot *plot);
+  /// A Poincaré plot to feed (created and docked by MainWindow);
+  /// removePoincare() before its window goes.
+  PoincareView *addPoincare(PoincarePlot *plot);
+  void        removePoincare(PoincareView *view);
+  const QList<PoincareView *> &poincares() const { return m_poincares; }
   /// Table model that gets every reading (MainWindow owns it).
   void        setReadingLog(ReadingsModel *);
-  /// @name Which value a view shows
-  /// The sidebar's value menu (ValueMenu), kept with the window layout:
-  /// a meter's value (ValueFeed), "no value" while the meter is not connected.
-  /// @{
-  void        setPoincareValue(const ValueRef &value);
-  ValueRef    poincareValue() const { return m_poincareValue; }
-  /// @}
   /// The limit test's band to the graph and the analog meter (they draw it
   /// for the value they show).
   void        applyLimitBands();
@@ -171,7 +168,6 @@ protected:
   /// The analog meters' settings: style, needle inertia, red zone, scale, blinking.
   MeterView::Look meterLook() const;
   DeviceSession   *m_session;
-  ValueFeed       *m_poincareFeed = nullptr;  ///< the Poincaré plot's
   SettingsDialog  *m_configDlg;
   qtdmm::PrintDlg *m_printDlg;
   QPrinter    m_printer;
@@ -192,11 +188,8 @@ protected:
   bool        m_consoleLogging = false;   ///< setConsoleLogging()
   QList<MeterView *> m_meters;
   int         m_meterStyle = -1;   ///< the settings' style last applied, -1 before the first
-  PoincarePlot  *m_poincare = nullptr;
+  QList<PoincareView *> m_poincares;
   QPointer<ReadingsModel> m_readingLog;
-  ValueRef    m_poincareValue;
-  /// The values chosen to the views.
-  void        applyValueChoice();
   /// The meters' values by name: the recording's choice of trigger value.
   void        updateValueNames();
   Settings    *m_settings;
