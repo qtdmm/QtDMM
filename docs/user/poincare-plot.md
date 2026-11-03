@@ -22,7 +22,7 @@ QtDMM runs, shown or not, independent of the recorder.
 one (in a plot's right-click menu it opens one with the same value), each with its own value; **New
 Poincaré plot** in the menu of a value in the sidebar opens one for that
 value. **Close window** in its right-click menu removes an added plot; the
-window layout and workspaces keep them. Distance, points and the ellipse
+window layout and benches keep them. Distance, points and the ellipse
 are the same for all plots.
 
 ## The numbers

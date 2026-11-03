@@ -12,7 +12,7 @@ side, one window each, and can be combined into calculated values.
   manual settings, the status line.
 - [My devices](my-devices.md) — your meters with their connections, switched
   with two clicks.
-- [Analog meter](analog-meter.md) — the moving-coil style instrument: scale,
+- [Needle meter](analog-meter.md) — the moving-coil style instrument: scale,
   red zone, readouts, styles.
 - [The recorder](recorder.md) — live graph, recording and view; starting manually, at a time or on a threshold;
   zoom, pan and cursor; integration; CSV export and import.

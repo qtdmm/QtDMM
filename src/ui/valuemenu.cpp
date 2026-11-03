@@ -72,7 +72,7 @@ void ValueMenu::fill(QMenu *menu, const Target &target, const ValueRef &value)
   // the analog meters and the Poincaré plot choose their value with
   // Sources... in their own menu; here a new analog meter for it
   if (target.newMeter)
-    QObject::connect(menu->addAction(tr("New &analog meter")), &QAction::triggered, menu,
+    QObject::connect(menu->addAction(tr("New &needle meter")), &QAction::triggered, menu,
                      [add = target.newMeter, ref] { add(ref); });
   if (target.newPoincare)
     QObject::connect(menu->addAction(tr("New &Poincaré plot")), &QAction::triggered, menu,

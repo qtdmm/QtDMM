@@ -1,6 +1,6 @@
 # Readings table
 
-Next to the display, the analog meter and the graph, QtDMM can
+Next to the display, the needle meter and the graph, QtDMM can
 list every reading the meter sends: one row per value, with the time it
 arrived, the value as the meter displayed it, unit, mode and range. Where
 the recorder samples the reading on a fixed grid (once a second by

@@ -8,7 +8,7 @@ voltage - without setting up alarms.
 ## Setting it up
 
 Each open device has its own test. Right-click the device's front panel
-(its digital display), or its row under *Connected devices* in the sidebar:
+(its digital display), or its row under *Bench* in the sidebar:
 
 - **PASS/FAIL test** switches the test on and off. The limits stay when it
   is off. Switched on without limits, it asks for them.
@@ -47,11 +47,11 @@ An overload counts as FAIL HI, a negative one (-OL) as FAIL LO. There is
 no minimum duration and no hysteresis: each reading has its verdict. For
 "too long too high", use an [alarm](alarms.md).
 
-## In the graph, on the analog meter and in the status line
+## In the graph, on the needle meter and in the status line
 
 The [graph](recorder.md) draws the limits as two dashed green lines, faintly
 green between them, while the tested value is the one on its left axis (see [the graph's values](recorder.md#looking-at-the-data)). The
-reference line snaps to them. The [analog meter](analog-meter.md) shows
+reference line snaps to them. The [needle meter](analog-meter.md) shows
 the passing range as a green band on its arc, in place of the red zone,
 while its needle shows the tested value. A limit beyond the scale ends
 the band at the scale's end. The dial keeps its colour, so the needle

@@ -200,7 +200,7 @@ advertisements ("Instant Readout"). QtDMM listens to those broadcasts - no
 connection, no pairing - and shows them like a meter's reading:
 
 Each device broadcasts several values; you choose which one QtDMM treats
-as the reading (**Main value**: display, analog meter, recorder) and which
+as the reading (**Main value**: display, needle meter, recorder) and which
 go to the display's second line, the graph and the
 [readings table](readings-table.md) (**Second value**, **Third value**,
 **Fourth value**, each or none):

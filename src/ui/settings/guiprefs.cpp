@@ -38,7 +38,7 @@
 GuiPrefs::GuiPrefs(QWidget *parent) : SettingsPage(parent)
 {
   m_label = tr("Appearance");
-  m_description = tr("Design and symbols, the digital display, the analog meter and the sidebar.");
+  m_description = tr("Design and symbols, the digital display, the needle meter and the sidebar.");
   m_iconName = "qtdmm-display";
 
   QFormLayout *form = createForm();
@@ -102,11 +102,11 @@ GuiPrefs::GuiPrefs(QWidget *parent) : SettingsPage(parent)
   form->addRow(tr("LCD &colours:"), ui_lcdVariant);
   form->addRow(tr("Custom &face:"), ui_bgColorDisplay);
 
-  addSection(form, tr("Analog meter"));
+  addSection(form, tr("Needle meter"));
   ui_meterScale = new QComboBox(this);
   ui_meterScale->setObjectName("ui_meterScale");
   ui_meterScale->addItems({ tr("Automatic"), tr("Zero left"), tr("Centre zero") });
-  ui_meterScale->setToolTip(tr("How the analog meter lays out its scale. <b>Automatic</b> starts with zero at "
+  ui_meterScale->setToolTip(tr("How the needle meter lays out its scale. <b>Automatic</b> starts with zero at "
                                "the left and switches to a centre-zero scale as soon as a clearly negative "
                                "reading arrives (until the min/max memory is reset). <b>Zero left</b> and "
                                "<b>Centre zero</b> fix one layout."));
@@ -114,7 +114,7 @@ GuiPrefs::GuiPrefs(QWidget *parent) : SettingsPage(parent)
   ui_meterStyle = new QComboBox(this);
   ui_meterStyle->setObjectName("ui_meterStyle");
   ui_meterStyle->addItems({ tr("Dark studio"), tr("Classic ivory") });
-  ui_meterStyle->setToolTip(tr("Colour scheme of the analog meter: a dark studio dial with a white scale, or "
+  ui_meterStyle->setToolTip(tr("Colour scheme of the needle meter: a dark studio dial with a white scale, or "
                                "a classic ivory dial with a black scale."));
   form->addRow(tr("S&tyle:"), ui_meterStyle);
   ui_meterBallistics = new QCheckBox(tr("&Needle inertia"), this);
@@ -135,9 +135,9 @@ GuiPrefs::GuiPrefs(QWidget *parent) : SettingsPage(parent)
   ui_recentWorkspaces->setObjectName("ui_recentWorkspaces");
   ui_recentWorkspaces->setRange(0, 30);
   ui_recentWorkspaces->setSpecialValueText(tr("none"));
-  ui_recentWorkspaces->setToolTip(tr("How many of the workspaces loaded or saved last the sidebar and the menu "
-                                     "Arrange > Recent workspaces show. The list is shared by all windows."));
-  form->addRow(tr("Recent worksp&aces:"), ui_recentWorkspaces);
+  ui_recentWorkspaces->setToolTip(tr("How many of the benches loaded or saved last the sidebar and the menu "
+                                     "Arrange > Recent benches show. The list is shared by all windows."));
+  form->addRow(tr("Recent benc&hes:"), ui_recentWorkspaces);
 
   // the fields of a section line up
   const int width = qMax(ui_meterStyle->sizeHint().width(), ui_meterScale->sizeHint().width());

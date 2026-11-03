@@ -51,7 +51,7 @@ handbook window are fixed.
 | Key | Action |
 |---|---|
 | Ctrl+1 | Show / hide the front panels (digital displays) of all devices |
-| Ctrl+2 | Show / hide the analog meter |
+| Ctrl+2 | Show / hide the needle meter |
 | Ctrl+3 | Show / hide the graph |
 | Ctrl+4 | Show / hide the readings table |
 | Ctrl+5 | Show / hide the Poincaré plot |
@@ -113,5 +113,5 @@ While the table has the focus:
 ## Sidebar
 
 F8 opens the settings here too; F2 renames the selected device (also
-through its context menu, **Rename**). Enter on a workspace
+through its context menu, **Rename**). Enter on a bench
 loads it.

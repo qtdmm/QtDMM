@@ -130,7 +130,7 @@ Where the meter showed no value, the curve has a gap instead of a line:
 - **No value** - the meter stopped sending, or the connection dropped.
   QtDMM learns how often the meter sends and takes a value as gone after
   three of its intervals (at least 1 s, at most 30 s). The digital display
-  and the analog meter fade their value at the same time.
+  and the needle meter fade their value at the same time.
 - **No number** - the meter shows dashes or nothing instead of a number
   (`----` of an APPA, `--` of a Victron's time to go while charging, the
   field strength of a ZOTEK's NCV). The display shows what the meter shows,
@@ -165,7 +165,7 @@ were; the integration curve carries on across a gap.
   click at the right end of the overview, a time button or *Live* follows
   the newest reading again. **Overview** in the right-click menu switches it
   off: the scroll bar is back. Whether it shows is kept with the window
-  layout and in a saved workspace.
+  layout and in a saved bench.
 - **Min/max band** in the right-click menu draws a faint band behind the
   curve: at each point the lowest to the highest the curve reaches within
   four pixels to either side. It shows how much a value scatters around
@@ -227,7 +227,7 @@ were; the integration curve carries on across a gap.
   between it takes the value where you let go. The right-click menu,
   **Reference line**, chooses the same, and **Off** hides the line. On the mean, minimum or maximum the
   line follows the readings and says what it is (`mean 1.83 A`). Where it
-  stands is kept with the window layout and in a saved workspace.
+  stands is kept with the window layout and in a saved bench.
 - **Time cursors:** a click into the graph sets cursor **A**, Shift+click
   cursor **B**; drag them to move them, Esc or **Remove time cursors** in
   the right-click menu takes them away. Top right the graph shows the time

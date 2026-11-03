@@ -311,7 +311,7 @@ void MainWindow::createViews()
   // meters they are given (see InstanceWidget)
 
   m_meter = new AnalogMeter(this);
-  m_meter->setWindowTitle(tr("Analog meter"));
+  m_meter->setWindowTitle(tr("Needle meter"));
   m_wid->addMeter(m_meter);
   m_meterWin = addView(m_meter, m_meter->windowTitle(), MdiArranger::Instrument, "meter");
   // no cell bigger than the instrument can fill
@@ -365,19 +365,19 @@ void MainWindow::createViews()
     }
     m_arranger->arrange();
   });
-  m_meterAction = windowAction(m_meterWin, tr("Analog &meter"), "Ctrl+2", "qtdmm-meter",
-    tr("<html><head/><body><p><span style=\" font-weight:600;\">Analog meter</span></p>"
+  m_meterAction = windowAction(m_meterWin, tr("Needle &meter"), "Ctrl+2", "qtdmm-meter",
+    tr("<html><head/><body><p><span style=\" font-weight:600;\">Needle meter</span></p>"
        "<p>Show the reading on a moving-coil style instrument.</p></body></html>"));
   m_readingsAction = windowAction(m_readingsWin, tr("&Readings table"), "Ctrl+4", "table",
     tr("<html><head/><body><p><span style=\" font-weight:600;\">Readings table</span></p>"
        "<p>Every reading the meter sent, one row each, with time, mode and range - "
        "the raw protocol of the session next to the graph. Copy rows to a "
        "spreadsheet or export them as CSV.</p></body></html>"));
-  m_newMeterAction = new QAction(QIcon::fromTheme("qtdmm-meter"), tr("Add ana&log meter"), this);
+  m_newMeterAction = new QAction(QIcon::fromTheme("qtdmm-meter"), tr("&Add needle meter"), this);
   m_newMeterAction->setObjectName("action_NewMeter");
   m_newMeterAction->setWhatsThis(
-    tr("<html><head/><body><p><span style=\" font-weight:600;\">Add analog meter</span></p>"
-       "<p>Another analog meter window: pick its value first, later with Sources in its window "
+    tr("<html><head/><body><p><span style=\" font-weight:600;\">Add needle meter</span></p>"
+       "<p>Another needle meter window: pick its value first, later with Sources in its window "
        "menu; closing it removes it.</p></body></html>"));
   connect(m_newMeterAction, &QAction::triggered, this, [this]
   {
@@ -546,7 +546,7 @@ QMdiSubWindow *MainWindow::addViewWindow(Added kind, const ValueRef &value, int 
   if (kind == Added::Meter)
   {
     auto *meter = new AnalogMeter(this);
-    meter->setWindowTitle(tr("Analog meter %1").arg(number));
+    meter->setWindowTitle(tr("Needle meter %1").arg(number));
     m_wid->addMeter(meter)->setValue(value);
     win = addView(meter, meter->windowTitle(), MdiArranger::Instrument, prefix + QString::number(number));
     m_arranger->setContentAspect(win, AnalogMeter::kMinAspect, AnalogMeter::kMaxAspect);
@@ -900,21 +900,21 @@ QList<QAction *> MainWindow::createArrangeMenu()
   m_arrangeMenu->addSeparator();
   m_arrangeMenu->addAction(m_titleBars);
   m_arrangeMenu->addSeparator();
-  QAction *loadWs = m_arrangeMenu->addAction(QIcon::fromTheme("document-open"), tr("L&oad workspace..."));
+  QAction *loadWs = m_arrangeMenu->addAction(QIcon::fromTheme("document-open"), tr("L&oad bench..."));
   loadWs->setObjectName("action_LoadWorkspace");
-  loadWs->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">Load workspace</span></p>"
-                          "<p>Takes a set-up saved with <i>Save workspace</i>: the devices connected (others "
+  loadWs->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">Load bench</span></p>"
+                          "<p>Takes a set-up saved with <i>Save bench</i>: the devices connected (others "
                           "close), which windows are shown with which values, the "
                           "arrangement, title bars, toolbar, design and the size of the main window. A device "
                           "missing in My devices is added back from the file.</p></body></html>"));
   connect(loadWs, &QAction::triggered, this, &MainWindow::loadWorkspace);
   // filled from the file each time: another QtDMM may have added one
-  m_recentMenu = m_arrangeMenu->addMenu(QIcon::fromTheme("document-open-recent"), tr("&Recent workspaces"));
+  m_recentMenu = m_arrangeMenu->addMenu(QIcon::fromTheme("document-open-recent"), tr("&Recent benches"));
   m_recentMenu->setObjectName("menu_RecentWorkspaces");
   connect(m_recentMenu, &QMenu::aboutToShow, this, &MainWindow::updateRecentWorkspaces);
-  QAction *saveWs = m_arrangeMenu->addAction(QIcon::fromTheme("document-save-as"), tr("&Save workspace..."));
+  QAction *saveWs = m_arrangeMenu->addAction(QIcon::fromTheme("document-save-as"), tr("&Save bench..."));
   saveWs->setObjectName("action_SaveWorkspace");
-  saveWs->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">Save workspace</span></p>"
+  saveWs->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">Save bench</span></p>"
                           "<p>Writes the set-up to a file, under a name and a description, with a picture of "
                           "the windows: the devices connected (a copy of their entries in My devices), which "
                           "windows are shown with which values, the arrangement, "
@@ -925,7 +925,7 @@ QList<QAction *> MainWindow::createArrangeMenu()
   m_autoSaveLayout->setChecked(true);
   m_autoSaveLayout->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">Save layout on exit</span></p>"
                                     "<p>On: QtDMM starts with the window layout it had when it was closed. Off: it "
-                                    "starts with the layout last saved while this was on, or the workspace last "
+                                    "starts with the layout last saved while this was on, or the bench last "
                                     "loaded.</p></body></html>"));
   QAction *arrangeButton = m_arrangeMenu->menuAction();
   arrangeButton->setIcon(QIcon::fromTheme("qtdmm-arrange"));
@@ -1722,10 +1722,11 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
     win->hide();
 }
 
-void MainWindow::addRulesMenu(QMenu *menu, MeterController *ctl)
+void MainWindow::addRulesMenu(QMenu *parent, MeterController *ctl)
 {
-  // the limit test: on and off here, the limits in the dialog; on without
-  // limits set yet asks for them
+  // together in one submenu. The limit test: on and off here, the limits in
+  // the dialog; on without limits set yet asks for them
+  QMenu *menu = parent->addMenu(tr("Limits && &alarms"));
   QAction *test = menu->addAction(tr("PASS/FAIL &test"));
   test->setCheckable(true);
   test->setChecked(ctl->limitTest().enabled);
@@ -1968,7 +1969,7 @@ void MainWindow::dropValue(const ValueRef &value, const QPoint &pos)
   {
     // the free area: a new view for it
     QMenu menu(this);
-    QAction *meter = menu.addAction(m_newMeterAction->icon(), tr("New &analog meter"));
+    QAction *meter = menu.addAction(m_newMeterAction->icon(), tr("New &needle meter"));
     QAction *plot = menu.addAction(m_newPoincareAction->icon(), tr("New &Poincaré plot"));
     QAction *graph = menu.addAction(action_Graph->icon(), tr("In the &graph"));
     QAction *chosen = menu.exec(m_mdi->viewport()->mapToGlobal(pos));
@@ -2660,8 +2661,8 @@ void MainWindow::saveWorkspace()
   const QString proposal = !m_workspaceFile.isEmpty() && (dlg.name() == m_workspaceName || base.isEmpty())
                              ? m_workspaceFile
                              : QDir(dir).filePath((base.isEmpty() ? QString("untitled") : base) + "." + kWorkspaceSuffix);
-  QString file = QFileDialog::getSaveFileName(this, tr("Save workspace"), proposal,
-                                              tr("QtDMM workspace (*.%1)").arg(kWorkspaceSuffix));
+  QString file = QFileDialog::getSaveFileName(this, tr("Save bench"), proposal,
+                                              tr("QtDMM bench (*.%1)").arg(kWorkspaceSuffix));
   if (file.isEmpty())
     return;
   if (QFileInfo(file).suffix().isEmpty())
@@ -2685,14 +2686,14 @@ void MainWindow::saveWorkspace()
   QString error;
   if (!ws.write(file, &error))
   {
-    QMessageBox::warning(this, tr("QtDMM: Save workspace"), tr("Could not write %1.").arg(QDir::toNativeSeparators(file)));
+    QMessageBox::warning(this, tr("QtDMM: Save bench"), tr("Could not write %1.").arg(QDir::toNativeSeparators(file)));
     return;
   }
   cfg->setString("Windows/workspace-dir", QFileInfo(file).absolutePath());
   recentWorkspaces().add(file);
   setCurrentWorkspace(file);
   updateRecentWorkspaces();
-  Q_EMIT m_wid->error(tr("Workspace saved to %1").arg(QDir::toNativeSeparators(file)));
+  Q_EMIT m_wid->error(tr("Bench saved to %1").arg(QDir::toNativeSeparators(file)));
 }
 
 void MainWindow::loadWorkspace()
@@ -2700,8 +2701,8 @@ void MainWindow::loadWorkspace()
   Settings *cfg = m_wid->settings();
   const QString dir = cfg->getString("Windows/workspace-dir",
                                      QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
-  const QString file = QFileDialog::getOpenFileName(this, tr("Load workspace"), dir,
-                                                    tr("QtDMM workspace (*.%1)").arg(kWorkspaceSuffix));
+  const QString file = QFileDialog::getOpenFileName(this, tr("Load bench"), dir,
+                                                    tr("QtDMM bench (*.%1)").arg(kWorkspaceSuffix));
   if (!file.isEmpty())
     loadWorkspaceFile(file);
 }
@@ -2713,7 +2714,7 @@ bool MainWindow::loadWorkspaceFile(const QString &file)
   const std::optional<WorkspaceFile> ws = WorkspaceFile::read(file, &error);
   if (!ws)
   {
-    QMessageBox::warning(this, tr("QtDMM: Load workspace"), tr("%1: %2").arg(QDir::toNativeSeparators(file), error));
+    QMessageBox::warning(this, tr("QtDMM: Load bench"), tr("%1: %2").arg(QDir::toNativeSeparators(file), error));
     return false;
   }
   DeviceLibrary *lib = m_wid->devices();
@@ -2730,8 +2731,8 @@ bool MainWindow::loadWorkspaceFile(const QString &file)
     if (ctl->recorder()->state() == RecordingStore::View && ctl->recorder()->dirty())
       unsaved << ctl->deviceName();
   if (!unsaved.isEmpty()
-      && QMessageBox::question(this, tr("QtDMM: Load workspace"),
-                               tr("The workspace closes %1, its recording is not saved.").arg(unsaved.join(", ")),
+      && QMessageBox::question(this, tr("QtDMM: Load bench"),
+                               tr("The bench closes %1, its recording is not saved.").arg(unsaved.join(", ")),
                                QMessageBox::Discard | QMessageBox::Cancel, QMessageBox::Cancel) != QMessageBox::Discard)
     return false;
   // a device gone from My devices comes back from the copy, under its id:
@@ -2782,7 +2783,7 @@ bool MainWindow::loadWorkspaceFile(const QString &file)
   recentWorkspaces().add(file);
   setCurrentWorkspace(file);
   updateRecentWorkspaces();
-  QString text = tr("Workspace loaded from %1").arg(QDir::toNativeSeparators(file));
+  QString text = tr("Bench loaded from %1").arg(QDir::toNativeSeparators(file));
   if (!restored.isEmpty())
     text += "; " + tr("back in My devices: %1").arg(restored.join(", "));
   if (programsLeft)

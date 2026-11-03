@@ -106,13 +106,13 @@ int main(int argc, char **argv)
   //    here only a new analog meter for the value
   {
     QMenu *menu = menuFor(ValueRef(1, source));
-    check(!action(menu, { "&Analog meter" }) && !action(menu, { "&Poincaré plot" }) && !action(menu, { "New &analog meter" }),
+    check(!action(menu, { "&Needle meter" }) && !action(menu, { "&Poincaré plot" }) && !action(menu, { "New &needle meter" }),
           "no entries of the analog meter or the Poincaré plot, no new meter without newMeter");
     delete menu;
     QList<ValueRef> added;
     target.newMeter = [&added](const ValueRef &v) { added << v; };
     menu = menuFor(ValueRef(1, source));
-    action(menu, { "New &analog meter" })->trigger();
+    action(menu, { "New &needle meter" })->trigger();
     check(added == QList<ValueRef>{ ValueRef(1, source) }, "a new analog meter for it");
     delete menu;
     target.newMeter = nullptr;

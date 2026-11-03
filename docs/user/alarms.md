@@ -13,7 +13,7 @@ Where to set them up:
   list shows (only with more than one device connected); it starts on the
   [active device](my-devices.md#several-meters-front-panels-and-the-active-device).
 - **Alarms...** in the context menu of a device's front panel or of its
-  row under *Connected devices* in the sidebar opens that page on the device.
+  row under *Bench* in the sidebar opens that page on the device.
 - **New alarm...** in the menu of a value (the sidebar's value rows)
   starts a new alarm on that value.
 
@@ -54,10 +54,10 @@ What happens when an alarm raises; tick any of them:
   in front when more than one is open. **Acknowledge** hides it and
   acknowledges the alarms of all devices; an alarm stays raised until the
   reading is back and raises again only after that.
-- **Display and analog meter in the alarm's colour** (on by default): the
-  LCD of the device's front panel takes the colour (the analog meter while
+- **Display and needle meter in the alarm's colour** (on by default): the
+  LCD of the device's front panel takes the colour (the needle meter while
   it shows a value of that device), its digits turn light or dark, whichever
-  reads better; the analog meter's dial takes a third of it, so scale and
+  reads better; the needle meter's dial takes a third of it, so scale and
   pointer stay readable. The colour stays after Acknowledge until the
   reading is back. With several alarms raised, the one raised last gives
   the colour. The colour is never the only sign: banner, sound and the
@@ -95,7 +95,7 @@ What happens when an alarm raises; tick any of them:
 The status line reports every raise and clear too.
 
 **Coloured displays blink**, below the list of alarms, makes the display
-and the analog meter switch between the alarm's colour and their own once
+and the needle meter switch between the alarm's colour and their own once
 a second. It is off by default.
 
 An alarm judges one value of its device. For a condition on several meters -
@@ -109,7 +109,7 @@ An alarm can also say "on target" instead of "wrong". Setting the reference
 voltage of a stepper motor driver with its trimmer, say to 2.00 V:
 
 - Condition **inside**, from 1.95 V to 2.05 V; duration 0, no hysteresis.
-- Colour **green**, **Display and analog meter in the alarm's colour** on.
+- Colour **green**, **Display and needle meter in the alarm's colour** on.
 - **Banner** and the two **Mark** boxes off, **Sound** none: it would sound
   every time the reading enters the range, and every entry would be a mark.
 

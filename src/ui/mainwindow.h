@@ -383,8 +383,9 @@ protected:
   /// the limits" in it (switched on from the menu without limits yet),
   /// @p id >= 0 sets the value it judges.
   void        editLimits(MeterController *ctl, bool enable, int id = -1);
-  /// The rules of the meter @p ctl in @p menu: PASS/FAIL test, limits, alarms.
-  void        addRulesMenu(QMenu *menu, MeterController *ctl);
+  /// The rules of the meter @p ctl in a submenu of @p parent, "Limits & alarms":
+  /// PASS/FAIL test, limits, alarms.
+  void        addRulesMenu(QMenu *parent, MeterController *ctl);
   /// A new alarm on @p value, edited in AlarmDlg and given to its meter.
   void        addAlarm(const ValueRef &value);
   /// Window layout from/to the settings (Windows/... keys).

@@ -38,7 +38,7 @@ Source code and bug reports: <https://github.com/qtdmm/QtDMM>.
   - Manual start
   - Scheduled start at a specific time
   - Automatic start triggered when defined thresholds are reached
-- Analog meter display with auto-ranging scale; display, meter, graph and readings table arranged automatically or freely
+- Needle meter display with auto-ranging scale; display, meter, graph and readings table arranged automatically or freely
 - Alarms: banner, beep, popup, program or recorder start/stop when the reading leaves its range, stays there for a while, overloads or stops coming (see [Alarms](user/alarms.md))
 - Export as CSV, Excel (.xlsx) or OpenDocument (.ods) - recorder and readings table
 - Export the graph as SVG, PDF, PNG or JPEG - vector output for documents and the web

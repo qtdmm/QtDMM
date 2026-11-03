@@ -464,11 +464,6 @@
         <translation>Aviso sobre la pantalla (con Confirmar)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/alarmprefs.cpp" line="379"/>
-        <source>Display and analog meter in the alarm&apos;s colour</source>
-        <translation>Pantalla e instrumento analógico en el color de la alarma</translation>
-    </message>
-    <message>
         <location filename="../../src/ui/settings/alarmprefs.cpp" line="380"/>
         <source>While the alarm is raised, also after Acknowledge, until the reading is back. With several alarms the one raised last gives the colour.</source>
         <translation>Mientras la alarma está activa, también después de Confirmar, hasta que la lectura vuelva. Con varias alarmas da el color la última activada.</translation>
@@ -528,6 +523,11 @@
         <location filename="../../src/ui/settings/alarmprefs.cpp" line="456"/>
         <source>none</source>
         <translation>ninguno</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/settings/alarmprefs.cpp" line="379"/>
+        <source>Display and needle meter in the alarm&apos;s colour</source>
+        <translation>Pantalla e instrumento de aguja en el color de la alarma</translation>
     </message>
     <message>
         <location filename="../../src/ui/settings/alarmprefs.cpp" line="399"/>
@@ -705,8 +705,8 @@
     </message>
     <message>
         <location filename="../../src/ui/settings/alarmprefs.cpp" line="91"/>
-        <source>The display and the analog meter switch between the alarm&apos;s colour and their own once a second, for alarms that colour them.</source>
-        <translation>La pantalla y el instrumento analógico alternan una vez por segundo entre el color de la alarma y el suyo, para las alarmas que los colorean.</translation>
+        <source>The display and the needle meter switch between the alarm&apos;s colour and their own once a second, for alarms that colour them.</source>
+        <translation>La pantalla y el instrumento de aguja alternan una vez por segundo entre el color de la alarma y el suyo, para las alarmas que los colorean.</translation>
     </message>
     <message>
         <location filename="../../src/ui/settings/alarmprefs.cpp" line="161"/>
@@ -1532,16 +1532,6 @@
         <translation>&amp;Renombrar</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="116"/>
-        <source>Workspaces</source>
-        <translation>Espacios de trabajo</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="122"/>
-        <source>The workspaces used last: a double click loads one.</source>
-        <translation>Los espacios de trabajo usados por última vez: un doble clic carga uno.</translation>
-    </message>
-    <message>
         <location filename="../../src/ui/devicesidebar.cpp" line="137"/>
         <source>Services</source>
         <translation>Servicios</translation>
@@ -1552,9 +1542,19 @@
         <translation>Lo que esta ventana ofrece a otros programas por la red.</translation>
     </message>
     <message>
+        <location filename="../../src/ui/devicesidebar.cpp" line="116"/>
+        <source>Saved benches</source>
+        <translation>Puestos de medida guardados</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/devicesidebar.cpp" line="122"/>
+        <source>The benches used last: a double click loads one.</source>
+        <translation>Los puestos de medida usados por última vez: un doble clic carga uno.</translation>
+    </message>
+    <message>
         <location filename="../../src/ui/devicesidebar.cpp" line="130"/>
-        <source>Connected devices</source>
-        <translation>Dispositivos conectados</translation>
+        <source>Bench</source>
+        <translation>Puesto de medida</translation>
     </message>
     <message>
         <location filename="../../src/ui/devicesidebar.cpp" line="135"/>
@@ -2851,6 +2851,11 @@ y cierre la sesión y vuelva a entrar.</translation>
 <context>
     <name>GuiPrefs</name>
     <message>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="41"/>
+        <source>Design and symbols, the digital display, the needle meter and the sidebar.</source>
+        <translation>Diseño y símbolos, la pantalla digital, el instrumento de aguja y la barra lateral.</translation>
+    </message>
+    <message>
         <location filename="../../src/ui/settings/guiprefs.cpp" line="46"/>
         <source>Design</source>
         <translation>Diseño</translation>
@@ -2993,8 +2998,28 @@ y cierre la sesión y vuelva a entrar.</translation>
     </message>
     <message>
         <location filename="../../src/ui/settings/guiprefs.cpp" line="105"/>
-        <source>Analog meter</source>
-        <translation>Instrumento analógico</translation>
+        <source>Needle meter</source>
+        <translation>Instrumento de aguja</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="109"/>
+        <source>How the needle meter lays out its scale. &lt;b&gt;Automatic&lt;/b&gt; starts with zero at the left and switches to a centre-zero scale as soon as a clearly negative reading arrives (until the min/max memory is reset). &lt;b&gt;Zero left&lt;/b&gt; and &lt;b&gt;Centre zero&lt;/b&gt; fix one layout.</source>
+        <translation>Cómo distribuye su escala el instrumento de aguja. &lt;b&gt;Automática&lt;/b&gt; empieza con el cero a la izquierda y pasa a cero central en cuanto llega una lectura claramente negativa (hasta reiniciar la memoria mín/máx). &lt;b&gt;Cero a la izquierda&lt;/b&gt; y &lt;b&gt;Cero central&lt;/b&gt; fijan una distribución.</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="117"/>
+        <source>Colour scheme of the needle meter: a dark studio dial with a white scale, or a classic ivory dial with a black scale.</source>
+        <translation>Colores del instrumento de aguja: una esfera oscura de estudio con escala blanca, o una esfera clásica de marfil con escala negra.</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="138"/>
+        <source>How many of the benches loaded or saved last the sidebar and the menu Arrange &gt; Recent benches show. The list is shared by all windows.</source>
+        <translation>Cuántos de los puestos de medida cargados o guardados por última vez muestran la barra lateral y el menú Organizar &gt; Puestos de medida recientes. La lista es común a todas las ventanas.</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="140"/>
+        <source>Recent benc&amp;hes:</source>
+        <translation>Puestos de medida &amp;recientes:</translation>
     </message>
     <message>
         <location filename="../../src/ui/settings/guiprefs.cpp" line="108"/>
@@ -3012,11 +3037,6 @@ y cierre la sesión y vuelva a entrar.</translation>
         <translation>Cero central</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="109"/>
-        <source>How the analog meter lays out its scale. &lt;b&gt;Automatic&lt;/b&gt; starts with zero at the left and switches to a centre-zero scale as soon as a clearly negative reading arrives (until the min/max memory is reset). &lt;b&gt;Zero left&lt;/b&gt; and &lt;b&gt;Centre zero&lt;/b&gt; fix one layout.</source>
-        <translation>Cómo distribuye su escala el instrumento analógico. &lt;b&gt;Automática&lt;/b&gt; empieza con el cero a la izquierda y pasa a cero central en cuanto llega una lectura claramente negativa (hasta reiniciar la memoria mín/máx). &lt;b&gt;Cero a la izquierda&lt;/b&gt; y &lt;b&gt;Cero central&lt;/b&gt; fijan una distribución.</translation>
-    </message>
-    <message>
         <location filename="../../src/ui/settings/guiprefs.cpp" line="113"/>
         <source>&amp;Scale:</source>
         <translation>&amp;Escala:</translation>
@@ -3030,11 +3050,6 @@ y cierre la sesión y vuelva a entrar.</translation>
         <location filename="../../src/ui/settings/guiprefs.cpp" line="116"/>
         <source>Classic ivory</source>
         <translation>Marfil clásico</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="117"/>
-        <source>Colour scheme of the analog meter: a dark studio dial with a white scale, or a classic ivory dial with a black scale.</source>
-        <translation>Colores del instrumento analógico: una esfera oscura de estudio con escala blanca, o una esfera clásica de marfil con escala negra.</translation>
     </message>
     <message>
         <location filename="../../src/ui/settings/guiprefs.cpp" line="119"/>
@@ -3072,24 +3087,9 @@ y cierre la sesión y vuelva a entrar.</translation>
         <translation>ninguno</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="138"/>
-        <source>How many of the workspaces loaded or saved last the sidebar and the menu Arrange &gt; Recent workspaces show. The list is shared by all windows.</source>
-        <translation>Cuántos de los espacios de trabajo cargados o guardados por última vez muestran la barra lateral y el menú Organizar &gt; Espacios de trabajo recientes. La lista es común a todas las ventanas.</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="140"/>
-        <source>Recent worksp&amp;aces:</source>
-        <translation>Espacios de trabajo &amp;recientes:</translation>
-    </message>
-    <message>
         <location filename="../../src/ui/settings/guiprefs.cpp" line="40"/>
         <source>Appearance</source>
         <translation>Apariencia</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="41"/>
-        <source>Design and symbols, the digital display, the analog meter and the sidebar.</source>
-        <translation>Diseño y símbolos, la pantalla digital, el instrumento analógico y la barra lateral.</translation>
     </message>
     <message>
         <location filename="../../src/ui/settings/guiprefs.cpp" line="59"/>
@@ -3549,7 +3549,7 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
     <name>MainWindow</name>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="320"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="1870"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1871"/>
         <source>Graph</source>
         <translation>Gráfica</translation>
     </message>
@@ -3559,24 +3559,9 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
         <translation>&amp;Pantalla</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="314"/>
-        <source>Analog meter</source>
-        <translation>Instrumento analógico</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="368"/>
-        <source>Analog &amp;meter</source>
-        <translation>Instrumento &amp;analógico</translation>
-    </message>
-    <message>
         <location filename="../../src/ui/mainwindow.cpp" line="327"/>
         <source>Readings</source>
         <translation>Lecturas</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="369"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Analog meter&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Show the reading on a moving-coil style instrument.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Instrumento analógico&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Muestra la lectura en un instrumento de bobina móvil.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="371"/>
@@ -3705,24 +3690,9 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
         <translation>Organi&amp;zar</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="903"/>
-        <source>L&amp;oad workspace...</source>
-        <translation>&amp;Cargar espacio de trabajo...</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="915"/>
-        <source>&amp;Save workspace...</source>
-        <translation>&amp;Guardar espacio de trabajo...</translation>
-    </message>
-    <message>
         <location filename="../../src/ui/mainwindow.cpp" line="923"/>
         <source>Save layout on e&amp;xit</source>
         <translation>Guardar disposición al &amp;salir</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="926"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Save layout on exit&lt;/span&gt;&lt;/p&gt;&lt;p&gt;On: QtDMM starts with the window layout it had when it was closed. Off: it starts with the layout last saved while this was on, or the workspace last loaded.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Guardar disposición al salir&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Activado: QtDMM se inicia con la disposición de ventanas que tenía al cerrarse. Desactivado: se inicia con la última disposición guardada mientras estaba activado, o con el último espacio de trabajo cargado.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="932"/>
@@ -3770,12 +3740,12 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
         <translation>&lt;h2&gt;QtDMM %1&lt;/h2&gt;&lt;p&gt;Lectura y registrador de transitorios para multímetros digitales.&lt;/p&gt;&lt;p&gt;Construido con &lt;b&gt;Qt&lt;/b&gt; %2. Bajo licencia &lt;b&gt;GNU GPL 3 o posterior&lt;/b&gt; (versiones anteriores a 0.9.0 bajo GPL 2 o posterior).&lt;/p&gt;&lt;p&gt;Desde 0.9.5: tuxmaster y colaboradores, véase el archivo AUTHORS.&lt;br&gt;0.9.3 y anteriores: &amp;copy; 2001-2016 M. Toussaint &amp;lt;&lt;a href=&apos;mailto:qtdmm@mtoussaint.de&apos;&gt;qtdmm@mtoussaint.de&lt;/a&gt;&amp;gt;&lt;/p&gt;&lt;p&gt;Sitio web: &lt;a href=&apos;https://qtdmm.de&apos;&gt;qtdmm.de&lt;/a&gt; &amp;middot; Contacto: &lt;a href=&apos;mailto:hello@qtdmm.de&apos;&gt;hello@qtdmm.de&lt;/a&gt;&lt;br&gt;Código fuente e informes de errores: &lt;a href=&apos;https://github.com/qtdmm/QtDMM&apos;&gt;github.com/qtdmm/QtDMM&lt;/a&gt;&lt;br&gt;Los símbolos proceden de los temas de iconos &lt;b&gt;Oxygen&lt;/b&gt; y &lt;b&gt;Breeze&lt;/b&gt; de la comunidad KDE (LGPL 3); los símbolos propios de QtDMM están dibujados en su estilo.&lt;/p&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2325"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2326"/>
         <source>Show the toolbar</source>
         <translation>Mostrar la barra de herramientas</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2325"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2326"/>
         <source>Hide the toolbar</source>
         <translation>Ocultar la barra de herramientas</translation>
     </message>
@@ -3804,30 +3774,20 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="692"/>
         <location filename="../../src/ui/mainwindow.cpp" line="802"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="2085"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="2716"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2086"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2717"/>
         <source>%1: %2</source>
         <translation>%1: %2</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="376"/>
-        <source>Add ana&amp;log meter</source>
-        <translation>Añadir instr&amp;umento analógico</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="379"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Add analog meter&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Another analog meter window: pick its value first, later with Sources in its window menu; closing it removes it.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Añadir instrumento analógico&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Otra ventana con instrumento analógico: primero se elige su valor, después con Orígenes en su menú de ventana; al cerrarla se elimina.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <source>&amp;Add needle meter</source>
+        <translation>Añadir instr&amp;umento de aguja</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="390"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Add Poincaré plot&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Another Poincaré plot window: pick its value first, later with Sources in its window menu; closing it removes it.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Añadir gráfico de Poincaré&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Otra ventana con diagrama de Poincaré: primero se elige su valor, después con Orígenes en su menú de ventana; al cerrarla se elimina.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="549"/>
-        <source>Analog meter %1</source>
-        <translation>Instrumento analógico %1</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="559"/>
@@ -3843,16 +3803,6 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
         <location filename="../../src/ui/mainwindow.cpp" line="752"/>
         <source>Closing it discards its recording, which is not saved.</source>
         <translation>Cerrarlo descarta su grabación, que no está guardada.</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="905"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Load workspace&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Takes a set-up saved with &lt;i&gt;Save workspace&lt;/i&gt;: the devices connected (others close), which windows are shown with which values, the arrangement, title bars, toolbar, design and the size of the main window. A device missing in My devices is added back from the file.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Cargar espacio de trabajo&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Toma un montaje guardado con &lt;i&gt;Guardar espacio de trabajo&lt;/i&gt;: los aparatos conectados (los demás se cierran), qué ventanas se muestran con qué valores, la disposición, las barras de título, la barra de herramientas, el diseño y el tamaño de la ventana principal. Un aparato que falta en Mis aparatos se vuelve a crear desde el archivo.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="917"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Save workspace&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Writes the set-up to a file, under a name and a description, with a picture of the windows: the devices connected (a copy of their entries in My devices), which windows are shown with which values, the arrangement, title bars, toolbar, design and the size of the main window.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Guardar espacio de trabajo&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Escribe el montaje en un archivo, con un nombre, una descripción y una imagen de las ventanas: los aparatos conectados (una copia de sus entradas en Mis aparatos), qué ventanas se muestran con qué valores, la disposición, las barras de título, la barra de herramientas, el diseño y el tamaño de la ventana principal.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="948"/>
@@ -4000,102 +3950,92 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
         <translation>Como en los a&amp;justes</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1749"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1750"/>
         <source>&amp;Alarms...</source>
         <translation>&amp;Alarmas...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1956"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1957"/>
         <source>A front panel shows the values of its own device</source>
         <translation>Un panel frontal muestra los valores de su propio dispositivo</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1971"/>
-        <source>New &amp;analog meter</source>
-        <translation>Nuevo instrumento &amp;analógico</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1972"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1973"/>
         <source>New &amp;Poincaré plot</source>
         <translation>Nuevo diagrama de &amp;Poincaré</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1973"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1974"/>
         <source>In the &amp;graph</source>
         <translation>En la &amp;gráfica</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2096"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2097"/>
         <source>Value %1</source>
         <translation>Valor %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2128"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2129"/>
         <source>disconnected</source>
         <translation>desconectado</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2219"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2220"/>
         <source>The changes connect it anew, which discards its recording, which is not saved.</source>
         <translation>Los cambios lo vuelven a conectar, lo que descarta su grabación, que no está guardada.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2221"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2222"/>
         <source>%1: the changes take effect when it is connected next</source>
         <translation>%1: los cambios se aplican en la próxima conexión</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2254"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2255"/>
         <source>Its port is in use by %1.</source>
         <translation>Su puerto lo usa %1.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2255"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2256"/>
         <source>Not connected. Connect takes it out of My devices.</source>
         <translation>No conectado. Conectar lo saca de Mis dispositivos.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2297"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2298"/>
         <source>%1 is connected already</source>
         <translation>%1 ya está conectado</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2298"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2299"/>
         <source>%1: its port is in use by %2</source>
         <translation>%1: su puerto lo usa %2</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2304"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2305"/>
         <source>%1 connected</source>
         <translation>%1 conectado</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2734"/>
-        <source>The workspace closes %1, its recording is not saved.</source>
-        <translation>El espacio de trabajo cierra %1, su grabación no está guardada.</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2787"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2788"/>
         <source>back in My devices: %1</source>
         <translation>de nuevo en Mis aparatos: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2789"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2790"/>
         <source>the programs of their alarms were left out, set them again in Alarms...</source>
         <translation>los programas de sus alarmas se han omitido, vuelva a definirlos en Alarmas...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2791"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2792"/>
         <source>%1 without its key: enter it in the device settings</source>
         <translation>%1 sin su clave: introdúzcala en los ajustes del aparato</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3099"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3100"/>
         <source>Active: %1</source>
         <translation>Activo: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3100"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3101"/>
         <source>Connect, Reset and the device settings act on this device; a click on another front panel makes that one active</source>
         <translation>Conectar, Restablecer y los ajustes del dispositivo actúan sobre este dispositivo; un clic en otro panel frontal lo hace activo</translation>
     </message>
@@ -4109,11 +4049,6 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
         <location filename="../../src/ui/mainwindow.cpp" line="730"/>
         <source>Devices: show or hide the sidebar with My devices and the open devices</source>
         <translation>Dispositivos: mostrar u ocultar la barra lateral con Mis dispositivos y los dispositivos abiertos</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="912"/>
-        <source>&amp;Recent workspaces</source>
-        <translation>Espacios de trabajo &amp;recientes</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="997"/>
@@ -4161,12 +4096,12 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
         <translation>&amp;Personalizado (de la configuración)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1729"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1730"/>
         <source>PASS/FAIL &amp;test</source>
         <translation>&amp;Prueba PASS/FAIL</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1744"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1745"/>
         <source>L&amp;imits...</source>
         <translation>Lí&amp;mites...</translation>
     </message>
@@ -4176,9 +4111,64 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
         <translation>&amp;Estilo del instrumento</translation>
     </message>
     <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="314"/>
+        <source>Needle meter</source>
+        <translation>Instrumento de aguja</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="368"/>
+        <source>Needle &amp;meter</source>
+        <translation>Instrumento de &amp;aguja</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="369"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Needle meter&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Show the reading on a moving-coil style instrument.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Instrumento de aguja&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Muestra la lectura en un instrumento de bobina móvil.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="379"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Add needle meter&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Another needle meter window: pick its value first, later with Sources in its window menu; closing it removes it.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Añadir instrumento de aguja&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Otra ventana con instrumento de aguja: primero se elige su valor, después con Orígenes en su menú de ventana; al cerrarla se elimina.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
         <location filename="../../src/ui/mainwindow.cpp" line="387"/>
         <source>Add Po&amp;incaré plot</source>
         <translation>Añadir grá&amp;fico de Poincaré</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="549"/>
+        <source>Needle meter %1</source>
+        <translation>Instrumento de aguja %1</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="903"/>
+        <source>L&amp;oad bench...</source>
+        <translation>&amp;Cargar puesto de medida...</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="905"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Load bench&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Takes a set-up saved with &lt;i&gt;Save bench&lt;/i&gt;: the devices connected (others close), which windows are shown with which values, the arrangement, title bars, toolbar, design and the size of the main window. A device missing in My devices is added back from the file.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Cargar puesto de medida&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Toma un montaje guardado con &lt;i&gt;Guardar puesto de medida&lt;/i&gt;: los aparatos conectados (los demás se cierran), qué ventanas se muestran con qué valores, la disposición, las barras de título, la barra de herramientas, el diseño y el tamaño de la ventana principal. Un aparato que falta en Mis aparatos se vuelve a crear desde el archivo.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="912"/>
+        <source>&amp;Recent benches</source>
+        <translation>Puestos de medida &amp;recientes</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="915"/>
+        <source>&amp;Save bench...</source>
+        <translation>&amp;Guardar puesto de medida...</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="917"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Save bench&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Writes the set-up to a file, under a name and a description, with a picture of the windows: the devices connected (a copy of their entries in My devices), which windows are shown with which values, the arrangement, title bars, toolbar, design and the size of the main window.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Guardar puesto de medida&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Escribe el montaje en un archivo, con un nombre, una descripción y una imagen de las ventanas: los aparatos conectados (una copia de sus entradas en Mis aparatos), qué ventanas se muestran con qué valores, la disposición, las barras de título, la barra de herramientas, el diseño y el tamaño de la ventana principal.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="926"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Save layout on exit&lt;/span&gt;&lt;/p&gt;&lt;p&gt;On: QtDMM starts with the window layout it had when it was closed. Off: it starts with the layout last saved while this was on, or the bench last loaded.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Guardar disposición al salir&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Activado: QtDMM se inicia con la disposición de ventanas que tenía al cerrarse. Desactivado: se inicia con la última disposición guardada mientras estaba activado, o con el último puesto de medida cargado.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="1697"/>
@@ -4191,82 +4181,92 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
         <translation>Marfil &amp;clásico</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1813"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1729"/>
+        <source>Limits &amp;&amp; &amp;alarms</source>
+        <translation>Límites y &amp;alarmas</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="1814"/>
         <source>off</source>
         <translation>apagado</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1813"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1814"/>
         <source>failed</source>
         <translation>fallo</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1814"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1815"/>
         <source>1 client</source>
         <translation>1 cliente</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1814"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1815"/>
         <source>%1 clients</source>
         <translation>%1 clientes</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1816"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1817"/>
         <source>%1 could not start: %2. Double-click for its settings.</source>
         <translation>%1 no pudo arrancar: %2. Doble clic para sus ajustes.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1818"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1819"/>
         <source>%1 is off. Double-click for its settings.</source>
         <translation>%1 está apagado. Doble clic para sus ajustes.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1820"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1821"/>
         <source>HiSLIP for VISA (NI-VISA, LabVIEW, PyVISA): %1, %2 connected.</source>
         <translation>HiSLIP para VISA (NI-VISA, LabVIEW, PyVISA): %1, %2 conectado(s).</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1822"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1823"/>
         <source>VXI-11 for VISA and lxi-tools: %1, %2 connected.</source>
         <translation>VXI-11 para VISA y lxi-tools: %1, %2 conectado(s).</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1824"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1825"/>
         <source>SCPI server (raw socket) on %1, %2 connected.</source>
         <translation>Servidor SCPI (socket raw) en %1, %2 conectado(s).</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1874"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1875"/>
         <source>Readings table</source>
         <translation>Tabla de lecturas</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2262"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1972"/>
+        <source>New &amp;needle meter</source>
+        <translation>Nuevo instrumento de &amp;aguja</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="2263"/>
         <source>Not connected.</source>
         <translation>Sin conectar.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2263"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2264"/>
         <source>Connecting ...</source>
         <translation>Conectando …</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2264"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2265"/>
         <source>Connected, but the meter sends nothing.</source>
         <translation>Conectado, pero el medidor no envía nada.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2265"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2266"/>
         <source>The connection went away; QtDMM tries again.</source>
         <translation>Se perdió la conexión; QtDMM lo vuelve a intentar.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2267"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2268"/>
         <source>Connected, readings are coming in.</source>
         <translation>Conectado, llegan lecturas.</translation>
     </message>
     <message numerus="yes">
-        <location filename="../../src/ui/mainwindow.cpp" line="2268"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2269"/>
         <source>Connected, no reading for %n s.</source>
         <translation>
             <numerusform>Conectado, sin lectura desde hace %n s.</numerusform>
@@ -4274,7 +4274,7 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
         </translation>
     </message>
     <message numerus="yes">
-        <location filename="../../src/ui/mainwindow.cpp" line="2273"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2274"/>
         <source>Last reading %n s ago.</source>
         <translation>
             <numerusform>Última lectura hace %n s.</numerusform>
@@ -4282,54 +4282,59 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
         </translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2275"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2276"/>
         <source>The meter&apos;s battery is low.</source>
         <translation>La batería del medidor está baja.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2663"/>
-        <source>Save workspace</source>
-        <translation>Guardar espacio de trabajo</translation>
-    </message>
-    <message>
         <location filename="../../src/ui/mainwindow.cpp" line="2664"/>
+        <source>Save bench</source>
+        <translation>Guardar puesto de medida</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="2665"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2705"/>
+        <source>QtDMM bench (*.%1)</source>
+        <translation>Puesto de medida de QtDMM (*.%1)</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="2689"/>
+        <source>QtDMM: Save bench</source>
+        <translation>QtDMM: Guardar puesto de medida</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="2696"/>
+        <source>Bench saved to %1</source>
+        <translation>Puesto de medida guardado en %1</translation>
+    </message>
+    <message>
         <location filename="../../src/ui/mainwindow.cpp" line="2704"/>
-        <source>QtDMM workspace (*.%1)</source>
-        <translation>Espacio de trabajo de QtDMM (*.%1)</translation>
+        <source>Load bench</source>
+        <translation>Cargar puesto de medida</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2688"/>
-        <source>QtDMM: Save workspace</source>
-        <translation>QtDMM: Guardar espacio de trabajo</translation>
+        <location filename="../../src/ui/mainwindow.cpp" line="2717"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2734"/>
+        <source>QtDMM: Load bench</source>
+        <translation>QtDMM: Cargar puesto de medida</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2688"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2735"/>
+        <source>The bench closes %1, its recording is not saved.</source>
+        <translation>El puesto de medida cierra %1, su grabación no está guardada.</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="2786"/>
+        <source>Bench loaded from %1</source>
+        <translation>Puesto de medida cargado desde %1</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="2689"/>
         <source>Could not write %1.</source>
         <translation>No se pudo escribir %1.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2695"/>
-        <source>Workspace saved to %1</source>
-        <translation>Espacio de trabajo guardado en %1</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2703"/>
-        <source>Load workspace</source>
-        <translation>Cargar espacio de trabajo</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2716"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="2733"/>
-        <source>QtDMM: Load workspace</source>
-        <translation>QtDMM: Cargar espacio de trabajo</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2785"/>
-        <source>Workspace loaded from %1</source>
-        <translation>Espacio de trabajo cargado desde %1</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2849"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2850"/>
         <source>&amp;Clear list</source>
         <translation>&amp;Vaciar lista</translation>
     </message>
@@ -6186,6 +6191,11 @@ Después cierre la sesión y vuelva a iniciarla para que la pertenencia al grupo
         <translation>Valor &amp;principal:</translation>
     </message>
     <message>
+        <location filename="../../src/ui/forms/uidevicesettings.ui" line="807"/>
+        <source>Which of the device&apos;s values the display, the needle meter and the graph show.</source>
+        <translation>Qué valor del dispositivo muestran la pantalla, el instrumento de aguja y el gráfico.</translation>
+    </message>
+    <message>
         <location filename="../../src/ui/forms/uidevicesettings.ui" line="814"/>
         <source>Se&amp;cond value:</source>
         <translation>Valor se&amp;cundario:</translation>
@@ -6359,11 +6369,6 @@ Después cierre la sesión y vuelva a iniciarla para que la pertenencia al grupo
         <location filename="../../src/ui/forms/uidevicesettings.ui" line="607"/>
         <source>Here you may select the Communication type. If you have a not &quot;officially&quot; supported multimeter, just try out the existing protocols. If you are lucky it may work. If you find working settings, send the to me.</source>
         <translation>Seleccione aquí el tipo de comunicación. Si su multímetro no está «oficialmente» soportado, pruebe los protocolos existentes; con suerte alguno funcionará. Si encuentra ajustes que funcionan, comuníquelos.</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/forms/uidevicesettings.ui" line="807"/>
-        <source>Which of the device&apos;s values the display, the analog meter and the graph show.</source>
-        <translation>Qué valor del dispositivo muestran la pantalla, el instrumento analógico y el gráfico.</translation>
     </message>
     <message>
         <location filename="../../src/ui/forms/uidevicesettings.ui" line="831"/>
@@ -6974,8 +6979,8 @@ Después cierre la sesión y vuelva a iniciarla para que la pertenencia al grupo
     </message>
     <message>
         <location filename="../../src/ui/valuemenu.cpp" line="75"/>
-        <source>New &amp;analog meter</source>
-        <translation>Nuevo instrumento &amp;analógico</translation>
+        <source>New &amp;needle meter</source>
+        <translation>Nuevo instrumento de &amp;aguja</translation>
     </message>
     <message>
         <location filename="../../src/ui/valuemenu.cpp" line="78"/>
@@ -7173,8 +7178,8 @@ Después cierre la sesión y vuelva a iniciarla para que la pertenencia al grupo
     <name>WorkspaceDlg</name>
     <message>
         <location filename="../../src/ui/dialogs/workspacedlg.cpp" line="16"/>
-        <source>Save workspace</source>
-        <translation>Guardar espacio de trabajo</translation>
+        <source>Save bench</source>
+        <translation>Guardar puesto de medida</translation>
     </message>
     <message>
         <location filename="../../src/ui/dialogs/workspacedlg.cpp" line="23"/>
@@ -7206,18 +7211,18 @@ Después cierre la sesión y vuelva a iniciarla para que la pertenencia al grupo
     </message>
     <message>
         <location filename="../../src/core/workspacefile.cpp" line="186"/>
-        <source>This is no QtDMM workspace: %1.</source>
-        <translation>No es un espacio de trabajo de QtDMM: %1.</translation>
+        <source>This is no QtDMM bench file: %1.</source>
+        <translation>No es un archivo de puesto de medida de QtDMM: %1.</translation>
     </message>
     <message>
         <location filename="../../src/core/workspacefile.cpp" line="187"/>
-        <source>This is no QtDMM workspace.</source>
-        <translation>No es un espacio de trabajo de QtDMM.</translation>
+        <source>This is no QtDMM bench file.</source>
+        <translation>No es un archivo de puesto de medida de QtDMM.</translation>
     </message>
     <message>
         <location filename="../../src/core/workspacefile.cpp" line="193"/>
-        <source>This workspace needs a newer QtDMM (workspace format %1).</source>
-        <translation>Este espacio de trabajo necesita un QtDMM más nuevo (formato %1).</translation>
+        <source>This bench needs a newer QtDMM (bench file format %1).</source>
+        <translation>Este puesto de medida necesita un QtDMM más nuevo (formato de archivo %1).</translation>
     </message>
     <message>
         <location filename="../../src/core/workspacefile.cpp" line="341"/>
