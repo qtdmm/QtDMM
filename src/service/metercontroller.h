@@ -78,7 +78,8 @@ public:
   /// The meter's display count (DMMInfo::display), for the range and the
   /// bar graph of the readings.
   void        setDisplayCounts(int counts) { m_adapter.setCounts(counts); }
-  /// How many values the meter has (DMMInfo::valueCount()): the SCPI channels.
+  /// How many values the meter has (MeterSetup::valueCount: those of the
+  /// model, the Simulated meter's chosen ones): the SCPI channels.
   void        setValueCount(int count);
   /// This instance's id (--config-id), part of the mDNS name.
   void        setInstanceId(const QString &id);
@@ -97,7 +98,7 @@ public:
   /// meter's own name of it); empty before the first.
   QString     valueName(int id) const;
   /// The values seen since the meter was connected: the highest id + 1, at
-  /// least those the meter has (DMMInfo::valueCount()).
+  /// least those the meter has (setValueCount(), else DMMInfo::valueCount()).
   int         valueCount() const;
   /// The entry of My devices setDevice() gave, empty for none.
   QString     deviceId() const { return m_deviceId; }
@@ -278,6 +279,7 @@ private:
 
   MinMaxMemory m_minMax;   ///< min/max of value m_minMaxId, SI, per port
   int         m_minMaxId = 0;
+  int         m_valueCount = 0;  ///< setValueCount(), 0 before
   std::array<MinMaxMemory, kMaxValues> m_valueMinMax;   ///< per value id, valueMinMax()
   QString     m_lastUnit;
   Reading     m_lastMain;   ///< lastReading()

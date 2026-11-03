@@ -48,6 +48,19 @@ int main(int argc, char **argv)
   window.connectMeter(false);
   auto ask = [&](const char *line) { return QString::fromLatin1(session.host()->scpi()->process(line)).trimmed(); };
 
+  // the Simulated meter's values are those chosen, before the first reading
+  // (the front panel's LCD takes them; the model has one)
+  check(window.valueCount() == 1, QString("one value, got %1").arg(window.valueCount()));
+  const QString three = lib.add("Three values", {{"DMM/model", "QtDMM Simulated meter"}, {"Port settings/device", "calc V/DC 1"},
+                                                 {"DMM/virtual-values", 3}});
+  if (MeterController *tri = session.open(three))
+  {
+    check(tri->valueCount() == 3, QString("three chosen values, got %1").arg(tri->valueCount()));
+    session.close(three);
+  }
+  else
+    check(false, "open the meter of three values");
+
   // 1. open from My devices: connected, readings with its source
   QString error;
   MeterController *ctl = session.open(sim, &error);
