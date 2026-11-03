@@ -134,7 +134,11 @@ The LCD-style display mirrors the meter: value, unit, the annunciators -
 AUTO at the left (lit while the meter ranges by itself, off in a manual
 range), AC, DC, diode, continuity and HOLD (an H in a square) at the right;
 for AC+DC a "+" lights between AC and DC. Unlit ones stay faintly visible,
-like on the meter itself. Then the bar graph and, below the value, the minimum
+like on the meter itself. Only those a meter of its kind has are there: a
+thermometer has HOLD, MAX and MIN, a luxmeter or sound level meter AUTO as
+well, an anemometer or air quality meter AVG as well, a Victron device none;
+one a reading lights shows anyway. Then the bar graph (multimeters and clamp
+meters only; the others leave its room empty) and, below the value, the minimum
 and maximum since the last **Reset** (F4), each as the meter showed it
 ("MIN 221.18 mV" stays so when the meter has moved on to V). A range change
 (mV to V, kΩ to MΩ) keeps them; they start afresh when the meter switches to

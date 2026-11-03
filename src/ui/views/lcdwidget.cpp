@@ -171,6 +171,36 @@ void LcdWidget::setManu(bool on)
   m_auto = !on;
 }
 
+LcdWidget::Look LcdWidget::lookOf(DeviceType::Type type)
+{
+  switch (type)
+  {
+    case DeviceType::Thermometer:
+      return { false, AnnHold | AnnMax | AnnMin };
+    case DeviceType::Luxmeter:
+    case DeviceType::SoundLevel:
+      return { false, AnnAuto | AnnHold | AnnMax | AnnMin };
+    case DeviceType::Anemometer:
+    case DeviceType::Environment:
+      return { false, AnnHold | AnnMax | AnnMin | AnnAvg };
+    case DeviceType::BatteryMonitor:
+    case DeviceType::SolarCharger:
+    case DeviceType::Inverter:
+      return { false, 0 };
+    default:   // the multimeters, the Simulated meter: all of it
+      return {};
+  }
+}
+
+void LcdWidget::setLook(const Look &look)
+{
+  if (look.bar == m_look.bar && look.annunciators == m_look.annunciators)
+    return;
+  m_look = look;
+  m_staticDirty = true;
+  update();
+}
+
 void LcdWidget::setDisplayMode(int counts, bool minMax, bool bar, int numValues)
 {
   m_counts = counts > 0 ? counts : 4000;
@@ -719,38 +749,42 @@ void LcdWidget::drawFlags(QPainter &p, const Layout &l) const
   const int main = idAt(0);
   const quint32 flags = m_flags[main];
 
-  struct Flag { QString text; bool on; };
+  struct Flag { QString text; bool on; quint16 has; };
   const QStringList &lt = leftFlags();
   const QStringList &rt = rightFlags();
   const bool ac = flags & SampleFlag::AC, dc = flags & SampleFlag::DC;
   const bool peak = flags & SampleFlag::Peak;
-  const Flag left[] = {
-    { lt[0], m_auto },
-    { lt[1], peak && (flags & SampleFlag::Max) },
-    { lt[2], bool(flags & SampleFlag::Max) },
-    { lt[3], peak && (flags & SampleFlag::Min) },
-    { lt[4], bool(flags & SampleFlag::Min) },
-    { lt[5], bool(flags & SampleFlag::Avg) },
+  const Flag all[] = {
+    { lt[0], m_auto, AnnAuto },
+    { lt[1], peak && (flags & SampleFlag::Max), AnnPeak },
+    { lt[2], bool(flags & SampleFlag::Max), AnnMax },
+    { lt[3], peak && (flags & SampleFlag::Min), AnnPeak },
+    { lt[4], bool(flags & SampleFlag::Min), AnnMin },
+    { lt[5], bool(flags & SampleFlag::Avg), AnnAvg },
+    { rt[0], ac, AnnAc },
+    { rt[1], ac && dc, AnnAc | AnnDc },
+    { rt[2], dc, AnnDc },
+    { rt[3], bool(flags & SampleFlag::Diode), AnnDiode },
+    { rt[4], m_quantity[main] == Quantity::Continuity, AnnContinuity },
+    { rt[5], m_hold, AnnHold },
   };
-  const Flag right[] = {
-    { rt[0], ac },
-    { rt[1], ac && dc },
-    { rt[2], dc },
-    { rt[3], bool(flags & SampleFlag::Diode) },
-    { rt[4], m_quantity[main] == Quantity::Continuity },
-    { rt[5], m_hold },
-  };
+  // the ones the meter's display has, and any a reading lights; they close
+  // up within their group
+  QList<Flag> left, right;
+  for (int i = 0; i < int(std::size(all)); ++i)
+    if (all[i].on || (m_look.annunciators & all[i].has) == all[i].has)
+      (i < int(lt.size()) ? left : right) << all[i];
 
   double x = l.flags.left();
   auto width = [&](const QString &t) { return flagWidth(t, fm, fontPx); };
-  for (int i = 0; i < int(sizeof(left) / sizeof(left[0])); ++i)
+  for (int i = 0; i < int(left.size()); ++i)
   {
     const double w = width(left[i].text);
     drawAnnunciator(p, QRectF(x, l.flags.top(), w + 2, l.flags.height()), left[i].text, left[i].on, fontPx);
     x += w + flagGap(left[i].text, QString(), gap);
   }
   double xr = l.flags.right();
-  for (int i = int(sizeof(right) / sizeof(right[0])) - 1; i >= 0; --i)
+  for (int i = int(right.size()) - 1; i >= 0; --i)
   {
     const double w = width(right[i].text);
     xr -= w;
@@ -901,7 +935,8 @@ void LcdWidget::drawExtra(QPainter &p, const Layout &l) const
 // digits over the display count, in blocks with a tick scale above.
 void LcdWidget::drawBar(QPainter &p, const Layout &l, bool staticPart) const
 {
-  if (!m_showBar)
+  // without a bar on the meter its room stays empty
+  if (!m_showBar || !m_look.bar)
     return;
 
   const int digits = int(QString::number(m_counts).size());

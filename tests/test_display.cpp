@@ -128,6 +128,33 @@ int main(int argc, char **argv)
             .arg(two.x()).arg(two.width()).arg(three.x()).arg(three.width()));
   }
 
+  // --- 1d2. the display after the kind of meter: a thermometer has no
+  //          bar and no AC/DC, a Victron no annunciators; the room stays,
+  //          an annunciator a reading lights still shows ---
+  {
+    check(LcdWidget::lookOf(DeviceType::HandheldDmm).bar && LcdWidget::lookOf(DeviceType::Virtual).annunciators == LcdWidget::AnnAll,
+          "LCD look: multimeters and the Simulated meter have all of it");
+    const LcdWidget::Look thermo = LcdWidget::lookOf(DeviceType::Thermometer);
+    check(!thermo.bar && (thermo.annunciators & LcdWidget::AnnHold) && !(thermo.annunciators & LcdWidget::AnnAc),
+          "LCD look: a thermometer has HOLD, no bar, no AC");
+    check(LcdWidget::lookOf(DeviceType::BatteryMonitor).annunciators == 0, "LCD look: a Victron has no annunciators");
+    LcdWidget a, b;
+    for (LcdWidget *d : { &a, &b })
+    {
+      d->setDisplayMode(6000, true, true, 1);
+      d->setUnit(0, "V");
+      d->setValue(0, "1.234");
+    }
+    b.setLook(LcdWidget::lookOf(DeviceType::BatteryMonitor));
+    a.resize(520, 200);
+    b.resize(520, 200);
+    check(a.layout().main == b.layout().main && a.layout().bar == b.layout().bar, "LCD look: the layout stays");
+    check(render(a, QSize(520, 200)) != render(b, QSize(520, 200)), "LCD look: no bar, no annunciators drawn");
+    const QImage off = render(b, QSize(520, 200));
+    b.setHold(true);
+    check(render(b, QSize(520, 200)) != off, "LCD look: HOLD lit by a reading shows anyway");
+  }
+
   // --- 1e. a value with more digits than the display count (a Victron
   //         current "-10.967" at 6000 counts) widens the field: the same
   //         picture as with a count of five digits, the unit after the number
