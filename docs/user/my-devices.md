@@ -39,7 +39,8 @@ Below My devices the node **Bench** lists the meters this
 QtDMM reads with their current reading, in the order they were connected.
 The active device is in bold, one disconnected is grey. A double click or
 *Show front panel* in the context menu brings its front panel back;
-*Connect*/*Disconnect* there connects or disconnects it, *Close* (or
+*Info and settings...* there opens its entry of My devices (all its values
+for a look), *Connect*/*Disconnect* connects or disconnects it, *Close* (or
 dragging it back onto My devices) puts it back into the cupboard.
 
 ### Several meters: front panels and the active device
@@ -71,13 +72,17 @@ a double click loads one (see
 For a meter with more than one value (a second display, the CO2,
 temperature and humidity of the TFA AirCO2ntrol, the voltage, current and
 state of charge of a Victron) each device has a row for each
-value below it in **Bench**: its number, its name and its reading.
+value below it in **Bench**: its name and its reading, in a column of its
+own width so the names do not move with it (the device's own row has the
+reading only while its values are folded).
 A device with one value has the same menu in its own row, under **Value**. The name is
 the one the meter gives the value (a Victron's *Battery voltage*), else
-unit and coupling (*V DC*); the tooltip has the full one. A
-coloured dot shows that the graph draws it, in the colour of its curve, so
-the rows are the graph's legend as well; a device with one value has that dot
-in its own row, after the green one. This is where you say which window
+the name in the graph's legend (*Voltage DC*); the tooltip has its number
+and the full name. At the end of the row, marks show where the value is
+shown: a stroke in its curve's colour while the graph draws it (the rows are
+the graph's legend as well), then the symbols of its front panel, of each
+needle meter and Poincaré plot with it. A click on the marks frames those
+windows for a moment. A device with one value has them in its own row. This is where you say which window
 shows which value - right-click a value:
 
 - **LCD** ▸ **Main value**, **Secondary value left**, **Secondary value

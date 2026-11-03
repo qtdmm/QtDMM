@@ -15,6 +15,7 @@
 #include <QMimeData>
 #include <QMessageBox>
 #include <QPainter>
+#include <QStyledItemDelegate>
 #include <QTimer>
 #include <QUrl>
 
@@ -36,6 +37,12 @@ constexpr int kDotSize = 12;
 constexpr int kSymbolSize = 20;
 constexpr int kGap = 4;
 const QSize kIconSize(kDotSize + kGap + kSymbolSize, kSymbolSize);
+// the columns: the name, the reading, where the value is shown
+constexpr int kReading = 1;
+constexpr int kShown = 2;
+constexpr int kMark = 13;   // one mark of kShown
+// a row's marks of kShown (shownMarks())
+constexpr int kMarks = Qt::UserRole + 5;
 
 // the state of the device in use, as the status line's dot: readings
 // coming in or not; the others get an empty one. After it the device's
@@ -63,22 +70,73 @@ QIcon dot(const QColor &color, qreal dpr, const QPixmap &symbol = QPixmap())
   return icon;
 }
 
-// the colour of a curve in the graph, in the place of a picture
-QPixmap curveDot(const QColor &color, qreal dpr)
+// where a value is shown, as a legend: a stroke of its curve's colour
+// (not a dot, unlike the states before the names), then the symbols of
+// the front panel, the needle meters and the Poincaré plots
+QPixmap shownMarks(const DeviceSidebar::Value &value, qreal dpr)
 {
-  QPixmap pixmap(QSize(kSymbolSize, kSymbolSize) * dpr);
+  QList<QIcon> views;
+  if (value.onPanel)
+    views << QIcon::fromTheme("qtdmm-display");
+  for (int i = 0; i < value.meters; ++i)
+    views << QIcon::fromTheme("qtdmm-meter");
+  for (int i = 0; i < value.poincares; ++i)
+    views << QIcon::fromTheme("qtdmm-poincare");
+  const int marks = int(views.size()) + (value.color.isValid() ? 1 : 0);
+  if (marks == 0)
+    return QPixmap();
+  QPixmap pixmap(QSize(marks * (kMark + 1), kMark) * dpr);
   pixmap.setDevicePixelRatio(dpr);
   pixmap.fill(Qt::transparent);
-  if (color.isValid())
+  QPainter p(&pixmap);
+  p.setRenderHint(QPainter::Antialiasing);
+  int x = 0;
+  if (value.color.isValid())
   {
-    QPainter p(&pixmap);
-    p.setRenderHint(QPainter::Antialiasing);
-    p.setPen(Qt::NoPen);
-    p.setBrush(color);
-    const double top = (kSymbolSize - kDotSize) / 2.0;
-    p.drawEllipse(QRectF(1, top + 1, kDotSize - 2, kDotSize - 2));
+    p.setPen(QPen(value.color, 3, Qt::SolidLine, Qt::RoundCap));
+    p.drawLine(QPointF(x + 2, kMark / 2.0), QPointF(x + kMark - 2, kMark / 2.0));
+    x += kMark + 1;
+  }
+  for (const QIcon &icon : std::as_const(views))
+  {
+    icon.paint(&p, QRect(x, 0, kMark, kMark));
+    x += kMark + 1;
   }
   return pixmap;
+}
+
+// the marks at their own size: an icon would be scaled to the list's
+// icon size, made for one picture
+class MarksDelegate : public QStyledItemDelegate
+{
+public:
+  using QStyledItemDelegate::QStyledItemDelegate;
+  void paint(QPainter *p, const QStyleOptionViewItem &option, const QModelIndex &index) const override
+  {
+    QStyleOptionViewItem plain(option);
+    initStyleOption(&plain, index);
+    option.widget->style()->drawPrimitive(QStyle::PE_PanelItemViewItem, &plain, p, option.widget);
+    const QPixmap marks = index.data(kMarks).value<QPixmap>();
+    if (marks.isNull())
+      return;
+    const QSizeF size = marks.deviceIndependentSize();
+    p->drawPixmap(QPointF(option.rect.left() + 2, option.rect.center().y() - size.height() / 2.0 + 1), marks);
+  }
+  QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const override
+  {
+    const QPixmap marks = index.data(kMarks).value<QPixmap>();
+    const QSize base = QStyledItemDelegate::sizeHint(option, index);
+    return marks.isNull() ? QSize(0, base.height()) : QSize(int(marks.deviceIndependentSize().width()) + 4, base.height());
+  }
+};
+
+// a reading's digits in a fixed width, so a changing value does not move
+QFont tabular(QFont font)
+{
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+  font.setFeature(QFont::Tag("tnum"), 1);
+#endif
+  return font;
 }
 
 // the picture of the model an entry of My devices has; "unknown" for
@@ -99,11 +157,15 @@ DeviceSidebar::DeviceSidebar(DeviceLibrary *library, QWidget *parent)
 {
   setObjectName("ui_deviceSidebar");
   setHeaderHidden(true);
-  // the name, and the reading of an open device at the right
-  setColumnCount(2);
+  // the name, the reading of an open device in a fixed width (the name
+  // does not jump with it) and where a value is shown
+  setColumnCount(3);
   header()->setStretchLastSection(false);
   header()->setSectionResizeMode(0, QHeaderView::Stretch);
-  header()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+  header()->setSectionResizeMode(kReading, QHeaderView::Fixed);
+  header()->resizeSection(kReading, QFontMetrics(tabular(font())).horizontalAdvance("-8.8888 mV DC"));
+  header()->setSectionResizeMode(kShown, QHeaderView::ResizeToContents);
+  setItemDelegateForColumn(kShown, new MarksDelegate(this));
   setRootIsDecorated(true);
   setIconSize(kIconSize);
   setDragDropMode(QAbstractItemView::InternalMove);
@@ -143,11 +205,21 @@ DeviceSidebar::DeviceSidebar(DeviceLibrary *library, QWidget *parent)
 
   // a click on a device does nothing (its context menu connects it), on the
   // last row it adds one
-  connect(this, &QTreeWidget::itemClicked, this, [this](QTreeWidgetItem *item)
+  connect(this, &QTreeWidget::itemClicked, this, [this](QTreeWidgetItem *item, int column)
   {
     if (item && item == m_addItem)
       Q_EMIT addDeviceRequested();
+    else if (column == kShown && !item->data(kShown, kMarks).isNull())
+      Q_EMIT viewsHighlightRequested(valueOf(item));
   });
+  // a device with values below: its reading only while they are folded
+  auto refold = [this](const QTreeWidgetItem *item)
+  {
+    if (!m_filling && item->parent() == m_open)
+      setOpenDevices(m_openList);
+  };
+  connect(this, &QTreeWidget::itemExpanded, this, refold);
+  connect(this, &QTreeWidget::itemCollapsed, this, refold);
   connect(this, &QTreeWidget::itemDoubleClicked, this, [this](QTreeWidgetItem *item)
   {
     const QString id = idOf(item);
@@ -245,9 +317,15 @@ void DeviceSidebar::setOpenDevices(const QList<OpenDevice> &devices)
     const OpenDevice &device = devices[i];
     QTreeWidgetItem *item = m_open->child(i);
     item->setText(0, device.name);
-    item->setText(1, device.value);
-    // one value, no rows below: its curve's colour beside the device's dot
-    const QColor curve = device.values.size() == 1 ? device.values.first().color : QColor();
+    const bool rows = device.values.size() > 1;
+    bool below = false;
+    for (const Value &value : device.values)
+      below = below || !value.text.isEmpty();
+    item->setText(kReading, rows && item->isExpanded() && below ? QString() : device.value);
+    item->setFont(kReading, tabular(item->font(kReading)));
+    // one value, no rows below: where it is shown in the device's row
+    item->setData(kShown, kMarks, rows || device.values.isEmpty() ? QVariant() : shownMarks(device.values.first(), devicePixelRatioF()));
+    const QColor curve = rows || device.values.isEmpty() ? QColor() : device.values.first().color;
     QString tip = device.current ? tr("%1 - active: Connect, Reset and the device settings act on it").arg(device.name)
                                  : device.name;
     if (curve.isValid())
@@ -263,8 +341,7 @@ void DeviceSidebar::setOpenDevices(const QList<OpenDevice> &devices)
     item->setIcon(0, dot(device.active      ? QColor(0x22, 0xaa, 0x22)
                          : device.connected ? palette().color(QPalette::Disabled, QPalette::WindowText)
                                             : QColor(),
-                         devicePixelRatioF(),
-                         curve.isValid() ? curveDot(curve, devicePixelRatioF()) : QPixmap()));
+                         devicePixelRatioF()));
     fillValues(item, 0, device.values);
   }
   updateMarks();
@@ -290,10 +367,14 @@ void DeviceSidebar::fillValues(QTreeWidgetItem *parent, int first, const QList<V
       item->setTextAlignment(1, Qt::AlignRight | Qt::AlignVCenter);
     }
     item->setData(0, kValueId, value.id);
-    item->setText(0, QString("%1  %2").arg(value.id + 1).arg(value.shortName.isEmpty() ? value.name : value.shortName));
-    item->setText(1, value.text);
-    item->setToolTip(0, value.color.isValid() ? tr("%1 - in the graph").arg(value.name) : value.name);
-    item->setIcon(0, dot(value.color, devicePixelRatioF()));
+    // named as in the graph's legend; the number in the tooltip
+    item->setText(0, value.shortName.isEmpty() ? value.name : value.shortName);
+    item->setText(kReading, value.text);
+    item->setFont(kReading, tabular(item->font(kReading)));
+    item->setToolTip(0, tr("Value %1: %2").arg(value.id + 1).arg(value.name));
+    const QPixmap marks = shownMarks(value, devicePixelRatioF());
+    item->setData(kShown, kMarks, marks.isNull() ? QVariant() : QVariant(marks));
+    item->setToolTip(kShown, tr("Where it is shown; a click points to it"));
   }
   m_filling = filling;
 }
@@ -616,6 +697,10 @@ void DeviceSidebar::openMenu(QTreeWidgetItem *item, const QPoint &pos)
     if (device.id == id)
       connected = device.connected;
   QMenu menu(this);
+  // its entry of My devices, as there: all its values for a look
+  QAction *info = nullptr;
+  if (m_library->find(id))
+    info = menu.addAction(QIcon::fromTheme("configure"), tr("&Info and settings..."));
   QAction *panel = menu.addAction(QIcon::fromTheme("qtdmm-display"), tr("Show &front panel"));
   // a device with one value: where it is shown, here
   if (const ValueRef value = valueOf(item); value.source != "-" && m_valueFiller)
@@ -624,11 +709,13 @@ void DeviceSidebar::openMenu(QTreeWidgetItem *item, const QPoint &pos)
   // its rules, kept with it
   menu.addSeparator();
   QAction *alarms = menu.addAction(tr("&Alarms..."));
-  QAction *limits = menu.addAction(tr("L&imits..."));
+  QAction *limits = menu.addAction(tr("Li&mits..."));
   menu.addSeparator();
   QAction *close = menu.addAction(QIcon::fromTheme("window-close"), tr("&Close"));
   QAction *chosen = menu.exec(pos);
-  if (chosen == panel)
+  if (chosen && chosen == info)
+    Q_EMIT settingsRequested(id);
+  else if (chosen == panel)
     Q_EMIT frontPanelRequested(id);
   else if (chosen == link)
     Q_EMIT connectRequested(id, !connected);
@@ -688,6 +775,12 @@ void DeviceSidebar::contextMenuEvent(QContextMenuEvent *event)
            && QMessageBox::question(this, tr("Remove device"), tr("Remove \"%1\" from My devices?").arg(d->name))
                 == QMessageBox::Yes)
     m_library->remove(id);
+}
+
+QSize DeviceSidebar::sizeHint() const
+{
+  // room for a name, a reading and a few marks of where it is shown
+  return { fontMetrics().averageCharWidth() * 46, QTreeWidget::sizeHint().height() };
 }
 
 bool DeviceSidebar::isConnected(const QString &id) const

@@ -197,8 +197,9 @@ int main(int argc, char **argv)
     {
       auto curveAt = [&](const QString &id)
       {
-        const QImage icon = sidebar.openItem(id)->icon(0).pixmap(sidebar.iconSize()).toImage();
-        return icon.pixelColor(icon.width() - icon.height() / 2 - 2, icon.height() / 2);
+        // the marks of where it is shown: the curve's stroke first
+        const QImage marks = sidebar.openItem(id)->data(2, Qt::UserRole + 5).value<QPixmap>().toImage();
+        return marks.isNull() ? QColor(Qt::transparent) : marks.pixelColor(marks.height() / 2, marks.height() / 2);
       };
       rows[2].values = { DeviceSidebar::Value { 0, "Voltage DC (V)", "OL", QColor(Qt::magenta) } };
       sidebar.setOpenDevices(rows);
@@ -246,9 +247,9 @@ int main(int argc, char **argv)
     check(sidebar.valueOf(sidebar.valueItem(1, "w")) == ValueRef(1, "device:w"), "each by its source");
     check(sidebar.valueOf(own).source == "-", "a device row with value rows is no value");
     QTreeWidgetItem *current = sidebar.valueItem(1, "w");
-    check(current && current->text(0) == "2  Current DC" && current->text(1) == "-14.9 A", "the row of value 2");
-    check(sidebar.valueItem(0, "w")->toolTip(0).contains("graph") && !current->toolTip(0).contains("graph"),
-          "the graph's values say so");
+    check(current && current->text(0) == "Current DC" && current->text(1) == "-14.9 A", "the row of value 2");
+    auto marked = [](const QTreeWidgetItem *item) { return !item->data(2, Qt::UserRole + 5).isNull(); };
+    check(marked(sidebar.valueItem(0, "w")) && !marked(current), "the graph's values say so");
     rows[0].values[1].text = "-15.0 A";
     sidebar.setOpenDevices(rows);
     check(sidebar.valueItem(1, "w") == current && current->text(1) == "-15.0 A", "the reading in place");
@@ -271,8 +272,8 @@ int main(int argc, char **argv)
     rows[0].values = values;
     rows[0].values[1].shortName = "A DC";
     sidebar.setOpenDevices(rows);
-    check(sidebar.valueItem(1, "w")->text(0) == "2  A DC" && sidebar.valueItem(1, "w")->toolTip(0) == "Current DC",
-          "the short name in the row, the full one in the tooltip");
+    check(sidebar.valueItem(1, "w")->text(0) == "A DC" && sidebar.valueItem(1, "w")->toolTip(0) == "Value 2: Current DC",
+          "the short name in the row, the number and the full one in the tooltip");
   }
 
   // 7c. dragged between the nodes: an entry onto the connected devices

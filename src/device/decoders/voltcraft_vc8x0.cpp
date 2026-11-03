@@ -68,7 +68,7 @@ quint16 sum16(const unsigned char *f, int n)
 DecoderVC8x0::DecoderVC8x0(FrameFormat::DataFormat df) :
   DmmDecoder(df),
   m_vc890(df == FrameFormat::VoltcraftVC890),
-  m_length(m_vc890 ? 66 : 39),
+  m_length(m_vc890 ? kMaxLength : 39),
   m_statusAt(m_vc890 ? 56 : 30)
 {
   m_name = m_vc890 ? "VoltcraftVC890" : "VoltcraftVC880";
@@ -88,7 +88,7 @@ bool DecoderVC8x0::checkFormat(const char *data, size_t idx)
   // command results and other frames do not fit it
   if (idx < size_t(m_length - 1))
     return false;
-  unsigned char f[66];
+  unsigned char f[kMaxLength] = {};
   lastBytes(data, idx, m_length, f);
   return f[0] == 0xAB && f[1] == 0xCD && f[2] == m_length - 3 && f[3] == kLiveData
          && sum16(f, m_length - 2) == quint16((f[m_length - 2] << 8) | f[m_length - 1]);

@@ -23,6 +23,7 @@
 
 #include <QtGui>
 #include <QtWidgets>
+#include <QFrame>
 #include <QTimer>
 #include <QMenu>
 #include <cmath>
@@ -741,6 +742,7 @@ void MainWindow::createSidebar()
   });
   connect(m_sidebar, &DeviceSidebar::settingsRequested, this, [this](const QString &id) { deviceSettings(id); });
   connect(m_sidebar, &DeviceSidebar::valueMenuRequested, this, &MainWindow::valueMenu);
+  connect(m_sidebar, &DeviceSidebar::viewsHighlightRequested, this, &MainWindow::pointToViews);
   m_sidebar->setValueMenuFiller([this](QMenu *menu, const ValueRef &value) { fillValueMenu(menu, value); });
   connect(m_wid->graph(), &GraphWidget::notice, this, [this](const QString &text)
   {
@@ -1837,7 +1839,9 @@ static QString readingText(const Reading &r)
     return QString();
   QString prefix;
   const QString value = SiPrefix::format(r.value, r.baseUnit, &prefix);
-  return QString("%1 %2%3 %4").arg(value.left(8), prefix, r.baseUnit, couplingText(r.port.defining)).trimmed();
+  // as the displays write the unit: °C, not the stored C
+  return QString("%1 %2 %3").arg(value.left(8), SiPrefix::displayText(prefix + r.baseUnit), couplingText(r.port.defining))
+    .trimmed();
 }
 
 bool MainWindow::editSources(ValueMenu::View view, MeterView *meter, PoincareView *plot)
@@ -2099,11 +2103,23 @@ DeviceSidebar::Value MainWindow::otherValueRow(const MeterController *ctl, int i
   {
     row.name = ctl->valueName(id);
     row.text = readingText(r);
-    const QString unit = SiPrefix::displayText(r.baseUnit);
-    if (r.name.isEmpty() && !unit.isEmpty())
-      row.shortName = QString("%1 %2").arg(unit, couplingText(r.port.defining)).trimmed();
+    // as the graph's legend names it, the unit is in the reading
+    row.shortName = QString(row.name).remove(QRegularExpression("\\s*\\([^)]*\\)$"));
   }
-  row.color = m_wid->graph()->drawnColor(ValueRef(id, ctl->source()));
+  const ValueRef value(id, ctl->source());
+  // a curve where one sees it
+  if (!m_graphWin->isHidden())
+    row.color = m_wid->graph()->drawnColor(value);
+  // the views showing it, for the marks of its row
+  if (QMdiSubWindow *win = m_panelWins.value(ctl->source()); win && !win->isHidden())
+    if (const FrontPanel *panel = panelOf(win))
+      row.onPanel = panel->value().id == id || panel->secondaries().contains(id);
+  for (QMdiSubWindow *win : meterWindows())
+    if (const MeterView *meter = meterViewOf(win); meter && !win->isHidden() && meter->value() == value)
+      ++row.meters;
+  for (QMdiSubWindow *win : poincareWindows())
+    if (const PoincareView *plot = poincareViewOf(win); plot && !win->isHidden() && plot->value() == value)
+      ++row.poincares;
   return row;
 }
 
@@ -2141,6 +2157,37 @@ void MainWindow::updateOpenDevices()
     rows << row;
   }
   m_sidebar->setOpenDevices(rows);
+}
+
+void MainWindow::pointToViews(const ValueRef &value)
+{
+  const MeterController *ctl = m_session->controller(value.source);
+  if (!ctl)
+    return;
+  const DeviceSidebar::Value row = otherValueRow(ctl, value.id);
+  QList<QMdiSubWindow *> wins;
+  if (row.onPanel)
+    wins << m_panelWins.value(value.source);
+  if (row.color.isValid())
+    wins << m_graphWin;
+  for (QMdiSubWindow *win : meterWindows())
+    if (const MeterView *meter = meterViewOf(win); meter && !win->isHidden() && meter->value() == value)
+      wins << win;
+  for (QMdiSubWindow *win : poincareWindows())
+    if (const PoincareView *plot = poincareViewOf(win); plot && !win->isHidden() && plot->value() == value)
+      wins << win;
+  // a frame in the selection colour for a moment, above what the view draws
+  for (QMdiSubWindow *win : std::as_const(wins))
+  {
+    auto *mark = new QFrame(win);
+    mark->setAttribute(Qt::WA_TransparentForMouseEvents);
+    mark->setStyleSheet(QString("QFrame { border: 3px solid %1; background: transparent; }")
+                          .arg(palette().color(QPalette::Highlight).name()));
+    mark->setGeometry(win->rect());
+    mark->show();
+    mark->raise();
+    QTimer::singleShot(900, mark, &QObject::deleteLater);
+  }
 }
 
 void MainWindow::valueMenu(const ValueRef &value, const QPoint &globalPos)
