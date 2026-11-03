@@ -341,7 +341,7 @@ AnalogMeter::Geometry AnalogMeter::geometry() const
   Geometry g;
   const QRectF r = PanelFrame::panelRect(QRectF(rect()).adjusted(1, 1, -1, -1), kMinAspect, kMaxAspect);
   g.bezel = r;
-  g.face = PanelFrame::faceRect(r);
+  g.face = PanelFrame::faceRect(r, !m_caption.isEmpty());
   const double fh = g.face.height();
   const double fw = g.face.width();
   // the arc ends at +-45 deg, the labels sit one font size outside it and
@@ -366,7 +366,9 @@ void AnalogMeter::drawBezel(QPainter &p, const Geometry &g) const
   c.bezelDark = m_style.bezelDark;
   c.face = dialColor();
   c.faceGlow = m_alert.isValid() ? mixed(m_style.faceGlow, m_alert) : m_style.faceGlow;
-  PanelFrame::paint(p, g.bezel, c, g.pivot, g.radius * 1.2);
+  PanelFrame::paint(p, g.bezel, c, g.pivot, g.radius * 1.2, !m_caption.isEmpty());
+  if (!m_caption.isEmpty())
+    PanelFrame::paintPlate(p, g.bezel, m_caption, c);
 }
 
 void AnalogMeter::setAlertColor(const QColor &color)
@@ -617,17 +619,9 @@ void AnalogMeter::drawBoxes(QPainter &p, const Geometry &g) const
   else
   {
     // no value yet: why, in place of the unit
-    const QRectF wide = unitRect.adjusted(-fw * 0.06, 0, fw * 0.06, 0);
-    p.setFont(fittedFont(g.fontPx * 0.8, false, m_notice, wide.width()));
+    const QRectF wide(g.face.center().x() - fw * 0.3, unitRect.top(), fw * 0.6, unitRect.height());
+    p.setFont(fittedFont(g.fontPx * 0.9, false, m_notice, wide.width()));
     p.drawText(wide, Qt::AlignCenter, m_notice);
-  }
-  // where the value comes from, small below it like the maker's name
-  if (!m_caption.isEmpty())
-  {
-    const QRectF line(g.face.center().x() - fw * 0.24, unitRect.bottom() - g.fontPx * 0.1, fw * 0.48, g.fontPx);
-    p.setFont(fittedFont(g.fontPx * 0.75, false, m_caption, line.width()));
-    p.setPen(m_style.scale.darker(m_style.face.lightness() < 128 ? 150 : 100));
-    p.drawText(line, Qt::AlignHCenter | Qt::AlignTop, m_caption);
   }
 
   // readout boxes with their captions: minimum left, maximum right

@@ -125,8 +125,8 @@ public Q_SLOTS:
   /// and readouts fade, the dial stays.
   void setStale(bool stale);
   bool isStale() const { return m_stale; }
-  /// Where the value comes from (ValueFeed::caption()), printed small on
-  /// the dial below the unit like the maker's name; empty: none.
+  /// Where the value comes from (ValueFeed::caption()), on the bezel above
+  /// the dial as on the front panel's LCD; empty: none, the dial takes the room.
   void setCaption(const QString &caption);
   /// Words in place of the unit while there is no value (ValueFeed::notice()).
   void setNotice(const QString &notice);
