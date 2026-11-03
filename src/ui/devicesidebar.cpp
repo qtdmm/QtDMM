@@ -38,7 +38,8 @@ constexpr int kWhere = Qt::UserRole + 4;
 constexpr int kDotSize = 12;
 constexpr int kSymbolSize = 20;
 const QSize kIconSize(kSymbolSize, kSymbolSize);
-// the columns: the name, a service's port, where a value is shown
+// the columns: the name, where a value is shown or a service's port; the
+// one between is hidden (the address to copy)
 constexpr int kShown = 2;
 constexpr int kMark = 13;   // one mark of kShown
 // a row's marks of kShown (shownMarks())
@@ -138,7 +139,11 @@ public:
     option.widget->style()->drawPrimitive(QStyle::PE_PanelItemViewItem, &plain, p, option.widget);
     const QPixmap marks = index.data(kMarks).value<QPixmap>();
     if (marks.isNull())
+    {
+      // a service's port
+      QStyledItemDelegate::paint(p, option, index);
       return;
+    }
     const QSizeF size = marks.deviceIndependentSize();
     p->drawPixmap(QPointF(option.rect.left() + 2, option.rect.center().y() - size.height() / 2.0 + 1), marks);
   }
@@ -146,7 +151,7 @@ public:
   {
     const QPixmap marks = index.data(kMarks).value<QPixmap>();
     const QSize base = QStyledItemDelegate::sizeHint(option, index);
-    return marks.isNull() ? QSize(0, base.height()) : QSize(int(marks.deviceIndependentSize().width()) + 4, base.height());
+    return marks.isNull() ? base : QSize(int(marks.deviceIndependentSize().width()) + 4, base.height());
   }
 };
 
@@ -173,7 +178,7 @@ DeviceSidebar::DeviceSidebar(DeviceLibrary *library, QWidget *parent)
   setColumnCount(3);
   header()->setStretchLastSection(false);
   header()->setSectionResizeMode(0, QHeaderView::Stretch);
-  header()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+  header()->hideSection(1);
   header()->setSectionResizeMode(kShown, QHeaderView::ResizeToContents);
   setItemDelegateForColumn(kShown, new MarksDelegate(this));
   setRootIsDecorated(true);
@@ -415,16 +420,16 @@ void DeviceSidebar::setServices(const QList<Service> &services)
     {
       item = new QTreeWidgetItem(m_services);
       item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-      item->setTextAlignment(1, Qt::AlignRight | Qt::AlignVCenter);
+      item->setTextAlignment(kShown, Qt::AlignRight | Qt::AlignVCenter);
     }
     item->setData(0, Qt::UserRole, service.id);
     item->setData(1, Qt::UserRole, service.address);
     item->setText(0, service.name);
-    item->setText(1, service.value);
+    item->setText(kShown, service.value);
     item->setToolTip(0, service.tooltip);
-    item->setToolTip(1, service.tooltip);
+    item->setToolTip(kShown, service.tooltip);
     item->setForeground(0, service.running ? palette().color(QPalette::Text) : grey);
-    item->setForeground(1, service.running ? palette().color(QPalette::Text) : grey);
+    item->setForeground(kShown, service.running ? palette().color(QPalette::Text) : grey);
     // green while a client is connected, dark green while it runs and waits
     // for one; red: switched on but not running (port taken)
     item->setIcon(0, dot(service.active    ? QColor(0x22, 0xaa, 0x22)
@@ -475,9 +480,11 @@ void DeviceSidebar::setWorkspaces(const QList<Workspace> &workspaces)
 
 void DeviceSidebar::setCurrentWorkspace(const QString &name, const QString &tooltip)
 {
-  m_workspaces->setText(1, name);
-  m_workspaces->setToolTip(1, tooltip);
-  m_workspaces->setFirstColumnSpanned(name.isEmpty());
+  // after the node of the devices it is about, in the name's own cell: in a
+  // column of its own it widened that for every row
+  m_open->setText(0, name.isEmpty() ? tr("Bench") : tr("Bench · %1").arg(name));
+  m_open->setToolTip(0, tooltip.isEmpty() ? tr("The devices this window reads: each has its front panel and records with the others.")
+                                          : tooltip);
 }
 
 void DeviceSidebar::workspaceMenu(QTreeWidgetItem *item, const QPoint &pos)
@@ -703,10 +710,10 @@ void DeviceSidebar::openMenu(QTreeWidgetItem *item, const QPoint &pos)
       connected = device.connected;
   QMenu menu(this);
   // its entry of My devices, as there: all its values for a look
+  QAction *panel = menu.addAction(QIcon::fromTheme("qtdmm-display"), tr("Show &front panel"));
   QAction *info = nullptr;
   if (m_library->find(id))
     info = menu.addAction(QIcon::fromTheme("configure"), tr("&Info and settings..."));
-  QAction *panel = menu.addAction(QIcon::fromTheme("qtdmm-display"), tr("Show &front panel"));
   QAction *link = menu.addAction(connected ? tr("&Disconnect") : tr("Co&nnect"));
   // its rules, kept with it
   menu.addSeparator();

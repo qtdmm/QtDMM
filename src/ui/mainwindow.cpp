@@ -406,7 +406,7 @@ void MainWindow::createViews()
   // entry, as the window menu of the others
   auto hideWindow = [this](QMdiSubWindow *win)
   {
-    QAction *hide = new QAction(tr("&Hide window"), this);
+    QAction *hide = new QAction(tr("&Hide view"), this);
     connect(hide, &QAction::triggered, win, &QWidget::hide);
     return hide;
   };
@@ -1670,7 +1670,7 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
   MeterView *meter = meterViewOf(win);
   const bool added = m_added.contains(win);
   PoincareView *plot = poincareViewOf(win);
-  QAction *hide = menu.addAction(added ? tr("&Close window") : tr("&Hide window"));
+  QAction *hide = menu.addAction(added ? tr("&Close window") : tr("&Hide view"));
   FrontPanel *panel = panelOf(win);
   if (panel && panel->keysSupported())
   {

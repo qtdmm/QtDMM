@@ -64,7 +64,8 @@ programs: the [SCPI server and HiSLIP](scpi-server.md) with their port, or
 *off*.
 
 Above My devices, folded at the start, the node **Recent benches** lists the
-benches loaded or saved last by their names, the one in use at its right;
+benches loaded or saved last by their names (the one in use stands after
+**Bench**, as *Bench · Lab*);
 a double click loads one (see
 [Window layout](connecting.md#window-layout)). Without any it is hidden.
 The star at the right of one (or *Favourite* in its context menu) makes it

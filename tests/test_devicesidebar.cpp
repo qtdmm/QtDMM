@@ -321,9 +321,9 @@ int main(int argc, char **argv)
     QTreeWidgetItem *node = sidebar.servicesNode();
     check(node->childCount() == 2, "two services");
     QTreeWidgetItem *s = node->child(0);
-    check(s->text(0) == "SCPI" && s->text(1) == "5025" && s->data(1, Qt::UserRole).toString() == "localhost:5025",
-          "SCPI row: " + s->text(1));
-    check(node->child(1)->text(1) == "off", "HiSLIP off");
+    check(s->text(0) == "SCPI" && s->text(2) == "5025" && s->data(1, Qt::UserRole).toString() == "localhost:5025",
+          "SCPI row: " + s->text(2));
+    check(node->child(1)->text(2) == "off", "HiSLIP off");
     check(!(s->flags() & Qt::ItemIsEditable) && !(node->flags() & Qt::ItemIsDropEnabled), "not renamed, no drops");
     int settings = 0;
     QObject::connect(&sidebar, &DeviceSidebar::serviceSettingsRequested, [&] { ++settings; });
@@ -332,7 +332,7 @@ int main(int argc, char **argv)
     hislip.running = true;
     hislip.value = "4880";
     sidebar.setServices({ scpi, hislip });
-    check(node->child(0) == s && node->child(1)->text(1) == "4880", "updated in place");
+    check(node->child(0) == s && node->child(1)->text(2) == "4880", "updated in place");
     sidebar.setServices({ scpi });
     check(node->childCount() == 1, "one less");
   }
@@ -354,10 +354,12 @@ int main(int argc, char **argv)
     sidebar.setWorkspaces({ { file.fileName(), "Bench test", "<b>Bench test</b>" }, { gone, {}, {} } });
     check(node->child(0)->text(0) == "Bench test" && node->child(0)->toolTip(0) == "<b>Bench test</b>",
           "a workspace's name and its tooltip");
-    sidebar.setCurrentWorkspace("Bench test");
-    check(node->text(1) == "Bench test" && !node->isFirstColumnSpanned(), "the workspace in use at the right of the node");
+    sidebar.setCurrentWorkspace("Bench test", "<b>Bench test</b>");
+    check(sidebar.openNode()->text(0) == "Bench · Bench test" && node->text(1).isEmpty()
+            && sidebar.openNode()->toolTip(0) == "<b>Bench test</b>",
+          "the workspace in use after Bench, not at the recent ones: " + sidebar.openNode()->text(0));
     sidebar.setCurrentWorkspace(QString());
-    check(node->text(1).isEmpty() && node->isFirstColumnSpanned(), "none in use: the node across");
+    check(sidebar.openNode()->text(0) == "Bench", "none in use: Bench alone");
     check(node->child(1)->toolTip(0).contains("not found"), "a gone one says so");
     check(!(node->flags() & Qt::ItemIsDropEnabled) && !(node->child(0)->flags() & Qt::ItemIsDragEnabled),
           "no drag and drop");

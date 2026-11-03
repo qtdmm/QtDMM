@@ -1502,188 +1502,195 @@
 <context>
     <name>DeviceSidebar</name>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="196"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="201"/>
         <source>My devices</source>
         <translation>Mis dispositivos</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="368"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="373"/>
         <source>Value %1: %2</source>
         <translation>Valor %1: %2</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="371"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="376"/>
         <source>Where it is shown; a click points to it</source>
         <translation>Dónde se muestra; un clic lo señala</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="461"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="466"/>
         <source>Favourite: stays on the list. A click takes the star away.</source>
         <translation>Favorito: se queda en la lista. Un clic quita la estrella.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="462"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="467"/>
         <source>A click makes it a favourite: first on the list, never dropped.</source>
         <translation>Un clic lo hace favorito: primero en la lista, nunca se descarta.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="492"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="499"/>
         <source>Fa&amp;vourite</source>
         <translation>&amp;Favorito</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="512"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="519"/>
         <source>&amp;Settings...</source>
         <translation>&amp;Ajustes...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="575"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="582"/>
         <source>Connected, readings are coming in</source>
         <translation>Conectado, llegan lecturas</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="575"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="582"/>
         <source>Connected</source>
         <translation>Conectado</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="714"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="721"/>
         <source>Li&amp;mits...</source>
         <translation>Lí&amp;mites...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="716"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="723"/>
         <source>&amp;Close</source>
         <translation>&amp;Cerrar</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="772"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="779"/>
         <source>&amp;Rename</source>
         <translation>&amp;Renombrar</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="209"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="214"/>
         <source>Services</source>
         <translation>Servicios</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="213"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="218"/>
         <source>What this window offers to other programs over the network.</source>
         <translation>Lo que esta ventana ofrece a otros programas por la red.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="194"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="199"/>
         <source>The benches used last: a double click loads one.</source>
         <translation>Los puestos de medida usados por última vez: un doble clic carga uno.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="202"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="207"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="485"/>
         <source>Bench</source>
         <translation>Puesto de medida</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="207"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="212"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="486"/>
         <source>The devices this window reads: each has its front panel and records with the others.</source>
         <translation>Los aparatos que lee esta ventana: cada uno tiene su panel frontal y graba con los demás.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="327"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="332"/>
         <source>%1 - active: Connect, Reset and the device settings act on it</source>
         <translation>%1 – activo: Conectar, Restablecer y los ajustes del dispositivo actúan sobre él</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="469"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="474"/>
         <source>%1 (not found)</source>
         <translation>%1 (no encontrado)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="488"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="485"/>
+        <source>Bench · %1</source>
+        <translation>Puesto de medida · %1</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/devicesidebar.cpp" line="495"/>
         <source>&amp;Load</source>
         <translation>&amp;Cargar</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="490"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="497"/>
         <source>Open &amp;folder</source>
         <translation>Abrir &amp;carpeta</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="496"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="503"/>
         <source>&amp;Remove from list</source>
         <translation>&amp;Quitar de la lista</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="513"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="520"/>
         <source>&amp;Copy address</source>
         <translation>&amp;Copiar dirección</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="546"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="553"/>
         <source>+ Add device...</source>
         <translation>＋ Añadir dispositivo…</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="550"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="557"/>
         <source>Set up another meter (the assistant).</source>
         <translation>Configurar otro multímetro (el asistente).</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="576"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="583"/>
         <source>Double-click: info and settings</source>
         <translation>Doble clic: información y ajustes</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="709"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="713"/>
         <source>Show &amp;front panel</source>
         <translation>Mostrar &amp;panel frontal</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="710"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="717"/>
         <source>&amp;Disconnect</source>
         <translation>&amp;Desconectar</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="710"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="717"/>
         <source>Co&amp;nnect</source>
         <translation>Co&amp;nectar</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="713"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="720"/>
         <source>&amp;Alarms...</source>
         <translation>&amp;Alarmas...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="708"/>
-        <location filename="../../src/ui/devicesidebar.cpp" line="771"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="716"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="778"/>
         <source>&amp;Info and settings...</source>
         <translation>&amp;Información y ajustes…</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="188"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="193"/>
         <source>Recent benches</source>
         <translation>Puestos de medida recientes</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="773"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="780"/>
         <source>&amp;Connect</source>
         <translation>&amp;Conectar</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="774"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="781"/>
         <source>Reads it with the other devices connected: recorded with them, in formulas and over SCPI</source>
         <translation>Lo lee con los demás dispositivos conectados: grabado con ellos, en fórmulas y por SCPI</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="777"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="784"/>
         <source>Re&amp;move from My devices</source>
         <translation>&amp;Quitar de Mis dispositivos</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="787"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="794"/>
         <source>Remove device</source>
         <translation>Quitar dispositivo</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="787"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="794"/>
         <source>Remove &quot;%1&quot; from My devices?</source>
         <translation>¿Quitar «%1» de Mis dispositivos?</translation>
     </message>
@@ -3821,6 +3828,12 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Añadir gráfico de Poincaré&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Otra ventana con diagrama de Poincaré: primero se elige su valor, después con Orígenes en su menú de ventana; al cerrarla se elimina.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="409"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1673"/>
+        <source>&amp;Hide view</source>
+        <translation>&amp;Ocultar vista</translation>
+    </message>
+    <message>
         <location filename="../../src/ui/mainwindow.cpp" line="560"/>
         <source>Poincaré plot %1</source>
         <translation>Diagrama de Poincaré %1</translation>
@@ -4064,12 +4077,6 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
         <location filename="../../src/ui/mainwindow.cpp" line="3195"/>
         <source>Connect, Reset and the device settings act on this device; a click on another front panel makes that one active</source>
         <translation>Conectar, Restablecer y los ajustes del dispositivo actúan sobre este dispositivo; un clic en otro panel frontal lo hace activo</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="409"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="1673"/>
-        <source>&amp;Hide window</source>
-        <translation>&amp;Ocultar ventana</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="732"/>

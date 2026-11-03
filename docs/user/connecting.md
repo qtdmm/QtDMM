@@ -283,15 +283,15 @@ loaded last.
 last by their names, favourites first, then newest first; the tooltip shows
 the description, the picture and the file. **Clear list** empties it but for
 the favourites. The node **Recent benches** at
-the top of the sidebar shows the same list, folded at the start, with the
-name of the bench in use at its right: a double click or Enter loads one, its context menu also opens its folder or takes
+the top of the sidebar shows the same list, folded at the start; the name
+of the bench in use stands after **Bench**. A double click or Enter loads one, its context menu also opens its folder or takes
 it off the list; its star makes it a favourite (see [My devices](my-devices.md)). A file that is gone is grey. The list is shared by all
 QtDMM windows; how many it shows is set under **Preferences** >
 **Appearance** > **Recent benches** (10, *none* hides it).
 
 **Hide title bars** (F10) takes the title bars away so the windows sit
 flush next to each other - the default for the arranged modes. Right-click
-a window for its menu: **Hide window** comes first, in the graph and the
+a window for its menu: **Hide view** comes first, in the graph and the
 readings table too; in *Free* mode Ctrl+drag moves a window without title
 bar. Window
 layouts of versions before 26.1 are not taken over.

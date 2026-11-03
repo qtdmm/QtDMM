@@ -34,7 +34,7 @@ class DeviceLibrary;
 ///
 /// The node "Workspaces" (shown as Recent benches) on top lists the workspace files used last
 /// (setWorkspaces()) by their names, folded at the start and hidden while
-/// there are none; at its right the name of the workspace in use
+/// there are none. The name of the workspace in use stands after "Bench"
 /// (setCurrentWorkspace()). A double click or Enter loads one, the context
 /// menu also takes it off the list or opens its folder.
 class DeviceSidebar : public QTreeWidget
@@ -126,7 +126,7 @@ public:
   /// The workspaces used last, newest first; the node is hidden without
   /// any. A file that is gone is grey and loads no more.
   void        setWorkspaces(const QList<Workspace> &workspaces);
-  /// The name of the workspace in use, at the right of the node; empty: none.
+  /// The name of the workspace in use, after "Bench"; empty: none.
   void        setCurrentWorkspace(const QString &name, const QString &tooltip = QString());
   /// The node "Workspaces".
   QTreeWidgetItem *workspacesNode() const { return m_workspaces; }
