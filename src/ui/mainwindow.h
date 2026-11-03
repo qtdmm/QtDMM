@@ -342,6 +342,9 @@ protected:
   QMdiSubWindow *addView(QWidget *view, const QString &title, int role, const QString &name);
   /// The context menu of the sidebar's row of @p value (ValueMenu).
   void        valueMenu(const ValueRef &value, const QPoint &globalPos);
+  /// Frames the views showing @p value for a moment (a click on the marks
+  /// of its row in the sidebar).
+  void        pointToViews(const ValueRef &value);
   /// @name The readings table's meters
   /// The meters in it (m_tableMeters; none chosen: all connected). The
   /// table logs the readings of all of them in its own store, in the order

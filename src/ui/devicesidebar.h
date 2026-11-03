@@ -49,7 +49,10 @@ public:
     QString name;           ///< "Current DC (A)", "Value 2" before a reading; the row's tooltip
     QString text;           ///< its reading with the unit, "OL"
     QColor  color;          ///< its curve's colour while the graph shows it, else invalid
-    QString shortName;      ///< shown in the row ("A DC"); name when empty
+    QString shortName;      ///< shown in the row ("Voltage DC"); name when empty
+    bool    onPanel = false;   ///< on its device's front panel, big or small
+    int     meters = 0;        ///< the needle meters showing it
+    int     poincares = 0;     ///< the Poincaré plots showing it
   };
 
   /// One row of the node "Open devices".
@@ -160,6 +163,9 @@ Q_SIGNALS:
   void        addDeviceRequested();
   /// The settings of the services (Settings, SCPI server).
   void        serviceSettingsRequested();
+  /// A click on the views of a value's row (Value::onPanel, meters ...):
+  /// show where it is.
+  void        viewsHighlightRequested(const ValueRef &value);
   /// The context menu of the row of value @p id (MainWindow fills it).
   void        valueMenuRequested(const ValueRef &value, const QPoint &globalPos);
   /// Load the workspace file @p path.
@@ -170,6 +176,8 @@ Q_SIGNALS:
 public Q_SLOTS:
   /// The entries anew from the library.
   void        fill();
+
+  QSize       sizeHint() const override;
 
 protected:
   QMimeData  *mimeData(const QList<QTreeWidgetItem *> &items) const override;
