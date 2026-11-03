@@ -15,8 +15,8 @@
 static const bool registered = []() {
   DmmDecoder::addConfig({"Uni-Trend", "UT333BT", "", 0, FrameFormat::UniTiENV, 8, 1, 1, 0, 1000, 0, 0, 0, "", "", 2});
   DmmDecoder::addConfig({"Uni-Trend", "UT353BT", "", 0, FrameFormat::UniTiENV, 8, 1, 1, 0, 10000, 0, 0, 0});
-  DmmDecoder::addConfig({"Uni-Trend", "UT363BT *", "", 0, FrameFormat::UniTiENV, 8, 1, 1, 0, 10000, 0, 0, 0, "", "", 2});
-  DmmDecoder::addConfig({"Uni-Trend", "UT383BT *", "", 0, FrameFormat::UniTiENV, 8, 1, 1, 0, 100000, 0, 0, 0});
+  DmmDecoder::addConfig({"Uni-Trend", "UT363BT", "", 0, FrameFormat::UniTiENV, 8, 1, 1, 0, 10000, 0, 0, 0, "", "", 2});
+  DmmDecoder::addConfig({"Uni-Trend", "UT383BT", "", 0, FrameFormat::UniTiENV, 8, 1, 1, 0, 100000, 0, 0, 0});
   return true;
 }();
 

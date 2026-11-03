@@ -75,7 +75,7 @@ int main(int argc, char **argv)
     check(bu86x && !bu86x->models.isEmpty() && bu86x->models.first().startsWith("Brymen"), "BU-86X: Brymen");
     const auto tfa = Families::forUsb(0x04d9, 0xa052);
     check(tfa && tfa->portType == "HIDHOLTEK" && tfa->models.size() == 3
-            && tfa->models.first() == "TFA Dostmann AIRCO2NTROL Mini *",
+            && tfa->models.first() == "TFA Dostmann AIRCO2NTROL Mini",
           "TFA: the AIRCO2NTROL Mini first, HIDHOLTEK: " + (tfa ? tfa->models.join(", ") : QString()));
     check(!Families::forUsb(0x046d, 0xc52b), "a mouse is no meter");
   }

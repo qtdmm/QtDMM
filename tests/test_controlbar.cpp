@@ -62,7 +62,7 @@ int main(int argc, char **argv)
     check(!key(bar, "fn_a")->isCheckable() && key(bar, "fn_v")->styleSheet().contains("#e03c31"),
           "UT202BT: function keys are plain keys, V~ red");
   }
-  bar.setProtocol(FrameFormat::UniTiENV, "UT363BT *");
+  bar.setProtocol(FrameFormat::UniTiENV, "UT363BT");
   check(!key(bar, "hold")->isHidden() && !key(bar, "max")->isHidden() && !key(bar, "avg")->isHidden()
           && !key(bar, "unit")->isHidden() && key(bar, "unit2")->isHidden(),
         "UT363BT: HOLD, MAX, AVG, UNIT shown, no °C/°F");
