@@ -207,8 +207,9 @@ protected:
   /// A window with another view of @p kind showing @p value, numbered
   /// @p number (the next free one for 0); not shown yet.
   QMdiSubWindow *addViewWindow(Added kind, const ValueRef &value, int number = 0);
-  /// Another view of @p kind for @p value, shown and placed.
-  void        newView(Added kind, const ValueRef &value);
+  /// Another view of @p kind for @p value, shown and placed; with @p ask
+  /// its Sources dialog first, cancelled no view.
+  void        newView(Added kind, const ValueRef &value, bool ask = false);
   void        newMeter(const ValueRef &value) { newView(Added::Meter, value); }
   void        removeAddedWindow(QMdiSubWindow *win);
   /// The analog meter or Poincaré plot in @p win, nullptr for another window.
@@ -361,8 +362,8 @@ protected:
   void        setTableShown(const ValueRef &value, bool shown);
   /// "Sources..." of a view: the values of the open meters it shows.
   /// "Sources..." of a view; for View::Meter the analog meter @p meter,
-  /// nullptr for the first.
-  void        editSources(ValueMenu::View view, MeterView *meter = nullptr, PoincareView *plot = nullptr);
+  /// nullptr for the first. False when cancelled.
+  bool        editSources(ValueMenu::View view, MeterView *meter = nullptr, PoincareView *plot = nullptr);
   QAction    *m_graphSources = nullptr;   ///< in the graph's menu, with more than one meter
   QAction    *m_tableSources = nullptr;   ///< in the table's menu, the same
   /// A meter's name by its source, also after it was closed.

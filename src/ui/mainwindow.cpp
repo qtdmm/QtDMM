@@ -377,23 +377,23 @@ void MainWindow::createViews()
   m_newMeterAction->setObjectName("action_NewMeter");
   m_newMeterAction->setWhatsThis(
     tr("<html><head/><body><p><span style=\" font-weight:600;\">Add analog meter</span></p>"
-       "<p>Another analog meter window, for a value of the active device at first. Pick its value "
-       "with Sources in its window menu; closing it removes it.</p></body></html>"));
+       "<p>Another analog meter window: pick its value first, later with Sources in its window "
+       "menu; closing it removes it.</p></body></html>"));
   connect(m_newMeterAction, &QAction::triggered, this, [this]
   {
     const MeterController *ctl = activeController();
-    newMeter(ctl ? ValueRef(0, ctl->source()) : ValueRef());
+    newView(Added::Meter, ctl ? ValueRef(0, ctl->source()) : ValueRef(), true);
   });
   m_newPoincareAction = new QAction(QIcon::fromTheme("qtdmm-poincare"), tr("Add Po&incaré plot"), this);
   m_newPoincareAction->setObjectName("action_NewPoincare");
   m_newPoincareAction->setWhatsThis(
     tr("<html><head/><body><p><span style=\" font-weight:600;\">Add Poincaré plot</span></p>"
-       "<p>Another Poincaré plot window, for a value of the active device at first. Pick its value "
-       "with Sources in its window menu; closing it removes it.</p></body></html>"));
+       "<p>Another Poincaré plot window: pick its value first, later with Sources in its window "
+       "menu; closing it removes it.</p></body></html>"));
   connect(m_newPoincareAction, &QAction::triggered, this, [this]
   {
     const MeterController *ctl = activeController();
-    newView(Added::Poincare, ctl ? ValueRef(0, ctl->source()) : ValueRef());
+    newView(Added::Poincare, ctl ? ValueRef(0, ctl->source()) : ValueRef(), true);
   });
   m_poincareAction = windowAction(m_poincareWin, tr("Poi&ncaré plot"), "Ctrl+5", "qtdmm-poincare",
     tr("<html><head/><body><p><span style=\" font-weight:600;\">Poincaré plot</span></p>"
@@ -572,9 +572,22 @@ QMdiSubWindow *MainWindow::addViewWindow(Added kind, const ValueRef &value, int 
   return win;
 }
 
-void MainWindow::newView(Added kind, const ValueRef &value)
+void MainWindow::newView(Added kind, const ValueRef &value, bool ask)
 {
   QMdiSubWindow *win = addViewWindow(kind, value);
+  // from the menu its value is asked first (the active device's first one
+  // ticked); cancelled, there is no new view. With no device open there is
+  // nothing to pick from.
+  if (ask && !m_session->controllers().isEmpty())
+  {
+    MeterView *meter = meterViewOf(win);
+    PoincareView *plot = poincareViewOf(win);
+    if (!editSources(meter ? ValueMenu::View::Meter : ValueMenu::View::Poincare, meter, plot))
+    {
+      removeAddedWindow(win);
+      return;
+    }
+  }
   win->show();
   m_mdi->setActiveSubWindow(win);
   growFor(win);
@@ -1826,7 +1839,7 @@ static QString readingText(const Reading &r)
   return QString("%1 %2%3 %4").arg(value.left(8), prefix, r.baseUnit, couplingText(r.port.defining)).trimmed();
 }
 
-void MainWindow::editSources(ValueMenu::View view, MeterView *meter, PoincareView *plot)
+bool MainWindow::editSources(ValueMenu::View view, MeterView *meter, PoincareView *plot)
 {
   if (!meter)
     meter = meterViewOf(m_meterWin);
@@ -1875,10 +1888,10 @@ void MainWindow::editSources(ValueMenu::View view, MeterView *meter, PoincareVie
   SourcesDlg dlg(name, several, meters, this);
   dlg.setChosen(chosen);
   if (dlg.exec() != QDialog::Accepted)
-    return;
+    return false;
   const QList<ValueRef> picked = dlg.chosen();
   if (!several && picked.isEmpty())
-    return;
+    return false;
   switch (view)
   {
     case ValueMenu::View::Graph:
@@ -1916,6 +1929,7 @@ void MainWindow::editSources(ValueMenu::View view, MeterView *meter, PoincareVie
       break;
   }
   updateOpenDevices();
+  return true;
 }
 
 void MainWindow::dropValue(const ValueRef &value, const QPoint &pos)

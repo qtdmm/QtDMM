@@ -20,6 +20,7 @@
 #pragma once
 
 #include <QColor>
+#include <QPair>
 #include <QPixmap>
 #include <QPointF>
 #include <QRectF>
@@ -62,8 +63,13 @@ namespace PanelFrame
              bool plate = false);
 
   /// @p text engraved in the wide top of the bezel (faceRect() with plate),
-  /// like the model name on the front of an instrument.
+  /// like the model name on the front of an instrument: the manufacturer
+  /// left, the model right (splitName()), only the model when both do not fit.
   void paintPlate(QPainter &p, const QRectF &bezel, const QString &text, const Colors &c);
+
+  /// A device name taken apart for it: the manufacturer of the model list
+  /// it begins with and the rest; no manufacturer for a name of its own.
+  QPair<QString, QString> splitName(const QString &name);
 
   /// Clip path of the face (rounded), for drawing that must stay inside.
   void clipToFace(QPainter &p, const QRectF &face);

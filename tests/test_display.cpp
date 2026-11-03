@@ -6,6 +6,7 @@
 #include <QDebug>
 
 #include "ui/views/lcdwidget.h"
+#include "ui/panelframe.h"
 #include "core/siprefix.h"
 #include "testutil.h"
 
@@ -33,6 +34,16 @@ int main(int argc, char **argv)
   if (qEnvironmentVariableIsEmpty("QT_QPA_PLATFORM"))
     qputenv("QT_QPA_PLATFORM", "offscreen");
   QApplication app(argc, argv);
+
+  // --- 0. the name plate: manufacturer and model apart, a name of its own whole ---
+  {
+    const auto [vendor, model] = PanelFrame::splitName("Uni-Trend UT61E");
+    check(vendor == "Uni-Trend" && model == "UT61E", "plate: " + vendor + " | " + model);
+    const auto [none, own] = PanelFrame::splitName("Bench sim");
+    check(none.isEmpty() && own == "Bench sim", "plate: own name whole, got " + none + " | " + own);
+    const auto [alone, rest] = PanelFrame::splitName("Uni-Trend");
+    check(alone.isEmpty() && rest == "Uni-Trend", "plate: a manufacturer alone stays whole");
+  }
 
   // --- 1. glyphs: every digit, the letters meters send (OL, Err, dIodE, bAt) ---
   check(LcdWidget::segmentsFor('8') == 0x7f, "8 lights all seven segments");

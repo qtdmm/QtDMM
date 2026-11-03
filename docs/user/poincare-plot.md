@@ -18,8 +18,8 @@ Switch it on with **Poincaré plot** in the toolbar or the menu (Ctrl+5); it
 sits in the column next to the graph. It collects the main value while
 QtDMM runs, shown or not, independent of the recorder.
 
-**Add Poincaré plot** in the menu (or in a plot's right-click menu, then
-with the same value) opens another one, each with its own value; **New
+**Add Poincaré plot** in the menu asks for its value first and opens another
+one (in a plot's right-click menu it opens one with the same value), each with its own value; **New
 Poincaré plot** in the menu of a value in the sidebar opens one for that
 value. **Close window** in its right-click menu removes an added plot; the
 window layout and workspaces keep them. Distance, points and the ellipse
