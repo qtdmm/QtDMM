@@ -71,6 +71,7 @@
 - **Silver is now called Light** — and the designs are named Light, Dark, Light Metal and Dark Metal in every language; the saved choice stays.
 - **First steps** — the first start opens an 800×600 window (at most 84 % of the screen) that the views fill; without a device the status line is empty, a device connected says how (`UT61E: connected (USB)`, the port in the tooltip), and the tooltip of the time (`0:26 / 8:20 - Live`) says what the numbers are. Showing or hiding the sidebar widens or narrows the window by its width, so the views keep their arrangement (maximized they share the room). The graph's automatic axis now fits the data closely for a new installation (**Include zero line** in Settings → Graph brings zero back; a setting saved before stays). Add device shows the picture of a meter it recognises at a port, and the link in the warning about unconfirmed settings takes the design's link colour.
 - **The LCD after the kind of meter** — a front panel shows only the annunciators the meter's own display has (a thermometer HOLD, MAX and MIN, a Victron device none) and the bar graph only for multimeters and clamp meters; their room stays, so the panels line up. An annunciator a reading lights shows anyway.
+- **Graph: no leftovers after an axis change** — switching a value to another axis or off left old labels at the time axis and beside the right axes, and a piece of curve between them, until the next full repaint. The sidebar's reading column is a little wider, so "387.58 mA DC" is no longer cut.
 
 ### Please note when updating from 26.3
 

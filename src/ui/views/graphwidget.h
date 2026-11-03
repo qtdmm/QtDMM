@@ -695,7 +695,7 @@ protected:
   // Qt Charts based rendering (core curve + axes, plus the integration curve
   // and the cursor/threshold overlays reintroduced as QGraphicsLineItems on
   // top of the chart scene).
-  QChartView      *m_chartView;
+  QChartView      *m_chartView = nullptr;
   QChart          *m_chart;
   QLineSeries     *m_dataSeries;   ///< the data line's first segment (positions map with it)
   QScatterSeries  *m_dataPoints;
