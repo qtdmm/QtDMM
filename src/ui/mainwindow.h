@@ -219,6 +219,10 @@ protected:
   QList<QMdiSubWindow *> poincareWindows() const;
   /// The readings table or a Poincaré plot: a window of the column on the right.
   bool        isColumn(const QMdiSubWindow *win) const;
+  /// @p value dragged out of the sidebar and dropped at @p pos of the area:
+  /// onto a view (analog meter, Poincaré plot, graph, readings table, the
+  /// big line of its device's front panel), or a menu of new views.
+  void        dropValue(const ValueRef &value, const QPoint &pos);
   /// The design's colours for @p plot.
   void        applyPoincareColors(PoincarePlot *plot);
   /// @}

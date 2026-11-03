@@ -27,7 +27,7 @@ colours. A device connected is bold, with a dot that is green while its
 readings come in and grey when none has come for three seconds. A click on
 a device does nothing: **Connect** in its context menu, the button
 **Connect** in its info (a double click), or dragging it onto **Connected
-devices** connects it (see below).
+devices** or onto the windows connects it (see below).
 
 With a single device the sidebar stays closed; adding the second one opens
 it, and the window remembers whether you leave it open. With no device
@@ -101,6 +101,13 @@ shows which value - right-click a value:
 
 A choice opens the window it is for, also when the toolbar is hidden. The
 choices are kept with the window layout.
+
+A value can also be **dragged** out of the sidebar: onto an analog meter or
+the Poincaré plot it becomes the value shown, onto the graph a curve, onto
+the readings table a column of the table, onto the front panel of its own
+device the big line (the value there moves to the small line). Dropped on
+the free area between the windows (in the arrangement *Free*), it offers a
+new analog meter, a new Poincaré plot or the graph.
 
 An analog meter and the Poincaré plot show one value each: **Sources...** in
 their right-click menu chooses it, from the connected devices and their

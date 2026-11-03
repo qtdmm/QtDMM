@@ -297,6 +297,9 @@ void MainWindow::createViews()
   });
   m_emptyStart->hide();
   m_mdi->installEventFilter(this);
+  // a value or an entry of My devices dragged out of the sidebar
+  m_mdi->viewport()->setAcceptDrops(true);
+  m_mdi->viewport()->installEventFilter(this);
   connect(addButton, &QToolButton::clicked, this, &MainWindow::addDevice);
 
   // the alarms of every open meter: sounds, popups, one banner
@@ -1556,6 +1559,30 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
     if (auto *panel = qobject_cast<FrontPanel *>(watched->parent() ? watched->parent() : watched);
         panel && watched == panel->display())
       setActive(panel->controller());
+  if (watched == m_mdi->viewport()
+      && (event->type() == QEvent::DragEnter || event->type() == QEvent::DragMove || event->type() == QEvent::Drop))
+  {
+    auto *drag = static_cast<QDropEvent *>(event);
+    const QMimeData *data = drag->mimeData();
+    const bool value = data->hasFormat(DeviceSidebar::kValueMime);
+    const QString id = QString::fromUtf8(data->data(DeviceSidebar::kDeviceMime));
+    if (!value && (id.isEmpty() || m_session->controller("device:" + id)))
+      return false;
+    // taken, but the sidebar keeps its row (no move)
+    drag->setDropAction(Qt::IgnoreAction);
+    drag->accept();
+    if (event->type() == QEvent::DragEnter || event->type() == QEvent::DragMove)
+    {
+      drag->setDropAction(Qt::CopyAction);
+      return true;
+    }
+    if (value)
+      dropValue(ValueRef::fromString(QString::fromUtf8(data->data(DeviceSidebar::kValueMime))),
+                drag->position().toPoint());
+    else
+      openBeside(id);
+    return true;
+  }
   if (watched == m_mdi && event->type() == QEvent::Resize)
     m_emptyStart->setGeometry(m_mdi->rect());
   // closing a window (its title bar button, Ctrl+F4) only hides it: a real
@@ -1886,6 +1913,59 @@ void MainWindow::editSources(ValueMenu::View view, MeterView *meter, PoincareVie
       if (plot == poincareViewOf(m_poincareWin))
         m_poincareAction->setChecked(true);
       break;
+  }
+  updateOpenDevices();
+}
+
+void MainWindow::dropValue(const ValueRef &value, const QPoint &pos)
+{
+  // the window under the drop, the topmost first
+  QMdiSubWindow *win = nullptr;
+  const QList<QMdiSubWindow *> wins = m_mdi->subWindowList(QMdiArea::StackingOrder);
+  for (auto it = wins.crbegin(); it != wins.crend() && !win; ++it)
+    if ((*it)->isVisible() && (*it)->geometry().contains(pos))
+      win = *it;
+  if (MeterView *meter = meterViewOf(win))
+    meter->setValue(value);
+  else if (PoincareView *plot = poincareViewOf(win))
+    plot->setValue(value);
+  else if (win == m_graphWin)
+    m_wid->graph()->setValueShown(value, true);
+  else if (win == m_readingsWin)
+    setTableShown(value, true);
+  else if (FrontPanel *panel = panelOf(win))
+  {
+    // a front panel shows its own device's values: the big line
+    if (!panel->controller() || panel->controller()->source() != value.source)
+    {
+      statusBar()->showMessage(tr("A front panel shows the values of its own device"), 4000);
+      return;
+    }
+    const int before = panel->value().id;
+    QList<int> small = panel->secondaries();
+    if (const qsizetype at = small.indexOf(value.id); at >= 0)
+      small[at] = before;
+    panel->setValue(value);
+    panel->setSecondaries(small);
+    panel->controller()->setMinMaxValue(value.id);
+  }
+  else
+  {
+    // the free area: a new view for it
+    QMenu menu(this);
+    QAction *meter = menu.addAction(m_newMeterAction->icon(), tr("New &analog meter"));
+    QAction *plot = menu.addAction(m_newPoincareAction->icon(), tr("New &Poincaré plot"));
+    QAction *graph = menu.addAction(action_Graph->icon(), tr("In the &graph"));
+    QAction *chosen = menu.exec(m_mdi->viewport()->mapToGlobal(pos));
+    if (chosen == meter)
+      newView(Added::Meter, value);
+    else if (chosen == plot)
+      newView(Added::Poincare, value);
+    else if (chosen == graph)
+    {
+      m_wid->graph()->setValueShown(value, true);
+      action_Graph->setChecked(true);
+    }
   }
   updateOpenDevices();
 }
