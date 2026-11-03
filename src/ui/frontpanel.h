@@ -78,6 +78,8 @@ private:
   /// The verdict of the limit test on value @p id: on the LCD for the value
   /// it shows big, its colour under an alarm's.
   void        showVerdict(int id, LimitTest::Verdict verdict, double deviation);
+  /// The limit test's count in the display's tooltip, while the test is on.
+  void        showLimitCount(const LimitTest::Count &count);
   /// The alarm's colour (blinking if wanted) or the limit test's on the LCD.
   void        showAlert();
 

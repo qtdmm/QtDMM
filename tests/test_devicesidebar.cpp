@@ -173,26 +173,28 @@ int main(int argc, char **argv)
     check(connects == 1 && !dlg.connectButton()->isEnabled(), "Connect: connects, then greyed");
   }
 
-  // 7. the open devices: the active one bold, one not connected grey, a double
-  //    click shows the front panel, the others closed by their menu
+  // 7. the open devices: none bold (no active device any more), one not
+  //    connected grey, a double click shows the front panel, the others
+  //    closed by their menu; the one chosen for Shift+F8
   {
     QList<DeviceSidebar::OpenDevice> rows;
     rows << DeviceSidebar::OpenDevice { "w", "Bench UT61E", true }
          << DeviceSidebar::OpenDevice { "p", "Power", false }
          << DeviceSidebar::OpenDevice { "u", "PSU", true };
-    rows[0].current = true;
     rows[1].connected = false;
     sidebar.setOpenDevices(rows);
     check(sidebar.openNode()->childCount() == 3, "three open devices");
     QTreeWidgetItem *own = sidebar.openItem("w");
     QTreeWidgetItem *p = sidebar.openItem("p");
-    check(own && own->font(0).bold() && !p->font(0).bold(), "the active one is bold");
+    check(own && !own->font(0).bold() && !p->font(0).bold(), "none bold");
     check(p->foreground(0).color() != own->foreground(0).color(), "one not connected greyed");
-    // another one active: it is bold
-    rows[0].current = false;
-    rows[2].current = true;
-    sidebar.setOpenDevices(rows);
-    check(!own->font(0).bold() && sidebar.openItem("u")->font(0).bold(), "another active one bold");
+    sidebar.clearSelection();
+    check(sidebar.chosenDevice().isEmpty(), "nothing chosen");
+    sidebar.setCurrentItem(p);
+    check(sidebar.chosenDevice() == "p", "the device chosen on the bench: " + sidebar.chosenDevice());
+    sidebar.devicesNode()->setExpanded(true);
+    sidebar.setCurrentItem(sidebar.deviceItem(ut61e));
+    check(sidebar.chosenDevice() == ut61e, "or in My devices: " + sidebar.chosenDevice());
     // one value: a row of its own with the curve's colour, none without;
     // the device's row has no marks
     {

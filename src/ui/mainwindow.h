@@ -173,18 +173,9 @@ protected:
   QList<QMdiSubWindow *> panelWindows() const { return m_panelWins.values(); }
   /// Whether @p win shows an instrument: a front panel or an analog meter.
   bool        isInstrument(const QMdiSubWindow *win) const;
-  /// @name The active device: the meter of the front panel used last
-  /// Connect, Reset min/max and Device settings act on it; the first meter
-  /// connected while no panel was used, none without a meter.
-  /// @{
-  QPointer<MeterController> m_active;   ///< null: the first meter
-  QLabel     *m_activeName = nullptr;   ///< "Active: <name>" in the status bar, with more than one meter
-  QMetaObject::Connection m_limitCountLink;   ///< the active device's limit test count
-  std::function<void(const LimitTest::Count &)> m_showLimitCount;   ///< into the status bar
-  MeterController *activeController() const;
-  /// Makes @p ctl the active device; Connect shows its state.
-  void        setActive(MeterController *ctl);
-  /// @}
+  /// Connect (@p on) or disconnect all devices of the bench: Connect in the
+  /// toolbar and the graph's menu. One device by its own context menu.
+  void        connectBench(bool on);
   /// The panel in @p win, nullptr for another view.
   static FrontPanel *panelOf(const QMdiSubWindow *win);
   /// The window's background behind @p view: the design's frame (metal) or the palette's.
@@ -326,7 +317,6 @@ protected:
   bool        m_running;
   QLabel     *m_error;
   QLabel     *m_info;
-  QLabel     *m_limitCount;   ///< PASS/FAIL count, while the limit test is on
   QMenu      *m_menu;
   QAction    *m_arrangeEntry = nullptr;   ///< Arrange in m_menu, shown while the toolbar is hidden
   HelpDlg    *m_helpDlg;

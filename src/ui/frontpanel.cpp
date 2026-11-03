@@ -122,8 +122,11 @@ void FrontPanel::attach(MeterController *ctl)
     m_rules << connect(ctl, &MeterController::limitTestChanged, this, [this](const LimitTest &test)
     {
       m_display->setLimitTest(test.enabled);
+      showLimitCount(m_ctl->limitCount());
     });
+    m_rules << connect(ctl, &MeterController::limitCountChanged, this, &FrontPanel::showLimitCount);
   }
+  showLimitCount(ctl ? ctl->limitCount() : LimitTest::Count());
   updateKeys();
 }
 
@@ -140,6 +143,21 @@ void FrontPanel::showVerdict(int id, LimitTest::Verdict v, double deviation)
   m_limitColor = !tint || v == LimitTest::NoVerdict ? QColor()
                  : v == LimitTest::Pass ? QColor(0x3c, 0xb0, 0x4a) : QColor(0xd8, 0x22, 0x22);
   showAlert();
+}
+
+void FrontPanel::showLimitCount(const LimitTest::Count &count)
+{
+  // the readings judged, in the display's tooltip while the test is on
+  if (!m_ctl || !m_ctl->limitTest().enabled)
+  {
+    m_display->setToolTip(QString());
+    return;
+  }
+  const QLocale locale;
+  const QString share = count.total() > 0 ? locale.toString(100.0 * count.fail() / count.total(), 'f', 1) : "-";
+  m_display->setToolTip(tr("PASS %1 · FAIL %2 (%3 %)").arg(count.pass).arg(count.fail()).arg(share) + '\n'
+                        + tr("Readings judged since the limits were set or min/max was reset: "
+                             "%1 too high, %2 too low").arg(count.high).arg(count.low));
 }
 
 void FrontPanel::showAlert()

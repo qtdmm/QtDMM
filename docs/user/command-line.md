@@ -23,7 +23,7 @@ of an entry of [My devices](my-devices.md) (or dragging it onto
 device*) connects the device in the same QtDMM, with a front panel of its
 own; `--connect <id>` does the same at the start, and over SCPI
 `QTDMM:DEVice:OPEN`. The node **Bench** of the sidebar (F9)
-lists them with their current reading, the active device in bold; *Close*
+lists them with the values they read; *Close*
 in the context menu closes one (see [My devices](my-devices.md#several-meters-front-panels-and-the-active-device)). They record together, on one
 time base, and a [calculated value](calculated-values.md) reads them by
 their names.

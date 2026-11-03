@@ -29,16 +29,16 @@ handbook window are fixed.
 
 | Key | Action |
 |---|---|
-| F3 | Connect / disconnect the meter |
+| F3 | Connect / disconnect all devices of the bench |
 | Space | Record: start the recorder, or stop it when it is running |
 | Ctrl+Del | Clear the recording |
-| F4 | Reset the min/max memory |
+| F4 | Reset the min/max memory of all devices |
 | Ctrl+E | Export the recording as CSV |
 | Ctrl+I | Import a CSV file |
 | Ctrl+P | Print the graph |
 | Ctrl+Shift+C | Copy the graph as an image to the clipboard |
 | F8 | Settings |
-| Shift+F8 | Settings of the device in use (without one: Add device) |
+| Shift+F8 | Settings of the device chosen in the sidebar |
 | Ctrl+F8 | Settings, Recording page |
 | F9 | Show or hide the sidebar with My devices and the open devices |
 | F7 | Open the menu |

@@ -19,9 +19,8 @@ class DeviceLibrary;
 ///
 /// The node "Open devices" (shown as Bench) lists the meters of the process
 /// (MainWindow gives them with setOpenDevices()) with a dot, green while
-/// readings come in; the active one (the meter
-/// of the front panel used last) in bold, one not connected greyed. No
-/// readings and no states: the front panels have them. Their context menu shows the front panel
+/// readings come in, one not connected greyed. No readings and no states:
+/// the front panels have them. Their context menu shows the front panel
 /// (also a double click), connects or disconnects, and closes; dragged back
 /// onto My devices one closes. Below each meter a row for each of its values,
 /// its name with the unit and the marks of where it is shown; its context
@@ -61,7 +60,6 @@ public:
     QString name;
     bool    active = false; ///< readings come in
     QList<Value> values;    ///< a row each below the device
-    bool    current = false; ///< the active device: the toolbar acts on it
     bool    connected = true; ///< its connection is wanted (MeterConnection::isWanted())
   };
 
@@ -102,6 +100,9 @@ public:
   QTreeWidgetItem *openNode() const { return m_open; }
   /// The item of the open device @p id, nullptr when there is none.
   QTreeWidgetItem *openItem(const QString &id) const;
+  /// The entry of My devices chosen (selected) here, on the bench or in My
+  /// devices, a value row for its device; empty: none.
+  QString     chosenDevice() const;
 
   /// The rows of the meter's values below @p parent, after its first
   /// @p first children, also for a single one.

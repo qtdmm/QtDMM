@@ -39,7 +39,7 @@ sigrok and *Simulated / calculated* skip step 2.
 ## Choosing the device by hand
 
 Step 3 of [Add device](#add-device) and **Settings...** of a device in the
-sidebar (Shift+F8 for the one in use) hold the settings of the meter:
+sidebar (Shift+F8 for the one chosen there) hold the settings of the meter:
 
 1. Pick the **vendor** in the first box. The second box then lists only that
    vendor's models. *All vendors* shows the complete list; *Manual settings*
