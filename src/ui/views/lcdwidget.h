@@ -31,7 +31,8 @@
 
 #include "core/sampletypes.h"
 #include "core/limittest.h"
-#include "core/reading.h"   // complete for moc: a slot takes it (GCC 16 -Wsfinae-incomplete)
+#include "core/reading.h"
+#include "device/devicetype.h"   // complete for moc: a slot takes it (GCC 16 -Wsfinae-incomplete)
 
 /// The digital display: an LCD panel in the same housing as the analog
 /// meter. Seven-segment digits, unit, annunciators (AUTO; AC, "+" for AC+DC,
@@ -89,6 +90,25 @@ public:
   /// Layout: digit count from the display counts, which rows to show and how
   /// many secondary values.
   void setDisplayMode(int counts, bool minMax, bool bar, int numValues);
+  /// The annunciators a meter's own display has (Annunciator bits).
+  enum Annunciator : quint16
+  {
+    AnnAuto = 0x001, AnnPeak = 0x002, AnnMax = 0x004, AnnMin = 0x008, AnnAvg = 0x010,
+    AnnAc = 0x020, AnnDc = 0x040, AnnDiode = 0x080, AnnContinuity = 0x100, AnnHold = 0x200,
+    AnnAll = 0x3ff
+  };
+  /// What the display of a kind of meter has: a bar graph, its annunciators.
+  struct Look
+  {
+    bool    bar = true;
+    quint16 annunciators = AnnAll;
+  };
+  static Look lookOf(DeviceType::Type type);
+  /// Draws only what @p look has: the others are left out (an annunciator a
+  /// reading lights still shows); their room stays, so the panels of
+  /// different meters line up.
+  void setLook(const Look &look);
+  Look look() const { return m_look; }
   /// Only the number of values: the main one and up to three more, of which
   /// the small line shows kSmallLineValues.
   void setValueCount(int numValues);
@@ -231,6 +251,7 @@ private:
   bool m_showMinMax = true;
   bool m_showBar = true;
   bool m_paintBar = false;
+  Look m_look;   ///< setLook()
   int m_numValues = 1;
   int m_primary = 0;   ///< setPrimary()
   std::optional<QList<int>> m_secondaries;   ///< setSecondaries(), unset: the first ones
