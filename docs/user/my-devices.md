@@ -101,11 +101,10 @@ shows which value - right-click a value:
 A choice opens the window it is for, also when the toolbar is hidden. The
 choices are kept with the window layout.
 
-An analog meter and the Poincaré plot show one value each: **Value** in
+An analog meter and the Poincaré plot show one value each: **Sources...** in
 their right-click menu chooses it, from the connected devices and their
-values. With more than one device connected, the context menus of the graph
-and the readings table have **Sources...**: all connected devices with their
-values, to tick those the view shows. A device connected later changes nothing by itself - unless
+values. With more than one device connected, the graph and the readings
+table have **Sources...** too, to tick the values they show. A device connected later changes nothing by itself - unless
 a view shows nothing: an empty graph then takes its main value, the analog
 meter and the Poincaré plot take it when their device is not connected.
 The graph draws its values from the recording of the device of its first

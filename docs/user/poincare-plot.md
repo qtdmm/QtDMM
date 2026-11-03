@@ -52,7 +52,7 @@ Right-click into the plot:
 - **Clear** - starts afresh.
 - **Save image...** - the plot as PNG or SVG.
 
-**Value** in its right-click menu chooses the value plotted, of any
+**Sources...** in its right-click menu chooses the value plotted, of any
 connected device; another one starts afresh. Kept with the window layout.
 
 Distance, points and the ellipse are kept with the other settings of the

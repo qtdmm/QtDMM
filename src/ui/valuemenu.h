@@ -19,7 +19,7 @@ class InstanceWidget;
 /// takes the place, the value there swaps with it), Graph shown or not and
 /// on which axis, Readings table, and a new analog meter for it. A choice
 /// opens the window it is for. The analog meters and the Poincaré plot
-/// choose their value in their own menu (MainWindow::addValueChoice()).
+/// choose their value with Sources... in their own menu.
 ///
 /// The LCD places go to the meter's FrontPanel, the other views get the
 /// value by its ValueRef (InstanceWidget).
@@ -27,7 +27,7 @@ class ValueMenu
 {
   Q_DECLARE_TR_FUNCTIONS(ValueMenu)
 public:
-  enum class View { Lcd, Graph, Table };
+  enum class View { Lcd, Meter, Poincare, Graph, Table };
 
   /// What the menu acts on.
   struct Target

@@ -21,8 +21,8 @@ Until a value comes in, the dial says why in place of the unit, as the
 main value of the active device at first; in an analog meter's right-click
 menu it opens one with the same value as that meter. Each one shows its own
 value, of any connected device, and has its own style. Choose the value with
-**Value** in the meter's right-click menu (the connected devices, each with
-its values); **New analog meter** in the menu of a value in the sidebar
+**Sources...** in the meter's right-click menu (the connected devices, each
+with its values); **New analog meter** in the menu of a value in the sidebar
 opens one for that value. **Close window** in that menu (or the X in its title bar)
 removes an added meter; the first one is only hidden, as before. The window
 layout and workspaces keep the added meters with their values and styles.
@@ -74,7 +74,7 @@ a classic ivory dial with black lettering (the default). **Meter style** in a
 meter's right-click menu sets it for that meter only; the *Appearance* settings
 page sets it for all of them.
 
-For a meter with more than one value, **Value** in the analog meter's
+For a meter with more than one value, **Sources...** in the analog meter's
 right-click menu chooses the one the needle shows (kept with the window
 layout). **MIN**, **MAX** and their marks are those of the value the needle
 shows, whichever the display shows.

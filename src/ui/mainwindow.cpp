@@ -1400,11 +1400,6 @@ void MainWindow::on_action_Menu_triggered()
     m_menu->addAction(m_toolbars);
     m_menu->addAction(m_fullScreen);
     m_menu->addSeparator();
-    m_menu->addAction(m_zoomIn);
-    m_menu->addAction(m_zoomOut);
-    m_menu->addAction(m_zoomFit);
-    m_menu->addAction(m_copyImage);
-    m_menu->addSeparator();
     m_menu->addAction(action_Help);
     m_menu->addAction(action_Direct_help);
     m_menu->addAction(action_About);
@@ -1582,10 +1577,11 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
     addRulesMenu(&menu, panel->controller());
   }
   // the value it shows, of any open meter
-  if (meter)
-    addValueChoice(&menu, meter->value(), [meter](const ValueRef &v) { meter->setValue(v); });
-  else if (win == m_poincareWin)
-    addValueChoice(&menu, m_wid->poincareValue(), [this](const ValueRef &v) { m_wid->setPoincareValue(v); });
+  if ((meter || win == m_poincareWin) && !m_session->controllers().isEmpty())
+    connect(menu.addAction(tr("S&ources...")), &QAction::triggered, this, [this, meter]
+    {
+      editSources(meter ? ValueMenu::View::Meter : ValueMenu::View::Poincare, meter);
+    });
   if (meter)
   {
     // this meter's own, the settings' until one is picked
@@ -1732,8 +1728,10 @@ static QString readingText(const Reading &r)
   return QString("%1 %2%3 %4").arg(value.left(8), prefix, r.baseUnit, couplingText(r.port.defining)).trimmed();
 }
 
-void MainWindow::editSources(ValueMenu::View view)
+void MainWindow::editSources(ValueMenu::View view, MeterView *meter)
 {
+  if (!meter)
+    meter = meterViewOf(m_meterWin);
   // the open meters with their values
   QList<SourcesDlg::Meter> meters;
   QList<ValueRef> all;
@@ -1750,26 +1748,45 @@ void MainWindow::editSources(ValueMenu::View view)
     meters << meter;
   }
   GraphWidget *graph = m_wid->graph();
-  const bool graphView = view == ValueMenu::View::Graph;
+  const bool several = view == ValueMenu::View::Graph || view == ValueMenu::View::Table;
   QList<ValueRef> chosen;
-  if (graphView)
-    chosen = graph->values();   // each with its meter's source, as the dialog lists them
-  else
-    for (const ValueRef &v : std::as_const(all))
-      if (tableShows(v))
-        chosen << v;
-  SourcesDlg dlg(graphView ? tr("Graph") : tr("Readings table"), true, meters, this);
+  QString name;
+  switch (view)
+  {
+    case ValueMenu::View::Graph:
+      name = tr("Graph");
+      chosen = graph->values();   // each with its meter's source, as the dialog lists them
+      break;
+    case ValueMenu::View::Table:
+      name = tr("Readings table");
+      for (const ValueRef &v : std::as_const(all))
+        if (tableShows(v))
+          chosen << v;
+      break;
+    case ValueMenu::View::Meter:
+      name = meter->meter()->windowTitle();
+      chosen << meter->value();
+      break;
+    default:
+      name = tr("Poincaré plot");
+      chosen << m_wid->poincareValue();
+      break;
+  }
+  SourcesDlg dlg(name, several, meters, this);
   dlg.setChosen(chosen);
   if (dlg.exec() != QDialog::Accepted)
     return;
   const QList<ValueRef> picked = dlg.chosen();
-  if (graphView)
+  if (!several && picked.isEmpty())
+    return;
+  switch (view)
   {
-    graph->setValues(picked);
-    action_Graph->setChecked(true);
-  }
-  else
-  {
+    case ValueMenu::View::Graph:
+      graph->setValues(picked);
+      action_Graph->setChecked(true);
+      break;
+    case ValueMenu::View::Table:
+    {
       // the meters of the values picked
       ReadingsModel *log = m_readings->log();
       QStringList sources;
@@ -1785,34 +1802,19 @@ void MainWindow::editSources(ValueMenu::View view)
         applyTableSources();
       }
       m_readingsAction->setChecked(true);
+      break;
+    }
+    case ValueMenu::View::Meter:
+      meter->setValue(picked.first());
+      if (meter == meterViewOf(m_meterWin))
+        m_meterAction->setChecked(true);
+      break;
+    default:
+      m_wid->setPoincareValue(picked.first());
+      m_poincareAction->setChecked(true);
+      break;
   }
   updateOpenDevices();
-}
-
-void MainWindow::addValueChoice(QMenu *menu, const ValueRef &shown, const std::function<void(const ValueRef &)> &choose)
-{
-  QMenu *values = menu->addMenu(tr("&Value"));
-  const QList<MeterController *> meters = m_session->controllers();
-  values->setEnabled(!meters.isEmpty());
-  auto *group = new QActionGroup(values);
-  for (const MeterController *ctl : meters)
-  {
-    // one meter: its values right here
-    QMenu *sub = meters.size() > 1 ? values->addMenu(QString(ctl->deviceName()).replace('&', "&&")) : values;
-    for (int id = 0; id < ctl->valueCount(); ++id)
-    {
-      const ValueRef v(id, ctl->source());
-      QAction *a = sub->addAction(QString("&%1 %2").arg(id + 1).arg(otherValueRow(ctl, id).name.replace('&', "&&")));
-      a->setCheckable(true);
-      a->setChecked(v == shown);
-      group->addAction(a);
-      connect(a, &QAction::triggered, this, [this, choose, v]
-      {
-        choose(v);
-        updateOpenDevices();
-      });
-    }
-  }
 }
 
 QString MainWindow::sourceName(const QString &source) const

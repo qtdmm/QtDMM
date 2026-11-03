@@ -69,8 +69,8 @@ void ValueMenu::fill(QMenu *menu, const Target &target, const ValueRef &value)
     });
   }
   // the analog meters: one entry, with more than one a submenu by their windows
-  // the analog meters and the Poincaré plot choose their value in their own
-  // menu; here a new analog meter for it
+  // the analog meters and the Poincaré plot choose their value with
+  // Sources... in their own menu; here a new analog meter for it
   if (target.newMeter)
     QObject::connect(menu->addAction(tr("New &analog meter")), &QAction::triggered, menu,
                      [add = target.newMeter, ref] { add(ref); });
