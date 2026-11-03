@@ -69,20 +69,11 @@ void ValueMenu::fill(QMenu *menu, const Target &target, const ValueRef &value)
     });
   }
   // the analog meters: one entry, with more than one a submenu by their windows
-  const QList<MeterView *> &meters = wid->meters();
-  QMenu *meterMenu = meters.size() > 1 ? menu->addMenu(tr("&Analog meter")) : menu;
-  for (MeterView *view : meters)
-  {
-    const QString text = meters.size() > 1 ? view->meter()->windowTitle() : tr("&Analog meter");
-    QObject::connect(checkable(meterMenu, text, view->value() == ref), &QAction::triggered, menu,
-                     [view, ref, show, first = view == meters.first()]
-    {
-      view->setValue(ref);
-      // the others go when closed: they are on screen
-      if (first)
-        show(View::Meter, ref.source);
-    });
-  }
+  // the analog meters and the Poincaré plot choose their value with
+  // Sources... in their own menu; here a new analog meter for it
+  if (target.newMeter)
+    QObject::connect(menu->addAction(tr("New &analog meter")), &QAction::triggered, menu,
+                     [add = target.newMeter, ref] { add(ref); });
   // the graph: off, or on an axis. A unit the axis has already joins it,
   // another one takes its place there (GraphWidget::setValueAxis())
   GraphWidget *graph = wid->graph();
@@ -128,12 +119,6 @@ void ValueMenu::fill(QMenu *menu, const Target &target, const ValueRef &value)
       show(View::Graph, ref.source);
     });
   }
-  QObject::connect(checkable(menu, tr("&Poincaré plot"), wid->poincareValue() == ref), &QAction::triggered, menu,
-                   [wid, ref, show]
-  {
-    wid->setPoincareValue(ref);
-    show(View::Poincare, ref.source);
-  });
   // the readings table: all values at first; copying follows it, the
   // export keeps them all
   menu->addSeparator();

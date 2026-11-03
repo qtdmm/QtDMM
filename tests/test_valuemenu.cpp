@@ -17,7 +17,6 @@
 #include "ui/frontpanel.h"
 #include "ui/instancewidget.h"
 #include "ui/valuemenu.h"
-#include "ui/views/analogmeter.h"
 #include "ui/views/graphwidget.h"
 #include "ui/views/lcdwidget.h"
 #include "testutil.h"
@@ -47,9 +46,7 @@ int main(int argc, char **argv)
                                       {"DMM/virtual-max", "0.25"}, {"DMM/virtual-values", 2}});
   DeviceSession session;
   session.setConfigDir(dir.path());
-  AnalogMeter meter;   // outlives the window's MeterView
   InstanceWidget wid("vm", dir.path(), &session);
-  wid.addMeter(&meter);
   MeterController *ctl = session.open(b);
   check(ctl != nullptr, "Sim B open");
   if (!ctl)
@@ -105,31 +102,20 @@ int main(int argc, char **argv)
           "off: the menu says off, no axis beside it");
     delete menu;
   }
-  // 3. the analog meter and the Poincaré plot by its ValueRef
+  // 3. the analog meters and the Poincaré plot choose in their own menu;
+  //    here only a new analog meter for the value
   {
     QMenu *menu = menuFor(ValueRef(1, source));
-    action(menu, { "&Analog meter" })->trigger();
-    action(menu, { "&Poincaré plot" })->trigger();
-    check(wid.meters().first()->value() == ValueRef(1, source) && wid.poincareValue() == ValueRef(1, source),
-          "analog meter and Poincaré plot show it");
+    check(!action(menu, { "&Analog meter" }) && !action(menu, { "&Poincaré plot" }) && !action(menu, { "New &analog meter" }),
+          "no entries of the analog meter or the Poincaré plot, no new meter without newMeter");
     delete menu;
+    QList<ValueRef> added;
+    target.newMeter = [&added](const ValueRef &v) { added << v; };
     menu = menuFor(ValueRef(1, source));
-    check(action(menu, { "&Analog meter" })->isChecked(), "the menu says so");
+    action(menu, { "New &analog meter" })->trigger();
+    check(added == QList<ValueRef>{ ValueRef(1, source) }, "a new analog meter for it");
     delete menu;
-    // a second analog meter: a submenu by the windows' titles, each its own value
-    AnalogMeter second;
-    second.setWindowTitle("Analog meter 2");
-    MeterView *view = wid.addMeter(&second);
-    menu = menuFor(ValueRef(0, source));
-    action(menu, { "&Analog meter", "Analog meter 2" })->trigger();
-    check(view->value() == ValueRef(0, source) && wid.meters().first()->value() == ValueRef(1, source),
-          "the second analog meter shows it, the first keeps its own");
-    delete menu;
-    menu = menuFor(ValueRef(0, source));
-    check(action(menu, { "&Analog meter", "Analog meter 2" })->isChecked(), "the submenu says so");
-    delete menu;
-    wid.removeMeter(view);
-    check(wid.meters().size() == 1, "removed again");
+    target.newMeter = nullptr;
   }
   // 5. the rules on a value: a new alarm, the limits, by its ValueRef
   {

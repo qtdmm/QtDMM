@@ -84,7 +84,6 @@ shows which value - right-click a value:
   right** - the place on the device's front panel: big (the min/max memory
   follows it) or on the small line below it. The value that had the place goes where
   this one was, or off the display when this one was not on it.
-- **Analog meter** - the value the needle shows (one).
 - **Graph** ▸ **Off**, **Left axis**, **Right axis**, **Third axis** - the
   value's curve off or on that axis; the third axis sits outside the right
   one. A value in the unit the axis has already joins it (two voltages on
@@ -94,7 +93,7 @@ shows which value - right-click a value:
   says which. The main value is always on the left. A value of
   another device joins an axis in its unit; one with no room there is not
   drawn, and the status line says so.
-- **Poincaré plot** - the value the plot takes (one).
+- **New analog meter** - another analog meter window showing it.
 - **Readings table** - whether the [readings table](readings-table.md)
   lists it (all values of the devices it shows; another device comes in
   with the value chosen).
@@ -102,11 +101,10 @@ shows which value - right-click a value:
 A choice opens the window it is for, also when the toolbar is hidden. The
 choices are kept with the window layout.
 
-With more than one device connected, the context menus of the graph, the
-readings table, the analog meter and the Poincaré plot have **Sources...**:
-all connected devices with their values, to tick those the view shows -
-several for the graph and the table, one for the analog meter and the
-Poincaré plot. A device connected later changes nothing by itself - unless
+An analog meter and the Poincaré plot show one value each: **Sources...** in
+their right-click menu chooses it, from the connected devices and their
+values. With more than one device connected, the graph and the readings
+table have **Sources...** too, to tick the values they show. A device connected later changes nothing by itself - unless
 a view shows nothing: an empty graph then takes its main value, the analog
 meter and the Poincaré plot take it when their device is not connected.
 The graph draws its values from the recording of the device of its first

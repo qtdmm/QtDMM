@@ -1392,15 +1392,13 @@ void MainWindow::on_action_Menu_triggered()
     m_menu->addAction(m_newMeterAction);
     m_menu->addAction(m_readingsAction);
     m_menu->addAction(m_poincareAction);
-    m_menu->addMenu(m_arrangeMenu);
+    // Arrange has its button next to the menu's; here only while the toolbar is hidden
+    m_arrangeEntry = new QAction(m_arrangeMenu->title(), m_menu);
+    m_arrangeEntry->setMenu(m_arrangeMenu);
+    m_menu->addAction(m_arrangeEntry);
     m_menu->addMenu(m_designMenu);
     m_menu->addAction(m_toolbars);
     m_menu->addAction(m_fullScreen);
-    m_menu->addSeparator();
-    m_menu->addAction(m_zoomIn);
-    m_menu->addAction(m_zoomOut);
-    m_menu->addAction(m_zoomFit);
-    m_menu->addAction(m_copyImage);
     m_menu->addSeparator();
     m_menu->addAction(action_Help);
     m_menu->addAction(action_Direct_help);
@@ -1408,6 +1406,7 @@ void MainWindow::on_action_Menu_triggered()
     m_menu->addSeparator();
     m_menu->addAction(action_Quit);
   }
+  m_arrangeEntry->setVisible(m_toolbars->isChecked());
 
   // below the menu button; with the toolbar hidden at the top right of the window
   QWidget* widget = this->toolBarMenu->widgetForAction(this->action_Menu);
@@ -1577,8 +1576,8 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
     menu.addSeparator();
     addRulesMenu(&menu, panel->controller());
   }
-  // the value of an open meter it shows
-  if ((meter || win == m_poincareWin) && m_session->controllers().size() > 1)
+  // the value it shows, of any open meter
+  if ((meter || win == m_poincareWin) && !m_session->controllers().isEmpty())
     connect(menu.addAction(tr("S&ources...")), &QAction::triggered, this, [this, meter]
     {
       editSources(meter ? ValueMenu::View::Meter : ValueMenu::View::Poincare, meter);
@@ -1996,6 +1995,7 @@ void MainWindow::fillValueMenu(QMenu *menu, const ValueRef &value)
     if (MeterController *ctl = m_session->controller(v))
       editLimits(ctl, false, v.id);
   };
+  target.newMeter = [this](const ValueRef &v) { newMeter(v); };
   target.show = [this](ValueMenu::View view, const QString &source)
   {
     QMdiSubWindow *panel = m_panelWins.value(source);
@@ -2006,11 +2006,9 @@ void MainWindow::fillValueMenu(QMenu *menu, const ValueRef &value)
       m_arranger->arrange();
       return;
     }
-    QAction *action = view == ValueMenu::View::Lcd     ? m_displayAction
-                    : view == ValueMenu::View::Meter   ? m_meterAction
-                    : view == ValueMenu::View::Poincare ? m_poincareAction
-                    : view == ValueMenu::View::Table   ? m_readingsAction
-                                                        : action_Graph;
+    QAction *action = view == ValueMenu::View::Lcd   ? m_displayAction
+                    : view == ValueMenu::View::Table ? m_readingsAction
+                                                      : action_Graph;
     action->setChecked(true);
   };
   ValueMenu::fill(menu, target, value);
