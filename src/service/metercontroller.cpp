@@ -249,8 +249,11 @@ void MeterController::setInstanceId(const QString &id)
 void MeterController::setDevice(const QString &id, const QString &name)
 {
   m_deviceId = id;
+  const bool renamed = name != m_deviceName;
   m_deviceName = name;
   updateScpiName();
+  if (renamed)
+    Q_EMIT deviceNameChanged(name);
 }
 
 void MeterController::updateScpiName()

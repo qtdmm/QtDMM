@@ -238,6 +238,8 @@ Q_SIGNALS:
   /// SCPI server state as a sentence for the settings page; services()
   /// changed with it.
   void        scpiStatusChanged(const QString &detail);
+  /// setDevice() gave another name (renamed in My devices).
+  void        deviceNameChanged(const QString &name);
 
 private:
   /// valueMinMaxChanged() with the memory of value @p id as it is.

@@ -53,6 +53,7 @@ void ValueFeed::attach()
       m_heard = true;
       updateTexts();
     });
+    m_links << connect(ctl, &MeterController::deviceNameChanged, this, &ValueFeed::updateTexts);
     // a new connection: nothing heard of it yet; a silent meter keeps its value
     m_links << connect(ctl->dmm(), &MeterConnection::linkStateChanged, this, [this](MeterConnection::LinkState state)
     {
@@ -89,15 +90,12 @@ void ValueFeed::updateTexts()
   if (m_ctl)
   {
     caption = m_ctl->deviceName();
-    const QString name = m_ctl->valueName(m_value.id);
-    if (m_ctl->valueCount() > 1 && !name.isEmpty())
-      caption += QStringLiteral(" · ") + name;
     if (!m_heard)
       switch (m_ctl->dmm()->linkState())
       {
         case MeterConnection::LinkState::Closed:     notice = tr("Not connected"); break;
         case MeterConnection::LinkState::Connecting: notice = tr("Connecting ..."); break;
-        case MeterConnection::LinkState::Timeout:    notice = tr("No data - meter switched on?"); break;
+        case MeterConnection::LinkState::Timeout:    notice = tr("No data"); break;
         case MeterConnection::LinkState::Error:      notice = tr("No connection"); break;
         // frames arrive, but not of this value yet
         case MeterConnection::LinkState::Connected:  notice = tr("Waiting for data"); break;

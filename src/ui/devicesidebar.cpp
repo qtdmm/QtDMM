@@ -214,6 +214,9 @@ QTreeWidgetItem *DeviceSidebar::openItem(const QString &id) const
 
 void DeviceSidebar::setOpenDevices(const QList<OpenDevice> &devices)
 {
+  // a name being typed (Rename) would go: the next update, once it is done
+  if (state() == QAbstractItemView::EditingState)
+    return;
   m_openList = devices;
   m_filling = true;
   QStringList ids, shown;
@@ -317,6 +320,8 @@ QTreeWidgetItem *DeviceSidebar::valueItem(int id, const QString &device) const
 
 void DeviceSidebar::setServices(const QList<Service> &services)
 {
+  if (state() == QAbstractItemView::EditingState)
+    return;
   m_serviceList = services;
   m_filling = true;
   while (m_services->childCount() > services.size())

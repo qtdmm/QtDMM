@@ -31,13 +31,12 @@ public:
   ValueRef    value() const { return m_value; }
   /// The meter that has value() now, nullptr while it is not open.
   MeterController *controller() const { return m_ctl; }
-  /// Where the value comes from, for a view to say: the meter's name, with
-  /// the value's name after it when the meter has more than one value
-  /// ("Bench · Current DC (A)"); empty while the meter is not open.
+  /// Where the value comes from, for a view to say: the meter's name (its
+  /// entry in My devices while it is not open); the view shows the unit.
   QString     caption() const { return m_caption; }
   /// What stands instead of the value while none of it came in since the
-  /// meter was connected: its link state ("Connecting ...", "No data -
-  /// meter switched on?"), "Not connected" while the meter is not open;
+  /// meter was connected: its link state ("Connecting ...", "No data"),
+  /// "Not connected" while the meter is not open;
   /// empty once readings come in. A meter
   /// silent later keeps its last value (staleChanged()).
   QString     notice() const { return m_notice; }

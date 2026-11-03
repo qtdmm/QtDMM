@@ -118,6 +118,7 @@ void FrontPanel::attach(MeterController *ctl)
       showAlert();
     });
     m_rules << connect(ctl, &MeterController::limitJudged, this, &FrontPanel::showVerdict);
+    m_rules << connect(ctl, &MeterController::deviceNameChanged, m_display, &LcdWidget::setCaption);
     m_rules << connect(ctl, &MeterController::limitTestChanged, this, [this](const LimitTest &test)
     {
       m_display->setLimitTest(test.enabled);

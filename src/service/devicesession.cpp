@@ -33,6 +33,13 @@ void DeviceSession::setConfigDir(const QString &dir)
 {
   delete m_library;
   m_library = new DeviceLibrary(dir, this);
+  // renamed in My devices: the open meter takes the name
+  connect(m_library, &DeviceLibrary::changed, this, [this]
+  {
+    for (MeterController *ctl : controllers())
+      if (const std::optional<MyDevice> entry = m_library->find(ctl->deviceId()); entry && entry->name != ctl->deviceName())
+        ctl->setDevice(entry->id, entry->name);
+  });
 }
 
 void DeviceSession::watchRecording(MeterController *ctl)

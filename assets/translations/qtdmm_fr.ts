@@ -773,24 +773,24 @@
 <context>
     <name>AnalogMeter</name>
     <message>
-        <location filename="../../src/ui/views/analogmeter.cpp" line="640"/>
+        <location filename="../../src/ui/views/analogmeter.cpp" line="634"/>
         <source>MIN</source>
         <translation>MIN</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/analogmeter.cpp" line="641"/>
+        <location filename="../../src/ui/views/analogmeter.cpp" line="635"/>
         <source>MAX</source>
         <translation>MAX</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/analogmeter.cpp" line="647"/>
-        <location filename="../../src/ui/views/analogmeter.cpp" line="648"/>
-        <location filename="../../src/ui/views/analogmeter.cpp" line="656"/>
+        <location filename="../../src/ui/views/analogmeter.cpp" line="641"/>
+        <location filename="../../src/ui/views/analogmeter.cpp" line="642"/>
+        <location filename="../../src/ui/views/analogmeter.cpp" line="650"/>
         <source>OL</source>
         <translation>OL</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/analogmeter.cpp" line="734"/>
+        <location filename="../../src/ui/views/analogmeter.cpp" line="728"/>
         <source>HOLD</source>
         <translation>HOLD</translation>
     </message>
@@ -1277,20 +1277,20 @@
 <context>
     <name>DeviceSession</name>
     <message>
-        <location filename="../../src/service/devicesession.cpp" line="183"/>
+        <location filename="../../src/service/devicesession.cpp" line="190"/>
         <source>%1: the recording was not saved, the new one replaces it</source>
         <translation>%1 : l’enregistrement n’était pas sauvegardé, le nouveau le remplace</translation>
     </message>
     <message>
-        <location filename="../../src/service/devicesession.cpp" line="204"/>
+        <location filename="../../src/service/devicesession.cpp" line="211"/>
         <source>start ignored, the recording shown is not saved yet</source>
         <translation>démarrage ignoré, l&apos;enregistrement affiché n&apos;est pas encore sauvegardé</translation>
     </message>
     <message>
-        <location filename="../../src/service/devicesession.cpp" line="208"/>
-        <location filename="../../src/service/devicesession.cpp" line="281"/>
-        <location filename="../../src/service/devicesession.cpp" line="285"/>
-        <location filename="../../src/service/devicesession.cpp" line="298"/>
+        <location filename="../../src/service/devicesession.cpp" line="215"/>
+        <location filename="../../src/service/devicesession.cpp" line="288"/>
+        <location filename="../../src/service/devicesession.cpp" line="292"/>
+        <location filename="../../src/service/devicesession.cpp" line="305"/>
         <source>%1: %2</source>
         <translation>%1 : %2</translation>
     </message>
@@ -1507,27 +1507,27 @@
         <translation>Mes appareils</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="418"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="423"/>
         <source>&amp;Settings...</source>
         <translation>&amp;Réglages...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="481"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="486"/>
         <source>Connected, readings are coming in</source>
         <translation>Connecté, des mesures arrivent</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="481"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="486"/>
         <source>Connected</source>
         <translation>Connecté</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="602"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="607"/>
         <source>&amp;Close</source>
         <translation>&amp;Fermer</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="646"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="651"/>
         <source>&amp;Rename</source>
         <translation>Re&amp;nommer</translation>
     </message>
@@ -1562,117 +1562,117 @@
         <translation>Les appareils que lit cette fenêtre : chacun a sa face avant et enregistre avec les autres.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="247"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="250"/>
         <source>%1 - active: Connect, Reset and the device settings act on it</source>
         <translation>%1 – actif : Connecter, Réinitialiser et les réglages de l&apos;appareil agissent sur lui</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="250"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="253"/>
         <source>In the graph</source>
         <translation>Dans le graphique</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="290"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="293"/>
         <source>%1 - in the graph</source>
         <translation>%1 - dans le graphique</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="380"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="385"/>
         <source>%1 (not found)</source>
         <translation>%1 (introuvable)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="399"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="404"/>
         <source>&amp;Load</source>
         <translation>&amp;Charger</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="401"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="406"/>
         <source>Open &amp;folder</source>
         <translation>Ouvrir le &amp;dossier</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="404"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="409"/>
         <source>&amp;Remove from list</source>
         <translation>&amp;Retirer de la liste</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="419"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="424"/>
         <source>&amp;Copy address</source>
         <translation>&amp;Copier l&apos;adresse</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="452"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="457"/>
         <source>+ Add device...</source>
         <translation>＋ Ajouter un appareil…</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="456"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="461"/>
         <source>Set up another meter (the assistant).</source>
         <translation>Configurer un autre multimètre (l&apos;assistant).</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="482"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="487"/>
         <source>Double-click: info and settings</source>
         <translation>Double-clic : infos et réglages</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="592"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="597"/>
         <source>Show &amp;front panel</source>
         <translation>Afficher la face &amp;avant</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="595"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="600"/>
         <source>&amp;Value</source>
         <translation>&amp;Valeur</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="596"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="601"/>
         <source>&amp;Disconnect</source>
         <translation>&amp;Déconnecter</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="596"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="601"/>
         <source>Co&amp;nnect</source>
         <translation>Co&amp;nnecter</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="599"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="604"/>
         <source>&amp;Alarms...</source>
         <translation>A&amp;larmes...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="600"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="605"/>
         <source>L&amp;imits...</source>
         <translation>L&amp;imites...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="645"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="650"/>
         <source>&amp;Info and settings...</source>
         <translation>&amp;Infos et réglages…</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="647"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="652"/>
         <source>&amp;Connect</source>
         <translation>&amp;Connecter</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="648"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="653"/>
         <source>Reads it with the other devices connected: recorded with them, in formulas and over SCPI</source>
         <translation>Le lit avec les autres appareils connectés : enregistré avec eux, dans les formules et via SCPI</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="651"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="656"/>
         <source>Re&amp;move from My devices</source>
         <translation>Re&amp;tirer de Mes appareils</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="661"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="666"/>
         <source>Remove device</source>
         <translation>Retirer l’appareil</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="661"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="666"/>
         <source>Remove &quot;%1&quot; from My devices?</source>
         <translation>Retirer « %1 » de Mes appareils ?</translation>
     </message>
@@ -4454,43 +4454,43 @@ Le multimètre est-il branché et allumé ?</translation>
         <translation>%1 s&apos;est terminé avec le code de sortie %2</translation>
     </message>
     <message>
-        <location filename="../../src/service/metercontroller.cpp" line="335"/>
+        <location filename="../../src/service/metercontroller.cpp" line="338"/>
         <source>The meter shows %1</source>
         <translation>L&apos;appareil affiche %1</translation>
     </message>
     <message>
-        <location filename="../../src/service/metercontroller.cpp" line="386"/>
+        <location filename="../../src/service/metercontroller.cpp" line="389"/>
         <source>already recording, the recording goes on</source>
         <translation>enregistrement déjà en cours, il continue</translation>
     </message>
     <message>
-        <location filename="../../src/service/metercontroller.cpp" line="388"/>
+        <location filename="../../src/service/metercontroller.cpp" line="391"/>
         <source>start ignored, the recording shown is not saved yet</source>
         <translation>démarrage ignoré, l&apos;enregistrement affiché n&apos;est pas encore sauvegardé</translation>
     </message>
     <message>
-        <location filename="../../src/service/metercontroller.cpp" line="428"/>
+        <location filename="../../src/service/metercontroller.cpp" line="431"/>
         <source>SCPI: recording saved as %1</source>
         <translation>SCPI : enregistrement sauvegardé sous %1</translation>
     </message>
     <message>
-        <location filename="../../src/service/metercontroller.cpp" line="522"/>
+        <location filename="../../src/service/metercontroller.cpp" line="525"/>
         <source>%1: %2 (%3)</source>
         <translation>%1 : %2 (%3)</translation>
     </message>
     <message>
-        <location filename="../../src/service/metercontroller.cpp" line="528"/>
+        <location filename="../../src/service/metercontroller.cpp" line="531"/>
         <source>%1: %2</source>
         <translation>%1 : %2</translation>
     </message>
     <message>
-        <location filename="../../src/service/metercontroller.cpp" line="544"/>
-        <location filename="../../src/service/metercontroller.cpp" line="569"/>
+        <location filename="../../src/service/metercontroller.cpp" line="547"/>
+        <location filename="../../src/service/metercontroller.cpp" line="572"/>
         <source>%1: could not run %2</source>
         <translation>%1 : impossible de lancer %2</translation>
     </message>
     <message>
-        <location filename="../../src/service/metercontroller.cpp" line="547"/>
+        <location filename="../../src/service/metercontroller.cpp" line="550"/>
         <source>%1: %2 is still running</source>
         <translation>%1 : %2 est toujours en cours</translation>
     </message>
@@ -6885,28 +6885,28 @@ Puis déconnectez-vous et reconnectez-vous pour que l&apos;appartenance au group
 <context>
     <name>ValueFeed</name>
     <message>
-        <location filename="../../src/service/valuefeed.cpp" line="98"/>
-        <location filename="../../src/service/valuefeed.cpp" line="112"/>
+        <location filename="../../src/service/valuefeed.cpp" line="96"/>
+        <location filename="../../src/service/valuefeed.cpp" line="110"/>
         <source>Not connected</source>
         <translation>Non connecté</translation>
     </message>
     <message>
-        <location filename="../../src/service/valuefeed.cpp" line="99"/>
+        <location filename="../../src/service/valuefeed.cpp" line="97"/>
         <source>Connecting ...</source>
         <translation>Connexion…</translation>
     </message>
     <message>
-        <location filename="../../src/service/valuefeed.cpp" line="100"/>
-        <source>No data - meter switched on?</source>
-        <translation>Pas de données – appareil allumé ?</translation>
+        <location filename="../../src/service/valuefeed.cpp" line="98"/>
+        <source>No data</source>
+        <translation>Pas de données</translation>
     </message>
     <message>
-        <location filename="../../src/service/valuefeed.cpp" line="101"/>
+        <location filename="../../src/service/valuefeed.cpp" line="99"/>
         <source>No connection</source>
         <translation>Pas de connexion</translation>
     </message>
     <message>
-        <location filename="../../src/service/valuefeed.cpp" line="103"/>
+        <location filename="../../src/service/valuefeed.cpp" line="101"/>
         <source>Waiting for data</source>
         <translation>En attente de données</translation>
     </message>

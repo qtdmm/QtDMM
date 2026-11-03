@@ -37,8 +37,7 @@ heading. Hovering shows the two values under the cursor.
   on, another function (V DC to Ω, °C to °F) starts afresh.
 - No pair spans a gap: an overload (OL), a held display (HOLD) or a meter that
   stopped sending breaks the sequence.
-- Above the plot stands where the value comes from: the device, and the value
-  when the device has more than one.
+- Above the plot stands the device the value comes from.
 
 ## The context menu
 

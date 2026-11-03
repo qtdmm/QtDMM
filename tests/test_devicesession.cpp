@@ -249,8 +249,15 @@ int main(int argc, char **argv)
     check(waitFor([&] { return !got.isEmpty() && got.last().source == "device:" + sim && !got.last().noNumber(); }, 4000),
           "its readings come");
     const QString name = lib.find(sim)->name;
-    check(feed.caption().startsWith(name) && feed.notice().isEmpty(),
+    check(feed.caption() == name && feed.notice().isEmpty(),
           "it says where the value comes from, no notice: " + feed.caption() + " / " + feed.notice());
+    // renamed in My devices: the open meter and the view take the name
+    lib.rename(sim, "Renamed");
+    check(waitFor([&] { return feed.caption() == "Renamed"; }, 2000)
+            && session.controller("device:" + sim)->deviceName() == "Renamed",
+          "renamed: " + feed.caption());
+    lib.rename(sim, name);
+    waitFor([&] { return feed.caption() == name; }, 2000);
     got.clear();
     session.close(sim);
     check(!feed.controller() && !got.isEmpty() && got.last().quality == Quality::NoValue
