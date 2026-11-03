@@ -163,7 +163,9 @@ DeviceSidebar::DeviceSidebar(DeviceLibrary *library, QWidget *parent)
   header()->setStretchLastSection(false);
   header()->setSectionResizeMode(0, QHeaderView::Stretch);
   header()->setSectionResizeMode(kReading, QHeaderView::Fixed);
-  header()->resizeSection(kReading, QFontMetrics(tabular(font())).horizontalAdvance("-8.8888 mV DC"));
+  // the widest reading plus the cell's padding: without it "387.58 mA DC" was cut
+  const QFontMetrics readingFm(tabular(font()));
+  header()->resizeSection(kReading, readingFm.horizontalAdvance("-8.8888 mA DC") + readingFm.height() / 2);
   header()->setSectionResizeMode(kShown, QHeaderView::ResizeToContents);
   setItemDelegateForColumn(kShown, new MarksDelegate(this));
   setRootIsDecorated(true);

@@ -147,6 +147,10 @@ GraphWidget::GraphWidget(QWidget *parent, Settings *settings) :
     updateYLabels();
     updateStateLabel();
     updateLegend();
+    // the view repaints only what changed: the old labels and titles beside
+    // a plot area that moved (an axis on or off) would stay
+    if (m_chartView)
+      m_chartView->viewport()->update();
   });
   m_centreTicks = new QGraphicsPathItem(m_chart);
   m_centreTicks->setZValue(5);   // above the grid, below the curves' markers
