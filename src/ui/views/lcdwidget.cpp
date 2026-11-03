@@ -599,7 +599,7 @@ LcdWidget::Layout LcdWidget::layout() const
   Layout l;
   const double widen = m_limitOn ? kLimitWiden : 1.0;
   l.bezel = PanelFrame::panelRect(QRectF(rect()).adjusted(1, 1, -1, -1), kMinAspect * widen, kMaxAspect * widen);
-  l.face = PanelFrame::faceRect(l.bezel);
+  l.face = PanelFrame::faceRect(l.bezel, !m_caption.isEmpty());
 
   const double fh = l.face.height();
   const double fw = l.face.width();
@@ -766,6 +766,21 @@ void LcdWidget::drawMain(QPainter &p, const Layout &l) const
   const int digits = numDigits();
   const double numW = numberWidth(h, digits);
   const double y = l.main.top() + (l.main.height() - h) / 2.0;
+  // no number yet: the words, not a row of ghost digits that looks broken
+  if (!m_notice.isEmpty())
+  {
+    QFont font = sansFont(qMin(h * 0.36, l.main.height() * 0.3), false);
+    const double fit = l.main.width() * 0.92 / QFontMetricsF(font).horizontalAdvance(m_notice);
+    if (fit < 1)
+      font.setPixelSize(qMax(6, int(font.pixelSize() * fit)));
+    p.save();
+    p.setOpacity(1);   // not faded as a stale value: it is no value
+    p.setFont(font);
+    p.setPen(m_segment);
+    p.drawText(l.main, Qt::AlignCenter, m_notice);
+    p.restore();
+    return;
+  }
 
   // number left, unit right after it; the whole group is centred
   const int id = idAt(0);
@@ -953,11 +968,30 @@ void LcdWidget::renderStatic()
   c.bezelDark = kBezelDark;
   c.face = m_face;
   c.faceGlow = m_face.lighter(112);
-  PanelFrame::paint(p, l.bezel, c, l.face.center(), l.face.width() * 0.6);
+  PanelFrame::paint(p, l.bezel, c, l.face.center(), l.face.width() * 0.6, !m_caption.isEmpty());
+  if (!m_caption.isEmpty())
+    PanelFrame::paintPlate(p, l.bezel, m_caption, c);
 
   PanelFrame::clipToFace(p, l.face);
   drawBar(p, l, true);
   m_staticDirty = false;
+}
+
+void LcdWidget::setCaption(const QString &caption)
+{
+  if (caption == m_caption)
+    return;
+  m_caption = caption;
+  m_staticDirty = true;
+  update();
+}
+
+void LcdWidget::setNotice(const QString &notice)
+{
+  if (notice == m_notice)
+    return;
+  m_notice = notice;
+  update();
 }
 
 void LcdWidget::setStale(bool stale)

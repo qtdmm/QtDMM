@@ -255,7 +255,11 @@ void DeviceSidebar::setOpenDevices(const QList<OpenDevice> &devices)
     const QBrush text = device.connected ? palette().text() : palette().brush(QPalette::Disabled, QPalette::Text);
     item->setForeground(0, text);
     item->setForeground(1, text);
-    item->setIcon(0, dot(device.active ? QColor(0x22, 0xaa, 0x22) : QColor(), devicePixelRatioF(),
+    // connected: green while readings come in, grey while they do not
+    item->setIcon(0, dot(device.active      ? QColor(0x22, 0xaa, 0x22)
+                         : device.connected ? palette().color(QPalette::Disabled, QPalette::WindowText)
+                                            : QColor(),
+                         devicePixelRatioF(),
                          curve.isValid() ? curveDot(curve, devicePixelRatioF()) : QPixmap()));
     fillValues(item, 0, device.values);
   }

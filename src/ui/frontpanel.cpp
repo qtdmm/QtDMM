@@ -39,6 +39,7 @@ FrontPanel::FrontPanel(DeviceSession *session, QWidget *parent)
   connect(m_feed, &ValueFeed::maximumChanged, m_display, &LcdWidget::showMaximum);
   connect(m_feed, &ValueFeed::minMaxReset, m_display, &LcdWidget::clearMinMax);
   connect(m_feed, &ValueFeed::controllerChanged, this, &FrontPanel::attach);
+  connect(m_feed, &ValueFeed::noticeChanged, m_display, &LcdWidget::setNotice);
   m_blinkTimer->setInterval(500);
   connect(m_blinkTimer, &QTimer::timeout, this, [this]
   {
@@ -88,7 +89,9 @@ MeterController *FrontPanel::controller() const
 
 void FrontPanel::attach(MeterController *ctl)
 {
-  // another meter: its lines afresh, none of the one before
+  // another meter: its lines afresh, none of the one before; its name above
+  m_display->setCaption(ctl ? ctl->deviceName() : QString());
+  m_display->setNotice(m_feed->notice());
   m_display->clearMinMax();
   for (int id = 0; id < kMaxValues; ++id)
   {

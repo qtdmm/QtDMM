@@ -52,10 +52,36 @@ QRectF panelRect(const QRectF &available, double minAspect, double maxAspect)
   return QRectF(available.center().x() - w / 2.0, available.center().y() - h / 2.0, w, h);
 }
 
-QRectF faceRect(const QRectF &bezel)
+static double plateWidth(const QRectF &bezel)
+{
+  return qBound(13.0, bezel.height() * 0.11, 24.0);
+}
+
+QRectF faceRect(const QRectF &bezel, bool plate)
 {
   const double w = bezelWidth(bezel);
-  return bezel.adjusted(w, w, -w, -w);
+  return bezel.adjusted(w, plate ? qMax(w, plateWidth(bezel)) : w, -w, -w);
+}
+
+void paintPlate(QPainter &p, const QRectF &bezel, const QString &text, const Colors &c)
+{
+  const QRectF face = faceRect(bezel, true);
+  const QRectF band(face.left() + faceRadius(face), bezel.top() + 1, face.width() - 2 * faceRadius(face),
+                    face.top() - bezel.top() - 1);
+  QFont font = p.font();
+  font.setBold(true);
+  font.setLetterSpacing(QFont::PercentageSpacing, 108);
+  font.setPixelSize(qMax(7, int(band.height() * 0.62)));
+  p.save();
+  p.setFont(font);
+  const QString shown = QFontMetricsF(font).elidedText(text, Qt::ElideRight, band.width());
+  // printed on the metal like the lettering of an instrument: light, with
+  // a dark edge below, readable on the dark and the light bezels
+  p.setPen(QColor(0, 0, 0, 110));
+  p.drawText(band.translated(0, 1), Qt::AlignLeft | Qt::AlignVCenter, shown);
+  p.setPen(QColor(235, 235, 235));
+  p.drawText(band, Qt::AlignLeft | Qt::AlignVCenter, shown);
+  p.restore();
 }
 
 void clipToFace(QPainter &p, const QRectF &face)
@@ -66,7 +92,7 @@ void clipToFace(QPainter &p, const QRectF &face)
   p.setClipPath(clip);
 }
 
-void paint(QPainter &p, const QRectF &bezel, const Colors &c, const QPointF &glowCenter, double glowRadius)
+void paint(QPainter &p, const QRectF &bezel, const Colors &c, const QPointF &glowCenter, double glowRadius, bool plate)
 {
   const double radius = bezelWidth(bezel) * 1.2;
 
@@ -84,7 +110,7 @@ void paint(QPainter &p, const QRectF &bezel, const Colors &c, const QPointF &glo
   p.drawRoundedRect(bezel.adjusted(1, 1, -1, -1), radius, radius);
 
   // recessed face: base colour, lit from glowCenter, inner shadow
-  const QRectF face = faceRect(bezel);
+  const QRectF face = faceRect(bezel, plate);
   const double faceR = faceRadius(face);
   p.save();
   clipToFace(p, face);

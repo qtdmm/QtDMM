@@ -1929,7 +1929,7 @@ DeviceSidebar::Value MainWindow::otherValueRow(const MeterController *ctl, int i
     row.name = tr("Value %1").arg(id + 1);
   else
   {
-    row.name = r.name.isEmpty() ? RecordingStore::describe(r.port, r.baseUnit) : r.name;
+    row.name = ctl->valueName(id);
     row.text = readingText(r);
     const QString unit = SiPrefix::displayText(r.baseUnit);
     if (r.name.isEmpty() && !unit.isEmpty())
@@ -1959,6 +1959,9 @@ void MainWindow::updateOpenDevices()
     const Reading &r = ctl->lastReading();
     if (!row.connected)
       row.value = tr("disconnected");
+    // no frames (yet): why, instead of an old reading
+    else if (const QString state = ctl->dmm()->shortState(); !state.isEmpty())
+      row.value = state;
     else if (r.msecs > 0)
     {
       row.value = readingText(r);

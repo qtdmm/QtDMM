@@ -449,6 +449,14 @@ bool MeterController::writeRecording(const QString &path, bool raw, QString *err
   return m_recorder->write(path, error, raw, extras, foreign, m_deviceName);
 }
 
+QString MeterController::valueName(int id) const
+{
+  const Reading r = lastReading(id);
+  if (r.msecs <= 0)
+    return QString();
+  return r.name.isEmpty() ? RecordingStore::describe(r.port, r.baseUnit) : r.name;
+}
+
 int MeterController::valueCount() const
 {
   const int seen = m_lastReadings.isEmpty() ? 0 : m_lastReadings.lastKey() + 1;

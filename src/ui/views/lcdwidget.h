@@ -135,6 +135,12 @@ public:
   /// segments fade, the panel stays.
   void setStale(bool stale);
   bool isStale() const { return m_stale; }
+  /// The device's name on the bezel above the face, like the model name on
+  /// an instrument; empty: none, the face takes the room.
+  void setCaption(const QString &caption);
+  /// Words in place of the number while there is none ("Waiting for data",
+  /// ValueFeed::notice()); empty: the number.
+  void setNotice(const QString &notice);
   /// "classic", "blue", "amber", "contrast", "custom"
   static QString lcdVariantName(LcdVariant variant);
   static LcdVariant lcdVariantFromName(const QString &name);
@@ -231,6 +237,8 @@ private:
   bool m_hold = false;
   bool m_auto = false;
   bool m_stale = false;
+  QString m_caption;   ///< setCaption()
+  QString m_notice;    ///< setNotice()
   bool m_limitOn = false;
   LimitTest::Verdict m_verdict = LimitTest::NoVerdict;
   double m_deviation = 0;   ///< NaN: none

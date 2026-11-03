@@ -41,6 +41,7 @@
 
 ### GUI
 
+- **Every view says where its value comes from** — the front panel has the device's name above the display like the model name on an instrument, the analog meter prints device and value below the unit, the Poincaré plot names them above the plot. Until a value comes in, the views say why instead of showing empty digits (*Connecting ...*, *No data - meter switched on?*, *Not connected*), and a connected device without readings gets a grey dot and the same in short in the sidebar.
 - **More than one analog meter** — **Add analog meter** in the menu (or in an analog meter's right-click menu) opens another analog meter window, each with its own value of any connected device and its own style; the value menu then has **Analog meter ▸** with one entry per window. Closing an added one removes it; the window layout keeps them. *Meter style* in the right-click menu now applies to that meter only, the *Appearance* page sets it for all.
 - **A third axis in the graph** — a third unit gets an axis of its own outside the right one (a voltage left, a temperature right, a frequency on the third), automatically or chosen in the value menu (**Graph ▸ Third axis**); the right axes' titles are in the colour of their curves. A value pushed off the right axis moves to the third one when it is free.
 - **OWON, EEVblog, Minipa and AOPUTTRIVER meters get their own colours in the device pictures** — they showed the grey generic symbol.

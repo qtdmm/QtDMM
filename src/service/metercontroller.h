@@ -93,6 +93,9 @@ public:
   const Reading &lastReading() const { return m_lastMain; }
   /// The last reading of value @p id (Reading::id), empty before the first.
   Reading     lastReading(int id) const { return m_lastReadings.value(id); }
+  /// The name of value @p id from its last reading ("Voltage DC (V)", the
+  /// meter's own name of it); empty before the first.
+  QString     valueName(int id) const;
   /// The values seen since the meter was connected: the highest id + 1, at
   /// least those the meter has (DMMInfo::valueCount()).
   int         valueCount() const;

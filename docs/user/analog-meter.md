@@ -10,6 +10,11 @@ Switch it on and off with **Analog meter** in the toolbar or in the menu
 display (see [Window layout](connecting.md#window-layout)); the dial, scale
 and lettering scale with the window.
 
+Below the unit the dial names where the value comes from: the device, and
+the value when the device has more than one (*Bench · Current DC (A)*).
+Until a value comes in, the dial says why in place of the unit, as the
+[display](connecting.md) does.
+
 ## More analog meters
 
 **Add analog meter** in the menu opens another analog meter window, for the

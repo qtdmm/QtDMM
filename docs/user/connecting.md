@@ -142,8 +142,12 @@ nothing.
 
 The display is a window like the [analog meter](analog-meter.md), one for
 each device connected (its front panel); digits and lettering scale with
-it. **Display** in the toolbar or the menu (Ctrl+1) hides and shows all of
-them. Bar graph and min/max (off by default) are set on the
+it. The device's name stands on the frame above the display, like the model
+name on an instrument. Until the device sends a value, the display says why
+instead of showing digits: *Connecting ...*, *No data - meter switched on?*,
+*No connection* or *Not connected*; the sidebar shows the same in short
+next to the device, with a grey dot. **Display** in the toolbar or the menu
+(Ctrl+1) hides and shows all of them. Bar graph and min/max (off by default) are set on the
 *Appearance* settings page, in the group *Digital display (LCD)*.
 
 **LCD colours** on the *Appearance* settings page, for all displays:

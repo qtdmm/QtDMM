@@ -608,9 +608,27 @@ void AnalogMeter::drawBoxes(QPainter &p, const Geometry &g) const
   // running over
   const QString unit = m_unit.isEmpty() ? QStringLiteral("—") : m_unit;
   const QRectF unitRect(g.face.center().x() - fw * 0.17, g.face.top() + fh * 0.60, fw * 0.34, fh * 0.17);
-  p.setFont(fittedFont(g.fontPx * 1.35, true, unit, unitRect.width()));
   p.setPen(m_style.scale);
-  p.drawText(unitRect, Qt::AlignCenter, unit);
+  if (m_notice.isEmpty())
+  {
+    p.setFont(fittedFont(g.fontPx * 1.35, true, unit, unitRect.width()));
+    p.drawText(unitRect, Qt::AlignCenter, unit);
+  }
+  else
+  {
+    // no value yet: why, in place of the unit
+    const QRectF wide = unitRect.adjusted(-fw * 0.06, 0, fw * 0.06, 0);
+    p.setFont(fittedFont(g.fontPx * 0.8, false, m_notice, wide.width()));
+    p.drawText(wide, Qt::AlignCenter, m_notice);
+  }
+  // where the value comes from, small below it like the maker's name
+  if (!m_caption.isEmpty())
+  {
+    const QRectF line(g.face.center().x() - fw * 0.24, unitRect.bottom() - g.fontPx * 0.1, fw * 0.48, g.fontPx);
+    p.setFont(fittedFont(g.fontPx * 0.75, false, m_caption, line.width()));
+    p.setPen(m_style.scale.darker(m_style.face.lightness() < 128 ? 150 : 100));
+    p.drawText(line, Qt::AlignHCenter | Qt::AlignTop, m_caption);
+  }
 
   // readout boxes with their captions: minimum left, maximum right
   QRectF min, max;
@@ -808,6 +826,24 @@ void AnalogMeter::renderStatic()
   drawScale(p, g);
   drawBoxes(p, g);
   m_staticDirty = false;
+}
+
+void AnalogMeter::setCaption(const QString &caption)
+{
+  if (caption == m_caption)
+    return;
+  m_caption = caption;
+  m_staticDirty = true;
+  update();
+}
+
+void AnalogMeter::setNotice(const QString &notice)
+{
+  if (notice == m_notice)
+    return;
+  m_notice = notice;
+  m_staticDirty = true;
+  update();
 }
 
 void AnalogMeter::setStale(bool stale)

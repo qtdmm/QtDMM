@@ -307,6 +307,19 @@ void MeterConnection::setState(LinkState state, const QString &message)
   }
 }
 
+QString MeterConnection::shortState() const
+{
+  switch (m_state)
+  {
+    case LinkState::Closed:     return tr("not connected");
+    case LinkState::Connecting: return tr("connecting ...");
+    case LinkState::Connected:  return QString();
+    case LinkState::Timeout:    return tr("no data");
+    case LinkState::Error:      return tr("no connection");
+  }
+  return QString();
+}
+
 QString MeterConnection::timeoutMessage() const
 {
   // a HID cable that answers but never carries UART bytes: the meter's

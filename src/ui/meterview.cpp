@@ -19,6 +19,8 @@ MeterView::MeterView(DeviceSession *session, AnalogMeter *meter, QObject *parent
   // the memory of the value it shows, whichever the LCD follows
   connect(m_feed, &ValueFeed::valueMinMaxChanged, meter, &AnalogMeter::showValueMinMax);
   connect(m_feed, &ValueFeed::controllerChanged, this, &MeterView::follow);
+  connect(m_feed, &ValueFeed::captionChanged, meter, &AnalogMeter::setCaption);
+  connect(m_feed, &ValueFeed::noticeChanged, meter, &AnalogMeter::setNotice);
   // in the colour of an alarm of the meter it shows, blinking if wanted, with
   // that meter's PASS/FAIL band; the banner and the beep stay, the colour is
   // never the only sign
