@@ -370,7 +370,32 @@ QString MeterConnection::connectedMessage() const
   // the formula is long and says little: what kind of source it is
   if (m_portType == Transport::PortType::Calc)
     return m_dmmInfo.model == QLatin1String("Simulated meter") ? tr("Simulated") : tr("Calculated");
-  return tr("Connected %1").arg(deviceName());
+  // the way in the status bar, the port in its tooltip (the second line)
+  QString way;
+  switch (m_portType)
+  {
+    case Transport::PortType::Ble:
+    case Transport::PortType::BleGatt:
+      way = tr("Bluetooth");
+      break;
+    case Transport::PortType::RFC2217:
+      way = tr("network");
+      break;
+    case Transport::PortType::Sigrok:
+      way = QStringLiteral("sigrok");
+      break;
+    case Transport::PortType::Serial:
+      if (!m_device.contains(QLatin1String("usb"), Qt::CaseInsensitive) && !m_device.contains(QLatin1String("ACM")))
+      {
+        way = tr("serial port");
+        break;
+      }
+      [[fallthrough]];
+    default:
+      way = QStringLiteral("USB");
+      break;
+  }
+  return tr("connected (%1)").arg(way) + '\n' + deviceName();
 }
 
 QString MeterConnection::permissionHint() const

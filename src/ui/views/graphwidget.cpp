@@ -732,19 +732,25 @@ void GraphWidget::emitInfo()
     txt += " / " + durationText(limit / 1000);
   if (m_store->remainingLength() > 0)
     txt += " - " + tr("%1 left").arg(durationText(m_store->remainingLength() / 10));
+  // what the numbers are, on a second line for the tooltip
+  QString tip;
   switch (m_store->state())
   {
     case RecordingStore::Live:
       txt += " - " + tr("Live");
+      tip = tr("Live: the graph holds the readings of the last %1; older ones drop out. "
+               "Record keeps them.").arg(durationText(limit / 1000));
       break;
     case RecordingStore::Record:
       txt += " - " + tr("Recording");
+      tip = limit > 0 ? tr("Recording: the time recorded / the recording length set") : tr("Recording: the time recorded");
       break;
     case RecordingStore::View:
       txt += " - " + tr("Stopped");
+      tip = tr("Stopped: the length of the recording shown");
       break;
   }
-  Q_EMIT info(txt);
+  Q_EMIT info(txt + '\n' + tip);
 }
 
 void GraphWidget::setMode(GraphWidget::SampleMode mode)

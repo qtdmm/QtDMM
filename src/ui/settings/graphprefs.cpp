@@ -266,7 +266,7 @@ void GraphPrefs::defaultsSLOT()
     autoScaleBut->setChecked(true);
   else
     manualScaleBut->setChecked(true);
-  ui_includeZero->setChecked(m_cfg->getBool("Scale/automatic-include-zero", true));
+  ui_includeZero->setChecked(m_cfg->getBool("Scale/automatic-include-zero", false));
   ui_scaleMin->setText(m_cfg->getString("Scale/minimum", "-3.999"));
   ui_scaleMax->setText(m_cfg->getString("Scale/maximum", "3.999"));
   ui_winSize->setValue(m_cfg->getInt("Window/size", 600));
@@ -297,7 +297,7 @@ void GraphPrefs::factoryDefaultsSLOT()
   ui_crosshair->setChecked(true);
 
   autoScaleBut->setChecked(true);
-  ui_includeZero->setChecked(true);
+  ui_includeZero->setChecked(false);
   ui_scaleMin->setText("-3.999");
   ui_scaleMax->setText("3.999");
   ui_winSize->setValue(600);

@@ -58,13 +58,14 @@ the recording in view. A slow computer draws it less often by itself.
 How long a recording runs is asked when you press *Record* (see above).
 
 **Settings → Graph** sets the visible window (**Time axis**) and the
-vertical scale (**Y axis**: automatic, or a fixed minimum and maximum).
+vertical scale (**Y axis**: automatic, or a fixed minimum and maximum). The
+automatic axis fits the data closely; **Include zero line** keeps zero on it.
 
 The status bar shows how much is recorded and the recording's length, the
 time left until the length stops the recording, and whether it records:
 `0:42 / 10:00 - 9:18 left - Recording`. While live it shows how much the
 live graph holds and the time span shown (the recording length, if one is
-set): `12:30 / 1:00 - Live`.
+set): `12:30 / 1:00 - Live`. Its tooltip says what the numbers are.
 
 The vertical axis is in the unit that suits its range - mV for an axis up to
 0.4 V. A meter that changes range (V, mV) does not change the axis.
