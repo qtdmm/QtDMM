@@ -44,8 +44,9 @@ public:
     /// for it (at the end of the menu, when given).
     std::function<void(const ValueRef &)> addAlarm;
     std::function<void(const ValueRef &)> editLimits;
-    /// A new analog meter showing the value (none: no entry).
+    /// A new analog meter or Poincaré plot showing the value (none: no entry).
     std::function<void(const ValueRef &)> newMeter;
+    std::function<void(const ValueRef &)> newPoincare;
   };
 
   /// Fills @p menu for @p value of an open meter.

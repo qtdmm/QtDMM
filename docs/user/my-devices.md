@@ -93,7 +93,8 @@ shows which value - right-click a value:
   says which. The main value is always on the left. A value of
   another device joins an axis in its unit; one with no room there is not
   drawn, and the status line says so.
-- **New analog meter** - another analog meter window showing it.
+- **New analog meter**, **New Poincaré plot** - another window of that kind
+  showing it.
 - **Readings table** - whether the [readings table](readings-table.md)
   lists it (all values of the devices it shows; another device comes in
   with the value chosen).

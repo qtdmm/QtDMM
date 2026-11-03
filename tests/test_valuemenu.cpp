@@ -116,6 +116,12 @@ int main(int argc, char **argv)
     check(added == QList<ValueRef>{ ValueRef(1, source) }, "a new analog meter for it");
     delete menu;
     target.newMeter = nullptr;
+    target.newPoincare = [&added](const ValueRef &v) { added << v; };
+    menu = menuFor(ValueRef(0, source));
+    action(menu, { "New &Poincaré plot" })->trigger();
+    check(added.size() == 2 && added.last() == ValueRef(0, source), "a new Poincaré plot for it");
+    delete menu;
+    target.newPoincare = nullptr;
   }
   // 5. the rules on a value: a new alarm, the limits, by its ValueRef
   {

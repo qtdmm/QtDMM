@@ -74,6 +74,9 @@ void ValueMenu::fill(QMenu *menu, const Target &target, const ValueRef &value)
   if (target.newMeter)
     QObject::connect(menu->addAction(tr("New &analog meter")), &QAction::triggered, menu,
                      [add = target.newMeter, ref] { add(ref); });
+  if (target.newPoincare)
+    QObject::connect(menu->addAction(tr("New &Poincaré plot")), &QAction::triggered, menu,
+                     [add = target.newPoincare, ref] { add(ref); });
   // the graph: off, or on an axis. A unit the axis has already joins it,
   // another one takes its place there (GraphWidget::setValueAxis())
   GraphWidget *graph = wid->graph();
