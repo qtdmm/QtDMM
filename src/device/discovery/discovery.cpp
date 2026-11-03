@@ -137,7 +137,7 @@ std::optional<Families::Family> Families::forUsb(quint16 vid, quint16 pid)
   }
   if (id == "04d9:a052")
     return Family { QCoreApplication::translate("Discovery", "TFA AIRCO2NTROL CO2 monitor"), QString(), QString(), "HIDHOLTEK",
-                    likeliestFirst(Families::models(FrameFormat::TfaAirControl, false), "TFA Dostmann AIRCO2NTROL Mini *") };
+                    likeliestFirst(Families::models(FrameFormat::TfaAirControl, false), "TFA Dostmann AIRCO2NTROL Mini") };
   return std::nullopt;
 }
 

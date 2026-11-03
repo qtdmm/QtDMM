@@ -25,6 +25,7 @@
 
 ### Devices
 
+- **UNI-T UT363BT and UT383BT, TFA AIRCO2NTROL Mini confirmed** — tried on the meters, no longer marked with `*`.
 - **AOPUTTRIVER AP-570C-APP no longer marked as untried** — it is the HoldPeak HP-570C-APP under another name, which a user confirmed in 26.3.
 - **USB-HID cables keep their udev link** — Add device's search and the saving of a device now take the link in `/dev/qtdmm/` (UT-D04 and similar cables, the TFA CO2 monitor) instead of `/dev/hidrawN`, which changes with every plug; a serial adapter found is saved under `/dev/serial/by-id/` as before. An entry saved with `/dev/hidrawN` gets the link when Add device finds it again.
 - **UNI-T UT61E+ and UT161E: AC readings show as AC** — they showed as DC (V AC, mV AC, µA/mA/A AC, LoZ, LPF): the function says AC or DC, not the flag QtDMM read, which real meters set only in the alternating AC+DC position. Found with frames of a real UT61E+ and UT161E (captured for dmm-tools), now test vectors. The UT161 series also on the UT-D09 USB cable; UT61E+ and UT161E on the cable without `*`. An NCV bar or other text is no reading, not 0.

@@ -328,7 +328,7 @@ meter working, please report it on the
 | Tenma | 72-7745 | Handheld multimeter | FS9721 LP3 | `VC820Continuous` | 2400 8N1 | DTR | 4000 |
 | Tenma | 72-9380A ¹ | Handheld multimeter | - | `VC940Continuous` | 2400 7O1 | DTR | 40000 |
 | TFA Dostmann | AIRCO2NTROL Coach | Air quality meter | Holtek | `TfaAirControl` | USB-HID (Holtek) | - | 5000 |
-| TFA Dostmann | AIRCO2NTROL Mini ¹ | Air quality meter | Holtek | `TfaAirControl` | USB-HID (Holtek) | - | 5000 |
+| TFA Dostmann | AIRCO2NTROL Mini | Air quality meter | Holtek | `TfaAirControl` | USB-HID (Holtek) | - | 5000 |
 | Uni-Trend | UT161B (UT-D09 USB) ¹ | Handheld multimeter | - | `UniTUT61Plus` | 9600 8N1 | - | 6000 |
 | Uni-Trend | UT161B ¹ | Handheld multimeter | - | `UniTUT61Plus` | Bluetooth LE | - | 6000 |
 | Uni-Trend | UT161D (UT-D09 USB) ¹ | Handheld multimeter | - | `UniTUT61Plus` | 9600 8N1 | - | 6000 |
@@ -351,9 +351,9 @@ meter working, please report it on the
 | Uni-Trend | UT325 ¹ | Thermometer | - | `UniTUT32x` | 2400 8N1 | - | 9999 |
 | Uni-Trend | UT333BT | Air quality meter | - | `UniTiENV` | Bluetooth LE | - | 1000 |
 | Uni-Trend | UT353BT | Sound level meter | - | `UniTiENV` | Bluetooth LE | - | 10000 |
-| Uni-Trend | UT363BT ¹ | Air quality meter | - | `UniTiENV` | Bluetooth LE | - | 10000 |
+| Uni-Trend | UT363BT | Air quality meter | - | `UniTiENV` | Bluetooth LE | - | 10000 |
 | Uni-Trend | UT382 ¹ | Luxmeter | - | `UniTUT382` | 19200 8N1 | - | 2000 |
-| Uni-Trend | UT383BT ¹ | Luxmeter | - | `UniTiENV` | Bluetooth LE | - | 100000 |
+| Uni-Trend | UT383BT | Luxmeter | - | `UniTiENV` | Bluetooth LE | - | 100000 |
 | Uni-Trend | UT60A | Handheld multimeter | FS9721 LP3 | `VC820Continuous` | 2400 8N1 | DTR | 4000 |
 | Uni-Trend | UT60BT | Handheld multimeter | - | `UniTiDMM` | Bluetooth LE | - | 10000 |
 | Uni-Trend | UT60D ¹ | Handheld multimeter | FS9922-DMM4 | `QM1537Continuous` | 2400 8N1 | DTR | 6000 |

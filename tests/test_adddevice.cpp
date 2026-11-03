@@ -118,7 +118,7 @@ int main(int argc, char **argv)
         "Bench multimeter", "USB-HID /dev/hidraw3<" },
       // the TFA sensor's own HID port: no serial parameters either
       { "tfa", AddDeviceDlg::Cable, "HIDHOLTEK 0x04d9:0xa052 /dev/hidraw4",
-        { { "DMM/model", "TFA Dostmann AIRCO2NTROL Mini *" } }, "Air quality meter", "USB-HID /dev/hidraw4<" },
+        { { "DMM/model", "TFA Dostmann AIRCO2NTROL Mini" } }, "Air quality meter", "USB-HID /dev/hidraw4<" },
       { "victron", AddDeviceDlg::Bluetooth, "AA:BB:CC:DD:EE:FF",
         { { "DMM/model", "Victron SmartSolar MPPT" }, { "Port settings/ble-address", "AA:BB:CC:DD:EE:FF" },
           { "Port settings/ble-key", "00112233445566778899aabbccddeeff" } }, "Solar charge controller", "Bluetooth LE" },

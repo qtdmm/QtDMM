@@ -6,7 +6,7 @@
 
 static const bool registered = []() {
   // 3 channels: CO2, temperature, humidity; 5000 ppm is the sensor's range
-  DmmDecoder::addConfig({"TFA Dostmann", "AIRCO2NTROL Mini *", "", 0, FrameFormat::TfaAirControl, 8, 1, 1, 0, 5000, 0, 0, 0, "", "", 3});
+  DmmDecoder::addConfig({"TFA Dostmann", "AIRCO2NTROL Mini", "", 0, FrameFormat::TfaAirControl, 8, 1, 1, 0, 5000, 0, 0, 0, "", "", 3});
   DmmDecoder::addConfig({"TFA Dostmann", "AIRCO2NTROL Coach", "", 0, FrameFormat::TfaAirControl, 8, 1, 1, 0, 5000, 0, 0, 0, "", "", 3});
   DmmDecoder::addConfig({"CO2Meter", "CM-INK-1 *", "", 0, FrameFormat::TfaAirControl, 8, 1, 1, 0, 5000, 0, 0, 0, "", "", 3});
   return true;
