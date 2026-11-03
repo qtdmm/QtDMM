@@ -207,7 +207,9 @@ DeviceSidebar::DeviceSidebar(DeviceLibrary *library, QWidget *parent)
   // last row it adds one
   connect(this, &QTreeWidget::itemClicked, this, [this](QTreeWidgetItem *item, int column)
   {
-    if (item && item == m_addItem)
+    if (!item)
+      return;
+    if (item == m_addItem)
       Q_EMIT addDeviceRequested();
     else if (column == kShown && !item->data(kShown, kMarks).isNull())
       Q_EMIT viewsHighlightRequested(valueOf(item));
