@@ -138,7 +138,7 @@ std::optional<WorkspaceFile> readVersion1(const QString &path, QString *error)
   QSettings ini(path, QSettings::IniFormat);
   if (ini.status() != QSettings::NoError || ini.value("Workspace/version").toInt() < 1)
   {
-    setError(error, tr("This is no QtDMM workspace."));
+    setError(error, tr("This is no QtDMM bench file."));
     return std::nullopt;
   }
   WorkspaceFile ws;
@@ -183,14 +183,14 @@ std::optional<WorkspaceFile> WorkspaceFile::read(const QString &path, QString *e
   const QJsonObject root = QJsonDocument::fromJson(data, &parse).object();
   if (parse.error != QJsonParseError::NoError || root.value("format").toString() != kFormat)
   {
-    setError(error, parse.error != QJsonParseError::NoError ? tr("This is no QtDMM workspace: %1.").arg(parse.errorString())
-                                                            : tr("This is no QtDMM workspace."));
+    setError(error, parse.error != QJsonParseError::NoError ? tr("This is no QtDMM bench file: %1.").arg(parse.errorString())
+                                                            : tr("This is no QtDMM bench file."));
     return std::nullopt;
   }
   const int minReader = root.value("minReader").toInt(root.value("version").toInt());
   if (minReader > kVersion)
   {
-    setError(error, tr("This workspace needs a newer QtDMM (workspace format %1).").arg(minReader));
+    setError(error, tr("This bench needs a newer QtDMM (bench file format %1).").arg(minReader));
     return std::nullopt;
   }
 

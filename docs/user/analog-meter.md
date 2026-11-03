@@ -1,11 +1,11 @@
-# Analog meter
+# Needle meter
 
 Besides the digital display, QtDMM can show the reading on a moving-coil style
 instrument: a dial with a scale on an arc, a needle that swings with the
 inertia of a real meter, a red zone at the top end, boxes with the minimum
 and the maximum, and an overload lamp.
 
-Switch it on and off with **Analog meter** in the toolbar or in the menu
+Switch it on and off with **Needle meter** in the toolbar or in the menu
 (Ctrl+2). It is one of the windows of the main window, next to the digital
 display (see [Window layout](connecting.md#window-layout)); the dial, scale
 and lettering scale with the window.
@@ -17,17 +17,17 @@ on the dial says which value it is.
 Until a value comes in, the dial says why in place of the unit, as the
 [display](connecting.md) does.
 
-## More analog meters
+## More needle meters
 
-**Add analog meter** in the menu asks for its value first (the main value of
-the active device ticked; *Cancel* adds none); in an analog meter's right-click
+**Add needle meter** in the menu asks for its value first (the main value of
+the active device ticked; *Cancel* adds none); in a needle meter's right-click
 menu it opens one with the same value as that meter. Each one shows its own
 value, of any connected device, and has its own style. Choose the value with
 **Sources...** in the meter's right-click menu (the connected devices, each
-with its values); **New analog meter** in the menu of a value in the sidebar
+with its values); **New needle meter** in the menu of a value in the sidebar
 opens one for that value. **Close window** in that menu (or the X in its title bar)
 removes an added meter; the first one is only hidden, as before. The window
-layout and workspaces keep the added meters with their values and styles.
+layout and benches keep the added meters with their values and styles.
 
 ## The scale
 
@@ -76,7 +76,7 @@ a classic ivory dial with black lettering (the default). **Meter style** in a
 meter's right-click menu sets it for that meter only; the *Appearance* settings
 page sets it for all of them.
 
-For a meter with more than one value, **Sources...** in the analog meter's
+For a meter with more than one value, **Sources...** in the needle meter's
 right-click menu chooses the one the needle shows (kept with the window
 layout). **MIN**, **MAX** and their marks are those of the value the needle
 shows, whichever the display shows.

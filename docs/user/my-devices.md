@@ -21,7 +21,7 @@ device); a device connected takes the change at once.
 
 **Devices** in the toolbar shows and hides the sidebar at the left of the
 window, with the node **My devices** (folded at the start: the devices in
-use are under **Connected devices**; unfold it to take out another). Each entry has a small picture of its
+use are under **Bench**; unfold it to take out another). Each entry has a small picture of its
 kind of instrument (handheld, clamp, bench meter, ...) in its maker's
 colours. A device connected is bold, with a dot that is green while its
 readings come in and grey when none has come for three seconds. A click on
@@ -35,7 +35,7 @@ connected the window shows the big **Add device** button and, when My
 devices has entries, **Connect a device from My devices**, which opens the
 sidebar.
 
-Below My devices the node **Connected devices** lists the meters this
+Below My devices the node **Bench** lists the meters this
 QtDMM reads with their current reading, in the order they were connected.
 The active device is in bold, one disconnected is grey. A double click or
 *Show front panel* in the context menu brings its front panel back;
@@ -45,7 +45,7 @@ dragging it back onto My devices) puts it back into the cupboard.
 ### Several meters: front panels and the active device
 
 Each connected meter has its own front panel: its LCD with its keys, as a
-window next to the analog meter; all are alike. **Display** (Ctrl+1) shows
+window next to the needle meter; all are alike. **Display** (Ctrl+1) shows
 or hides all of them, the X of one only hides it - the meter stays
 connected and keeps recording. The meter of the front panel clicked last
 (at first the first one connected) is the **active device**: *Connect*,
@@ -56,13 +56,13 @@ panels take the LCD colours of the settings, one can have its own (see
 [PASS/FAIL test](limit-test.md); its front panel takes their colours, and
 *PASS/FAIL test*, *Limits...* and *Alarms...* are in the context menu of
 its front panel and of its row. The window layout remembers the meters
-connected and connects them again at the next start; a workspace file does
+connected and connects them again at the next start; a bench file does
 the same when it is loaded. **Services** shows what this window offers to other
 programs: the [SCPI server and HiSLIP](scpi-server.md) with their port, or
 *off*.
 
-Above My devices, folded at the start, the node **Workspaces** lists the
-workspaces loaded or saved last by their names, the one in use at its right;
+Above My devices, folded at the start, the node **Saved benches** lists the
+benches loaded or saved last by their names, the one in use at its right;
 a double click loads one (see
 [Window layout](connecting.md#window-layout)). Without any it is hidden.
 
@@ -71,7 +71,7 @@ a double click loads one (see
 For a meter with more than one value (a second display, the CO2,
 temperature and humidity of the TFA AirCO2ntrol, the voltage, current and
 state of charge of a Victron) each device has a row for each
-value below it in **Connected devices**: its number, its name and its reading.
+value below it in **Bench**: its number, its name and its reading.
 A device with one value has the same menu in its own row, under **Value**. The name is
 the one the meter gives the value (a Victron's *Battery voltage*), else
 unit and coupling (*V DC*); the tooltip has the full one. A
@@ -93,7 +93,7 @@ shows which value - right-click a value:
   says which. The main value is always on the left. A value of
   another device joins an axis in its unit; one with no room there is not
   drawn, and the status line says so.
-- **New analog meter**, **New Poincaré plot** - another window of that kind
+- **New needle meter**, **New Poincaré plot** - another window of that kind
   showing it.
 - **Readings table** - whether the [readings table](readings-table.md)
   lists it (all values of the devices it shows; another device comes in
@@ -102,14 +102,14 @@ shows which value - right-click a value:
 A choice opens the window it is for, also when the toolbar is hidden. The
 choices are kept with the window layout.
 
-A value can also be **dragged** out of the sidebar: onto an analog meter or
+A value can also be **dragged** out of the sidebar: onto a needle meter or
 the Poincaré plot it becomes the value shown, onto the graph a curve, onto
 the readings table a column of the table, onto the front panel of its own
 device the big line (the value there moves to the small line). Dropped on
 the free area between the windows (in the arrangement *Free*), it offers a
-new analog meter, a new Poincaré plot or the graph.
+new needle meter, a new Poincaré plot or the graph.
 
-An analog meter and the Poincaré plot show one value each: **Sources...** in
+A needle meter and the Poincaré plot show one value each: **Sources...** in
 their right-click menu chooses it, from the connected devices and their
 values. With more than one device connected, the graph and the readings
 table have **Sources...** too, to tick the values they show. A device connected later changes nothing by itself - unless
@@ -141,7 +141,7 @@ The context menu of a device:
     device connected takes them at once (it connects anew).
 - **Rename** - in place.
 - **Connect** (also the button at the bottom left of its info, or drag it
-  onto **Connected devices**) - takes the device out of the cupboard, with
+  onto **Bench**) - takes the device out of the cupboard, with
   a front panel of its own: it shows its reading there and in **Connected
   devices**, records with the others, is a variable in
   [calculated values](calculated-values.md) and answers over SCPI

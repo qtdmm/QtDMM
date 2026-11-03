@@ -13,7 +13,7 @@
 WorkspaceDlg::WorkspaceDlg(const QString &name, const QString &description, const QPixmap &picture, QWidget *parent)
   : QDialog(parent)
 {
-  setWindowTitle(tr("Save workspace"));
+  setWindowTitle(tr("Save bench"));
   auto *layout = new QVBoxLayout(this);
   auto *form = new QFormLayout;
   m_name = new QLineEdit(name, this);

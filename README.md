@@ -40,7 +40,7 @@ Source code and bug reports: <https://github.com/qtdmm/QtDMM>.
   - Manual start
   - Scheduled start at a specific time
   - Automatic start triggered when defined thresholds are reached
-- Analog meter display with auto-ranging scale; display, meter, graph and readings table arranged automatically or freely
+- Needle meter display with auto-ranging scale; display, meter, graph and readings table arranged automatically or freely
 - Alarms: banner, beep, popup, program or recorder start/stop when the reading leaves its range, stays there for a while, overloads or stops coming (see [Alarms](docs/user/alarms.md))
 - Export as CSV, Excel (.xlsx) or OpenDocument (.ods) - recorder and readings table
 - Export the graph as SVG, PDF, PNG or JPEG - vector output for documents and the web
@@ -468,10 +468,10 @@ qtdmm [options]
 
 One QtDMM reads several meters, all alike. *Connect* in the context menu
 of an entry of [My devices](docs/user/my-devices.md) (or dragging it onto
-**Connected devices**, or *Connect* at the end of the assistant *Add
+**Bench**, or *Connect* at the end of the assistant *Add
 device*) connects the device in the same QtDMM, with a front panel of its
 own; `--connect <id>` does the same at the start, and over SCPI
-`QTDMM:DEVice:OPEN`. The node **Connected devices** of the sidebar (F9)
+`QTDMM:DEVice:OPEN`. The node **Bench** of the sidebar (F9)
 lists them with their current reading, the active device in bold; *Close*
 in the context menu closes one (see [My devices](docs/user/my-devices.md#several-meters-front-panels-and-the-active-device)). They record together, on one
 time base, and a [calculated value](docs/user/calculated-values.md) reads them by

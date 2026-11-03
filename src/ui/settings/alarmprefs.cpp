@@ -88,7 +88,7 @@ AlarmPrefs::AlarmPrefs(QWidget *parent) : SettingsPage(parent)
   layout->addLayout(buttons);
 
   m_blink = new QCheckBox(tr("Coloured displays &blink"), this);
-  m_blink->setToolTip(tr("The display and the analog meter switch between the alarm's colour and their own "
+  m_blink->setToolTip(tr("The display and the needle meter switch between the alarm's colour and their own "
                          "once a second, for alarms that colour them."));
   layout->addWidget(m_blink);
 }
@@ -376,7 +376,7 @@ AlarmDlg::AlarmDlg(const Alarm &alarm, const QMap<int, QString> &units, const QS
   af->addRow(tr("Co&lour:"), m_color);
   m_banner = new QCheckBox(tr("Banner over the display (with Acknowledge)"), act);
   m_banner->setChecked(alarm.banner);
-  m_tint = new QCheckBox(tr("Display and analog meter in the alarm's colour"), act);
+  m_tint = new QCheckBox(tr("Display and needle meter in the alarm's colour"), act);
   m_tint->setToolTip(tr("While the alarm is raised, also after Acknowledge, until the reading is back. With "
                         "several alarms the one raised last gives the colour."));
   m_tint->setChecked(alarm.tintDisplay);

@@ -140,7 +140,7 @@ and maximum since the last **Reset** (F4), each as the meter showed it
 another function (V DC to Ω, DC to AC, °C to °F). An overload changes
 nothing.
 
-The display is a window like the [analog meter](analog-meter.md), one for
+The display is a window like the [needle meter](analog-meter.md), one for
 each device connected (its front panel); digits and lettering scale with
 it. The device's name stands on the frame above the display, like the model
 name on an instrument. Until the device sends a value, the display says why
@@ -155,7 +155,7 @@ next to the device, with a grey dot. **Display** in the toolbar or the menu
 segments on blue, the default), *Amber*, *High contrast* (black on white) or
 *Custom*, the tint set below it (*Custom face*). The same colours in a
 display's right-click menu are that display's own, until *As in the
-settings* or until its device is closed; the workspace keeps them. Colours
+settings* or until its device is closed; the bench keeps them. Colours
 changed in the settings reach every display without colours of its own.
 
 **PASS/FAIL test** and **Limits...** in the same menu judge each reading
@@ -205,7 +205,7 @@ or **Hide controls** in its right-click menu, folds the row away.
 
 ## Window layout
 
-The main window holds five windows: the digital display, the analog meter,
+The main window holds five windows: the digital display, the needle meter,
 the graph, the [readings table](readings-table.md) and the
 [Poincaré plot](poincare-plot.md). The toolbar buttons (or Ctrl+1 … Ctrl+5)
 show and hide them. A fresh QtDMM starts as a
@@ -245,16 +245,16 @@ dropped elsewhere it goes back. A layout changed like this is remembered.
 In *Displays on top* and *on the left* it lasts until a window is shown or
 hidden; then the windows are placed by the rule again.
 
-**Load workspace...** and **Save workspace...** in the same menu keep a
+**Load bench...** and **Save bench...** in the same menu keep a
 measuring set-up in a file (`*.qtdmm-workspace`): the devices connected
 with their front panels, which windows are shown with
 which values, the arrangement with its dividers, the title bars, the
 toolbar, the design and the size of the main window - for instance one
-set-up for the bench and one for the battery in the van. *Save workspace*
+set-up for the bench and one for the battery in the van. *Save bench*
 first asks for a name and a description and shows the picture of the
 windows that goes into the file.
 
-Loading a workspace connects its devices; devices connected now that it
+Loading a bench connects its devices; devices connected now that it
 does not have are closed (with
 a question when one has a recording not saved). The file keeps a copy of
 each device's entry in My devices, with its alarms and PASS/FAIL test: an
@@ -262,23 +262,23 @@ entry that is there wins (a port changed since), one that is missing - on
 another computer, or deleted - is added back from the copy. Its alarms
 come back without their programs (a file may come from anyone): set them
 again under *Alarms...* if you want them. A Victron device's key is not
-written to the file; enter it again in the device's settings. Workspaces of
+written to the file; enter it again in the device's settings. Saved benches of
 QtDMM 26.2 to 26.4 before this (layout only) are still read; their
 window's device is connected first.
 
 **Save layout on exit** (on by default) makes QtDMM start with
 the layout it had when it was closed. Switched off, it starts with the
-layout it had when the option was switched off, or with the workspace
+layout it had when the option was switched off, or with the bench
 loaded last.
 
-**Recent workspaces** in the same menu lists the workspaces loaded or saved
+**Recent benches** in the same menu lists the benches loaded or saved
 last by their names, newest first; the tooltip shows the description, the
-picture and the file. **Clear list** empties it. The node **Workspaces** at
+picture and the file. **Clear list** empties it. The node **Saved benches** at
 the top of the sidebar shows the same list, folded at the start, with the
-name of the workspace in use at its right: a double click or Enter loads one, its context menu also opens its folder or takes
+name of the bench in use at its right: a double click or Enter loads one, its context menu also opens its folder or takes
 it off the list. A file that is gone is grey. The list is shared by all
 QtDMM windows; how many it shows is set under **Preferences** >
-**Appearance** > **Recent workspaces** (10, *none* hides it).
+**Appearance** > **Recent benches** (10, *none* hides it).
 
 **Hide title bars** (F10) takes the title bars away so the windows sit
 flush next to each other - the default for the arranged modes. Right-click
@@ -298,7 +298,7 @@ of the window: *System* (the look of your desktop), *Light* (polished
 aluminium), *Dark*, or *Light Metal* and *Dark Metal* (the default), the two
 with the instruments on brushed metal. The readings table
 and a graph in the colours *Neutral* follow; the LCD colours, the graph's
-colours and the style of the analog meter are chosen separately.
+colours and the style of the needle meter are chosen separately.
 
 **Settings → Appearance → Symbols** chooses the toolbar and menu symbols:
 *Coloured* (KDE's Oxygen icons, the default), *Plain* (KDE's monochrome Breeze

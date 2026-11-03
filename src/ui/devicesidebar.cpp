@@ -113,13 +113,13 @@ DeviceSidebar::DeviceSidebar(DeviceLibrary *library, QWidget *parent)
   // only the node takes entries: they cannot become children of each other
   invisibleRootItem()->setFlags(Qt::ItemIsEnabled);
   // folded at the start: one look away, not in the way of the devices
-  m_workspaces = new QTreeWidgetItem(this, { tr("Workspaces") });
+  m_workspaces = new QTreeWidgetItem(this, { tr("Saved benches") });
   m_workspaces->setFlags(Qt::ItemIsEnabled);
   QFont bold = m_workspaces->font(0);
   bold.setBold(true);
   m_workspaces->setFont(0, bold);
   m_workspaces->setFirstColumnSpanned(true);
-  m_workspaces->setToolTip(0, tr("The workspaces used last: a double click loads one."));
+  m_workspaces->setToolTip(0, tr("The benches used last: a double click loads one."));
   m_workspaces->setHidden(true);
   m_devices = new QTreeWidgetItem(this, { tr("My devices") });
   m_devices->setFlags(Qt::ItemIsEnabled | Qt::ItemIsDropEnabled);
@@ -127,7 +127,7 @@ DeviceSidebar::DeviceSidebar(DeviceLibrary *library, QWidget *parent)
   m_devices->setFirstColumnSpanned(true);
   // folded at the start: the devices in use are under "Connected devices"
   m_devices->setExpanded(false);
-  m_open = new QTreeWidgetItem(this, { tr("Connected devices") });
+  m_open = new QTreeWidgetItem(this, { tr("Bench") });
   // an entry dragged here connects, one dragged back to My devices closes
   m_open->setFlags(Qt::ItemIsEnabled | Qt::ItemIsDropEnabled);
   m_open->setFont(0, bold);

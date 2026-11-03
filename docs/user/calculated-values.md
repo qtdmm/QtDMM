@@ -4,14 +4,14 @@ A meter shows what it measures. To see a quantity nobody measures
 directly - the power a load draws, the resistance from a voltage and a
 current, the difference between two channels - let one meter measure the
 voltage, another the current, and a *calculated value* compute from both.
-It is a device like any other: display, analog meter, recorder, export and
+It is a device like any other: display, needle meter, recorder, export and
 printing all work on the calculated value exactly as on a measured one.
 
 ## Setting it up
 
 1. Put the meters into [My devices](my-devices.md) and connect them in one
    QtDMM: *Connect* in their context menu in the sidebar (or *Connect* at
-   the end of *Add device*). The node **Connected devices** of the sidebar
+   the end of *Add device*). The node **Bench** of the sidebar
    (F9) lists them.
 2. Each one is a variable by its name in My devices: lower case, other
    characters than letters and digits as `_`, so *UT61E Bench* is
