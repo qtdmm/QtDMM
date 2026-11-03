@@ -5,7 +5,7 @@ frames_per_reading: 1
 unit_map:                      # spec spelling -> what the decoder emits
   "u": "µ"
 sources:
-  - "ablage/dmm-tools/docs/research/owon/reverse-engineered-protocol.md (dmm-tools, GPL-3.0-or-later: §10, from OWON's app iMeter 1.2.4 and Voltcraft's VC800 VC900 app; VC871 captures §14.5; no meter on dmm-tools' bench)"
+  - "ablage/dmm-tools/docs/research/owon/reverse-engineered-protocol.md (dmm-tools, GPL-3.0-or-later: §10, from OWON's app iMeter 1.2.4 and Voltcraft's VC800 VC900 app; VC871 captures §14.5; a UNI-T UT217A (CMS061) captured over Bluetooth in dmm-tools issue #45, its tests/golden/cms061)"
 
 # Advertising, GATT, model code (0xFFF2 byte 0: 101 CMS101, 61 CMS061,
 # 65 OW65, 67 OW67, 69 OW69, 87 VC871, 89 VC891, 91 VC915, 92 VC925) and
@@ -28,7 +28,9 @@ sources:
 #
 # The vectors are the 28 VC871 frames of §14.5 (community captures), with
 # the readings dmm-tools' tests give them; the VC871's sub-display rule is
-# not used by them (no REL/MIN/MAX).
+# not used by them (no REL/MIN/MAX). Then 20 UT217A (CMS061) frames whose
+# readings the meter's LCD confirmed; it sends model code 61 and NCV with
+# decimal code 1.
 vectors:
   - source_line: "VC871 Capacitance UL MF (§14.5 frame 1)"
     bytes: 76 01 F0 F6 00 00 A1 09 F0 F6 00 00 04 00 00
@@ -142,3 +144,85 @@ vectors:
     bytes: A3 00 F0 00 00 00 A2 09 F0 00 00 00 04 00 01
     reading: {value: "0.000", unit: "A", range_mode: "auto"}
     expect: {special: "DC"}
+  # A UNI-T UT217A (the CMS061) over Bluetooth, 2026-11-03: the frames whose
+  # readings its LCD confirmed (dmm-tools issue #45, tests/golden/cms061).
+  - source_line: "UT217A DC V 0 V leads open (cms061/dcv)"
+    bytes: 24 00 F0 00 00 00 20 00 F0 00 00 00 04 00 00
+    reading: {value: "0", unit: "V", range_mode: "auto"}
+    expect: {special: "DC"}
+  - source_line: "UT217A DC V 39.3 V on a source (cms061/dcv_source)"
+    bytes: 22 00 F0 5A 0F 00 22 00 F0 00 00 00 04 00 00
+    reading: {value: "39.30", unit: "V", range_mode: "auto"}
+    expect: {special: "DC"}
+  - source_line: "UT217A DC V 0.0003 V HOLD (cms061/hold)"
+    bytes: 24 00 F0 03 00 00 20 00 F0 00 00 00 01 00 00
+    reading: {value: "0.0003", unit: "V", range_mode: "manual", flags: [HOLD]}
+    expect: {special: "DC"}
+  - source_line: "UT217A DC V 0 V on the 20 V manual range (cms061/manual_range)"
+    bytes: 23 00 F0 00 00 00 20 00 F0 00 00 00 00 00 00
+    reading: {value: "0", unit: "V", range_mode: "manual"}
+    expect: {special: "DC"}
+  - source_line: "UT217A DC V 0 V REL, sub the reference 39.30 V (cms061/rel)"
+    bytes: 22 10 F0 00 00 00 22 10 F0 5A 0F 00 02 00 00
+    reading: {value: "0", unit: "V", range_mode: "manual"}
+    expect: {special: "DC", val2: "39.30", unit2: "V", id2: 1}
+  - source_line: "UT217A DC V 4.714 mV leads open (cms061/dcmv)"
+    bytes: 1B 00 F0 6A 12 00 A2 01 F0 00 00 00 04 00 00
+    reading: {value: "4.714", unit: "mV", range_mode: "auto"}
+    expect: {special: "DC"}
+  - source_line: "UT217A AC V 26.28 mV leads open (cms061/acmv)"
+    bytes: 5A 00 F0 44 0A 00 A4 01 F0 23 04 00 00 00 00
+    reading: {value: "26.28", unit: "mV", range_mode: "manual"}
+    expect: {special: "AC"}
+  - source_line: "UT217A Hz 49.96 Hz on AC V, sub AC V 0.1045 V (cms061/acv_hz)"
+    bytes: A2 11 F0 84 13 00 64 10 F0 15 04 00 04 00 00
+    reading: {value: "49.96", unit: "Hz", range_mode: "auto"}
+    expect: {special: "HZ", val2: "0.1045", unit2: "V", id2: 1}
+  - source_line: "UT217A Hz 0 Hz, sub Duty 0.0 % (cms061/hz)"
+    bytes: A3 11 F0 00 00 00 E1 11 F0 00 00 00 04 00 00
+    reading: {value: "0", unit: "Hz", range_mode: "auto"}
+    expect: {special: "HZ", val2: "0.0", unit2: "%", id2: 1}
+  - source_line: "UT217A DC A 0.92 A before zeroing (cms061/dca)"
+    bytes: A2 00 F0 5C 00 00 A3 01 F0 00 00 00 04 00 00
+    reading: {value: "0.92", unit: "A", range_mode: "auto"}
+    expect: {special: "DC"}
+  - source_line: "UT217A DC A 0 A zeroed (cms061/dca_zero)"
+    bytes: A2 00 F0 00 00 00 A3 01 F0 00 00 00 04 00 00
+    reading: {value: "0", unit: "A", range_mode: "auto"}
+    expect: {special: "DC"}
+  - source_line: "UT217A AC A 0 A (cms061/aca)"
+    bytes: E2 00 F0 00 00 00 A3 01 F0 00 00 00 04 00 00
+    reading: {value: "0", unit: "A", range_mode: "auto"}
+    expect: {special: "AC"}
+  - source_line: "UT217A Inrush on AC A 0 A, waiting (cms061/inrush)"
+    bytes: E2 00 F0 00 00 00 A2 01 F0 00 00 00 00 00 02
+    reading: {value: "0", unit: "A", range_mode: "manual"}
+    expect: {special: "AC"}
+  - source_line: "UT217A Ω 0.9117 MΩ across a body (cms061/ohm_body)"
+    bytes: 34 01 F0 9D 23 00 20 00 F0 00 00 00 04 00 00
+    reading: {value: "0.9117", unit: "MOhm", range_mode: "auto"}
+    expect: {special: "OH"}
+  - source_line: "UT217A Ω 0.09 Ω tips together (cms061/ohm_short)"
+    bytes: 22 01 F0 09 00 00 20 00 F0 00 00 00 04 00 00
+    reading: {value: "0.09", unit: "Ohm", range_mode: "auto"}
+    expect: {special: "OH"}
+  - source_line: "UT217A Continuity 0 Ω tips together (cms061/cont)"
+    bytes: E1 02 F0 00 00 00 A4 01 F0 00 00 00 00 00 00
+    reading: {value: "0", unit: "Ohm", range_mode: "manual"}
+    expect: {special: "BUZ"}
+  - source_line: "UT217A Diode OL leads open (cms061/diode)"
+    bytes: A4 02 F0 30 75 10 A4 01 F0 00 00 00 00 00 00
+    reading: {value: "OL", unit: "V", range_mode: "manual"}
+    expect: {special: "DI", val: "OL"}
+  - source_line: "UT217A Capacitance 0.01 nF leads open (cms061/cap)"
+    bytes: 4B 01 F0 0A 00 00 A4 01 F0 00 00 00 04 00 00
+    reading: {value: "0.01", unit: "nF", range_mode: "auto"}
+    expect: {special: "CA"}
+  - source_line: "UT217A NCV EF, decimal code 1 (cms061/ncv_ef)"
+    bytes: 61 03 F0 00 00 00 A3 01 F0 00 00 00 04 00 00
+    reading: {value: "EF", unit: "", range_mode: "auto", shown: "none"}
+    expect: {special: "NCV"}
+  - source_line: "UT217A NCV four dashes, decimal code 1 (cms061/ncv)"
+    bytes: 61 03 F0 04 00 00 A3 01 F0 00 00 00 04 00 00
+    reading: {value: "----", unit: "", range_mode: "auto", shown: "none"}
+    expect: {special: "NCV"}
