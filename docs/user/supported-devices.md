@@ -186,7 +186,7 @@ meter working, please report it on the
 | OWON | B35T+ ¹ | Handheld multimeter | - | `OwonBLE` | Bluetooth LE | - | 6000 |
 | OWON | B41T+ ¹ | Handheld multimeter | - | `OwonBLE` | Bluetooth LE | - | 22000 |
 | OWON | CM2100B | Clamp meter | - | `OwonBLE` | Bluetooth LE | - | 20000 |
-| OWON | CMS061 ¹ | Handheld multimeter | - | `OwonBLE15` | Bluetooth LE | - | 20000 |
+| OWON | CMS061 | Handheld multimeter | - | `OwonBLE15` | Bluetooth LE | - | 20000 |
 | OWON | CMS101 ¹ | Handheld multimeter | - | `OwonBLE15` | Bluetooth LE | - | 20000 |
 | OWON | OW16B ¹ | Handheld multimeter | - | `OwonBLE` | Bluetooth LE | - | 6000 |
 | OWON | OW18B ¹ | Handheld multimeter | - | `OwonBLE` | Bluetooth LE | - | 6000 |
@@ -255,7 +255,7 @@ meter working, please report it on the
 | Uni-Trend | UT181A (UT-D07B Bluetooth) ¹ | Handheld multimeter | - | `UniTUT181A` | Bluetooth LE | - | 60000 |
 | Uni-Trend | UT181A ¹ | Handheld multimeter | - | `UniTUT181A` | 9600 8N1 | - | 60000 |
 | Uni-Trend | UT202BT | Clamp meter | - | `UniTUT202BT` | Bluetooth LE | - | 10000 |
-| Uni-Trend | UT217A ¹ | Handheld multimeter | - | `OwonBLE15` | Bluetooth LE | - | 20000 |
+| Uni-Trend | UT217A | Handheld multimeter | - | `OwonBLE15` | Bluetooth LE | - | 20000 |
 | Uni-Trend | UT217B ¹ | Handheld multimeter | - | `OwonBLE15` | Bluetooth LE | - | 20000 |
 | Uni-Trend | UT30A ¹ | Handheld multimeter | FS9721 LP3 | `VC820Continuous` | 2400 8N1 | DTR | 4000 |
 | Uni-Trend | UT30E ¹ | Handheld multimeter | FS9721 LP3 | `VC820Continuous` | 2400 8N1 | DTR | 4000 |

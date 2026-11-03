@@ -19,12 +19,13 @@ static const bool registered = []() {
   DmmDecoder::addConfig({"OWON", "OW18B *", "", 0, FrameFormat::OwonBLE, 8, 1, 1, 0, 6000, 0, 0, 0});
   DmmDecoder::addConfig({"OWON", "OW18E *", "", 0, FrameFormat::OwonBLE, 8, 1, 1, 0, 20000, 0, 0, 0});
   DmmDecoder::addConfig({"OWON", "CM2100B", "", 0, FrameFormat::OwonBLE, 8, 1, 1, 0, 20000, 0, 0, 0});
-  // the 15-byte frame, a main and a sub-display; none tried. Counts from
+  // the 15-byte frame, a main and a sub-display; the UT217A (CMS061) ran
+  // dmm-tools (its #45, the spec's vectors), the others untried. Counts from
   // OWON's app (spec §10.1); UNI-T's UT217A/B are the CMS061/101 (§9.4)
   DmmDecoder::addConfig({"OWON", "CMS101 *", "", 0, FrameFormat::OwonBLE15, 8, 1, 1, 0, 20000, 0, 0, 0, "", "", 2});
-  DmmDecoder::addConfig({"OWON", "CMS061 *", "", 0, FrameFormat::OwonBLE15, 8, 1, 1, 0, 20000, 0, 0, 0, "", "", 2});
+  DmmDecoder::addConfig({"OWON", "CMS061", "", 0, FrameFormat::OwonBLE15, 8, 1, 1, 0, 20000, 0, 0, 0, "", "", 2});
   DmmDecoder::addConfig({"Uni-Trend", "UT217B *", "", 0, FrameFormat::OwonBLE15, 8, 1, 1, 0, 20000, 0, 0, 0, "", "", 2});
-  DmmDecoder::addConfig({"Uni-Trend", "UT217A *", "", 0, FrameFormat::OwonBLE15, 8, 1, 1, 0, 20000, 0, 0, 0, "", "", 2});
+  DmmDecoder::addConfig({"Uni-Trend", "UT217A", "", 0, FrameFormat::OwonBLE15, 8, 1, 1, 0, 20000, 0, 0, 0, "", "", 2});
   DmmDecoder::addConfig({"OWON", "OW65B *", "", 0, FrameFormat::OwonBLE15, 8, 1, 1, 0, 6000, 0, 0, 0, "", "", 2});
   DmmDecoder::addConfig({"OWON", "OW67B *", "", 0, FrameFormat::OwonBLE15, 8, 1, 1, 0, 60000, 0, 0, 0, "", "", 2});
   DmmDecoder::addConfig({"OWON", "OW69B *", "", 0, FrameFormat::OwonBLE15, 8, 1, 1, 0, 60000, 0, 0, 0, "", "", 2});
@@ -56,7 +57,7 @@ const char *const kPrefixes[8] = { "p", "n", "µ", "m", "", "k", "M", "G" };
 
 // the model code in byte 0 of 0xFFF2 (spec §1, §10.1), both frames; 18 is
 // the OW18B's, the OW16B's by the PC software's name for it ("OW18_16"); a
-// UT217's own code is not known, the CMS's taken
+// UT217A sends the CMS061's 61 (dmm-tools #45), the UT217B's is taken from the CMS101
 struct ModelCode
 {
   const char *model;   ///< DMMInfo::model without " *"
@@ -288,9 +289,10 @@ void DecoderOwon15::fill(DmmChannel &c, quint32 gear, quint32 v, int function, q
     case 7: c.val = QStringLiteral("----"); c.noValue = true; return;
     default: break;   // 5: a number OWON's log may filter out
   }
-  if (function == kNcv && dp == 0 && !minus && magnitude <= 4)
+  if (function == kNcv && dp <= 1 && !minus && magnitude <= 4)
   {
-    // EF, then one to four dashes (spec §6.7)
+    // EF, then one to four dashes (spec §6.7); a UT217A (CMS061) sends
+    // them with decimal code 1 (dmm-tools #45)
     c.val = magnitude == 0 ? QStringLiteral("EF") : QString(int(magnitude), '-');
     c.noValue = true;
     return;
