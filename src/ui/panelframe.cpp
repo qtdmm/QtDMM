@@ -79,7 +79,7 @@ void paintPlate(QPainter &p, const QRectF &bezel, const QString &text, const Col
   // a dark edge below, readable on the dark and the light bezels
   p.setPen(QColor(0, 0, 0, 110));
   p.drawText(band.translated(0, 1), Qt::AlignLeft | Qt::AlignVCenter, shown);
-  p.setPen(QColor(235, 235, 235));
+  p.setPen(QColor(200, 200, 200));
   p.drawText(band, Qt::AlignLeft | Qt::AlignVCenter, shown);
   p.restore();
 }
