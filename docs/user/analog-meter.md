@@ -11,14 +11,16 @@ display (see [Window layout](connecting.md#window-layout)); the dial, scale
 and lettering scale with the window.
 
 The frame above the dial names the device the value comes from, as on the
-front panels; the unit on the dial says which value it is.
+front panels: the manufacturer on the left, the model on the right (a name
+given in My devices whole); too narrow for both, only the model. The unit
+on the dial says which value it is.
 Until a value comes in, the dial says why in place of the unit, as the
 [display](connecting.md) does.
 
 ## More analog meters
 
-**Add analog meter** in the menu opens another analog meter window, for the
-main value of the active device at first; in an analog meter's right-click
+**Add analog meter** in the menu asks for its value first (the main value of
+the active device ticked; *Cancel* adds none); in an analog meter's right-click
 menu it opens one with the same value as that meter. Each one shows its own
 value, of any connected device, and has its own style. Choose the value with
 **Sources...** in the meter's right-click menu (the connected devices, each

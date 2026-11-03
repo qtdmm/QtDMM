@@ -19,6 +19,10 @@
 
 #include "ui/panelframe.h"
 
+#include "device/dmmdecoder.h"
+
+#include <algorithm>
+
 #include <QPainter>
 #include <QPainterPath>
 #include <QLinearGradient>
@@ -63,24 +67,72 @@ QRectF faceRect(const QRectF &bezel, bool plate)
   return bezel.adjusted(w, plate ? qMax(w, plateWidth(bezel)) : w, -w, -w);
 }
 
+// The manufacturers of the model list, longest first: "UNI-T" must not
+// take the name of a "UNI-T UT61E+" apart before a longer one would
+static const QStringList &vendors()
+{
+  static const QStringList list = [] {
+    QStringList v;
+    for (const auto &cfg : DmmDecoder::getDeviceConfigurations())
+      if (!cfg.vendor.isEmpty() && !v.contains(cfg.vendor, Qt::CaseInsensitive))
+        v << cfg.vendor;
+    std::sort(v.begin(), v.end(), [](const QString &a, const QString &b) { return a.size() > b.size(); });
+    return v;
+  }();
+  return list;
+}
+
+QPair<QString, QString> splitName(const QString &name)
+{
+  for (const QString &vendor : vendors())
+    if (name.size() > vendor.size() + 1 && name.startsWith(vendor, Qt::CaseInsensitive) && name.at(vendor.size()) == ' ')
+      return { name.left(vendor.size()), name.mid(vendor.size() + 1).trimmed() };
+  return { QString(), name };
+}
+
 void paintPlate(QPainter &p, const QRectF &bezel, const QString &text, const Colors &c)
 {
   const QRectF face = faceRect(bezel, true);
   const QRectF band(face.left() + faceRadius(face), bezel.top() + 1, face.width() - 2 * faceRadius(face),
                     face.top() - bezel.top() - 1);
-  QFont font = p.font();
-  font.setBold(true);
-  font.setLetterSpacing(QFont::PercentageSpacing, 108);
-  font.setPixelSize(qMax(7, int(band.height() * 0.62)));
+  // a device's own name: the manufacturer bold on the left, the model on
+  // the right as on the front of an instrument; a name given by the user
+  // stays whole. Too narrow for both, the manufacturer goes first.
+  const auto [vendor, model] = splitName(text);
+  QFont bold = p.font();
+  // with the panel, but never above the text around it
+  bold.setPixelSize(qBound(7, int(band.height() * 0.62), QFontInfo(p.font()).pixelSize()));
+  bold.setCapitalization(QFont::AllUppercase);
+  QFont plain = bold;
+  bold.setBold(true);
+  bold.setLetterSpacing(QFont::AbsoluteSpacing, bold.pixelSize() * 0.2);
+  plain.setLetterSpacing(QFont::AbsoluteSpacing, plain.pixelSize() * 0.12);
+  const QFontMetricsF boldFm(bold);
+  const QFontMetricsF plainFm(plain);
+  const double gap = boldFm.height();
+  const bool both = !vendor.isEmpty() && boldFm.horizontalAdvance(vendor) + gap + plainFm.horizontalAdvance(model) <= band.width();
+  // the lettering of the metal: light on a dark bezel with a dark edge
+  // below, dark on a light one with a light edge
+  const bool light = c.bezelDark.lightness() > 140;
+  const QColor ink = light ? QColor(40, 40, 40) : QColor(205, 205, 205);
+  const QColor second = light ? QColor(85, 85, 85) : QColor(150, 150, 150);
+  const QColor edge = light ? QColor(255, 255, 255, 110) : QColor(0, 0, 0, 110);
+  auto engrave = [&](const QFont &font, const QString &str, Qt::Alignment align, const QColor &color) {
+    p.setFont(font);
+    const QString shown = QFontMetricsF(font).elidedText(str, Qt::ElideRight, band.width());
+    p.setPen(edge);
+    p.drawText(band.translated(0, 1), align | Qt::AlignVCenter, shown);
+    p.setPen(color);
+    p.drawText(band, align | Qt::AlignVCenter, shown);
+  };
   p.save();
-  p.setFont(font);
-  const QString shown = QFontMetricsF(font).elidedText(text, Qt::ElideRight, band.width());
-  // printed on the metal like the lettering of an instrument: light, with
-  // a dark edge below, readable on the dark and the light bezels
-  p.setPen(QColor(0, 0, 0, 110));
-  p.drawText(band.translated(0, 1), Qt::AlignLeft | Qt::AlignVCenter, shown);
-  p.setPen(QColor(200, 200, 200));
-  p.drawText(band, Qt::AlignLeft | Qt::AlignVCenter, shown);
+  if (both)
+  {
+    engrave(bold, vendor, Qt::AlignLeft, ink);
+    engrave(plain, model, Qt::AlignRight, second);
+  }
+  else
+    engrave(bold, model, Qt::AlignLeft, ink);
   p.restore();
 }
 
