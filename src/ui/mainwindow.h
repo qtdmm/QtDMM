@@ -187,7 +187,10 @@ protected:
   /// The panel in @p win, nullptr for another view.
   static FrontPanel *panelOf(const QMdiSubWindow *win);
   /// The window's background behind @p view: the design's frame (metal) or the palette's.
-  void        applyFrame(QWidget *view);
+  /// An @p instrument (front panel, analog meter) in Silver stands on the
+  /// area's colour: its rounded bezel fills the window, and the corners
+  /// would show the top of the frame's gradient, nearly white.
+  void        applyFrame(QWidget *view, bool instrument = true);
   /// @}
   AnalogMeter   *m_meter;
   /// @name More analog meters

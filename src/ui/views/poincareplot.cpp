@@ -107,6 +107,22 @@ void PoincarePlot::setStale(bool stale)
     m_series.gap();
 }
 
+void PoincarePlot::setCaption(const QString &caption)
+{
+  if (caption == m_caption)
+    return;
+  m_caption = caption;
+  update();
+}
+
+void PoincarePlot::setNotice(const QString &notice)
+{
+  if (notice == m_notice)
+    return;
+  m_notice = notice;
+  update();
+}
+
 void PoincarePlot::clear()
 {
   m_series.clear();
@@ -208,7 +224,7 @@ QRect PoincarePlot::plotRect(const QRect &area) const
   const QFontMetrics fm(font());
   const int left = fm.horizontalAdvance("-000.000") + fm.height() + 10;
   const int bottom = 2 * fm.height() + 8;
-  const int top = fm.height() / 2 + 4, right = fm.horizontalAdvance("000") / 2 + 6;
+  const int top = (m_caption.isEmpty() ? fm.height() / 2 : fm.height() * 3 / 2) + 4, right = fm.horizontalAdvance("000") / 2 + 6;
   const int side = qMax(20, qMin(area.width() - left - right, area.height() - top - bottom));
   const int x = area.left() + left + (area.width() - left - right - side) / 2;
   const int y = area.top() + top + (area.height() - top - bottom - side) / 2;
@@ -235,11 +251,19 @@ void PoincarePlot::render(QPainter &p, const QRect &area)
   const QRect plot = plotRect(area);
   m_plot = plot;
 
+  // where the value comes from, above the plot as on the other views
+  if (!m_caption.isEmpty())
+  {
+    p.setPen(labels);
+    p.drawText(QRect(area.left() + 6, area.top() + 2, area.width() - 12, fm.height()), Qt::AlignLeft | Qt::AlignVCenter,
+               fm.elidedText(m_caption, Qt::ElideRight, area.width() - 12));
+  }
   if (m_shown.isEmpty())
   {
     p.setPen(labels);
-    p.drawText(area, Qt::AlignCenter, m_series.valueCount() > 0 ? tr("Waiting for the next reading")
-                                                                : tr("No readings yet"));
+    p.drawText(area, Qt::AlignCenter, !m_notice.isEmpty() ? m_notice
+                                      : m_series.valueCount() > 0 ? tr("Waiting for the next reading")
+                                                                  : tr("No readings yet"));
     return;
   }
 

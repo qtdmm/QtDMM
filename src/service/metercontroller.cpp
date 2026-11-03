@@ -249,8 +249,11 @@ void MeterController::setInstanceId(const QString &id)
 void MeterController::setDevice(const QString &id, const QString &name)
 {
   m_deviceId = id;
+  const bool renamed = name != m_deviceName;
   m_deviceName = name;
   updateScpiName();
+  if (renamed)
+    Q_EMIT deviceNameChanged(name);
 }
 
 void MeterController::updateScpiName()
@@ -447,6 +450,14 @@ bool MeterController::writeRecording(const QString &path, bool raw, QString *err
       foreign << RecordingStore::Foreign{ store, id, other->deviceName() };
   }
   return m_recorder->write(path, error, raw, extras, foreign, m_deviceName);
+}
+
+QString MeterController::valueName(int id) const
+{
+  const Reading r = lastReading(id);
+  if (r.msecs <= 0)
+    return QString();
+  return r.name.isEmpty() ? RecordingStore::describe(r.port, r.baseUnit) : r.name;
 }
 
 int MeterController::valueCount() const

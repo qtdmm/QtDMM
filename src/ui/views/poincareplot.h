@@ -56,6 +56,10 @@ public Q_SLOTS:
   /// The main value went stale (true) or is current again.
   void        setStale(bool stale);
   void        clear();
+  /// Where the value comes from (ValueFeed::caption()), above the plot.
+  void        setCaption(const QString &caption);
+  /// Why there are no points (ValueFeed::notice()), in place of them.
+  void        setNotice(const QString &notice);
 
 protected:
   void        paintEvent(QPaintEvent *) override;
@@ -90,6 +94,8 @@ private:
   bool        m_mouseIn = false;
 
   QBrush      m_background;
+  QString     m_caption;   ///< setCaption()
+  QString     m_notice;    ///< setNotice()
   QColor      m_grid;
   QColor      m_labels;
   QColor      m_data;

@@ -53,11 +53,17 @@ namespace PanelFrame
   /// the rest of the widget shows the window background.
   QRectF panelRect(const QRectF &available, double minAspect, double maxAspect);
 
-  /// Face rect for a bezel rect (the inset the frame uses).
-  QRectF faceRect(const QRectF &bezel);
+  /// Face rect for a bezel rect (the inset the frame uses); with @p plate
+  /// the top of the bezel is wider, room for a name (paintPlate()).
+  QRectF faceRect(const QRectF &bezel, bool plate = false);
 
   /// Paints bezel and face. glowCenter is where the face is lit from.
-  void paint(QPainter &p, const QRectF &bezel, const Colors &c, const QPointF &glowCenter, double glowRadius);
+  void paint(QPainter &p, const QRectF &bezel, const Colors &c, const QPointF &glowCenter, double glowRadius,
+             bool plate = false);
+
+  /// @p text engraved in the wide top of the bezel (faceRect() with plate),
+  /// like the model name on the front of an instrument.
+  void paintPlate(QPainter &p, const QRectF &bezel, const QString &text, const Colors &c);
 
   /// Clip path of the face (rounded), for drawing that must stay inside.
   void clipToFace(QPainter &p, const QRectF &face);

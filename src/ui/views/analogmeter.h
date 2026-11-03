@@ -125,6 +125,11 @@ public Q_SLOTS:
   /// and readouts fade, the dial stays.
   void setStale(bool stale);
   bool isStale() const { return m_stale; }
+  /// Where the value comes from (ValueFeed::caption()), on the bezel above
+  /// the dial as on the front panel's LCD; empty: none, the dial takes the room.
+  void setCaption(const QString &caption);
+  /// Words in place of the unit while there is no value (ValueFeed::notice()).
+  void setNotice(const QString &notice);
   /// The min/max memory of value @p id (MeterController::valueMinMaxChanged),
   /// in SI base units, NaN when empty; drawn as marks in display units when
   /// it is the value shown.
@@ -234,6 +239,8 @@ private:
   double m_value = 0.0;
   QString m_text;
   QString m_unit;
+  QString m_caption;   ///< setCaption()
+  QString m_notice;    ///< setNotice()
   bool m_overload = false;
   bool m_hold = false;
   bool m_stale = false;

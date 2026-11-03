@@ -1929,7 +1929,7 @@ DeviceSidebar::Value MainWindow::otherValueRow(const MeterController *ctl, int i
     row.name = tr("Value %1").arg(id + 1);
   else
   {
-    row.name = r.name.isEmpty() ? RecordingStore::describe(r.port, r.baseUnit) : r.name;
+    row.name = ctl->valueName(id);
     row.text = readingText(r);
     const QString unit = SiPrefix::displayText(r.baseUnit);
     if (r.name.isEmpty() && !unit.isEmpty())
@@ -1959,6 +1959,9 @@ void MainWindow::updateOpenDevices()
     const Reading &r = ctl->lastReading();
     if (!row.connected)
       row.value = tr("disconnected");
+    // no frames (yet): why, instead of an old reading
+    else if (const QString state = ctl->dmm()->shortState(); !state.isEmpty())
+      row.value = state;
     else if (r.msecs > 0)
     {
       row.value = readingText(r);
@@ -2839,7 +2842,7 @@ void MainWindow::setDesign(int design)
   const QBrush frame = Designs::frameBrush(d);
   for (QMdiSubWindow *win : meterWindows())
     applyFrame(win->widget());
-  applyFrame(m_readings);
+  applyFrame(m_readings, false);
   for (QMdiSubWindow *win : std::as_const(m_panelWins))
     applyFrame(win->widget());
   const Designs::GraphColors g = Designs::graphColors(d);
@@ -2859,9 +2862,10 @@ void MainWindow::setDesign(int design)
   m_wid->settingsDialog()->guiPage()->setDesign(Designs::name(d));
 }
 
-void MainWindow::applyFrame(QWidget *view)
+void MainWindow::applyFrame(QWidget *view, bool instrument)
 {
-  const QBrush frame = Designs::frameBrush(Designs::current());
+  const Designs::Design design = Designs::current();
+  const QBrush frame = instrument && design == Designs::Silver ? Designs::areaBrush(design) : Designs::frameBrush(design);
   const bool own = frame.style() != Qt::NoBrush;
   QPalette pal = view->palette();
   pal.setBrush(QPalette::Window, own ? frame : QApplication::palette().window());

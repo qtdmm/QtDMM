@@ -214,6 +214,9 @@ QTreeWidgetItem *DeviceSidebar::openItem(const QString &id) const
 
 void DeviceSidebar::setOpenDevices(const QList<OpenDevice> &devices)
 {
+  // a name being typed (Rename) would go: the next update, once it is done
+  if (state() == QAbstractItemView::EditingState)
+    return;
   m_openList = devices;
   m_filling = true;
   QStringList ids, shown;
@@ -255,7 +258,11 @@ void DeviceSidebar::setOpenDevices(const QList<OpenDevice> &devices)
     const QBrush text = device.connected ? palette().text() : palette().brush(QPalette::Disabled, QPalette::Text);
     item->setForeground(0, text);
     item->setForeground(1, text);
-    item->setIcon(0, dot(device.active ? QColor(0x22, 0xaa, 0x22) : QColor(), devicePixelRatioF(),
+    // connected: green while readings come in, grey while they do not
+    item->setIcon(0, dot(device.active      ? QColor(0x22, 0xaa, 0x22)
+                         : device.connected ? palette().color(QPalette::Disabled, QPalette::WindowText)
+                                            : QColor(),
+                         devicePixelRatioF(),
                          curve.isValid() ? curveDot(curve, devicePixelRatioF()) : QPixmap()));
     fillValues(item, 0, device.values);
   }
@@ -313,6 +320,8 @@ QTreeWidgetItem *DeviceSidebar::valueItem(int id, const QString &device) const
 
 void DeviceSidebar::setServices(const QList<Service> &services)
 {
+  if (state() == QAbstractItemView::EditingState)
+    return;
   m_serviceList = services;
   m_filling = true;
   while (m_services->childCount() > services.size())

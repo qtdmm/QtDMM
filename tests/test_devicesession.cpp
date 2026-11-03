@@ -248,15 +248,29 @@ int main(int argc, char **argv)
     check(feed.controller() == session.controller("device:" + sim) && changes == 2, "another meter's value");
     check(waitFor([&] { return !got.isEmpty() && got.last().source == "device:" + sim && !got.last().noNumber(); }, 4000),
           "its readings come");
+    const QString name = lib.find(sim)->name;
+    check(feed.caption() == name && feed.notice().isEmpty(),
+          "it says where the value comes from, no notice: " + feed.caption() + " / " + feed.notice());
+    // renamed in My devices: the open meter and the view take the name
+    lib.rename(sim, "Renamed");
+    check(waitFor([&] { return feed.caption() == "Renamed"; }, 2000)
+            && session.controller("device:" + sim)->deviceName() == "Renamed",
+          "renamed: " + feed.caption());
+    lib.rename(sim, name);
+    waitFor([&] { return feed.caption() == name; }, 2000);
     got.clear();
     session.close(sim);
     check(!feed.controller() && !got.isEmpty() && got.last().quality == Quality::NoValue
             && feed.value() == ValueRef(0, "device:" + sim),
           "closed: no value, the value kept");
+    check(feed.caption() == name && feed.notice() == "Not connected",
+          "closed: its name from My devices, not connected: " + feed.caption() + " / " + feed.notice());
     got.clear();
     session.open(sim);
+    check(feed.controller() && !feed.notice().isEmpty(), "open again: a notice until its value comes: " + feed.notice());
     check(feed.controller() && waitFor([&] { return !got.isEmpty() && !got.last().noNumber(); }, 4000),
           "open again: its readings again");
+    check(feed.notice().isEmpty(), "and then no notice: " + feed.notice());
   }
 
   // 10. rules with the entry: set when opened, a change (also over SCPI)

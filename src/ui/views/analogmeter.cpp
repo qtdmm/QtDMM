@@ -341,7 +341,7 @@ AnalogMeter::Geometry AnalogMeter::geometry() const
   Geometry g;
   const QRectF r = PanelFrame::panelRect(QRectF(rect()).adjusted(1, 1, -1, -1), kMinAspect, kMaxAspect);
   g.bezel = r;
-  g.face = PanelFrame::faceRect(r);
+  g.face = PanelFrame::faceRect(r, !m_caption.isEmpty());
   const double fh = g.face.height();
   const double fw = g.face.width();
   // the arc ends at +-45 deg, the labels sit one font size outside it and
@@ -366,7 +366,9 @@ void AnalogMeter::drawBezel(QPainter &p, const Geometry &g) const
   c.bezelDark = m_style.bezelDark;
   c.face = dialColor();
   c.faceGlow = m_alert.isValid() ? mixed(m_style.faceGlow, m_alert) : m_style.faceGlow;
-  PanelFrame::paint(p, g.bezel, c, g.pivot, g.radius * 1.2);
+  PanelFrame::paint(p, g.bezel, c, g.pivot, g.radius * 1.2, !m_caption.isEmpty());
+  if (!m_caption.isEmpty())
+    PanelFrame::paintPlate(p, g.bezel, m_caption, c);
 }
 
 void AnalogMeter::setAlertColor(const QColor &color)
@@ -608,9 +610,19 @@ void AnalogMeter::drawBoxes(QPainter &p, const Geometry &g) const
   // running over
   const QString unit = m_unit.isEmpty() ? QStringLiteral("—") : m_unit;
   const QRectF unitRect(g.face.center().x() - fw * 0.17, g.face.top() + fh * 0.60, fw * 0.34, fh * 0.17);
-  p.setFont(fittedFont(g.fontPx * 1.35, true, unit, unitRect.width()));
   p.setPen(m_style.scale);
-  p.drawText(unitRect, Qt::AlignCenter, unit);
+  if (m_notice.isEmpty())
+  {
+    p.setFont(fittedFont(g.fontPx * 1.35, true, unit, unitRect.width()));
+    p.drawText(unitRect, Qt::AlignCenter, unit);
+  }
+  else
+  {
+    // no value yet: why, in place of the unit
+    const QRectF wide(g.face.center().x() - fw * 0.3, unitRect.top(), fw * 0.6, unitRect.height());
+    p.setFont(fittedFont(g.fontPx * 0.9, false, m_notice, wide.width()));
+    p.drawText(wide, Qt::AlignCenter, m_notice);
+  }
 
   // readout boxes with their captions: minimum left, maximum right
   QRectF min, max;
@@ -808,6 +820,24 @@ void AnalogMeter::renderStatic()
   drawScale(p, g);
   drawBoxes(p, g);
   m_staticDirty = false;
+}
+
+void AnalogMeter::setCaption(const QString &caption)
+{
+  if (caption == m_caption)
+    return;
+  m_caption = caption;
+  m_staticDirty = true;
+  update();
+}
+
+void AnalogMeter::setNotice(const QString &notice)
+{
+  if (notice == m_notice)
+    return;
+  m_notice = notice;
+  m_staticDirty = true;
+  update();
 }
 
 void AnalogMeter::setStale(bool stale)

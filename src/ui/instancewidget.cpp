@@ -277,6 +277,10 @@ void InstanceWidget::setPoincare(PoincarePlot *plot)
   connect(m_poincareFeed, &ValueFeed::reading, plot, &PoincarePlot::addReading);
   connect(m_poincareFeed, &ValueFeed::staleChanged, plot, &PoincarePlot::setStale);
   connect(m_poincareFeed, &ValueFeed::controllerChanged, plot, &PoincarePlot::clear);
+  connect(m_poincareFeed, &ValueFeed::captionChanged, plot, &PoincarePlot::setCaption);
+  connect(m_poincareFeed, &ValueFeed::noticeChanged, plot, &PoincarePlot::setNotice);
+  plot->setCaption(m_poincareFeed->caption());
+  plot->setNotice(m_poincareFeed->notice());
   applyValueChoice();
 }
 

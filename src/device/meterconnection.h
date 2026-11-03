@@ -87,6 +87,9 @@ public:
   /// The last message emitted through error().
   QString errorString() const  { return m_error; }
   LinkState linkState() const { return m_state; }
+  /// linkState() in a word or two ("connecting ...", "no data"), for the
+  /// sidebar; empty while frames arrive.
+  QString shortState() const;
   /// open() called and not close()d: the connection is wanted, even while
   /// it is lost and being reopened.
   bool    isWanted() const { return m_wanted; }
