@@ -360,6 +360,8 @@ protected:
   /// "Sources..." of a view; for View::Meter the analog meter @p meter,
   /// nullptr for the first. False when cancelled.
   bool        editSources(ValueMenu::View view, MeterView *meter = nullptr, PoincareView *plot = nullptr);
+  /// Values... of a front panel: its device's values on the big and small line.
+  void        editPanelValues(FrontPanel *panel);
   QAction    *m_graphSources = nullptr;   ///< in the graph's menu, with more than one meter
   QAction    *m_tableSources = nullptr;   ///< in the table's menu, the same
   /// A meter's name by its source, also after it was closed.

@@ -92,7 +92,8 @@ a value:
 - **LCD** ▸ **Main value**, **Secondary value left**, **Secondary value
   right** - the place on the device's front panel: big (the min/max memory
   follows it) or on the small line below it. The value that had the place goes where
-  this one was, or off the display when this one was not on it.
+  this one was, or off the display when this one was not on it. **Values...** in the
+  context menu of the front panel sets all places at once.
 - **Graph** ▸ **Off**, **Left axis**, **Right axis**, **Third axis** - the
   value's curve off or on that axis; the third axis sits outside the right
   one. A value in the unit the axis has already joins it (two voltages on

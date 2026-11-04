@@ -57,6 +57,7 @@
 #include "ui/settings/keyboardprefs.h"
 #include "ui/views/analogmeter.h"
 #include "ui/views/readingswidget.h"
+#include "ui/dialogs/panelvaluesdlg.h"
 #include "ui/dialogs/sourcesdlg.h"
 #include "core/settings.h"
 #include "core/alarm.h"
@@ -1775,6 +1776,9 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
       connect(a, &QAction::triggered, this, [this, source, v = v] { setPanelLcdVariant(source, v); });
     }
   }
+  // which of its device's values it shows, big and on the small line
+  if (panel && panel->controller() && panel->controller()->valueCount() > 1)
+    connect(menu.addAction(tr("&Values...")), &QAction::triggered, this, [this, panel] { editPanelValues(panel); });
   if (panel && panel->controller())
   {
     menu.addSeparator();
@@ -2338,6 +2342,22 @@ void MainWindow::fillValueMenu(QMenu *menu, const ValueRef &value)
     action->setChecked(true);
   };
   ValueMenu::fill(menu, target, value);
+}
+
+void MainWindow::editPanelValues(FrontPanel *panel)
+{
+  MeterController *ctl = panel->controller();
+  QStringList names;
+  for (int id = 0; id < ctl->valueCount(); ++id)
+    names << otherValueRow(ctl, id).name;
+  PanelValuesDlg dlg(names, panel->value().id, panel->secondaries(), this);
+  if (dlg.exec() != QDialog::Accepted)
+    return;
+  panel->setValue(ValueRef(dlg.main(), ctl->source()));
+  // its min/max memory follows the big line
+  ctl->setMinMaxValue(dlg.main());
+  panel->setSecondaries(dlg.secondaries());
+  updateOpenDevices();
 }
 
 void MainWindow::deviceSettings(const QString &id, bool settingsTab)
