@@ -117,6 +117,8 @@ void GraphWidget::handleChartMousePress(QMouseEvent *ev)
     item(tr("Configure..."), IDConfigure);
     item(tr("Copy image"), IDCopyImage);
     item(tr("Export image..."), IDExportImage);
+    if (m_printAction)
+      m_popup->addAction(m_printAction);
 
     // this graph's colours: the default from the settings page, or one of
     // the variants for this graph only

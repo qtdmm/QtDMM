@@ -434,6 +434,7 @@ void MainWindow::createViews()
   connect(m_session, &DeviceSession::opened, this, sourcesShown);
   connect(m_session, &DeviceSession::closed, this, sourcesShown);
   m_wid->graph()->setWindowActions({ hideWindow(m_graphWin), m_graphSources });
+  m_wid->graph()->setPrintAction(action_Print);
   m_readings->setWindowActions({ hideWindow(m_readingsWin), m_tableSources });
   m_displayAction->setObjectName("action_WindowDisplay");
   m_meterAction->setObjectName("action_WindowMeter");
@@ -847,14 +848,120 @@ void MainWindow::fillViewToolbar()
   connect(m_addDeviceAction, &QAction::triggered, this, &MainWindow::addDevice);
   toolBarDMM->insertAction(m_sidebarAction, m_addDeviceAction);
 
+  toolBarDMM->insertSeparator(action_Connect);
   toolBarDMM->addSeparator();
   toolBarDMM->addAction(m_displayAction);
   toolBarDMM->addAction(m_meterAction);
-  toolBarDMM->addAction(m_readingsAction);
   toolBarDMM->addAction(m_poincareAction);
-  // the graph is a window like the others (it sat with the recording)
   toolBarDMM->addAction(action_Graph);
+  toolBarDMM->addAction(m_readingsAction);
   connect(m_displayAction, &QAction::toggled, this, &MainWindow::storeDisplaySLOT);
+
+  // a click shows or hides the views of the kind, the arrow lists them; the
+  // table is one window, without an arrow
+  addViewMenu(m_displayAction, [this](QMenu *menu)
+  {
+    for (auto it = m_panelWins.cbegin(); it != m_panelWins.cend(); ++it)
+      if (const FrontPanel *panel = panelOf(it.value()); panel && panel->controller())
+        addViewEntry(menu, it.value(), panel->controller()->deviceName());
+  });
+  addViewMenu(m_meterAction, [this](QMenu *menu)
+  {
+    for (QMdiSubWindow *win : meterWindows())
+      addViewEntry(menu, win, viewName(win, meterViewOf(win)->value()));
+    menu->addSeparator();
+    connect(menu->addAction(tr("&New...")), &QAction::triggered, m_newMeterAction, &QAction::trigger);
+  });
+  addViewMenu(m_poincareAction, [this](QMenu *menu)
+  {
+    for (QMdiSubWindow *win : poincareWindows())
+      addViewEntry(menu, win, viewName(win, poincareViewOf(win)->value()));
+    menu->addSeparator();
+    connect(menu->addAction(tr("&New...")), &QAction::triggered, m_newPoincareAction, &QAction::trigger);
+  });
+  addViewMenu(action_Graph, [this](QMenu *menu)
+  {
+    addViewEntry(menu, m_graphWin, m_graphWin->windowTitle());
+    if (m_graphSources->isVisible())
+      menu->addAction(m_graphSources);
+  });
+  // no value yet: the click is the way to choose one; the others of the
+  // kind follow the button
+  auto kindClicked = [this](QAction *action, const std::function<QList<QMdiSubWindow *>()> &windows,
+                            const std::function<bool()> &choose)
+  {
+    connect(action, &QAction::triggered, this, [this, action, windows, choose](bool on)
+    {
+      if (on && !choose())
+      {
+        action->setChecked(false);
+        return;
+      }
+      for (QMdiSubWindow *win : windows())
+        if (m_added.contains(win))
+        {
+          win->setVisible(on);
+          if (on)
+            growFor(win);
+        }
+      m_arranger->arrange();
+    });
+  };
+  kindClicked(m_meterAction, [this] { return meterWindows(); }, [this]
+  {
+    const bool none = meterWindows().size() == 1 && meterViewOf(m_meterWin)->value().source.isEmpty();
+    return !none || m_session->controllers().isEmpty() || editSources(ValueMenu::View::Meter, meterViewOf(m_meterWin));
+  });
+  kindClicked(m_poincareAction, [this] { return poincareWindows(); }, [this]
+  {
+    const bool none = poincareWindows().size() == 1 && poincareViewOf(m_poincareWin)->value().source.isEmpty();
+    return !none || m_session->controllers().isEmpty()
+           || editSources(ValueMenu::View::Poincare, nullptr, poincareViewOf(m_poincareWin));
+  });
+}
+
+void MainWindow::addViewMenu(QAction *action, const std::function<void(QMenu *)> &fill)
+{
+  auto *button = qobject_cast<QToolButton *>(toolBarDMM->widgetForAction(action));
+  if (!button)
+    return;
+  auto *menu = new QMenu(button);
+  connect(menu, &QMenu::aboutToShow, this, [menu, fill]
+  {
+    menu->clear();
+    fill(menu);
+  });
+  button->setMenu(menu);
+  button->setPopupMode(QToolButton::MenuButtonPopup);
+}
+
+void MainWindow::addViewEntry(QMenu *menu, QMdiSubWindow *win, const QString &name)
+{
+  QAction *entry = menu->addAction(QString(name).replace('&', "&&"));
+  entry->setCheckable(true);
+  entry->setChecked(!win->isHidden());
+  connect(entry, &QAction::toggled, this, [this, win](bool on)
+  {
+    // the windows with an action of their own through it, it follows them
+    for (QAction *a : { m_meterAction, m_poincareAction, action_Graph })
+      if (a->property("window").value<QObject *>() == win)
+      {
+        a->setChecked(on);
+        m_arranger->arrange();
+        return;
+      }
+    win->setVisible(on);
+    if (on)
+      growFor(win);
+    m_arranger->arrange();
+  });
+}
+
+QString MainWindow::viewName(const QMdiSubWindow *win, const ValueRef &value) const
+{
+  // several of a kind: which is which
+  const MeterController *ctl = m_session->controller(value.source);
+  return ctl ? QString("%1 · %2").arg(win->windowTitle(), ctl->deviceName()) : win->windowTitle();
 }
 
 // Arrange: the arrangement, title bars, workspaces; returns Load and Save workspace for the keys.
@@ -1171,8 +1278,6 @@ void MainWindow::setUseTextLabel(bool on)
   if (!on)
     Style = Qt::ToolButtonIconOnly;
   toolBarDMM->setToolButtonStyle(Style);
-  toolBarRecorder->setToolButtonStyle(Style);
-  toolBarFile->setToolButtonStyle(Style);
   toolBarMenu->setToolButtonStyle(Style);
 }
 
@@ -1282,7 +1387,10 @@ void MainWindow::createExtraActions()
   // button nor a key of their own any more
   addActions({action_Configure, action_ConfigureDMM, action_Direct_help, action_Help, action_Quit,
               m_displayAction, m_meterAction, m_readingsAction, m_poincareAction, m_titleBars,
-              m_fullScreen, m_toolbars, m_zoomIn, m_zoomOut, m_zoomFit, m_copyImage});
+              m_fullScreen, m_toolbars, m_zoomIn, m_zoomOut, m_zoomFit, m_copyImage,
+              // no buttons of their own: the keys stay, the graph's menu has them
+              action_Connect, action_Reset, action_Record, action_Live, action_Clear,
+              action_Export, action_Import, action_Print});
 }
 
 // Every command that may have a key, in the groups of the page Keyboard;
@@ -1332,7 +1440,7 @@ void MainWindow::setFullScreen(bool on)
 
 void MainWindow::setToolbarsHidden(bool hide)
 {
-  for (QToolBar *bar : { toolBarDMM, toolBarRecorder, toolBarFile, toolBarMenu })
+  for (QToolBar *bar : { toolBarDMM, toolBarMenu })
     bar->setVisible(!hide);
 }
 
@@ -1401,7 +1509,7 @@ void MainWindow::updateRecorderActions()
   const bool recording = state == RecordingStore::Record;
   action_Record->setEnabled(recording ? action_Stop->isEnabled() : action_Start->isEnabled());
   action_Record->setIcon(QIcon(new RecordIconEngine(recording)));
-  action_Record->setText(recording ? tr("S&top") : tr("&Record"));
+  action_Record->setText(recording ? tr("&Stop") : tr("Rec&ord"));
   const QString key = action_Record->shortcut().toString(QKeySequence::NativeText);
   action_Record->setToolTip(QString("%1 (%2)").arg(recording ? tr("Stop recording") : tr("Start recording"), key));
   action_Live->setEnabled(!recording);
@@ -1459,13 +1567,14 @@ void MainWindow::on_action_Menu_triggered()
     m_menu = new QMenu(this);
     m_menu->addAction(action_Configure);
     m_menu->addAction(m_sidebarAction);
+    // for the whole bench, also without the graph
+    m_menu->addAction(action_Record);
+    m_menu->addSeparator();
     m_menu->addAction(action_Graph);
     m_menu->addAction(m_displayAction);
     m_menu->addAction(m_meterAction);
-    m_menu->addAction(m_newMeterAction);
     m_menu->addAction(m_readingsAction);
     m_menu->addAction(m_poincareAction);
-    m_menu->addAction(m_newPoincareAction);
     // Arrange has its button next to the menu's; here only while the toolbar is hidden
     m_arrangeEntry = new QAction(m_arrangeMenu->title(), m_menu);
     m_arrangeEntry->setMenu(m_arrangeMenu);
