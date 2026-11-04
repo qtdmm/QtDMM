@@ -61,7 +61,7 @@ int main(int argc, char **argv)
     const QString file = dir.filePath("x.log");
     check(log.write(file), "written");
     QFile in(file);
-    in.open(QIODevice::ReadOnly | QIODevice::Text);
+    check(in.open(QIODevice::ReadOnly | QIODevice::Text), "read back");
     const QStringList lines = QString::fromUtf8(in.readAll()).split('\n', Qt::SkipEmptyParts);
     check(lines.size() == 5 && lines.first().startsWith("# QtDMM") && lines.last().endsWith("INFO\tmore"), "versions, then the lines");
     QString error;
