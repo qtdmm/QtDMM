@@ -19,8 +19,9 @@ Until a value comes in, the dial says why in place of the unit, as the
 
 ## More needle meters
 
-**Add needle meter** in the menu asks for its value first (the main value of
-the first device ticked; *Cancel* adds none); in a needle meter's right-click
+**New...** in the list at the arrow of the **Needle meter** button asks for
+its value first (the main value of the first device ticked; *Cancel* adds
+none); a click on the button shows or hides all needle meters; in a needle meter's right-click
 menu it opens one with the same value as that meter. Each one shows its own
 value, of any connected device, and has its own style. Choose the value with
 **Sources...** in the meter's right-click menu (the connected devices, each

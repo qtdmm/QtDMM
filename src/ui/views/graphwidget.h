@@ -269,6 +269,8 @@ public:
   /// Entries of the window around the graph ("Hide window"), first in its
   /// context menu; not owned.
   void             setWindowActions(const QList<QAction *> &actions) { m_windowActions = actions; }
+  /// Printing in the context menu, after Export image (the window's action).
+  void             setPrintAction(QAction *action) { m_printAction = action; }
   bool             minimapVisible() const { return m_minimapOn; }
   GraphMinimap    *minimap() const { return m_minimap; }
   /// @}
@@ -691,6 +693,7 @@ protected:
   bool             m_includeZero;
   QMenu           *m_popup;
   QList<QAction *> m_windowActions;   ///< setWindowActions()
+  QAction         *m_printAction = nullptr;   ///< setPrintAction()
 
   // Qt Charts based rendering (core curve + axes, plus the integration curve
   // and the cursor/threshold overlays reintroduced as QGraphicsLineItems on

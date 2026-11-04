@@ -2661,87 +2661,87 @@ a potem wyloguj się i zaloguj ponownie.</translation>
         <translation>Eksportuj obraz...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="123"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="125"/>
         <source>Graph &amp;colours</source>
         <translation>&amp;Kolory wykresu</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="132"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="134"/>
         <source>&amp;Default: %1</source>
         <translation>&amp;Domyślne: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="138"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="140"/>
         <source>&amp;Reference line</source>
         <translation>Linia &amp;odniesienia</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="155"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="157"/>
         <source>At &amp;0</source>
         <translation>Na &amp;0</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="156"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="158"/>
         <source>&amp;Mean of the window</source>
         <translation>Ś&amp;rednia z okna</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="157"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="159"/>
         <source>M&amp;inimum of the window</source>
         <translation>M&amp;inimum z okna</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="158"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="160"/>
         <source>Ma&amp;ximum of the window</source>
         <translation>Ma&amp;ksimum z okna</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="162"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="164"/>
         <source>Alarm threshold %1</source>
         <translation>Próg alarmu %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="166"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="168"/>
         <source>At %1 (dragged)</source>
         <translation>Na %1 (przeciągnięta)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="169"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="171"/>
         <source>&amp;Off</source>
         <translation>&amp;Wyłączona</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="170"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="172"/>
         <source>Over&amp;view</source>
         <translation>&amp;Podgląd całości</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="173"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="175"/>
         <source>Min/max &amp;band</source>
         <translation>Pa&amp;smo min/maks</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="177"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="179"/>
         <source>Remove time cursors</source>
         <translation>Usuń kursory czasu</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="182"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="184"/>
         <source>Export data...</source>
         <translation>Eksportuj dane…</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="183"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="185"/>
         <source>Import data...</source>
         <translation>Importuj dane…</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="307"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="309"/>
         <source>no value</source>
         <translation>brak wartości</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="307"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="309"/>
         <source>fault</source>
         <translation>błąd</translation>
     </message>
@@ -3595,7 +3595,7 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
     <name>MainWindow</name>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="330"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="1873"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1982"/>
         <source>Graph</source>
         <translation>Wykres</translation>
     </message>
@@ -3615,47 +3615,47 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
         <translation>&amp;Tabela odczytów</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="874"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="981"/>
         <source>&lt;p&gt;Drag a divider between two windows to share the space differently. Ctrl+drag a window (or drag its title bar) onto another one to swap them.&lt;/p&gt;</source>
         <translation>&lt;p&gt;Przeciągnij separator między dwoma oknami, aby inaczej podzielić miejsce. Przeciągnij okno z Ctrl (lub za pasek tytułu) na inne, aby je zamienić.&lt;/p&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="876"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="983"/>
         <source>Displays on &amp;top</source>
         <translation>Wyświetlacze u &amp;góry</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="877"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="984"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Displays on top&lt;/span&gt;&lt;/p&gt;&lt;p&gt;The displays share a strip at the top, the graph takes the rest and the readings table a column on the right; everything follows the window size.&lt;/p&gt;%1&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Wyświetlacze u góry&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Wyświetlacze dzielą pasek u góry, wykres zajmuje resztę, a tabela odczytów kolumnę po prawej; wszystko dopasowuje się do rozmiaru okna.&lt;/p&gt;%1&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="881"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="988"/>
         <source>Displays on the &amp;left</source>
         <translation>Wyświetlacze po &amp;lewej</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="882"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="989"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Displays on the left&lt;/span&gt;&lt;/p&gt;&lt;p&gt;The displays share a column on the left, the graph and the readings table take the rest; everything follows the window size.&lt;/p&gt;%1&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Wyświetlacze po lewej&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Wyświetlacze dzielą kolumnę po lewej, wykres i tabela odczytów zajmują resztę; wszystko dopasowuje się do rozmiaru okna.&lt;/p&gt;%1&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="886"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="993"/>
         <source>F&amp;ixed</source>
         <translation>Sta&amp;ły</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="887"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="994"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Fixed&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Keeps the layout as it is: from Displays on top or on the left as they are, from Free the windows snap into a grid made from their positions. A window shown later gets a place at the edge.&lt;/p&gt;%1&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Stały&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Zachowuje układ bez zmian: z trybu Wyświetlacze u góry lub po lewej taki, jaki jest, z trybu Swobodnie okna dopasowują się do siatki utworzonej z ich położeń. Okno pokazane później dostaje miejsce przy krawędzi.&lt;/p&gt;%1&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="892"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="999"/>
         <source>&amp;Free</source>
         <translation>&amp;Swobodnie</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="897"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1004"/>
         <source>&amp;Hide title bars</source>
         <translation>&amp;Ukryj paski tytułu</translation>
     </message>
@@ -3675,13 +3675,13 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Wykres Poincarégo&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Każdy odczyt względem następnego: szum poszerza chmurę w poprzek przekątnej, dryf rozciąga ją wzdłuż niej. SD1 i SD2 podają oba w liczbach.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="841"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="842"/>
         <source>&amp;Add device...</source>
         <translation>&amp;Dodaj urządzenie...</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="279"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="843"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="844"/>
         <source>Add device: a meter, a sensor or a calculated value</source>
         <translation>Dodaj urządzenie: miernik, czujnik lub wartość obliczaną</translation>
     </message>
@@ -3711,117 +3711,117 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Tabela odczytów&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Każdy odczyt wysłany przez miernik, po jednym wierszu, z czasem, trybem i zakresem – surowy zapis sesji obok wykresu. Skopiuj wiersze do arkusza kalkulacyjnego lub wyeksportuj je jako CSV.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="740"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="741"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Devices&lt;/span&gt;&lt;/p&gt;&lt;p&gt;The sidebar with My devices: the context menu of one connects it, has its settings, rename and remove; a double click shows its info and settings. Drag an entry to change the order.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Urządzenia&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Panel boczny z Moimi urządzeniami: menu kontekstowe urządzenia łączy je, ma jego ustawienia, zmianę nazwy i usunięcie; dwuklik pokazuje informacje i ustawienia. Przeciągnij wpis, aby zmienić kolejność.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="844"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="845"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Add device&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Step by step: how the meter is connected, which one it is, and whether it goes into this window or a new one. It is kept in My devices.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Dodaj urządzenie&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Krok po kroku: jak podłączony jest miernik, który to jest i czy trafia do tego okna, czy do nowego. Zostaje zapisany w Moich urządzeniach.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="893"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1000"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Free&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Place and size the windows as you like; Ctrl+drag moves a window, also one without title bar.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Swobodnie&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Umieszczaj okna i zmieniaj ich rozmiar dowolnie; Ctrl+przeciąganie przesuwa okno, także bez paska tytułu.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="901"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1008"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Hide title bars&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Windows without title bar sit flush next to each other. Right-click the display or the meter for the window&apos;s menu; Ctrl+drag moves a window, in the arranged modes onto another one to swap them.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Ukryj paski tytułu&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Okna bez paska tytułu przylegają do siebie. Kliknij prawym przyciskiem wyświetlacz lub miernik, aby otworzyć menu okna; Ctrl+przeciąganie przesuwa okno, w trybach rozmieszczonych na inne okno, aby je zamienić.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="909"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1016"/>
         <source>&amp;Arrange</source>
         <translation>&amp;Rozmieść</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="939"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1046"/>
         <source>Save layout on e&amp;xit</source>
         <translation>Zapisz układ przy za&amp;mykaniu</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="948"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1055"/>
         <source>Arrange the windows</source>
         <translation>Rozmieść okna</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="962"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1069"/>
         <source>D&amp;esign</source>
         <translation>Wy&amp;gląd</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="964"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1071"/>
         <source>&amp;System</source>
         <translation>&amp;Systemowy</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="965"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1072"/>
         <source>&amp;Dark</source>
         <translation>&amp;Ciemny</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1241"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1346"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Full screen&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Use the whole screen for the instruments, e.g. on a lab monitor. The same key again returns to the normal window.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Pełny ekran&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Wykorzystaj cały ekran na przyrządy, np. na monitorze laboratoryjnym. Ponowne naciśnięcie tego samego klawisza przywraca zwykłe okno.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1276"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1381"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Copy graph image&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Puts a picture of the graph on the clipboard, ready to paste into a report or a chat.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Kopiuj obraz wykresu&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Umieszcza obraz wykresu w schowku, gotowy do wklejenia do raportu lub czatu.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1346"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1454"/>
         <source>The toolbar is hidden. The arrow at the right end of the status line brings it back.</source>
         <translation>Pasek narzędzi jest ukryty. Strzałka na prawym końcu linii stanu przywraca go.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1348"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1456"/>
         <source>The toolbar is hidden. %1 brings it back, and so does the arrow at the right end of the status line.</source>
         <translation>Pasek narzędzi jest ukryty. %1 przywraca go, podobnie jak strzałka na prawym końcu linii stanu.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1426"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1534"/>
         <source>&lt;h2&gt;QtDMM %1&lt;/h2&gt;&lt;p&gt;A readout and transient recorder for digital multimeters.&lt;/p&gt;&lt;p&gt;Built with &lt;b&gt;Qt&lt;/b&gt; %2. Licensed under the &lt;b&gt;GNU GPL 3 or later&lt;/b&gt; (versions before 0.9.0 under GPL 2 or later).&lt;/p&gt;&lt;p&gt;0.9.5 onwards: tuxmaster and contributors, see the AUTHORS file.&lt;br&gt;0.9.3 and before: &amp;copy; 2001-2016 M. Toussaint &amp;lt;&lt;a href=&apos;mailto:qtdmm@mtoussaint.de&apos;&gt;qtdmm@mtoussaint.de&lt;/a&gt;&amp;gt;&lt;/p&gt;&lt;p&gt;Website: &lt;a href=&apos;https://qtdmm.de&apos;&gt;qtdmm.de&lt;/a&gt; &amp;middot; Contact: &lt;a href=&apos;mailto:hello@qtdmm.de&apos;&gt;hello@qtdmm.de&lt;/a&gt;&lt;br&gt;Source and bug reports: &lt;a href=&apos;https://github.com/qtdmm/QtDMM&apos;&gt;github.com/qtdmm/QtDMM&lt;/a&gt;&lt;br&gt;Symbols from the &lt;b&gt;Oxygen&lt;/b&gt; and &lt;b&gt;Breeze&lt;/b&gt; icon themes of the KDE community (LGPL 3); QtDMM&apos;s own symbols are drawn in its style.&lt;/p&gt;</source>
         <translation>&lt;h2&gt;QtDMM %1&lt;/h2&gt;&lt;p&gt;Odczyt i rejestrator przebiegów dla multimetrów cyfrowych.&lt;/p&gt;&lt;p&gt;Zbudowany z użyciem &lt;b&gt;Qt&lt;/b&gt; %2. Licencja &lt;b&gt;GNU GPL 3 lub nowsza&lt;/b&gt; (wersje przed 0.9.0 na GPL 2 lub nowszej).&lt;/p&gt;&lt;p&gt;Od 0.9.5: tuxmaster i współtwórcy, zob. plik AUTHORS.&lt;br&gt;0.9.3 i wcześniejsze: &amp;copy; 2001-2016 M. Toussaint &amp;lt;&lt;a href=&apos;mailto:qtdmm@mtoussaint.de&apos;&gt;qtdmm@mtoussaint.de&lt;/a&gt;&amp;gt;&lt;/p&gt;&lt;p&gt;Strona: &lt;a href=&apos;https://qtdmm.de&apos;&gt;qtdmm.de&lt;/a&gt; &amp;middot; Kontakt: &lt;a href=&apos;mailto:hello@qtdmm.de&apos;&gt;hello@qtdmm.de&lt;/a&gt;&lt;br&gt;Kod źródłowy i zgłoszenia błędów: &lt;a href=&apos;https://github.com/qtdmm/QtDMM&apos;&gt;github.com/qtdmm/QtDMM&lt;/a&gt;&lt;br&gt;Symbole pochodzą z motywów ikon &lt;b&gt;Oxygen&lt;/b&gt; i &lt;b&gt;Breeze&lt;/b&gt; społeczności KDE (LGPL 3); własne symbole QtDMM są narysowane w jego stylu.&lt;/p&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2373"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2482"/>
         <source>Show the toolbar</source>
         <translation>Pokaż pasek narzędzi</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2373"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2482"/>
         <source>Hide the toolbar</source>
         <translation>Ukryj pasek narzędzi</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="423"/>
         <location filename="../../src/ui/mainwindow.cpp" line="424"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="1676"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1785"/>
         <source>S&amp;ources...</source>
         <translation>Ź&amp;ródła...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="493"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="494"/>
         <source>%1: the key did not reach the meter: it is not connected yet.</source>
         <translation>%1: klawisz nie dotarł do miernika: nie jest jeszcze połączony.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="726"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="727"/>
         <source>Devices</source>
         <translation>Urządzenia</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="733"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="734"/>
         <source>De&amp;vices</source>
         <translation>Urzą&amp;dzenia</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="700"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="811"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="2088"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="2764"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="701"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="812"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2197"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2873"/>
         <source>%1: %2</source>
         <translation>%1: %2</translation>
     </message>
@@ -3837,297 +3837,293 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="418"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="1631"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1740"/>
         <source>&amp;Hide view</source>
         <translation>&amp;Ukryj widok</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="566"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="567"/>
         <source>Poincaré plot %1</source>
         <translation>Wykres Poincarégo %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="700"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="701"/>
         <source>QtDMM: Unsaved data</source>
         <translation>QtDMM: niezapisane dane</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="764"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="765"/>
         <source>Closing it discards its recording, which is not saved.</source>
         <translation>Zamknięcie odrzuca jego nagranie, które nie jest zapisane.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="964"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="873"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="880"/>
+        <source>&amp;New...</source>
+        <translation>&amp;Nowy...</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="1071"/>
         <source>&amp;Light</source>
         <translation>&amp;Jasny</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="965"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1072"/>
         <source>Light &amp;Metal</source>
         <translation>Jasny &amp;metal</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="966"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1073"/>
         <source>Dark Me&amp;tal</source>
         <translation>Ciemny me&amp;tal</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1145"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1252"/>
         <source>Connected: %1</source>
         <translation>Połączone: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1237"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1342"/>
         <source>&amp;Full screen</source>
         <translation>Pełny &amp;ekran</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1246"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1351"/>
         <source>Hide &amp;toolbar</source>
         <translation>Ukryj pa&amp;sek narzędzi</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1250"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1355"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Hide toolbar&lt;/span&gt;&lt;/p&gt;&lt;p&gt;More room for the instruments. The menu stays at hand with F7, the same key again brings the toolbar back.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Ukryj pasek narzędzi&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Więcej miejsca na przyrządy. Menu pozostaje pod ręką pod klawiszem F7, ten sam klawisz ponownie przywraca pasek narzędzi.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1261"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1366"/>
         <source>Zoom &amp;in</source>
         <translation>Pow&amp;iększ</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1265"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1370"/>
         <source>Zoom &amp;out</source>
         <translation>Po&amp;mniejsz</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1269"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1374"/>
         <source>Show &amp;whole recording</source>
         <translation>Pokaż &amp;całe nagranie</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1273"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1378"/>
         <source>Cop&amp;y graph image</source>
         <translation>Kopi&amp;uj wykres jako obraz</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1294"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1402"/>
         <source>Meter</source>
         <translation>Miernik</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1294"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1402"/>
         <source>Recording and graph</source>
         <translation>Rejestracja i wykres</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1294"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1402"/>
         <source>Windows</source>
         <translation>Okna</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1295"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1403"/>
         <source>Settings and help</source>
         <translation>Ustawienia i pomoc</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1298"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1406"/>
         <source>Record / Stop</source>
         <translation>Rejestruj / Zatrzymaj</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1307"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1415"/>
         <source>Settings</source>
         <translation>Ustawienia</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1308"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1416"/>
         <source>Recording settings</source>
         <translation>Ustawienia rejestracji</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1351"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1459"/>
         <source>The menu opens with %1.</source>
         <translation>Menu otwiera się klawiszem %1.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1352"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1460"/>
         <source>Hide toolbar</source>
         <translation>Ukryj pasek narzędzi</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1353"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1461"/>
         <source>&amp;Do not show this again</source>
         <translation>&amp;Nie pokazuj więcej</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1404"/>
-        <source>S&amp;top</source>
-        <translation>S&amp;top</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1404"/>
-        <source>&amp;Record</source>
-        <translation>&amp;Rejestruj</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1406"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1514"/>
         <source>Stop recording</source>
         <translation>Zatrzymaj rejestrację</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1406"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1514"/>
         <source>Start recording</source>
         <translation>Zacznij rejestrację</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1423"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1531"/>
         <source>About QtDMM</source>
         <translation>O QtDMM</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1443"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1551"/>
         <source>Supported devices...</source>
         <translation>Obsługiwane urządzenia…</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1631"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1740"/>
         <source>&amp;Close window</source>
         <translation>&amp;Zamknij okno</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1654"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1763"/>
         <source>As in the &amp;settings</source>
         <translation>&amp;Jak w ustawieniach</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1737"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1846"/>
         <source>&amp;Alarms...</source>
         <translation>&amp;Alarmy...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1959"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2068"/>
         <source>A front panel shows the values of its own device</source>
         <translation>Panel przedni pokazuje wartości własnego urządzenia</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1975"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2084"/>
         <source>New &amp;Poincaré plot</source>
         <translation>Nowy wykres &amp;Poincarégo</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1976"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2085"/>
         <source>In the &amp;graph</source>
         <translation>Na &amp;wykresie</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2099"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2208"/>
         <source>Value %1</source>
         <translation>Wartość %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2267"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2376"/>
         <source>The changes connect it anew, which discards its recording, which is not saved.</source>
         <translation>Zmiany łączą je ponownie, co odrzuca jego nagranie, które nie jest zapisane.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2269"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2378"/>
         <source>%1: the changes take effect when it is connected next</source>
         <translation>%1: zmiany zadziałają przy następnym połączeniu</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2302"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2411"/>
         <source>Its port is in use by %1.</source>
         <translation>Jego port jest używany przez %1.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2303"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2412"/>
         <source>Not connected. Connect takes it out of My devices.</source>
         <translation>Niepołączone. Połącz wyjmuje je z Moich urządzeń.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2345"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2454"/>
         <source>%1 is connected already</source>
         <translation>%1 jest już połączone</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2346"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2455"/>
         <source>%1: its port is in use by %2</source>
         <translation>%1: jego port jest używany przez %2</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2352"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2461"/>
         <source>%1 connected</source>
         <translation>%1 połączone</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2835"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2944"/>
         <source>back in My devices: %1</source>
         <translation>ponownie w Moich urządzeniach: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2837"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2946"/>
         <source>the programs of their alarms were left out, set them again in Alarms...</source>
         <translation>programy ich alarmów pominięto, ustaw je ponownie w Alarmy...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2839"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2948"/>
         <source>%1 without its key: enter it in the device settings</source>
         <translation>%1 bez klucza: wpisz go w ustawieniach urządzenia</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="738"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="739"/>
         <source>Devices: show or hide the sidebar with My devices and the open devices</source>
         <translation>Urządzenia: pokaż lub ukryj pasek boczny z Moimi urządzeniami i otwartymi urządzeniami</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1635"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1744"/>
         <source>Hide &amp;controls</source>
         <translation>Ukryj &amp;przyciski</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1646"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1755"/>
         <source>&amp;LCD colours</source>
         <translation>Kolory &amp;LCD</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1648"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1757"/>
         <source>&amp;Classic</source>
         <translation>&amp;Klasyczny</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1648"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1757"/>
         <source>&amp;Backlight blue</source>
         <translation>Podświetlenie &amp;niebieskie</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1649"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1758"/>
         <source>&amp;Amber</source>
         <translation>&amp;Bursztynowy</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1649"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1758"/>
         <source>&amp;High contrast</source>
         <translation>Wysoki k&amp;ontrast</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1650"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1759"/>
         <source>C&amp;ustom (from the settings)</source>
         <translation>&amp;Własne (z ustawień)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1717"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1826"/>
         <source>PASS/FAIL &amp;test</source>
         <translation>&amp;Test PASS/FAIL</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1732"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1841"/>
         <source>L&amp;imits...</source>
         <translation>&amp;Granice...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1683"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1792"/>
         <source>Meter &amp;style</source>
         <translation>&amp;Styl miernika</translation>
     </message>
@@ -4157,137 +4153,147 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
         <translation>Doda&amp;j wykres Poincarégo</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="556"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="557"/>
         <source>Needle meter %1</source>
         <translation>Miernik wskazówkowy %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="917"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1024"/>
         <source>L&amp;oad bench...</source>
         <translation>&amp;Wczytaj stanowisko pomiarowe...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="919"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1026"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Load bench&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Takes a set-up saved with &lt;i&gt;Save bench&lt;/i&gt;: the devices connected (others close), which windows are shown with which values, the arrangement, title bars, toolbar, design and the size of the main window. A device missing in My devices is added back from the file.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Wczytaj stanowisko pomiarowe&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Przejmuje układ zapisany przez &lt;i&gt;Zapisz stanowisko pomiarowe&lt;/i&gt;: połączone urządzenia (pozostałe zostaną zamknięte), które okna są widoczne z jakimi wartościami, rozmieszczenie, paski tytułu, pasek narzędzi, motyw i rozmiar okna głównego. Urządzenie, którego brakuje w Moich urządzeniach, zostanie odtworzone z pliku.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="926"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1033"/>
         <source>&amp;Recent benches</source>
         <translation>&amp;Ostatnie stanowiska pomiarowe</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="929"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1036"/>
         <source>&amp;Save bench...</source>
         <translation>&amp;Zapisz stanowisko pomiarowe...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="931"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1038"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Save bench&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Writes the set-up to a file, under a name and a description, with a picture of the windows: the devices connected (a copy of their entries in My devices), which windows are shown with which values, the arrangement, title bars, toolbar, design and the size of the main window.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Zapisz stanowisko pomiarowe&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Zapisuje układ do pliku, z nazwą, opisem i obrazem okien: połączone urządzenia (kopia ich wpisów w Moich urządzeniach), które okna są widoczne z jakimi wartościami, rozmieszczenie, paski tytułu, pasek narzędzi, motyw i rozmiar okna głównego.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="942"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1049"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Save layout on exit&lt;/span&gt;&lt;/p&gt;&lt;p&gt;On: QtDMM starts with the window layout it had when it was closed. Off: it starts with the layout last saved while this was on, or the bench last loaded.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Zapisz układ przy zamykaniu&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Włączone: QtDMM uruchamia się z układem okien z chwili zamknięcia. Wyłączone: uruchamia się z układem zapisanym ostatnio przy włączonej opcji lub z ostatnio wczytanym stanowiskiem pomiarowym.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1684"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1512"/>
+        <source>&amp;Stop</source>
+        <translation>Zatrzym&amp;aj</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="1512"/>
+        <source>Rec&amp;ord</source>
+        <translation>&amp;Rejestruj</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="1793"/>
         <source>&amp;Dark studio</source>
         <translation>&amp;Ciemne studio</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1684"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1793"/>
         <source>Classic &amp;ivory</source>
         <translation>&amp;Klasyczna kość słoniowa</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1716"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1825"/>
         <source>Limits &amp;&amp; &amp;alarms</source>
         <translation>Granice i &amp;alarmy</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1814"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1923"/>
         <source>off</source>
         <translation>wył.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1814"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1923"/>
         <source>failed</source>
         <translation>błąd</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1815"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1924"/>
         <source>1 client</source>
         <translation>1 klient</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1815"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1924"/>
         <source>%1 clients</source>
         <translation>Klienci: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1817"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1926"/>
         <source>%1 could not start: %2. Double-click for its settings.</source>
         <translation>%1 nie mógł wystartować: %2. Dwuklik otwiera ustawienia.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1819"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1928"/>
         <source>%1 is off. Double-click for its settings.</source>
         <translation>%1 jest wyłączony. Dwuklik otwiera ustawienia.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1821"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1930"/>
         <source>HiSLIP for VISA (NI-VISA, LabVIEW, PyVISA): %1, %2 connected.</source>
         <translation>HiSLIP dla VISA (NI-VISA, LabVIEW, PyVISA): %1, połączono: %2.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1823"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1932"/>
         <source>VXI-11 for VISA and lxi-tools: %1, %2 connected.</source>
         <translation>VXI-11 dla VISA i lxi-tools: %1, połączono: %2.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1825"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1934"/>
         <source>SCPI server (raw socket) on %1, %2 connected.</source>
         <translation>Serwer SCPI (surowe gniazdo) na %1, połączono: %2.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1877"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="1986"/>
         <source>Readings table</source>
         <translation>Tabela odczytów</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="1974"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2083"/>
         <source>New &amp;needle meter</source>
         <translation>Nowy miernik &amp;wskazówkowy</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2310"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2419"/>
         <source>Not connected.</source>
         <translation>Niepołączone.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2311"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2420"/>
         <source>Connecting ...</source>
         <translation>Łączenie …</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2312"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2421"/>
         <source>Connected, but the meter sends nothing.</source>
         <translation>Połączone, ale miernik nic nie wysyła.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2313"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2422"/>
         <source>The connection went away; QtDMM tries again.</source>
         <translation>Połączenie zostało utracone; QtDMM próbuje ponownie.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2315"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2424"/>
         <source>Connected, readings are coming in.</source>
         <translation>Połączone, odczyty napływają.</translation>
     </message>
     <message numerus="yes">
-        <location filename="../../src/ui/mainwindow.cpp" line="2316"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2425"/>
         <source>Connected, no reading for %n s.</source>
         <translation>
             <numerusform>Połączone, brak odczytu od %n s.</numerusform>
@@ -4296,7 +4302,7 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
         </translation>
     </message>
     <message numerus="yes">
-        <location filename="../../src/ui/mainwindow.cpp" line="2321"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2430"/>
         <source>Last reading %n s ago.</source>
         <translation>
             <numerusform>Ostatni odczyt %n s temu.</numerusform>
@@ -4305,59 +4311,59 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
         </translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2323"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2432"/>
         <source>The meter&apos;s battery is low.</source>
         <translation>Bateria miernika jest słaba.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2711"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2820"/>
         <source>Save bench</source>
         <translation>Zapisz stanowisko pomiarowe</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2712"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="2752"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2821"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2861"/>
         <source>QtDMM bench (*.%1)</source>
         <translation>Stanowisko pomiarowe QtDMM (*.%1)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2736"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2845"/>
         <source>QtDMM: Save bench</source>
         <translation>QtDMM: Zapisz stanowisko pomiarowe</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2743"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2852"/>
         <source>Bench saved to %1</source>
         <translation>Stanowisko pomiarowe zapisane w %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2751"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2860"/>
         <source>Load bench</source>
         <translation>Wczytaj stanowisko pomiarowe</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2764"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="2781"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2873"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2890"/>
         <source>QtDMM: Load bench</source>
         <translation>QtDMM: Wczytaj stanowisko pomiarowe</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2782"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2891"/>
         <source>The bench closes %1, its recording is not saved.</source>
         <translation>Stanowisko pomiarowe zamyka %1, jego nagranie nie jest zapisane.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2833"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2942"/>
         <source>Bench loaded from %1</source>
         <translation>Stanowisko pomiarowe wczytane z %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2736"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2845"/>
         <source>Could not write %1.</source>
         <translation>Nie można zapisać %1.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2900"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3009"/>
         <source>&amp;Clear list</source>
         <translation>&amp;Wyczyść listę</translation>
     </message>
@@ -6517,261 +6523,251 @@ Następnie wyloguj się i zaloguj ponownie, aby członkostwo w grupie zaczęło 
         <translation>Multimetr</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="75"/>
-        <source>File</source>
-        <translation>Plik</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="98"/>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="466"/>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="469"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="52"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="420"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="423"/>
         <source>Menu</source>
         <translation>Menu</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="121"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="75"/>
         <source>&amp;Export</source>
         <translation>&amp;Eksportuj</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="124"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="78"/>
         <source>Export graph</source>
         <translation>Eksportuj wykres</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="141"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="95"/>
         <source>&amp;Import</source>
         <translation>&amp;Importuj</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="144"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="98"/>
         <source>Import graph</source>
         <translation>Importuj wykres</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="161"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="115"/>
         <source>&amp;Print</source>
         <translation>&amp;Drukuj</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="164"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="118"/>
         <source>Print graph</source>
         <translation>Drukuj wykres</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="181"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="135"/>
         <source>&amp;Configure</source>
         <translation>&amp;Konfiguruj</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="198"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="152"/>
         <source>&amp;Quit</source>
         <translation>&amp;Zakończ</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="218"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="172"/>
         <source>&amp;Connect</source>
         <translation>Połą&amp;cz</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="221"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="175"/>
         <source>Connect/Disconnect DMM</source>
         <translation>Połącz/rozłącz multimetr</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="224"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="178"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Connect to the Multimeter&lt;/span&gt;&lt;/p&gt;&lt;p&gt;This will establish the serial connection to the dmm. If not connected the serial port is free and can be used by other software.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Połącz z multimetrem&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Nawiązuje połączenie szeregowe z multimetrem. Bez połączenia port szeregowy jest wolny dla innych programów.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="244"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="198"/>
         <source>&amp;Graph</source>
         <translation>&amp;Wykres</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="247"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="201"/>
         <source>show or hide the graph</source>
         <translation>pokaż lub ukryj wykres</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="52"/>
-        <source>Graph</source>
-        <translation>Wykres</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="127"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="81"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Export the recording&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Writes the recording as CSV, Excel or OpenDocument: one row per sample time, or every reading at its time.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Eksportuj rejestrację&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Zapisuje rejestrację jako CSV, Excel lub OpenDocument: jeden wiersz na okres próbkowania albo każdy odczyt w jego czasie.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="147"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="101"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Import a recording&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Loads a file exported before into the graph, to zoom, scroll and export. A file QtDMM cannot read is refused.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Importuj rejestrację&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Wczytuje do wykresu wcześniej wyeksportowany plik, do powiększania, przewijania i eksportu. Plik, którego QtDMM nie umie odczytać, jest odrzucany.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="167"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="121"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Print the graph&lt;/span&gt;&lt;/p&gt;&lt;p&gt;A dialog asks for a title and a comment and lets you choose the printer; printing into a PDF file works too.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Drukuj wykres&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Okno pyta o tytuł i komentarz i pozwala wybrać drukarkę; drukowanie do pliku PDF też działa.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="184"/>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="398"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="138"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="352"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Settings&lt;/span&gt;&lt;/p&gt;&lt;p&gt;The settings: appearance, graph, recording, alarms and the SCPI server. The meter is set up with Add device.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Ustawienia&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Ustawienia: wygląd, wykres, rejestracja, alarmy i serwer SCPI. Miernik konfiguruje się przez Dodaj urządzenie.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="201"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="155"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Quit QtDMM&lt;/span&gt;&lt;/p&gt;&lt;p&gt;When a recording is not saved yet, QtDMM offers to export it first.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Zakończ QtDMM&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Gdy rejestracja nie jest jeszcze zapisana, QtDMM proponuje najpierw ją wyeksportować.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="250"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="204"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Graph&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Show or hide the graph. Recording continues while the graph is hidden; with only the display and the meter panels visible the window can be made much smaller.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Wykres&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Pokaż lub ukryj wykres. Rejestracja trwa także przy ukrytym wykresie; z samym wyświetlaczem i miernikiem okno może być dużo mniejsze.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="264"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="218"/>
         <source>&amp;Reset</source>
         <translation>&amp;Resetuj</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="267"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="221"/>
         <source>reset min/max</source>
         <translation>zeruj min/maks</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="270"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="224"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Reset min/max values&lt;/span&gt;&lt;/p&gt;&lt;p&gt;The min/max values in the display will be reset. You can activate this option at any time. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Zeruj min/maks&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Wartości min/maks na wyświetlaczu zostaną wyzerowane. Można to zrobić w każdej chwili. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="281"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="235"/>
         <source>&amp;Device settings...</source>
         <translation>Ustawienia &amp;urządzenia...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="284"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="238"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Device settings&lt;/span&gt;&lt;/p&gt;&lt;p&gt;The settings of the device in use, as Settings... in its context menu in the sidebar. Without a device: Add device.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Ustawienia urządzenia&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Ustawienia używanego urządzenia, jak Ustawienia... w jego menu kontekstowym w panelu bocznym. Bez urządzenia: Dodaj urządzenie.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="301"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="255"/>
         <source>&amp;Start</source>
         <translation>&amp;Start</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="304"/>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="341"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="258"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="295"/>
         <source>Start recording</source>
         <translation>Zacznij rejestrację</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="307"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="261"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Start recording&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Asks for the length and starts a recording. A start at a clock time or at a threshold is set under Settings, Recording.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Rozpocznij rejestrację&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Pyta o czas trwania i rozpoczyna rejestrację. Start o godzinie lub po przekroczeniu progu ustawia się w Ustawienia, Rejestracja.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="327"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="281"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Stop recording&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Stops the recording, however it was started.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Zatrzymaj rejestrację&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Zatrzymuje rejestrację, niezależnie od tego, jak się zaczęła.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="384"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="292"/>
+        <source>Rec&amp;ord</source>
+        <translation>&amp;Rejestruj</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="338"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Clear the graph&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Empties the recording or the live graph; a recording viewed goes back to Live.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Wyczyść wykres&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Czyści rejestrację lub wykres na żywo; oglądana rejestracja wraca do trybu Na żywo.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="438"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="392"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Handbook&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Open the QtDMM handbook: connecting a meter, recording, troubleshooting and the list of supported devices.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Podręcznik&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Otwórz podręcznik QtDMM: podłączanie miernika, rejestracja, rozwiązywanie problemów i lista obsługiwanych urządzeń.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="472"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="426"/>
         <source>F7</source>
         <translation>F7</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="321"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="275"/>
         <source>S&amp;top</source>
         <translation>S&amp;top</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="324"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="278"/>
         <source>Stop recording</source>
         <translation>Zatrzymaj rejestrację</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="338"/>
-        <source>&amp;Record</source>
-        <translation>&amp;Rejestruj</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="344"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="298"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Record&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Starts a recording: the graph is cleared and fills from now on, until the recording length or until you press the button again (a red square while it records). The recording then stands in the graph to zoom, save and export. The recording length and the start options are set under Settings, Recording.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Rejestruj&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Rozpoczyna rejestrację: wykres zostaje wyczyszczony i wypełnia się od teraz, aż do czasu rejestracji albo do ponownego naciśnięcia przycisku (czerwony kwadrat podczas rejestracji). Potem rejestracja zostaje na wykresie do powiększania, zapisu i eksportu. Czas rejestracji i opcje startu ustawia się w Ustawienia, Rejestracja.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="361"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="315"/>
         <source>&amp;Live</source>
         <translation>Na &amp;żywo</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="364"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="318"/>
         <source>Live: the graph runs with the last readings</source>
         <translation>Na żywo: wykres przesuwa się z ostatnimi odczytami</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="367"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="321"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Live&lt;/span&gt;&lt;/p&gt;&lt;p&gt;The graph shows the readings of the last recording length, running through; older ones fall out on the left. QtDMM is live after connecting. After a recording or a loaded file, Live leaves them (unsaved readings are offered for export first). Saving or exporting while live saves what the graph holds up to now.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Na żywo&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Wykres pokazuje odczyty z ostatniego czasu rejestracji i przesuwa się; starsze znikają po lewej. Po połączeniu QtDMM działa na żywo. Po rejestracji lub wczytanym pliku tryb na żywo je opuszcza (niezapisane odczyty są najpierw proponowane do eksportu). Zapis lub eksport na żywo zapisuje to, co wykres zawiera do teraz.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="378"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="332"/>
         <source>&amp;Clear</source>
         <translation>&amp;Wyczyść</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="381"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="335"/>
         <source>Clear graph</source>
         <translation>Wyczyść wykres</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="395"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="349"/>
         <source>C&amp;onfigure</source>
         <translation>K&amp;onfiguruj</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="412"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="366"/>
         <source>Direct Hel&amp;p</source>
         <translation>Pomoc &amp;bezpośrednia</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="415"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="369"/>
         <source>Help</source>
         <translation>Pomoc</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="418"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="372"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Direct Help&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Enter the direct help mode. You have done this already when reading this text :)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Pomoc bezpośrednia&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Włącza tryb pomocy bezpośredniej. Właśnie to zrobiłeś, skoro czytasz ten tekst :)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="432"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="386"/>
         <source>&amp;Handbook</source>
         <translation>&amp;Podręcznik</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="435"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="389"/>
         <source>Handbook</source>
         <translation>Podręcznik</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="452"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="406"/>
         <source>A&amp;bout</source>
         <translation>&amp;O programie</translation>
     </message>
     <message>
-        <location filename="../../src/ui/forms/uimainwindow.ui" line="455"/>
+        <location filename="../../src/ui/forms/uimainwindow.ui" line="409"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Copyright information&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Show copyright information and some blurb about QtDMM. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Informacje o prawach autorskich&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Pokazuje prawa autorskie i kilka słów o QtDMM. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>

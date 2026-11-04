@@ -370,6 +370,12 @@ protected:
   /// Fills @p menu for @p value of an open meter (ValueMenu).
   void        fillValueMenu(QMenu *menu, const ValueRef &value);
   /// A checkable action that shows/hides @p win.
+  /// The arrow of @p action's button in the toolbar: @p fill lists the views.
+  void        addViewMenu(QAction *action, const std::function<void(QMenu *)> &fill);
+  /// An entry of such a list: @p win shown or not, ticked.
+  void        addViewEntry(QMenu *menu, QMdiSubWindow *win, const QString &name);
+  /// @p win's title with the device of @p value, for such a list.
+  QString     viewName(const QMdiSubWindow *win, const ValueRef &value) const;
   QAction    *windowAction(QMdiSubWindow *win, const QString &text, const char *shortcut,
                            const char *icon, const QString &whatsThis);
   void        bindWindowAction(QAction *action, QMdiSubWindow *win);

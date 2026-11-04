@@ -47,52 +47,6 @@
    <addaction name="action_Connect"/>
    <addaction name="action_Reset"/>
   </widget>
-  <widget class="QToolBar" name="toolBarRecorder">
-   <property name="windowTitle">
-    <string>Graph</string>
-   </property>
-   <property name="toolTip">
-    <string/>
-   </property>
-   <property name="movable">
-    <bool>false</bool>
-   </property>
-   <property name="toolButtonStyle">
-    <enum>Qt::ToolButtonTextUnderIcon</enum>
-   </property>
-   <attribute name="toolBarArea">
-    <enum>TopToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
-   <addaction name="action_Record"/>
-   <addaction name="action_Live"/>
-   <addaction name="action_Clear"/>
-  </widget>
-  <widget class="QToolBar" name="toolBarFile">
-   <property name="windowTitle">
-    <string>File</string>
-   </property>
-   <property name="movable">
-    <bool>false</bool>
-   </property>
-   <property name="toolButtonStyle">
-    <enum>Qt::ToolButtonTextUnderIcon</enum>
-   </property>
-   <property name="floatable">
-    <bool>false</bool>
-   </property>
-   <attribute name="toolBarArea">
-    <enum>TopToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
-   <addaction name="action_Export"/>
-   <addaction name="action_Import"/>
-   <addaction name="action_Print"/>
-  </widget>
   <widget class="QToolBar" name="toolBarMenu">
    <property name="windowTitle">
     <string>Menu</string>
@@ -335,7 +289,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>&amp;Record</string>
+    <string>Rec&amp;ord</string>
    </property>
    <property name="toolTip">
     <string>Start recording</string>

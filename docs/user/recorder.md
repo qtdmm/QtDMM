@@ -1,6 +1,6 @@
 # The recorder
 
-The recorder graph — shown with the **Graph** toolbar button, hidden by
+The recorder graph — shown with the **Graph** button in the toolbar, hidden by
 default and brought up automatically when a recording starts — shows
 every reading of the meter's primary value, at the time it came: a short
 spike between two others is kept, and a slow meter is drawn from reading to
@@ -22,7 +22,8 @@ The graph is in one of three modes:
   hour). The time begins with the first reading, so the curve starts at 0
   also when the meter took a while to connect or after *Clear*. Live is no recording: there is
   nothing to lose, and leaving it asks nothing.
-- **Recording** — *Record* (the grey dot ● in the toolbar, Space) asks
+- **Recording** — *Record* (Space, in the menu, or *Start recording* in the
+  graph's right-click menu) asks
   how long to record, with the last length ready: Enter starts it, *Until
   Stop* records until you stop it. Then it clears the graph and records
   from now on, until the length is reached or you press the button again
@@ -34,8 +35,7 @@ The graph is in one of three modes:
   stands where it comes from: `Recording of 06.10.26 14:32 · 10:00`, or
   the file's name.
 
-▶ *Live* in the toolbar is pressed while live and locked while recording;
-in View it goes back to Live. Going back to Live, starting a new recording
+*Live* in the graph's right-click menu goes back to Live from View. Going back to Live, starting a new recording
 and importing a file ask first when the readings viewed are not saved yet:
 **Export data first**, drop them, or cancel.
 
@@ -74,7 +74,7 @@ The vertical axis is in the unit that suits its range - mV for an axis up to
 
 Three ways to start, chosen under **Start** on the Recording page:
 
-- **By hand** — *Record* in the toolbar (Space) or the graph's right-click
+- **By hand** — *Record* in the menu (Space) or the graph's right-click
   menu. With several devices connected, *Record* records all of them
   on one time base; *Start recording* in the graph's menu only those whose
   values the graph shows (the others stay Live). A device opened while it
