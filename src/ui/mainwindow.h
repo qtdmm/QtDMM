@@ -44,6 +44,7 @@ class WorkspaceFile;
 class MeterController;
 class LcdWidget;
 class HelpDlg;
+class LogDlg;
 class AnalogMeter;
 class MeterView;
 class PoincareView;
@@ -320,6 +321,8 @@ protected:
   QMenu      *m_menu;
   QAction    *m_arrangeEntry = nullptr;   ///< Arrange in m_menu, shown while the toolbar is hidden
   HelpDlg    *m_helpDlg;
+  QAction    *m_logAction = nullptr;
+  LogDlg     *m_logDlg = nullptr;   ///< made when first opened
   QString     m_configId;
 
   void        setupIcons();

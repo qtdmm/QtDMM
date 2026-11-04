@@ -27,6 +27,7 @@
 #include <iostream>
 #include <cmath>
 
+#include "core/applog.h"
 #include "ui/dialogs/recordlengthdlg.h"
 #include "ui/alarmsound.h"
 #include "ui/instancewidget.h"
@@ -178,6 +179,7 @@ InstanceWidget::InstanceWidget(QString instanceId, QString configPath, DeviceSes
   });
   connect(ui_graph, &GraphWidget::info, this, &InstanceWidget::info);
   connect(ui_graph, &GraphWidget::error, this, &InstanceWidget::error);
+  connect(ui_graph, &GraphWidget::error, this, [](const QString &text) { AppLog::error("Graph", text); });
   connect(ui_graph, &GraphWidget::stateChanged, this, &InstanceWidget::recorderState);
   connect(ui_graph, &GraphWidget::liveRequested, this, &InstanceWidget::liveSLOT);
   // OK and Apply take the settings over; the meter stays as it is - the
@@ -521,12 +523,14 @@ bool InstanceWidget::exportRecording()
   // the dialog runs events: SCPI may have closed it meanwhile
   if (!lead)
   {
+    AppLog::error("app", "Export failed: the device was closed meanwhile");
     Q_EMIT error(tr("Export failed: the device was closed meanwhile"));
     return false;
   }
   QString err;
   if (!lead->writeRecording(file, raw, &err))
   {
+    AppLog::error("app", "Export failed: " + err);
     Q_EMIT error(tr("Export failed: %1").arg(err));
     return false;
   }

@@ -1,5 +1,19 @@
 # Troubleshooting
 
+## The log
+
+**Log...** in the menu at the top right opens QtDMM's log in a window of its
+own, beside the others: the time, the scope (a device's name, *app*, *Graph*),
+the level and the message of what happened - errors, connection states and
+the program's messages. Above the table you tick the levels to show (*Debug*
+is off at first), search with the arrows or Enter, and **Export...** saves all
+lines kept, also those not shown, as `qtdmm-<date>.log`.
+
+When something goes wrong, attach that file to your report. It holds the
+versions of QtDMM and Qt, and no Victron keys, but the names of your devices,
+their ports and Bluetooth addresses: look it over if that matters to you.
+The log keeps the last 10 000 lines and starts afresh with each start of QtDMM.
+
 ## "No permission to access /dev/ttyUSB0"
 
 On Linux, serial ports belong to a group, and your user has to be in it. QtDMM
