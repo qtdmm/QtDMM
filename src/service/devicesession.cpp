@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <utility>
 
+#include "core/applog.h"
+
 #include "core/devicelibrary.h"
 #include "core/sampletypes.h"
 #include "device/meterconnection.h"
@@ -187,7 +189,10 @@ void DeviceSession::warnUnsaved(MeterController *ctl)
 {
   const RecordingStore *store = ctl->recorder();
   if (store->state() == RecordingStore::View && store->dirty())
+  {
+    AppLog::warning(ctl->deviceName(), "the recording was not saved, the new one replaces it");
     Q_EMIT error(tr("%1: the recording was not saved, the new one replaces it").arg(ctl->deviceName()));
+  }
 }
 
 void DeviceSession::startFollower(MeterController *ctl, qint64 t0, const QDateTime &start, int sampleTime)
@@ -212,6 +217,7 @@ void DeviceSession::onRecordingRequested(bool start)
     if (start && by && (!why.isEmpty() || !by->mayStartRecording(&why)))
     {
       m_host->scpi()->pushError(-213, "Init ignored");
+      AppLog::error(by->deviceName(), why);
       Q_EMIT error(tr("%1: %2").arg(by->deviceName(), why));
       return;
     }
@@ -285,11 +291,21 @@ MeterController *DeviceSession::open(const QString &id, const QVariantMap &keys,
   // its messages to the status bar: a lost connection, a recording stopped
   connect(ctl, &MeterController::error, this, [this, ctl](const QString &text)
   {
+    // a connection's message is in the log with its state
+    if (text != ctl->dmm()->errorString())
+      AppLog::error(ctl->deviceName(), text);
     Q_EMIT this->error(tr("%1: %2").arg(ctl->deviceName(), text));
   });
   connect(ctl, &MeterController::info, this, [this, ctl](const QString &text)
   {
+    AppLog::info(ctl->deviceName(), text);
     Q_EMIT info(tr("%1: %2").arg(ctl->deviceName(), text));
+  });
+  connect(ctl->dmm(), &MeterConnection::linkStateChanged, this, [ctl](MeterConnection::LinkState state, const QString &detail)
+  {
+    using State = MeterConnection::LinkState;
+    AppLog::instance()->add(state == State::Error ? AppLog::Error : state == State::Timeout ? AppLog::Warning : AppLog::Info,
+                            ctl->deviceName(), detail);
   });
   // no window to ask: INPut ON|OFF goes to the connection
   connect(ctl, &MeterController::connectRequested, ctl, [ctl](bool on) { ctl->connectMeter(on); });

@@ -57,6 +57,7 @@
 #include "ui/settings/keyboardprefs.h"
 #include "ui/views/analogmeter.h"
 #include "ui/views/readingswidget.h"
+#include "ui/dialogs/logdlg.h"
 #include "ui/dialogs/panelvaluesdlg.h"
 #include "ui/dialogs/sourcesdlg.h"
 #include "core/settings.h"
@@ -1340,6 +1341,20 @@ void MainWindow::createActions()
 // so their shortcuts would be dead - adding them to the window fixes that.
 void MainWindow::createExtraActions()
 {
+  // beside the windows, to look into a fault or attach to a report
+  m_logAction = new QAction(tr("&Log..."), this);
+  m_logAction->setObjectName("action_Log");
+  m_logAction->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">Log</span></p>"
+                               "<p>What QtDMM did: errors, connection states and messages of the program, with the "
+                               "levels to show, a search and the export to attach to a report.</p></body></html>"));
+  connect(m_logAction, &QAction::triggered, this, [this]
+  {
+    if (!m_logDlg)
+      m_logDlg = new LogDlg(AppLog::instance(), this);
+    m_logDlg->show();
+    m_logDlg->raise();
+    m_logDlg->activateWindow();
+  });
   m_fullScreen = new QAction(tr("&Full screen"), this);
   m_fullScreen->setObjectName("action_FullScreen");
   m_fullScreen->setCheckable(true);
@@ -1415,7 +1430,7 @@ void MainWindow::createShortcuts(const QList<QAction *> &workspace)
     m_shortcuts->add(a, windows);
   m_shortcuts->add(action_Configure, help, tr("Settings"));
   m_shortcuts->add(actionConfigureRecorder, help, tr("Recording settings"));
-  for (QAction *a : { action_Help, action_Direct_help, action_About, action_Menu, action_Quit })
+  for (QAction *a : { action_Help, action_Direct_help, m_logAction, action_About, action_Menu, action_Quit })
     m_shortcuts->add(a, help);
   m_shortcuts->load();
   // Record names its key in a tooltip of its own
@@ -1586,6 +1601,7 @@ void MainWindow::on_action_Menu_triggered()
     m_menu->addSeparator();
     m_menu->addAction(action_Help);
     m_menu->addAction(action_Direct_help);
+    m_menu->addAction(m_logAction);
     m_menu->addAction(action_About);
     m_menu->addSeparator();
     m_menu->addAction(action_Quit);

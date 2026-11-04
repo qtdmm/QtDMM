@@ -44,6 +44,45 @@ QIcon symbolOf(const QStringList &models, QSize box, qreal dpr)
 }
 }
 
+namespace
+{
+// a find: its title in bold, the lines below it as they are
+class CardDelegate : public QStyledItemDelegate
+{
+public:
+  using QStyledItemDelegate::QStyledItemDelegate;
+  void paint(QPainter *p, const QStyleOptionViewItem &option, const QModelIndex &index) const override
+  {
+    QStyleOptionViewItem o(option);
+    initStyleOption(&o, index);
+    const QStringList lines = index.data(Qt::DisplayRole).toString().split('\n');
+    o.text.clear();
+    const QStyle *style = o.widget->style();
+    style->drawControl(QStyle::CE_ItemViewItem, &o, p, o.widget);
+    // right of the picture, the row's height (the style's text rect is as
+    // high as the text taken away)
+    const int margin = style->pixelMetric(QStyle::PM_FocusFrameHMargin, &o, o.widget) + 1;
+    const QRect area = o.rect.adjusted(o.decorationSize.width() + 3 * margin, 0, -margin, 0);
+    const QFontMetrics fm(o.font);
+    QFont bold(o.font);
+    bold.setBold(true);
+    p->save();
+    p->setPen(o.palette.color(QPalette::Normal, o.state & QStyle::State_Selected ? QPalette::HighlightedText : QPalette::Text));
+    if (const QVariant colour = index.data(Qt::ForegroundRole); colour.isValid() && !(o.state & QStyle::State_Selected))
+      p->setPen(colour.value<QBrush>().color());
+    int y = area.top() + (area.height() - fm.lineSpacing() * int(lines.size())) / 2;
+    for (int i = 0; i < lines.size(); ++i)
+    {
+      p->setFont(i == 0 ? bold : o.font);
+      p->drawText(QRect(area.left(), y, area.width(), fm.lineSpacing()), Qt::AlignLeft | Qt::AlignVCenter,
+                  QFontMetrics(p->font()).elidedText(lines[i], Qt::ElideRight, area.width()));
+      y += fm.lineSpacing();
+    }
+    p->restore();
+  }
+};
+}
+
 AddDeviceDlg::AddDeviceDlg(DeviceLibrary *library, QWidget *parent)
   : QDialog(parent)
   , m_library(library)
@@ -119,6 +158,7 @@ AddDeviceDlg::AddDeviceDlg(DeviceLibrary *library, QWidget *parent)
   m_cards = new QListWidget(port);
   m_cards->setObjectName("ui_cards");
   m_cards->setIconSize(QSize(32, 32));
+  m_cards->setItemDelegate(new CardDelegate(m_cards));
   m_cards->setSpacing(2);
   portLayout->addWidget(m_cards, 1);
   connect(m_cards, &QListWidget::itemClicked, this, [this](QListWidgetItem *item)

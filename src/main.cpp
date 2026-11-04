@@ -28,6 +28,7 @@
 #include "ui/mainwindow.h"
 #include "ui/mnemoniccheck.h"
 #include "ui/dialogs/adddevicedlg.h"
+#include "core/applog.h"
 #include "core/settings.h"
 #include "service/metercontroller.h"
 
@@ -73,6 +74,11 @@ void qtdmmMessageOutput(QtMsgType type, const QMessageLogContext &context, const
   }
   fprintf(stderr, "%s: %s\n", prefix, msg.toLocal8Bit().constData());
   fflush(stderr);
+  // and into the log the user can attach to a report
+  const AppLog::Level level = type == QtDebugMsg ? AppLog::Debug : type == QtInfoMsg ? AppLog::Info
+                              : type == QtWarningMsg ? AppLog::Warning : AppLog::Error;
+  const QLatin1String category(context.category ? context.category : "default");
+  AppLog::instance()->add(level, category == QLatin1String("default") ? QStringLiteral("app") : QString(category), msg);
   if (type == QtFatalMsg)
     abort();
 }
@@ -124,6 +130,7 @@ int main(int argc, char **argv)
 
   app.setApplicationName(APP_NAME);
   app.setApplicationVersion(APP_VERSION);
+  AppLog::info("app", QString("QtDMM %1, Qt %2, %3").arg(APP_VERSION, qVersion(), QSysInfo::prettyProductName()));
   app.setOrganizationName(APP_ORGANIZATION);
   // the application id: on Wayland the compositor finds the desktop file,
   // and with it the icon, by this name (not by the program name)
