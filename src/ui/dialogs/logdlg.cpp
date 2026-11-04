@@ -107,7 +107,12 @@ public:
   void setShown(AppLog::Level level, bool on)
   {
     m_hidden[level] = !on;
+#if QT_VERSION >= QT_VERSION_CHECK(6, 10, 0)
+    beginFilterChange();   // invalidateFilter() is deprecated from there on
+    endFilterChange();
+#else
     invalidateFilter();
+#endif
   }
   bool has(int row, const QString &text) const
   {
