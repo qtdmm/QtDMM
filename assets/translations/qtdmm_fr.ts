@@ -2195,7 +2195,7 @@ puis déconnectez-vous et reconnectez-vous.</translation>
     <message>
         <location filename="../../src/ui/settings/graphprefs.cpp" line="63"/>
         <source>Graph</source>
-        <translation>Graphe</translation>
+        <translation>Graphique</translation>
     </message>
     <message>
         <location filename="../../src/ui/settings/graphprefs.cpp" line="64"/>
@@ -6721,7 +6721,7 @@ Puis déconnectez-vous et reconnectez-vous pour que l&apos;appartenance au group
     <message>
         <location filename="../../src/ui/forms/uimainwindow.ui" line="198"/>
         <source>&amp;Graph</source>
-        <translation>&amp;Graphe</translation>
+        <translation>&amp;Graphique</translation>
     </message>
     <message>
         <location filename="../../src/ui/forms/uimainwindow.ui" line="201"/>

@@ -172,11 +172,11 @@ public:
   /// A MIN/MAX readout: value with that many decimals, "—" for NaN, and no
   /// minus sign on a rounded zero ("-0.00" -> "0.00").
   static QString readoutString(double value, int decimals);
-  /// A MIN/MAX readout as shown: @p value in the display unit @p unit (with
+  /// A MIN/MAX readout as shown: @p value with the display unit @p unit (with
   /// its prefix), at most as many digits as the display has (@p counts) and
   /// at most @p decimals; a value beyond the scale (@p fullScale, another
-  /// range) in a prefix of its own with the unit: "10.000 V", not
-  /// "10000.0000" in the mV range.
+  /// range) in a prefix of its own: "10.000 V", not "10000.0000 mV" in the
+  /// mV range.
   static QString readoutFor(double value, int decimals, double fullScale, int counts, const QString &unit);
 
   QSize sizeHint() const override;

@@ -2663,7 +2663,7 @@ und melden Sie sich danach ab und wieder an.</translation>
     <message>
         <location filename="../../src/ui/views/graphwidget_input.cpp" line="125"/>
         <source>Graph &amp;colours</source>
-        <translation>Diagramm&amp;farben</translation>
+        <translation>Graph&amp;farben</translation>
     </message>
     <message>
         <location filename="../../src/ui/views/graphwidget_input.cpp" line="134"/>
@@ -2849,7 +2849,7 @@ und melden Sie sich danach ab und wieder an.</translation>
         <location filename="../../src/ui/views/graphwidget_export.cpp" line="276"/>
         <location filename="../../src/ui/views/graphwidget_export.cpp" line="292"/>
         <source>QtDMM graph</source>
-        <translation>QtDMM-Diagramm</translation>
+        <translation>QtDMM-Graph</translation>
     </message>
     <message>
         <location filename="../../src/ui/views/graphwidget_export.cpp" line="277"/>
@@ -2866,7 +2866,7 @@ und melden Sie sich danach ab und wieder an.</translation>
     <message>
         <location filename="../../src/ui/views/graphwidget_export.cpp" line="320"/>
         <source>Graph written to %1</source>
-        <translation>Diagramm nach %1 geschrieben</translation>
+        <translation>Graph nach %1 geschrieben</translation>
     </message>
     <message>
         <location filename="../../src/ui/views/graphwidget_curves.cpp" line="836"/>
@@ -3691,7 +3691,7 @@ Keine Berechtigung? Der Sensor braucht eine udev-Regel für die USB-ID %1:%2.</t
         <location filename="../../src/ui/mainwindow.cpp" line="332"/>
         <location filename="../../src/ui/mainwindow.cpp" line="2002"/>
         <source>Graph</source>
-        <translation>Diagramm</translation>
+        <translation>Graph</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="361"/>
@@ -4279,7 +4279,7 @@ Keine Berechtigung? Der Sensor braucht eine udev-Regel für die USB-ID %1:%2.</t
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="1035"/>
         <source>&amp;Recent benches</source>
-        <translation>&amp;Zuletzt benutzte Messplätze</translation>
+        <translation>Letzte &amp;Messplätze</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="1038"/>
