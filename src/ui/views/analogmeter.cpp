@@ -688,7 +688,8 @@ QString AnalogMeter::readoutFor(double value, int decimals, double fullScale, in
     const double scaled = SiPrefix::scale(value * SiPrefix::factor(split.prefix), &prefix);
     return readoutString(scaled, qBound(0, digits - intDigits(scaled), 6)) + " " + SiPrefix::displayText(prefix + base);
   }
-  return readoutString(value, qBound(0, qMin(decimals, digits - intDigits(value)), 6));
+  const QString text = readoutString(value, qBound(0, qMin(decimals, digits - intDigits(value)), 6));
+  return unit.isEmpty() ? text : text + " " + SiPrefix::displayText(unit);
 }
 
 QString AnalogMeter::readoutString(double value, int decimals)

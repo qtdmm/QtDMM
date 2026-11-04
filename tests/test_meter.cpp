@@ -197,9 +197,10 @@ int main(int argc, char **argv)
   // as many digits as the display has; another range in its own prefix
   check(AnalogMeter::readoutFor(10000.0, 4, 400.0, 40000, "mV") == "10.000 V",
         "MAX from the 40 V range in the mV range: " + AnalogMeter::readoutFor(10000.0, 4, 400.0, 40000, "mV"));
-  check(AnalogMeter::readoutFor(3.001, 4, 400.0, 40000, "mV") == "3.0010", "MIN in the range: as the meter shows it");
-  check(AnalogMeter::readoutFor(312.5, 4, 400.0, 40000, "mV") == "312.50", "at most five digits on a 40000 count display");
-  check(AnalogMeter::readoutFor(1200.0, 1, 1000.0, 10000, "ppm") == "1200.0", "ppm keeps its unit");
+  check(AnalogMeter::readoutFor(3.001, 4, 400.0, 40000, "mV") == "3.0010 mV", "MIN in the range: as the meter shows it");
+  check(AnalogMeter::readoutFor(312.5, 4, 400.0, 40000, "mV") == "312.50 mV", "at most five digits on a 40000 count display");
+  check(AnalogMeter::readoutFor(3.5, 2, 10.0, 0, "") == "3.50", "no unit, no space");
+  check(AnalogMeter::readoutFor(1200.0, 1, 1000.0, 10000, "ppm") == "1200.0 ppm", "ppm keeps its unit");
 
 
   // --- 3. ballistics: converges, bounded overshoot, timer stops ---

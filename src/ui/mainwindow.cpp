@@ -1183,6 +1183,9 @@ void MainWindow::updateEmptyStart()
 {
   const bool empty = m_session->controllers().isEmpty() && m_pendingOpen.isEmpty();
   m_emptyConnect->setVisible(!m_wid->devices()->list().isEmpty());
+  // nothing to see behind the start page; checked stays what comes back
+  for (QAction *a : { m_displayAction, m_meterAction, m_poincareAction, action_Graph, m_readingsAction })
+    a->setEnabled(!empty);
   if (empty)
   {
     // the last device closed: its messages go with it
@@ -1586,11 +1589,12 @@ void MainWindow::on_action_Menu_triggered()
     // for the whole bench, also without the graph
     m_menu->addAction(action_Record);
     m_menu->addSeparator();
-    m_menu->addAction(action_Graph);
+    // as on the toolbar
     m_menu->addAction(m_displayAction);
     m_menu->addAction(m_meterAction);
-    m_menu->addAction(m_readingsAction);
     m_menu->addAction(m_poincareAction);
+    m_menu->addAction(action_Graph);
+    m_menu->addAction(m_readingsAction);
     // Arrange has its button next to the menu's; here only while the toolbar is hidden
     m_arrangeEntry = new QAction(m_arrangeMenu->title(), m_menu);
     m_arrangeEntry->setMenu(m_arrangeMenu);

@@ -144,6 +144,20 @@ public:
       qDrawPlainRect(painter, option->rect, frame, 1, &back);
       return;
     }
+    // a tool button: disabled without a frame, also when checked
+    if (element == PE_PanelButtonTool && !(option->state & State_Enabled))
+      return;
+    // the arrow of a tool button looks the same checked or not: a frame only
+    // under the mouse or pressed
+    if (element == PE_IndicatorButtonDropDown && (option->state & State_On))
+    {
+      if (!(option->state & (State_Raised | State_Sunken)) || !(option->state & State_Enabled))
+        return;
+      QStyleOption copy(*option);
+      copy.state &= ~State_On;
+      QProxyStyle::drawPrimitive(element, &copy, painter, widget);
+      return;
+    }
     if (!m_dark || (element != PE_IndicatorCheckBox && element != PE_IndicatorRadioButton))
     {
       QProxyStyle::drawPrimitive(element, option, painter, widget);
