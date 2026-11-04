@@ -11,7 +11,7 @@ Where to set them up:
 
 - **Settings → Alarms**: **Device** at the top chooses whose alarms the
   list shows (only with more than one device connected); it starts on the
-  [active device](my-devices.md#several-meters-front-panels-and-the-active-device).
+  first one.
 - **Alarms...** in the context menu of a device's front panel or of its
   row under *Bench* in the sidebar opens that page on the device.
 - **New alarm...** in the menu of a value (the sidebar's value rows)

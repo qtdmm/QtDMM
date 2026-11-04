@@ -289,6 +289,16 @@ QString DeviceSidebar::openOf(const QTreeWidgetItem *item) const
   return item && item->parent() == m_open ? item->data(0, Qt::UserRole).toString() : QString();
 }
 
+QString DeviceSidebar::chosenDevice() const
+{
+  const QTreeWidgetItem *item = currentItem();
+  if (!item || !item->isSelected())
+    return QString();
+  if (const QString id = idOf(item); !id.isEmpty())
+    return id;
+  return openOf(item->data(0, kValueId).isValid() ? item->parent() : item);
+}
+
 QTreeWidgetItem *DeviceSidebar::openItem(const QString &id) const
 {
   for (int i = 0; i < m_open->childCount(); ++i)
@@ -329,11 +339,7 @@ void DeviceSidebar::setOpenDevices(const QList<OpenDevice> &devices)
     const OpenDevice &device = devices[i];
     QTreeWidgetItem *item = m_open->child(i);
     item->setText(0, device.name);
-    item->setToolTip(0, device.current ? tr("%1 - active: Connect, Reset and the device settings act on it").arg(device.name)
-                                       : device.name);
-    QFont font = item->font(0);
-    font.setBold(device.current);
-    item->setFont(0, font);
+    item->setToolTip(0, device.name);
     item->setForeground(0, device.connected ? palette().text() : palette().brush(QPalette::Disabled, QPalette::Text));
     // connected: green while readings come in, grey while they do not
     item->setIcon(0, dot(device.active      ? QColor(0x22, 0xaa, 0x22)
@@ -582,7 +588,7 @@ void DeviceSidebar::updateMarks()
       tip += '\n' + (active ? tr("Connected, readings are coming in") : tr("Connected"));
     item->setToolTip(0, tip + '\n' + tr("Double-click: info and settings"));
     QFont font = item->font(0);
-    font.setBold(connected);
+    font.setBold(isConnected(id));   // on the bench, connected or not
     item->setFont(0, font);
     QIcon symbol(item->data(0, kSymbol).value<QPixmap>());
     symbol.addPixmap(item->data(0, kSymbol).value<QPixmap>(), QIcon::Selected);

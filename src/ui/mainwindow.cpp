@@ -289,12 +289,21 @@ void MainWindow::createViews()
   emptyLayout->addWidget(m_emptyConnect, 1, 0, Qt::AlignHCenter | Qt::AlignTop);
   emptyLayout->setRowStretch(0, 1);
   emptyLayout->setRowStretch(1, 1);
+  // the entries to choose one from, connected at once; the sidebar opens
+  // with them, where the others stay at hand
   connect(m_emptyConnect, &QPushButton::clicked, this, [this]
   {
     showSidebar(true);
     m_wid->settings()->setBool("Windows/sidebar", true);
     m_sidebar->devicesNode()->setExpanded(true);
-    m_sidebar->setFocus();
+    QMenu menu(this);
+    for (const MyDevice &d : m_wid->devices()->list())
+    {
+      const QString id = d.id;
+      QTreeWidgetItem *item = m_sidebar->deviceItem(id);
+      menu.addAction(item ? item->icon(0) : QIcon(), QString(d.name).replace('&', "&&"), this, [this, id] { openBeside(id); });
+    }
+    menu.exec(m_emptyConnect->mapToGlobal(QPoint(0, m_emptyConnect->height())));
   });
   m_emptyStart->hide();
   m_mdi->installEventFilter(this);
@@ -382,7 +391,7 @@ void MainWindow::createViews()
        "menu; closing it removes it.</p></body></html>"));
   connect(m_newMeterAction, &QAction::triggered, this, [this]
   {
-    const MeterController *ctl = activeController();
+    const MeterController *ctl = m_session->controllers().value(0);
     newView(Added::Meter, ctl ? ValueRef(0, ctl->source()) : ValueRef(), true);
   });
   m_newPoincareAction = new QAction(QIcon::fromTheme("qtdmm-poincare"), tr("Add Po&incaré plot"), this);
@@ -393,7 +402,7 @@ void MainWindow::createViews()
        "menu; closing it removes it.</p></body></html>"));
   connect(m_newPoincareAction, &QAction::triggered, this, [this]
   {
-    const MeterController *ctl = activeController();
+    const MeterController *ctl = m_session->controllers().value(0);
     newView(Added::Poincare, ctl ? ValueRef(0, ctl->source()) : ValueRef(), true);
   });
   m_poincareAction = windowAction(m_poincareWin, tr("Poi&ncaré plot"), "Ctrl+5", "qtdmm-poincare",
@@ -494,9 +503,6 @@ void MainWindow::addPanel(MeterController *ctl)
   applyPanelState(win, state);
   if (state.shown && !m_restoring)
     growFor(win);
-  // the first one: the active device
-  if (!m_active)
-    setActive(ctl);
 }
 
 void MainWindow::applyPanelState(QMdiSubWindow *win, const PanelState &state)
@@ -744,6 +750,10 @@ void MainWindow::createSidebar()
   connect(m_sidebar, &DeviceSidebar::settingsRequested, this, [this](const QString &id) { deviceSettings(id); });
   connect(m_sidebar, &DeviceSidebar::valueMenuRequested, this, &MainWindow::valueMenu);
   connect(m_sidebar, &DeviceSidebar::viewsHighlightRequested, this, &MainWindow::pointToViews);
+  // Shift+F8 for the device chosen in the sidebar
+  action_ConfigureDMM->setEnabled(false);
+  connect(m_sidebar, &QTreeWidget::itemSelectionChanged, this, [this]
+          { action_ConfigureDMM->setEnabled(!m_sidebar->chosenDevice().isEmpty()); });
   connect(m_wid->graph(), &GraphWidget::notice, this, [this](const QString &text)
   {
     statusBar()->showMessage(text, 5000);
@@ -765,7 +775,6 @@ void MainWindow::createSidebar()
       growFor(win);
     }
     m_mdi->setActiveSubWindow(win);
-    setActive(panelOf(win)->controller());
     m_arranger->arrange();
   });
   connect(m_sidebar, &DeviceSidebar::connectRequested, this, [this](const QString &id, bool on)
@@ -773,8 +782,6 @@ void MainWindow::createSidebar()
     if (MeterController *ctl = m_session->controller("device:" + id))
     {
       ctl->connectMeter(on);
-      if (ctl == m_active)
-        action_Connect->setChecked(ctl->dmm()->isWanted());
     }
     updateOpenDevices();
   });
@@ -979,38 +986,6 @@ void MainWindow::createStatusBar()
   statusBar()->addWidget(m_info, 10);
   m_info->setLineWidth(1);
 
-  // the active device, while there is more than one
-  m_activeName = new QLabel(statusBar());
-  m_activeName->setObjectName("activeDevice");
-  m_activeName->setFrameStyle(QFrame::Panel | QFrame::Sunken);
-  m_activeName->setLineWidth(1);
-  statusBar()->addWidget(m_activeName);
-  m_activeName->hide();
-  // a click on a front panel makes its meter the active one (eventFilter());
-  // Qt activates windows on its own too (one shown, one added): not that
-  connect(m_session, &DeviceSession::opened, this, [this] { setActive(m_active); });
-  // the active one closed: the first again
-  connect(m_session, &DeviceSession::closed, this, [this] { setActive(m_active); });
-
-  // the limit test's count: "PASS 812 · FAIL 23 (2.8 %)", reset with min/max
-  m_limitCount = new QLabel(statusBar());
-  m_limitCount->setFrameStyle(QFrame::Panel | QFrame::Sunken);
-  m_limitCount->setLineWidth(1);
-  statusBar()->addPermanentWidget(m_limitCount);
-  auto showCount = [this](const LimitTest::Count &count)
-  {
-    const MeterController *ctl = activeController();
-    m_limitCount->setVisible(ctl && ctl->limitTest().enabled);
-    const QLocale locale;
-    const QString share = count.total() > 0 ? locale.toString(100.0 * count.fail() / count.total(), 'f', 1) : "-";
-    m_limitCount->setText(tr("PASS %1 · FAIL %2 (%3 %)").arg(count.pass).arg(count.fail()).arg(share));
-    m_limitCount->setToolTip(tr("Readings judged since the limits were set or min/max was reset: "
-                                "%1 too high, %2 too low").arg(count.high).arg(count.low));
-  };
-  // of the active device (setActive())
-  m_showLimitCount = showCount;
-  showCount(LimitTest::Count());
-
   // the toolbar on and off: the way back with the mouse, always there
   m_toolbarButton = new QToolButton(statusBar());
   m_toolbarButton->setObjectName("toolbarButton");
@@ -1042,13 +1017,8 @@ void MainWindow::createStatusBar()
   connect(m_wid, &InstanceWidget::useTextLabel, this, &MainWindow::setUseTextLabel);
   connect(m_wid, &InstanceWidget::iconSet, this, [](const QString &set)
           { Designs::setIconSet(Designs::iconSetFromName(set)); });
-  // the graph's menu: Connect and Disconnect for the active device
-  connect(m_wid->graph(), &GraphWidget::connectDMM, this, [this](bool on)
-  {
-    if (MeterController *ctl = activeController(); ctl && ctl->connectMeter(on) == on)
-      action_Connect->setChecked(on);
-    updateOpenDevices();
-  });
+  // the graph's menu: Connect and Disconnect, as the toolbar
+  connect(m_wid->graph(), &GraphWidget::connectDMM, this, &MainWindow::connectBench);
   connect(m_wid, &InstanceWidget::showDisplay, this, &MainWindow::showDisplaySLOT);
 }
 
@@ -1208,17 +1178,11 @@ void MainWindow::setUseTextLabel(bool on)
 
 void MainWindow::createActions()
 {
-  // Connect and Reset act on the active device
-  connect(action_Connect, &QAction::triggered, this, [this](bool on)
-  {
-    MeterController *ctl = activeController();
-    if (!ctl || !ctl->connectMeter(on))
-      action_Connect->setChecked(false);
-    updateOpenDevices();
-  });
+  // Connect and Reset act on the whole bench; one device by its context menu
+  connect(action_Connect, &QAction::triggered, this, &MainWindow::connectBench);
   connect(action_Reset, &QAction::triggered, this, [this]
   {
-    if (MeterController *ctl = activeController())
+    for (MeterController *ctl : m_session->controllers())
       ctl->resetMinMax();
   });
   connect(action_Start, &QAction::triggered, this, &MainWindow::startSLOT);
@@ -1252,13 +1216,11 @@ void MainWindow::createActions()
   connect(action_Import, &QAction::triggered, m_wid, &InstanceWidget::importSLOT);
   connect(action_Export, &QAction::triggered, m_wid, &InstanceWidget::exportSLOT);
   connect(action_Configure, &QAction::triggered, m_wid, &InstanceWidget::configSLOT);
-  // Shift+F8: the settings of the device in use, as its context menu in the sidebar
+  // Shift+F8: the settings of the device chosen in the sidebar, as its context menu there
   connect(action_ConfigureDMM, &QAction::triggered, this, [this]
   {
-    if (const MeterController *ctl = activeController())
-      deviceSettings(ctl->deviceId(), true);
-    else
-      addDevice();
+    if (const QString id = m_sidebar->chosenDevice(); !id.isEmpty())
+      deviceSettings(id, m_session->controller("device:" + id) != nullptr);
   });
   connect(actionConfigureRecorder, &QAction::triggered, m_wid, &InstanceWidget::configRecorderSLOT);
   connect(action_Quit, &QAction::triggered, this, &MainWindow::storeDisplaySLOT);
@@ -1598,10 +1560,6 @@ void MainWindow::bindWindowAction(QAction *action, QMdiSubWindow *win)
 // A window was closed with its title bar button, or shown: its action follows.
 bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 {
-  if (event->type() == QEvent::MouseButtonPress)
-    if (auto *panel = qobject_cast<FrontPanel *>(watched->parent() ? watched->parent() : watched);
-        panel && watched == panel->display())
-      setActive(panel->controller());
   if (watched == m_mdi->viewport()
       && (event->type() == QEvent::DragEnter || event->type() == QEvent::DragMove || event->type() == QEvent::Drop))
   {
@@ -2173,9 +2131,13 @@ DeviceSidebar::Value MainWindow::otherValueRow(const MeterController *ctl, int i
 
 void MainWindow::updateOpenDevices()
 {
-  // the active one connected or disconnected elsewhere (SCPI, an error)
-  if (const MeterController *active = activeController(); active && action_Connect->isChecked() != active->dmm()->isWanted())
-    action_Connect->setChecked(active->dmm()->isWanted());
+  // pressed while a device of the bench is connected (also by SCPI, its menu)
+  bool any = false;
+  for (const MeterController *ctl : m_session->controllers())
+    any = any || ctl->dmm()->isWanted();
+  action_Connect->setChecked(any);
+  action_Connect->setEnabled(!m_session->controllers().isEmpty());
+  action_Reset->setEnabled(!m_session->controllers().isEmpty());
   if (!m_sidebarDock->isVisible())
     return;
   const qint64 now = QDateTime::currentMSecsSinceEpoch();
@@ -2185,7 +2147,6 @@ void MainWindow::updateOpenDevices()
     DeviceSidebar::OpenDevice row;
     row.id = ctl->deviceId();
     row.name = ctl->deviceName();
-    row.current = ctl == activeController();
     row.connected = ctl->dmm()->isWanted();
     // the dot green while readings come in; why none come is on the front panel
     const Reading &r = ctl->lastReading();
@@ -3163,38 +3124,11 @@ void MainWindow::storeDisplaySLOT()
   m_wid->settingsDialog()->guiPage()->setShowDisplay(m_displayAction->isChecked());
 }
 
-MeterController *MainWindow::activeController() const
+void MainWindow::connectBench(bool on)
 {
-  if (m_active)
-    return m_active.data();
-  const QList<MeterController *> meters = m_session->controllers();
-  return meters.isEmpty() ? nullptr : meters.first();
-}
-
-void MainWindow::setActive(MeterController *ctl)
-{
-  m_active = ctl;
-  MeterController *active = activeController();
-  action_Connect->setEnabled(active);
-  action_Connect->setChecked(active && active->dmm()->isWanted());
-  action_Reset->setEnabled(active);
-  // the settings' Alarms page opens on its alarms
-  m_wid->setActiveSource(active ? active->source() : QString());
-  // its limit test's count in the status bar
-  disconnect(m_limitCountLink);
-  if (m_showLimitCount)
-  {
-    if (active)
-      m_limitCountLink = connect(active, &MeterController::limitCountChanged, this, m_showLimitCount);
-    m_showLimitCount(active ? active->limitCount() : LimitTest::Count());
-  }
-  if (!m_activeName)
-    return;
-  const QList<MeterController *> meters = m_session->controllers();
-  m_activeName->setText(tr("Active: %1").arg(active ? active->deviceName() : QString()));
-  m_activeName->setToolTip(tr("Connect, Reset and the device settings act on this device; "
-                              "a click on another front panel makes that one active"));
-  m_activeName->setVisible(meters.size() > 1);
+  // all devices of the bench; the button stays pressed while one is
+  for (MeterController *ctl : m_session->controllers())
+    ctl->connectMeter(on);
   updateOpenDevices();
 }
 

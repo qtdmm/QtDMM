@@ -47,7 +47,7 @@ An overload counts as FAIL HI, a negative one (-OL) as FAIL LO. There is
 no minimum duration and no hysteresis: each reading has its verdict. For
 "too long too high", use an [alarm](alarms.md).
 
-## In the graph, on the needle meter and in the status line
+## In the graph, on the needle meter and in the count
 
 The [graph](recorder.md) draws the limits as two dashed green lines, faintly
 green between them, while the tested value is the one on its left axis (see [the graph's values](recorder.md#looking-at-the-data)). The
@@ -57,8 +57,9 @@ while its needle shows the tested value. A limit beyond the scale ends
 the band at the scale's end. The dial keeps its colour, so the needle
 stays easy to follow.
 
-The status line counts the verdicts, one per reading: `PASS 812 · FAIL
-23 (2.8 %)`, the tooltip splits FAIL into too high and too low. The
+The tooltip of the device's front panel counts the verdicts, one per
+reading: `PASS 812 · FAIL 23 (2.8 %)`, and splits FAIL into too high and
+too low. The
 count starts anew when the limits change and with **Reset min/max**.
 
 ## Over the network

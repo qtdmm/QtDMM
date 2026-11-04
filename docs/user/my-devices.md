@@ -14,8 +14,8 @@ window. An older `devices.conf` with more in it is tidied up when QtDMM
 starts.
 
 **Info and settings...** of an entry in the sidebar, or a double click on
-it, shows and changes the entry (Shift+F8: the settings of the active
-device); a device connected takes the change at once.
+it, shows and changes the entry (Shift+F8: the settings of the device
+chosen in the sidebar); a device connected takes the change at once.
 
 ## The sidebar
 
@@ -38,21 +38,21 @@ Below My devices the node **Bench** lists the meters this
 QtDMM reads, in the order they were connected, each with a dot that is
 green while its readings come in and grey when none has come for three
 seconds. The readings and why none come are on the front panels, not here.
-The active device is in bold, one disconnected is grey. A double click or
+One disconnected is grey. A double click or
 *Show front panel* in the context menu brings its front panel back;
 *Info and settings...* there opens its entry of My devices (all its values
 for a look), *Connect*/*Disconnect* connects or disconnects it, *Close* (or
 dragging it back onto My devices) puts it back into the cupboard.
 
-### Several meters: front panels and the active device
+### Several meters: front panels
 
 Each connected meter has its own front panel: its LCD with its keys, as a
 window next to the needle meter; all are alike. **Display** (Ctrl+1) shows
 or hides all of them, the X of one only hides it - the meter stays
-connected and keeps recording. The meter of the front panel clicked last
-(at first the first one connected) is the **active device**: *Connect*,
-*Reset* (min/max) and the device settings (Shift+F8) act on it. The status
-bar shows its name while more than one meter is connected. All front
+connected and keeps recording. **Connect** (F3) and **Reset** (F4, min/max)
+in the toolbar act on the whole bench: Connect is pressed while one device
+is connected and then disconnects them all; one device alone connects or
+disconnects by its context menu here or at its front panel. All front
 panels take the LCD colours of the settings, one can have its own (see
 [LCD colours](connecting.md)). Each device has its own [alarms](alarms.md) and
 [PASS/FAIL test](limit-test.md); its front panel takes their colours, and
