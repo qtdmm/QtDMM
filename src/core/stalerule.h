@@ -10,7 +10,9 @@
 /// 3 s (the link timeout the meters always had).
 ///
 /// The interval is a moving average; a gap longer than the current limit is
-/// an outage, not the meter's rhythm, and does not count.
+/// an outage, not the meter's rhythm, and does not count. Two such gaps in a
+/// row are the rhythm after all: the limit was too short, as for a meter
+/// slower than the 3 s, or after a burst of readings held up on the way.
 class StaleRule
 {
 public:
@@ -25,7 +27,16 @@ public:
     {
       const qint64 dt = t - m_last;
       if (dt > 0 && dt <= maxAgeMs())
+      {
         m_interval = m_interval > 0 ? 0.8 * m_interval + 0.2 * double(dt) : double(dt);
+        m_gapBefore = false;
+      }
+      else if (dt > 0)
+      {
+        if (m_gapBefore)
+          m_interval = double(dt);
+        m_gapBefore = !m_gapBefore;
+      }
     }
     m_last = t;
   }
@@ -45,9 +56,11 @@ public:
   {
     m_last = -1;
     m_interval = 0;
+    m_gapBefore = false;
   }
 
 private:
   qint64 m_last = -1;
   double m_interval = 0;
+  bool m_gapBefore = false;   ///< the last interval was longer than the limit
 };

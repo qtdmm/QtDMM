@@ -22,6 +22,7 @@
 - **Workspaces keep the whole set-up** — a bench now has a name, a description and a picture of the windows, and keeps the devices connected (with a copy of their entries in My devices, alarms and PASS/FAIL test) besides the layout and the values of the views. Loading one switches to its devices and closes the others; a device missing in My devices is added back from the file. The name of the bench in use stands at the right of the sidebar's **Saved benches** node, the list shows the names, the tooltip description and picture. The file is JSON now (version 2); benches saved before are still read.
 - **Sidebar: "My devices" folded at the start** — the devices in use are under **Bench**; unfold My devices to take out another.
 - **One QtDMM per settings file** — a second start with the same `--config-id` says that one runs already (process number) and stops; another `--config-id` runs on its own, without a link.
+- **A meter no longer stays faded between its readings** — after a burst of held-up readings the display of a slow meter blinked for good, and a meter slower than one reading in 3 s never learned its rhythm. Two long gaps in a row now count as the rhythm.
 
 ### Devices
 

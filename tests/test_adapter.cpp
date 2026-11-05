@@ -165,6 +165,33 @@ int main(int argc, char **argv)
     s.arrived(30000);   // an outage, not the rhythm
     check(s.maxAgeMs() == 1500, QString("a gap does not count as an interval, got %1").arg(s.maxAgeMs()));
 
+    s.arrived(30500);
+    s.arrived(60000);   // gaps with a reading between them that keeps the rhythm: still outages
+    check(s.maxAgeMs() == 1500, QString("a gap after the rhythm is another outage, got %1").arg(s.maxAgeMs()));
+
+    // a burst held up on the way drives the limit down to 1 s; a meter of
+    // 2 s must not stay stale between its readings for good
+    StaleRule burst;
+    qint64 now = 0;
+    for (int i = 0; i < 40; ++i)
+      burst.arrived(now += 2000);
+    now += 15000;
+    for (int i = 0; i < 20; ++i)
+      burst.arrived(now += 2);
+    check(burst.maxAgeMs() == 1000, QString("after a burst the limit is 1 s, got %1").arg(burst.maxAgeMs()));
+    burst.arrived(now += 2000);
+    burst.arrived(now += 2000);
+    check(burst.maxAgeMs() == 6000 && !burst.stale(now + 1999),
+          QString("two gaps in a row are the rhythm again, got %1").arg(burst.maxAgeMs()));
+
+    // slower than the 3 s it starts with: it learns its rhythm all the same
+    StaleRule slowest;
+    now = 0;
+    for (int i = 0; i < 3; ++i)
+      slowest.arrived(now += 5000);
+    check(slowest.maxAgeMs() == 15000 && !slowest.stale(now + 4999),
+          QString("every 5 s: stale after 15 s, got %1").arg(slowest.maxAgeMs()));
+
     StaleRule fast;
     for (qint64 t = 0; t <= 5000; t += 100)
       fast.arrived(t);
