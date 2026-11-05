@@ -186,7 +186,10 @@ bool GraphWidget::importCsvFile(const QString &fileName)
   m_sourceDevice = rec->device;
   // this meter's columns into the store, another meter's into one of its own
   m_store->load(RecordingFile::devicePart(*rec, rec->device));
-  // all its values shown, so a new export writes them again
+  // all its values shown, so a new export writes them again; without a
+  // device the main curve was off
+  if (m_store->count() > 0)
+    setValueShown(0, true);
   for (int i = 0; i < m_store->extraCount(); ++i)
     setValueShown(m_store->extra(i).id, true);
   setFileStores(*rec);

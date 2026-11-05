@@ -182,7 +182,8 @@ std::optional<DmmDecoder::DmmResponse> DecoderBM78xBT::decode(const QByteArray &
   if (count & 0x800000)
     count -= 0x1000000;
   const bool negative = (flag1 & 0x40) || count < 0;
-  if (flag1 & 0x20)
+  // the ASCII flag's code 0 says OL as well (spec §6.7)
+  if ((flag1 & 0x20) || ((flag0 & 0x04) && count == 0))
   {
     c.val = negative ? QStringLiteral("-OL") : QStringLiteral("OL");
     c.dval = 0;

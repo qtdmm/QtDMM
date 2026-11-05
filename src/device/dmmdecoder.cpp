@@ -114,7 +114,7 @@ void DmmDecoder::setFromENotation(const QString &number, double value, const QSt
 void DmmDecoder::formatResultValue(int commaPos, const QString& prefix, const QString& baseUnit)
 {
   m_result.main().val = insertCommaIT(m_result.main().val, commaPos);
-  m_result.main().dval = m_result.main().val.toDouble() * prefixFactor(prefix);
+  m_result.main().dval = QString(m_result.main().val).remove(' ').toDouble() * prefixFactor(prefix);   // "- 0.24"
 
   m_result.main().unit = prefix + baseUnit;
 }

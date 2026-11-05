@@ -112,6 +112,9 @@ std::optional<DmmDecoder::DmmResponse> DecoderM9803R::decode(const QByteArray &d
     val = "  0L";
   else
   {
+    for (int i = 1; i <= 4; ++i)
+      if (quint8(data[i]) > 9)
+        return std::nullopt;
     val = data[0] == 0x08 ? "-" : "";
     val += QChar('0' + data[4]);
     val += QChar('0' + data[3]);

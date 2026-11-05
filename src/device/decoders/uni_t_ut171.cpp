@@ -58,10 +58,23 @@ float floatAt(const QByteArray &d, int i)
 }
 
 // the float as the meter would show it: no decimals are sent, so the
-// shortest form that gives the float back
+// shortest form that gives the float back; no exponent, a letter in the text
+// says overload
 QString shown(float f)
 {
-  return QString::number(double(f), 'g', 7);
+  const QString text = QString::number(double(f), 'g', 7);
+  if (!text.contains('e'))
+    return text;
+  const int decimals = qMax(0, 6 - int(std::floor(std::log10(std::fabs(double(f))))));
+  QString plain = QString::number(double(f), 'f', decimals);
+  if (plain.contains('.'))
+  {
+    while (plain.endsWith('0'))
+      plain.chop(1);
+    if (plain.endsWith('.'))
+      plain.chop(1);
+  }
+  return plain;
 }
 }
 

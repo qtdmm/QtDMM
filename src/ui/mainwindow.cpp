@@ -210,6 +210,14 @@ MainWindow::MainWindow(QCommandLineParser &parser, QWidget *parent)
       updateRecorderActions();
   });
   connect(m_wid, &InstanceWidget::recorderState, this, &MainWindow::updateRecorderActions);
+  // a file loaded without a device: the start page makes way for its graph
+  connect(m_wid, &InstanceWidget::recorderState, this, [this]
+  {
+    const bool covered = !m_emptyStart->isHidden();
+    updateEmptyStart();
+    if (covered && m_emptyStart->isHidden())
+      action_Graph->setChecked(true);
+  });
 
   // Record while a meter is connected
   auto recordable = [this] { connectSLOT(!m_session->controllers().isEmpty()); };
@@ -502,7 +510,14 @@ void MainWindow::addPanel(MeterController *ctl)
   panel->display()->setContextMenuPolicy(Qt::CustomContextMenu);
   connect(panel->display(), &QWidget::customContextMenuRequested, this, [this, panel, win](const QPoint &pos)
   {
-    windowMenu(win, panel->display()->mapToGlobal(pos));
+    // not from inside the display's event: its device may close while the
+    // menu is open, and the panel with it
+    const QPoint at = panel->display()->mapToGlobal(pos);
+    QTimer::singleShot(0, this, [this, at, w = QPointer<QMdiSubWindow>(win)]
+    {
+      if (w)
+        windowMenu(w, at);
+    });
   });
   PanelState state = m_panelStates.take(id);
   state.shown = state.shown && m_displayAction->isChecked();
@@ -1184,7 +1199,7 @@ void MainWindow::placeWindow()
 
 void MainWindow::updateEmptyStart()
 {
-  const bool empty = m_session->controllers().isEmpty() && m_pendingOpen.isEmpty();
+  const bool empty = m_session->controllers().isEmpty() && m_pendingOpen.isEmpty() && !m_wid->graph()->showsFile();
   m_emptyConnect->setVisible(!m_wid->devices()->list().isEmpty());
   // nothing to see behind the start page; checked stays what comes back
   for (QAction *a : { m_displayAction, m_meterAction, m_poincareAction, action_Graph, m_readingsAction })
@@ -1763,14 +1778,19 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
   PoincareView *plot = poincareViewOf(win);
   QAction *hide = menu.addAction(added ? tr("&Close window") : tr("&Hide view"));
   FrontPanel *panel = panelOf(win);
+  // a front panel goes with its device, also while the menu is open
+  QPointer<QMdiSubWindow> window(win);
+  QPointer<FrontPanel> open(panel);
   if (panel && panel->keysSupported())
   {
     QAction *hideControls = menu.addAction(tr("Hide &controls"));
     hideControls->setCheckable(true);
     hideControls->setChecked(panel->isFolded());
-    connect(hideControls, &QAction::toggled, this, [this, panel](bool on)
+    connect(hideControls, &QAction::toggled, this, [this, open](bool on)
     {
-      panel->setFolded(on);
+      if (!open)
+        return;
+      open->setFolded(on);
       updateControls();
     });
   }
@@ -1801,7 +1821,11 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
   }
   // which of its device's values it shows, big and on the small line
   if (panel && panel->controller() && panel->controller()->valueCount() > 1)
-    connect(menu.addAction(tr("&Values...")), &QAction::triggered, this, [this, panel] { editPanelValues(panel); });
+    connect(menu.addAction(tr("&Values...")), &QAction::triggered, this, [this, open]
+    {
+      if (open)
+        editPanelValues(open);
+    });
   if (panel && panel->controller())
   {
     menu.addSeparator();
@@ -1837,7 +1861,7 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
     menu.addSeparator();
     plot->plot()->addMenuActions(&menu);
   }
-  if (menu.exec(globalPos) != hide)
+  if (menu.exec(globalPos) != hide || !window)
     return;
   if (added)
     removeAddedWindow(win);
@@ -2374,7 +2398,9 @@ void MainWindow::editPanelValues(FrontPanel *panel)
   for (int id = 0; id < ctl->valueCount(); ++id)
     names << otherValueRow(ctl, id).name;
   PanelValuesDlg dlg(names, panel->value().id, panel->secondaries(), this);
-  if (dlg.exec() != QDialog::Accepted)
+  QPointer<FrontPanel> open(panel);   // they may close meanwhile
+  QPointer<MeterController> meter(ctl);
+  if (dlg.exec() != QDialog::Accepted || !open || !meter)
     return;
   panel->setValue(ValueRef(dlg.main(), ctl->source()));
   // its min/max memory follows the big line

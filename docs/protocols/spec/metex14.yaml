@@ -11,6 +11,9 @@ sources:
 # hold are derived from it. Put decoder-specific assertions (special, val)
 # under 'expect' by hand. 'range_label' and 'remark' are informational.
 vectors:
+  - source_line: "DC - 0.24   V (synthetic: a space after the sign)"
+    bytes: 44 43 20 2D 20 30 2E 32 34 20 20 20 56 0D
+    reading: {value: "-0.24", unit: "V", coupling: DC}
   - source_line: "FR  0.050 KHz"
     bytes: 46 52 20 20 30 2E 30 35 30 20 4B 48 7A 0D
     reading: {value: "0.050", unit: "kHz", function: frequency}

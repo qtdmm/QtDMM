@@ -4,6 +4,7 @@
 
 #include <QActionGroup>
 #include <QMenu>
+#include <QPointer>
 
 #include "service/metercontroller.h"
 #include "ui/frontpanel.h"
@@ -32,8 +33,9 @@ void ValueMenu::fill(QMenu *menu, const Target &target, const ValueRef &value)
   // this one was, or off the display when it had none
   QMenu *lcd = menu->addMenu(tr("&LCD"));
   auto *places = new QActionGroup(lcd);
-  auto mainOf = [panel]() { return panel ? panel->value().id : -1; };
-  auto smallOf = [panel]() { return panel ? panel->secondaries() : QList<int>(); };
+  QPointer<FrontPanel> open(panel);   // it goes with its device, also while the menu is open
+  auto mainOf = [open]() { return open ? open->value().id : -1; };
+  auto smallOf = [open]() { return open ? open->secondaries() : QList<int>(); };
   const int values = panel && panel->controller() ? panel->controller()->valueCount() : 1;
   const QList<int> small = smallOf();
   const int taken[] = { mainOf(), int(small.value(0, -1)), int(small.value(1, -1)) };
@@ -45,8 +47,10 @@ void ValueMenu::fill(QMenu *menu, const Target &target, const ValueRef &value)
     places->addAction(a);
     // a meter with two values has one place on the small line
     a->setEnabled(place == 0 || place < values);
-    QObject::connect(a, &QAction::triggered, menu, [panel, id, place, show, source, mainOf, smallOf]
+    QObject::connect(a, &QAction::triggered, menu, [open, id, place, show, source, mainOf, smallOf]
     {
+      if (!open)
+        return;
       const QList<int> small = smallOf();
       QList<int> now { mainOf(), int(small.value(0, -1)), int(small.value(1, -1)) };
       const qsizetype from = now.indexOf(id);
@@ -59,12 +63,12 @@ void ValueMenu::fill(QMenu *menu, const Target &target, const ValueRef &value)
           line << now[i];
       if (now[0] >= 0)
       {
-        panel->setValue(ValueRef(now[0], source));
+        open->setValue(ValueRef(now[0], source));
         // its min/max memory follows the big line
-        if (MeterController *ctl = panel->controller())
+        if (MeterController *ctl = open->controller())
           ctl->setMinMaxValue(now[0]);
       }
-      panel->setSecondaries(line);
+      open->setSecondaries(line);
       show(View::Lcd, source);
     });
   }
