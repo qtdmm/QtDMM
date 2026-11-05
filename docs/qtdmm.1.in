@@ -17,6 +17,8 @@ qtdmm \- read out and record digital multimeters
 .RB [ \-\-vxi11\-portmapper\-port
 .IR port ]
 .RB [ \-\-debug ]
+.RB [ \-\-debug\-device
+.IR id ]
 .br
 .B qtdmm
 .BR \-h " | " \-\-help " | " \-v " | " \-\-version
@@ -101,6 +103,13 @@ instead of 111
 any free one), for this run only; implies
 .BR "\-\-vxi11\-rpc own" .
 VISA libraries and lxi\-tools ask port 111 and do not find it there.
+.TP
+.BI \-\-debug\-device " id"
+Print only the frames of the entry
+.I id
+of My devices; repeat it for more.
+Without the HID, Bluetooth and service messages of
+.BR \-\-debug .
 .TP
 .B \-\-debug
 Print every frame received from the meter as a line of hex bytes on

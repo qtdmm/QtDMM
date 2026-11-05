@@ -40,6 +40,7 @@
 #include "decoders.h"
 
 #include <stdio.h>
+#include <QTime>
 #include <iostream>
 
 #if defined(Q_OS_UNIX) && !defined(Q_OS_MAC)
@@ -170,7 +171,7 @@ bool MeterConnection::sendKey(const QString &key)
   if (frame.isEmpty() || !port || !port->isOpen())
     return false;
   if (m_consoleLogging)
-    std::cout << "key " << key.toStdString() << ": " << frame.toHex(' ').toStdString() << std::endl;
+    consoleLine("key " + key.toUtf8() + ": " + frame.toHex(' '));
 #ifdef QTDMM_WITH_BLE
   // a GATT link repeats what is written as its poll: a key goes once
   if (auto *gatt = dynamic_cast<BleGattDevice *>(port))
@@ -456,16 +457,18 @@ void MeterConnection::timerEvent(QTimerEvent *)
     setState(LinkState::Timeout, timeoutMessage());
 }
 
+void MeterConnection::consoleLine(const QByteArray &text) const
+{
+  std::cout << QTime::currentTime().toString("HH:mm:ss.zzz").toStdString() << ' ' << m_consoleName.toStdString() << ": "
+            << text.toStdString() << std::endl;
+}
+
 // A complete frame from the reader: decode it and publish the reading. Frames
 // are the heartbeat of the connection; the watchdog in timerEvent() misses them.
 void MeterConnection::readEventSLOT(const QByteArray &data, int id, qint64 t, qint64 wall)
 {
   if (m_consoleLogging)
-  {
-    for (int i = 0; i < data.size(); ++i)
-      fprintf(stdout, "%02X ", data[i] & 0x0ff);
-    fprintf(stdout, "\r\n");
-  }
+    consoleLine(data.toHex(' ').toUpper());
   if (m_decoder == nullptr)
     return;
 

@@ -43,6 +43,7 @@
 
 ### GUI
 
+- **`--debug` with several devices** — each frame line now says when and from which device, and `--debug-device <id>` prints the frames of that device only.
 - **Drag values onto the views** — a value dragged out of the sidebar becomes the value of the needle meter or Poincaré plot it is dropped on, a curve of the graph, a column of the readings table, or the big line of its own device's front panel; on the free area it offers a new needle meter, a new Poincaré plot or the graph. An entry of My devices dragged onto the windows connects it.
 - **More than one Poincaré plot** — **Add Poincaré plot** in the menu (or a plot's right-click menu, or *New Poincaré plot* in the value menu of the sidebar) opens another one with its own value, in the column next to the graph; closing an added one removes it, the window layout keeps them (`Windows/poincares`, `poincare-<n>-value`).
 - **Bench: where each value is shown** — at the end of a value's row in the sidebar, marks show where it is: a stroke in its curve's colour (instead of a dot like the states), the symbols of its front panel, of the needle meters and the Poincaré plots with it; a click frames those windows for a moment. The rows name the values as the graph's legend (*Voltage DC*, the number in the tooltip), the readings have a column of fixed width with tabular digits so the names stay put, a device's own row shows its reading only while its values are folded, and temperatures read °C as on the displays. *Info and settings...* is in the context menu of a device under Bench too.
@@ -456,6 +457,7 @@ Pre-release.
 
 ### GUI
 
+- **`--debug` with several devices** — each frame line now says when and from which device, and `--debug-device <id>` prints the frames of that device only.
 - **Cleaned-up UI**
 - **Support for hold, auto/manual range, continuity test, combined AC+DC and Fahrenheit**
 - **Export file in ms precision** — to support more than 1 S/s.
@@ -473,6 +475,7 @@ Pre-release.
 
 ### GUI
 
+- **`--debug` with several devices** — each frame line now says when and from which device, and `--debug-device <id>` prints the frames of that device only.
 - **VA symbols to display apparent power**
 - **cosφ symbols to display the power factor**
 
@@ -480,6 +483,7 @@ Pre-release.
 
 ### GUI
 
+- **`--debug` with several devices** — each frame line now says when and from which device, and `--debug-device <id>` prints the frames of that device only.
 - **Code clean-up**
 - **Infinity sign to set an endless recorder**
 

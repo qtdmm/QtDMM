@@ -139,6 +139,7 @@ int main(int argc, char **argv)
   initTranslation(&app,&QtTranslation,&AppTranslation);
 
   parser.addOption({"debug", QObject::tr("protocol debugging information")});
+  parser.addOption({"debug-device", QObject::tr("only the frames of <id> of My devices (repeatable)"), "id"});
   parser.addOption({"config-dir",QObject::tr("sets directory where config files are located"), "config-dir"});
   parser.addOption({"config-id",QObject::tr("sets <config-id>"), "config-id"});
   parser.addOption({"connect", QObject::tr("connects <id> of My devices at the start (repeatable)"), "id"});

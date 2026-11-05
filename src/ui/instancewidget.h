@@ -95,8 +95,9 @@ public:
   /// The limit test's band to the graph and the analog meter (they draw it
   /// for the value they show).
   void        applyLimitBands();
-  /// --debug: pass on to MeterConnection::setConsoleLogging() of every meter.
-  void        setConsoleLogging(bool);
+  /// --debug: pass on to MeterConnection::setConsoleLogging() of every meter,
+  /// or only of the My devices entries @p only (--debug-device).
+  void        setConsoleLogging(bool on, const QStringList &only = {});
   /// The recorder graph (for the zoom/pan shortcuts in MainWindow).
   GraphWidget   *graph() const { return ui_graph; }
   Settings   *settings() const { return m_settings; }
@@ -186,6 +187,8 @@ protected:
   QMetaObject::Connection m_graphLimitLink;   ///< of the meter of the graph's left axis
   QString     m_activeSource;   ///< setActiveSource()
   bool        m_consoleLogging = false;   ///< setConsoleLogging()
+  QStringList m_consoleOnly;
+  void        applyConsoleLogging(MeterController *ctl) const;
   QList<MeterView *> m_meters;
   int         m_meterStyle = -1;   ///< the settings' style last applied, -1 before the first
   QList<PoincareView *> m_poincares;
