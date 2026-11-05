@@ -82,6 +82,21 @@ qint64 GraphMinimap::to() const
   return qMax(end, from() + 1);
 }
 
+// The right edge of the scale: to(), rounded up in steps of 1/64 to 1/32 of the
+// strip. Between two steps a new reading moves nothing; with the exact end
+// every reading would shrink the strip and its edges would jump by a pixel,
+// each at its own moment. A finished recording has no use for the steps.
+qint64 GraphMinimap::scaleEnd() const
+{
+  if (!m_store || m_store->state() == RecordingStore::View)
+    return to();
+  const qint64 span = to() - from();
+  qint64 step = 1;
+  while (step * 64 < span)
+    step *= 2;
+  return from() + (span + step - 1) / step * step;
+}
+
 const GraphMinimap::Column *GraphMinimap::column(qint64 t) const
 {
   if (t < from() || t > to())
@@ -92,12 +107,12 @@ const GraphMinimap::Column *GraphMinimap::column(qint64 t) const
 
 double GraphMinimap::xOf(qint64 t) const
 {
-  return double(t - from()) / double(to() - from()) * width();
+  return double(t - from()) / double(scaleEnd() - from()) * width();
 }
 
 qint64 GraphMinimap::timeAt(double x) const
 {
-  return from() + qint64(std::llround(x / qMax(1, width()) * double(to() - from())));
+  return from() + qint64(std::llround(x / qMax(1, width()) * double(scaleEnd() - from())));
 }
 
 qint64 GraphMinimap::neededColumnMs() const

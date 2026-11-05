@@ -1736,6 +1736,27 @@ int main(int argc, char **argv)
           }
       return rows;
     };
+    // the strip's scale moves in steps: most readings leave it alone
+    {
+      Settings cfg("minimapsteps", tmpDir.path());
+      GraphWidget graph(nullptr, &cfg);
+      graph.resize(800, 500);
+      graph.show();
+      QTest::qWait(50);
+      Feed feed(graph, 1000);
+      graph.liveSLOT();
+      for (int i = 0; i < 500; ++i)
+        feed.value(1.0);
+      GraphMinimap *map = graph.minimap();
+      int moves = 0;
+      for (int i = 0; i < 60; ++i)
+      {
+        const double before = map->xOf(100000);
+        feed.value(1.0);
+        moves += map->xOf(100000) != before;
+      }
+      check(moves > 0 && moves < 12, QString("overview: 60 readings moved the scale %1 times").arg(moves));
+    }
     const int steady = curveRows(0.01), stepping = curveRows(1.0);
     check(steady > 0 && steady <= 4, QString("overview: 10 mV at 13 V takes %1 rows").arg(steady));
     check(stepping >= 15, QString("overview: 1 V at 13 V takes %1 rows").arg(stepping));
