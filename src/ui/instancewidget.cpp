@@ -173,10 +173,7 @@ InstanceWidget::InstanceWidget(QString instanceId, QString configPath, DeviceSes
     setGraphBase(next);
   });
   // --debug for every meter
-  connect(m_session, &DeviceSession::opened, this, [this](MeterController *ctl)
-  {
-    ctl->dmm()->setConsoleLogging(m_consoleLogging);
-  });
+  connect(m_session, &DeviceSession::opened, this, &InstanceWidget::applyConsoleLogging);
   connect(ui_graph, &GraphWidget::info, this, &InstanceWidget::info);
   connect(ui_graph, &GraphWidget::error, this, &InstanceWidget::error);
   connect(ui_graph, &GraphWidget::error, this, [](const QString &text) { AppLog::error("Graph", text); });
@@ -251,11 +248,17 @@ InstanceWidget::InstanceWidget(QString instanceId, QString configPath, DeviceSes
   });
 }
 
-void InstanceWidget::setConsoleLogging(bool on)
+void InstanceWidget::setConsoleLogging(bool on, const QStringList &only)
 {
   m_consoleLogging = on;
+  m_consoleOnly = only;
   for (MeterController *ctl : m_session->controllers())
-    ctl->dmm()->setConsoleLogging(on);
+    applyConsoleLogging(ctl);
+}
+
+void InstanceWidget::applyConsoleLogging(MeterController *ctl) const
+{
+  ctl->dmm()->setConsoleLogging(m_consoleLogging && (m_consoleOnly.isEmpty() || m_consoleOnly.contains(ctl->deviceId())));
 }
 
 MeterView *InstanceWidget::addMeter(AnalogMeter *meter)

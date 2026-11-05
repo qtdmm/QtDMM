@@ -105,8 +105,9 @@ public:
   void    setFormat(FrameFormat::DataFormat);
   /// Frames per reading, see FrameReader::setFramesPerReading().
   void    setFramesPerReading(int frames);
-  /// --debug: dump every frame as hex to stdout.
+  /// --debug: dump every frame as hex to stdout, a line with time and name.
   void    setConsoleLogging(bool on) { m_consoleLogging = on; }
+  void    setConsoleName(const QString &name) { m_consoleName = name; }
   /// The inputs of a calculated value (PortType::Calc, CalcDevice).
   void    setCalcInputs(CalcDevice::Inputs inputs);
 
@@ -156,6 +157,8 @@ protected:
   QElapsedTimer         m_lastFrame;            ///< since the last complete frame (or open)
   QString               m_name;
   bool                  m_consoleLogging;
+  QString               m_consoleName;
+  void                  consoleLine(const QByteArray &text) const;
   int                   m_flags;
   int                   m_delayTimer;
   std::shared_ptr<DmmDecoder> m_decoder;

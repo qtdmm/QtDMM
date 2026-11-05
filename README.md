@@ -461,6 +461,7 @@ qtdmm [options]
 | `--vxi11-rpc auto\|system\|own` | For this run, where VXI-11 gets its portmapper from: the system's rpcbind, an own one on port 111, or automatically (see [SCPI server](docs/user/scpi-server.md#vxi-11)). Replaces the setting without changing it. |
 | `--vxi11-portmapper-port <port>` | For tests and development: VXI-11 with an own portmapper on this port instead of 111 (0: any free one), for this run. VISA libraries and lxi-tools ask port 111 and do not find it there; a client of your own (or a test) asks this port. |
 | `--debug` | Print every frame received from the meter as hex to the console. Useful when a meter is not decoded correctly — include this output in a bug report. |
+| `--debug-device <id>` | Print only the frames of the entry `<id>` of *My devices*; repeat it for more. Without the HID, Bluetooth and service messages of `--debug`. |
 | `-h`, `--help` | Show the options. |
 | `-v`, `--version` | Show the version. |
 
@@ -485,10 +486,10 @@ they are.
 
 ### Debug output
 
-`--debug` writes each received frame as a line of hex bytes, e.g.
+`--debug` writes each received frame as a line with the time, the device and the hex bytes, e.g.
 
 ```
-30 30 30 30 30 31 3B 30 30 30 3A 30 0D 0A
+12:34:56.789 UT61E: 30 30 30 30 30 31 3B 30 30 30 3A 30 0D 0A
 ```
 
 These lines are exactly what the decoder test fixtures are made of, so a short

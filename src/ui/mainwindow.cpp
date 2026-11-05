@@ -173,6 +173,9 @@ MainWindow::MainWindow(QCommandLineParser &parser, QWidget *parent)
   m_oldDevice = m_wid->takeOldDevice();
   m_wid->setFrameShape(QFrame::NoFrame);
   setConsoleLogging(parser.isSet("debug"));
+  // one device: its frames only, without what the other categories print
+  if (parser.isSet("debug-device"))
+    m_wid->setConsoleLogging(true, parser.values("debug-device"));
 
   createActions();
 
