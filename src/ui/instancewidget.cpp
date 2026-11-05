@@ -584,7 +584,8 @@ void InstanceWidget::clearSLOT()
 
 void InstanceWidget::liveSLOT()
 {
-  if (recordingState() != RecordingStore::View)
+  // a file without a device stays in view beside a meter that is live
+  if (recordingState() != RecordingStore::View && !ui_graph->showsFile())
   {
     Q_EMIT recorderState(recordingState());   // the button shows the state again
     return;
