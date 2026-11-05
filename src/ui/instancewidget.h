@@ -189,6 +189,7 @@ protected:
   bool        m_consoleLogging = false;   ///< setConsoleLogging()
   QStringList m_consoleOnly;
   void        applyConsoleLogging(MeterController *ctl) const;
+  void        leaveFile();
   QList<MeterView *> m_meters;
   int         m_meterStyle = -1;   ///< the settings' style last applied, -1 before the first
   QList<PoincareView *> m_poincares;

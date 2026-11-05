@@ -139,10 +139,9 @@ InstanceWidget::InstanceWidget(QString instanceId, QString configPath, DeviceSes
   m_emptyStore->live();
   ui_graph->setStore(m_emptyStore);
   // the recording is the session's: the graph's store may follow another meter's
-  ui_graph->setControl({ [this] { m_session->startRecording(); }, [this] { m_session->stopRecording(); },
-                         // no device: a file viewed lies in the graph's own store
-                         [this] { m_session->lead() ? m_session->goLive() : ui_graph->store()->live(); },
-                         [this] { m_session->lead() ? m_session->clearRecording() : ui_graph->store()->clear(); } });
+  ui_graph->setControl({ [this] { m_session->startRecording(); leaveFile(); }, [this] { m_session->stopRecording(); },
+                         [this] { m_session->goLive(); leaveFile(); },
+                         [this] { m_session->clearRecording(); leaveFile(); } });
   ui_graph->setOtherStores([this](const QString &source) -> RecordingStore *
   {
     MeterController *ctl = m_session->controller(source);
@@ -403,6 +402,18 @@ void InstanceWidget::followGraphBase()
         setGraphBase(next);
       return;
     }
+}
+
+void InstanceWidget::leaveFile()
+{
+  // a file loaded without a device lies in the graph's own store and is no
+  // value of any meter: the graph starts afresh, as an empty one
+  if (ui_graph->store() != m_emptyStore || !ui_graph->showsFile())
+    return;
+  m_emptyStore->live();
+  ui_graph->setValues({});
+  if (!m_session->controllers().isEmpty())
+    ui_graph->setValues({ ValueRef(0, m_session->controllers().first()->source()) });
 }
 
 void InstanceWidget::setGraphBase(MeterController *ctl)
