@@ -335,7 +335,16 @@ void GraphMinimap::paintEvent(QPaintEvent *)
     lo = std::fmin(lo, std::fmin(c.min, c.last));
     hi = std::fmax(hi, std::fmax(c.max, c.last));
   }
-  const double pad = hi > lo ? (hi - lo) * 0.08 : qMax(std::abs(hi), 1.0) * 0.1;
+  // the last digit of a steady value must not fill the strip: it would turn
+  // into a square wave from top to bottom
+  const double least = qMax(std::abs(lo), std::abs(hi)) * kLeastSpan;
+  if (hi - lo < least)
+  {
+    const double middle = (lo + hi) / 2;
+    lo = middle - least / 2;
+    hi = middle + least / 2;
+  }
+  const double pad = hi > lo ? (hi - lo) * 0.08 : 1.0;
   lo -= pad;
   hi += pad;
   const double top = 4, bottom = height() - 6;

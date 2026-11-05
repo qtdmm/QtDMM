@@ -1709,6 +1709,38 @@ int main(int argc, char **argv)
           QString("phosphor: the vertical line at the trigger (%1), got %2 lines").arg(triggerX).arg(vertical().size()));
   }
 
+  // --- overview: the last digit of a steady value stays a line, a real
+  //          step fills the strip ---
+  {
+    const auto curveRows = [&](double step) {
+      Settings cfg("minimapscale", tmpDir.path());
+      GraphWidget graph(nullptr, &cfg);
+      graph.resize(800, 500);
+      graph.show();
+      QTest::qWait(50);
+      Feed feed(graph, 1000);
+      graph.liveSLOT();
+      for (int i = 0; i < 200; ++i)
+        feed.value(13.27 + (i / 5 % 2) * step);
+      GraphMinimap *map = graph.minimap();
+      map->setColors(QBrush(Qt::black), Qt::white);
+      map->setCurveColor(Qt::yellow);
+      const QImage img = map->grab().toImage();
+      int rows = 0;
+      for (int y = 0; y < img.height(); ++y)
+        for (int x = 0; x < img.width(); ++x)
+          if (img.pixelColor(x, y).red() > 200 && img.pixelColor(x, y).blue() < 100)   // under the window's tint
+          {
+            ++rows;
+            break;
+          }
+      return rows;
+    };
+    const int steady = curveRows(0.01), stepping = curveRows(1.0);
+    check(steady > 0 && steady <= 4, QString("overview: 10 mV at 13 V takes %1 rows").arg(steady));
+    check(stepping >= 15, QString("overview: 1 V at 13 V takes %1 rows").arg(stepping));
+  }
+
   // --- 7j. the overview below the graph: all the store keeps, the
   //          minimum to the maximum per column (a spike stays), overloads,
   //          gaps and marks, in the design's colours; dragging moves the
