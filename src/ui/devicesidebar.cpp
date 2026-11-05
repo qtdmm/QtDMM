@@ -793,7 +793,12 @@ void DeviceSidebar::contextMenuEvent(QContextMenuEvent *event)
   if (chosen == settings)
     Q_EMIT settingsRequested(id);
   else if (chosen == rename)
-    editItem(item);
+  {
+    // the list may have been filled anew meanwhile
+    for (int i = 0; i < m_devices->childCount(); ++i)
+      if (m_devices->child(i)->data(0, Qt::UserRole).toString() == id)
+        editItem(m_devices->child(i));
+  }
   else if (chosen == beside)
     Q_EMIT openBesideRequested(id);
   else if (chosen == remove

@@ -210,6 +210,14 @@ MainWindow::MainWindow(QCommandLineParser &parser, QWidget *parent)
       updateRecorderActions();
   });
   connect(m_wid, &InstanceWidget::recorderState, this, &MainWindow::updateRecorderActions);
+  // a file loaded without a device: the start page makes way for its graph
+  connect(m_wid, &InstanceWidget::recorderState, this, [this]
+  {
+    const bool covered = !m_emptyStart->isHidden();
+    updateEmptyStart();
+    if (covered && m_emptyStart->isHidden())
+      action_Graph->setChecked(true);
+  });
 
   // Record while a meter is connected
   auto recordable = [this] { connectSLOT(!m_session->controllers().isEmpty()); };
@@ -1191,7 +1199,7 @@ void MainWindow::placeWindow()
 
 void MainWindow::updateEmptyStart()
 {
-  const bool empty = m_session->controllers().isEmpty() && m_pendingOpen.isEmpty();
+  const bool empty = m_session->controllers().isEmpty() && m_pendingOpen.isEmpty() && !m_wid->graph()->showsFile();
   m_emptyConnect->setVisible(!m_wid->devices()->list().isEmpty());
   // nothing to see behind the start page; checked stays what comes back
   for (QAction *a : { m_displayAction, m_meterAction, m_poincareAction, action_Graph, m_readingsAction })

@@ -25,6 +25,7 @@
 
 ### Devices
 
+- **Brymen BM78xBT: OL by its text code is an overload** — it was a gap, without the overload alarm.
 - **Damaged frames no longer read 0** — on protocols without a checksum a disturbed digit gave a valid 0 in the graph and the recording; it is a gap now.
 - **UNI-T UT171: small and large values no longer read OL** — 4.7 nF or 12.345 MHz came with an exponent, and its letter counted as overload.
 - **UT71, UT804, VC 920/940/960, Tenma 72-7732: overload no longer reads 0** — OL, HI and LO came out as a valid 0 with odd characters on the LCD, in the graph and in exports. Now OL and HI are overloads, LO of the 4-20 mA loop is no reading. Four digit ranges lost their value the same way.
@@ -45,6 +46,7 @@
 
 ### GUI
 
+- **A file loaded without a device is shown** — the start page covered the graph and the view buttons were grey.
 - **`--debug` with several devices** — each frame line now says when and from which device, and `--debug-device <id>` prints the frames of that device only.
 - **Drag values onto the views** — a value dragged out of the sidebar becomes the value of the needle meter or Poincaré plot it is dropped on, a curve of the graph, a column of the readings table, or the big line of its own device's front panel; on the free area it offers a new needle meter, a new Poincaré plot or the graph. An entry of My devices dragged onto the windows connects it.
 - **More than one Poincaré plot** — **Add Poincaré plot** in the menu (or a plot's right-click menu, or *New Poincaré plot* in the value menu of the sidebar) opens another one with its own value, in the column next to the graph; closing an added one removes it, the window layout keeps them (`Windows/poincares`, `poincare-<n>-value`).

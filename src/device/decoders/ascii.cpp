@@ -164,7 +164,7 @@ std::optional<DmmDecoder::DmmResponse> DecoderAscii::decode(const QByteArray &da
       return std::nullopt;
   }
 
-  m_result.main().dval = m_result.main().val.toDouble();
+  m_result.main().dval = QString(m_result.main().val).remove(' ').toDouble();   // "- 0.24"
 
   switch (m_result.main().unit.length())
   {

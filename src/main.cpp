@@ -241,5 +241,7 @@ int main(int argc, char **argv)
     });
   }
 
-  return app.exec();
+  const int result = app.exec();
+  qInstallMessageHandler(nullptr);   // AppLog ends with the program
+  return result;
 }
