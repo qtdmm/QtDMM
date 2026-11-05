@@ -169,6 +169,17 @@
         "unit": "F",
         "range": "AUTO",
         "hold": false,
+        "port": "capacitance"
+      }
+    },
+    {
+      "comment": "[reverse-engineered-protocol.md (dmm-tools, GPL-3.0-or-later: from UNI-T's UT171C PC software and the manual, cross-checked with the captures of gulux's Uni-T-CP2110; no meter read there yet, issue #4)] '4.7 nF as a float in F: no exponent, a letter would read as overload'",
+      "hex": "AB CD 11 00 02 00 01 09 02 A3 7D A1 31 00 00 00 00 00 00 11 02",
+      "expected": {
+        "dval": 4.7e-09,
+        "unit": "F",
+        "range": "AUTO",
+        "hold": false,
         "port": "capacitance",
         "special": "CA"
       }

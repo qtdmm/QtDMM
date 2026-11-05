@@ -51,6 +51,14 @@ int main(int argc, char **argv)
   ReadingAdapter a;
   a.setCounts(4000);
 
+  // --- a text that is neither word nor number: no value, not a valid 0 ---
+  {
+    const PortSample r = one(a, "1.:34", "V", "DC");
+    check(r.sample.quality == Quality::NoValue && std::isnan(r.sample.value), "damaged digits: no value");
+    check(one(a, " 1.234", "V", "DC").sample.quality == Quality::Valid, "a space is no damage");
+    check(one(a, "-0.012", "V", "DC").sample.quality == Quality::Valid, "a sign neither");
+  }
+
   // --- unit spelling, prefix, flags ---
   {
     const PortSample r = one(a, "4.700", "kOhm", "OH");

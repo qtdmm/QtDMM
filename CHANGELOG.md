@@ -25,6 +25,8 @@
 
 ### Devices
 
+- **Damaged frames no longer read 0** — on protocols without a checksum a disturbed digit gave a valid 0 in the graph and the recording; it is a gap now.
+- **UNI-T UT171: small and large values no longer read OL** — 4.7 nF or 12.345 MHz came with an exponent, and its letter counted as overload.
 - **UT71, UT804, VC 920/940/960, Tenma 72-7732: overload no longer reads 0** — OL, HI and LO came out as a valid 0 with odd characters on the LCD, in the graph and in exports. Now OL and HI are overloads, LO of the 4-20 mA loop is no reading. Four digit ranges lost their value the same way.
 - **UNI-T UT363BT and UT383BT, TFA AIRCO2NTROL Mini confirmed** — tried on the meters, no longer marked with `*`.
 - **AOPUTTRIVER AP-570C-APP no longer marked as untried** — it is the HoldPeak HP-570C-APP under another name, which a user confirmed in 26.3.

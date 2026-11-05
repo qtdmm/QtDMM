@@ -209,7 +209,15 @@ PortSample ReadingAdapter::adaptValue(double dval, const QString &text, const QS
   // decoders mark overload and similar states with letters in the value
   // text ("OL", "-OL", "0.L", "EFLO"); a number never has one
   static const QRegularExpression letters("[A-Za-z]");
-  s.quality = shown != Quality::Valid ? shown : text.contains(letters) ? Quality::Overload : Quality::Valid;
+  bool isNumber = text.isEmpty();
+  if (!isNumber)
+    QString(text).remove(' ').toDouble(&isNumber);
+  // neither word nor number (a damaged frame without a checksum, "1.:34"): no
+  // value rather than a valid 0
+  s.quality = shown != Quality::Valid    ? shown
+              : text.contains(letters) ? Quality::Overload
+              : isNumber               ? Quality::Valid
+                                       : Quality::NoValue;
   // no number on the display, or a fault word: no value either, but no
   // overload - the graph has a gap there
   if (s.quality == Quality::NoValue || s.quality == Quality::Fault)

@@ -82,6 +82,10 @@ vectors:
   - source_line: "Capacitance 47 on range 2, in the base unit (scale UNVERIFIED)"
     bytes: AB CD 11 00 02 00 01 09 02 00 00 3C 42 00 00 00 00 00 00 9D 00
     reading: {value: "47", unit: "F", range_mode: "auto"}
+  - source_line: "4.7 nF as a float in F: no exponent, a letter would read as overload"
+    bytes: AB CD 11 00 02 00 01 09 02 A3 7D A1 31 00 00 00 00 00 00 11 02
+    reading: {value: "0.0000000047", unit: "F", range_mode: "auto"}
+    expect: {val: "0.0000000047"}
     expect: {special: "CA"}
   - source_line: "Conductance 12.5 nS"
     bytes: AB CD 11 00 02 00 01 0E 01 00 00 48 41 00 00 00 00 00 00 AC 00
