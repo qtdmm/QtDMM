@@ -140,7 +140,9 @@ InstanceWidget::InstanceWidget(QString instanceId, QString configPath, DeviceSes
   ui_graph->setStore(m_emptyStore);
   // the recording is the session's: the graph's store may follow another meter's
   ui_graph->setControl({ [this] { m_session->startRecording(); }, [this] { m_session->stopRecording(); },
-                         [this] { m_session->goLive(); }, [this] { m_session->clearRecording(); } });
+                         // no device: a file viewed lies in the graph's own store
+                         [this] { m_session->lead() ? m_session->goLive() : ui_graph->store()->live(); },
+                         [this] { m_session->lead() ? m_session->clearRecording() : ui_graph->store()->clear(); } });
   ui_graph->setOtherStores([this](const QString &source) -> RecordingStore *
   {
     MeterController *ctl = m_session->controller(source);

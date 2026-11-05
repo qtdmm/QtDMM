@@ -44,6 +44,10 @@ vectors:
     bytes: FF 02 20 05 01 00 00 01 FA 78 85 03 3A 35 10 20 00 01 0D 00 00 00 00 00 02 06 04 05 07 98 FF 03
     reading: {value: "OL", unit: "MOhm", range_mode: "auto"}
     expect: {special: "OH", val: "OL"}
+  - source_line: "Resistance OL by the ASCII flag, code 0 (spec §6.7)"
+    bytes: FF 02 20 05 01 00 00 01 FA 78 85 03 3A 35 14 00 00 01 0D 00 00 00 00 00 02 06 04 05 7D 3C FF 03
+    reading: {value: "OL", unit: "MOhm", range_mode: "auto"}
+    expect: {special: "OH", val: "OL"}
   - source_line: "12.345 mA DC with REL and MAX, prefix -3"
     bytes: FF 02 20 05 01 00 00 01 FA 78 85 03 3A 35 50 18 00 01 06 00 01 39 30 00 02 FD 03 05 77 BB FF 03
     reading: {value: "12.345", unit: "mA", range_mode: "auto"}

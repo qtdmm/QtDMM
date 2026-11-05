@@ -63,6 +63,18 @@
       }
     },
     {
+      "comment": "[reverse-engineered-protocol.md (dmm-tools, GPL-3.0-or-later: from Brymen's published protocol document r4, Brymen's app and the manuals; no meter read there yet)] 'Resistance OL by the ASCII flag, code 0 (spec §6.7)'",
+      "hex": "FF 02 20 05 01 00 00 01 FA 78 85 03 3A 35 14 00 00 01 0D 00 00 00 00 00 02 06 04 05 7D 3C FF 03",
+      "expected": {
+        "unit": "MOhm",
+        "range": "AUTO",
+        "hold": false,
+        "port": "resistance",
+        "special": "OH",
+        "val": "OL"
+      }
+    },
+    {
       "comment": "[reverse-engineered-protocol.md (dmm-tools, GPL-3.0-or-later: from Brymen's published protocol document r4, Brymen's app and the manuals; no meter read there yet)] '12.345 mA DC with REL and MAX, prefix -3'",
       "hex": "FF 02 20 05 01 00 00 01 FA 78 85 03 3A 35 50 18 00 01 06 00 01 39 30 00 02 FD 03 05 77 BB FF 03",
       "expected": {

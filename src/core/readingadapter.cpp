@@ -209,9 +209,11 @@ PortSample ReadingAdapter::adaptValue(double dval, const QString &text, const QS
   // decoders mark overload and similar states with letters in the value
   // text ("OL", "-OL", "0.L", "EFLO"); a number never has one
   static const QRegularExpression letters("[A-Za-z]");
-  bool isNumber = text.isEmpty();
-  if (!isNumber)
-    QString(text).remove(' ').toDouble(&isNumber);
+  // spaces only at the edges and after the sign, a digit in the middle of
+  // them is damage
+  static const QRegularExpression number("^\\s*([-+]?)\\s*(?=\\.?\\d)(\\d*)(?:\\.(\\d*))?\\s*$");
+  const QRegularExpressionMatch nm = number.match(text);
+  const bool isNumber = text.isEmpty() || nm.hasMatch();
   // neither word nor number (a damaged frame without a checksum, "1.:34"): no
   // value rather than a valid 0
   s.quality = shown != Quality::Valid    ? shown
@@ -232,8 +234,6 @@ PortSample ReadingAdapter::adaptValue(double dval, const QString &text, const QS
 
   // full scale and bar from the display count and the decimals shown:
   // "3.856" at 4000 counts is the 4 V range, the bar at 3856/4000
-  static const QRegularExpression number("^\\s*([-+]?)\\s*(\\d+)(?:\\.(\\d*))?\\s*$");
-  const QRegularExpressionMatch nm = number.match(text);
   if (m_counts > 0 && nm.hasMatch() && hasRange(m.quantity))
   {
     const int decimals = nm.captured(3).size();
