@@ -14,6 +14,10 @@ sources:
 # hold are derived from it. Put decoder-specific assertions (special, val)
 # under 'expect' by hand. 'range_label' and 'remark' are informational.
 vectors:
+  - source_line: "DC  1.234 V AUTO"
+    bytes: 31 32 33 34 3A 31 31 30 31 0D 0A
+    reading: {value: "1.234", unit: "V", coupling: DC, range_mode: auto}
+    remark: "synthetic: a four digit range with a value, the logs only have 0.000"
   - source_line: "DC  0.0000 V AUTO BG"
     bytes: 30 30 30 30 30 31 31 30 31 0D 0A
     reading: {value: "0.0000", unit: "V", coupling: DC, range_mode: auto, flags: [BG]}
@@ -67,25 +71,32 @@ vectors:
   - source_line: ".0L MΩ AUTO BG"
     bytes: 3A 3A 30 3C 3A 36 34 30 31 0D 0A
     reading: {value: ".0L", unit: "MOhm", range_mode: auto, flags: [BG]}
+    expect: {val: "OL"}
   - source_line: "0.L  Ω MAN BG"
     bytes: 3A 3A 30 3C 3A 31 34 30 32 0D 0A
     reading: {value: "0.L", unit: "Ohm", range_mode: manual, flags: [BG]}
+    expect: {val: "OL"}
     remark: "Endwert 400 Ω"
   - source_line: ". 0L kΩ MAN BG"
     bytes: 3A 3A 30 3C 3A 32 34 30 32 0D 0A
     reading: {value: ". 0L", unit: "kOhm", range_mode: manual, flags: [BG]}
+    expect: {val: "OL"}
   - source_line: ".0L kΩ MAN BG"
     bytes: 3A 3A 30 3C 3A 33 34 30 32 0D 0A
     reading: {value: ".0L", unit: "kOhm", range_mode: manual, flags: [BG]}
+    expect: {val: "OL"}
   - source_line: "0.L kΩ MAN BG"
     bytes: 3A 3A 30 3C 3A 34 34 30 32 0D 0A
     reading: {value: "0.L", unit: "kOhm", range_mode: manual, flags: [BG]}
+    expect: {val: "OL"}
   - source_line: ". 0L MΩ MAN BG"
     bytes: 3A 3A 30 3C 3A 35 34 30 32 0D 0A
     reading: {value: ". 0L", unit: "MOhm", range_mode: manual, flags: [BG]}
+    expect: {val: "OL"}
   - source_line: ".0L MΩ MAN BG"
     bytes: 3A 3A 30 3C 3A 36 34 30 32 0D 0A
     reading: {value: ".0L", unit: "MOhm", range_mode: manual, flags: [BG]}
+    expect: {val: "OL"}
     remark: "Endwert 40 MΩ"
   - source_line: "00.000 nF AUTO BG"
     bytes: 30 30 30 30 30 31 35 30 31 0D 0A
@@ -235,23 +246,28 @@ vectors:
     source: docs/protocols/sources/UT804.log
     bytes: 3A 3A 30 3C 3A 36 34 30 31 0D 0A
     reading: {value: ".0L", unit: "MOhm", range_mode: auto, range_label: "40M"}
+    expect: {val: "OL"}
   - source_line: ".0L MOhm MAN 40M"
     source: docs/protocols/sources/UT804.log
     bytes: 3A 3A 30 3C 3A 36 34 30 32 0D 0A
     reading: {value: ".0L", unit: "MOhm", range_mode: manual, range_label: "40M"}
+    expect: {val: "OL"}
   - source_line: "0.L Ohm MAN 400"
     source: docs/protocols/sources/UT804.log
     bytes: 3A 3A 30 3C 3A 31 34 30 32 0D 0A
     reading: {value: "0.L", unit: "Ohm", range_mode: manual, range_label: "400"}
+    expect: {val: "OL"}
   - source_line: "0.L Ohm FIX 400"
     source: docs/protocols/sources/UT804.log
     bytes: 3A 3A 30 3C 3A 30 3A 30 30 0D 0A
     reading: {value: "0.L", unit: "Ohm", function: continuity, range_mode: manual, range_label: "400"}
+    expect: {val: "OL"}
     # the log line does not name the mode; byte 6 has function code A (continuity), "FIX" is its fixed range
   - source_line: ". 0L V FIX 4V"
     source: docs/protocols/sources/UT804.log
     bytes: 3A 3A 30 3C 3A 30 3B 30 30 0D 0A
     reading: {value: ". 0L", unit: "V", function: diode, range_mode: manual, range_label: "4V"}
+    expect: {val: "OL"}
     # the log line does not name the mode; byte 6 has function code B (diode), "FIX" is its fixed range
   - source_line: "00.000 nF AUTO 40nF"
     source: docs/protocols/sources/UT804.log
@@ -301,16 +317,19 @@ vectors:
     source: docs/protocols/sources/UT804.log
     bytes: 3A 3C 30 3A 3A 30 3F 30 30 0D 0A
     reading: {value: "L0.", unit: "%", range_mode: manual, range_label: "100%"}
+    expect: {val: "LO", noValue: true}
     remark: "// Unterlauf"
   - source_line: "HI.  % FIX 100%"
     source: docs/protocols/sources/UT804.log
     bytes: 3A 3F 31 3A 3A 30 3F 30 30 0D 0A
     reading: {value: "HI.", unit: "%", range_mode: manual, range_label: "100%"}
+    expect: {val: "HI"}
     remark: "// Überlauf"
   - source_line: "0.L % FIX 100%"
     source: docs/protocols/sources/UT804.log
     bytes: 3A 3A 30 3C 3A 30 3F 30 30 0D 0A
     reading: {value: "0.L", unit: "%", range_mode: manual, range_label: "100%"}
+    expect: {val: "OL"}
     remark: "// Mehr als 400 mA"
   - source_line: "DC   00.000 A FIX 10A"
     source: docs/protocols/sources/UT804.log

@@ -4,6 +4,17 @@
   "framesPerReading": 2,
   "tests": [
     {
+      "comment": "[UT71BCDE.log] 'DC  1.234 V AUTO'",
+      "hex": "31 32 33 34 3A 31 31 30 31 0D 0A",
+      "expected": {
+        "dval": 1.234,
+        "unit": "V",
+        "range": "AUTO",
+        "hold": false,
+        "port": "voltage.dc"
+      }
+    },
+    {
       "comment": "[UT71BCDE.log] 'DC  0.0000 V AUTO BG'",
       "hex": "30 30 30 30 30 31 31 30 31 0D 0A",
       "expected": {
@@ -186,7 +197,8 @@
         "unit": "MOhm",
         "range": "AUTO",
         "hold": false,
-        "port": "resistance"
+        "port": "resistance",
+        "val": "OL"
       }
     },
     {
@@ -196,7 +208,8 @@
         "unit": "Ohm",
         "range": "MANU",
         "hold": false,
-        "port": "resistance"
+        "port": "resistance",
+        "val": "OL"
       }
     },
     {
@@ -206,7 +219,8 @@
         "unit": "kOhm",
         "range": "MANU",
         "hold": false,
-        "port": "resistance"
+        "port": "resistance",
+        "val": "OL"
       }
     },
     {
@@ -216,7 +230,8 @@
         "unit": "kOhm",
         "range": "MANU",
         "hold": false,
-        "port": "resistance"
+        "port": "resistance",
+        "val": "OL"
       }
     },
     {
@@ -226,7 +241,8 @@
         "unit": "kOhm",
         "range": "MANU",
         "hold": false,
-        "port": "resistance"
+        "port": "resistance",
+        "val": "OL"
       }
     },
     {
@@ -236,7 +252,8 @@
         "unit": "MOhm",
         "range": "MANU",
         "hold": false,
-        "port": "resistance"
+        "port": "resistance",
+        "val": "OL"
       }
     },
     {
@@ -246,7 +263,8 @@
         "unit": "MOhm",
         "range": "MANU",
         "hold": false,
-        "port": "resistance"
+        "port": "resistance",
+        "val": "OL"
       }
     },
     {
@@ -707,7 +725,8 @@
         "unit": "MOhm",
         "range": "AUTO",
         "hold": false,
-        "port": "resistance"
+        "port": "resistance",
+        "val": "OL"
       }
     },
     {
@@ -717,7 +736,8 @@
         "unit": "MOhm",
         "range": "MANU",
         "hold": false,
-        "port": "resistance"
+        "port": "resistance",
+        "val": "OL"
       }
     },
     {
@@ -727,7 +747,8 @@
         "unit": "Ohm",
         "range": "MANU",
         "hold": false,
-        "port": "resistance"
+        "port": "resistance",
+        "val": "OL"
       }
     },
     {
@@ -737,7 +758,8 @@
         "unit": "Ohm",
         "range": "MANU",
         "hold": false,
-        "port": "continuity"
+        "port": "continuity",
+        "val": "OL"
       }
     },
     {
@@ -747,7 +769,8 @@
         "unit": "V",
         "range": "MANU",
         "hold": false,
-        "port": "voltage.diode"
+        "port": "voltage.diode",
+        "val": "OL"
       }
     },
     {
@@ -878,7 +901,9 @@
         "unit": "%",
         "range": "MANU",
         "hold": false,
-        "port": "duty_cycle"
+        "port": "duty_cycle",
+        "val": "LO",
+        "noValue": true
       }
     },
     {
@@ -888,7 +913,8 @@
         "unit": "%",
         "range": "MANU",
         "hold": false,
-        "port": "duty_cycle"
+        "port": "duty_cycle",
+        "val": "HI"
       }
     },
     {
@@ -898,7 +924,8 @@
         "unit": "%",
         "range": "MANU",
         "hold": false,
-        "port": "duty_cycle"
+        "port": "duty_cycle",
+        "val": "OL"
       }
     },
     {
