@@ -55,7 +55,8 @@ std::optional<DmmDecoder::DmmResponse> DecoderVC940::decode(const QByteArray &da
   Q_UNUSED(mode2)
 
   m_result.main().val = makeValue(data,0,3, (function != 0xC && neg));
-  if (data[4] != 'A')
+  // a fifth digit; ':' is its blank (the nibble A) on four digit ranges
+  if (data[4] != ':')
     m_result.main().val += data[4];
 
   switch (function)
@@ -150,6 +151,22 @@ std::optional<DmmDecoder::DmmResponse> DecoderVC940::decode(const QByteArray &da
       break;
   }
 
+  // no digits on the display: nibble A in the first place, the second says
+  // which word (UT804.log, UT71BCDE.log)
+  if (data[0] == ':')
+  {
+    DmmChannel &main = m_result.main();
+    main.dval = 0;
+    if (data[1] == '<')
+    {
+      main.val = QStringLiteral("LO");   // below the 4-20 mA loop: no reading, no overload
+      main.noValue = true;
+    }
+    else if (data[1] == '?')
+      main.val = QStringLiteral("HI");
+    else
+      main.val = function != 0xC && neg ? QStringLiteral("-OL") : QStringLiteral("OL");
+  }
 
   return m_result;
 }

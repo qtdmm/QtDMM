@@ -25,6 +25,7 @@
 
 ### Devices
 
+- **UT71, UT804, VC 920/940/960, Tenma 72-7732: overload no longer reads 0** — OL, HI and LO came out as a valid 0 with odd characters on the LCD, in the graph and in exports. Now OL and HI are overloads, LO of the 4-20 mA loop is no reading. Four digit ranges lost their value the same way.
 - **UNI-T UT363BT and UT383BT, TFA AIRCO2NTROL Mini confirmed** — tried on the meters, no longer marked with `*`.
 - **AOPUTTRIVER AP-570C-APP no longer marked as untried** — it is the HoldPeak HP-570C-APP under another name, which a user confirmed in 26.3.
 - **USB-HID cables keep their udev link** — Add device's search and the saving of a device now take the link in `/dev/qtdmm/` (UT-D04 and similar cables, the TFA CO2 monitor) instead of `/dev/hidrawN`, which changes with every plug; a serial adapter found is saved under `/dev/serial/by-id/` as before. An entry saved with `/dev/hidrawN` gets the link when Add device finds it again.
