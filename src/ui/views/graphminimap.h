@@ -28,7 +28,9 @@ struct RawPoint;
 ///
 /// The columns are a power of two milliseconds wide, counted from the start
 /// of the recording: a new reading changes its column only, and the columns
-/// are counted anew only when the strip outgrows twice its width.
+/// are counted anew only when the strip outgrows twice its width. Its scale
+/// moves in steps, so the strip stands still between them; the newest reading
+/// can end a little before the right edge.
 class GraphMinimap : public QWidget
 {
   Q_OBJECT
@@ -46,6 +48,9 @@ public:
 
   /// The strip's height in pixels.
   static constexpr int kHeight = 30;
+  /// The strip's scale spans at least this part of the value: a steady value
+  /// stays a line, whatever its last digit does.
+  static constexpr double kLeastSpan = 0.02;
   /// The narrowest window a bracket drag asks for (ms).
   static constexpr qint64 kMinWidthMs = 10000;
 
@@ -138,5 +143,6 @@ private:
   void             dropFront();
   /// The pixels within which the right bracket counts as at the end.
   qint64           endTolerance() const;
+  qint64           scaleEnd() const;
   Drag             dragAt(double x) const;
 };

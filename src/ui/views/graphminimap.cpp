@@ -82,6 +82,21 @@ qint64 GraphMinimap::to() const
   return qMax(end, from() + 1);
 }
 
+// The right edge of the scale: to(), rounded up in steps of 1/64 to 1/32 of the
+// strip. Between two steps a new reading moves nothing; with the exact end
+// every reading would shrink the strip and its edges would jump by a pixel,
+// each at its own moment. A finished recording has no use for the steps.
+qint64 GraphMinimap::scaleEnd() const
+{
+  if (!m_store || m_store->state() == RecordingStore::View)
+    return to();
+  const qint64 span = to() - from();
+  qint64 step = 1;
+  while (step * 64 < span)
+    step *= 2;
+  return from() + (span + step - 1) / step * step;
+}
+
 const GraphMinimap::Column *GraphMinimap::column(qint64 t) const
 {
   if (t < from() || t > to())
@@ -92,12 +107,12 @@ const GraphMinimap::Column *GraphMinimap::column(qint64 t) const
 
 double GraphMinimap::xOf(qint64 t) const
 {
-  return double(t - from()) / double(to() - from()) * width();
+  return double(t - from()) / double(scaleEnd() - from()) * width();
 }
 
 qint64 GraphMinimap::timeAt(double x) const
 {
-  return from() + qint64(std::llround(x / qMax(1, width()) * double(to() - from())));
+  return from() + qint64(std::llround(x / qMax(1, width()) * double(scaleEnd() - from())));
 }
 
 qint64 GraphMinimap::neededColumnMs() const
@@ -335,7 +350,16 @@ void GraphMinimap::paintEvent(QPaintEvent *)
     lo = std::fmin(lo, std::fmin(c.min, c.last));
     hi = std::fmax(hi, std::fmax(c.max, c.last));
   }
-  const double pad = hi > lo ? (hi - lo) * 0.08 : qMax(std::abs(hi), 1.0) * 0.1;
+  // the last digit of a steady value must not fill the strip: it would turn
+  // into a square wave from top to bottom
+  const double least = qMax(std::abs(lo), std::abs(hi)) * kLeastSpan;
+  if (hi - lo < least)
+  {
+    const double middle = (lo + hi) / 2;
+    lo = middle - least / 2;
+    hi = middle + least / 2;
+  }
+  const double pad = hi > lo ? (hi - lo) * 0.08 : 1.0;
   lo -= pad;
   hi += pad;
   const double top = 4, bottom = height() - 6;
