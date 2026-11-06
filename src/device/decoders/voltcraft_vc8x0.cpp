@@ -132,7 +132,14 @@ std::optional<DmmDecoder::DmmResponse> DecoderVC8x0::decode(const QByteArray &da
   const QString shown = QString::fromLatin1(data.mid(kMainAt, 7)).remove(' ');
   bool number = false;
   const double value = shown.toDouble(&number);
-  if ((status(2) & 0x04) || shown.contains(QLatin1String("OL")))
+  if (!m_vc890 && (status(6) & 0x02))
+  {
+    // the setup screen (§4.3): whatever it shows is the menu, no reading and
+    // no overload
+    main.val = QStringLiteral("----");
+    main.noValue = true;
+  }
+  else if ((status(2) & 0x04) || shown.contains(QLatin1String("OL")))
   {
     main.val = shown.startsWith('-') ? QStringLiteral("-OL") : QStringLiteral("OL");
     main.dval = 0;

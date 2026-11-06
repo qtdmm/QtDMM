@@ -26,6 +26,7 @@
 
 ### Devices
 
+- **VC-880, VC650BT: the setup screen is no reading** — a number in the menu counted as a measurement in the function's unit, and an OL there as an overload.
 - **Brymen BM78xBT: OL by its text code is an overload** — it was a gap, without the overload alarm.
 - **Damaged frames no longer read 0** — on protocols without a checksum a disturbed digit gave a valid 0 in the graph and the recording; it is a gap now.
 - **UNI-T UT171: small and large values no longer read OL** — 4.7 nF or 12.345 MHz came with an exponent, and its letter counted as overload.

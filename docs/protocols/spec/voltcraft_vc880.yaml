@@ -13,7 +13,8 @@ sources:
 # 0A C, 0B F, 0C/0D DC/AC uA, 0E/0F mA, 10/11 A, 12 AC V low-pass), range
 # ('0'-based, §4.2: with the function the unit), main display 7 ASCII,
 # sub 1 and 2 (7 each), bar (3), status 30-36 (§4.3: 31 REL AVG MIN MAX,
-# 32 HOLD MANUAL OL1 OL2, 33 bit 3 low battery), BE16 sum of bytes 0-36.
+# 32 HOLD MANUAL OL1 OL2, 33 bit 3 low battery, 36 bit 1 setup screen), BE16
+# sum of bytes 0-36.
 #
 # The vectors are SYNTHETIC: frames built from the spec's layout, the
 # displays and functions of dmm-tools' unit tests where named. No capture of
@@ -59,3 +60,11 @@ vectors:
     bytes: AB CD 24 01 0C 30 20 31 32 33 2E 34 35 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 00 00 00 00 00 00 05 46
     reading: {value: "123.45", unit: "uA", range_mode: "auto"}
     expect: {special: "DC"}
+  - source_line: "A number on the setup screen is the menu, no reading (the_setup_screen_is_no_reading)"
+    bytes: AB CD 24 01 00 31 20 31 32 2E 33 34 35 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 00 00 00 00 00 02 05 3D
+    reading: {value: "----", unit: "V", range_mode: "auto", shown: "none"}
+    expect: {special: "DC"}
+  - source_line: "OL with the OL1 bit on the setup screen: no overload either"
+    bytes: AB CD 24 01 06 30 20 20 20 20 20 4F 4C 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 00 04 00 00 00 02 05 34
+    reading: {value: "----", unit: "Ohm", range_mode: "auto", shown: "none"}
+    expect: {special: "OH"}
