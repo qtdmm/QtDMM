@@ -370,12 +370,12 @@ void MainWindow::createViews()
   }
 
   // one checkable action per window: toolbar buttons, menu entries,
-  // shortcuts; Display for the front panels of all meters
-  m_displayAction = new QAction(QIcon::fromTheme("qtdmm-display"), tr("&Display"), this);
+  // shortcuts; LCD for the front panels of all meters
+  m_displayAction = new QAction(QIcon::fromTheme("qtdmm-display"), tr("LC&D"), this);
   m_displayAction->setShortcut(QKeySequence("Ctrl+1"));
   m_displayAction->setCheckable(true);
   m_displayAction->setWhatsThis(
-    tr("<html><head/><body><p><span style=\" font-weight:600;\">Display</span></p>"
+    tr("<html><head/><body><p><span style=\" font-weight:600;\">LCD</span></p>"
        "<p>Show or hide the front panels of all devices connected: the LCD-style digital display, with "
        "the keys of meters that have them.</p></body></html>"));
   connect(m_displayAction, &QAction::toggled, this, [this](bool on)
