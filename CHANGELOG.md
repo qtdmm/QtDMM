@@ -27,6 +27,8 @@
 ### Devices
 
 - **VC-880, VC650BT: the setup screen is no reading** — a number in the menu counted as a measurement in the function's unit, and an OL there as an overload.
+- **UT363BT is an anemometer** — it was listed as an air quality meter.
+- **UT363BT, UT383BT: data sheets** — ranges, resolution and accuracy from their manuals in the Data tab.
 - **TFA AIRCO2NTROL: humidity in %RH** — like the hygrometers; it showed a plain %.
 - **Brymen BM78xBT: OL by its text code is an overload** — it was a gap, without the overload alarm.
 - **Damaged frames no longer read 0** — on protocols without a checksum a disturbed digit gave a valid 0 in the graph and the recording; it is a gap now.

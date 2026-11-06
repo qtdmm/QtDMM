@@ -32,7 +32,8 @@
         "thermometer",
         "luxmeter",
         "environment",
-        "sound_level"
+        "sound_level",
+        "anemometer"
       ]
     },
     "voltcraft": {

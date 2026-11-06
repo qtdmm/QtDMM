@@ -1,0 +1,125 @@
+{
+ "source": "user manual of the UNI-T UT363BT",
+ "device": "ut363bt",
+ "models": [
+  "Uni-Trend UT363BT"
+ ],
+ "model": "UT363BT",
+ "tables": [
+  {
+   "table": "Wind Speed",
+   "page": 1,
+   "input_impedance": null,
+   "overload_protection": null,
+   "notes": [
+    "Ambient temperature 23°C ±5°C, ambient humidity ≤80%RH",
+    "m/s is the standard range; km/h, knots, mph and ft/min are for reference"
+   ],
+   "ranges": [
+    {
+     "range": "0~30 m/s",
+     "resolution": "0.1",
+     "accuracy": [
+      {
+       "freq_range": null,
+       "accuracy": "5%+0.5 m/s"
+      }
+     ]
+    },
+    {
+     "range": "1.4~108 km/h",
+     "resolution": "0.1",
+     "accuracy": [
+      {
+       "freq_range": null,
+       "accuracy": "5%+15"
+      }
+     ]
+    },
+    {
+     "range": "0.7~58 knots",
+     "resolution": "0.1",
+     "accuracy": [
+      {
+       "freq_range": null,
+       "accuracy": "5%+10"
+      }
+     ]
+    },
+    {
+     "range": "0.8~67 mph",
+     "resolution": "0.1",
+     "accuracy": [
+      {
+       "freq_range": null,
+       "accuracy": "5%+10"
+      }
+     ]
+    },
+    {
+     "range": "78~5905 ft/min",
+     "resolution": "1",
+     "accuracy": [
+      {
+       "freq_range": null,
+       "accuracy": "5%+180"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "table": "Temperature",
+   "page": 1,
+   "input_impedance": null,
+   "overload_protection": null,
+   "notes": [
+    "Sensor operating temperature"
+   ],
+   "ranges": [
+    {
+     "range": "-10~50°C",
+     "resolution": "0.1°C",
+     "accuracy": [
+      {
+       "freq_range": null,
+       "accuracy": "2°C"
+      }
+     ]
+    },
+    {
+     "range": "14~122°F",
+     "resolution": "0.2°F",
+     "accuracy": [
+      {
+       "freq_range": null,
+       "accuracy": "4°F"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "table": "Wind Rating",
+   "page": 1,
+   "input_impedance": null,
+   "overload_protection": null,
+   "notes": [
+    "Beaufort scale as reference",
+    "Shown on the meter only: it does not come over Bluetooth"
+   ],
+   "ranges": [
+    {
+     "range": "0~12",
+     "resolution": "1",
+     "accuracy": [
+      {
+       "freq_range": null,
+       "accuracy": "1"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}
