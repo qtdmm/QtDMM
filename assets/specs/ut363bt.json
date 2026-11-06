@@ -105,7 +105,8 @@
    "input_impedance": null,
    "overload_protection": null,
    "notes": [
-    "PUFU wind rating as reference"
+    "Beaufort scale as reference",
+    "Shown on the meter only: it does not come over Bluetooth"
    ],
    "ranges": [
     {
