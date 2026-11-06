@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
 
+#include <QHash>
 #include <QList>
 #include <QObject>
 #include <QPointer>
@@ -29,9 +30,10 @@ class QWidget;
 ///   windows; then the tree stays (and scales) until the set of windows
 ///   changes.
 /// - "Fixed" keeps its tree for good: taken over from an automatic mode, or
-///   derived from the window positions in Free mode. A window shown later
-///   gets a new cell at the edge, a hidden one leaves its space to its
-///   neighbours.
+///   derived from the window positions in Free mode. A hidden or closed
+///   window leaves its space to its neighbours and gets its place back when
+///   it returns under its object name. A new one stands beside the last of
+///   its kind, or at the edge when it is the first.
 /// - "Free" is the classic MDI.
 ///
 /// Ctrl+drag moves a window, also one without title bar. In the arranged
@@ -137,8 +139,9 @@ public:
   static Node deriveTree(const QList<QRect> &rects, double tolerance);
   /// Removes a leaf; its neighbours share its space.
   static bool removeLeaf(Node &node, int leaf);
-  /// Adds a leaf in a new cell at the bottom (or, @p wide, the right) edge.
-  static void addAtEdge(Node &root, int leaf, bool wide);
+  /// Adds a leaf in a new cell at the bottom (or, @p wide, the right) edge;
+  /// with @p first at the top (or left).
+  static void addAtEdge(Node &root, int leaf, bool wide, bool first = false);
   static Node *findLeaf(Node &node, int leaf);
   static QList<int> leaves(const Node &node);
   /// Text form: a name, or H(ratio:child,ratio:child,...) / V(...).
@@ -161,6 +164,20 @@ protected:
   bool eventFilter(QObject *watched, QEvent *event) override;
 
 private:
+  /// Where a window stood that left the tree in Fixed mode.
+  struct Place
+  {
+    QStringList beside;   ///< the object names of the neighbouring cell
+    Qt::Orientation orient = Qt::Vertical;
+    bool before = false;  ///< it stood before that cell
+    double share = 0;     ///< of the split it stood in
+  };
+
+  static Node *covering(Node &node, const QList<int> &ids);
+  void leaveTree(int leaf);
+  bool returnToPlace(int leaf);
+  void addNew(int leaf);
+
   void doArrange();
   QMdiSubWindow *subWindowOf(QObject *object) const;
   QList<int> visibleWindows() const;
@@ -191,6 +208,7 @@ private:
   Node m_root;
   bool m_hasTree = false;
   QList<int> m_treeFor;            ///< the windows m_root was made for (sorted)
+  QHash<QString, Place> m_places;  ///< by object name, while the window is away
   bool m_custom = false;           ///< automatic mode: the user changed the tree
   std::vector<Divider> m_dividers;
 
