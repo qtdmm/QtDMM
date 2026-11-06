@@ -34,7 +34,7 @@
       "expected": {
         "dval": 45.2,
         "val": "45.20",
-        "unit": "%",
+        "unit": "%RH",
         "special": "RH",
         "id": 2,
         "showBar": false,

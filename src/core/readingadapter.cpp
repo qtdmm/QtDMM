@@ -78,7 +78,7 @@ Meaning meaning(const QString &base, const QString &mode, FrameFormat::DataForma
     { "ppm",    Quantity::Unknown,           "ppm" },   // a concentration; of what, the meter says
     { "lx",     Quantity::Illuminance,       "lx" },
     { "fc",     Quantity::Illuminance,       "fc" },    // foot-candle, 1 fc = 10.764 lx
-    { "%RH",    Quantity::RelativeHumidity,  "%" },     // hygrometers; the TFA sensor's plain % below
+    { "%RH",    Quantity::RelativeHumidity,  "%" },     // hygrometers
     { "m/s",    Quantity::WindSpeed,         "m/s" },
     { "dBA",    Quantity::SoundPressureLevel, "dBA" },  // sound level meters, A and C weighting
     { "dBC",    Quantity::SoundPressureLevel, "dBC" },
@@ -89,8 +89,6 @@ Meaning meaning(const QString &base, const QString &mode, FrameFormat::DataForma
       Meaning m{ r.quantity, QString::fromUtf8(r.unit) };
       if (victron && m.quantity == Quantity::DutyCycle)
         m.quantity = Quantity::StateOfCharge;
-      if (tfa && m.quantity == Quantity::DutyCycle)   // the % of the TFA sensor is humidity
-        m.quantity = Quantity::RelativeHumidity;
       if (victron && m.quantity == Quantity::Time)
         m.quantity = Quantity::TimeToGo;
       if (tfa && m.unit == QLatin1String("ppm"))   // the TFA sensor measures CO2
