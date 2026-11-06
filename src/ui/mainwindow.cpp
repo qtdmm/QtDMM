@@ -2224,8 +2224,7 @@ void MainWindow::applyTableSources()
                    [](const LoggedReading &a, const LoggedReading &b) { return a.when < b.when; });
   log->setStore(nullptr);
   log->setMaxRows(rows);
-  for (const LoggedReading &row : std::as_const(merged).mid(qMax(qsizetype(0), merged.size() - rows)))
-    log->store()->logRow(row);
+  log->store()->logRows(merged);
   connectTableSources();
 }
 

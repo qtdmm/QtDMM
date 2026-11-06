@@ -1359,6 +1359,30 @@ int main(int argc, char **argv)
           "another meter's limit column read back: " + err);
   }
 
+  // --- many rows at once: one insert for the table, the newest ones kept ---
+  {
+    RecordingStore store;
+    store.setReadingCapacity(4);
+    QSignalSpy about(&store, &RecordingStore::readingsAboutToInsert);
+    QList<LoggedReading> rows;
+    for (int i = 0; i < 6; ++i)
+    {
+      LoggedReading row;
+      row.value = i;
+      rows << row;
+    }
+    store.logRows(rows);
+    check(about.size() == 1 && about.at(0).at(0).toInt() == 0 && about.at(0).at(1).toInt() == 3,
+          "logRows: one insert of the rows that fit");
+    check(store.readingCount() == 4 && store.readingAt(0).value == 2 && store.readingAt(3).value == 5,
+          "logRows: the newest rows stay");
+    store.logRows(rows.mid(0, 2));
+    check(store.readingCount() == 4 && store.readingAt(0).value == 4 && store.readingAt(3).value == 1,
+          "logRows: the oldest rows make room");
+    store.logRows({});
+    check(about.size() == 2, "logRows: no rows, no insert");
+  }
+
   if (failed)
   {
     qWarning() << failed << "RecordingStore check(s) failed";
