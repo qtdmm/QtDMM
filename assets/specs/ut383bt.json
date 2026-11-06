@@ -1,0 +1,52 @@
+{
+ "source": "user manual of the UNI-T UT383BT",
+ "device": "ut383bt",
+ "models": [
+  "Uni-Trend UT383BT"
+ ],
+ "model": "UT383BT",
+ "tables": [
+  {
+   "table": "Illuminance",
+   "page": 1,
+   "input_impedance": null,
+   "overload_protection": null,
+   "notes": [
+    "Ambient temperature 23°C ±5°C, ambient humidity ≤80%RH",
+    "Measurement range 0~199900 Lux, shifts to the range automatically"
+   ],
+   "ranges": [
+    {
+     "range": "0~9999 Lux",
+     "resolution": "1 Lux",
+     "accuracy": [
+      {
+       "freq_range": null,
+       "accuracy": "4%+8"
+      }
+     ]
+    },
+    {
+     "range": "≥10000 Lux",
+     "resolution": "10 Lux",
+     "accuracy": [
+      {
+       "freq_range": null,
+       "accuracy": "5%+10"
+      }
+     ]
+    },
+    {
+     "range": "≥100000 Lux",
+     "resolution": "100 Lux",
+     "accuracy": [
+      {
+       "freq_range": null,
+       "accuracy": "5%+10"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

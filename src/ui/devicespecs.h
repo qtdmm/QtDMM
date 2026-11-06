@@ -10,7 +10,7 @@
 /// Data tab of a device's info. Most comes from dmm-tools, which transcribed
 /// it from the manuals (tools/update_device_specs.py writes assets/specs);
 /// a file whose "source" is not dmm-tools was written by hand from a manual
-/// (hp570c-app.json, cmt3503.json). The resources have them as ":/specs/<id>.json"; only
+/// (hp570c-app.json, cmt3503.json, ut363bt.json, ut383bt.json). The resources have them as ":/specs/<id>.json"; only
 /// some meters have it.
 namespace DeviceSpecs
 {
