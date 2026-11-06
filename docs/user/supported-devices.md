@@ -264,7 +264,7 @@ meter working, please report it on the
 | Uni-Trend | UT325 ¹ | Thermometer | - | `UniTUT32x` | 2400 8N1 | - | 9999 |
 | Uni-Trend | UT333BT | Air quality meter | - | `UniTiENV` | Bluetooth LE | - | 1000 |
 | Uni-Trend | UT353BT | Sound level meter | - | `UniTiENV` | Bluetooth LE | - | 10000 |
-| Uni-Trend | UT363BT | Air quality meter | - | `UniTiENV` | Bluetooth LE | - | 10000 |
+| Uni-Trend | UT363BT | Anemometer | - | `UniTiENV` | Bluetooth LE | - | 10000 |
 | Uni-Trend | UT382 ¹ | Luxmeter | - | `UniTUT382` | 19200 8N1 | - | 2000 |
 | Uni-Trend | UT383BT | Luxmeter | - | `UniTiENV` | Bluetooth LE | - | 100000 |
 | Uni-Trend | UT60A | Handheld multimeter | FS9721 LP3 | `VC820Continuous` | 2400 8N1 | DTR | 4000 |
@@ -358,4 +358,4 @@ meter working, please report it on the
 
 324 devices across 57 vendors.
 
-By type: Handheld multimeter 242, Bench multimeter 33, Clamp meter 25, Thermometer 6, Air quality meter 5, Generic 4, Luxmeter 3, Battery monitor 2, Solar charge controller 2, Inverter 1, Sound level meter 1.
+By type: Handheld multimeter 242, Bench multimeter 33, Clamp meter 25, Thermometer 6, Air quality meter 4, Generic 4, Luxmeter 3, Battery monitor 2, Solar charge controller 2, Anemometer 1, Inverter 1, Sound level meter 1.
