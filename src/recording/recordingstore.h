@@ -323,6 +323,9 @@ public Q_SLOTS:
   void        logReading(const Reading &reading);
   /// Adds a row as another store logged it (dropped while paused).
   void        logRow(const LoggedReading &row);
+  /// Adds @p rows at once, one insert for the table; the newest when they
+  /// are more than the capacity (dropped while paused).
+  void        logRows(const QList<LoggedReading> &rows);
   /// Empties the readings series.
   void        clearReadings();
   /// A reading from the MeterController: every one goes into the readings

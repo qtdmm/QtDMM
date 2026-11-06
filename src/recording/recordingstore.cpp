@@ -1257,6 +1257,20 @@ void RecordingStore::logRow(const LoggedReading &row)
   Q_EMIT readingsInserted();
 }
 
+void RecordingStore::logRows(const QList<LoggedReading> &rows)
+{
+  if (m_readingsPaused || rows.isEmpty())
+    return;
+  const QList<LoggedReading> kept = rows.mid(qMax<qsizetype>(0, rows.size() - m_readingCapacity));
+  const qsizetype over = m_readings.size() + kept.size() - m_readingCapacity;
+  if (over > 0)
+    removeOldestReadings(int(over));
+  const int at = m_readings.size();
+  Q_EMIT readingsAboutToInsert(at, at + int(kept.size()) - 1);
+  m_readings.append(kept);
+  Q_EMIT readingsInserted();
+}
+
 void RecordingStore::removeOldestReadings(int count)
 {
   Q_EMIT readingsAboutToRemove(0, count - 1);
