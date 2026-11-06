@@ -121,6 +121,32 @@
         "port": "current.dc",
         "special": "DC"
       }
+    },
+    {
+      "comment": "[reverse-engineered-protocol.md (dmm-tools, GPL-3.0-or-later: from Voltcraft's PC software DMSShare.dll, the manuals and Conrad's VC890 protocol; no meter on dmm-tools' bench)] 'A number on the setup screen is the menu, no reading (the_setup_screen_is_no_reading)'",
+      "hex": "AB CD 24 01 00 31 20 31 32 2E 33 34 35 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 00 00 00 00 00 02 05 3D",
+      "expected": {
+        "unit": "V",
+        "range": "AUTO",
+        "hold": false,
+        "val": "----",
+        "noValue": true,
+        "port": "voltage.dc",
+        "special": "DC"
+      }
+    },
+    {
+      "comment": "[reverse-engineered-protocol.md (dmm-tools, GPL-3.0-or-later: from Voltcraft's PC software DMSShare.dll, the manuals and Conrad's VC890 protocol; no meter on dmm-tools' bench)] 'OL with the OL1 bit on the setup screen: no overload either'",
+      "hex": "AB CD 24 01 06 30 20 20 20 20 20 4F 4C 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 00 04 00 00 00 02 05 34",
+      "expected": {
+        "unit": "Ohm",
+        "range": "AUTO",
+        "hold": false,
+        "val": "----",
+        "noValue": true,
+        "port": "resistance",
+        "special": "OH"
+      }
     }
   ]
 }
