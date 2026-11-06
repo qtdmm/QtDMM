@@ -70,6 +70,8 @@ public:
   /// centred with room around it.
   static constexpr double kMinAspect = 1.3;
   static constexpr double kMaxAspect = 2.2;
+  /// Full scale of a sound level (dB): the top of what the sound level meters measure.
+  static constexpr double kSoundFullScale = 130.0;
   /// Where zero sits on the scale.
   enum ScaleMode
   {
