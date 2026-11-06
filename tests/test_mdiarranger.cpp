@@ -478,17 +478,76 @@ static void testArranged()
         "Fixed from Free: meters side by side, graph below across");
   const QString fixedText = arranger.layoutText();
   check(!fixedText.isEmpty(), "Fixed: the tree is saved");
+  const QRect placeOfB = wins[1]->geometry();
   wins[1]->hide();
   QTest::qWait(50);
   check(wins[0]->width() > 900, "Fixed: a hidden window leaves its space to its neighbour");
   wins[1]->show();
   QTest::qWait(50);
-  check(wins[1]->geometry().bottom() > wins[2]->geometry().bottom(), "Fixed: a window shown again gets a cell at the edge");
+  check(wins[1]->geometry() == placeOfB, "Fixed: a window shown again gets its place back");
+
+  // closed for good, and back under its name: the tree stays, in one go and
+  // with the arranger working between
+  auto reopen = [&](QMdiSubWindow *old)
+  {
+    const QString name = old->objectName();
+    delete old;
+    QMdiSubWindow *w = area.addSubWindow(new QLabel(name));
+    w->setObjectName(name);
+    w->show();
+    arranger.addWindow(w, R::Instrument);
+    return w;
+  };
+  wins[1] = reopen(wins[1]);
+  QTest::qWait(50);
+  check(wins[1]->geometry() == placeOfB, "Fixed: reopened at once, it stands where it stood");
+  const QString name = wins[1]->objectName();
+  delete wins[1];
+  arranger.arrange();
+  QTest::qWait(50);
+  check(wins[0]->width() > 900 && wins[2]->width() > 900, "Fixed: a closed window leaves its space");
+  wins[1] = area.addSubWindow(new QLabel(name));
+  wins[1]->setObjectName(name);
+  wins[1]->show();
+  arranger.addWindow(wins[1], R::Instrument);
+  QTest::qWait(50);
+  check(wins[1]->geometry() == placeOfB, "Fixed: added again later, it stands where it stood");
+
+  // both gone, both back: whichever comes first
+  wins[0]->hide();
+  wins[1]->hide();
+  QTest::qWait(50);
+  wins[1]->show();
+  wins[0]->show();
+  QTest::qWait(50);
+  check(wins[1]->geometry() == placeOfB && wins[0]->geometry().right() < wins[1]->geometry().left(),
+        "Fixed: two windows back at once, each in its place");
+
+  // a new instrument stands beside the others, not below the graph
+  QMdiSubWindow *fresh = area.addSubWindow(new QLabel("new"));
+  fresh->setObjectName("new");
+  fresh->show();
+  arranger.addWindow(fresh, R::Instrument);
+  QTest::qWait(50);
+  check(fresh->geometry().top() == wins[1]->geometry().top() && fresh->geometry().left() > wins[1]->geometry().left()
+          && fresh->geometry().bottom() < wins[2]->geometry().top(),
+        "Fixed: a new instrument joins the row of instruments");
+  delete fresh;
+  arranger.arrange();
+  QTest::qWait(50);
   // a resize keeps the proportions
   const double gShare = double(wins[2]->height()) / vp->height();
   area.resize(900, 700);
   QTest::qWait(50);
   check(qAbs(double(wins[2]->height()) / vp->height() - gShare) < 0.02, "Fixed: the cells scale with the area");
+
+  // the first instrument of a tree without any: at the start, above the graph
+  {
+    MdiArranger::Node tree;
+    tree.leaf = 0;
+    MdiArranger::addAtEdge(tree, 1, false, true);
+    check(tree.kids.size() == 2 && tree.kids[0].leaf == 1 && tree.kids[1].leaf == 0, "addAtEdge first: before the rest");
+  }
 }
 
 int main(int argc, char **argv)
