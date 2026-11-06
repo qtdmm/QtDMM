@@ -84,6 +84,8 @@ int main(int argc, char **argv)
   check(near(AnalogMeter::fullScaleFromReading("-1234", 2000), 2000.0), "\"-1234\" @2000 -> 2000");
   check(near(AnalogMeter::fullScaleFromReading("71.5", 6000, "%"), 100.0), "a percentage is a 0..100 scale (SOC \"71.5\" @6000)");
   check(near(AnalogMeter::fullScaleFromReading("50.0", 4000, "%"), 100.0), "duty cycle too");
+  check(near(AnalogMeter::fullScaleFromReading("36.5", 10000, "dBA"), AnalogMeter::kSoundFullScale), "a sound level has no display count");
+  check(near(AnalogMeter::fullScaleFromReading("36.5", 10000, "dBC"), AnalogMeter::kSoundFullScale), "C weighting too");
   check(near(AnalogMeter::fullScaleFromReading("3.856", 4000, "V"), 4.0), "other units keep the count rule");
   check(near(AnalogMeter::fullScaleFromReading("0.000", 6000), 6.0), "\"0.000\" @6000 -> 6");
   check(near(AnalogMeter::fullScaleFromReading("19.99", 2000), 20.0), "\"19.99\" @2000 -> 20");

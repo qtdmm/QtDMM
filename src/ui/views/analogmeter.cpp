@@ -183,8 +183,12 @@ double AnalogMeter::fullScaleFromReading(const QString &value, int counts)
 
 double AnalogMeter::fullScaleFromReading(const QString &value, int counts, const QString &unit)
 {
-  if (SiPrefix::split(unit).baseUnit == QLatin1String("%"))
+  const QString base = SiPrefix::split(unit).baseUnit;
+  if (base == QLatin1String("%"))
     return 100.0;
+  // a level, no count: the display count gave 1000 dB for "36.5"
+  if (base == QLatin1String("dBA") || base == QLatin1String("dBC"))
+    return kSoundFullScale;
   return fullScaleFromReading(value, counts);
 }
 
