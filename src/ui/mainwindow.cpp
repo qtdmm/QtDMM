@@ -233,6 +233,8 @@ MainWindow::MainWindow(QCommandLineParser &parser, QWidget *parent)
   // --connect <id> (--also before 26.4): more of "My devices", after those of last time
   QTimer::singleShot(1000, this, [this, ids = parser.values("connect") + parser.values("also")]
   {
+    // one by one like the workspace's: a view of the next stays with it
+    const QScopedValueRollback<QStringList> opening(m_openingPending, ids);
     for (const QString &id : ids)
     {
       QString error;
