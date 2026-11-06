@@ -128,7 +128,7 @@ protected:
   InstanceWidget    *m_wid;
   /// @name The front panels of the meters connected
   /// One MDI window each (role Instrument), by MeterController::source().
-  /// Its X hides it, the meter stays connected. Display (Ctrl+1) shows and
+  /// Its X hides it, the meter stays connected. LCD (Ctrl+1) shows and
   /// hides them all.
   /// @{
   QMap<QString, QMdiSubWindow *> m_panelWins;

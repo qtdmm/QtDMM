@@ -24,7 +24,7 @@ window, with the node **My devices** (folded at the start: the devices in
 use are under **Bench**; unfold it to take out another). Each entry has a small picture of its
 kind of instrument (handheld, clamp, bench meter, ...) in its maker's
 colours. A device on the bench is bold. A click on
-a device does nothing: **Connect** in its context menu, the button
+a device does nothing: **Use** in its context menu, the button
 **Connect** in its info (a double click), or dragging it onto **Connected
 devices** or onto the windows connects it (see below).
 
@@ -41,13 +41,13 @@ seconds. The readings and why none come are on the front panels, not here.
 One disconnected is grey. A double click or
 *Show front panel* in the context menu brings its front panel back;
 *Info and settings...* there opens its entry of My devices (all its values
-for a look), *Connect*/*Disconnect* connects or disconnects it, *Close* (or
+for a look), *Connect*/*Disconnect* connects or disconnects it, *Remove from bench* (or
 dragging it back onto My devices) puts it back into the cupboard.
 
 ### Several meters: front panels
 
 Each connected meter has its own front panel: its LCD with its keys, as a
-window next to the needle meter; all are alike. **Display** (Ctrl+1) shows
+window next to the needle meter; all are alike. **LCD** (Ctrl+1) shows
 or hides all of them, the X of one only hides it - the meter stays
 connected and keeps recording. **Connect** (F3) and **Reset** (F4, min/max)
 in the toolbar act on the whole bench: Connect is pressed while one device
@@ -150,7 +150,7 @@ The context menu of a device:
   - **Settings**: the meter's settings as in the assistant; with **OK** a
     device connected takes them at once (it connects anew).
 - **Rename** - in place.
-- **Connect** (also the button at the bottom left of its info, or drag it
+- **Use** (also **Connect** at the bottom left of its info, or drag it
   onto **Bench**) - takes the device out of the cupboard, with
   a front panel of its own: it shows its reading there and in **Connected
   devices**, records with the others, is a variable in

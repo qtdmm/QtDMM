@@ -726,7 +726,7 @@ void DeviceSidebar::openMenu(QTreeWidgetItem *item, const QPoint &pos)
   QAction *alarms = menu.addAction(tr("&Alarms..."));
   QAction *limits = menu.addAction(tr("Li&mits..."));
   menu.addSeparator();
-  QAction *close = menu.addAction(QIcon::fromTheme("window-close"), tr("&Close"));
+  QAction *close = menu.addAction(QIcon::fromTheme("window-close"), tr("&Remove from bench"));
   QAction *chosen = menu.exec(pos);
   if (chosen && chosen == info)
     Q_EMIT settingsRequested(id);
@@ -783,7 +783,7 @@ void DeviceSidebar::contextMenuEvent(QContextMenuEvent *event)
   QMenu menu(this);
   QAction *settings = menu.addAction(QIcon::fromTheme("configure"), tr("&Info and settings..."));
   QAction *rename = menu.addAction(tr("&Rename"));
-  QAction *beside = menu.addAction(QIcon::fromTheme("network-connect"), tr("&Connect"));
+  QAction *beside = menu.addAction(QIcon::fromTheme("network-connect"), tr("&Use"));
   beside->setToolTip(tr("Reads it with the other devices connected: recorded with them, in formulas and over SCPI"));
   beside->setEnabled(!isConnected(id));
   menu.addSeparator();
