@@ -50,7 +50,7 @@ std::optional<DmmDecoder::DmmResponse> DecoderTfaAirControl::decode(const QByteA
       m_result.main().id = 2;
       value = std::round(raw / 100.0 * 100.0) / 100.0;
       decimals = 2;
-      m_result.main().unit = "%";
+      m_result.main().unit = "%RH";
       m_result.main().special = "RH";
       break;
     default:
