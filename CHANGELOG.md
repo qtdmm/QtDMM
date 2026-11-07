@@ -95,6 +95,7 @@
 - **Adding or closing a device no longer freezes the program** — with many readings the table was filled again row by row, and the program stood still for up to half a minute, a gap in all recordings. Now it takes a fraction of a second.
 - **Needle meter for sound levels** — it scaled to 1000 dB and the needle stayed at the left; the scale now ends at 130 dB.
 - **Fixed arrangement keeps its layout** — closing a device or changing its settings threw the whole layout away, and a device added again landed below everything. A window that returns now gets its place back, and a new one stands beside its kind.
+- **Benches saved before 26.4** — loading one with a meter connected left the graph empty; it now shows that meter.
 - **Clearer names** — in My devices **Use** instead of Connect, on the bench **Remove from bench** instead of Close, and **LCD** instead of Display in the toolbar and the menu.
 - **A calmer overview strip** — the last digit of a steady value no longer fills the strip below the graph as a square wave: its scale spans at least 2 % of the value. It also moves in small steps instead of with every reading, so the strip stands still in between.
 
