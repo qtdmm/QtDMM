@@ -206,6 +206,7 @@ bool GraphWidget::importCsvFile(const QString &fileName)
 
   Q_EMIT error(fileName);
   update();
+  Q_EMIT fileImported();
   return true;
 }
 

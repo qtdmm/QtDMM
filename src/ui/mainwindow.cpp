@@ -211,13 +211,9 @@ MainWindow::MainWindow(QCommandLineParser &parser, QWidget *parent)
   });
   connect(m_wid, &InstanceWidget::recorderState, this, &MainWindow::updateRecorderActions);
   // a file loaded without a device: the start page makes way for its graph
-  connect(m_wid, &InstanceWidget::recorderState, this, [this]
-  {
-    const bool covered = !m_emptyStart->isHidden();
-    updateEmptyStart();
-    if (covered && m_emptyStart->isHidden())
-      action_Graph->setChecked(true);
-  });
+  connect(m_wid, &InstanceWidget::recorderState, this, &MainWindow::updateEmptyStart);
+  // with or without a device, the graph shows what was loaded
+  connect(m_wid->graph(), &GraphWidget::fileImported, action_Graph, [this] { action_Graph->setChecked(true); });
 
   // Record while a meter is connected
   auto recordable = [this] { connectSLOT(!m_session->controllers().isEmpty()); };

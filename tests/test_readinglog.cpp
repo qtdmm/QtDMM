@@ -334,8 +334,17 @@ int main(int argc, char **argv)
     model->setValueHidden(0, true);
     check(stats->text().contains("Value\u00a02\u00a0(Battery\u00a0current)") && view->model()->rowCount() == 3,
           "value 1 left out: the line is of value 2: " + stats->text());
+    // a reading reaches the line a moment later, many at once in one go
+    const QString before = stats->text();
+    for (int i = 0; i < 5; ++i)
+      model->append(entry(0.8, "0.800", "A", 3 + i, 1));
+    check(stats->text() == before, "the line waits for the readings to come together");
+    QEventLoop wait;
+    QTimer::singleShot(400, &wait, &QEventLoop::quit);
+    wait.exec();
+    check(stats->text() != before && stats->text().contains("8\u00a0reading"), "then it has them: " + stats->text());
     model->setValueHidden(0, false);
-    check(view->model() == model && view->model()->rowCount() == 6, "all shown: the table on the model again");
+    check(view->model() == model && view->model()->rowCount() == 11, "all shown: the table on the model again");
   }
 
   // several meters: their readings in one table with the Device column, the

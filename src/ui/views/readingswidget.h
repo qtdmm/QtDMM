@@ -13,6 +13,7 @@ class QHBoxLayout;
 class QLabel;
 class QSpinBox;
 class QTableView;
+class QTimer;
 class QToolButton;
 
 /// The readings table panel: a ReadingsModel in a table that follows the
@@ -70,6 +71,7 @@ private:
   QCheckBox *m_follow;
   QSpinBox *m_maxRows;
   QLabel *m_stats;
+  QTimer *m_statsTimer;
   QWidget *m_barLeft;                     ///< pause and follow
   QWidget *m_barRight;                    ///< keep, export, clear
   QHBoxLayout *m_row1;              ///< both groups, or the left one

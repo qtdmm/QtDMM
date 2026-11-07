@@ -231,6 +231,10 @@ protected:
   /// the decimal point at @p commaPos, sets unit to prefix+baseUnit and dval
   /// to the value scaled by the prefix. See the DmmChannel contract.
   void formatResultValue(int commaPos, const QString& prefix, const QString& baseUnit);
+  /// For decoders without a checksum, at the end of decode(): a function or
+  /// range byte they do not know set no unit. That frame is damaged, its digits
+  /// are no reading; without this they would count as a valid 0.
+  void noValueWithoutUnit();
   /// Tests bit @p bit (0 = LSB) of byte @p byte of the frame.
   bool bit(const QByteArray &data, int byte, int bit) const;
   /// Copies the ASCII digits data[first..last] into a string, with an
