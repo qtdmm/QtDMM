@@ -25,8 +25,8 @@ use are under **Bench**; unfold it to take out another). Each entry has a small 
 kind of instrument (handheld, clamp, bench meter, ...) in its maker's
 colours. A device on the bench is bold. A click on
 a device does nothing: **Use** in its context menu, the button
-**Connect** in its info (a double click), or dragging it onto **Connected
-devices** or onto the windows connects it (see below).
+**Connect** in its info (a double click), or dragging it onto **Bench** or
+onto the windows connects it (see below).
 
 With a single device the sidebar stays closed; adding the second one opens
 it, and the window remembers whether you leave it open. With no device
@@ -152,8 +152,7 @@ The context menu of a device:
 - **Rename** - in place.
 - **Use** (also **Connect** at the bottom left of its info, or drag it
   onto **Bench**) - takes the device out of the cupboard, with
-  a front panel of its own: it shows its reading there and in **Connected
-  devices**, records with the others, is a variable in
+  a front panel of its own: it shows its reading there and in **Bench**, records with the others, is a variable in
   [calculated values](calculated-values.md) and answers over SCPI
   (`INSTrument`). Greyed while the device is connected; a port another
   device connected uses is not opened twice.

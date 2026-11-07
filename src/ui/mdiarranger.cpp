@@ -440,10 +440,10 @@ QString MdiArranger::layoutText() const
 
 bool MdiArranger::setLayoutText(const QString &text)
 {
-  m_places.clear();
   if (text.trimmed().isEmpty())
   {
     // back to the rule (Fixed: the rule's tree, kept from then on)
+    m_places.clear();
     m_custom = false;
     m_hasTree = false;
     arrange();
@@ -455,6 +455,7 @@ bool MdiArranger::setLayoutText(const QString &text)
   Node tree;
   if (!fromText(text, names, tree))
     return false;
+  m_places.clear();
   m_root = tree;
   m_hasTree = true;
   m_treeFor = leaves(tree);

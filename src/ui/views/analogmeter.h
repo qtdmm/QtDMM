@@ -155,8 +155,9 @@ public:
   /// ("3.856", 4000) -> 4, ("385.6", 4000) -> 400. NaN if the string is not
   /// a number (OL etc.), so the caller keeps the previous scale.
   static double fullScaleFromReading(const QString &value, int counts);
-  /// The same, but a percentage (unit "%": state of charge, duty cycle) is
-  /// always a 0..100 scale, whatever the display count says.
+  /// The same, but a percentage (unit "%": state of charge, duty cycle; "%RH":
+  /// humidity) is always a 0..100 scale, whatever the display count says, and
+  /// a sound level ends at kSoundFullScale.
   static double fullScaleFromReading(const QString &value, int counts, const QString &unit);
   /// True for a unit whose quantity cannot be negative (ppm, %): its scale
   /// starts at 0 also in the modes Bipolar and Auto.
