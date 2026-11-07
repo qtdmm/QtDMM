@@ -18,7 +18,7 @@ qtdmm [options]
 
 ## Several meters at once
 
-One QtDMM reads several meters, all alike. *Connect* in the context menu
+One QtDMM reads several meters, all alike. *Use* in the context menu
 of an entry of [My devices](my-devices.md) (or dragging it onto
 **Bench**, or *Connect* at the end of the assistant *Add
 device*) connects the device in the same QtDMM, with a front panel of its

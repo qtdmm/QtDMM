@@ -10,7 +10,7 @@ printing all work on the calculated value exactly as on a measured one.
 ## Setting it up
 
 1. Put the meters into [My devices](my-devices.md) and connect them in one
-   QtDMM: *Connect* in their context menu in the sidebar (or *Connect* at
+   QtDMM: *Use* in their context menu in the sidebar (or **Connect** at
    the end of *Add device*). The node **Bench** of the sidebar
    (F9) lists them.
 2. Each one is a variable by its name in My devices: lower case, other
