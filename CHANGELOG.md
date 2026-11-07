@@ -113,7 +113,7 @@
 
 ### Platforms and build
 
-- **The Linux AppImage brings Qt 6.8.3** — instead of Ubuntu's Qt 6.4.2; it still runs on systems with glibc 2.39 or newer.
+- **The Linux AppImage brings Qt 6.8.3** — instead of Ubuntu's Qt 6.4.2. It is built on Ubuntu 26.04 now and needs glibc 2.43 or newer; on older systems take the Flatpak.
 - **`compile.sh` builds with another Qt** — `QTDMM_QT_DIR=<Qt directory> ./compile.sh`; CMake prints the Qt version it found.
 - **Qt Multimedia for sound and video** — built in when found (`QTDMM_WITH_MULTIMEDIA`, for the alarm sounds; without it every sound is the system's beep); the Flatpak may play sound.
 
