@@ -307,6 +307,10 @@ public:
   int         readingCount() const { return m_readings.size(); }
   /// Reading @p i, 0 = the oldest.
   const LoggedReading &readingAt(int i) const { return m_readings.at(i); }
+  /// What one last digit of value @p id is worth now, in SI base units: from
+  /// the newest numbers shown (0.001 for "1.234 V" and "0.012 kV" is 1). 0 when
+  /// the readings have none, a file loaded for one.
+  double      displayStep(int id) const;
   /// Readings to keep (at least 1); the oldest go when the series shrinks.
   void        setReadingCapacity(int rows);
   int         readingCapacity() const { return m_readingCapacity; }

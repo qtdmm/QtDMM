@@ -49,9 +49,17 @@ public:
   /// The strip's height in pixels.
   static constexpr int kHeight = 30;
   /// The strip's scale spans at least this part of the value: a steady value
-  /// stays a line, whatever its last digit does. Not around 0, where no part
-  /// of the value says what the last digit is: that takes the meter's resolution.
+  /// stays a line, whatever its last digit does.
   static constexpr double kLeastSpan = 0.02;
+  /// And this many last digits: around 0 no part of the value says what a
+  /// digit is. A real signal is wider and fills the strip as before.
+  static constexpr double kLeastDigits = 10;
+  /// The narrowest span of the scale for values from @p lo to @p hi, @p step
+  /// what one last digit is worth (RecordingStore::displayStep(), 0 = unknown).
+  static double leastSpan(double lo, double hi, double step)
+  {
+    return qMax(qMax(std::abs(lo), std::abs(hi)) * kLeastSpan, step * kLeastDigits);
+  }
   /// The narrowest window a bracket drag asks for (ms).
   static constexpr qint64 kMinWidthMs = 10000;
 
