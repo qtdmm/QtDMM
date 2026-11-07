@@ -18,7 +18,7 @@ body:
     attributes:
       label: QtDMM version
       description: "`qtdmm --version`, or *About* in the main menu."
-      placeholder: 26.3
+      placeholder: 26.4
     validations:
       required: true
   - type: dropdown
