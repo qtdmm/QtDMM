@@ -5,6 +5,7 @@
 ### GUI
 
 - **The repository page links qtdmm.de.**
+- **A file loaded is always shown** — *Import* turns the graph on also with a meter connected, before only the status bar changed.
 
 ## v26.4-rc1 — Many Meters, One Bench (2026-11-08)
 

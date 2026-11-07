@@ -521,6 +521,8 @@ Q_SIGNALS:
   void             liveRequested();
   void             exportData();
   void             importData();
+  /// importCsvFile() loaded a file: it wants to be seen.
+  void             fileImported();
   /// @}
 
 public Q_SLOTS:
