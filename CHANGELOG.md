@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased — 27.1 (not released yet)
+
+### GUI
+
+- **The repository page links qtdmm.de.**
+
 ## v26.4-rc1 — Many Meters, One Bench (2026-11-08)
 
 ### Multi-meter core
