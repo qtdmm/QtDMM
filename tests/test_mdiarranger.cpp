@@ -523,6 +523,40 @@ static void testArranged()
   check(wins[1]->geometry() == placeOfB && wins[0]->geometry().right() < wins[1]->geometry().left(),
         "Fixed: two windows back at once, each in its place");
 
+  // one after the other, back in the same order: not swapped
+  const QRect placeOfA = wins[0]->geometry();
+  for (int i : { 0, 1 })
+  {
+    wins[i]->hide();
+    QTest::qWait(50);
+  }
+  for (int i : { 0, 1 })
+  {
+    wins[i]->show();
+    QTest::qWait(50);
+  }
+  check(wins[0]->geometry() == placeOfA && wins[1]->geometry() == placeOfB,
+        "Fixed: gone one by one and back in that order, each in its place");
+  // closed one by one, too
+  for (int i : { 0, 1 })
+  {
+    const QString gone = wins[i]->objectName();
+    delete wins[i];
+    wins[i] = area.addSubWindow(new QLabel(gone));
+    wins[i]->setObjectName(gone);
+    wins[i]->hide();
+    arranger.arrange();
+    QTest::qWait(50);
+  }
+  for (int i : { 0, 1 })
+  {
+    wins[i]->show();
+    arranger.addWindow(wins[i], R::Instrument);
+    QTest::qWait(50);
+  }
+  check(wins[0]->geometry() == placeOfA && wins[1]->geometry() == placeOfB,
+        "Fixed: closed one by one and added back in that order, each in its place");
+
   // a new instrument stands beside the others, not below the graph
   QMdiSubWindow *fresh = area.addSubWindow(new QLabel("new"));
   fresh->setObjectName("new");

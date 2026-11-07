@@ -87,9 +87,10 @@ for `usb/*`) does that; `usbconfig` lists the attached devices.
 ## The AppImage does not start
 
 The AppImage brings its own Qt, but takes the C library from the system and
-needs **glibc 2.38 or newer**: Ubuntu 24.04, Debian 13, Fedora 39 and later.
-On older systems (Ubuntu 22.04, Debian 12, RHEL 9) it stops at once with
-`version 'GLIBC_2.38' not found`; build QtDMM from the sources there.
+needs **glibc 2.43 or newer**, as on Ubuntu 26.04.
+On older systems (Ubuntu 24.04, Debian 13) it stops at once with
+`version 'GLIBC_2.43' not found`; take the Flatpak there, or build QtDMM from
+the sources.
 
 It contains only the X11 platform plugin. Under Wayland it runs through
 XWayland, unless `QT_QPA_PLATFORM=wayland` is set: then it ends with "no Qt

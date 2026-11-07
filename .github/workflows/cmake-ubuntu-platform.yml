@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04   # the AppImage needs the glibc of this system: a new one is a decision
 
     steps:
     - uses: actions/checkout@v4

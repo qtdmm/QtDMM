@@ -73,6 +73,33 @@ Node *parentOf(Node &n, const Node *child)
   return nullptr;
 }
 
+// Keeps the leaves @p map has a window for, under its index; the others'
+// neighbours share their room. False: nothing of @p n stays.
+bool keepLeaves(Node &n, const QList<int> &map)
+{
+  if (n.isLeaf())
+  {
+    n.leaf = map.value(n.leaf, -1);
+    return n.leaf >= 0;
+  }
+  std::vector<Node> kids;
+  std::vector<double> ratios;
+  double sum = 0;
+  for (size_t i = 0; i < n.kids.size(); ++i)
+    if (keepLeaves(n.kids[i], map))
+    {
+      kids.push_back(n.kids[i]);
+      ratios.push_back(n.ratios[i]);
+      sum += n.ratios[i];
+    }
+  if (kids.empty())
+    return false;
+  for (double &r : ratios)
+    r /= sum;
+  n = splitNode(n.orient, std::move(kids), std::move(ratios));
+  return true;
+}
+
 // @p kid of @p split gets @p leaf beside it, with @p share of the split
 void insertBeside(Node &split, const Node *kid, int leaf, bool before, double share)
 {
@@ -311,7 +338,7 @@ void MdiArranger::setMode(Mode mode)
   const Mode before = m_mode;
   m_mode = mode;
   if (before != mode)
-    m_places.clear();
+    m_savedValid = false;
   if (mode == DisplaysOnTop || mode == DisplaysOnLeft)
   {
     // the rule of the new mode
@@ -443,7 +470,7 @@ bool MdiArranger::setLayoutText(const QString &text)
   if (text.trimmed().isEmpty())
   {
     // back to the rule (Fixed: the rule's tree, kept from then on)
-    m_places.clear();
+    m_savedValid = false;
     m_custom = false;
     m_hasTree = false;
     arrange();
@@ -455,7 +482,7 @@ bool MdiArranger::setLayoutText(const QString &text)
   Node tree;
   if (!fromText(text, names, tree))
     return false;
-  m_places.clear();
+  m_savedValid = false;
   m_root = tree;
   m_hasTree = true;
   m_treeFor = leaves(tree);
@@ -694,66 +721,38 @@ void MdiArranger::addAtEdge(Node &root, int leaf, bool wide, bool first)
   }
 }
 
-// The smallest node with all of @p ids in it; nullptr: not all are in @p node.
-MdiArranger::Node *MdiArranger::covering(Node &node, const QList<int> &ids)
-{
-  const QList<int> in = leaves(node);
-  if (!std::all_of(ids.cbegin(), ids.cend(), [&in](int id) { return in.contains(id); }))
-    return nullptr;
-  for (Node &k : node.kids)
-    if (Node *c = covering(k, ids))
-      return c;
-  return &node;
-}
-
-// Leaf @p leaf leaves the tree; its neighbours share the room, and it notes
-// what it stood beside.
+// Leaf @p leaf leaves the tree, its neighbours share the room. The first to
+// go saves the tree: all who left come back to it, whatever their order.
 void MdiArranger::leaveTree(int leaf)
 {
-  Node *node = findLeaf(m_root, leaf);
-  Node *split = node ? parentOf(m_root, node) : nullptr;
-  if (!split)
+  if (!m_savedValid)
   {
-    m_hasTree = false;
-    return;
+    m_saved = m_root;
+    m_savedNames.clear();
+    for (const QMdiSubWindow *w : std::as_const(m_order))
+      m_savedNames << w->objectName();
+    m_savedValid = true;
   }
-  const size_t at = size_t(node - split->kids.data());
-  Place place;
-  place.orient = split->orient;
-  place.before = at == 0;
-  place.share = split->ratios[at];
-  for (int id : leaves(split->kids[at == 0 ? 1 : at - 1]))
-    place.beside << m_order[id]->objectName();
-  m_places.insert(m_order[leaf]->objectName(), place);
-  removeLeaf(m_root, leaf);
+  if (m_root.isLeaf())
+    m_hasTree = false;
+  else
+    removeLeaf(m_root, leaf);
 }
 
-// Back beside what it stood beside; false: it has no place, or that is gone.
-bool MdiArranger::returnToPlace(int leaf)
+// The saved tree with the windows @p present in it; those no longer there
+// leave their room to their neighbours.
+void MdiArranger::restoreSaved(const QList<int> &present)
 {
-  const QString name = m_order[leaf]->objectName();
-  const auto place = m_places.constFind(name);
-  if (place == m_places.constEnd())
-    return false;
-  const QList<int> inTree = leaves(m_root);
-  QList<int> ids;
-  for (int id : inTree)
-    if (place->beside.contains(m_order[id]->objectName()))
-      ids << id;
-  if (ids.isEmpty())
-    return false;
-  Node *node = covering(m_root, ids);
-  Node *split = parentOf(m_root, node);
-  if (split && split->orient == place->orient)
-    insertBeside(*split, node, leaf, place->before, place->share);
-  else
+  QList<int> map(m_savedNames.size(), -1);
+  for (int i : present)
+    if (const qsizetype at = m_savedNames.indexOf(m_order[i]->objectName()); at >= 0)
+      map[at] = i;
+  Node tree = m_saved;
+  if (keepLeaves(tree, map))
   {
-    const Node old = *node;
-    *node = place->before ? splitNode(place->orient, { leafNode(leaf), old }, { place->share, 1 - place->share })
-                          : splitNode(place->orient, { old, leafNode(leaf) }, { 1 - place->share, place->share });
+    m_root = tree;
+    m_hasTree = true;
   }
-  m_places.remove(name);
-  return true;
 }
 
 // A window new to the tree: beside the last of its kind, along the longer
@@ -761,6 +760,7 @@ bool MdiArranger::returnToPlace(int leaf)
 // start, as the rules have it.
 void MdiArranger::addNew(int leaf)
 {
+  m_savedValid = false;   // the tree is another one now
   const Role role = m_roles[leaf];
   int same = -1;
   for (int id : leaves(m_root))
@@ -908,37 +908,31 @@ void MdiArranger::doArrange()
   {
     // the user's tree: vanished windows leave, returning ones find their
     // place, new ones stand beside their kind
-    if (!m_hasTree)
+    if (!m_hasTree && !m_savedValid)
       byRule(false);
     else
     {
-      for (int i : leaves(m_root))
-        if (!visible.contains(i))
-          leaveTree(i);
+      if (m_hasTree)
+        for (int i : leaves(m_root))
+          if (!visible.contains(i))
+            leaveTree(i);
       const QList<int> inTree = m_hasTree ? leaves(m_root) : QList<int>();
-      QList<int> coming;
+      QList<int> known, coming;
       for (int i : visible)
         if (!inTree.contains(i))
-          coming << i;
+          (m_savedValid && m_savedNames.contains(m_order[i]->objectName()) ? known : coming) << i;
+      if (!known.isEmpty())
+        restoreSaved(inTree + known);
       if (!m_hasTree && !coming.isEmpty())
       {
         m_root = leafNode(coming.takeFirst());
         m_hasTree = true;
       }
-      // those with a place first, again and again: one may stand beside
-      // another that is coming back, too
-      for (bool placed = true; placed;)
-      {
-        placed = false;
-        for (int k = int(coming.size()) - 1; k >= 0; --k)
-          if (returnToPlace(coming[k]))
-          {
-            coming.removeAt(k);
-            placed = true;
-          }
-      }
       for (int i : std::as_const(coming))
         addNew(i);
+      // all back: nothing left to come
+      if (m_savedValid && m_hasTree && leaves(m_root).size() == leaves(m_saved).size())
+        m_savedValid = false;
     }
   }
   else if (!m_hasTree || !m_custom || visible != m_treeFor)
@@ -1012,6 +1006,7 @@ void MdiArranger::dragDropped(QMdiSubWindow *window, const QPoint &global)
     {
       std::swap(a->leaf, b->leaf);
       m_custom = true;   // swapped in place: the ratios stay
+      m_savedValid = false;
     }
   }
   doArrange();   // without a target: back to its cell
@@ -1099,6 +1094,7 @@ bool MdiArranger::dividerEvent(QObject *watched, QEvent *event)
         b -= d;
         m_divLast = p;
         m_custom = true;
+        m_savedValid = false;
         doArrange();
         // keep dragging the same divider (doArrange() made them anew)
         for (const Divider &dv : m_dividers)
