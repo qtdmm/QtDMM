@@ -3,6 +3,7 @@
 #include "recording/recordingstore.h"
 
 #include <QCoreApplication>
+#include <cmath>
 #include <vector>
 
 #include "core/siprefix.h"
@@ -1223,6 +1224,24 @@ bool RecordingStore::trimMain()
   if (dropped)
     Q_EMIT marksChanged();
   return true;
+}
+
+double RecordingStore::displayStep(int id) const
+{
+  constexpr int kLook = 64;   // the newest rows are enough: other values lie between them
+  for (int i = readingCount() - 1; i >= qMax(0, readingCount() - kLook); --i)
+  {
+    const LoggedReading &e = readingAt(i);
+    const QString text = QString(e.text).remove(' ');
+    bool number = false;
+    text.toDouble(&number);
+    if (e.id != id || e.quality != Quality::Valid || !number)
+      continue;
+    const int point = text.indexOf('.');
+    const int decimals = point < 0 ? 0 : int(text.size()) - point - 1;
+    return std::pow(10.0, -decimals) * SiPrefix::factor(SiPrefix::split(e.unit).prefix);
+  }
+  return 0;
 }
 
 void RecordingStore::logReading(const Reading &reading)

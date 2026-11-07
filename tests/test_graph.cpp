@@ -1709,6 +1709,31 @@ int main(int argc, char **argv)
           QString("phosphor: the vertical line at the trigger (%1), got %2 lines").arg(triggerX).arg(vertical().size()));
   }
 
+  // --- overview: around 0 the last digit stays small too ---
+  {
+    RecordingStore store;
+    LoggedReading row;
+    row.text = "0.001";
+    row.unit = "V";
+    row.value = 0.001;
+    check(store.displayStep(0) == 0, "no readings: the step is not known");
+    store.logRow(row);
+    row.id = 1;
+    row.text = "- 012.3";
+    row.unit = "mV";
+    row.value = -0.0123;
+    store.logRow(row);
+    row.text = "OL";
+    row.quality = Quality::Overload;
+    store.logRow(row);
+    check(qFuzzyCompare(store.displayStep(0), 0.001), "step of 0.001 V");
+    check(qFuzzyCompare(store.displayStep(1), 0.0001), "step of 012.3 mV, past the OL");
+    check(store.displayStep(2) == 0, "another value: not known");
+    check(qFuzzyCompare(GraphMinimap::leastSpan(0, 0.001, 0.001), 0.01), "0.000/0.001: ten digits");
+    check(qFuzzyCompare(GraphMinimap::leastSpan(3, 3.0001, 0.0001), 3.0001 * GraphMinimap::kLeastSpan), "at 3 V: the part of the value");
+    check(GraphMinimap::leastSpan(0, 5, 0.001) < 5, "0 to 5 V is wider, the signal fills the strip");
+  }
+
   // --- overview: the last digit of a steady value stays a line, a real
   //          step fills the strip ---
   {
