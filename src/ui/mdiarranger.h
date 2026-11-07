@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
 
-#include <QHash>
 #include <QList>
 #include <QObject>
 #include <QPointer>
@@ -32,8 +31,9 @@ class QWidget;
 /// - "Fixed" keeps its tree for good: taken over from an automatic mode, or
 ///   derived from the window positions in Free mode. A hidden or closed
 ///   window leaves its space to its neighbours and gets its place back when
-///   it returns under its object name. A new one stands beside the last of
-///   its kind, or at the edge when it is the first.
+///   it returns under its object name, unless the tree changed meanwhile. A
+///   new one stands beside the last of its kind, or at the edge when it is
+///   the first.
 /// - "Free" is the classic MDI.
 ///
 /// Ctrl+drag moves a window, also one without title bar. In the arranged
@@ -164,18 +164,8 @@ protected:
   bool eventFilter(QObject *watched, QEvent *event) override;
 
 private:
-  /// Where a window stood that left the tree in Fixed mode.
-  struct Place
-  {
-    QStringList beside;   ///< the object names of the neighbouring cell
-    Qt::Orientation orient = Qt::Vertical;
-    bool before = false;  ///< it stood before that cell
-    double share = 0;     ///< of the split it stood in
-  };
-
-  static Node *covering(Node &node, const QList<int> &ids);
   void leaveTree(int leaf);
-  bool returnToPlace(int leaf);
+  void restoreSaved(const QList<int> &present);
   void addNew(int leaf);
 
   void doArrange();
@@ -208,7 +198,9 @@ private:
   Node m_root;
   bool m_hasTree = false;
   QList<int> m_treeFor;            ///< the windows m_root was made for (sorted)
-  QHash<QString, Place> m_places;  ///< by object name, while the window is away
+  Node m_saved;                    ///< Fixed: the tree when the first window left
+  QStringList m_savedNames;        ///< the windows m_saved's leaves stand for
+  bool m_savedValid = false;       ///< a window is away; changing the tree ends it
   bool m_custom = false;           ///< automatic mode: the user changed the tree
   std::vector<Divider> m_dividers;
 
