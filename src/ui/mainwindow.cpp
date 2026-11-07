@@ -2734,12 +2734,14 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
       for (const QString &text : get("Windows/graph-shown-values", QString()).toString().split(' ', Qt::SkipEmptyParts))
         values << valueOf(text);
     }
-    // without the old window's meter its values are none: the first meter
-    // connected takes the empty graph
+    // a file from before 26.4 names no meter: its values are those of a meter
+    // connected. Without any they are none: the first meter connected takes
+    // the empty graph
+    if (list == QLatin1String("-") && !m_session->controllers().isEmpty())
+      for (ValueRef &v : values)
+        if (v.source.isEmpty())
+          v.source = m_session->controllers().first()->source();
     values.removeIf([](const ValueRef &v) { return v.source.isEmpty(); });
-    // a file from before 26.4 names no meter: one connected stays in the graph
-    if (list == QLatin1String("-") && values.isEmpty() && !m_session->controllers().isEmpty())
-      values << ValueRef(0, m_session->controllers().first()->source());
     m_wid->graph()->setValues(values);
   }
   // the values the readings table leaves out, "1 2", another meter's

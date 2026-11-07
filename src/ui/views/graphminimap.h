@@ -49,7 +49,8 @@ public:
   /// The strip's height in pixels.
   static constexpr int kHeight = 30;
   /// The strip's scale spans at least this part of the value: a steady value
-  /// stays a line, whatever its last digit does.
+  /// stays a line, whatever its last digit does. Not around 0, where no part
+  /// of the value says what the last digit is: that takes the meter's resolution.
   static constexpr double kLeastSpan = 0.02;
   /// The narrowest window a bracket drag asks for (ms).
   static constexpr qint64 kMinWidthMs = 10000;
