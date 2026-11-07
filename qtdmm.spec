@@ -4,10 +4,10 @@
 %global	appid io.github.qtdmm.qtdmm
 
 Name:		qtdmm
-Version:	26.3
+Version:	26.4
 # Für RC's -p -e rcX
 # Sonst -p -e weglassen
-Release:	%autorelease
+Release:	%autorelease -p -e rc1
 Summary:	DMM Readout Software Including a Configurable Recorder
 License:	GPL-3.0-or-later AND LGPL-3.0-or-later
 URL:		https://www.qtdmm.de
@@ -18,7 +18,7 @@ BuildOption:	-DBUILD_TESTING=ON
 # Übersetzungen als eigene Dateien für %%find_lang
 BuildOption:	-DQTDMM_EMBED_TRANSLATIONS=OFF
 # Release-Tag des Quell-Archivs; für RC's %%{version}-rcX
-%global	tag %{version}
+%global	tag %{version}-rc1
 # Copr (.copr/Makefile) setzt hier sein eigenes Archiv aus dem Checkout ein
 Source0:	https://github.com/qtdmm/QtDMM/releases/download/%{tag}/QtDMM-%{tag}.tar.gz
 BuildRequires:	appdata-tools desktop-file-utils gcc-c++

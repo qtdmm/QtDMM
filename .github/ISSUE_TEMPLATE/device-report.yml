@@ -51,7 +51,7 @@ body:
     id: version
     attributes:
       label: QtDMM version and operating system
-      placeholder: 26.3, Windows 11
+      placeholder: 26.4, Windows 11
     validations:
       required: true
   - type: textarea
