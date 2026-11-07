@@ -372,6 +372,38 @@ int main(int argc, char **argv)
       }
     }
 
+    // no checksum: a function or range byte the decoder does not know is a
+    // damaged frame, its digits are no reading and no 0
+    {
+      struct Frames { FrameFormat::DataFormat format; const char *good; QList<const char *> damaged; };
+      const QList<Frames> list = {
+        { FrameFormat::VC940Continuous, "313233343a313130310d0a",
+          { "313233343a313e30310d0a", "313233343a303430310d0a" } },
+        { FrameFormat::CyrustekES51922, "3030303030303b3030303a300d0a",
+          { "3030303030303e3030303a300d0a", "3730303030303b3030303a300d0a" } },
+        { FrameFormat::CyrustekES51962, "30303035383b30303a0d0a",
+          { "30303035383730303a0d0a", "37303035383b30303a0d0a", "37303035383330303a0d0a" } },
+        { FrameFormat::CyrustekES51986, "30303030303b38303a0d0a",
+          { "30303030303738303a0d0a", "37303030303b38303a0d0a" } },
+      };
+      for (const Frames &f : list)
+      {
+        auto d = DmmDecoder::getInstance(f.format);
+        const auto good = d->decode(QByteArray::fromHex(f.good), 0);
+        bool ok = good && !good->main().noValue;
+        for (const char *frame : f.damaged)
+        {
+          const auto r = d->decode(QByteArray::fromHex(frame), 0);
+          ok = ok && r && r->main().noValue;
+        }
+        if (!ok)
+        {
+          qWarning() << "unknown function or range byte is no value:" << f.good;
+          ++problems;
+        }
+      }
+    }
+
     // the HoldPeak HP-570C-APP: the FS9721 frame in two notifications of 7
     // bytes. A lost first half must not glue the second half of the frame
     // before to the next one; the ring wraps as the reader's does.

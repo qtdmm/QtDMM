@@ -7,6 +7,12 @@
 - **The repository page links qtdmm.de.**
 - **A file loaded is always shown** — *Import* turns the graph on also with a meter connected, before only the status bar changed.
 
+### Meters
+
+- **Damaged frames of meters without a checksum are no reading** — ES51922, ES51962, ES51986 and VC940: a function or range byte they do not know gave a valid 0, now the reading is a gap.
+- **ES51962: the 4000 V range** — it was missing, its readings showed as overload.
+- **ES51962: overload compared the wrong bytes** — digits from the first byte on, not the second.
+
 ## v26.4-rc1 — Many Meters, One Bench (2026-11-08)
 
 ### Multi-meter core

@@ -119,6 +119,12 @@ void DmmDecoder::formatResultValue(int commaPos, const QString& prefix, const QS
   m_result.main().unit = prefix + baseUnit;
 }
 
+void DmmDecoder::noValueWithoutUnit()
+{
+  if (m_result.main().unit.isEmpty())
+    m_result.main().noValue = true;
+}
+
 QString DmmDecoder::makeValue(const QByteArray &data, int first, int last, bool neg)
 {
   QString val = neg ? "-" : "";

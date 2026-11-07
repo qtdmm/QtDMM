@@ -142,5 +142,6 @@ std::optional<DmmDecoder::DmmResponse> DecoderCyrusTekES51922::decode(const QByt
     m_result.main().val  = "OL";
     m_result.main().dval = 0;
   }
+  noValueWithoutUnit();
   return m_result;
 }
