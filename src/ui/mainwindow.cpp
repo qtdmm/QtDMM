@@ -2737,6 +2737,9 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
     // without the old window's meter its values are none: the first meter
     // connected takes the empty graph
     values.removeIf([](const ValueRef &v) { return v.source.isEmpty(); });
+    // a file from before 26.4 names no meter: one connected stays in the graph
+    if (list == QLatin1String("-") && values.isEmpty() && !m_session->controllers().isEmpty())
+      values << ValueRef(0, m_session->controllers().first()->source());
     m_wid->graph()->setValues(values);
   }
   // the values the readings table leaves out, "1 2", another meter's
