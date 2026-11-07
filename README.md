@@ -34,6 +34,8 @@ Website with downloads and the online handbook: **<https://qtdmm.de>**,
 contact: <hello@qtdmm.de>.
 Source code and bug reports: <https://github.com/qtdmm/QtDMM>.
 
+![QtDMM with five meters on one bench: front panels, a needle meter and the graph](docs/user/bench-five-meters.png)
+
 ## Features
 
 - Transient Recorder
