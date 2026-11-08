@@ -60,6 +60,7 @@ int main(int argc, char **argv)
   write(dir.filePath("Bench/project.json"), "{\"name\": \"mine\"}");
   check(BasketWidget::writeProjectFile(dir.filePath("Bench")), "project.json there: fine");
   check(project.open(QIODevice::ReadOnly) && project.readAll().contains("mine"), "and left as it was");
+  project.close();   // Windows keeps an open file from being replaced
 
   // the description: set, the other keys stay; a basket without project.json gets one
   check(BasketWidget::setProjectDescription(dir.filePath("Bench"), "Ripple of the 12 V supply"), "description set");
