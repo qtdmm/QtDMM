@@ -1,0 +1,11 @@
+  <xyCurve name="${NAME}">
+   <comment />
+   <general xColumn="${X}" yColumn="${Y}" plotRangeIndex="0" legendVisible="1" visible="1" />
+   <lines type="1" skipGaps="0" increasingXOnly="0" interpolationPointsCount="1" style="1" color_r="${R}" color_g="${G}" color_b="${B}" width="3.52778" opacity="1" />
+   <dropLines type="0" style="1" color_r="${R}" color_g="${G}" color_b="${B}" width="3.52778" opacity="1" />
+   <symbols symbolsStyle="0" opacity="1" rotation="0" size="17.6389" brush_style="1" brush_color_r="28" brush_color_g="113" brush_color_b="216" style="1" color_r="${R}" color_g="${G}" color_b="${B}" width="0" />
+   <values type="0" valuesColumn="" position="0" distance="17.6389" rotation="0" opacity="1" numericFormat="f" dateTimeFormat="yyyy-MM-dd" precision="2" prefix="" suffix="" color_r="${R}" color_g="${G}" color_b="${B}" fontFamily="Noto Sans" fontSize="-1" fontPointSize="28.2222" fontWeight="400" fontItalic="0" />
+   <filling position="0" type="0" colorStyle="0" imageStyle="1" brushStyle="1" firstColor_r="255" firstColor_g="255" firstColor_b="255" secondColor_r="0" secondColor_g="0" secondColor_b="0" fileName="" opacity="1" />
+   <errorBars xErrorType="0" xErrorPlusColumn="" xErrorMinusColumn="" yErrorType="0" yErrorPlusColumn="" yErrorMinusColumn="" type="0" capSize="35.2778" style="1" color_r="${R}" color_g="${G}" color_b="${B}" width="3.52778" opacity="1" />
+   <margins rugEnabled="0" rugOrientation="2" rugLength="17.6389" rugWidth="0" rugOffset="0" />
+  </xyCurve>

@@ -1,0 +1,15 @@
+  <cartesianPlotLegend name="legend">
+   <comment />
+   <general color_r="0" color_g="0" color_b="0" fontFamily="Noto Sans" fontSize="-1" fontPointSize="28" fontWeight="400" fontItalic="0" columnMajor="1" lineSymbolWidth="100" visible="1" />
+   <geometry x="0" y="0" horizontalPosition="2" verticalPosition="0" horizontalAlignment="2" verticalAlignment="0" rotationAngle="0" plotRangeIndex="0" visible="1" coordinateBinding="0" logicalPosX="0" logicalPosY="0" />
+   <textLabel name="legend">
+    <comment />
+    <geometry x="0" y="0" horizontalPosition="1" verticalPosition="0" horizontalAlignment="1" verticalAlignment="0" rotationAngle="0" plotRangeIndex="0" visible="1" coordinateBinding="0" logicalPosX="0" logicalPosY="0" />
+    <text />
+    <format placeholder="0" mode="0" fontFamily="Noto Sans" fontSize="-1" fontPointSize="28" fontWeight="400" fontItalic="0" fontColor_r="0" fontColor_g="0" fontColor_b="0" />
+    <border borderShape="0" style="1" color_r="0" color_g="0" color_b="0" width="1" borderOpacity="1" />
+   </textLabel>
+   <background type="0" colorStyle="0" imageStyle="1" brushStyle="1" firstColor_r="255" firstColor_g="255" firstColor_b="255" secondColor_r="0" secondColor_g="0" secondColor_b="0" fileName="" opacity="1" />
+   <border style="1" color_r="0" color_g="0" color_b="0" width="0" borderOpacity="1" borderCornerRadius="0" />
+   <layout topMargin="20" bottomMargin="20" leftMargin="20" rightMargin="20" verticalSpacing="10" horizontalSpacing="10" columnCount="1" />
+  </cartesianPlotLegend>

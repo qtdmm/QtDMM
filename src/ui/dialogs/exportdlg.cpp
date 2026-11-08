@@ -32,6 +32,7 @@ QList<QPair<QString, QString>> ExportDlg::formats(What what)
       return { { "csv", tr("CSV, on the recording's grid") }, { kEveryReading, tr("CSV, every reading") },
                { "xlsx", tr("Excel (xlsx)") }, { "ods", tr("OpenDocument (ods)") },
                { RecordingFile::kSuffix, tr("QtDMM recording, with the marks") },
+               { RecordingFile::kLabPlotProjectSuffix, tr("LabPlot project, with a graph") },
                { RecordingFile::kLabPlotSuffix, tr("CSV for LabPlot, numbers only") } };
     case Table:
       return { { "csv", tr("CSV") }, { "xlsx", tr("Excel (xlsx)") }, { "ods", tr("OpenDocument (ods)") } };
@@ -76,7 +77,8 @@ ExportDlg::ExportDlg(What what, const QString &basket, Settings *cfg, QWidget *p
   where->addLayout(fileRow);
   form->addRow(tr("Where to:"), where);
   m_labPlot = new QCheckBox(tr("Then open in &LabPlot"), this);
-  m_labPlot->setToolTip(tr("LabPlot (labplot.org) imports the recording for analysis: fits, statistics, plots"));
+  m_labPlot->setToolTip(tr("LabPlot (labplot.org) opens the recording as a project with a graph, for analysis: fits, "
+                           "statistics, plots"));
   form->addRow(QString(), m_labPlot);
 
   auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
@@ -100,9 +102,9 @@ ExportDlg::ExportDlg(What what, const QString &basket, Settings *cfg, QWidget *p
   m_file->setText(QDir::toNativeSeparators(QDir(dir).filePath(tr("export"))));
   connect(m_file, &QLineEdit::textEdited, this, [this] { m_toFile->setChecked(true); });
   connect(m_what, &QComboBox::currentIndexChanged, this, &ExportDlg::fillFormats);
-  // LabPlot takes the format made for it: the one goes with the other
+  // LabPlot opens its project: the one goes with the other
   m_labPlot->setChecked(what == Recording && m_cfg->getBool("Export/labplot", false)
-                        && format() == QLatin1String(RecordingFile::kLabPlotSuffix));
+                        && format() == QLatin1String(RecordingFile::kLabPlotProjectSuffix));
   m_labPlot->setEnabled(what == Recording);
   connect(m_what, &QComboBox::currentIndexChanged, this, [this]
   {
@@ -113,11 +115,11 @@ ExportDlg::ExportDlg(What what, const QString &basket, Settings *cfg, QWidget *p
   connect(m_labPlot, &QCheckBox::toggled, this, [this](bool on)
   {
     if (on)
-      m_format->setCurrentIndex(m_format->findData(QString(RecordingFile::kLabPlotSuffix)));
+      m_format->setCurrentIndex(m_format->findData(QString(RecordingFile::kLabPlotProjectSuffix)));
   });
   connect(m_format, &QComboBox::currentIndexChanged, this, [this]
   {
-    if (format() != QLatin1String(RecordingFile::kLabPlotSuffix))
+    if (format() != QLatin1String(RecordingFile::kLabPlotProjectSuffix))
       m_labPlot->setChecked(false);
   });
 }

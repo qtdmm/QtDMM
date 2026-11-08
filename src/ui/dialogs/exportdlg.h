@@ -29,7 +29,7 @@ public:
   ExportDlg(What what, const QString &basket, Settings *cfg, QWidget *parent = nullptr);
 
   What        what() const;
-  /// The file suffix of the format: csv, xlsx, ods, qtdmm-rec, labplot.csv,
+  /// The file suffix of the format: csv, xlsx, ods, qtdmm-rec, lml, labplot.csv,
   /// png, svg, pdf, jpg.
   QString     format() const;
   /// CSV with every reading instead of the recording's grid.
@@ -38,7 +38,7 @@ public:
   bool        toBasket() const;
   /// The file chosen, with the format's suffix.
   QString     file() const;
-  /// Open the recording in LabPlot once written (the format for LabPlot).
+  /// Open the recording in LabPlot once written (as a LabPlot project).
   bool        openInLabPlot() const;
 
   void        accept() override;

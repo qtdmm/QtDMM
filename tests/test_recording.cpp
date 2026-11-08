@@ -10,6 +10,7 @@
 #include <QJsonArray>
 #include <QJsonObject>
 
+#include "recording/labplotproject.h"
 #include "recording/recordingfile.h"
 #include "recording/zipfile.h"
 #include "core/sampletypes.h"
@@ -302,6 +303,79 @@ int main(int argc, char **argv)
       lpFile.close();
       check(text == "time[s];Sim A: value [V];Sim B: value [A]\n0;1.5;\n0.1;;0.25\n0.2;0.002;0.5\n",
             "LabPlot CSV: " + text);
+
+      // a LabPlot project: the same columns, a plot per unit, a legend where two share one
+      RecordingColumn third;
+      third.device = "Sim/C";   // a slash would split LabPlot's path
+      third.unit = "V";
+      third.values = { 1.0, 2.0, 3.0 };
+      third.states = { CellState::Ok, CellState::Ok, CellState::Ok };
+      lp.extra << third;
+      const QString lmlPath = tmp.filePath("probe.lml");
+      check(RecordingFile::writeAny(lp, lmlPath, &err), "LabPlot project written: " + err);
+      QFile lml(lmlPath);
+      check(lml.open(QIODevice::ReadOnly), "LabPlot project there");
+      QXmlStreamReader xml(&lml);
+      QStringList columns, curves, plots, ranges;
+      QHash<QString, QVector<double>> numbers;
+      int legends = 0;
+      QString projectName, current, column;
+      while (!xml.atEnd())
+      {
+        xml.readNext();
+        if (xml.isCharacters() && !column.isEmpty() && !xml.isWhitespace())
+        {
+          const QByteArray raw = QByteArray::fromBase64(xml.text().toLatin1());
+          QVector<double> v(raw.size() / 8);
+          for (int i = 0; i < v.size(); ++i)
+            v[i] = qFromLittleEndian<double>(raw.constData() + i * 8);
+          numbers[column] = v;
+        }
+        if (xml.isEndElement() && xml.name() == u"column")
+          column.clear();
+        if (!xml.isStartElement())
+          continue;
+        const QXmlStreamAttributes a = xml.attributes();
+        if (xml.name() == u"project")
+          projectName = a.value("name").toString();
+        else if (xml.name() == u"column")
+        {
+          column = a.value("name").toString();
+          columns << column + "/" + a.value("designation").toString();
+        }
+        else if (xml.name() == u"cartesianPlot")
+          plots << a.value("name").toString();
+        else if (xml.name() == u"cartesianPlotLegend")
+          ++legends;
+        else if (xml.name() == u"yRange")
+          ranges << a.value("start").toString() + ".." + a.value("end").toString();
+        else if (xml.name() == u"general" && a.hasAttribute("yColumn"))
+          curves << a.value("yColumn").toString();
+        else if (xml.name() == u"current")
+          current = a.value("path").toString();
+      }
+      check(!xml.hasError(), "LabPlot project: well-formed XML " + xml.errorString());
+      check(projectName == "probe" && current == "probe/Graph",
+            "LabPlot project named like the file, graph in front: " + current);
+      check(columns == QStringList({ "time[s]/1", "Sim A: value [V]/2", "Sim B: value [A]/2", "Sim-C: value [V]/2" }),
+            "LabPlot project: columns " + columns.join(", "));
+      const QVector<double> simA = numbers.value("Sim A: value [V]");
+      check(numbers.value("time[s]") == QVector<double>({ 0, 0.1, 0.2 }) && simA.size() == 3 && std::isnan(simA[1])
+              && simA[2] == 0.002,
+            "LabPlot project: the numbers, NaN where none");
+      check(plots == QStringList({ "V", "A" }) && legends == 1,
+            "LabPlot project: a plot per unit, legend where two share: " + plots.join(", "));
+      const QStringList onColumns{ "probe/Data/Sim A: value [V]", "probe/Data/Sim-C: value [V]",
+                                   "probe/Data/Sim B: value [A]" };
+      check(curves == onColumns,
+            "LabPlot project: curves on the columns " + curves.join(", "));
+      check(ranges == QStringList({ "0..3", "0.25..0.5" }),
+            "LabPlot project: y ranges rounded out " + ranges.join(", "));
+      using LabPlotProject::niceRange;
+      check(niceRange(0.2, 0.3) == std::pair(0.2, 0.3) && niceRange(4.7, 5.1) == std::pair(4.7, 5.1)
+              && niceRange(0, 99.5) == std::pair(0.0, 100.0) && niceRange(5, 5) == std::pair(4.4, 5.6)
+              && niceRange(qQNaN(), qQNaN()) == std::pair(0.0, 1.0),
+            "nice ranges");
     }
   }
 

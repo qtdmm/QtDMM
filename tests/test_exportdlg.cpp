@@ -23,7 +23,7 @@ int main(int argc, char **argv)
   QTemporaryDir tmp;
   Settings cfg("exportdlg", tmp.path());
 
-  check(ExportDlg::formats(ExportDlg::Recording).size() == 6 && ExportDlg::formats(ExportDlg::Table).size() == 3
+  check(ExportDlg::formats(ExportDlg::Recording).size() == 7 && ExportDlg::formats(ExportDlg::Table).size() == 3
           && ExportDlg::formats(ExportDlg::Picture).first().first == "png", "formats of each kind");
 
   {
@@ -60,13 +60,18 @@ int main(int argc, char **argv)
     auto *labPlot = dlg.findChild<QCheckBox *>();
     auto *fileEdit = dlg.findChild<QLineEdit *>();
     labPlot->setChecked(true);
-    check(dlg.openInLabPlot() && dlg.format() == "labplot.csv", "LabPlot: its format " + dlg.format());
+    check(dlg.openInLabPlot() && dlg.format() == "lml", "LabPlot: its project " + dlg.format());
     fileEdit->setText(tmp.filePath("rec"));
+    check(dlg.file() == tmp.filePath("rec.lml"), "the project's suffix: " + dlg.file());
+    auto combos = dlg.findChildren<QComboBox *>();
+    combos[1]->setCurrentIndex(combos[1]->findData(QString("labplot.csv")));
+    check(!dlg.openInLabPlot(), "the CSV for LabPlot: not opened");
     check(dlg.file() == tmp.filePath("rec.labplot.csv"), "two dots: " + dlg.file());
     fileEdit->setText(tmp.filePath("rec.labplot.csv"));
     check(dlg.file() == tmp.filePath("rec.labplot.csv"), "not twice: " + dlg.file());
+    labPlot->setChecked(true);
+    fileEdit->setText(tmp.filePath("rec"));
     dlg.accept();
-    auto combos = dlg.findChildren<QComboBox *>();
     combos[1]->setCurrentIndex(0);
     check(!dlg.openInLabPlot(), "another format: no LabPlot");
     combos[0]->setCurrentIndex(1);   // the table
