@@ -21,8 +21,11 @@ The basket stays open until you open or close another, also across
 restarts and when you load a bench from somewhere else.
 
 A basket is a plain folder. QtDMM puts a `project.json` into a new one,
-with its name and when it was made; it is kept for what a project needs
-beyond its files.
+with its name, a description and when it was made; it is kept for what a
+project needs beyond its files.
+
+**Description...** in the menu at the basket's name says what the project
+is about; the window shows it under the name.
 
 ## Putting files in
 

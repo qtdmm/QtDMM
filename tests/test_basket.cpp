@@ -6,6 +6,7 @@
 #include <QApplication>
 #include <QDir>
 #include <QFile>
+#include <QJsonObject>
 #include <QSignalSpy>
 #include <QTemporaryDir>
 
@@ -59,6 +60,16 @@ int main(int argc, char **argv)
   write(dir.filePath("Bench/project.json"), "{\"name\": \"mine\"}");
   check(BasketWidget::writeProjectFile(dir.filePath("Bench")), "project.json there: fine");
   check(project.open(QIODevice::ReadOnly) && project.readAll().contains("mine"), "and left as it was");
+
+  // the description: set, the other keys stay; a basket without project.json gets one
+  check(BasketWidget::setProjectDescription(dir.filePath("Bench"), "Ripple of the 12 V supply"), "description set");
+  QJsonObject p = BasketWidget::readProject(dir.filePath("Bench"));
+  check(p.value("description").toString() == "Ripple of the 12 V supply" && p.value("name").toString() == "mine",
+        "description in, name kept");
+  QDir().mkpath(dir.filePath("Other"));
+  check(BasketWidget::setProjectDescription(dir.filePath("Other"), "x")
+          && BasketWidget::readProject(dir.filePath("Other")).value("format").toInt() == 1, "made first when missing");
+  check(BasketWidget::readProject(dir.filePath("none")).isEmpty(), "no project.json: empty");
 
   if (failed == 0)
     qInfo() << "All basket tests passed.";

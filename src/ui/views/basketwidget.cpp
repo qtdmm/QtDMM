@@ -13,12 +13,14 @@
 #include <QFileInfo>
 #include <QFileSystemModel>
 #include <QHBoxLayout>
+#include <QInputDialog>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QLabel>
 #include <QMenu>
 #include <QMimeData>
 #include <QPushButton>
+#include <QSaveFile>
 #include <QStackedWidget>
 #include <QStyle>
 #include <QToolButton>
@@ -42,6 +44,8 @@ BasketWidget::BasketWidget(QWidget *parent) :
   connect(m_newAction, &QAction::triggered, this, &BasketWidget::newSLOT);
   connect(m_openAction, &QAction::triggered, this, &BasketWidget::openSLOT);
   connect(m_closeAction, &QAction::triggered, this, [this] { setFolder(QString()); });
+  m_describeAction = new QAction(tr("&Description..."), this);
+  connect(m_describeAction, &QAction::triggered, this, &BasketWidget::describeSLOT);
 
   // no basket open: what it is and how to get one
   auto *none = new QWidget(m_pages);
@@ -73,7 +77,8 @@ BasketWidget::BasketWidget(QWidget *parent) :
   m_title->setToolButtonStyle(Qt::ToolButtonTextOnly);
   m_title->setAutoRaise(true);
   auto *baskets = new QMenu(m_title);
-  baskets->addActions({ m_newAction, m_openAction, m_closeAction });
+  baskets->addActions({ m_describeAction, m_newAction, m_openAction, m_closeAction });
+  baskets->insertSeparator(m_newAction);
   m_title->setMenu(baskets);
   // icons only: the window is often a narrow column
   auto *add = new QToolButton(page);
@@ -98,6 +103,10 @@ BasketWidget::BasketWidget(QWidget *parent) :
   bar->addWidget(add);
   bar->addWidget(open);
   layout->addLayout(bar);
+  m_description = new QLabel(page);
+  m_description->setWordWrap(true);
+  m_description->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
+  layout->addWidget(m_description);
   m_empty = new QLabel(tr("Empty. Drop files here or add them with Add..."), page);
   m_empty->setAlignment(Qt::AlignCenter);
   m_empty->setWordWrap(true);
@@ -186,6 +195,38 @@ bool BasketWidget::writeProjectFile(const QString &dir)
   return file.open(QIODevice::WriteOnly) && file.write(QJsonDocument(project).toJson()) > 0;
 }
 
+QJsonObject BasketWidget::readProject(const QString &dir)
+{
+  QFile file(QDir(dir).filePath("project.json"));
+  if (!file.open(QIODevice::ReadOnly))
+    return {};
+  return QJsonDocument::fromJson(file.readAll()).object();
+}
+
+bool BasketWidget::setProjectDescription(const QString &dir, const QString &text)
+{
+  if (!writeProjectFile(dir))
+    return false;
+  QJsonObject project = readProject(dir);
+  project["description"] = text;
+  QSaveFile file(QDir(dir).filePath("project.json"));
+  return file.open(QIODevice::WriteOnly) && file.write(QJsonDocument(project).toJson()) > 0 && file.commit();
+}
+
+void BasketWidget::describeSLOT()
+{
+  bool ok = false;
+  const QString text = QInputDialog::getMultiLineText(this, tr("Project description"),
+                                                      tr("What the project is about:"),
+                                                      readProject(m_folder).value("description").toString(), &ok);
+  if (!ok)
+    return;
+  if (!setProjectDescription(m_folder, text.trimmed()))
+    Q_EMIT error(tr("Project basket: cannot write %1")
+                   .arg(QDir::toNativeSeparators(QDir(m_folder).filePath("project.json"))));
+  showFolder();
+}
+
 void BasketWidget::openSLOT()
 {
   const QString dir = QFileDialog::getExistingDirectory(this, tr("Open project basket"), m_folder);
@@ -199,6 +240,9 @@ void BasketWidget::showFolder()
   if (m_folder.isEmpty())
     return;
   m_title->setText(QFileInfo(m_folder).fileName());
+  const QString description = readProject(m_folder).value("description").toString();
+  m_description->setText(description);
+  m_description->setVisible(!description.isEmpty());
   m_title->setToolTip(QDir::toNativeSeparators(m_folder));
   // a folder that is not there yet shows nothing, not the whole disk
   const bool there = QFileInfo(m_folder).isDir();
