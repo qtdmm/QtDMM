@@ -162,8 +162,9 @@ public Q_SLOTS:
   void        importSLOT();
   /// Loads @p path into the graph as importSLOT() does, without the dialog.
   bool        importFile(const QString &path);
-  /// Writes what Export writes into @p file, without the dialog (CSV).
-  bool        writeRecordingTo(const QString &file);
+  /// Writes what Export writes into @p file, without the dialog; the format
+  /// by its suffix (csv, xlsx, ods), @p everyReading instead of the grid.
+  bool        writeRecordingTo(const QString &file, bool everyReading = false);
   /// Settings dialog OK/Apply: re-reads the configuration (readConfig()).
   void        applySLOT();
 

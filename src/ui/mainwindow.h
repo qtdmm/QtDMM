@@ -240,6 +240,8 @@ protected:
   QAction    *m_basketAction = nullptr;
   QAction    *m_graphToBasket = nullptr;   ///< the recording and the graph into the project basket
   QAction    *m_tableToBasket = nullptr;   ///< the readings into the project basket
+  QAction    *m_graphExport = nullptr;     ///< the export dialog, from the graph (Ctrl+Shift+E)
+  QAction    *m_tableExport = nullptr;     ///< the export dialog, from the readings table
   QAction    *m_addDeviceAction = nullptr;
   QDockWidget   *m_sidebarDock = nullptr;
   QElapsedTimer  m_designApplied;          ///< since setDesign(): its own palette change is no switch
@@ -420,6 +422,8 @@ protected:
   void        graphToBasket();
   /// The readings table as CSV, into the project basket.
   void        tableToBasket();
+  /// The export dialog (ExportDlg::What @p view preselected), then writes.
+  void        exportDialog(int view);
   /// A free path in the project basket: date, time, the leading device, @p what.
   QString     basketName(const QString &what, const QString &suffix) const;
   /// The workspaces used last, shared by all instances (workspaces.conf).
