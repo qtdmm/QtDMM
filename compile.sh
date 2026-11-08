@@ -147,7 +147,14 @@ then
 		file="$(basename ${tool}).AppImage"
 		if [ ! -x "${file}" ]
 		then
-			wget -q --https-only "https://github.com/linuxdeploy/$(dirname ${tool})/releases/download/continuous/${file}" || exit 1
+			# a failed download says so: wget -q alone ends the build without a word
+			url="https://github.com/linuxdeploy/$(dirname ${tool})/releases/download/continuous/${file}"
+			if ! wget -q --https-only --tries=3 --waitretry=10 --retry-on-http-error=502,503,504 "${url}"
+			then
+				echo "download failed: ${url}" >&2
+				rm -f "${file}"
+				exit 1
+			fi
 			chmod +x "${file}"
 		fi
 	done
