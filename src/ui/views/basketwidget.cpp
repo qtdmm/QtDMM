@@ -93,8 +93,13 @@ BasketWidget::BasketWidget(QWidget *parent) :
   m_title->setToolButtonStyle(Qt::ToolButtonTextOnly);
   m_title->setAutoRaise(true);
   auto *baskets = new QMenu(m_title);
-  baskets->addActions({ m_describeAction, m_exportAction, m_newAction, m_openAction, m_importAction, m_closeAction });
-  baskets->insertSeparator(m_newAction);
+  baskets->addAction(m_describeAction);
+  baskets->addSeparator();
+  baskets->addActions({ m_newAction, m_openAction });
+  baskets->addSeparator();
+  baskets->addActions({ m_importAction, m_exportAction });
+  baskets->addSeparator();
+  baskets->addAction(m_closeAction);
   m_title->setMenu(baskets);
   // icons only: the window is often a narrow column
   auto *add = new QToolButton(page);
