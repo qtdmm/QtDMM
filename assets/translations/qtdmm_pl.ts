@@ -798,109 +798,129 @@
 <context>
     <name>BasketWidget</name>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="32"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="34"/>
         <source>Project basket</source>
         <translation>Teczka projektu</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="39"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="41"/>
         <source>&amp;New project basket...</source>
         <translation>&amp;Nowa teczka projektu...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="40"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="42"/>
         <source>&amp;Open project basket...</source>
         <translation>&amp;Otwórz teczkę projektu...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="41"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="43"/>
         <source>&amp;Close project basket</source>
         <translation>&amp;Zamknij teczkę projektu</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="49"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="47"/>
+        <source>&amp;Description...</source>
+        <translation>O&amp;pis...</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="53"/>
         <source>A project basket keeps the files of a project: its benches, recordings, pictures, PDFs, LabPlot projects. It is a folder.</source>
         <translation>Teczka projektu zbiera pliki projektu: jego stanowiska pomiarowe, nagrania, obrazy, pliki PDF, projekty LabPlot. Jest to folder.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="80"/>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="290"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="85"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="334"/>
         <source>&amp;Add...</source>
         <translation>&amp;Dodaj...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="84"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="89"/>
         <source>Copy files into the basket</source>
         <translation>Kopiuj pliki do teczki projektu</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="87"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="92"/>
         <source>Open &amp;folder</source>
         <translation>Otwórz &amp;folder</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="91"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="96"/>
         <source>Show the basket in the file manager</source>
         <translation>Pokaż teczkę projektu w menedżerze plików</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="101"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="110"/>
         <source>Empty. Drop files here or add them with Add...</source>
         <translation>Pusto. Upuść tu pliki lub dodaj je przyciskiem Dodaj...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="165"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="174"/>
         <source>New project basket</source>
         <translation>Nowa teczka projektu</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="170"/>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="224"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="179"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="268"/>
         <source>Project basket: cannot make the folder %1</source>
         <translation>Teczka projektu: nie można utworzyć folderu %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="191"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="219"/>
+        <source>Project description</source>
+        <translation>Opis projektu</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="220"/>
+        <source>What the project is about:</source>
+        <translation>Czego dotyczy projekt:</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="225"/>
+        <source>Project basket: cannot write %1</source>
+        <translation>Teczka projektu: nie można zapisać %1</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="232"/>
         <source>Open project basket</source>
         <translation>Otwórz teczkę projektu</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="235"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="279"/>
         <source>Project basket: cannot copy %1</source>
         <translation>Teczka projektu: nie można skopiować %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="246"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="290"/>
         <source>Add to the project basket</source>
         <translation>Dodaj do teczki projektu</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="252"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="296"/>
         <source>No program opens %1</source>
         <translation>Żaden program nie otwiera %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="267"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="311"/>
         <source>&amp;Open</source>
         <translation>&amp;Otwórz</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="274"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="318"/>
         <source>Open &amp;with the system</source>
         <translation>Otwórz &amp;programem systemu</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="276"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="320"/>
         <source>&amp;Rename</source>
         <translation>Zmień &amp;nazwę</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="278"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="322"/>
         <source>Move to &amp;trash</source>
         <translation>Przenieś do &amp;kosza</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="286"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="330"/>
         <source>Project basket: cannot move %1 to the trash</source>
         <translation>Teczka projektu: nie można przenieść %1 do kosza</translation>
     </message>

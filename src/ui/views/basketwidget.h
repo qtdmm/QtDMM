@@ -6,6 +6,7 @@
 #include <QWidget>
 
 class QFileSystemModel;
+class QJsonObject;
 class QModelIndex;
 class QAction;
 class QLabel;
@@ -43,6 +44,11 @@ public:
   /// file for what is not a file of its own (name, description, when it was
   /// made; later what an export of the project needs). False when it fails.
   static bool writeProjectFile(const QString &dir);
+  /// project.json of the basket in @p dir; empty when it has none or it is no JSON.
+  static QJsonObject readProject(const QString &dir);
+  /// Sets the description in project.json of @p dir (made first when missing),
+  /// the other keys stay. False when it cannot be written.
+  static bool setProjectDescription(const QString &dir, const QString &text);
   /// @p name in @p dir if free, else "name (2).ext", "name (3).ext" ...
   static QString freeName(const QString &dir, const QString &name);
 
@@ -60,6 +66,8 @@ public Q_SLOTS:
   void        newSLOT();
   /// Asks for a folder and opens it as the basket.
   void        openSLOT();
+  /// Asks for the description of the open basket's project.
+  void        describeSLOT();
   /// Opens @p path with the program the system has for it.
   void        openWithSystem(const QString &path);
 
@@ -79,6 +87,8 @@ private:
   QAction          *m_newAction;
   QAction          *m_openAction;
   QAction          *m_closeAction;
+  QAction          *m_describeAction;
+  QLabel           *m_description;   ///< of the project, shown under the name
   QToolButton      *m_title;
   QLabel           *m_empty;
   QTreeView        *m_view;
