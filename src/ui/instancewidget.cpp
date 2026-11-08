@@ -560,6 +560,11 @@ void InstanceWidget::importSLOT()
   ui_graph->importDataSLOT();
 }
 
+bool InstanceWidget::importFile(const QString &path)
+{
+  return keepUnsavedData(tr("Loading a file replaces it."), tr("Load without saving")) && ui_graph->importCsvFile(path);
+}
+
 void InstanceWidget::printSLOT()
 {
   m_printDlg->setPrinter(&m_printer);

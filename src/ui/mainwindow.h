@@ -48,6 +48,7 @@ class LogDlg;
 class AnalogMeter;
 class MeterView;
 class PoincareView;
+class BasketWidget;
 class ReadingsWidget;
 class PoincarePlot;
 class AlarmBar;
@@ -220,6 +221,7 @@ protected:
   void        applyPoincareColors(PoincarePlot *plot);
   /// @}
   ReadingsWidget *m_readings;
+  BasketWidget *m_basket;
   PoincarePlot *m_poincare;
   AlarmBar   *m_alarmBar;
   class AlarmService *m_alarmService;
@@ -230,10 +232,12 @@ protected:
   QMdiSubWindow *m_graphWin;
   QMdiSubWindow *m_readingsWin;
   QMdiSubWindow *m_poincareWin;
+  QMdiSubWindow *m_basketWin;
   QAction    *m_displayAction = nullptr;
   QAction    *m_meterAction = nullptr;
   QAction    *m_readingsAction = nullptr;
   QAction    *m_poincareAction = nullptr;
+  QAction    *m_basketAction = nullptr;
   QAction    *m_addDeviceAction = nullptr;
   QDockWidget   *m_sidebarDock = nullptr;
   QElapsedTimer  m_designApplied;          ///< since setDesign(): its own palette change is no switch

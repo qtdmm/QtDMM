@@ -14,6 +14,7 @@ nav:
       - The recorder: user/recorder.md
       - Readings table: user/readings-table.md
       - Poincaré plot: user/poincare-plot.md
+      - Project basket: user/project-basket.md
       - Alarms: user/alarms.md
       - PASS/FAIL limit test: user/limit-test.md
       - Supported devices: user/supported-devices.md

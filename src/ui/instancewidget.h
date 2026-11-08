@@ -160,6 +160,8 @@ public Q_SLOTS:
   void        printSLOT();
   void        exportSLOT();
   void        importSLOT();
+  /// Loads @p path into the graph as importSLOT() does, without the dialog.
+  bool        importFile(const QString &path);
   /// Settings dialog OK/Apply: re-reads the configuration (readConfig()).
   void        applySLOT();
 

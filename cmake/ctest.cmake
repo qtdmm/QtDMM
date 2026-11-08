@@ -148,6 +148,9 @@ if (BUILD_TESTING)
 	## the recorder's CSV formats, without widgets
 	qtdmm_add_test(recording_file test_recording tests/test_recording.cpp "${TEST_DATA}/graph")
 
+	## the project basket: its folder, copies under free names
+	qtdmm_add_test(basket test_basket tests/test_basket.cpp)
+
 	## the readings table model, without its widget
 	qtdmm_add_test(reading_log test_readinglog tests/test_readinglog.cpp)
 
