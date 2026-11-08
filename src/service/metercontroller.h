@@ -74,7 +74,8 @@ public:
   /// recorded with it to @p path (CSV, .xlsx, .ods); they count as saved then.
   bool        writeRecording(const QString &path, bool raw, QString *error = nullptr);
   /// What a QtDMM recording keeps of this meter (meta.json "devices"): its
-  /// name, model, protocol, the values recorded (id, name, unit), the alarms
+  /// name, model, protocol (not of a virtual meter), the values recorded
+  /// (id, unit, quantity as PortKey text, the meter's own name), the alarms
   /// and the limit test - without sounds and commands, which are paths of
   /// this computer.
   QJsonObject recordingInfo() const;

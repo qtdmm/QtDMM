@@ -4,7 +4,7 @@
 
 ### GUI
 
-- **QtDMM recording: the meters in meta.json** — each meter that recorded with its name, model, protocol, values (name, unit), alarms and limit test, and start, end and sample time; a recording loaded and saved again keeps it.
+- **QtDMM recording: the meters in meta.json** — each meter that recorded with its name, model, protocol, values (unit, quantity), alarms and limit test, and start, end and sample time; a recording loaded and saved again keeps it.
 - **Open in LabPlot** — the export dialog writes a CSV for LabPlot (`.labplot.csv`: numbers only, a column per value with its unit, `time[s];Sim A: value [V]`) and with *Then open in LabPlot* starts LabPlot with it (found in the PATH, as Flatpak or set under Settings → General).
 - **Export project** — *Export project...* at the project basket's name packs the basket into a ZIP, with a `project.json` that lists every file with size and SHA-256.
 - **QtDMM recording** (`.qtdmm-rec`) — a format of its own for Export and the export dialog: the recording's CSV and a `meta.json` with the marks in a ZIP; *Import* and a double click in the project basket bring the marks back.
