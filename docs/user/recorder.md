@@ -288,7 +288,9 @@ the quick way, straight to the file dialog:
 - **QtDMM recording** (`.qtdmm-rec`) keeps what a CSV does not: the marks
   (alarms, trigger, your own) and, in its `meta.json`, start, end and
   sample time and each meter that recorded: its name, model and protocol,
-  the values with name and unit, the alarms and the limit test (without
+  the values with unit and quantity (`voltage.dc`, the same in every
+  language) and the meter's own name of a value where it has one, the
+  alarms and the limit test (without
   sounds and commands, which are paths of this computer). It is a ZIP of
   the same CSV (`recording.csv`) and that `meta.json`; *Import* reads it
   back with its marks, and saved again it keeps what it said of the

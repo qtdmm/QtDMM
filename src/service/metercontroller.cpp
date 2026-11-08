@@ -464,14 +464,24 @@ QJsonObject MeterController::recordingInfo() const
     o["name"] = m_deviceName;
   if (!m_model.isEmpty())
     o["model"] = m_model;
-  if (m_dmm->format() != FrameFormat::Invalid)
+  // not of the Simulated meter or a calculated value: how they run inside
+  // QtDMM is no protocol of a meter
+  const DmmDecoder::DMMInfo &info = m_dmm->dmmInfo();
+  if (m_dmm->format() != FrameFormat::Invalid && !MeterSetup::isVirtual(info) && !MeterSetup::isCalculated(info))
     o["protocol"] = FrameFormat::toString(m_dmm->format());
   QJsonArray values;
   auto value = [this, &values](int id, const QString &unit)
   {
+    // the quantity by its key ("voltage.dc"), not in the UI's language; the
+    // meter's own name of it as the meter says it
     QJsonObject v{ { "id", id }, { "unit", unit } };
-    if (const QString name = valueName(id); !name.isEmpty())
-      v["name"] = name;
+    const Reading r = lastReading(id);
+    if (r.msecs > 0)
+    {
+      v["quantity"] = r.port.toString();
+      if (!r.name.isEmpty())
+        v["name"] = r.name;
+    }
     values << v;
   };
   value(0, m_recorder->unit());

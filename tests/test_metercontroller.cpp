@@ -264,7 +264,17 @@ int main(int argc, char **argv)
     t.enabled = true;
     t.highSound = "/home/x/high.wav";
     m.setLimitTest(t);
+    DmmDecoder::DmmResponse r;
+    r.main().dval = 1.5;
+    r.main().val = "1.5";
+    r.main().unit = "V";
+    r.main().special = "DC";
+    Q_EMIT m.findChild<MeterConnection *>()->response(r);
     const QJsonObject info = m.recordingInfo();
+    const QJsonObject v0 = info.value("values").toArray().first().toObject();
+    check(v0.value("quantity") == "voltage.dc" && !v0.contains("name"),
+          "recordingInfo: the quantity by its key, no name the meter did not give: "
+            + QString::fromUtf8(QJsonDocument(v0).toJson(QJsonDocument::Compact)));
     const QJsonObject a = info.value("alarms").toArray().first().toObject();
     check(info.value("name") == "Bench" && info.value("model") == "UNI-T UT61E"
             && info.value("values").toArray().first().toObject().value("id").toInt() == 0,

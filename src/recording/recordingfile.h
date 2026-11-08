@@ -63,7 +63,7 @@ struct Recording
   QList<RecordingColumn> extra;
   /// What a QtDMM recording (*.qtdmm-rec) keeps beyond the columns, its
   /// meta.json: "marks" [{t ms since start, color "#aarrggbb", name}],
-  /// "devices" [{name, model, protocol, values [{id, name, unit}], alarms,
+  /// "devices" [{name, model, protocol, values [{id, unit, quantity, name}], alarms,
   /// limit-test}] (MeterController::recordingInfo()) and what the writer
   /// adds (format, qtdmm, written, start, end, sample-time in s). Empty for
   /// a CSV.
