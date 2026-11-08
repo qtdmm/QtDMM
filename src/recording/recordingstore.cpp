@@ -308,9 +308,12 @@ qint64 RecordingStore::offsetOf(const RecordingStore &other) const
 }
 
 Recording RecordingStore::toRecording(bool raw, const QList<int> &extras, const QList<Foreign> &foreign,
-                                       const QString &device) const
+                                       const QString &device, const QJsonObject &info) const
 {
   Recording rec;
+  rec.meta = m_fileInfo;
+  for (auto it = info.begin(); it != info.end(); ++it)
+    rec.meta[it.key()] = it.value();
   rec.sampleTimeTenths = m_sampleTime;
   rec.unit = m_unit;
   rec.device = device;
@@ -459,9 +462,9 @@ Recording RecordingStore::toRecording(bool raw, const QList<int> &extras, const 
 }
 
 bool RecordingStore::write(const QString &path, QString *error, bool raw, const QList<int> &extras,
-                           const QList<Foreign> &foreign, const QString &device)
+                           const QList<Foreign> &foreign, const QString &device, const QJsonObject &info)
 {
-  if (!RecordingFile::writeAny(toRecording(raw, extras, foreign, device), path, error))
+  if (!RecordingFile::writeAny(toRecording(raw, extras, foreign, device, info), path, error))
     return false;
   m_dirty = false;
   for (const Foreign &f : foreign)
@@ -537,7 +540,11 @@ void RecordingStore::load(const Recording &rec)
   m_fromFile = true;
   m_stopT = -1;
   m_dirty = false;
-  // a QtDMM recording brings its marks back
+  // a QtDMM recording brings its marks back, and keeps what it says of its
+  // devices for the next export
+  m_fileInfo = rec.meta;
+  for (const char *written : { "marks", "format", "qtdmm", "written", "start", "end", "sample-time" })
+    m_fileInfo.remove(QLatin1String(written));
   for (const QJsonValue &v : rec.meta.value("marks").toArray())
   {
     const QJsonObject m = v.toObject();
@@ -1140,6 +1147,7 @@ void RecordingStore::clear()
   m_stopT = m_state != View ? -1 : 0;
   m_loadedGrid = 0;
   m_fromFile = false;
+  m_fileInfo = QJsonObject();
   m_integral = 0;
   m_dirty = false;
   Q_EMIT cleared();

@@ -4,6 +4,7 @@
 
 #include <QColor>
 #include <QElapsedTimer>
+#include <QJsonObject>
 #include <QObject>
 #include <QString>
 #include <array>
@@ -72,6 +73,11 @@ public:
   /// Writes the recording with all values of this meter and of those that
   /// recorded with it to @p path (CSV, .xlsx, .ods); they count as saved then.
   bool        writeRecording(const QString &path, bool raw, QString *error = nullptr);
+  /// What a QtDMM recording keeps of this meter (meta.json "devices"): its
+  /// name, model, protocol, the values recorded (id, name, unit), the alarms
+  /// and the limit test - without sounds and commands, which are paths of
+  /// this computer.
+  QJsonObject recordingInfo() const;
   /// The meters whose recordings saveRecording() writes along (DeviceSession:
   /// those that recorded with this one), their names before the columns.
   void        setRecordedWith(std::function<QList<MeterController *>()> meters) { m_recordedWith = std::move(meters); }

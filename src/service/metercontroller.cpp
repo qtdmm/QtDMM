@@ -8,6 +8,7 @@
 #include <QDateTime>
 #include <QDir>
 #include <QFileInfo>
+#include <QJsonArray>
 #include <QHostInfo>
 #include <QProcess>
 #include <QTimer>
@@ -441,6 +442,7 @@ bool MeterController::writeRecording(const QString &path, bool raw, QString *err
     extras << i;
   // all values of the meters that recorded with it
   QList<RecordingStore::Foreign> foreign;
+  QJsonArray devices{ recordingInfo() };
   for (MeterController *other : m_recordedWith ? m_recordedWith() : QList<MeterController *>())
   {
     RecordingStore *store = other->recorder();
@@ -450,8 +452,52 @@ bool MeterController::writeRecording(const QString &path, bool raw, QString *err
         ids << store->extra(i).id;
     for (int id : std::as_const(ids))
       foreign << RecordingStore::Foreign{ store, id, other->deviceName() };
+    devices << other->recordingInfo();
   }
-  return m_recorder->write(path, error, raw, extras, foreign, m_deviceName);
+  return m_recorder->write(path, error, raw, extras, foreign, m_deviceName, QJsonObject{ { "devices", devices } });
+}
+
+QJsonObject MeterController::recordingInfo() const
+{
+  QJsonObject o;
+  if (!m_deviceName.isEmpty())
+    o["name"] = m_deviceName;
+  if (!m_model.isEmpty())
+    o["model"] = m_model;
+  if (m_dmm->format() != FrameFormat::Invalid)
+    o["protocol"] = FrameFormat::toString(m_dmm->format());
+  QJsonArray values;
+  auto value = [this, &values](int id, const QString &unit)
+  {
+    QJsonObject v{ { "id", id }, { "unit", unit } };
+    if (const QString name = valueName(id); !name.isEmpty())
+      v["name"] = name;
+    values << v;
+  };
+  value(0, m_recorder->unit());
+  for (int i = 0; i < m_recorder->extraCount(); ++i)
+    value(m_recorder->extra(i).id, m_recorder->extra(i).unit);
+  o["values"] = values;
+  // what an alarm watches and when it rings, not what it does here
+  static const char *const local[] = { "sound", "clear-sound", "command" };
+  QJsonArray alarms;
+  for (const Alarm &al : m_alarms->alarms())
+  {
+    QJsonObject a = al.toJson();
+    for (const char *key : local)
+      a.remove(QLatin1String(key));
+    alarms << a;
+  }
+  if (!alarms.isEmpty())
+    o["alarms"] = alarms;
+  if (m_limitTest.enabled)
+  {
+    QJsonObject t = m_limitTest.toJson();
+    for (const char *key : { "high-sound", "low-sound", "pass-sound" })
+      t.remove(QLatin1String(key));
+    o["limit-test"] = t;
+  }
+  return o;
 }
 
 QString MeterController::valueName(int id) const

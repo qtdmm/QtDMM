@@ -249,6 +249,33 @@ int main(int argc, char **argv)
     check(errors.filter("----").isEmpty() && marks.size() == 1, "dashes: no message, no mark");
   }
 
+  // what a QtDMM recording keeps of the meter: not the sounds and commands,
+  // paths of this computer
+  {
+    MeterController m;
+    m.setDevice("ab12", "Bench");
+    m.setModel("UNI-T UT61E");
+    Alarm al;
+    al.name = "hot";
+    al.sound = "/home/x/ring.wav";
+    al.command = "notify-send hot";
+    m.setAlarms({ al });
+    LimitTest t;
+    t.enabled = true;
+    t.highSound = "/home/x/high.wav";
+    m.setLimitTest(t);
+    const QJsonObject info = m.recordingInfo();
+    const QJsonObject a = info.value("alarms").toArray().first().toObject();
+    check(info.value("name") == "Bench" && info.value("model") == "UNI-T UT61E"
+            && info.value("values").toArray().first().toObject().value("id").toInt() == 0,
+          "recordingInfo: name, model, the main value");
+    check(a.value("name") == "hot" && !a.contains("sound") && !a.contains("command"),
+          "recordingInfo: the alarm without its sound and command");
+    check(info.value("limit-test").toObject().value("enabled").toBool()
+            && !info.value("limit-test").toObject().contains("high-sound"),
+          "recordingInfo: the limit test without its sounds");
+  }
+
   // two meters, one ServiceHost: one server, INSTrument chooses the meter
   {
     ServiceHost host;
