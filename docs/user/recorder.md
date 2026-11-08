@@ -278,6 +278,13 @@ only; *Default* goes back to the setting.
 
 ## Export and import
 
+**Export...** (Ctrl+Shift+E, also in the context menus of the graph and the
+readings table) asks in one dialog what to export - the recording, the
+readings table or a picture of the graph -, in which format, and where to:
+a file, or the open [project basket](project-basket.md) with a name made of
+date, time and device. It keeps the last choice. *Export* (Ctrl+E) stays
+the quick way, straight to the file dialog:
+
 *Export* (Ctrl+E) writes the recording on the grid of **Sample every** as
 CSV, or - pick the file type in the dialog or just name the file `.xlsx` /
 `.ods` - as an Excel or OpenDocument spreadsheet with the same columns.

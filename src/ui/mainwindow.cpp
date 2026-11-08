@@ -77,6 +77,7 @@ static const char *kWorkspaceSuffix = "qtdmm-workspace";
 #include "ui/shortcuts.h"
 #include "service/devicesession.h"
 #include "core/workspacefile.h"
+#include "ui/dialogs/exportdlg.h"
 #include "ui/dialogs/workspacedlg.h"
 #include <QBuffer>
 #include <QMdiArea>
@@ -373,6 +374,7 @@ void MainWindow::createViews()
   connect(m_basket, &BasketWidget::folderChanged, this, [this](const QString &folder)
   {
     m_wid->settings()->setString("Basket/folder", folder);
+    m_wid->settings()->save();   // set only stages it: the next start reads the file
     // without a basket everything is as before
     for (QAction *a : { m_graphToBasket, m_tableToBasket })
       a->setVisible(!folder.isEmpty());
@@ -500,9 +502,17 @@ void MainWindow::createViews()
   connect(m_tableToBasket, &QAction::triggered, this, &MainWindow::tableToBasket);
   for (QAction *a : { m_graphToBasket, m_tableToBasket })
     a->setVisible(!m_basket->folder().isEmpty());
-  m_wid->graph()->setWindowActions({ hideWindow(m_graphWin), m_graphSources, m_graphToBasket });
+  // what, which format, where to, in one dialog; Ctrl+E stays the quick way
+  m_graphExport = new QAction(tr("E&xport..."), this);
+  m_graphExport->setObjectName("action_ExportDialog");
+  m_graphExport->setShortcut(QKeySequence("Ctrl+Shift+E"));
+  m_graphExport->setToolTip(tr("Export the recording, the readings or a picture: format and place in a dialog"));
+  connect(m_graphExport, &QAction::triggered, this, [this] { exportDialog(ExportDlg::Recording); });
+  m_tableExport = new QAction(m_graphExport->text(), this);
+  connect(m_tableExport, &QAction::triggered, this, [this] { exportDialog(ExportDlg::Table); });
+  m_wid->graph()->setWindowActions({ hideWindow(m_graphWin), m_graphSources, m_graphToBasket, m_graphExport });
   m_wid->graph()->setPrintAction(action_Print);
-  m_readings->setWindowActions({ hideWindow(m_readingsWin), m_tableSources, m_tableToBasket });
+  m_readings->setWindowActions({ hideWindow(m_readingsWin), m_tableSources, m_tableToBasket, m_tableExport });
   m_displayAction->setObjectName("action_WindowDisplay");
   m_meterAction->setObjectName("action_WindowMeter");
   m_readingsAction->setObjectName("action_WindowReadings");
@@ -1482,7 +1492,7 @@ void MainWindow::createExtraActions()
               m_fullScreen, m_toolbars, m_zoomIn, m_zoomOut, m_zoomFit, m_copyImage,
               // no buttons of their own: the keys stay, the graph's menu has them
               action_Connect, action_Reset, action_Record, action_Live, action_Clear,
-              action_Export, action_Import, action_Print});
+              action_Export, m_graphExport, action_Import, action_Print});
 }
 
 // Every command that may have a key, in the groups of the page Keyboard;
@@ -1497,7 +1507,7 @@ void MainWindow::createShortcuts(const QList<QAction *> &workspace)
     m_shortcuts->add(a, meter);
   m_shortcuts->add(action_Record, recording, tr("Record / Stop"));
   for (QAction *a : { action_Live, action_Clear, m_zoomIn, m_zoomOut, m_zoomFit, m_copyImage, action_Export,
-                      action_Import, action_Print })
+                      m_graphExport, action_Import, action_Print })
     m_shortcuts->add(a, recording);
   for (QAction *a : { m_sidebarAction, m_displayAction, m_meterAction, m_newMeterAction, action_Graph,
                       m_readingsAction, m_poincareAction, m_newPoincareAction, m_basketAction, m_titleBars, m_toolbars,
@@ -2953,6 +2963,36 @@ void MainWindow::graphToBasket()
     Q_EMIT m_wid->error(tr("Project basket: cannot write %1").arg(QDir::toNativeSeparators(png)));
   else
     Q_EMIT m_wid->error(tr("Into the project basket: %1").arg(QFileInfo(csv).completeBaseName()));
+}
+
+void MainWindow::exportDialog(int view)
+{
+  ExportDlg dlg(static_cast<ExportDlg::What>(view), m_basket->folder(), m_wid->settings(), this);
+  if (dlg.exec() != QDialog::Accepted)
+    return;
+  QString path = dlg.file();
+  if (dlg.toBasket())
+    path = basketName(dlg.what() == ExportDlg::Table     ? tr("readings")
+                      : dlg.what() == ExportDlg::Picture ? tr("graph")
+                                                         : tr("recording"), dlg.format());
+  bool ok = false;
+  QString error;
+  switch (dlg.what())
+  {
+    case ExportDlg::Recording:
+      ok = m_wid->writeRecordingTo(path, dlg.everyReading());   // says why itself
+      break;
+    case ExportDlg::Table:
+      ok = m_readings->log()->writeAny(path, &error);
+      break;
+    case ExportDlg::Picture:
+      ok = m_wid->graph()->exportImageFile(path);
+      break;
+  }
+  if (ok)
+    Q_EMIT m_wid->error(tr("Exported to %1").arg(QDir::toNativeSeparators(path)));
+  else if (dlg.what() != ExportDlg::Recording)
+    Q_EMIT m_wid->error(tr("Export failed: %1").arg(error.isEmpty() ? QDir::toNativeSeparators(path) : error));
 }
 
 void MainWindow::tableToBasket()

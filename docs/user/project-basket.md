@@ -35,6 +35,8 @@ is about; the window shows it under the name.
   recording as CSV and the graph as a picture; in the readings table it
   writes the readings as CSV. The names begin with date and time and the
   device, `2026-11-08 0714 UT61E recording.csv`.
+- **Export...** (Ctrl+Shift+E) can write any format into the basket, see
+  [Export and import](recorder.md#export-and-import).
 - **Save bench...** and **Load bench...** start in the basket while one is
   open.
 

@@ -535,17 +535,17 @@ QPointer<MeterController> InstanceWidget::recordingLead() const
   return lead;
 }
 
-bool InstanceWidget::writeRecordingTo(const QString &file)
+bool InstanceWidget::writeRecordingTo(const QString &file, bool everyReading)
 {
   QString err;
   if (QPointer<MeterController> lead = recordingLead())
   {
-    if (lead->writeRecording(file, false, &err))
+    if (lead->writeRecording(file, everyReading, &err))
       return true;
   }
   else if (ui_graph->store()->count() <= 0)
     err = tr("nothing recorded");
-  else if (ui_graph->exportCsvFile(file))
+  else if (ui_graph->exportCsvFile(file, everyReading))
     return true;
   else
     return false;   // the graph said why
