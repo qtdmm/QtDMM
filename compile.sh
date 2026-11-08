@@ -147,7 +147,15 @@ then
 		file="$(basename ${tool}).AppImage"
 		if [ ! -x "${file}" ]
 		then
-			wget -q --https-only "https://github.com/linuxdeploy/$(dirname ${tool})/releases/download/continuous/${file}" || exit 1
+			# a failed download says so; it used to end the build without a word
+			url="https://github.com/linuxdeploy/$(dirname ${tool})/releases/download/continuous/${file}"
+			# HTTPS only, also where GitHub redirects the release download to
+			if ! curl -fsSL --proto '=https' --proto-redir '=https' --retry 3 --retry-delay 10 -o "${file}" "${url}"
+			then
+				echo "download failed: ${url}" >&2
+				rm -f "${file}"
+				exit 1
+			fi
 			chmod +x "${file}"
 		fi
 	done
