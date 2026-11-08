@@ -4,6 +4,7 @@
 
 ### GUI
 
+- **QtDMM recording** (`.qtdmm-rec`) — a format of its own for Export and the export dialog: the recording's CSV and a `meta.json` with the marks in a ZIP; *Import* and a double click in the project basket bring the marks back.
 - **Export dialog** — *Export...* (Ctrl+Shift+E, in the context menus of graph and table) asks what (recording, readings table, picture of the graph), the format (CSV on the grid or every reading, xlsx, ods; PNG, SVG, PDF, JPEG) and where to (a file or the open project basket), and keeps the last choice. *Export* (Ctrl+E) stays the quick way.
 - **The open project basket is remembered** — it was kept only until the settings were saved for another reason.
 - **Project basket** — optional: a folder with the files of a project, its benches, recordings, pictures, PDFs, LabPlot projects, as a window (Ctrl+6). Made or opened in the window, new ones in the folder set under Settings → General. Files dropped in are copied; *Into the project basket* in the graph and the table writes the recording, a picture of the graph or the readings; a double click loads a bench or a recording, anything else opens in its program. *Description...* at the basket's name describes the project (in `project.json`), shown under its name.

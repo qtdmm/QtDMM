@@ -406,7 +406,8 @@ bool plainFileName(const QString &name)
   const QString suffix = QFileInfo(name).suffix().toLower();
   return chars.match(name).hasMatch() && !name.startsWith('.') && !name.endsWith('.') && !name.endsWith(' ')
          && !device.match(name.section('.', 0, 0).trimmed()).hasMatch()
-         && (suffix.isEmpty() || suffix == "csv" || suffix == "xlsx" || suffix == "ods");
+         && (suffix.isEmpty() || suffix == "csv" || suffix == "xlsx" || suffix == "ods"
+             || suffix == RecordingFile::kSuffix);
 }
 }
 
@@ -415,7 +416,7 @@ QString MeterController::saveRecording(const QString &name, bool raw)
   // a client on the network names a file, no place: only into the folder
   // for recordings, and nothing there is overwritten
   if (!plainFileName(name))
-    return "-257,File name error; a file name only, .csv, .xlsx or .ods: " + name;
+    return "-257,File name error; a file name only, .csv, .xlsx, .ods or .qtdmm-rec: " + name;
   if (m_recorder->state() == RecordingStore::Record)
     return "-221,Settings conflict; recording, stop it first";
   if (m_recorder->state() != RecordingStore::View || m_recorder->count() == 0)

@@ -102,21 +102,26 @@ bool GraphWidget::exportDataSLOT()
 QString GraphWidget::askExportFile(bool *raw)
 {
   QFileInfo fileInfo(m_cfg->getString("QtDMM/LastUsesPath"));
-  QStringList validSuffixes = { "csv", "xlsx", "ods" };
+  QStringList validSuffixes = { "csv", "xlsx", "ods", RecordingFile::kSuffix };
   QString fnSuffix = validSuffixes.contains(fileInfo.suffix()) ? fileInfo.suffix() : "csv";
   QString fn = fileInfo.baseName().isEmpty() ? "untitled." + fnSuffix : fileInfo.absolutePath() + "/untitled." + fnSuffix;
   const QString csvFilter = tr("CSV (*.csv)"), xlsxFilter = tr("Excel (*.xlsx)"), odsFilter = tr("OpenDocument (*.ods)");
+  // the CSV with what it does not keep (marks), in a ZIP
+  const QString qtdmmFilter = tr("QtDMM recording (*.%1)").arg(RecordingFile::kSuffix);
   // every reading at its time instead of the sample time's grid
   const QString rawFilter = tr("CSV, every reading (*.csv)");
-  QString filter = fnSuffix == "xlsx" ? xlsxFilter : fnSuffix == "ods" ? odsFilter : csvFilter;
+  QString filter = fnSuffix == "xlsx" ? xlsxFilter : fnSuffix == "ods" ? odsFilter
+                 : fnSuffix == RecordingFile::kSuffix ? qtdmmFilter : csvFilter;
   fn = QFileDialog::getSaveFileName(this, tr("Export data"), fn,
-                                    csvFilter + ";;" + xlsxFilter + ";;" + odsFilter + ";;" + rawFilter, &filter);
+                                    csvFilter + ";;" + xlsxFilter + ";;" + odsFilter + ";;" + rawFilter + ";;"
+                                      + qtdmmFilter, &filter);
 
   if (fn.isNull())
     return QString();
   // the chosen filter decides when no suffix was typed
   if (QFileInfo(fn).suffix().isEmpty())
-    fn += filter == xlsxFilter ? ".xlsx" : filter == odsFilter ? ".ods" : ".csv";
+    fn += filter == xlsxFilter ? ".xlsx" : filter == odsFilter ? ".ods"
+          : filter == qtdmmFilter ? QString(".") + RecordingFile::kSuffix : ".csv";
   *raw = filter == rawFilter;
   m_cfg->setString("QtDMM/LastUsesPath", QDir().absoluteFilePath(fn));
   return fn;
@@ -155,7 +160,8 @@ bool GraphWidget::exportCsvFile(const QString &fileName, bool raw)
 void GraphWidget::importDataSLOT()
 {
   // unsaved data: InstanceWidget::importSLOT() asks first
-  QString fn = QFileDialog::getOpenFileName(this, tr("Import data"), m_cfg->getString("QtDMM/LastUsesPath", tr("CSV (*.csv);;All files (*)")));
+  QString fn = QFileDialog::getOpenFileName(this, tr("Import data"), m_cfg->getString("QtDMM/LastUsesPath"),
+                                            tr("Recordings (*.%1 *.csv *.txt);;All files (*)").arg(RecordingFile::kSuffix));
 
   if (!fn.isNull())
     importCsvFile(fn);

@@ -3,6 +3,7 @@
 #pragma once
 
 #include <QDateTime>
+#include <QJsonObject>
 #include <QList>
 #include <QString>
 #include <QStringList>
@@ -60,6 +61,10 @@ struct Recording
   QVector<quint32> limits;
   /// The other values, a column group each (value 2, value 3 ...).
   QList<RecordingColumn> extra;
+  /// What a QtDMM recording (*.qtdmm-rec) keeps beyond the columns, its
+  /// meta.json: "marks" [{t ms since start, color "#aarrggbb", name}] and
+  /// what the writer adds (format, qtdmm, written). Empty for a CSV.
+  QJsonObject meta;
 
   /// The time of value @p i, ms since start.
   qint64 timeAt(int i) const { return times.isEmpty() ? qint64(i) * sampleTimeTenths * 100 : times[i]; }
@@ -98,8 +103,13 @@ struct Recording
 /// (`21.09.2026<TAB>14:03:05[:250]<TAB>value<TAB>unit`). The sample time is
 /// derived from the time span and the row count; a CSV row keeps its time
 /// (Recording::times).
+///
+/// A QtDMM recording (`*.qtdmm-rec`) is a ZIP of that CSV as `recording.csv`
+/// and `meta.json` (Recording::meta): unpacked, the CSV reads anywhere.
 namespace RecordingFile
 {
+/// The suffix of a QtDMM recording.
+inline constexpr const char *kSuffix = "qtdmm-rec";
 /// Reads @p path; on failure returns nothing and sets @p error (translated).
 std::optional<Recording> read(const QString &path, QString *error = nullptr);
 /// Writes @p recording to @p path; false with @p error on failure or when
@@ -107,7 +117,8 @@ std::optional<Recording> read(const QString &path, QString *error = nullptr);
 bool write(const Recording &recording, const QString &path, QString *error = nullptr);
 /// The same columns as an Excel (.xlsx) or OpenDocument (.ods) sheet, with
 /// real date and number cells (SpreadsheetWriter); the format follows the
-/// suffix. Falls back to CSV for any other suffix.
+/// suffix; `.qtdmm-rec` writes a QtDMM recording. Falls back to CSV for any
+/// other suffix.
 bool writeAny(const Recording &recording, const QString &path, QString *error = nullptr);
 
 /// The other meters in @p recording (RecordingColumn::device, not

@@ -3,6 +3,7 @@
 #include "recording/recordingstore.h"
 
 #include <QCoreApplication>
+#include <QJsonArray>
 #include <cmath>
 #include <vector>
 
@@ -447,6 +448,13 @@ Recording RecordingStore::toRecording(bool raw, const QList<int> &extras, const 
       col.limits << (there ? own[j].limit : 0u);
     }
   }
+  // what the columns do not keep, for a QtDMM recording
+  QJsonArray marks;
+  for (const Mark &m : m_marks)
+    marks.append(QJsonObject{ { "t", double(m.t) }, { "color", QString("#%1").arg(m.color, 8, 16, QChar('0')) },
+                              { "name", m.name } });
+  if (!marks.isEmpty())
+    rec.meta["marks"] = marks;
   return rec;
 }
 
@@ -529,6 +537,13 @@ void RecordingStore::load(const Recording &rec)
   m_fromFile = true;
   m_stopT = -1;
   m_dirty = false;
+  // a QtDMM recording brings its marks back
+  for (const QJsonValue &v : rec.meta.value("marks").toArray())
+  {
+    const QJsonObject m = v.toObject();
+    m_marks.append(Mark{ qint64(m.value("t").toDouble()), m.value("color").toString().mid(1).toUInt(nullptr, 16),
+                         m.value("name").toString() });
+  }
   Q_EMIT marksChanged();
   Q_EMIT loaded();
   if (was != View)

@@ -21,7 +21,7 @@ int main(int argc, char **argv)
   QTemporaryDir tmp;
   Settings cfg("exportdlg", tmp.path());
 
-  check(ExportDlg::formats(ExportDlg::Recording).size() == 4 && ExportDlg::formats(ExportDlg::Table).size() == 3
+  check(ExportDlg::formats(ExportDlg::Recording).size() == 5 && ExportDlg::formats(ExportDlg::Table).size() == 3
           && ExportDlg::formats(ExportDlg::Picture).first().first == "png", "formats of each kind");
 
   {

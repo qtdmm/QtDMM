@@ -8,7 +8,7 @@
 #include <QFileInfo>
 #include <QTimeZone>
 
-#include "3rdparty/miniz/miniz.h"
+#include "recording/zipfile.h"
 
 namespace
 {
@@ -214,99 +214,6 @@ QByteArray SpreadsheetWriter::odsContent() const
   return x.toUtf8();
 }
 
-// ---------------------------------------------------------------- zip
-
-namespace
-{
-// A plain ZIP writer: local headers with the sizes known up front, no data
-// descriptors, no extra fields, then the central directory. miniz's own
-// writer sets the data-descriptor flag on every entry, which LibreOffice
-// rejects for the stored "mimetype" entry an ODS must begin with. Deflate
-// and CRC come from miniz.
-class ZipWriter
-{
-public:
-  bool add(const QByteArray &name, const QByteArray &data, bool store)
-  {
-    QByteArray payload;
-    quint16 method = 0;
-    if (!store && !data.isEmpty())
-    {
-      size_t outSize = 0;
-      void *out = tdefl_compress_mem_to_heap(data.constData(), size_t(data.size()), &outSize, TDEFL_DEFAULT_MAX_PROBES);
-      if (!out)
-        return false;
-      payload = QByteArray(static_cast<const char *>(out), int(outSize));
-      mz_free(out);
-      method = 8;
-    }
-    else
-      payload = data;
-    const quint32 crc = quint32(mz_crc32(MZ_CRC32_INIT, reinterpret_cast<const mz_uint8 *>(data.constData()), size_t(data.size())));
-
-    Entry e;
-    e.name = name;
-    e.crc = crc;
-    e.compressed = quint32(payload.size());
-    e.uncompressed = quint32(data.size());
-    e.method = method;
-    e.offset = quint32(m_data.size());
-    m_entries << e;
-
-    // local file header
-    put32(0x04034b50);
-    put16(20);            // version needed
-    put16(0x0800);        // flags: UTF-8 names
-    put16(method);
-    put16(0); put16(0x21);   // time 00:00:00, date 1980-01-01
-    put32(crc);
-    put32(e.compressed);
-    put32(e.uncompressed);
-    put16(quint16(name.size()));
-    put16(0);             // extra
-    m_data += name;
-    m_data += payload;
-    return true;
-  }
-
-  QByteArray finish()
-  {
-    const quint32 cdStart = quint32(m_data.size());
-    for (const Entry &e : m_entries)
-    {
-      put32(0x02014b50);
-      put16(20); put16(20);
-      put16(0x0800);
-      put16(e.method);
-      put16(0); put16(0x21);
-      put32(e.crc);
-      put32(e.compressed);
-      put32(e.uncompressed);
-      put16(quint16(e.name.size()));
-      put16(0); put16(0);   // extra, comment
-      put16(0);             // disk
-      put16(0); put32(0);   // attributes
-      put32(e.offset);
-      m_data += e.name;
-    }
-    const quint32 cdSize = quint32(m_data.size()) - cdStart;
-    put32(0x06054b50);
-    put16(0); put16(0);
-    put16(quint16(m_entries.size())); put16(quint16(m_entries.size()));
-    put32(cdSize);
-    put32(cdStart);
-    put16(0);
-    return m_data;
-  }
-
-private:
-  struct Entry { QByteArray name; quint32 crc, compressed, uncompressed, offset; quint16 method; };
-  void put16(quint16 v) { m_data.append(char(v & 0xff)).append(char(v >> 8)); }
-  void put32(quint32 v) { put16(quint16(v & 0xffff)); put16(quint16(v >> 16)); }
-  QByteArray m_data;
-  QList<Entry> m_entries;
-};
-}
 
 bool SpreadsheetWriter::write(const QString &path, Format format, QString *error) const
 {
