@@ -55,6 +55,7 @@ handbook window are fixed.
 | Ctrl+3 | Show / hide the graph |
 | Ctrl+4 | Show / hide the readings table |
 | Ctrl+5 | Show / hide the Poincaré plot |
+| Ctrl+6 | Show / hide the project basket |
 | F10 | Hide / show the title bars of the windows |
 | Ctrl+M | Hide / show the toolbar |
 | F11 | Full screen on / off |

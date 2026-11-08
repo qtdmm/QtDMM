@@ -4,6 +4,7 @@
 
 ### GUI
 
+- **Project basket** — a window with the files of a bench: recordings, pictures, PDFs, LabPlot projects. It is a folder next to the bench file; files dropped in are copied there, a QtDMM recording opens in the graph with a double click, anything else in its program (Ctrl+6).
 - **The repository page links qtdmm.de.**
 - **A file loaded is always shown** — *Import* turns the graph on also with a meter connected, before only the status bar changed.
 - **The statistics line of the readings table follows four times a second** — not at each reading: it goes over all rows, about half the time of a reading in a full table.

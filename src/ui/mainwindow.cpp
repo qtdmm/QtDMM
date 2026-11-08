@@ -45,6 +45,7 @@
 #include "core/devicelibrary.h"
 #include "core/sampletypes.h"
 #include "core/siprefix.h"
+#include "recording/recordingfile.h"
 #include "recording/recordingstore.h"
 #include "ui/instancewidget.h"
 #include "ui/views/graphwidget.h"
@@ -56,6 +57,7 @@
 #include "ui/settings/guiprefs.h"
 #include "ui/settings/keyboardprefs.h"
 #include "ui/views/analogmeter.h"
+#include "ui/views/basketwidget.h"
 #include "ui/views/readingswidget.h"
 #include "ui/dialogs/logdlg.h"
 #include "ui/dialogs/panelvaluesdlg.h"
@@ -352,6 +354,23 @@ void MainWindow::createViews()
   m_poincare->setWindowTitle(tr("Poincaré plot"));
   m_poincare->setSettings(m_wid->settings());
   m_poincareWin = addView(m_poincare, m_poincare->windowTitle(), MdiArranger::Table, "poincare");
+
+  // the files of the bench, a folder next to its file
+  m_basket = new BasketWidget(this);
+  m_basketWin = addView(m_basket, m_basket->windowTitle(), MdiArranger::Table, "basket");
+  connect(m_basket, &BasketWidget::saveBenchRequested, this, &MainWindow::saveWorkspace);
+  connect(m_basket, &BasketWidget::error, m_wid, &InstanceWidget::error);
+  connect(m_basket, &BasketWidget::openRequested, this, [this](const QString &path)
+  {
+    // a recording of QtDMM into the graph, anything else to its program
+    if (QFileInfo(path).suffix().compare("csv", Qt::CaseInsensitive) == 0 && RecordingFile::read(path).has_value())
+    {
+      if (m_wid->importFile(path))
+        action_Graph->setChecked(true);
+    }
+    else
+      m_basket->openWithSystem(path);
+  });
   m_wid->addPoincare(m_poincare);
 
   // right-click on the meter or the plot: the window's menu (also without title bar)
@@ -416,6 +435,12 @@ void MainWindow::createViews()
     const MeterController *ctl = m_session->controllers().value(0);
     newView(Added::Poincare, ctl ? ValueRef(0, ctl->source()) : ValueRef(), true);
   });
+  m_basketAction = windowAction(m_basketWin, tr("Project b&asket"), "Ctrl+6", "document-open",
+    tr("<html><head/><body><p><span style=\" font-weight:600;\">Project basket</span></p>"
+       "<p>The files of the bench: recordings, pictures, PDFs, LabPlot projects. A folder next to "
+       "the bench file; drop files in to copy them there.</p></body></html>"));
+  if (m_basketAction->icon().isNull())
+    m_basketAction->setIcon(style()->standardIcon(QStyle::SP_DirIcon));
   m_poincareAction = windowAction(m_poincareWin, tr("Poi&ncaré plot"), "Ctrl+5", "qtdmm-poincare",
     tr("<html><head/><body><p><span style=\" font-weight:600;\">Poincaré plot</span></p>"
        "<p>Each reading against the next one: noise widens the cloud across the diagonal, "
@@ -451,6 +476,7 @@ void MainWindow::createViews()
   m_meterAction->setObjectName("action_WindowMeter");
   m_readingsAction->setObjectName("action_WindowReadings");
   m_poincareAction->setObjectName("action_WindowPoincare");
+  m_basketAction->setObjectName("action_WindowBasket");
 
   // a front panel for each meter, also those opened before the window
   connect(m_session, &DeviceSession::opened, this, &MainWindow::addPanel);
@@ -1200,7 +1226,7 @@ void MainWindow::updateEmptyStart()
   const bool empty = m_session->controllers().isEmpty() && m_pendingOpen.isEmpty() && !m_wid->graph()->showsFile();
   m_emptyConnect->setVisible(!m_wid->devices()->list().isEmpty());
   // nothing to see behind the start page; checked stays what comes back
-  for (QAction *a : { m_displayAction, m_meterAction, m_poincareAction, action_Graph, m_readingsAction })
+  for (QAction *a : { m_displayAction, m_meterAction, m_poincareAction, action_Graph, m_readingsAction, m_basketAction })
     a->setEnabled(!empty);
   if (empty)
   {
@@ -1421,7 +1447,7 @@ void MainWindow::createExtraActions()
   // Space (Record) toggles the recorder; Start and Stop have neither a
   // button nor a key of their own any more
   addActions({action_Configure, action_ConfigureDMM, action_Direct_help, action_Help, action_Quit,
-              m_displayAction, m_meterAction, m_readingsAction, m_poincareAction, m_titleBars,
+              m_displayAction, m_meterAction, m_readingsAction, m_poincareAction, m_basketAction, m_titleBars,
               m_fullScreen, m_toolbars, m_zoomIn, m_zoomOut, m_zoomFit, m_copyImage,
               // no buttons of their own: the keys stay, the graph's menu has them
               action_Connect, action_Reset, action_Record, action_Live, action_Clear,
@@ -1443,7 +1469,8 @@ void MainWindow::createShortcuts(const QList<QAction *> &workspace)
                       action_Import, action_Print })
     m_shortcuts->add(a, recording);
   for (QAction *a : { m_sidebarAction, m_displayAction, m_meterAction, m_newMeterAction, action_Graph,
-                      m_readingsAction, m_poincareAction, m_newPoincareAction, m_titleBars, m_toolbars, m_fullScreen })
+                      m_readingsAction, m_poincareAction, m_newPoincareAction, m_basketAction, m_titleBars, m_toolbars,
+                      m_fullScreen })
     m_shortcuts->add(a, windows);
   for (QAction *a : workspace)
     m_shortcuts->add(a, windows);
@@ -1611,6 +1638,7 @@ void MainWindow::on_action_Menu_triggered()
     m_menu->addAction(m_poincareAction);
     m_menu->addAction(action_Graph);
     m_menu->addAction(m_readingsAction);
+    m_menu->addAction(m_basketAction);
     // Arrange has its button next to the menu's; here only while the toolbar is hidden
     m_arrangeEntry = new QAction(m_arrangeMenu->title(), m_menu);
     m_arrangeEntry->setMenu(m_arrangeMenu);
@@ -1751,7 +1779,8 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
   // minimizing the main window hides its children spontaneously; they are
   // not closed, so only explicit show/hide counts (isHidden() stays false)
   if ((event->type() == QEvent::Show || event->type() == QEvent::Hide) && !event->spontaneous())
-    for (QAction *a : { m_displayAction, m_meterAction, m_readingsAction, m_poincareAction, action_Graph })
+    for (QAction *a : { m_displayAction, m_meterAction, m_readingsAction, m_poincareAction, action_Graph,
+                        m_basketAction })
       if (a && a->property("window").value<QObject *>() == watched)
       {
         const bool visible = !static_cast<QWidget *>(watched)->isHidden();
@@ -2691,6 +2720,7 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
   action_Graph->setChecked(get("MainWindow/show-graph", false).toBool());   // a fresh start is a compact instrument
   m_readingsAction->setChecked(get("Windows/readings", false).toBool());
   m_poincareAction->setChecked(get("Windows/poincare", false).toBool());
+  m_basketAction->setChecked(get("Windows/basket", false).toBool());
   m_wid->graph()->setReferenceSetting(get("Windows/graph-reference", QString()).toString());
   m_wid->graph()->setMinimapVisible(get("Windows/graph-minimap", true).toBool());
   m_wid->graph()->setEnvelopeVisible(get("Windows/graph-envelope", false).toBool());
@@ -2763,7 +2793,7 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
     applyTableSources();
   }
   // an unchecked action did not toggle: hide its window explicitly
-  for (QAction *a : { m_meterAction, action_Graph, m_readingsAction, m_poincareAction })
+  for (QAction *a : { m_meterAction, action_Graph, m_readingsAction, m_poincareAction, m_basketAction })
     qobject_cast<QWidget *>(a->property("window").value<QObject *>())->setVisible(a->isChecked());
   if (!m_displayAction->isChecked())
     for (QMdiSubWindow *win : std::as_const(m_panelWins))
@@ -2816,6 +2846,7 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
   set("Windows/meter", m_meterAction->isChecked());
   set("Windows/readings", m_readingsAction->isChecked());
   set("Windows/poincare", m_poincareAction->isChecked());
+  set("Windows/basket", m_basketAction->isChecked());
   set("MainWindow/show-graph", action_Graph->isChecked());
   set("Windows/graph-reference", m_wid->graph()->referenceSetting());
   set("Windows/graph-minimap", m_wid->graph()->minimapVisible());
@@ -3027,6 +3058,7 @@ void MainWindow::setCurrentWorkspace(const QString &file)
   m_workspaceFile = ws ? file : QString();
   m_workspaceName = ws ? ws->name : QString();
   m_workspaceDescription = ws ? ws->description : QString();
+  m_basket->setBench(m_workspaceFile);
   m_wid->settings()->setString("Windows/workspace-current", m_workspaceFile);
   m_sidebar->setCurrentWorkspace(m_workspaceName, ws ? workspaceTooltip(file, *ws) : QString());
 }
