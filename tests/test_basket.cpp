@@ -154,7 +154,7 @@ int main(int argc, char **argv)
   check(!BasketWidget::importProject(slip, dir.filePath("base"), &folder, &why)
           && !QFileInfo::exists(dir.filePath("evil.txt")),
         "a path with ..: refused: " + why);
-  check(!BasketWidget::importProject(zipOf("abs.zip", { { "/tmp/evil.txt", "x" } }), dir.filePath("base"), &folder, &why),
+  check(!BasketWidget::importProject(zipOf("abs.zip", { { "/evil.txt", "x" } }), dir.filePath("base"), &folder, &why),
         "an absolute path: refused");
   // any ZIP without one top folder: named like the file, a basket then
   check(BasketWidget::importProject(zipOf("Loose files.zip", { { "x.csv", "1" }, { "sub/y.txt", "2" } }),
