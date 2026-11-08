@@ -101,6 +101,16 @@ foreach(file_path IN LISTS SOUND_FILES)
 endforeach()
 set(RES_CONTENT "${RES_CONTENT}    </qresource>\n")
 
+## parts of a LabPlot project (LabPlotProject, assets/labplot/README.md)
+file(GLOB LABPLOT_FILES CONFIGURE_DEPENDS assets/labplot/*.xml)
+list(SORT LABPLOT_FILES)
+set(RES_CONTENT "${RES_CONTENT}    <qresource prefix=\"/labplot\">\n")
+foreach(file_path IN LISTS LABPLOT_FILES)
+	get_filename_component(base_name "${file_path}" NAME)
+	set(RES_CONTENT "${RES_CONTENT}        <file alias=\"${base_name}\">${file_path}</file>\n")
+endforeach()
+set(RES_CONTENT "${RES_CONTENT}    </qresource>\n")
+
 ## specification data of some meters from their manuals (dmm-tools, via
 ## tools/update_device_specs.py) for the Data tab of a device's info
 file(GLOB SPEC_FILES CONFIGURE_DEPENDS assets/specs/*.json)

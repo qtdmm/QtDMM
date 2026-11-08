@@ -16,6 +16,7 @@
 
 #include "core/limittest.h"
 #include "core/siprefix.h"
+#include "recording/labplotproject.h"
 #include "recording/spreadsheet.h"
 #include "recording/zipfile.h"
 
@@ -532,6 +533,34 @@ static bool writeQtdmm(const Recording &recording, const QString &path, QString 
   return true;
 }
 
+QList<RecordingFile::NumberColumn> RecordingFile::numberColumns(const Recording &recording, QVector<double> *seconds)
+{
+  auto numbers = [&recording](auto value, auto state)
+  {
+    QVector<double> out(recording.values.size());
+    for (int i = 0; i < out.size(); ++i)
+      out[i] = state(i) == CellState::Ok ? value(i) : qQNaN();
+    return out;
+  };
+  QList<NumberColumn> out{ { mainName(QStringLiteral("value"), recording), recording.unit,
+                             numbers([&](int i) { return recording.values[i]; },
+                                     [&](int i) { return recording.stateAt(i); }) } };
+  for (int g = 0; g < recording.extra.size(); ++g)
+  {
+    const RecordingColumn &col = recording.extra[g];
+    out << NumberColumn{ columnName(QStringLiteral("value"), col, g), col.unit,
+                         numbers([&](int i) { return col.values.value(i, qQNaN()); },
+                                 [&](int i) { return col.states.value(i, CellState::None); }) };
+  }
+  if (seconds)
+  {
+    seconds->resize(recording.values.size());
+    for (int i = 0; i < seconds->size(); ++i)
+      (*seconds)[i] = recording.timeAt(i) / 1000.0;
+  }
+  return out;
+}
+
 // numbers only: time, then each value in its unit; what is no number is empty
 static bool writeLabPlot(const Recording &recording, const QString &path, QString *error)
 {
@@ -546,26 +575,20 @@ static bool writeLabPlot(const Recording &recording, const QString &path, QStrin
     setError(error, tr("Cannot open file."));
     return false;
   }
-  auto named = [](const QString &name, const QString &unit)
-  {
-    return unit.isEmpty() ? name : QString("%1 [%2]").arg(name, unit);
-  };
+  QVector<double> seconds;
+  const QList<RecordingFile::NumberColumn> columns = RecordingFile::numberColumns(recording, &seconds);
   // "time[s]" without a space: LabPlot's automatic import guesses the
   // separator from the first header field, "time (s)" fails it (2.12)
-  QStringList head{ QStringLiteral("time[s]"), named(mainName(QStringLiteral("value"), recording), recording.unit) };
-  for (int g = 0; g < recording.extra.size(); ++g)
-    head << named(columnName(QStringLiteral("value"), recording.extra[g], g), recording.extra[g].unit);
+  QStringList head{ QStringLiteral("time[s]") };
+  for (const RecordingFile::NumberColumn &col : columns)
+    head << (col.unit.isEmpty() ? col.name : QString("%1 [%2]").arg(col.name, col.unit));
   QTextStream ts(&file);
   ts << head.join(';') << '\n';
-  auto cell = [](double v, CellState state)
+  for (int i = 0; i < seconds.size(); ++i)
   {
-    return state == CellState::Ok ? QString::number(v, 'g', 12) : QString();
-  };
-  for (int i = 0; i < recording.values.size(); ++i)
-  {
-    ts << QString::number(recording.timeAt(i) / 1000.0, 'g', 12) << ';' << cell(recording.values[i], recording.stateAt(i));
-    for (const RecordingColumn &col : recording.extra)
-      ts << ';' << cell(col.values.value(i, qQNaN()), col.states.value(i, CellState::None));
+    ts << QString::number(seconds[i], 'g', 12);
+    for (const RecordingFile::NumberColumn &col : columns)
+      ts << ';' << (std::isnan(col.values[i]) ? QString() : QString::number(col.values[i], 'g', 12));
     ts << '\n';
   }
   ts.flush();
@@ -583,6 +606,8 @@ bool RecordingFile::writeAny(const Recording &recording, const QString &path, QS
     return writeQtdmm(recording, path, error);
   if (path.endsWith(QString(".") + kLabPlotSuffix, Qt::CaseInsensitive))
     return writeLabPlot(recording, path, error);
+  if (QFileInfo(path).suffix().compare(kLabPlotProjectSuffix, Qt::CaseInsensitive) == 0)
+    return LabPlotProject::write(recording, path, error);
   const auto format = SpreadsheetWriter::formatForFile(path);
   if (!format)
     return write(recording, path, error);

@@ -295,14 +295,20 @@ the quick way, straight to the file dialog:
   the same CSV (`recording.csv`) and that `meta.json`; *Import* reads it
   back with its marks, and saved again it keeps what it said of the
   meters. Unpacked, the CSV reads anywhere.
+- **LabPlot project** (`.lml`) opens in [LabPlot](https://labplot.org)
+  without its import dialog: a spreadsheet *Data* with the time in seconds
+  and one column per value, and a worksheet *Graph* with a plot per unit,
+  one below the other on the same time axis, a legend where values share
+  one. The axes are scaled to the values; what is no number (OL, a gap)
+  stays a gap in the curve. Made for LabPlot 2.12; *Import* does not read
+  it back.
 - **CSV for LabPlot** (`.labplot.csv`) has numbers only, for
-  [LabPlot](https://labplot.org) or any other analysis program: the time in
+  LabPlot's import or any other analysis program: the time in
   seconds, then one column per value in its unit without SI prefix,
   `time[s];Sim A: value [V];Sim A: value 2 [A]`, an empty cell where the
   value is no number. *Import* does not read it back.
-- **Then open in LabPlot** writes that CSV and starts LabPlot with it; its
-  import dialog takes the columns as they are, **OK** puts them in a table.
-  QtDMM looks for `labplot` in the `PATH`, the Flatpak `org.kde.labplot` and
+- **Then open in LabPlot** writes the LabPlot project and starts LabPlot
+  with it, the graph in front. QtDMM looks for `labplot` in the `PATH`, the Flatpak `org.kde.labplot` and
   the usual place on Windows and macOS; another place is set under
   **Settings → General → Programs → LabPlot**. QtDMM as Flatpak cannot
   start other programs: open the file in LabPlot yourself.
