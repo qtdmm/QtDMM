@@ -4518,7 +4518,7 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="2995"/>
         <source>Export failed: %1</source>
-        <translation type="unfinished">Error al exportar: %1</translation>
+        <translation>Error al exportar: %1</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="3003"/>

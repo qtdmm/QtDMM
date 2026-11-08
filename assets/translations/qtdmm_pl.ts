@@ -4518,7 +4518,7 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="2995"/>
         <source>Export failed: %1</source>
-        <translation type="unfinished">Eksport nie powiódł się: %1</translation>
+        <translation>Eksport nie powiódł się: %1</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="3003"/>

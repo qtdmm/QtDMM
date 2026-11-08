@@ -4518,7 +4518,7 @@ Keine Berechtigung? Der Sensor braucht eine udev-Regel für die USB-ID %1:%2.</t
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="2995"/>
         <source>Export failed: %1</source>
-        <translation type="unfinished">Export fehlgeschlagen: %1</translation>
+        <translation>Export fehlgeschlagen: %1</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="3003"/>

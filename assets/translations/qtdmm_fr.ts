@@ -4518,7 +4518,7 @@ Pas de permission ? Le capteur a besoin d’une règle udev pour l’ID USB %1:%
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="2995"/>
         <source>Export failed: %1</source>
-        <translation type="unfinished">Échec de l&apos;export : %1</translation>
+        <translation>Échec de l&apos;export : %1</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="3003"/>
