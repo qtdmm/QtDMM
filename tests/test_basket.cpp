@@ -15,8 +15,7 @@
 static void write(const QString &path, const QByteArray &data)
 {
   QFile f(path);
-  f.open(QIODevice::WriteOnly);
-  f.write(data);
+  check(f.open(QIODevice::WriteOnly) && f.write(data) == data.size(), "test file written: " + path);
 }
 
 int main(int argc, char **argv)
