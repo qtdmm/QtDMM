@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "ui/views/basketwidget.h"
 
+#include "core/projectfolder.h"
 #include "recording/zipfile.h"
 
 #include <algorithm>
@@ -185,6 +186,7 @@ void BasketWidget::setFolder(const QString &folder)
   if (dir == m_folder)
     return;
   m_folder = dir;
+  ProjectFolder::set(dir);
   showFolder();
   Q_EMIT folderChanged(m_folder);
 }

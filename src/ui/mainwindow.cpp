@@ -42,6 +42,7 @@
 #include "ui/dialogs/limitdlg.h"
 #include "device/transport.h"
 #include "device/transports/serial.h"
+#include "core/projectfolder.h"
 #include "core/devicelibrary.h"
 #include "core/sampletypes.h"
 #include "core/siprefix.h"
@@ -3030,7 +3031,8 @@ void MainWindow::saveWorkspace()
   const QString proposal = !m_workspaceFile.isEmpty() && (dlg.name() == m_workspaceName || base.isEmpty())
                              ? m_workspaceFile
                              : QDir(dir).filePath((base.isEmpty() ? QString("untitled") : base) + "." + kWorkspaceSuffix);
-  QString file = QFileDialog::getSaveFileName(this, tr("Save bench"), proposal,
+  // a bench loaded from elsewhere: into the open basket all the same
+  QString file = QFileDialog::getSaveFileName(this, tr("Save bench"), ProjectFolder::proposal(proposal),
                                               tr("QtDMM bench (*.%1)").arg(kWorkspaceSuffix));
   if (file.isEmpty())
     return;

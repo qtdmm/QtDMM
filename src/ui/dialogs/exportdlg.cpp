@@ -94,8 +94,9 @@ ExportDlg::ExportDlg(What what, const QString &basket, Settings *cfg, QWidget *p
     m_format->setCurrentIndex(last);
   const bool basketLast = m_cfg->getBool("Export/to-basket", true);
   (basketLast && !basket.isEmpty() ? m_toBasket : m_toFile)->setChecked(true);
-  const QString dir = m_cfg->getString("Export/dir",
-                                       QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
+  // a project open: a file of it goes there too
+  const QString documents = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+  const QString dir = !basket.isEmpty() ? basket : m_cfg->getString("Export/dir", documents);
   m_file->setText(QDir::toNativeSeparators(QDir(dir).filePath(tr("export"))));
   connect(m_file, &QLineEdit::textEdited, this, [this] { m_toFile->setChecked(true); });
   connect(m_what, &QComboBox::currentIndexChanged, this, &ExportDlg::fillFormats);

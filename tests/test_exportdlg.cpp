@@ -41,6 +41,10 @@ int main(int argc, char **argv)
     // the last format of the kind comes back; every reading is csv too
     ExportDlg dlg(ExportDlg::Table, tmp.path(), &cfg);
     check(dlg.format() == "xlsx", "last format kept: " + dlg.format());
+    // a basket open: the file field is in it too, not in the last folder
+    const auto edits = dlg.findChildren<QLineEdit *>();
+    check(!edits.isEmpty() && QDir::fromNativeSeparators(edits.first()->text()).startsWith(tmp.path() + '/'),
+          "file field in the basket: " + (edits.isEmpty() ? QString() : edits.first()->text()));
     auto combos = dlg.findChildren<QComboBox *>();
     combos[0]->setCurrentIndex(0);   // the recording
     combos[1]->setCurrentIndex(1);   // every reading

@@ -39,6 +39,11 @@ is about; the window shows it under the name.
   [Export and import](recorder.md#export-and-import).
 - **Save bench...** and **Load bench...** start in the basket while one is
   open.
+- Every other save dialog starts in the basket too while one is open: the
+  graph's *Export* and *Export image*, the readings table's export, the
+  Poincaré plot's picture, the export dialog's file, the application log,
+  printing into a PDF, and a bench loaded from somewhere else. The name
+  proposed stays; you can still choose another folder.
 
 A file is never overwritten: a second `ripple.csv` becomes `ripple (2).csv`.
 

@@ -30,6 +30,7 @@
 #include <QPdfWriter>
 
 #include "ui/views/graphwidget.h"
+#include "core/projectfolder.h"
 #include "core/settings.h"
 #include "recording/recordingfile.h"
 
@@ -112,7 +113,7 @@ QString GraphWidget::askExportFile(bool *raw)
   const QString rawFilter = tr("CSV, every reading (*.csv)");
   QString filter = fnSuffix == "xlsx" ? xlsxFilter : fnSuffix == "ods" ? odsFilter
                  : fnSuffix == RecordingFile::kSuffix ? qtdmmFilter : csvFilter;
-  fn = QFileDialog::getSaveFileName(this, tr("Export data"), fn,
+  fn = QFileDialog::getSaveFileName(this, tr("Export data"), ProjectFolder::proposal(fn),
                                     csvFilter + ";;" + xlsxFilter + ";;" + odsFilter + ";;" + rawFilter + ";;"
                                       + qtdmmFilter, &filter);
 
@@ -232,7 +233,7 @@ bool GraphWidget::exportImageSLOT()
                 pngFilter = tr("PNG image (*.png)"), jpgFilter = tr("JPEG image (*.jpg)");
   QString filter = suffix == "pdf" ? pdfFilter : suffix == "png" ? pngFilter
                  : suffix == "jpg" ? jpgFilter : svgFilter;
-  QString fn = QFileDialog::getSaveFileName(this, tr("Export image"), name + "." + suffix,
+  QString fn = QFileDialog::getSaveFileName(this, tr("Export image"), ProjectFolder::proposal(name + "." + suffix),
                                             svgFilter + ";;" + pdfFilter + ";;" + pngFilter + ";;" + jpgFilter,
                                             &filter);
   if (fn.isNull())

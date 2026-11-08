@@ -14,6 +14,7 @@
 #include <QSvgGenerator>
 #include <cmath>
 
+#include "core/projectfolder.h"
 #include "core/settings.h"
 #include "core/siprefix.h"
 
@@ -186,7 +187,8 @@ bool PoincarePlot::exportImageSLOT()
 {
   const QString png = tr("PNG image (*.png)"), svg = tr("SVG image (*.svg)");
   QString filter = png;
-  QString fn = QFileDialog::getSaveFileName(this, tr("Save image"), "poincare.png", png + ";;" + svg, &filter);
+  QString fn = QFileDialog::getSaveFileName(this, tr("Save image"), ProjectFolder::proposal("poincare.png"),
+                                            png + ";;" + svg, &filter);
   if (fn.isEmpty())
     return false;
   if (QFileInfo(fn).suffix().isEmpty())

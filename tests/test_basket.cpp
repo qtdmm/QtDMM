@@ -14,6 +14,7 @@
 #include <QSignalSpy>
 #include <QTemporaryDir>
 
+#include "core/projectfolder.h"
 #include "recording/zipfile.h"
 #include "ui/views/basketwidget.h"
 #include "testutil.h"
@@ -47,6 +48,11 @@ int main(int argc, char **argv)
   basket.setFolder(dir.filePath("Bench"));
   basket.setFolder(dir.filePath("Bench"));
   check(changed.size() == 1 && basket.folder() == dir.filePath("Bench"), "opened once");
+  // the save dialogs start in it: a proposal keeps its name, goes into the basket
+  check(ProjectFolder::current() == dir.filePath("Bench")
+          && ProjectFolder::proposal("/elsewhere/ripple.csv") == dir.filePath("Bench/ripple.csv")
+          && ProjectFolder::proposal(QString()) == dir.filePath("Bench"),
+        "save dialogs: into the open basket, got " + ProjectFolder::proposal("/elsewhere/ripple.csv"));
 
   // copies in, the originals stay; the same name twice gets a second name
   const QStringList added = basket.addFiles({ dir.filePath("a.csv"), dir.filePath("a.csv"), dir.filePath("missing.pdf") });
@@ -113,6 +119,10 @@ int main(int argc, char **argv)
   check(!BasketWidget::exportProject(dir.filePath("none"), dir.filePath("none.zip"), &why) && !why.isEmpty(),
         "no folder: an error that says so");
 
+  // no basket: the proposals as they were
+  basket.setFolder(QString());
+  check(ProjectFolder::current().isEmpty() && ProjectFolder::proposal("/elsewhere/ripple.csv") == "/elsewhere/ripple.csv",
+        "save dialogs: without a basket where they were");
   // and back: unpacked into a folder of its own, checked, without "export"
   auto zipOf = [&](const QString &name, const QList<QPair<QByteArray, QByteArray>> &entries)
   {

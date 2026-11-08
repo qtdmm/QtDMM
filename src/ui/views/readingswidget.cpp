@@ -23,6 +23,7 @@
 #include <QToolButton>
 #include <QVBoxLayout>
 
+#include "core/projectfolder.h"
 #include "core/siprefix.h"
 
 // The rows of the values the table shows (ReadingsModel::hiddenValues()).
@@ -405,7 +406,7 @@ void ReadingsWidget::exportSLOT()
 {
   const QString csvFilter = tr("CSV (*.csv)"), xlsxFilter = tr("Excel (*.xlsx)"), odsFilter = tr("OpenDocument (*.ods)");
   QString filter = csvFilter;
-  QString path = QFileDialog::getSaveFileName(this, tr("Export readings"), QString(),
+  QString path = QFileDialog::getSaveFileName(this, tr("Export readings"), ProjectFolder::proposal(QString()),
                                               csvFilter + ";;" + xlsxFilter + ";;" + odsFilter, &filter);
   if (path.isEmpty())
     return;

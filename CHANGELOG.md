@@ -4,6 +4,7 @@
 
 ### GUI
 
+- **Save dialogs start in the open project basket** — graph export and image, readings table, Poincaré picture, the export dialog's file, application log, printing into a PDF and Save bench (also for a bench loaded from elsewhere) propose the basket's folder while one is open.
 - **Import project** — *Import project...* at the project basket unpacks a project ZIP (*Export project*) into a new basket and opens it; files missing or changed since the export (size, SHA-256) or a path out of the folder stop it before anything is written.
 - **QtDMM recording: the meters in meta.json** — each meter that recorded with its name, model, protocol, values (unit, quantity), alarms and limit test, and start, end and sample time; a recording loaded and saved again keeps it.
 - **Open in LabPlot** — the export dialog writes a CSV for LabPlot (`.labplot.csv`: numbers only, a column per value with its unit, `time[s];Sim A: value [V]`) and with *Then open in LabPlot* starts LabPlot with it (found in the PATH, as Flatpak or set under Settings → General).
