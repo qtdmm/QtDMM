@@ -18,6 +18,7 @@
 #include <QVBoxLayout>
 
 #include "core/settings.h"
+#include "recording/recordingfile.h"
 
 // the format of a CSV with every reading: csv as well, told apart by this
 static const QString kEveryReading = QStringLiteral("csv-raw");
@@ -28,7 +29,8 @@ QList<QPair<QString, QString>> ExportDlg::formats(What what)
   {
     case Recording:
       return { { "csv", tr("CSV, on the recording's grid") }, { kEveryReading, tr("CSV, every reading") },
-               { "xlsx", tr("Excel (xlsx)") }, { "ods", tr("OpenDocument (ods)") } };
+               { "xlsx", tr("Excel (xlsx)") }, { "ods", tr("OpenDocument (ods)") },
+               { RecordingFile::kSuffix, tr("QtDMM recording, with the marks") } };
     case Table:
       return { { "csv", tr("CSV") }, { "xlsx", tr("Excel (xlsx)") }, { "ods", tr("OpenDocument (ods)") } };
     case Picture:

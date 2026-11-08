@@ -285,6 +285,11 @@ a file, or the open [project basket](project-basket.md) with a name made of
 date, time and device. It keeps the last choice. *Export* (Ctrl+E) stays
 the quick way, straight to the file dialog:
 
+- **QtDMM recording** (`.qtdmm-rec`) keeps what a CSV does not: the marks
+  (alarms, trigger, your own). It is a ZIP of the same CSV
+  (`recording.csv`) and a `meta.json`; *Import* reads it back with its
+  marks, unpacked the CSV reads anywhere.
+
 *Export* (Ctrl+E) writes the recording on the grid of **Sample every** as
 CSV, or - pick the file type in the dialog or just name the file `.xlsx` /
 `.ods` - as an Excel or OpenDocument spreadsheet with the same columns.

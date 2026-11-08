@@ -7,8 +7,11 @@
 // the error paths.
 
 #include <QtCore>
+#include <QJsonArray>
+#include <QJsonObject>
 
 #include "recording/recordingfile.h"
+#include "recording/zipfile.h"
 #include "core/sampletypes.h"
 #include "testutil.h"
 
@@ -240,6 +243,39 @@ int main(int argc, char **argv)
     check(QString::fromUtf8(c.readLine()).startsWith("timestamp;"), "csv is the csv");
     Recording empty;
     check(!RecordingFile::writeAny(empty, tmp.filePath("e.ods"), &err) && !err.isEmpty(), "empty refuses");
+  }
+
+  // --- QtDMM recording: the CSV in a ZIP with meta.json, read back the same ---
+  {
+    auto rec = RecordingFile::read(dataDir + "/new_larger.csv");
+    check(rec.has_value(), "fixture for the QtDMM recording");
+    if (rec)
+    {
+      rec->meta["marks"] = QJsonArray{ QJsonObject{ { "t", 1500.0 }, { "color", "#ffff0000" }, { "name", "Trigger" } } };
+      const QString path = tmp.filePath("probe.qtdmm-rec");
+      QString err;
+      check(RecordingFile::writeAny(*rec, path, &err), "QtDMM recording written: " + err);
+      QFile file(path);
+      check(file.open(QIODevice::ReadOnly) && file.read(4) == QByteArray("PK\x03\x04", 4), "a ZIP");
+      file.close();
+      // the same as the plain CSV of it
+      check(RecordingFile::write(*rec, tmp.filePath("probe.csv")), "the CSV of it");
+      const auto plain = RecordingFile::read(tmp.filePath("probe.csv"));
+      const auto back = RecordingFile::read(path, &err);
+      check(back && plain && back->values == plain->values && back->start == plain->start && back->unit == plain->unit
+              && back->times == plain->times,
+            "values, times, start and unit as from the CSV: " + err);
+      check(back && back->meta.value("format").toInt() == 1
+              && back->meta.value("marks").toArray().first().toObject().value("name").toString() == "Trigger",
+            "meta.json comes back with the marks");
+      // a ZIP without the CSV is no recording
+      ZipWriter zip;
+      zip.add("other.txt", "x", false);
+      QFile bad(tmp.filePath("bad.qtdmm-rec"));
+      check(bad.open(QIODevice::WriteOnly) && bad.write(zip.finish()) > 0, "bad file written");
+      bad.close();
+      check(!RecordingFile::read(bad.fileName(), &err) && !err.isEmpty(), "a ZIP without recording.csv: an error");
+    }
   }
 
   if (failed == 0)

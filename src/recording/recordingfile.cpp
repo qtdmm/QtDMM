@@ -2,9 +2,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "recording/recordingfile.h"
 
+#include <QBuffer>
 #include <QCoreApplication>
 #include <QFile>
+#include <QFileInfo>
+#include <QJsonDocument>
 #include <QRegularExpression>
+#include <QSaveFile>
+#include <QTemporaryDir>
 #include <QTextStream>
 
 #include <cmath>
@@ -12,6 +17,7 @@
 #include "core/limittest.h"
 #include "core/siprefix.h"
 #include "recording/spreadsheet.h"
+#include "recording/zipfile.h"
 
 namespace
 {
@@ -42,6 +48,7 @@ Recording RecordingFile::devicePart(const Recording &recording, const QString &d
   part.start = recording.start;
   part.sampleTimeTenths = recording.sampleTimeTenths;
   part.times = recording.times;
+  part.meta = recording.meta;   // the marks are the recording's
   bool haveMain = device == recording.device;
   if (haveMain)
   {
@@ -192,7 +199,26 @@ std::optional<Recording> RecordingFile::read(const QString &path, QString *error
     setError(error, tr("Cannot open file."));
     return std::nullopt;
   }
-  QTextStream ts(&file);
+  // a QtDMM recording: the CSV and meta.json in a ZIP
+  QBuffer unpacked;
+  QJsonObject meta;
+  QIODevice *in = &file;
+  if (file.peek(4) == QByteArray("PK\x03\x04", 4))
+  {
+    const QByteArray zip = file.readAll();
+    const std::optional<QByteArray> csv = zipEntry(zip, QStringLiteral("recording.csv"));
+    if (!csv)
+    {
+      setError(error, tr("No recording in the file (recording.csv is missing)."));
+      return std::nullopt;
+    }
+    if (const std::optional<QByteArray> json = zipEntry(zip, QStringLiteral("meta.json")))
+      meta = QJsonDocument::fromJson(*json).object();
+    unpacked.setData(*csv);
+    unpacked.open(QIODevice::ReadOnly);
+    in = &unpacked;
+  }
+  QTextStream ts(in);
 
   QString line = ts.readLine();
   if (line.isNull())
@@ -359,6 +385,7 @@ std::optional<Recording> RecordingFile::read(const QString &path, QString *error
   const int count = rec.values.size();
   const qint64 spanMs = rec.start.msecsTo(end);
   rec.sampleTimeTenths = count > 1 ? qMax(1, qRound(spanMs / 100.0 / (count - 1))) : 1;
+  rec.meta = meta;
   return rec;
 }
 
@@ -472,8 +499,38 @@ bool RecordingFile::write(const Recording &recording, const QString &path, QStri
   return true;
 }
 
+static bool writeQtdmm(const Recording &recording, const QString &path, QString *error)
+{
+  // the CSV as it is, beside it what it does not keep
+  QTemporaryDir tmp;
+  const QString csvPath = tmp.filePath("recording.csv");
+  if (!tmp.isValid() || !RecordingFile::write(recording, csvPath, error))
+    return false;
+  QFile csv(csvPath);
+  if (!csv.open(QIODevice::ReadOnly))
+  {
+    setError(error, tr("Cannot open file."));
+    return false;
+  }
+  QJsonObject meta = recording.meta;
+  meta["format"] = 1;
+  meta["qtdmm"] = QCoreApplication::applicationVersion();
+  meta["written"] = QDateTime::currentDateTime().toString(Qt::ISODate);
+  ZipWriter zip;
+  QSaveFile out(path);
+  if (!zip.add("meta.json", QJsonDocument(meta).toJson(), false) || !zip.add("recording.csv", csv.readAll(), false)
+      || !out.open(QIODevice::WriteOnly) || out.write(zip.finish()) < 0 || !out.commit())
+  {
+    setError(error, tr("Cannot write the file."));
+    return false;
+  }
+  return true;
+}
+
 bool RecordingFile::writeAny(const Recording &recording, const QString &path, QString *error)
 {
+  if (QFileInfo(path).suffix().compare(kSuffix, Qt::CaseInsensitive) == 0)
+    return writeQtdmm(recording, path, error);
   const auto format = SpreadsheetWriter::formatForFile(path);
   if (!format)
     return write(recording, path, error);

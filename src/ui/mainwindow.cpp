@@ -387,7 +387,8 @@ void MainWindow::createViews()
     const QString suffix = QFileInfo(path).suffix();
     if (suffix == kWorkspaceSuffix)
       loadWorkspaceFile(path);
-    else if (suffix.compare("csv", Qt::CaseInsensitive) == 0 && RecordingFile::read(path).has_value())
+    else if ((suffix.compare("csv", Qt::CaseInsensitive) == 0 || suffix == RecordingFile::kSuffix)
+             && RecordingFile::read(path).has_value())
     {
       if (m_wid->importFile(path))
         action_Graph->setChecked(true);
