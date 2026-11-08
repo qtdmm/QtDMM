@@ -9,6 +9,7 @@
 #include <QCoreApplication>
 #include <QDebug>
 #include <QFile>
+#include <QJsonArray>
 #include <QSignalSpy>
 #include <QTemporaryDir>
 #include <cmath>
@@ -664,6 +665,25 @@ int main(int argc, char **argv)
     for (const GridPoint &p : back.grid(5))
       g << QString::number(p.value);
     check(g.join(' ') == "1.5 1.54 2.5", "raw: grid of the import got " + g.join(' '));
+
+    // what a QtDMM recording says of its devices goes along when it is saved
+    // again, a new recording drops it; the writer's own keys are its own
+    if (rec)
+    {
+      Recording withInfo = *rec;
+      withInfo.meta = QJsonObject{ { "devices", QJsonArray{ QJsonObject{ { "model", "UNI-T UT61E" } } } },
+                                   { "written", "2020-01-01T00:00:00" } };
+      RecordingStore file;
+      file.load(withInfo);
+      const Recording again = file.toRecording(true);
+      check(again.meta.value("devices").toArray().first().toObject().value("model").toString() == "UNI-T UT61E"
+              && !again.meta.contains("written"),
+            "meta: the devices of a loaded file go along, not what the writer adds");
+      const Recording over = file.toRecording(true, {}, {}, {}, QJsonObject{ { "devices", QJsonArray() } });
+      check(over.meta.value("devices").toArray().isEmpty(), "meta: info given replaces the file's");
+      file.clear();
+      check(file.toRecording().meta.isEmpty(), "meta: a new recording has none of the file's");
+    }
 
     // an old export on its grid stays one: the gaps where they were
     const std::optional<Recording> legacy = RecordingFile::read(QString(argc > 1 ? argv[1] : "") + "/legacy_nan.txt", &err);

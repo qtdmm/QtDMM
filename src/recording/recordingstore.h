@@ -285,13 +285,16 @@ public:
   /// next. Before a value began its cells are empty (CellState::None).
   /// With @p foreign values of other meters the same way, on this time
   /// (offsetOf()). @p device names this meter's columns (Recording::device).
+  /// Recording::meta: what a loaded QtDMM recording had (its devices), the
+  /// marks, then @p info over it (MeterController::recordingInfo()).
   Recording   toRecording(bool raw = false, const QList<int> &extras = {}, const QList<Foreign> &foreign = {},
-                          const QString &device = QString()) const;
+                          const QString &device = QString(), const QJsonObject &info = {}) const;
   /// Writes the recording (CSV, .xlsx or .ods by suffix), on the grid or
   /// with @p raw every reading; clears dirty(), also of the @p foreign
   /// stores. In Live: the live window up to now.
   bool        write(const QString &path, QString *error = nullptr, bool raw = false, const QList<int> &extras = {},
-                    const QList<Foreign> &foreign = {}, const QString &device = QString());
+                    const QList<Foreign> &foreign = {}, const QString &device = QString(),
+                    const QJsonObject &info = {});
   /// Replaces the recording by @p rec: start, sample time and values, each
   /// at its time, and its other values as extra() (value 2 is id 1 ...);
   /// the store is in View then. A recording on the grid of its
@@ -480,6 +483,9 @@ private:
   bool        m_fromFile = false;   ///< load(): the time base is the file's
   int         m_loadedGrid = 0;   ///< load(): the points are the steps of this grid (tenths); 0 = readings
   QList<Mark> m_marks;
+  /// load(): what the file's meta.json said beyond the marks (its devices),
+  /// written along again
+  QJsonObject m_fileInfo;
   QTimer      m_poll;
 
   int         m_sampleTime = 1;

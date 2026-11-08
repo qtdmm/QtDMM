@@ -516,6 +516,11 @@ static bool writeQtdmm(const Recording &recording, const QString &path, QString 
   meta["format"] = 1;
   meta["qtdmm"] = QCoreApplication::applicationVersion();
   meta["written"] = QDateTime::currentDateTime().toString(Qt::ISODate);
+  // what the CSV says too, at a glance
+  meta["start"] = recording.start.toString(Qt::ISODateWithMs);
+  if (!recording.values.isEmpty())
+    meta["end"] = recording.start.addMSecs(recording.timeAt(int(recording.values.size()) - 1)).toString(Qt::ISODateWithMs);
+  meta["sample-time"] = recording.sampleTimeTenths / 10.0;
   ZipWriter zip;
   QSaveFile out(path);
   if (!zip.add("meta.json", QJsonDocument(meta).toJson(), false) || !zip.add("recording.csv", csv.readAll(), false)

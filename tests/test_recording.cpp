@@ -268,6 +268,11 @@ int main(int argc, char **argv)
       check(back && back->meta.value("format").toInt() == 1
               && back->meta.value("marks").toArray().first().toObject().value("name").toString() == "Trigger",
             "meta.json comes back with the marks");
+      check(back && back->meta.value("start").toString() == rec->start.toString(Qt::ISODateWithMs)
+              && back->meta.value("end").toString()
+                   == rec->start.addMSecs(rec->timeAt(int(rec->values.size()) - 1)).toString(Qt::ISODateWithMs)
+              && back->meta.value("sample-time").toDouble() == rec->sampleTimeTenths / 10.0,
+            "meta.json has start, end and sample time");
       // a ZIP without the CSV is no recording
       ZipWriter zip;
       zip.add("other.txt", "x", false);

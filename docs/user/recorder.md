@@ -286,9 +286,13 @@ date, time and device. It keeps the last choice. *Export* (Ctrl+E) stays
 the quick way, straight to the file dialog:
 
 - **QtDMM recording** (`.qtdmm-rec`) keeps what a CSV does not: the marks
-  (alarms, trigger, your own). It is a ZIP of the same CSV
-  (`recording.csv`) and a `meta.json`; *Import* reads it back with its
-  marks, unpacked the CSV reads anywhere.
+  (alarms, trigger, your own) and, in its `meta.json`, start, end and
+  sample time and each meter that recorded: its name, model and protocol,
+  the values with name and unit, the alarms and the limit test (without
+  sounds and commands, which are paths of this computer). It is a ZIP of
+  the same CSV (`recording.csv`) and that `meta.json`; *Import* reads it
+  back with its marks, and saved again it keeps what it said of the
+  meters. Unpacked, the CSV reads anywhere.
 - **CSV for LabPlot** (`.labplot.csv`) has numbers only, for
   [LabPlot](https://labplot.org) or any other analysis program: the time in
   seconds, then one column per value in its unit without SI prefix,
