@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The QtDMM developers
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// BasketWidget: the folder of a bench, copies in under free names.
+// BasketWidget: the folder of a project, copies in under free names.
 
 #include <QApplication>
 #include <QDir>
@@ -26,11 +26,6 @@ int main(int argc, char **argv)
   QTemporaryDir tmp;
   const QDir dir(tmp.path());
 
-  // the folder: next to the bench file, its name without the suffix
-  check(BasketWidget::folderFor(dir.filePath("Power supply.qtdmm-workspace")) == dir.filePath("Power supply"),
-        "folder next to the bench, named after it: " + BasketWidget::folderFor(dir.filePath("Power supply.qtdmm-workspace")));
-  check(BasketWidget::folderFor(QString()).isEmpty(), "no bench, no folder");
-
   // free names: never over a file
   write(dir.filePath("a.csv"), "1");
   write(dir.filePath("a (2).csv"), "2");
@@ -40,9 +35,12 @@ int main(int argc, char **argv)
 
   BasketWidget basket;
   QSignalSpy errors(&basket, &BasketWidget::error);
-  check(basket.addFiles({ dir.filePath("a.csv") }).isEmpty(), "no bench: nothing goes in");
-  basket.setBench(dir.filePath("Bench.qtdmm-workspace"));
-  check(!QFileInfo::exists(dir.filePath("Bench")), "the folder waits for the first file");
+  QSignalSpy changed(&basket, &BasketWidget::folderChanged);
+  check(basket.addFiles({ dir.filePath("a.csv") }).isEmpty(), "no basket open: nothing goes in");
+  // a basket whose folder went away is made again with the first file
+  basket.setFolder(dir.filePath("Bench"));
+  basket.setFolder(dir.filePath("Bench"));
+  check(changed.size() == 1 && basket.folder() == dir.filePath("Bench"), "opened once");
 
   // copies in, the originals stay; the same name twice gets a second name
   const QStringList added = basket.addFiles({ dir.filePath("a.csv"), dir.filePath("a.csv"), dir.filePath("missing.pdf") });
@@ -52,6 +50,15 @@ int main(int argc, char **argv)
   check(errors.size() == 1, QString("the missing file is named once, %1 errors").arg(errors.size()));
   // a file of the basket itself is not copied again
   check(basket.addFiles({ dir.filePath("Bench/a.csv") }).isEmpty(), "a basket file stays as it is");
+
+  // project.json: written once, never over the user's
+  check(BasketWidget::writeProjectFile(dir.filePath("Bench")), "project.json written");
+  QFile project(dir.filePath("Bench/project.json"));
+  check(project.open(QIODevice::ReadOnly) && project.readAll().contains("\"name\": \"Bench\""), "it names the project");
+  project.close();
+  write(dir.filePath("Bench/project.json"), "{\"name\": \"mine\"}");
+  check(BasketWidget::writeProjectFile(dir.filePath("Bench")), "project.json there: fine");
+  check(project.open(QIODevice::ReadOnly) && project.readAll().contains("mine"), "and left as it was");
 
   if (failed == 0)
     qInfo() << "All basket tests passed.";

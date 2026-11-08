@@ -58,6 +58,8 @@
 #include "ui/settings/keyboardprefs.h"
 #include "ui/views/analogmeter.h"
 #include "ui/views/basketwidget.h"
+
+static const char *kWorkspaceSuffix = "qtdmm-workspace";
 #include "ui/views/readingswidget.h"
 #include "ui/dialogs/logdlg.h"
 #include "ui/dialogs/panelvaluesdlg.h"
@@ -355,15 +357,35 @@ void MainWindow::createViews()
   m_poincare->setSettings(m_wid->settings());
   m_poincareWin = addView(m_poincare, m_poincare->windowTitle(), MdiArranger::Table, "poincare");
 
-  // the files of the bench, a folder next to its file
+  // the files of a project, a folder; it stays open until another is
   m_basket = new BasketWidget(this);
   m_basketWin = addView(m_basket, m_basket->windowTitle(), MdiArranger::Table, "basket");
-  connect(m_basket, &BasketWidget::saveBenchRequested, this, &MainWindow::saveWorkspace);
+  const QString basketDir = m_wid->settings()->getString("Basket/folder");
+  if (QFileInfo(basketDir).isDir())
+    m_basket->setFolder(basketDir);
+  auto basketBase = [this]
+  {
+    const QString base = m_wid->settings()->getString("Basket/base-dir");
+    m_basket->setBaseFolder(base.isEmpty() ? GeneralPrefs::defaultBasketBase() : base);
+  };
+  basketBase();
+  connect(m_wid, &InstanceWidget::configChanged, this, basketBase);
+  connect(m_basket, &BasketWidget::folderChanged, this, [this](const QString &folder)
+  {
+    m_wid->settings()->setString("Basket/folder", folder);
+    // without a basket everything is as before
+    for (QAction *a : { m_graphToBasket, m_tableToBasket })
+      a->setVisible(!folder.isEmpty());
+  });
   connect(m_basket, &BasketWidget::error, m_wid, &InstanceWidget::error);
   connect(m_basket, &BasketWidget::openRequested, this, [this](const QString &path)
   {
-    // a recording of QtDMM into the graph, anything else to its program
-    if (QFileInfo(path).suffix().compare("csv", Qt::CaseInsensitive) == 0 && RecordingFile::read(path).has_value())
+    // a bench is loaded, a recording of QtDMM goes into the graph, anything
+    // else to its program
+    const QString suffix = QFileInfo(path).suffix();
+    if (suffix == kWorkspaceSuffix)
+      loadWorkspaceFile(path);
+    else if (suffix.compare("csv", Qt::CaseInsensitive) == 0 && RecordingFile::read(path).has_value())
     {
       if (m_wid->importFile(path))
         action_Graph->setChecked(true);
@@ -469,9 +491,18 @@ void MainWindow::createViews()
   sourcesShown();
   connect(m_session, &DeviceSession::opened, this, sourcesShown);
   connect(m_session, &DeviceSession::closed, this, sourcesShown);
-  m_wid->graph()->setWindowActions({ hideWindow(m_graphWin), m_graphSources });
+  // what the view shows, as files into the open project basket
+  m_graphToBasket = new QAction(tr("Into the pro&ject basket"), this);
+  m_graphToBasket->setToolTip(tr("The recording as CSV and the graph as a picture, into the project basket"));
+  connect(m_graphToBasket, &QAction::triggered, this, &MainWindow::graphToBasket);
+  m_tableToBasket = new QAction(tr("Into the pro&ject basket"), this);
+  m_tableToBasket->setToolTip(tr("The readings as CSV, into the project basket"));
+  connect(m_tableToBasket, &QAction::triggered, this, &MainWindow::tableToBasket);
+  for (QAction *a : { m_graphToBasket, m_tableToBasket })
+    a->setVisible(!m_basket->folder().isEmpty());
+  m_wid->graph()->setWindowActions({ hideWindow(m_graphWin), m_graphSources, m_graphToBasket });
   m_wid->graph()->setPrintAction(action_Print);
-  m_readings->setWindowActions({ hideWindow(m_readingsWin), m_tableSources });
+  m_readings->setWindowActions({ hideWindow(m_readingsWin), m_tableSources, m_tableToBasket });
   m_displayAction->setObjectName("action_WindowDisplay");
   m_meterAction->setObjectName("action_WindowMeter");
   m_readingsAction->setObjectName("action_WindowReadings");
@@ -2901,7 +2932,38 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
 
 // A workspace file (WorkspaceFile): the window's keys, the devices connected,
 // a name, a description and a picture.
-static const char *kWorkspaceSuffix = "qtdmm-workspace";
+QString MainWindow::basketName(const QString &what, const QString &suffix) const
+{
+  // "2026-11-08 0714 Sim A recording.csv": sorts by time, says what it is
+  const QString device = m_session->lead() ? m_session->lead()->deviceName() : QString();
+  QString name = QDateTime::currentDateTime().toString("yyyy-MM-dd HHmm") + (device.isEmpty() ? "" : " " + device)
+                 + " " + what;
+  name.replace(QRegularExpression(R"([/\\:*?"<>|])"), "_");
+  return BasketWidget::freeName(m_basket->folder(), name + "." + suffix);
+}
+
+void MainWindow::graphToBasket()
+{
+  const QString csv = basketName(tr("recording"), "csv");
+  if (!m_wid->writeRecordingTo(csv))
+    return;
+  // the picture beside it, with the same name
+  const QString png = BasketWidget::freeName(m_basket->folder(), QFileInfo(csv).completeBaseName() + ".png");
+  if (!m_wid->graph()->exportImageFile(png))
+    Q_EMIT m_wid->error(tr("Project basket: cannot write %1").arg(QDir::toNativeSeparators(png)));
+  else
+    Q_EMIT m_wid->error(tr("Into the project basket: %1").arg(QFileInfo(csv).completeBaseName()));
+}
+
+void MainWindow::tableToBasket()
+{
+  const QString csv = basketName(tr("readings"), "csv");
+  QString error;
+  if (!m_readings->log()->write(csv, &error))
+    Q_EMIT m_wid->error(tr("Project basket: cannot write %1: %2").arg(QDir::toNativeSeparators(csv), error));
+  else
+    Q_EMIT m_wid->error(tr("Into the project basket: %1").arg(QFileInfo(csv).fileName()));
+}
 
 void MainWindow::saveWorkspace()
 {
@@ -2911,8 +2973,11 @@ void MainWindow::saveWorkspace()
   WorkspaceDlg dlg(m_workspaceName, m_workspaceDescription, shot, this);
   if (dlg.exec() != QDialog::Accepted)
     return;
-  const QString dir = cfg->getString("Windows/workspace-dir",
-                                     QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
+  // a project basket open: the bench goes into it
+  const QString dir = !m_basket->folder().isEmpty()
+                        ? m_basket->folder()
+                        : cfg->getString("Windows/workspace-dir",
+                                         QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
   // the file of the workspace in use, else one named after it
   QString base = dlg.name();
   base.replace(QRegularExpression(R"([/\\:*?"<>|])"), "_");
@@ -2957,8 +3022,10 @@ void MainWindow::saveWorkspace()
 void MainWindow::loadWorkspace()
 {
   Settings *cfg = m_wid->settings();
-  const QString dir = cfg->getString("Windows/workspace-dir",
-                                     QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
+  const QString dir = !m_basket->folder().isEmpty()
+                        ? m_basket->folder()
+                        : cfg->getString("Windows/workspace-dir",
+                                         QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
   const QString file = QFileDialog::getOpenFileName(this, tr("Load bench"), dir,
                                                     tr("QtDMM bench (*.%1)").arg(kWorkspaceSuffix));
   if (!file.isEmpty())
@@ -3058,7 +3125,6 @@ void MainWindow::setCurrentWorkspace(const QString &file)
   m_workspaceFile = ws ? file : QString();
   m_workspaceName = ws ? ws->name : QString();
   m_workspaceDescription = ws ? ws->description : QString();
-  m_basket->setBench(m_workspaceFile);
   m_wid->settings()->setString("Windows/workspace-current", m_workspaceFile);
   m_sidebar->setCurrentWorkspace(m_workspaceName, ws ? workspaceTooltip(file, *ws) : QString());
 }

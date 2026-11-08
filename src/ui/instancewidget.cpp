@@ -524,13 +524,40 @@ void InstanceWidget::exportSLOT()
   exportRecording();
 }
 
-bool InstanceWidget::exportRecording()
+QPointer<MeterController> InstanceWidget::recordingLead() const
 {
   // the session's recording: every meter that recorded with all its values,
   // as QTDMM:RECord:SAVE writes it; a file viewed or Live: what the graph has
   QPointer<MeterController> lead = m_session->lead();
   if (ui_graph->showsFile() || !lead || lead->recorder()->state() != RecordingStore::View
       || lead->recorder()->count() <= 0)
+    return nullptr;
+  return lead;
+}
+
+bool InstanceWidget::writeRecordingTo(const QString &file)
+{
+  QString err;
+  if (QPointer<MeterController> lead = recordingLead())
+  {
+    if (lead->writeRecording(file, false, &err))
+      return true;
+  }
+  else if (ui_graph->store()->count() <= 0)
+    err = tr("nothing recorded");
+  else if (ui_graph->exportCsvFile(file))
+    return true;
+  else
+    return false;   // the graph said why
+  AppLog::error("app", "Export failed: " + err);
+  Q_EMIT error(tr("Export failed: %1").arg(err));
+  return false;
+}
+
+bool InstanceWidget::exportRecording()
+{
+  QPointer<MeterController> lead = recordingLead();
+  if (!lead)
     return ui_graph->exportDataSLOT();
   bool raw = false;
   const QString file = ui_graph->askExportFile(&raw);
