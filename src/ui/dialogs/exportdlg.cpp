@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "ui/dialogs/exportdlg.h"
 
+#include <QCheckBox>
 #include <QComboBox>
 #include <QDialogButtonBox>
 #include <QDir>
@@ -30,7 +31,8 @@ QList<QPair<QString, QString>> ExportDlg::formats(What what)
     case Recording:
       return { { "csv", tr("CSV, on the recording's grid") }, { kEveryReading, tr("CSV, every reading") },
                { "xlsx", tr("Excel (xlsx)") }, { "ods", tr("OpenDocument (ods)") },
-               { RecordingFile::kSuffix, tr("QtDMM recording, with the marks") } };
+               { RecordingFile::kSuffix, tr("QtDMM recording, with the marks") },
+               { RecordingFile::kLabPlotSuffix, tr("CSV for LabPlot, numbers only") } };
     case Table:
       return { { "csv", tr("CSV") }, { "xlsx", tr("Excel (xlsx)") }, { "ods", tr("OpenDocument (ods)") } };
     case Picture:
@@ -73,6 +75,9 @@ ExportDlg::ExportDlg(What what, const QString &basket, Settings *cfg, QWidget *p
   where->addWidget(m_toBasket);
   where->addLayout(fileRow);
   form->addRow(tr("Where to:"), where);
+  m_labPlot = new QCheckBox(tr("Then open in &LabPlot"), this);
+  m_labPlot->setToolTip(tr("LabPlot (labplot.org) imports the recording for analysis: fits, statistics, plots"));
+  form->addRow(QString(), m_labPlot);
 
   auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
   buttons->button(QDialogButtonBox::Ok)->setText(tr("&Export"));
@@ -94,6 +99,26 @@ ExportDlg::ExportDlg(What what, const QString &basket, Settings *cfg, QWidget *p
   m_file->setText(QDir::toNativeSeparators(QDir(dir).filePath(tr("export"))));
   connect(m_file, &QLineEdit::textEdited, this, [this] { m_toFile->setChecked(true); });
   connect(m_what, &QComboBox::currentIndexChanged, this, &ExportDlg::fillFormats);
+  // LabPlot takes the format made for it: the one goes with the other
+  m_labPlot->setChecked(what == Recording && m_cfg->getBool("Export/labplot", false)
+                        && format() == QLatin1String(RecordingFile::kLabPlotSuffix));
+  m_labPlot->setEnabled(what == Recording);
+  connect(m_what, &QComboBox::currentIndexChanged, this, [this]
+  {
+    m_labPlot->setEnabled(this->what() == Recording);
+    if (this->what() != Recording)
+      m_labPlot->setChecked(false);
+  });
+  connect(m_labPlot, &QCheckBox::toggled, this, [this](bool on)
+  {
+    if (on)
+      m_format->setCurrentIndex(m_format->findData(QString(RecordingFile::kLabPlotSuffix)));
+  });
+  connect(m_format, &QComboBox::currentIndexChanged, this, [this]
+  {
+    if (format() != QLatin1String(RecordingFile::kLabPlotSuffix))
+      m_labPlot->setChecked(false);
+  });
 }
 
 void ExportDlg::fillFormats()
@@ -129,10 +154,15 @@ QString ExportDlg::file() const
   QString path = QDir::fromNativeSeparators(m_file->text().trimmed());
   if (path.isEmpty() || toBasket())
     return {};
-  // the format decides the suffix
-  if (QFileInfo(path).suffix().toLower() != format())
+  // the format decides the suffix ("x.labplot.csv" has two dots)
+  if (!path.endsWith("." + format(), Qt::CaseInsensitive))
     path += "." + format();
   return path;
+}
+
+bool ExportDlg::openInLabPlot() const
+{
+  return m_labPlot->isChecked();
 }
 
 void ExportDlg::browse()
@@ -156,6 +186,8 @@ void ExportDlg::accept()
     return;
   m_cfg->setString(QString("Export/format-%1").arg(int(what())), m_format->currentData().toString());
   m_cfg->setBool("Export/to-basket", toBasket());
+  if (what() == Recording)
+    m_cfg->setBool("Export/labplot", openInLabPlot());
   if (!toBasket())
     m_cfg->setString("Export/dir", QFileInfo(file()).absolutePath());
   m_cfg->save();   // set only stages it, get reads the file

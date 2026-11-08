@@ -527,10 +527,57 @@ static bool writeQtdmm(const Recording &recording, const QString &path, QString 
   return true;
 }
 
+// numbers only: time, then each value in its unit; what is no number is empty
+static bool writeLabPlot(const Recording &recording, const QString &path, QString *error)
+{
+  if (recording.values.isEmpty())
+  {
+    setError(error, tr("Nothing to export."));
+    return false;
+  }
+  QSaveFile file(path);
+  if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+  {
+    setError(error, tr("Cannot open file."));
+    return false;
+  }
+  auto named = [](const QString &name, const QString &unit)
+  {
+    return unit.isEmpty() ? name : QString("%1 [%2]").arg(name, unit);
+  };
+  // "time[s]" without a space: LabPlot's automatic import guesses the
+  // separator from the first header field, "time (s)" fails it (2.12)
+  QStringList head{ QStringLiteral("time[s]"), named(mainName(QStringLiteral("value"), recording), recording.unit) };
+  for (int g = 0; g < recording.extra.size(); ++g)
+    head << named(columnName(QStringLiteral("value"), recording.extra[g], g), recording.extra[g].unit);
+  QTextStream ts(&file);
+  ts << head.join(';') << '\n';
+  auto cell = [](double v, CellState state)
+  {
+    return state == CellState::Ok ? QString::number(v, 'g', 12) : QString();
+  };
+  for (int i = 0; i < recording.values.size(); ++i)
+  {
+    ts << QString::number(recording.timeAt(i) / 1000.0, 'g', 12) << ';' << cell(recording.values[i], recording.stateAt(i));
+    for (const RecordingColumn &col : recording.extra)
+      ts << ';' << cell(col.values.value(i, qQNaN()), col.states.value(i, CellState::None));
+    ts << '\n';
+  }
+  ts.flush();
+  if (!file.commit())
+  {
+    setError(error, tr("Cannot write the file."));
+    return false;
+  }
+  return true;
+}
+
 bool RecordingFile::writeAny(const Recording &recording, const QString &path, QString *error)
 {
   if (QFileInfo(path).suffix().compare(kSuffix, Qt::CaseInsensitive) == 0)
     return writeQtdmm(recording, path, error);
+  if (path.endsWith(QString(".") + kLabPlotSuffix, Qt::CaseInsensitive))
+    return writeLabPlot(recording, path, error);
   const auto format = SpreadsheetWriter::formatForFile(path);
   if (!format)
     return write(recording, path, error);

@@ -63,6 +63,23 @@ GeneralPrefs::GeneralPrefs(QWidget *parent) : SettingsPage(parent)
       ui_sigrokExe->setText(file);
   });
   form->addRow(tr("&sigrok-cli:"), row({ ui_sigrokExe, browse }, false));
+  // LabPlot for Export, Then open in LabPlot; empty: searched
+  ui_labPlotExe = new QLineEdit(this);
+  ui_labPlotExe->setObjectName("ui_labPlotExe");
+  ui_labPlotExe->setPlaceholderText(tr("searched"));
+  ui_labPlotExe->setToolTip(tr("The program the export opens a recording in; empty: labplot in the PATH, "
+                               "the Flatpak or the usual place."));
+  auto *browseLabPlot = new QToolButton(this);
+  browseLabPlot->setObjectName("ui_labPlotExeButton");
+  browseLabPlot->setIcon(QIcon::fromTheme("document-open"));
+  browseLabPlot->setToolTip(tr("Choose LabPlot"));
+  connect(browseLabPlot, &QToolButton::clicked, this, [this]
+  {
+    const QString file = QFileDialog::getOpenFileName(this, tr("LabPlot executable"));
+    if (!file.isEmpty())
+      ui_labPlotExe->setText(QDir::toNativeSeparators(file));
+  });
+  form->addRow(tr("&LabPlot:"), row({ ui_labPlotExe, browseLabPlot }, false));
 
   // where New project basket starts; the basket itself is optional
   addSection(form, tr("Project basket"));
@@ -115,12 +132,18 @@ QString GeneralPrefs::sigrokExecutable() const
   return exe.isEmpty() ? QStringLiteral("sigrok-cli") : exe;
 }
 
+QString GeneralPrefs::labPlotExecutable() const
+{
+  return QDir::fromNativeSeparators(ui_labPlotExe->text().trimmed());
+}
+
 void GeneralPrefs::defaultsSLOT()
 {
   ui_alertUnsavedData->setChecked(m_cfg->getBool("Alert/unsaved-file", true));
   ui_saveWindowPos->setChecked(m_cfg->getBool("Save/window-pos", true));
   ui_saveWindowSize->setChecked(m_cfg->getBool("Save/window-size", true));
   ui_sigrokExe->setText(m_cfg->getString("Port settings/sigrok_exe", "sigrok-cli"));
+  ui_labPlotExe->setText(QDir::toNativeSeparators(m_cfg->getString("Programs/labplot")));
   ui_basketBase->setText(QDir::toNativeSeparators(m_cfg->getString("Basket/base-dir")));
 }
 
@@ -130,6 +153,7 @@ void GeneralPrefs::factoryDefaultsSLOT()
   ui_saveWindowPos->setChecked(true);
   ui_saveWindowSize->setChecked(true);
   ui_sigrokExe->setText("sigrok-cli");
+  ui_labPlotExe->clear();
   ui_basketBase->clear();
 }
 
@@ -139,5 +163,6 @@ void GeneralPrefs::applySLOT()
   m_cfg->setBool("Save/window-pos", saveWindowPosition());
   m_cfg->setBool("Save/window-size", saveWindowSize());
   m_cfg->setString("Port settings/sigrok_exe", sigrokExecutable());
+  m_cfg->setString("Programs/labplot", labPlotExecutable());
   m_cfg->setString("Basket/base-dir", ui_basketBase->text().trimmed().isEmpty() ? QString() : basketBase());
 }

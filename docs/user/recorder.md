@@ -289,6 +289,17 @@ the quick way, straight to the file dialog:
   (alarms, trigger, your own). It is a ZIP of the same CSV
   (`recording.csv`) and a `meta.json`; *Import* reads it back with its
   marks, unpacked the CSV reads anywhere.
+- **CSV for LabPlot** (`.labplot.csv`) has numbers only, for
+  [LabPlot](https://labplot.org) or any other analysis program: the time in
+  seconds, then one column per value in its unit without SI prefix,
+  `time[s];Sim A: value [V];Sim A: value 2 [A]`, an empty cell where the
+  value is no number. *Import* does not read it back.
+- **Then open in LabPlot** writes that CSV and starts LabPlot with it; its
+  import dialog takes the columns as they are, **OK** puts them in a table.
+  QtDMM looks for `labplot` in the `PATH`, the Flatpak `org.kde.labplot` and
+  the usual place on Windows and macOS; another place is set under
+  **Settings → General → Programs → LabPlot**. QtDMM as Flatpak cannot
+  start other programs: open the file in LabPlot yourself.
 
 *Export* (Ctrl+E) writes the recording on the grid of **Sample every** as
 CSV, or - pick the file type in the dialog or just name the file `.xlsx` /

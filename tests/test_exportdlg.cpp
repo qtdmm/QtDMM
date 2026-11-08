@@ -4,6 +4,7 @@
 // ExportDlg: formats per kind, where to, the last choice kept.
 
 #include <QApplication>
+#include <QCheckBox>
 #include <QComboBox>
 #include <QLineEdit>
 #include <QRadioButton>
@@ -11,6 +12,7 @@
 
 #include "core/settings.h"
 #include "ui/dialogs/exportdlg.h"
+#include "ui/labplot.h"
 #include "testutil.h"
 
 int main(int argc, char **argv)
@@ -21,7 +23,7 @@ int main(int argc, char **argv)
   QTemporaryDir tmp;
   Settings cfg("exportdlg", tmp.path());
 
-  check(ExportDlg::formats(ExportDlg::Recording).size() == 5 && ExportDlg::formats(ExportDlg::Table).size() == 3
+  check(ExportDlg::formats(ExportDlg::Recording).size() == 6 && ExportDlg::formats(ExportDlg::Table).size() == 3
           && ExportDlg::formats(ExportDlg::Picture).first().first == "png", "formats of each kind");
 
   {
@@ -47,6 +49,35 @@ int main(int argc, char **argv)
     dlg.findChildren<QRadioButton *>().first()->setChecked(true);
     check(dlg.toBasket() && dlg.file().isEmpty(), "into the basket: no file");
   }
+
+  {
+    // LabPlot: the checkbox takes the format made for it, another format drops it
+    ExportDlg dlg(ExportDlg::Recording, QString(), &cfg);
+    auto *labPlot = dlg.findChild<QCheckBox *>();
+    auto *fileEdit = dlg.findChild<QLineEdit *>();
+    labPlot->setChecked(true);
+    check(dlg.openInLabPlot() && dlg.format() == "labplot.csv", "LabPlot: its format " + dlg.format());
+    fileEdit->setText(tmp.filePath("rec"));
+    check(dlg.file() == tmp.filePath("rec.labplot.csv"), "two dots: " + dlg.file());
+    fileEdit->setText(tmp.filePath("rec.labplot.csv"));
+    check(dlg.file() == tmp.filePath("rec.labplot.csv"), "not twice: " + dlg.file());
+    dlg.accept();
+    auto combos = dlg.findChildren<QComboBox *>();
+    combos[1]->setCurrentIndex(0);
+    check(!dlg.openInLabPlot(), "another format: no LabPlot");
+    combos[0]->setCurrentIndex(1);   // the table
+    check(!labPlot->isEnabled(), "only for the recording");
+  }
+  {
+    ExportDlg dlg(ExportDlg::Recording, QString(), &cfg);
+    check(dlg.openInLabPlot(), "LabPlot kept as last choice");
+  }
+  // the program set is taken as it is, a missing one is none
+  const QString exe = QCoreApplication::applicationFilePath();
+  check(LabPlot::command("x.csv", exe) == QStringList({ exe, "x.csv" }), "the program set");
+  check(LabPlot::command("x.csv", tmp.filePath("no-labplot")).isEmpty(), "a missing program: none");
+  QString why;
+  check(!LabPlot::open("x.csv", tmp.filePath("no-labplot"), &why) && !why.isEmpty(), "not found: says so");
 
   if (failed == 0)
     qInfo() << "All export dialog tests passed.";

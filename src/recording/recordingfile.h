@@ -106,10 +106,17 @@ struct Recording
 ///
 /// A QtDMM recording (`*.qtdmm-rec`) is a ZIP of that CSV as `recording.csv`
 /// and `meta.json` (Recording::meta): unpacked, the CSV reads anywhere.
+///
+/// A CSV for LabPlot (`*.labplot.csv`, written only) has numbers alone:
+/// `time[s];value [V];value 2 [A];Sim B: value [V]`, each value in its unit
+/// without SI prefix, an empty cell where it is no number. No timestamp,
+/// status or limit columns: LabPlot's import takes every column as a number.
 namespace RecordingFile
 {
 /// The suffix of a QtDMM recording.
 inline constexpr const char *kSuffix = "qtdmm-rec";
+/// The suffix of a CSV for LabPlot, after the dot ("x.labplot.csv").
+inline constexpr const char *kLabPlotSuffix = "labplot.csv";
 /// Reads @p path; on failure returns nothing and sets @p error (translated).
 std::optional<Recording> read(const QString &path, QString *error = nullptr);
 /// Writes @p recording to @p path; false with @p error on failure or when
@@ -117,8 +124,8 @@ std::optional<Recording> read(const QString &path, QString *error = nullptr);
 bool write(const Recording &recording, const QString &path, QString *error = nullptr);
 /// The same columns as an Excel (.xlsx) or OpenDocument (.ods) sheet, with
 /// real date and number cells (SpreadsheetWriter); the format follows the
-/// suffix; `.qtdmm-rec` writes a QtDMM recording. Falls back to CSV for any
-/// other suffix.
+/// suffix; `.qtdmm-rec` writes a QtDMM recording, `.labplot.csv` a CSV for
+/// LabPlot. Falls back to CSV for any other suffix.
 bool writeAny(const Recording &recording, const QString &path, QString *error = nullptr);
 
 /// The other meters in @p recording (RecordingColumn::device, not
