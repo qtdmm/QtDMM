@@ -74,3 +74,21 @@ basket itself stays as it is.
 Hidden files and folders (names beginning with a dot, such as `.git`) stay
 out, as does the ZIP itself when it is saved into the basket. A ZIP holds
 at most 4 GB.
+
+## Importing a project
+
+**Import project...** (in the menu at the basket's name, or as a button
+while no basket is open) unpacks a project ZIP into a new basket in the
+folder for new projects and opens it. It is named like the folder in the
+ZIP, `Bench (2)` when that name is taken; a basket that is there already
+is never written into.
+
+Before anything is unpacked, QtDMM checks the ZIP: every file the `export`
+part of its `project.json` lists must be there with the same size and
+SHA-256 checksum, and no file may lie outside its folder (a path with
+`..`). If something is missing or changed, nothing is written and the
+message names the files. The `export` part goes again; the basket's
+`project.json` is as it was before the export.
+
+Any other ZIP works too: its files become a basket named like the ZIP
+file.

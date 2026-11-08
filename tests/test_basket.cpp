@@ -7,6 +7,7 @@
 #include <QCryptographicHash>
 #include <QDir>
 #include <QFile>
+#include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -122,6 +123,58 @@ int main(int argc, char **argv)
   basket.setFolder(QString());
   check(ProjectFolder::current().isEmpty() && ProjectFolder::proposal("/elsewhere/ripple.csv") == "/elsewhere/ripple.csv",
         "save dialogs: without a basket where they were");
+  // and back: unpacked into a folder of its own, checked, without "export"
+  auto zipOf = [&](const QString &name, const QList<QPair<QByteArray, QByteArray>> &entries)
+  {
+    ZipWriter w;
+    for (const auto &e : entries)
+      w.add(e.first, e.second, false);
+    write(dir.filePath(name), w.finish());
+    return dir.filePath(name);
+  };
+  QDir().mkpath(dir.filePath("base"));
+  QString folder;
+  check(BasketWidget::importProject(dir.filePath("Bench/Bench.zip"), dir.filePath("base"), &folder, &why)
+          && folder == dir.filePath("base/Bench"),
+        "imported as base/Bench: " + why + " " + folder);
+  auto read = [](const QString &path)
+  {
+    QFile f(path);
+    return f.open(QIODevice::ReadOnly) ? f.readAll() : QByteArray("(none)");
+  };
+  check(read(dir.filePath("base/Bench/pictures/graph.png")) == "not really a PNG"
+          && read(dir.filePath("base/Bench/a (2).csv")) == "1",
+        "the files where they were");
+  const QJsonObject back = BasketWidget::readProject(dir.filePath("base/Bench"));
+  check(back.value("description").toString() == "Ripple of the 12 V supply" && !back.contains("export"),
+        "project.json without the export part");
+  check(BasketWidget::importProject(dir.filePath("Bench/Bench.zip"), dir.filePath("base"), &folder, &why)
+          && folder == dir.filePath("base/Bench (2)"),
+        "the name taken: Bench (2), got " + folder);
+  // a file changed after the export: refused, nothing written
+  const QByteArray exportedProject = zipEntry(zip, "Bench/project.json").value_or("");
+  const QString tampered = zipOf("changed.zip", { { "Bench/project.json", exportedProject }, { "Bench/a.csv", "2" },
+                                                  { "Bench/a (2).csv", "1" },
+                                                  { "Bench/pictures/graph.png", "not really a PNG" } });
+  check(!BasketWidget::importProject(tampered, dir.filePath("base"), &folder, &why) && why.contains("a.csv")
+          && !QFileInfo::exists(dir.filePath("base/Bench (3)")),
+        "a changed file: refused, nothing written: " + why);
+  // no way out of the folder
+  const QString slip = zipOf("slip.zip", { { "Bench/../../evil.txt", "x" } });
+  check(!BasketWidget::importProject(slip, dir.filePath("base"), &folder, &why)
+          && !QFileInfo::exists(dir.filePath("evil.txt")),
+        "a path with ..: refused: " + why);
+  check(!BasketWidget::importProject(zipOf("abs.zip", { { "/evil.txt", "x" } }), dir.filePath("base"), &folder, &why),
+        "an absolute path: refused");
+  // any ZIP without one top folder: named like the file, a basket then
+  check(BasketWidget::importProject(zipOf("Loose files.zip", { { "x.csv", "1" }, { "sub/y.txt", "2" } }),
+                                    dir.filePath("base"), &folder, &why)
+          && folder == dir.filePath("base/Loose files") && read(dir.filePath("base/Loose files/sub/y.txt")) == "2"
+          && BasketWidget::readProject(folder).value("format").toInt() == 1,
+        "loose files: a basket named like the ZIP: " + why);
+  write(dir.filePath("nozip.zip"), "plain text");
+  check(!BasketWidget::importProject(dir.filePath("nozip.zip"), dir.filePath("base"), &folder, &why) && !why.isEmpty(),
+        "no ZIP: an error");
 
   if (failed == 0)
     qInfo() << "All basket tests passed.";

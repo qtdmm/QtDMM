@@ -35,3 +35,14 @@ private:
 /// The entry @p name of the ZIP archive @p zip, nothing when it has none or
 /// @p zip is no archive (miniz's reader).
 std::optional<QByteArray> zipEntry(const QByteArray &zip, const QString &name);
+
+/// A file of a ZIP archive, unpacked.
+struct ZipFileEntry
+{
+  QString    name;   ///< its path in the archive, '/' between folders
+  QByteArray data;
+};
+/// All files of the ZIP archive @p zip (folders left out), in the archive's
+/// order; nothing when @p zip is no archive, a file cannot be unpacked or
+/// all of them unpacked would pass @p maxTotal bytes.
+std::optional<QList<ZipFileEntry>> zipFiles(const QByteArray &zip, qint64 maxTotal);
