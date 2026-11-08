@@ -4,12 +4,16 @@
 // BasketWidget: the folder of a project, copies in under free names.
 
 #include <QApplication>
+#include <QCryptographicHash>
 #include <QDir>
 #include <QFile>
+#include <QJsonArray>
+#include <QJsonDocument>
 #include <QJsonObject>
 #include <QSignalSpy>
 #include <QTemporaryDir>
 
+#include "recording/zipfile.h"
 #include "ui/views/basketwidget.h"
 #include "testutil.h"
 
@@ -71,6 +75,42 @@ int main(int argc, char **argv)
   check(BasketWidget::setProjectDescription(dir.filePath("Other"), "x")
           && BasketWidget::readProject(dir.filePath("Other")).value("format").toInt() == 1, "made first when missing");
   check(BasketWidget::readProject(dir.filePath("none")).isEmpty(), "no project.json: empty");
+
+  // the project as a ZIP: every file under the basket's name, hidden ones
+  // and the archive itself left out, project.json with the file list
+  QDir().mkpath(dir.filePath("Bench/pictures"));
+  QDir().mkpath(dir.filePath("Bench/.git"));
+  write(dir.filePath("Bench/pictures/graph.png"), "not really a PNG");
+  write(dir.filePath("Bench/.git/HEAD"), "ref");
+  write(dir.filePath("Bench/.directory"), "x");
+  write(dir.filePath("Bench/Bench.zip"), "an older export");
+  QString why;
+  check(BasketWidget::exportProject(dir.filePath("Bench"), dir.filePath("Bench/Bench.zip"), &why),
+        "exported into the basket itself: " + why);
+  QFile zipFile(dir.filePath("Bench/Bench.zip"));
+  check(zipFile.open(QIODevice::ReadOnly), "the archive is there");
+  const QByteArray zip = zipFile.readAll();
+  zipFile.close();
+  check(zipEntry(zip, "Bench/a.csv") == QByteArray("1") && zipEntry(zip, "Bench/a (2).csv") == QByteArray("1"),
+        "the files under the basket's name");
+  check(zipEntry(zip, "Bench/pictures/graph.png") == QByteArray("not really a PNG"), "sub folders too, stored");
+  check(!zipEntry(zip, "Bench/.git/HEAD") && !zipEntry(zip, "Bench/.directory") && !zipEntry(zip, "Bench/Bench.zip"),
+        "hidden files and the archive itself stay out");
+  const QJsonObject manifest = QJsonDocument::fromJson(zipEntry(zip, "Bench/project.json").value_or("")).object();
+  check(manifest.value("description").toString() == "Ripple of the 12 V supply", "project.json keeps its keys");
+  const QJsonObject exported = manifest.value("export").toObject();
+  const QJsonArray files = exported.value("files").toArray();
+  QStringList paths;
+  for (const QJsonValue &f : files)
+    paths << f.toObject().value("path").toString();
+  check(paths == QStringList({ "a (2).csv", "a.csv", "pictures/graph.png" }), "the file list: " + paths.join(", "));
+  check(files.at(2).toObject().value("size").toInt() == 16
+          && files.at(2).toObject().value("sha256").toString()
+               == QCryptographicHash::hash("not really a PNG", QCryptographicHash::Sha256).toHex(),
+        "size and SHA-256");
+  check(!exported.value("date").toString().isEmpty(), "export date");
+  check(!BasketWidget::exportProject(dir.filePath("none"), dir.filePath("none.zip"), &why) && !why.isEmpty(),
+        "no folder: an error that says so");
 
   if (failed == 0)
     qInfo() << "All basket tests passed.";

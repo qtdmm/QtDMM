@@ -2,11 +2,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "ui/views/basketwidget.h"
 
+#include "recording/zipfile.h"
+
 #include <QAction>
+#include <QApplication>
 #include <QCoreApplication>
+#include <QCryptographicHash>
 #include <QDateTime>
 #include <QDesktopServices>
 #include <QDir>
+#include <QDirIterator>
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QFileDialog>
@@ -14,6 +19,7 @@
 #include <QFileSystemModel>
 #include <QHBoxLayout>
 #include <QInputDialog>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QLabel>
@@ -46,6 +52,8 @@ BasketWidget::BasketWidget(QWidget *parent) :
   connect(m_closeAction, &QAction::triggered, this, [this] { setFolder(QString()); });
   m_describeAction = new QAction(tr("&Description..."), this);
   connect(m_describeAction, &QAction::triggered, this, &BasketWidget::describeSLOT);
+  m_exportAction = new QAction(tr("E&xport project..."), this);
+  connect(m_exportAction, &QAction::triggered, this, &BasketWidget::exportSLOT);
 
   // no basket open: what it is and how to get one
   auto *none = new QWidget(m_pages);
@@ -77,7 +85,7 @@ BasketWidget::BasketWidget(QWidget *parent) :
   m_title->setToolButtonStyle(Qt::ToolButtonTextOnly);
   m_title->setAutoRaise(true);
   auto *baskets = new QMenu(m_title);
-  baskets->addActions({ m_describeAction, m_newAction, m_openAction, m_closeAction });
+  baskets->addActions({ m_describeAction, m_exportAction, m_newAction, m_openAction, m_closeAction });
   baskets->insertSeparator(m_newAction);
   m_title->setMenu(baskets);
   // icons only: the window is often a narrow column
@@ -225,6 +233,87 @@ void BasketWidget::describeSLOT()
     Q_EMIT error(tr("Project basket: cannot write %1")
                    .arg(QDir::toNativeSeparators(QDir(m_folder).filePath("project.json"))));
   showFolder();
+}
+
+bool BasketWidget::exportProject(const QString &dir, const QString &zipFile, QString *failed)
+{
+  auto fail = [failed](const QString &why)
+  {
+    if (failed)
+      *failed = why;
+    return false;
+  };
+  const QDir root(dir);
+  if (!root.exists())
+    return fail(tr("there is no folder %1").arg(QDir::toNativeSeparators(dir)));
+  const QString top = QFileInfo(root.absolutePath()).fileName();
+  const QString target = QFileInfo(zipFile).absoluteFilePath();
+  // sorted: the same basket gives the same archive
+  QStringList files;
+  QDirIterator it(root.absolutePath(), QDir::Files | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+  while (it.hasNext())
+  {
+    const QString path = it.next();
+    const QString name = root.relativeFilePath(path);
+    // hidden folders (.git, a file manager's) and the archive itself stay out
+    if (path == target || name == "project.json" || name.startsWith('.') || name.contains("/."))
+      continue;
+    files << name;
+  }
+  files.sort();
+
+  // already packed: stored as they are, deflating them again gains nothing
+  static const QStringList packed{ "zip", "qtdmm-rec", "xlsx", "ods", "odt", "docx", "png", "jpg", "jpeg",
+                                   "pdf", "gz", "xz", "bz2", "7z", "mp4", "webm" };
+  ZipWriter zip;
+  QJsonArray manifest;
+  for (const QString &name : files)
+  {
+    QFile file(root.filePath(name));
+    if (!file.open(QIODevice::ReadOnly))
+      return fail(tr("cannot read %1").arg(QDir::toNativeSeparators(file.fileName())));
+    const QByteArray data = file.readAll();
+    const QFileInfo info(file);
+    if (!zip.add((top + '/' + name).toUtf8(), data, packed.contains(info.suffix().toLower()), info.lastModified()))
+      return fail(tr("the project is too large for a ZIP file (4 GB)"));
+    manifest.append(QJsonObject{ { "path", name },
+                                 { "size", double(data.size()) },
+                                 { "sha256", QString::fromLatin1(QCryptographicHash::hash(data, QCryptographicHash::Sha256).toHex()) } });
+  }
+  QJsonObject project = readProject(dir);
+  if (!project.contains("name"))
+    project["name"] = top;
+  if (!project.contains("format"))
+    project["format"] = 1;
+  project["export"] = QJsonObject{ { "date", QDateTime::currentDateTime().toString(Qt::ISODate) },
+                                   { "qtdmm", QCoreApplication::applicationVersion() },
+                                   { "files", manifest } };
+  if (!zip.add((top + "/project.json").toUtf8(), QJsonDocument(project).toJson(), false, QDateTime::currentDateTime()))
+    return fail(tr("the project is too large for a ZIP file (4 GB)"));
+
+  QSaveFile out(zipFile);
+  if (!out.open(QIODevice::WriteOnly) || out.write(zip.finish()) < 0 || !out.commit())
+    return fail(tr("cannot write %1").arg(QDir::toNativeSeparators(zipFile)));
+  return true;
+}
+
+void BasketWidget::exportSLOT()
+{
+  if (m_folder.isEmpty())
+    return;
+  // next to the basket, not in it
+  const QFileInfo folder(m_folder);
+  const QString zipFile = QFileDialog::getSaveFileName(this, tr("Export project"),
+                                                       folder.absoluteDir().filePath(folder.fileName() + ".zip"),
+                                                       tr("ZIP archives (*.zip)"));
+  if (zipFile.isEmpty())
+    return;
+  QApplication::setOverrideCursor(Qt::WaitCursor);
+  QString why;
+  const bool ok = exportProject(m_folder, zipFile, &why);
+  QApplication::restoreOverrideCursor();
+  if (!ok)
+    Q_EMIT error(tr("Export project: %1").arg(why));
 }
 
 void BasketWidget::openSLOT()

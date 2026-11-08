@@ -49,6 +49,11 @@ public:
   /// Sets the description in project.json of @p dir (made first when missing),
   /// the other keys stay. False when it cannot be written.
   static bool setProjectDescription(const QString &dir, const QString &text);
+  /// Packs the basket in @p dir into the ZIP @p zipFile: every file under a
+  /// folder named like the basket, project.json extended by "export" (date,
+  /// QtDMM version, each file with size and SHA-256). Hidden files and
+  /// @p zipFile itself stay out. On failure false and the reason in @p failed.
+  static bool exportProject(const QString &dir, const QString &zipFile, QString *failed = nullptr);
   /// @p name in @p dir if free, else "name (2).ext", "name (3).ext" ...
   static QString freeName(const QString &dir, const QString &name);
 
@@ -68,6 +73,8 @@ public Q_SLOTS:
   void        openSLOT();
   /// Asks for the description of the open basket's project.
   void        describeSLOT();
+  /// Asks where to and exports the open basket as a ZIP (exportProject()).
+  void        exportSLOT();
   /// Opens @p path with the program the system has for it.
   void        openWithSystem(const QString &path);
 
@@ -88,6 +95,7 @@ private:
   QAction          *m_openAction;
   QAction          *m_closeAction;
   QAction          *m_describeAction;
+  QAction          *m_exportAction;
   QLabel           *m_description;   ///< of the project, shown under the name
   QToolButton      *m_title;
   QLabel           *m_empty;

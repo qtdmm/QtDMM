@@ -4,8 +4,12 @@
 
 #include "3rdparty/miniz/miniz.h"
 
-bool ZipWriter::add(const QByteArray &name, const QByteArray &data, bool store)
+bool ZipWriter::add(const QByteArray &name, const QByteArray &data, bool store, const QDateTime &time)
 {
+  // the sizes and offsets are 32 bits, the number of entries 16
+  constexpr qint64 kLimit = 0xffffffffLL;
+  if (m_entries.size() >= 0xffff || qint64(m_data.size()) + data.size() + name.size() + 30 > kLimit)
+    return false;
   QByteArray payload;
   quint16 method = 0;
   if (!store && !data.isEmpty())
@@ -20,6 +24,8 @@ bool ZipWriter::add(const QByteArray &name, const QByteArray &data, bool store)
   }
   else
     payload = data;
+  if (qint64(m_data.size()) + payload.size() + name.size() + 30 > kLimit)
+    return false;
   const quint32 crc = quint32(mz_crc32(MZ_CRC32_INIT, reinterpret_cast<const mz_uint8 *>(data.constData()), size_t(data.size())));
 
   Entry e;
@@ -29,6 +35,15 @@ bool ZipWriter::add(const QByteArray &name, const QByteArray &data, bool store)
   e.uncompressed = quint32(data.size());
   e.method = method;
   e.offset = quint32(m_data.size());
+  // MS-DOS date and time, local, two seconds a step
+  e.time = 0;
+  e.date = 0x21;   // 1980-01-01
+  const QDateTime local = time.toLocalTime();
+  if (local.isValid() && local.date().year() >= 1980 && local.date().year() < 2108)
+  {
+    e.time = quint16((local.time().hour() << 11) | (local.time().minute() << 5) | (local.time().second() / 2));
+    e.date = quint16(((local.date().year() - 1980) << 9) | (local.date().month() << 5) | local.date().day());
+  }
   m_entries << e;
 
   // local file header
@@ -36,7 +51,7 @@ bool ZipWriter::add(const QByteArray &name, const QByteArray &data, bool store)
   put16(20);            // version needed
   put16(0x0800);        // flags: UTF-8 names
   put16(method);
-  put16(0); put16(0x21);   // time 00:00:00, date 1980-01-01
+  put16(e.time); put16(e.date);
   put32(crc);
   put32(e.compressed);
   put32(e.uncompressed);
@@ -56,7 +71,7 @@ QByteArray ZipWriter::finish()
     put16(20); put16(20);
     put16(0x0800);
     put16(e.method);
-    put16(0); put16(0x21);
+    put16(e.time); put16(e.date);
     put32(e.crc);
     put32(e.compressed);
     put32(e.uncompressed);
