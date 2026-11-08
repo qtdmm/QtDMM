@@ -275,6 +275,28 @@ int main(int argc, char **argv)
       check(bad.open(QIODevice::WriteOnly) && bad.write(zip.finish()) > 0, "bad file written");
       bad.close();
       check(!RecordingFile::read(bad.fileName(), &err) && !err.isEmpty(), "a ZIP without recording.csv: an error");
+
+      // for LabPlot: numbers only, units in the header, no number empty
+      Recording lp;
+      lp.start = rec->start;
+      lp.unit = "V";
+      lp.device = "Sim A";
+      lp.values = { 1.5, qQNaN(), 0.002 };
+      lp.states = { CellState::Ok, CellState::Overload, CellState::Ok };
+      RecordingColumn other;
+      other.device = "Sim B";
+      other.unit = "A";
+      other.values = { qQNaN(), 0.25, 0.5 };
+      other.states = { CellState::None, CellState::Ok, CellState::Ok };
+      lp.extra << other;
+      const QString lpPath = tmp.filePath("probe.labplot.csv");
+      check(RecordingFile::writeAny(lp, lpPath, &err), "LabPlot CSV written: " + err);
+      QFile lpFile(lpPath);
+      check(lpFile.open(QIODevice::ReadOnly | QIODevice::Text), "LabPlot CSV there");
+      const QString text = QString::fromUtf8(lpFile.readAll());
+      lpFile.close();
+      check(text == "time[s];Sim A: value [V];Sim B: value [A]\n0;1.5;\n0.1;;0.25\n0.2;0.002;0.5\n",
+            "LabPlot CSV: " + text);
     }
   }
 

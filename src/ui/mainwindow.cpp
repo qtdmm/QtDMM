@@ -78,6 +78,7 @@ static const char *kWorkspaceSuffix = "qtdmm-workspace";
 #include "service/devicesession.h"
 #include "core/workspacefile.h"
 #include "ui/dialogs/exportdlg.h"
+#include "ui/labplot.h"
 #include "ui/dialogs/workspacedlg.h"
 #include <QBuffer>
 #include <QMdiArea>
@@ -2990,7 +2991,11 @@ void MainWindow::exportDialog(int view)
       ok = m_wid->graph()->exportImageFile(path);
       break;
   }
-  if (ok)
+  QString labPlotError;
+  if (ok && dlg.openInLabPlot()
+      && !LabPlot::open(path, m_wid->settings()->getString("Programs/labplot"), &labPlotError))
+    Q_EMIT m_wid->error(labPlotError);
+  else if (ok)
     Q_EMIT m_wid->error(tr("Exported to %1").arg(QDir::toNativeSeparators(path)));
   else if (dlg.what() != ExportDlg::Recording)
     Q_EMIT m_wid->error(tr("Export failed: %1").arg(error.isEmpty() ? QDir::toNativeSeparators(path) : error));

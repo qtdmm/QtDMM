@@ -4,6 +4,7 @@
 
 #include <QDialog>
 
+class QCheckBox;
 class QComboBox;
 class QLabel;
 class QLineEdit;
@@ -12,8 +13,9 @@ class Settings;
 
 /// Export in one dialog: what (the recording, the readings table, a picture
 /// of the graph), in which format, and where to (a file or the open project
-/// basket). It only asks; MainWindow::exportWith() writes. The last choice
-/// is kept (Export/what, Export/format, Export/to-basket). Ctrl+E stays the
+/// basket), and whether LabPlot opens the recording then. It only asks;
+/// MainWindow::exportDialog() writes. The last choice is kept
+/// (Export/format-<what>, Export/to-basket, Export/dir, Export/labplot). Ctrl+E stays the
 /// quick way without it.
 class ExportDlg : public QDialog
 {
@@ -27,7 +29,8 @@ public:
   ExportDlg(What what, const QString &basket, Settings *cfg, QWidget *parent = nullptr);
 
   What        what() const;
-  /// The file suffix of the format: csv, xlsx, ods, png, svg, pdf, jpg.
+  /// The file suffix of the format: csv, xlsx, ods, qtdmm-rec, labplot.csv,
+  /// png, svg, pdf, jpg.
   QString     format() const;
   /// CSV with every reading instead of the recording's grid.
   bool        everyReading() const;
@@ -35,6 +38,8 @@ public:
   bool        toBasket() const;
   /// The file chosen, with the format's suffix.
   QString     file() const;
+  /// Open the recording in LabPlot once written (the format for LabPlot).
+  bool        openInLabPlot() const;
 
   void        accept() override;
 
@@ -51,4 +56,5 @@ private:
   QRadioButton *m_toFile;
   QRadioButton *m_toBasket;
   QLineEdit    *m_file;
+  QCheckBox    *m_labPlot;
 };
