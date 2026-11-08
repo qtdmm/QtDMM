@@ -19,6 +19,9 @@ finish-args:
   # alarm sounds (PulseAudio, also PipeWire's); cameras (/dev/video*) come
   # with --device=all above
   - --socket=pulseaudio
+  # files without a dialog: QTDMM:RECord:SAVE into Documents/QtDMM, benches and
+  # recent files by their path. Else they land inside the sandbox and are lost
+  - --filesystem=home
 
 modules:
   - name: hidapi
