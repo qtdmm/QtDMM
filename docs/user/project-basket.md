@@ -53,3 +53,19 @@ A file is never overwritten: a second `ripple.csv` becomes `ripple (2).csv`.
 | **Open folder** (the folder at the top) | Shows the basket in the file manager |
 
 The list shows the names, newest first.
+
+## Exporting the project
+
+**Export project...** in the menu at the basket's name packs the whole
+basket into one ZIP file, to pass it on or to keep it. The file is
+offered next to the basket, `<name>.zip`. Inside, everything lies in a
+folder with the basket's name, so unpacking it gives the basket back.
+
+The `project.json` in the ZIP gets an `export` part: the date, the QtDMM
+version and every file with its size and SHA-256 checksum, to check that
+nothing went missing or changed on the way. The `project.json` in the
+basket itself stays as it is.
+
+Hidden files and folders (names beginning with a dot, such as `.git`) stay
+out, as does the ZIP itself when it is saved into the basket. A ZIP holds
+at most 4 GB.

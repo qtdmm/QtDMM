@@ -3,6 +3,7 @@
 #pragma once
 
 #include <QByteArray>
+#include <QDateTime>
 #include <QList>
 #include <QString>
 
@@ -16,13 +17,15 @@
 class ZipWriter
 {
 public:
-  /// Adds @p data as @p name, deflated or, with @p store, as it is.
-  bool add(const QByteArray &name, const QByteArray &data, bool store);
+  /// Adds @p data as @p name, deflated or, with @p store, as it is, dated
+  /// @p time (none: 1980-01-01). False when deflate fails or the archive
+  /// would pass 4 GiB or 65535 entries (no ZIP64).
+  bool add(const QByteArray &name, const QByteArray &data, bool store, const QDateTime &time = {});
   /// The archive with all entries added.
   QByteArray finish();
 
 private:
-  struct Entry { QByteArray name; quint32 crc, compressed, uncompressed, offset; quint16 method; };
+  struct Entry { QByteArray name; quint32 crc, compressed, uncompressed, offset; quint16 method, time, date; };
   void put16(quint16 v) { m_data.append(char(v & 0xff)).append(char(v >> 8)); }
   void put32(quint32 v) { put16(quint16(v & 0xffff)); put16(quint16(v >> 16)); }
   QByteArray m_data;

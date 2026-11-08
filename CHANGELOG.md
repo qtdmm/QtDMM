@@ -4,6 +4,7 @@
 
 ### GUI
 
+- **Export project** — *Export project...* at the project basket's name packs the basket into a ZIP, with a `project.json` that lists every file with size and SHA-256.
 - **QtDMM recording** (`.qtdmm-rec`) — a format of its own for Export and the export dialog: the recording's CSV and a `meta.json` with the marks in a ZIP; *Import* and a double click in the project basket bring the marks back.
 - **Export dialog** — *Export...* (Ctrl+Shift+E, in the context menus of graph and table) asks what (recording, readings table, picture of the graph), the format (CSV on the grid or every reading, xlsx, ods; PNG, SVG, PDF, JPEG) and where to (a file or the open project basket), and keeps the last choice. *Export* (Ctrl+E) stays the quick way.
 - **The open project basket is remembered** — it was kept only until the settings were saved for another reason.
