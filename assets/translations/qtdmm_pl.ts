@@ -798,170 +798,213 @@
 <context>
     <name>BasketWidget</name>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="40"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="43"/>
         <source>Project basket</source>
         <translation>Teczka projektu</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="47"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="50"/>
         <source>&amp;New project basket...</source>
         <translation>&amp;Nowa teczka projektu...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="48"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="51"/>
         <source>&amp;Open project basket...</source>
         <translation>&amp;Otwórz teczkę projektu...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="49"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="52"/>
         <source>&amp;Close project basket</source>
         <translation>&amp;Zamknij teczkę projektu</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="53"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="56"/>
         <source>&amp;Description...</source>
         <translation>O&amp;pis...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="55"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="58"/>
         <source>E&amp;xport project...</source>
         <translation>&amp;Eksportuj projekt...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="61"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="60"/>
+        <source>&amp;Import project...</source>
+        <translation>&amp;Importuj projekt...</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="66"/>
         <source>A project basket keeps the files of a project: its benches, recordings, pictures, PDFs, LabPlot projects. It is a folder.</source>
         <translation>Teczka projektu zbiera pliki projektu: jego stanowiska pomiarowe, nagrania, obrazy, pliki PDF, projekty LabPlot. Jest to folder.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="93"/>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="423"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="101"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="538"/>
         <source>&amp;Add...</source>
         <translation>&amp;Dodaj...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="97"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="105"/>
         <source>Copy files into the basket</source>
         <translation>Kopiuj pliki do teczki projektu</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="100"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="108"/>
         <source>Open &amp;folder</source>
         <translation>Otwórz &amp;folder</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="104"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="112"/>
         <source>Show the basket in the file manager</source>
         <translation>Pokaż teczkę projektu w menedżerze plików</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="118"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="126"/>
         <source>Empty. Drop files here or add them with Add...</source>
         <translation>Pusto. Upuść tu pliki lub dodaj je przyciskiem Dodaj...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="182"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="190"/>
         <source>New project basket</source>
         <translation>Nowa teczka projektu</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="187"/>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="357"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="195"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="472"/>
         <source>Project basket: cannot make the folder %1</source>
         <translation>Teczka projektu: nie można utworzyć folderu %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="227"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="235"/>
         <source>Project description</source>
         <translation>Opis projektu</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="228"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="236"/>
         <source>What the project is about:</source>
         <translation>Czego dotyczy projekt:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="233"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="241"/>
         <source>Project basket: cannot write %1</source>
         <translation>Teczka projektu: nie można zapisać %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="248"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="256"/>
         <source>there is no folder %1</source>
         <translation>folder %1 nie istnieje</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="274"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="282"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="337"/>
         <source>cannot read %1</source>
         <translation>nie można odczytać %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="278"/>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="292"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="286"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="300"/>
         <source>the project is too large for a ZIP file (4 GB)</source>
         <translation>projekt jest za duży na plik ZIP (4 GB)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="296"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="304"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="406"/>
         <source>cannot write %1</source>
         <translation>nie można zapisać %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="306"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="314"/>
         <source>Export project</source>
         <translation>Eksportuj projekt</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="308"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="316"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="418"/>
         <source>ZIP archives (*.zip)</source>
         <translation>Archiwa ZIP (*.zip)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="316"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="324"/>
         <source>Export project: %1</source>
         <translation>Eksport projektu: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="321"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="343"/>
+        <source>%1 is no ZIP file, is damaged or unpacks to more than 4 GB</source>
+        <translation>%1 nie jest plikiem ZIP, jest uszkodzony lub po rozpakowaniu przekracza 4 GB</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="346"/>
+        <source>%1 is empty</source>
+        <translation>%1 jest pusty</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="355"/>
+        <source>%1 has a file outside its folder: %2</source>
+        <translation>%1 zawiera plik spoza swojego folderu: %2</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="388"/>
+        <source>missing or changed since the export: %1</source>
+        <translation>brak lub zmieniono od eksportu: %1</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="396"/>
+        <source>cannot make the folder %1</source>
+        <translation>nie można utworzyć folderu %1</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="417"/>
+        <source>Import project</source>
+        <translation>Importuj projekt</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="428"/>
+        <source>Import project: %1</source>
+        <translation>Import projektu: %1</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="436"/>
         <source>Open project basket</source>
         <translation>Otwórz teczkę projektu</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="368"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="483"/>
         <source>Project basket: cannot copy %1</source>
         <translation>Teczka projektu: nie można skopiować %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="379"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="494"/>
         <source>Add to the project basket</source>
         <translation>Dodaj do teczki projektu</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="385"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="500"/>
         <source>No program opens %1</source>
         <translation>Żaden program nie otwiera %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="400"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="515"/>
         <source>&amp;Open</source>
         <translation>&amp;Otwórz</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="407"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="522"/>
         <source>Open &amp;with the system</source>
         <translation>Otwórz &amp;programem systemu</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="409"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="524"/>
         <source>&amp;Rename</source>
         <translation>Zmień &amp;nazwę</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="411"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="526"/>
         <source>Move to &amp;trash</source>
         <translation>Przenieś do &amp;kosza</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="419"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="534"/>
         <source>Project basket: cannot move %1 to the trash</source>
         <translation>Teczka projektu: nie można przenieść %1 do kosza</translation>
     </message>
@@ -5093,74 +5136,74 @@ Czy multimetr jest podłączony i włączony?</translation>
 <context>
     <name>MeterController</name>
     <message>
-        <location filename="../../src/service/metercontroller.cpp" line="62"/>
+        <location filename="../../src/service/metercontroller.cpp" line="63"/>
         <source>Recording stopped: the meter measures %2 now, not %1</source>
         <translation>Nagrywanie zatrzymane: miernik mierzy teraz %2, a nie %1</translation>
     </message>
     <message>
-        <location filename="../../src/service/metercontroller.cpp" line="63"/>
+        <location filename="../../src/service/metercontroller.cpp" line="64"/>
         <source>Function changed</source>
         <translation>Zmiana funkcji</translation>
     </message>
     <message>
-        <location filename="../../src/service/metercontroller.cpp" line="69"/>
+        <location filename="../../src/service/metercontroller.cpp" line="70"/>
         <source>%1 cleared</source>
         <translation>%1 zgasł</translation>
     </message>
     <message>
-        <location filename="../../src/service/metercontroller.cpp" line="83"/>
+        <location filename="../../src/service/metercontroller.cpp" line="84"/>
         <source>already starting, the recording goes on</source>
         <translation>nagrywanie już się uruchamia i jest kontynuowane</translation>
     </message>
     <message>
-        <location filename="../../src/service/metercontroller.cpp" line="93"/>
-        <location filename="../../src/service/metercontroller.cpp" line="100"/>
+        <location filename="../../src/service/metercontroller.cpp" line="94"/>
+        <location filename="../../src/service/metercontroller.cpp" line="101"/>
         <source>SCPI: %1</source>
         <translation>SCPI: %1</translation>
     </message>
     <message>
-        <location filename="../../src/service/metercontroller.cpp" line="132"/>
+        <location filename="../../src/service/metercontroller.cpp" line="133"/>
         <source>%1 ended with exit code %2</source>
         <translation>%1 zakończył się z kodem wyjścia %2</translation>
     </message>
     <message>
-        <location filename="../../src/service/metercontroller.cpp" line="339"/>
+        <location filename="../../src/service/metercontroller.cpp" line="340"/>
         <source>The meter shows %1</source>
         <translation>Miernik pokazuje %1</translation>
     </message>
     <message>
-        <location filename="../../src/service/metercontroller.cpp" line="390"/>
+        <location filename="../../src/service/metercontroller.cpp" line="391"/>
         <source>already recording, the recording goes on</source>
         <translation>nagrywanie już trwa i jest kontynuowane</translation>
     </message>
     <message>
-        <location filename="../../src/service/metercontroller.cpp" line="392"/>
+        <location filename="../../src/service/metercontroller.cpp" line="393"/>
         <source>start ignored, the recording shown is not saved yet</source>
         <translation>start zignorowany, wyświetlane nagranie nie jest jeszcze zapisane</translation>
     </message>
     <message>
-        <location filename="../../src/service/metercontroller.cpp" line="433"/>
+        <location filename="../../src/service/metercontroller.cpp" line="434"/>
         <source>SCPI: recording saved as %1</source>
         <translation>SCPI: nagranie zapisano jako %1</translation>
     </message>
     <message>
-        <location filename="../../src/service/metercontroller.cpp" line="528"/>
+        <location filename="../../src/service/metercontroller.cpp" line="584"/>
         <source>%1: %2 (%3)</source>
         <translation>%1: %2 (%3)</translation>
     </message>
     <message>
-        <location filename="../../src/service/metercontroller.cpp" line="534"/>
+        <location filename="../../src/service/metercontroller.cpp" line="590"/>
         <source>%1: %2</source>
         <translation>%1: %2</translation>
     </message>
     <message>
-        <location filename="../../src/service/metercontroller.cpp" line="550"/>
-        <location filename="../../src/service/metercontroller.cpp" line="575"/>
+        <location filename="../../src/service/metercontroller.cpp" line="606"/>
+        <location filename="../../src/service/metercontroller.cpp" line="631"/>
         <source>%1: could not run %2</source>
         <translation>%1: nie można uruchomić %2</translation>
     </message>
     <message>
-        <location filename="../../src/service/metercontroller.cpp" line="553"/>
+        <location filename="../../src/service/metercontroller.cpp" line="609"/>
         <source>%1: %2 is still running</source>
         <translation>%1: %2 nadal działa</translation>
     </message>
@@ -6367,42 +6410,42 @@ Następnie wyloguj się i zaloguj ponownie, aby członkostwo w grupie zaczęło 
     </message>
     <message>
         <location filename="../../src/recording/recordingfile.cpp" line="463"/>
-        <location filename="../../src/recording/recordingfile.cpp" line="586"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="591"/>
         <source>Nothing to export.</source>
         <translation>Nic do wyeksportowania.</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="589"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="594"/>
         <source>Recording</source>
         <translation>Nagranie</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="591"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="596"/>
         <source>timestamp</source>
         <translation>znacznik czasu</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="591"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="596"/>
         <source>time (s)</source>
         <translation>czas (s)</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="591"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="596"/>
         <source>value</source>
         <translation>wartość</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="591"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="596"/>
         <source>unit</source>
         <translation>jednostka</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="591"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="596"/>
         <source>status</source>
         <translation>stan</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="593"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="598"/>
         <source>limit</source>
         <translation>granica</translation>
     </message>
@@ -6410,7 +6453,7 @@ Następnie wyloguj się i zaloguj ponownie, aby członkostwo w grupie zaczęło 
 <context>
     <name>RecordingStore</name>
     <message>
-        <location filename="../../src/recording/recordingstore.cpp" line="976"/>
+        <location filename="../../src/recording/recordingstore.cpp" line="983"/>
         <source>Trigger</source>
         <translation>Wyzwolenie</translation>
     </message>

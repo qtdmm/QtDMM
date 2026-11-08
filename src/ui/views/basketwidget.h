@@ -54,6 +54,15 @@ public:
   /// QtDMM version, each file with size and SHA-256). Hidden files and
   /// @p zipFile itself stay out. On failure false and the reason in @p failed.
   static bool exportProject(const QString &dir, const QString &zipFile, QString *failed = nullptr);
+  /// Unpacks the project ZIP @p zipFile (exportProject(), or any ZIP) into a
+  /// new folder in @p baseDir: named like its top folder, else like the ZIP,
+  /// "name (2)" when taken. Checked before anything is written: no path
+  /// out of the folder, every file the "export" part of project.json lists
+  /// there with its size and SHA-256. project.json loses that part again.
+  /// The folder in @p folder; on failure false, nothing written and the
+  /// reason in @p failed.
+  static bool importProject(const QString &zipFile, const QString &baseDir, QString *folder,
+                            QString *failed = nullptr);
   /// @p name in @p dir if free, else "name (2).ext", "name (3).ext" ...
   static QString freeName(const QString &dir, const QString &name);
 
@@ -75,6 +84,9 @@ public Q_SLOTS:
   void        describeSLOT();
   /// Asks where to and exports the open basket as a ZIP (exportProject()).
   void        exportSLOT();
+  /// Asks for a project ZIP, unpacks it into the folder for new baskets
+  /// (importProject()) and opens it.
+  void        importSLOT();
   /// Opens @p path with the program the system has for it.
   void        openWithSystem(const QString &path);
 
@@ -96,6 +108,7 @@ private:
   QAction          *m_closeAction;
   QAction          *m_describeAction;
   QAction          *m_exportAction;
+  QAction          *m_importAction;
   QLabel           *m_description;   ///< of the project, shown under the name
   QToolButton      *m_title;
   QLabel           *m_empty;
