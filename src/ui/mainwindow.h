@@ -238,6 +238,8 @@ protected:
   QAction    *m_readingsAction = nullptr;
   QAction    *m_poincareAction = nullptr;
   QAction    *m_basketAction = nullptr;
+  QAction    *m_graphToBasket = nullptr;   ///< the recording and the graph into the project basket
+  QAction    *m_tableToBasket = nullptr;   ///< the readings into the project basket
   QAction    *m_addDeviceAction = nullptr;
   QDockWidget   *m_sidebarDock = nullptr;
   QElapsedTimer  m_designApplied;          ///< since setDesign(): its own palette change is no switch
@@ -414,6 +416,12 @@ protected:
   /// Loads the workspace @p file; false (with a message) when it is none.
   bool        loadWorkspaceFile(const QString &file);
   void        saveWorkspace();
+  /// The recording as CSV and the graph as PNG, into the project basket.
+  void        graphToBasket();
+  /// The readings table as CSV, into the project basket.
+  void        tableToBasket();
+  /// A free path in the project basket: date, time, the leading device, @p what.
+  QString     basketName(const QString &what, const QString &suffix) const;
   /// The workspaces used last, shared by all instances (workspaces.conf).
   RecentFiles recentWorkspaces() const;
   /// The sidebar's node and the menu "Recent workspaces" anew.

@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "ui/views/basketwidget.h"
 
+#include <QAction>
+#include <QCoreApplication>
+#include <QDateTime>
 #include <QDesktopServices>
 #include <QDir>
 #include <QDragEnterEvent>
@@ -10,6 +13,8 @@
 #include <QFileInfo>
 #include <QFileSystemModel>
 #include <QHBoxLayout>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QLabel>
 #include <QMenu>
 #include <QMimeData>
@@ -31,19 +36,28 @@ BasketWidget::BasketWidget(QWidget *parent) :
   outer->setContentsMargins(0, 0, 0, 0);
   outer->addWidget(m_pages);
 
-  // without a bench: what the basket is and how to get one
+  m_newAction = new QAction(tr("&New project basket..."), this);
+  m_openAction = new QAction(tr("&Open project basket..."), this);
+  m_closeAction = new QAction(tr("&Close project basket"), this);
+  connect(m_newAction, &QAction::triggered, this, &BasketWidget::newSLOT);
+  connect(m_openAction, &QAction::triggered, this, &BasketWidget::openSLOT);
+  connect(m_closeAction, &QAction::triggered, this, [this] { setFolder(QString()); });
+
+  // no basket open: what it is and how to get one
   auto *none = new QWidget(m_pages);
   auto *noneLayout = new QVBoxLayout(none);
-  m_noBench = new QLabel(tr("The project basket keeps the files of a bench: recordings, pictures, PDFs, "
-                            "LabPlot projects. It is a folder next to the bench file.\n\n"
-                            "Save the bench first."), none);
-  m_noBench->setWordWrap(true);
-  m_noBench->setAlignment(Qt::AlignCenter);
-  auto *save = new QPushButton(tr("&Save bench..."), none);
-  connect(save, &QPushButton::clicked, this, &BasketWidget::saveBenchRequested);
+  auto *what = new QLabel(tr("A project basket keeps the files of a project: its benches, recordings, "
+                             "pictures, PDFs, LabPlot projects. It is a folder."), none);
+  what->setWordWrap(true);
+  what->setAlignment(Qt::AlignCenter);
+  auto *create = new QPushButton(m_newAction->text(), none);
+  auto *choose = new QPushButton(m_openAction->text(), none);
+  connect(create, &QPushButton::clicked, m_newAction, &QAction::trigger);
+  connect(choose, &QPushButton::clicked, m_openAction, &QAction::trigger);
   noneLayout->addStretch();
-  noneLayout->addWidget(m_noBench);
-  noneLayout->addWidget(save, 0, Qt::AlignCenter);
+  noneLayout->addWidget(what);
+  noneLayout->addWidget(create, 0, Qt::AlignCenter);
+  noneLayout->addWidget(choose, 0, Qt::AlignCenter);
   noneLayout->addStretch();
   m_pages->addWidget(none);
 
@@ -52,10 +66,15 @@ BasketWidget::BasketWidget(QWidget *parent) :
   auto *layout = new QVBoxLayout(page);
   layout->setContentsMargins(4, 4, 4, 4);
   auto *bar = new QHBoxLayout;
-  m_title = new QLabel(page);
-  m_title->setMinimumWidth(0);
+  // its name; a click offers another basket
+  m_title = new QToolButton(page);
   m_title->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
-  m_title->setTextInteractionFlags(Qt::TextSelectableByMouse);
+  m_title->setPopupMode(QToolButton::InstantPopup);
+  m_title->setToolButtonStyle(Qt::ToolButtonTextOnly);
+  m_title->setAutoRaise(true);
+  auto *baskets = new QMenu(m_title);
+  baskets->addActions({ m_newAction, m_openAction, m_closeAction });
+  m_title->setMenu(baskets);
   // icons only: the window is often a narrow column
   auto *add = new QToolButton(page);
   add->setText(tr("&Add..."));
@@ -114,14 +133,6 @@ BasketWidget::BasketWidget(QWidget *parent) :
   showFolder();
 }
 
-QString BasketWidget::folderFor(const QString &benchFile)
-{
-  if (benchFile.isEmpty())
-    return {};
-  const QFileInfo info(benchFile);
-  return info.absoluteDir().filePath(info.completeBaseName());
-}
-
 QString BasketWidget::freeName(const QString &dir, const QString &name)
 {
   const QDir d(dir);
@@ -138,10 +149,48 @@ QString BasketWidget::freeName(const QString &dir, const QString &name)
   }
 }
 
-void BasketWidget::setBench(const QString &benchFile)
+void BasketWidget::setFolder(const QString &folder)
 {
-  m_folder = folderFor(benchFile);
+  const QString dir = folder.isEmpty() ? QString() : QDir(folder).absolutePath();
+  if (dir == m_folder)
+    return;
+  m_folder = dir;
   showFolder();
+  Q_EMIT folderChanged(m_folder);
+}
+
+void BasketWidget::newSLOT()
+{
+  QDir().mkpath(m_baseFolder);
+  const QString dir = QFileDialog::getSaveFileName(this, tr("New project basket"), m_baseFolder);
+  if (dir.isEmpty())
+    return;
+  if (!QDir().mkpath(dir) || !writeProjectFile(dir))
+  {
+    Q_EMIT error(tr("Project basket: cannot make the folder %1").arg(QDir::toNativeSeparators(dir)));
+    return;
+  }
+  setFolder(dir);
+}
+
+bool BasketWidget::writeProjectFile(const QString &dir)
+{
+  QFile file(QDir(dir).filePath("project.json"));
+  if (file.exists())
+    return true;
+  const QJsonObject project{ { "format", 1 },
+                             { "name", QFileInfo(dir).fileName() },
+                             { "description", QString() },
+                             { "created", QDateTime::currentDateTime().toString(Qt::ISODate) },
+                             { "qtdmm", QCoreApplication::applicationVersion() } };
+  return file.open(QIODevice::WriteOnly) && file.write(QJsonDocument(project).toJson()) > 0;
+}
+
+void BasketWidget::openSLOT()
+{
+  const QString dir = QFileDialog::getExistingDirectory(this, tr("Open project basket"), m_folder);
+  if (!dir.isEmpty())
+    setFolder(dir);
 }
 
 void BasketWidget::showFolder()
@@ -149,7 +198,7 @@ void BasketWidget::showFolder()
   m_pages->setCurrentIndex(m_folder.isEmpty() ? 0 : 1);
   if (m_folder.isEmpty())
     return;
-  m_title->setText(QDir::toNativeSeparators(QFileInfo(m_folder).fileName()));
+  m_title->setText(QFileInfo(m_folder).fileName());
   m_title->setToolTip(QDir::toNativeSeparators(m_folder));
   // a folder that is not there yet shows nothing, not the whole disk
   const bool there = QFileInfo(m_folder).isDir();

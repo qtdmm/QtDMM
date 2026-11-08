@@ -1,40 +1,47 @@
 # Project basket
 
-The project basket keeps the files that belong to a bench: recordings,
-pictures of the graph, data sheets as PDF, LabPlot projects, notes - any
-file. Switch it on with **Project basket** in the menu (Ctrl+6); it opens
-as a window next to the other views.
+A project basket keeps the files of a project in one folder: its benches,
+recordings, pictures of the graph, data sheets as PDF, LabPlot projects,
+notes - any file. One project can have several benches, one for each
+measuring set-up.
 
-## A folder next to the bench
+The basket is optional. As long as none is open, QtDMM works as before.
 
-The basket is a plain folder beside the bench file, with the bench's name:
+Switch the window on with **Project basket** in the menu (Ctrl+6).
 
-```
-Power supply.qtdmm-workspace
-Power supply/
-    2026-11-07 ripple.csv
-    ripple.png
-    datasheet.pdf
-```
+## Making or opening a basket
 
-Move or copy both together and the basket goes along. The folder can be
-used in a file manager as well; the window always shows what is in it.
+Without a basket the window offers **New project basket...** and **Open
+project basket...**; later the basket's name at the top of the window has
+the same and **Close project basket**. New baskets are made in the folder
+set under **Settings → General → Folder for new projects**
+(Documents/QtDMM at first).
 
-A basket needs a saved bench. Without one the window offers **Save
-bench...** (see [Benches](connecting.md#window-layout)). The folder is made
-when the first file goes in.
+The basket stays open until you open or close another, also across
+restarts and when you load a bench from somewhere else.
+
+A basket is a plain folder. QtDMM puts a `project.json` into a new one,
+with its name and when it was made; it is kept for what a project needs
+beyond its files.
 
 ## Putting files in
 
-Drop files onto the window, or choose **Add...** (the + at the top). Files are copied, the
-originals stay where they are. A file is never overwritten: a second
-`ripple.csv` becomes `ripple (2).csv`.
+- Drop files onto the window, or choose **Add...** (the + at the top).
+  Files are copied, the originals stay where they are.
+- **Into the project basket** in the context menu of the graph writes the
+  recording as CSV and the graph as a picture; in the readings table it
+  writes the readings as CSV. The names begin with date and time and the
+  device, `2026-11-08 0714 UT61E recording.csv`.
+- **Save bench...** and **Load bench...** start in the basket while one is
+  open.
+
+A file is never overwritten: a second `ripple.csv` becomes `ripple (2).csv`.
 
 ## Working with the files
 
 | Action | What it does |
 |---|---|
-| Double click, **Open** | A recording of QtDMM (CSV) loads into the graph; any other file opens in the program the system has for it |
+| Double click, **Open** | A bench is loaded, a recording of QtDMM (CSV) goes into the graph; any other file opens in the program the system has for it |
 | **Open with the system** | Opens a CSV in the spreadsheet or LabPlot instead |
 | **Rename** (F2) | Renames the file in the folder |
 | **Move to trash** | Moves the selected files to the system's trash, never deletes them for good |

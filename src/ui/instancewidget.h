@@ -162,6 +162,8 @@ public Q_SLOTS:
   void        importSLOT();
   /// Loads @p path into the graph as importSLOT() does, without the dialog.
   bool        importFile(const QString &path);
+  /// Writes what Export writes into @p file, without the dialog (CSV).
+  bool        writeRecordingTo(const QString &file);
   /// Settings dialog OK/Apply: re-reads the configuration (readConfig()).
   void        applySLOT();
 
@@ -209,6 +211,8 @@ protected:
   /// Export with a file dialog: the session's recording with every meter
   /// that recorded, else what the graph shows; false when cancelled or failed.
   bool        exportRecording();
+  /// The meter that recorded, when its recording is in the graph; else none.
+  QPointer<MeterController> recordingLead() const;
   DeviceLibrary *m_devices;
   QString     m_instanceId;
   QString     m_configPath;   ///< --config-dir, passed on to new instances

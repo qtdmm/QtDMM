@@ -3,9 +3,11 @@
 #include "ui/settings/generalprefs.h"
 
 #include <QCheckBox>
+#include <QDir>
 #include <QFileDialog>
 #include <QFormLayout>
 #include <QLineEdit>
+#include <QStandardPaths>
 #include <QToolButton>
 
 #include "core/settings.h"
@@ -61,6 +63,35 @@ GeneralPrefs::GeneralPrefs(QWidget *parent) : SettingsPage(parent)
       ui_sigrokExe->setText(file);
   });
   form->addRow(tr("&sigrok-cli:"), row({ ui_sigrokExe, browse }, false));
+
+  // where New project basket starts; the basket itself is optional
+  addSection(form, tr("Project basket"));
+  ui_basketBase = new QLineEdit(this);
+  ui_basketBase->setObjectName("ui_basketBase");
+  ui_basketBase->setPlaceholderText(defaultBasketBase());
+  ui_basketBase->setToolTip(tr("New project baskets are made in this folder."));
+  auto *browseBase = new QToolButton(this);
+  browseBase->setObjectName("ui_basketBaseButton");
+  browseBase->setIcon(QIcon::fromTheme("document-open"));
+  browseBase->setToolTip(tr("Choose the folder for new projects"));
+  connect(browseBase, &QToolButton::clicked, this, [this]
+  {
+    const QString dir = QFileDialog::getExistingDirectory(this, tr("Folder for new projects"), basketBase());
+    if (!dir.isEmpty())
+      ui_basketBase->setText(QDir::toNativeSeparators(dir));
+  });
+  form->addRow(tr("&Folder for new projects:"), row({ ui_basketBase, browseBase }, false));
+}
+
+QString GeneralPrefs::defaultBasketBase()
+{
+  return QDir::toNativeSeparators(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + "/QtDMM");
+}
+
+QString GeneralPrefs::basketBase() const
+{
+  const QString dir = ui_basketBase->text().trimmed();
+  return QDir::fromNativeSeparators(dir.isEmpty() ? defaultBasketBase() : dir);
 }
 
 bool GeneralPrefs::alertUnsavedData() const
@@ -90,6 +121,7 @@ void GeneralPrefs::defaultsSLOT()
   ui_saveWindowPos->setChecked(m_cfg->getBool("Save/window-pos", true));
   ui_saveWindowSize->setChecked(m_cfg->getBool("Save/window-size", true));
   ui_sigrokExe->setText(m_cfg->getString("Port settings/sigrok_exe", "sigrok-cli"));
+  ui_basketBase->setText(QDir::toNativeSeparators(m_cfg->getString("Basket/base-dir")));
 }
 
 void GeneralPrefs::factoryDefaultsSLOT()
@@ -98,6 +130,7 @@ void GeneralPrefs::factoryDefaultsSLOT()
   ui_saveWindowPos->setChecked(true);
   ui_saveWindowSize->setChecked(true);
   ui_sigrokExe->setText("sigrok-cli");
+  ui_basketBase->clear();
 }
 
 void GeneralPrefs::applySLOT()
@@ -106,4 +139,5 @@ void GeneralPrefs::applySLOT()
   m_cfg->setBool("Save/window-pos", saveWindowPosition());
   m_cfg->setBool("Save/window-size", saveWindowSize());
   m_cfg->setString("Port settings/sigrok_exe", sigrokExecutable());
+  m_cfg->setString("Basket/base-dir", ui_basketBase->text().trimmed().isEmpty() ? QString() : basketBase());
 }
