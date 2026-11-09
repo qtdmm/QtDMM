@@ -37,6 +37,7 @@ public:
   QAction    *newAction() const { return m_newAction; }
   QAction    *openAction() const { return m_openAction; }
   QAction    *closeAction() const { return m_closeAction; }
+  QAction    *importAction() const { return m_importAction; }
   /// Copies @p files into the basket (makes the folder first) under names
   /// not taken yet; returns the paths they got. Not a file, or not
   /// readable: left out, an error() names it.
@@ -50,6 +51,9 @@ public:
   static bool writeProjectFile(const QString &dir);
   /// project.json of the basket in @p dir; empty when it has none or it is no JSON.
   static QJsonObject readProject(const QString &dir);
+  /// The name the project in @p dir is shown by: its name in project.json,
+  /// else the folder's.
+  static QString projectName(const QString &dir);
   /// Sets the description in project.json of @p dir (made first when missing),
   /// the other keys stay. False when it cannot be written.
   static bool setProjectDescription(const QString &dir, const QString &text);

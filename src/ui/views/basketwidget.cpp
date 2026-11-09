@@ -219,9 +219,17 @@ void BasketWidget::setFolder(const QString &folder)
 void BasketWidget::newSLOT()
 {
   QDir().mkpath(m_baseFolder);
-  const QString dir = QFileDialog::getSaveFileName(this, tr("New project"), m_baseFolder);
-  if (dir.isEmpty())
+  // a folder to be made: folders only, no "All files (*)" [V 09.11.]
+  QFileDialog dlg(this, tr("New project: the name of its folder"), m_baseFolder);
+  dlg.setAcceptMode(QFileDialog::AcceptSave);
+  dlg.setFileMode(QFileDialog::AnyFile);
+  dlg.setFilter(QDir::AllDirs | QDir::NoDotAndDotDot | QDir::Drives);
+  dlg.setNameFilter(tr("Project folder (*)"));
+  dlg.setLabelText(QFileDialog::FileName, tr("Project:"));
+  dlg.setLabelText(QFileDialog::Accept, tr("Make"));
+  if (dlg.exec() != QDialog::Accepted || dlg.selectedFiles().isEmpty())
     return;
+  const QString dir = dlg.selectedFiles().constFirst();
   if (!QDir().mkpath(dir) || !writeProjectFile(dir))
   {
     Q_EMIT error(tr("Project: cannot make the folder %1").arg(QDir::toNativeSeparators(dir)));
@@ -242,6 +250,12 @@ bool BasketWidget::writeProjectFile(const QString &dir)
                              { "created", QDateTime::currentDateTime().toString(Qt::ISODate) },
                              { "qtdmm", QCoreApplication::applicationVersion() } };
   return file.open(QIODevice::WriteOnly) && file.write(QJsonDocument(project).toJson()) > 0;
+}
+
+QString BasketWidget::projectName(const QString &dir)
+{
+  const QString name = readProject(dir).value("name").toString();
+  return name.isEmpty() ? QFileInfo(dir).fileName() : name;
 }
 
 QJsonObject BasketWidget::readProject(const QString &dir)

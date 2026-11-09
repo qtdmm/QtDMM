@@ -455,6 +455,14 @@ void MdiArranger::setTableWidth(int width)
   arrange();
 }
 
+void MdiArranger::setHeld(bool held)
+{
+  if (held == m_held)
+    return;
+  m_held = held;
+  arrange();
+}
+
 QString MdiArranger::layoutText() const
 {
   if (!m_hasTree || m_mode == Free || ((m_mode == DisplaysOnTop || m_mode == DisplaysOnLeft) && !m_custom))
@@ -877,7 +885,7 @@ void MdiArranger::doArrange()
   m_dividers.clear();
   if (m_divHint)
     m_divHint->hide();
-  if (m_mode == Free)
+  if (m_mode == Free || m_held)
     return;
   const QList<int> visible = visibleWindows();
   for (int i : visible)
@@ -979,7 +987,7 @@ QMdiSubWindow *MdiArranger::windowAt(const QPoint &global, const QMdiSubWindow *
 
 void MdiArranger::dragMoving(QMdiSubWindow *window, const QPoint &global)
 {
-  if (m_mode == Free)
+  if (m_mode == Free || m_held)
     return;
   if (!m_band)
     m_band = new QRubberBand(QRubberBand::Rectangle, m_area->viewport());
@@ -998,7 +1006,7 @@ void MdiArranger::dragDropped(QMdiSubWindow *window, const QPoint &global)
 {
   if (m_band)
     m_band->hide();
-  if (m_mode == Free)
+  if (m_mode == Free || m_held)
     return;
   if (QMdiSubWindow *target = windowAt(global, window); target && m_hasTree)
   {
