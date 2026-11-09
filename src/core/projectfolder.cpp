@@ -67,6 +67,18 @@ void enterFolder(const QString &project, const KindNames &k)
 }
 }
 
+namespace
+{
+// the names of @p kind, null for Root
+const KindNames *namesOf(ProjectFolder::Kind kind)
+{
+  for (const KindNames &k : kNames)
+    if (k.kind == kind)
+      return &k;
+  return nullptr;
+}
+}
+
 void ProjectFolder::set(const QString &dir)
 {
   folder() = dir;
@@ -104,26 +116,19 @@ ProjectFolder::Kind ProjectFolder::kindOf(const QString &file)
 
 QString ProjectFolder::folderName(Kind kind)
 {
-  for (const KindNames &k : kNames)
-    if (k.kind == kind)
-      return QString::fromLatin1(k.name);
-  return QString();
+  const KindNames *k = namesOf(kind);
+  return k ? QString::fromLatin1(k->name) : QString();
 }
 
 QString ProjectFolder::dirFor(const QString &project, Kind kind)
 {
-  if (project.isEmpty() || kind == Root || !byType())
+  const KindNames *k = namesOf(kind);
+  if (project.isEmpty() || !k || !byType())
     return project;
-  for (const KindNames &k : kNames)
-  {
-    if (k.kind != kind)
-      continue;
-    // the names first: the project view shows the folder by them as it appears
-    enterFolder(project, k);
-    const QString dir = QDir(project).filePath(k.name);
-    return QDir().mkpath(dir) ? dir : project;
-  }
-  return project;
+  // the names first: the project view shows the folder by them as it appears
+  enterFolder(project, *k);
+  const QString dir = QDir(project).filePath(k->name);
+  return QDir().mkpath(dir) ? dir : project;
 }
 
 QString ProjectFolder::proposal(const QString &proposal)
@@ -134,32 +139,51 @@ QString ProjectFolder::proposal(const QString &proposal)
   return name.isEmpty() ? folder() : QDir(folder()).filePath(name);
 }
 
-ProjectFolder::Proposal::Proposal(const QString &proposal, Kind kind)
+ProjectFolder::Proposal::Proposal(const QString &proposal, Kind kind) :
+  m_kind(kind)
 {
   const QString project = folder();
+  const QString name = QFileInfo(proposal).fileName();
   if (project.isEmpty())
   {
     m_path = proposal;
     return;
   }
-  const QString dir = QDir(project).filePath(folderName(kind));
-  const bool existed = QFileInfo(dir).isDir();
-  const QString target = dirFor(project, kind);
-  if (!existed && target != project)
-    m_made = target;
-  const QString name = QFileInfo(proposal).fileName();
+  QString target = project;
+  const KindNames *k = namesOf(kind);
+  if (k && byType())
+  {
+    const QString dir = QDir(project).filePath(k->name);
+    if (QFileInfo(dir).isDir())
+      target = dirFor(project, kind);
+    // made for the dialog only: project.json names it once a file is in it,
+    // a dialog cancelled leaves the project as it was
+    else if (QDir().mkpath(dir))
+    {
+      target = dir;
+      m_project = project;
+      m_made = dir;
+    }
+  }
   m_path = name.isEmpty() ? target : QDir(target).filePath(name);
 }
 
 void ProjectFolder::Proposal::keep(const QString &chosen)
 {
   if (!m_made.isEmpty() && QFileInfo(chosen).absolutePath() == QFileInfo(m_made).absoluteFilePath())
+  {
+    enterFolder(m_project, *namesOf(m_kind));
     m_made.clear();
+  }
 }
 
 ProjectFolder::Proposal::~Proposal()
 {
-  // rmdir() leaves a folder with a file in it alone
-  if (!m_made.isEmpty())
+  if (m_made.isEmpty())
+    return;
+  // a file went in after all (written in the dialog's scope): it stays, named
+  if (!QDir(m_made).isEmpty())
+    enterFolder(m_project, *namesOf(m_kind));
+  else
     QDir().rmdir(m_made);
 }
