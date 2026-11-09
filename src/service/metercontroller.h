@@ -4,6 +4,7 @@
 
 #include <QColor>
 #include <QElapsedTimer>
+#include <QJsonArray>
 #include <QJsonObject>
 #include <QObject>
 #include <QString>
@@ -18,13 +19,13 @@
 #include "core/reading.h"
 #include "core/sampletypes.h"
 #include "core/stalerule.h"
+#include "recording/recordingstore.h"
 #include "service/servicehost.h"
 
 class MeterConnection;
 struct MeterSetup;
 class QProcess;
 class ScpiDevice;
-class RecordingStore;
 
 /// The meter session without any user interface: the connection (MeterConnection), the
 /// min/max memory, the alarms, its part in the SCPI server (ScpiDevice in a ServiceHost),
@@ -73,6 +74,9 @@ public:
   /// Writes the recording with all values of this meter and of those that
   /// recorded with it to @p path (CSV, .xlsx, .ods); they count as saved then.
   bool        writeRecording(const QString &path, bool raw, QString *error = nullptr);
+  /// The same recording as writeRecording() writes it, on the grid, without
+  /// writing it (LabPlotLive follows it); not saved by that.
+  Recording   recording() const;
   /// What a QtDMM recording keeps of this meter (meta.json "devices"): its
   /// name, model, protocol (not of a virtual meter), the values recorded
   /// (id, unit, quantity as PortKey text, the meter's own name), the alarms
@@ -250,6 +254,9 @@ Q_SIGNALS:
   void        deviceNameChanged(const QString &name);
 
 private:
+  /// The values writeRecording() takes: this meter's other values, those of
+  /// the meters that recorded with it, and meta.json's "devices".
+  void        recordingSources(QList<int> &extras, QList<RecordingStore::Foreign> &foreign, QJsonArray &devices) const;
   /// valueMinMaxChanged() with the memory of value @p id as it is.
   void        emitValueMinMax(int id);
   void        responseSLOT(const DmmDecoder::DmmResponse &response);

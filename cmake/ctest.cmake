@@ -148,6 +148,8 @@ if (BUILD_TESTING)
 	## the recorder's CSV formats, without widgets
 	qtdmm_add_test(recording_file test_recording tests/test_recording.cpp "${TEST_DATA}/graph")
 	target_link_libraries(test_recording PRIVATE qtdmm_resources)   # the LabPlot templates
+	qtdmm_add_test(labplot_live test_labplotlive tests/test_labplotlive.cpp)
+	target_link_libraries(test_labplotlive PRIVATE qtdmm_resources)   # the LabPlot templates
 
 	## the export dialog: formats, where to, the last choice
 	qtdmm_add_test(export_dialog test_exportdlg tests/test_exportdlg.cpp)

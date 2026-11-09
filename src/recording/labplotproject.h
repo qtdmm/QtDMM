@@ -3,11 +3,14 @@
 #pragma once
 
 #include <QByteArray>
+#include <QList>
 #include <QString>
+#include <QStringList>
+#include <QVector>
 
 #include <utility>
 
-struct Recording;
+#include "recording/recordingfile.h"
 
 /// A recording as a LabPlot project (`*.lml`, labplot.org): it opens in
 /// LabPlot without its import dialog, with the numbers and a graph of them.
@@ -31,6 +34,17 @@ namespace LabPlotProject
 /// The XML of the project of @p recording named @p name; empty when the
 /// templates are missing (resources not linked).
 QByteArray xml(const Recording &recording, const QString &name);
+/// The project of a recording that goes on (LabPlotLive): instead of the
+/// spreadsheet a live data source "Live" on the CSV @p file that grows,
+/// LabPlot reads it on each change; the plots as xml() makes them, their
+/// ranges from @p columns over @p seconds so far, LabPlot widens them as the
+/// data comes. The file has a line `time[s];Sim A: value [V];...` with '#'
+/// first (LabPlot takes no header from a live file), then rows of numbers,
+/// `nan` where there is none.
+QByteArray liveXml(const QList<RecordingFile::NumberColumn> &columns, const QVector<double> &seconds,
+                   const QString &file, const QString &name);
+/// The names of the columns of liveXml(), the time first: no ',' in them.
+QStringList liveColumnNames(const QList<RecordingFile::NumberColumn> &columns);
 /// Writes the project of @p recording to @p path, named after the file;
 /// false with @p error (translated) when there is nothing to write or the
 /// file cannot be written.

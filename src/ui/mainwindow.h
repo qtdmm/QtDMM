@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <QPointer>
 #include <functional>
 #include <optional>
 
@@ -38,6 +39,7 @@
 #include "ui/devicesidebar.h"
 #include "ui/valuemenu.h"
 
+class LabPlotLive;
 class InstanceWidget;
 class DeviceSession;
 class WorkspaceFile;
@@ -239,6 +241,8 @@ protected:
   QAction    *m_poincareAction = nullptr;
   QAction    *m_basketAction = nullptr;
   QAction    *m_graphToBasket = nullptr;   ///< the recording and the graph into the project basket
+  QAction    *m_labPlotLive = nullptr;     ///< Live in LabPlot, while it records
+  QPointer<LabPlotLive> m_live;            ///< the recording live in LabPlot, while it goes on
   QAction    *m_tableToBasket = nullptr;   ///< the readings into the project basket
   QAction    *m_graphExport = nullptr;     ///< the export dialog, from the graph (Ctrl+E)
   QAction    *m_tableExport = nullptr;     ///< the export dialog, from the readings table
@@ -424,6 +428,10 @@ protected:
   void        tableToBasket();
   /// The export dialog (ExportDlg::What @p view preselected), then writes.
   void        exportDialog(int view);
+  /// LabPlot follows the recording that goes on (LabPlotLive): a CSV and
+  /// a project in the project basket, else in Documents/QtDMM; again while
+  /// it runs: LabPlot opens that project once more.
+  void        labPlotLive();
   /// A free path in the project basket: date, time, the leading device, @p what.
   QString     basketName(const QString &what, const QString &suffix) const;
   /// The workspaces used last, shared by all instances (workspaces.conf).
