@@ -7,12 +7,16 @@
 #include <QApplication>
 #include <QCheckBox>
 #include <QFile>
+#include <QGroupBox>
+#include <QLabel>
+#include <QSet>
 #include <QLineEdit>
 #include <QPushButton>
 #include <QTemporaryDir>
 #include <QTreeWidget>
 
 #include "device/capturelog.h"
+#include "device/capturesteps.h"
 #include "device/meterconnection.h"
 #include "ui/dialogs/capturedlg.h"
 #include "testutil.h"
@@ -20,6 +24,17 @@
 namespace
 {
 // a Fluke 18x line: -121.43 V DC (docs/protocols/spec/fluke_qm.yaml)
+// a decoded value as the decoders deliver it
+CaptureLog::Frame decoded(const QString &val, const QString &unit, const QString &special, qint64 wall = 0)
+{
+  DmmDecoder::DmmResponse r;
+  r.main().val = val;
+  r.main().unit = unit;
+  r.main().special = special;
+  r.range = "AUTO";
+  return CaptureLog::Frame{ wall, "x", r };
+}
+
 const QByteArray kDcVolt = QByteArray::fromHex("300D514D2C2D3132312E3433205644430D");
 
 // feeds @p bytes through the connection as the frame reader does
@@ -148,6 +163,131 @@ int main(int argc, char **argv)
       seen = int(dlg.log().frames().size());
     }
     check(seen == 1, "the window sees the frame");
+  }
+
+  // 5. the steps of a kind of meter
+  {
+    const QList<CaptureSteps::Step> dmmSteps = CaptureSteps::forType(DeviceType::HandheldDmm);
+    check(!dmmSteps.isEmpty() && dmmSteps.first().id == "dc_v", "a multimeter starts with DC V");
+    for (DeviceType::Type t : { DeviceType::HandheldDmm, DeviceType::ClampMeter, DeviceType::Thermometer,
+                                DeviceType::Luxmeter, DeviceType::SoundLevel })
+    {
+      QSet<QString> ids;
+      for (const CaptureSteps::Step &st : CaptureSteps::forType(t))
+      {
+        check(st.instruction && !ids.contains(st.id), QString("step %1 once, with an instruction").arg(st.id));
+        check(st.key.isEmpty() || DmmDecoder::keyNames().contains(st.key), QString("key %1 known").arg(st.key));
+        ids << st.id;
+      }
+      check(!ids.isEmpty(), "steps for the kind");
+    }
+    bool clamp = false;
+    for (const CaptureSteps::Step &st : CaptureSteps::forType(DeviceType::ClampMeter))
+      clamp = clamp || st.id == "ac_a_clamp";
+    check(clamp, "a clamp meter measures with its clamp");
+    check(CaptureSteps::forType(DeviceType::BatteryMonitor).isEmpty(), "no steps for a battery monitor");
+  }
+
+  // 6. the state of a frame leaves the digits out
+  {
+    using namespace CaptureSteps;
+    const FrameFormat::DataFormat f = FrameFormat::FlukeQM;
+    const State a = stateOf(decoded("1.2345", "V", "DC"), f);
+    const State b = stateOf(decoded("1.2391", "V", "DC"), f);
+    const State neg = stateOf(decoded("-1.2345", "V", "DC"), f);
+    const State range = stateOf(decoded("12.345", "V", "DC"), f);
+    const State ol = stateOf(decoded("0L", "MOhm", "OH"), f);
+    check(a.understood && a == b, "another value, the same state");
+    check(a != neg && a != range && a != stateOf(decoded("1.2345", "V", "AC"), f), "sign, range and coupling count");
+    check(!stateOf(CaptureLog::Frame{ 0, "abc", std::nullopt }, f).understood, "a frame not understood");
+
+    Expect dcv;
+    dcv.quantity = Quantity::Voltage;
+    dcv.defining = SampleFlag::DC;
+    Expect negative = dcv;
+    negative.negative = true;
+    Expect open;
+    open.quantity = Quantity::Resistance;
+    open.overload = true;
+    check(matches(dcv, a) && matches(dcv, neg) && !matches(negative, a) && matches(negative, neg), "DC V and negative");
+    check(matches(open, ol) && !matches(open, stateOf(decoded("1.000", "kOhm", "OH"), f)), "OL");
+    check(!matches(dcv, ol), "Ω is not DC V");
+    check(describe(negative).contains("DC") && describe(open).contains("OL"), describe(negative));
+
+    // a new state that holds for a second
+    CaptureWatcher w;
+    check(!w.add(a, 0) && !w.add(b, 500) && w.add(a, 1000) && !w.add(a, 1500), "proposed once after a second");
+    check(!w.add(neg, 1600) && !w.steady() && w.add(neg, 2600), "a new state starts again");
+    w.setBaseline(neg);
+    check(!w.add(neg, 3000) && !w.add(neg, 5000), "not the state the step started from");
+    w.setBaseline(std::nullopt);
+    check(w.add(neg, 5100), "without a baseline any steady state");
+  }
+
+  // 7. guided through the window
+  {
+    MeterConnection guidedDmm(nullptr);
+    DmmDecoder::DMMInfo gInfo;
+    gInfo.vendor = "Fluke";
+    gInfo.model = "287";
+    gInfo.protocol = FrameFormat::FlukeQM;
+    guidedDmm.setDmmInfo(gInfo);
+    guidedDmm.setFormat(FrameFormat::FlukeQM);
+    CaptureDlg dlg(&guidedDmm, "x", nullptr);
+    auto *guided = dlg.findChild<QGroupBox *>("ui_captureGuided");
+    auto *shown = dlg.findChild<QLineEdit *>("ui_captureShown");
+    auto *keep = dlg.findChild<QPushButton *>("ui_captureKeep");
+    auto *skip = dlg.findChild<QPushButton *>("ui_captureSkip");
+    auto *hint = dlg.findChild<QLabel *>("ui_captureStepHint");
+    auto *kept = dlg.findChild<QTreeWidget *>("ui_captureKept");
+    check(guided && shown && keep && skip && hint && kept && dlg.step() == 0, "the guided steps of a multimeter");
+
+    const auto feedFor = [&](const QByteArray &line, qint64 from)
+    {
+      for (qint64 t = from; t <= from + 1200; t += 400)
+        feed(guidedDmm, line, t);
+    };
+    feedFor("QM,+1.2345 V DC\r", 10000);
+    check(shown->text().startsWith("1.2345 V DC") || shown->text().startsWith("+1.2345 V DC"), shown->text());
+    check(hint->text().isEmpty(), "DC V is what the step wants");
+    keep->click();
+    check(dlg.step() == 1 && dlg.log().kept().last().step == "dc_v" && kept->topLevelItem(0)->text(2) == "dc_v",
+          "kept in step dc_v, on to the next");
+    feedFor("QM,+1.2391 V DC\r", 12000);
+    check(shown->text().isEmpty(), "the same state again is not proposed");
+    feedFor("QM,-1.2345 V DC\r", 14000);
+    check(shown->text().contains("-1.2345"), shown->text());
+    shown->setText("-1.2345 V DC (corrected)");
+    keep->click();
+    check(dlg.log().kept().last().shown == "-1.2345 V DC (corrected)", "what the user typed is kept");
+
+    skip->click();   // no AC V
+    check(dlg.step() == 3, "skipped AC V");
+    feedFor("QM,+230.1 V AC\r", 16000);   // not Ω: proposed, with a hint
+    check(!shown->text().isEmpty() && !hint->text().isEmpty(), hint->text());
+    shown->setText("120.3 Ohm");   // the meter showed Ω, QtDMM read V AC
+    keep->click();
+    check(dlg.log().kept().last().unexpected, "kept although QtDMM read something else");
+
+    const QString yaml = dlg.yaml();
+    check(yaml.contains("  # step dc_v\n  - source_line: \"") && yaml.contains("  # step dc_v_neg\n"), yaml);
+    check(yaml.contains("  # step ohm - QtDMM read something else than the step wants\n"), yaml);
+    check(yaml.contains("# steps skipped: ac_v\n"), yaml);
+
+    // back to AC V: no longer skipped
+    for (QPushButton *b : dlg.findChildren<QPushButton *>())
+      if (b->text() == "&Back")
+      {
+        b->click();
+        b->click();
+      }
+    check(dlg.step() == 2 && !dlg.yaml().contains("steps skipped"), "back to a skipped step");
+
+    // by hand: no step taken
+    guided->setChecked(false);
+    shown->setText("by hand");
+    keep->click();
+    check(dlg.step() == 2 && dlg.log().kept().last().step.isEmpty(), "without guided steps nothing moves on");
   }
 
   return failed == 0 ? 0 : 1;

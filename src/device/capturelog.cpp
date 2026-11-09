@@ -77,6 +77,14 @@ bool CaptureLog::keep(const QString &shown, int index)
   return true;
 }
 
+void CaptureLog::setKeptStep(const QString &step, bool unexpected)
+{
+  if (m_kept.isEmpty())
+    return;
+  m_kept.last().step = step;
+  m_kept.last().unexpected = unexpected;
+}
+
 void CaptureLog::removeKept(int index)
 {
   if (index >= 0 && index < m_kept.size())
@@ -168,12 +176,16 @@ QString CaptureLog::yaml(const Header &header, bool allFrames) const
       << "vectors:";
   for (const Kept &k : m_kept)
   {
+    if (!k.step.isEmpty())
+      out << "  # step " + k.step + (k.unexpected ? " - QtDMM read something else than the step wants" : QString());
     out << "  - source_line: " + quoted(k.shown) << "    bytes: " + hex(k.frame.bytes);
     if (k.frame.response)
       out << "    reading: " + reading(*k.frame.response) << "    expect: " + expect(*k.frame.response);
     else
       out << "    # QtDMM did not understand this frame";
   }
+  if (!m_skipped.isEmpty())
+    out << "# steps skipped: " + m_skipped.join(", ");
   if (allFrames)
   {
     out << "" << "frames:";

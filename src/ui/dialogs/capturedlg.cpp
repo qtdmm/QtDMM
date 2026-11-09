@@ -23,6 +23,7 @@
 
 #include "core/projectfolder.h"
 #include "core/settings.h"
+#include "device/devicetype.h"
 #include "device/meterconnection.h"
 #include "device/protocols.h"
 
@@ -84,6 +85,51 @@ CaptureDlg::CaptureDlg(MeterConnection *dmm, const QString &name, Settings *sett
   hint->setWordWrap(true);
   top->addWidget(hint);
 
+  // the guided steps for the kind of meter
+  m_steps = CaptureSteps::forType(DeviceType::of(info));
+  if (!m_steps.isEmpty())
+  {
+    m_guided = new QGroupBox(tr("&Guided steps"), this);
+    m_guided->setObjectName("ui_captureGuided");
+    m_guided->setCheckable(true);
+    m_guided->setToolTip(tr("Off: keep frames by hand, without steps"));
+    auto *g = new QVBoxLayout(m_guided);
+    m_stepTitle = new QLabel(m_guided);
+    QFont bold = m_stepTitle->font();
+    bold.setBold(true);
+    m_stepTitle->setFont(bold);
+    m_stepText = new QLabel(m_guided);
+    m_stepText->setObjectName("ui_captureStepText");
+    m_stepText->setWordWrap(true);
+    m_stepHint = new QLabel(m_guided);
+    m_stepHint->setObjectName("ui_captureStepHint");
+    m_stepHint->setWordWrap(true);
+    auto *stepBar = new QHBoxLayout;
+    m_back = new QPushButton(tr("&Back"), m_guided);
+    m_skip = new QPushButton(tr("Sk&ip"), m_guided);
+    m_skip->setObjectName("ui_captureSkip");
+    m_skip->setToolTip(tr("The meter has no such function, or you cannot measure it now"));
+    m_sendKey = new QPushButton(m_guided);
+    m_sendKey->setObjectName("ui_captureSendKey");
+    for (QPushButton *b : { m_back, m_skip, m_sendKey })
+      b->setAutoDefault(false);
+    stepBar->addWidget(m_stepTitle, 1);
+    stepBar->addWidget(m_sendKey);
+    stepBar->addWidget(m_back);
+    stepBar->addWidget(m_skip);
+    g->addLayout(stepBar);
+    g->addWidget(m_stepText);
+    g->addWidget(m_stepHint);
+    top->addWidget(m_guided);
+    connect(m_back, &QPushButton::clicked, this, &CaptureDlg::stepBack);
+    connect(m_skip, &QPushButton::clicked, this, &CaptureDlg::skipStep);
+    connect(m_sendKey, &QPushButton::clicked, this, [this]
+    {
+      if (m_step < m_steps.size())
+        m_dmm->sendKey(m_steps.at(m_step).key);
+    });
+  }
+
   // the frames as they come
   auto *bar = new QHBoxLayout;
   top->addLayout(bar);
@@ -119,10 +165,11 @@ CaptureDlg::CaptureDlg(MeterConnection *dmm, const QString &name, Settings *sett
   keepBar->addWidget(shownLabel);
   keepBar->addWidget(m_shown, 1);
   keepBar->addWidget(m_keep);
-  m_kept = table({ tr("The meter shows"), tr("QtDMM reads"), tr("Bytes") }, this);
+  m_kept = table({ tr("The meter shows"), tr("QtDMM reads"), tr("Step"), tr("Bytes") }, this);
   m_kept->setObjectName("ui_captureKept");
   m_kept->setColumnWidth(0, 30 * em);
   m_kept->setColumnWidth(1, 30 * em);
+  m_kept->setColumnWidth(2, 12 * em);
   top->addWidget(m_kept, 2);
 
   auto *bottom = new QHBoxLayout;
@@ -172,6 +219,88 @@ CaptureDlg::CaptureDlg(MeterConnection *dmm, const QString &name, Settings *sett
   });
   connect(save, &QPushButton::clicked, this, &CaptureDlg::exportCapture);
   connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::close);
+  showStep();
+}
+
+bool CaptureDlg::guided() const
+{
+  return m_guided && m_guided->isChecked() && m_step < m_steps.size();
+}
+
+void CaptureDlg::showStep()
+{
+  if (!m_guided)
+    return;
+  m_back->setEnabled(m_step > 0);
+  m_skip->setEnabled(m_step < m_steps.size());
+  m_stepHint->clear();
+  if (m_step >= m_steps.size())
+  {
+    m_stepTitle->setText(tr("All steps done"));
+    m_stepText->setText(tr("Export the capture with Export... - it holds the frames kept, with what the meter showed."));
+    m_sendKey->hide();
+    return;
+  }
+  const CaptureSteps::Step &step = m_steps.at(m_step);
+  m_stepTitle->setText(tr("Step %1 of %2").arg(m_step + 1).arg(m_steps.size()));
+  m_stepText->setText(CaptureSteps::instruction(step));
+  // a key QtDMM can press on the meter itself
+  const bool remote = !step.key.isEmpty() && m_dmm->keys().contains(step.key);
+  m_sendKey->setVisible(remote);
+  if (remote)
+  {
+    const QString label = QCoreApplication::translate("CaptureSteps", step.keyLabel);
+    m_sendKey->setText(tr("Se&nd %1").arg(label));
+    m_sendKey->setToolTip(tr("Presses %1 on the meter").arg(label));
+  }
+}
+
+void CaptureDlg::skipStep()
+{
+  if (m_step >= m_steps.size())
+    return;
+  if (!m_skipped.contains(m_steps.at(m_step).id))
+    m_skipped << m_steps.at(m_step).id;
+  m_log.setSkipped(m_skipped);
+  // what the meter shows now is not the next step's
+  m_watcher.setBaseline(m_watcher.steady() ? m_watcher.steady() : m_watcher.current());
+  ++m_step;
+  showStep();
+}
+
+void CaptureDlg::stepBack()
+{
+  if (m_step == 0)
+    return;
+  --m_step;
+  m_skipped.removeAll(m_steps.at(m_step).id);
+  m_log.setSkipped(m_skipped);
+  m_watcher.setBaseline(std::nullopt);
+  showStep();
+}
+
+// a new state held: what QtDMM reads, for the user to confirm or correct
+void CaptureDlg::propose()
+{
+  if (!guided() || m_log.frames().isEmpty())
+    return;
+  const CaptureSteps::Step &step = m_steps.at(m_step);
+  const CaptureSteps::State &state = *m_watcher.steady();
+  if (step.expect.isSet() && !CaptureSteps::matches(step.expect, state))
+    m_stepHint->setText(tr("QtDMM does not read what this step wants (%1). If the meter shows it, "
+                           "keep the frame anyway: that is what the capture is for.")
+                          .arg(CaptureSteps::describe(step.expect)));
+  else
+    m_stepHint->clear();
+  const QString read = CaptureLog::readingText(m_log.frames().last());
+  const QString typed = m_shown->text();
+  if (typed.isEmpty() || typed == m_proposed)
+  {
+    m_shown->setText(read);
+    m_proposed = read;
+  }
+  m_shown->setFocus();
+  m_shown->selectAll();
 }
 
 void CaptureDlg::addFrame(const QByteArray &bytes, qint64 wall, const std::optional<DmmDecoder::DmmResponse> &response)
@@ -186,6 +315,8 @@ void CaptureDlg::addFrame(const QByteArray &bytes, qint64 wall, const std::optio
     delete m_frames->takeTopLevelItem(0);
   if (atEnd)
     m_frames->scrollToBottom();
+  if (m_guided && m_watcher.add(CaptureSteps::stateOf(m_log.frames().last(), m_dmm->format()), wall))
+    propose();
 }
 
 void CaptureDlg::keep()
@@ -197,14 +328,25 @@ void CaptureDlg::keep()
   const int row = selected.isEmpty() ? -1 : m_frames->indexOfTopLevelItem(selected.first());
   if (!m_log.keep(shown, row))
     return;
+  if (guided())
+  {
+    const CaptureSteps::Step &step = m_steps.at(m_step);
+    const CaptureSteps::State state = CaptureSteps::stateOf(m_log.kept().last().frame, m_dmm->format());
+    m_log.setKeptStep(step.id, step.expect.isSet() && !CaptureSteps::matches(step.expect, state));
+    // the next step starts from what the meter showed in this one
+    m_watcher.setBaseline(state);
+    ++m_step;
+    showStep();
+  }
   const CaptureLog::Kept &k = m_log.kept().last();
   const QString read = CaptureLog::readingText(k.frame);
   const QString bytes = QString::fromLatin1(k.frame.bytes.toHex(' ').toUpper());
-  auto *item = new QTreeWidgetItem({ k.shown, read.isEmpty() ? tr("not understood") : read, bytes });
-  item->setToolTip(2, bytes);
+  auto *item = new QTreeWidgetItem({ k.shown, read.isEmpty() ? tr("not understood") : read, k.step, bytes });
+  item->setToolTip(3, bytes);
   m_kept->addTopLevelItem(item);
   m_kept->scrollToBottom();
   m_shown->clear();
+  m_proposed.clear();
 }
 
 QString CaptureDlg::yaml() const

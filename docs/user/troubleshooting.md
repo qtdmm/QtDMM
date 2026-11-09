@@ -187,5 +187,32 @@ and the kept frames in the form of the test vectors in
 port name, Bluetooth address or key. *Export also all frames of the list*
 adds the whole list, which helps when a reading changes over time.
 
+#### Guided steps
+
+For a multimeter, clamp meter, thermometer, luxmeter or sound level meter
+the window walks you through the meter's functions under *Guided steps*:
+DC V, negative DC V, AC V, Ω, Ω open (OL), diode, continuity, capacitance,
+Hz and mA, then HOLD, REL, MIN/MAX and a range chosen by hand (a clamp meter
+also AC A through its clamp; the other kinds have shorter lists).
+
+- Each step says what to set the meter to. Once the meter shows something
+  new for a second, QtDMM puts what it read into *The meter shows*. Correct
+  it to what the display shows and press Enter: the frame is kept and the
+  next step comes. QtDMM never keeps a frame by itself.
+- If QtDMM reads something else than the step wants (Ω where the step asks
+  for DC V), a hint says so. If the meter shows what the step wants, keep the
+  frame anyway: that is the fault the capture is for.
+- *Skip* leaves out a step the meter has no function for, or that you cannot
+  measure now. AC V only with a source that is safe to measure, the current
+  step only with a small circuit, never a voltage source directly.
+- A step with a key (HOLD, REL, ...) has *Send ...* when QtDMM can press the
+  key over the meter's connection; else press it on the meter.
+- *Back* goes to the step before. Uncheck *Guided steps* to keep frames by
+  hand as above.
+
+In the file, each frame kept in a step has the step's name above it
+(`# step dc_v_neg`), with a note where QtDMM read something else, and the
+skipped steps are listed at the end.
+
 `qtdmm --debug` still prints every frame as hex on the console
 ([Command line](command-line.md)).
