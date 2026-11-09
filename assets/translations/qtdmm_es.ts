@@ -1237,119 +1237,348 @@
 <context>
     <name>CaptureDlg</name>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="41"/>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="203"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="42"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="344"/>
         <source>not understood</source>
         <translation>no entendido</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="69"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="70"/>
         <source>Capture - %1</source>
         <translation>Captura – %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="82"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="83"/>
         <source>Set the meter to what it reads wrong, enter what its display shows and keep the frame. The export holds only the frames and what you entered, no port or address.</source>
         <translation>Ponga el equipo en lo que se lee mal, escriba lo que muestra su pantalla y conserve la trama. La exportación contiene solo las tramas y lo que escribió, ni puerto ni dirección.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="90"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="92"/>
+        <source>&amp;Guided steps</source>
+        <translation>Pasos &amp;guiados</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="95"/>
+        <source>Off: keep frames by hand, without steps</source>
+        <translation>Desactivado: conservar tramas a mano, sin pasos</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="108"/>
+        <source>&amp;Back</source>
+        <translation>&amp;Atrás</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="109"/>
+        <source>Sk&amp;ip</source>
+        <translation>&amp;Omitir</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="111"/>
+        <source>The meter has no such function, or you cannot measure it now</source>
+        <translation>El equipo no tiene esta función, o no puede medirla ahora</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="136"/>
         <source>Last frames (up to %1):</source>
         <translation>Últimas tramas (hasta %1):</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="91"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="137"/>
         <source>&amp;Pause</source>
         <translation>&amp;Pausa</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="95"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="141"/>
         <source>Stop adding frames, to keep one of the list</source>
         <translation>Dejar de añadir tramas, para conservar una de la lista</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="96"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="142"/>
         <source>C&amp;lear</source>
         <translation>&amp;Limpiar</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="100"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="146"/>
         <source>Time</source>
         <translation>Hora</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="100"/>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="122"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="146"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="168"/>
         <source>Bytes</source>
         <translation>Bytes</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="100"/>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="122"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="146"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="168"/>
         <source>QtDMM reads</source>
         <translation>QtDMM lee</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="110"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="156"/>
         <source>The meter &amp;shows:</source>
         <translation>El equipo &amp;muestra:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="113"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="159"/>
         <source>as on its display, e.g. -1.234 V DC AUTO HOLD</source>
         <translation>como en su pantalla, p. ej. -1.234 V DC AUTO HOLD</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="115"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="161"/>
         <source>&amp;Keep</source>
         <translation>&amp;Conservar</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="118"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="164"/>
         <source>Keeps the frame selected, else the newest, with what the meter shows</source>
         <translation>Conserva la trama seleccionada, si no la más reciente, con lo que muestra el equipo</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="122"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="168"/>
         <source>The meter shows</source>
         <translation>El equipo muestra</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="130"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="168"/>
+        <source>Step</source>
+        <translation>Paso</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="177"/>
         <source>&amp;Remove</source>
         <translation>&amp;Quitar</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="133"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="180"/>
         <source>Export also all &amp;frames of the list</source>
         <translation>Exportar también todas las &amp;tramas de la lista</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="135"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="182"/>
         <source>&amp;Export...</source>
         <translation>&amp;Exportar…</translation>
     </message>
     <message>
         <location filename="../../src/ui/dialogs/capturedlg.cpp" line="239"/>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="250"/>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="256"/>
+        <source>All steps done</source>
+        <translation>Todos los pasos hechos</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="240"/>
+        <source>Export the capture with Export... - it holds the frames kept, with what the meter showed.</source>
+        <translation>Exporte la captura con Exportar…: contiene las tramas conservadas, con lo que mostraba el equipo.</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="245"/>
+        <source>Step %1 of %2</source>
+        <translation>Paso %1 de %2</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="253"/>
+        <source>Se&amp;nd %1</source>
+        <translation>E&amp;nviar %1</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="254"/>
+        <source>Presses %1 on the meter</source>
+        <translation>Pulsa %1 en el equipo</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="290"/>
+        <source>QtDMM does not read what this step wants (%1). If the meter shows it, keep the frame anyway: that is what the capture is for.</source>
+        <translation>QtDMM no lee lo que este paso espera (%1). Si el equipo lo muestra, conserve la trama de todos modos: para eso es la captura.</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="381"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="392"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="398"/>
         <source>Export capture</source>
         <translation>Exportar captura</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="240"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="382"/>
         <source>No frame is kept with what the meter showed. Export anyway?</source>
         <translation>Ninguna trama está conservada con lo que mostraba el equipo. ¿Exportar de todos modos?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="250"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="392"/>
         <source>Capture (*.yaml)</source>
         <translation>Captura (*.yaml)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="257"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="399"/>
         <source>Could not write %1: %2</source>
         <translation>No se pudo escribir %1: %2</translation>
+    </message>
+</context>
+<context>
+    <name>CaptureSteps</name>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="55"/>
+        <source>Set the meter to DC voltage and measure a battery.</source>
+        <translation>Ponga el equipo en tensión continua y mida una pila.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="57"/>
+        <source>Swap the test leads on the battery, so the meter shows a negative voltage.</source>
+        <translation>Invierta las puntas en la pila, para que el equipo muestre una tensión negativa.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="59"/>
+        <source>Set the meter to AC voltage and measure a source that is safe to measure, such as the AC output of a small transformer. Without one, skip this step.</source>
+        <translation>Ponga el equipo en tensión alterna y mida una fuente que se pueda medir sin peligro, como la salida de CA de un transformador pequeño. Sin ella, omita este paso.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="63"/>
+        <source>Set the meter to resistance and measure a resistor.</source>
+        <translation>Ponga el equipo en resistencia y mida una resistencia.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="65"/>
+        <source>Leave the test leads open, so the meter shows OL.</source>
+        <translation>Deje las puntas abiertas, para que el equipo muestre OL.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="66"/>
+        <source>Set the meter to diode test and measure a diode in forward direction.</source>
+        <translation>Ponga el equipo en prueba de diodos y mida un diodo en sentido directo.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="68"/>
+        <source>Set the meter to continuity and short the test leads.</source>
+        <translation>Ponga el equipo en continuidad y junte las puntas.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="70"/>
+        <source>Set the meter to capacitance and measure a discharged capacitor.</source>
+        <translation>Ponga el equipo en capacidad y mida un condensador descargado.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="72"/>
+        <source>Set the meter to frequency (Hz).</source>
+        <translation>Ponga el equipo en frecuencia (Hz).</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="73"/>
+        <source>Set the meter to DC current in mA, put the red test lead into the mA socket and measure a small current, such as an LED with its resistor. Never measure a voltage source directly in this setting. Without such a circuit, skip this step.</source>
+        <translation>Ponga el equipo en corriente continua en mA, conecte la punta roja a la entrada mA y mida una corriente pequeña, como la de un LED con su resistencia. Nunca mida directamente una fuente de tensión en esta posición. Sin un circuito así, omita este paso.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="80"/>
+        <source>Set the meter to AC current and clamp one wire of a running appliance.</source>
+        <translation>Ponga el equipo en corriente alterna y abrace con la pinza un conductor de un aparato en marcha.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="82"/>
+        <source>Measure something and press HOLD.</source>
+        <translation>Mida algo y pulse HOLD.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="83"/>
+        <source>Release HOLD, then press REL (relative).</source>
+        <translation>Suelte HOLD y luego pulse REL (relativo).</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="85"/>
+        <source>Release REL, then press MIN/MAX.</source>
+        <translation>Suelte REL y luego pulse MIN/MAX.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="87"/>
+        <source>Release MIN/MAX, then press RANGE to choose the range by hand.</source>
+        <translation>Suelte MIN/MAX y luego pulse RANGE para elegir el rango a mano.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="112"/>
+        <source>Plug a probe into the first input (T1) and measure the room temperature.</source>
+        <translation>Conecte una sonda a la primera entrada (T1) y mida la temperatura ambiente.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="114"/>
+        <source>Unplug the probe, so the meter shows that no probe is there.</source>
+        <translation>Desconecte la sonda, para que el equipo muestre que no hay sonda.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="115"/>
+        <source>Plug probes into the first and the second input (T1 and T2). With one input only, skip this step.</source>
+        <translation>Conecte sondas a la primera y a la segunda entrada (T1 y T2). Con una sola entrada, omita este paso.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="117"/>
+        <source>Switch the unit between °C and °F.</source>
+        <translation>Cambie la unidad entre °C y °F.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="118"/>
+        <source>Switch back to °C and press HOLD.</source>
+        <translation>Vuelva a °C y pulse HOLD.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="119"/>
+        <source>Release HOLD, then press MAX/MIN.</source>
+        <translation>Suelte HOLD y luego pulse MAX/MIN.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="125"/>
+        <source>Point the sensor at a lamp.</source>
+        <translation>Apunte el sensor a una lámpara.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="126"/>
+        <source>Change the range, with the RANGE key or by covering the sensor.</source>
+        <translation>Cambie el rango, con la tecla RANGE o tapando el sensor.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="128"/>
+        <source>Switch the unit between lx and fc.</source>
+        <translation>Cambie la unidad entre lx y fc.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="129"/>
+        <source>Switch back to lx and press HOLD.</source>
+        <translation>Vuelva a lx y pulse HOLD.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="130"/>
+        <location filename="../../src/device/capturesteps.cpp" line="139"/>
+        <source>Release HOLD, then press MAX.</source>
+        <translation>Suelte HOLD y luego pulse MAX.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="134"/>
+        <source>Measure the sound level of the room.</source>
+        <translation>Mida el nivel sonoro de la sala.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="136"/>
+        <source>Switch the weighting between dBA and dBC.</source>
+        <translation>Cambie la ponderación entre dBA y dBC.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="137"/>
+        <source>Switch the time weighting between FAST and SLOW.</source>
+        <translation>Cambie la ponderación temporal entre FAST y SLOW.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="138"/>
+        <source>Press HOLD.</source>
+        <translation>Pulse HOLD.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="216"/>
+        <source>diode</source>
+        <translation>diodo</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="220"/>
+        <source>negative</source>
+        <translation>negativa</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="228"/>
+        <source>manual range</source>
+        <translation>rango manual</translation>
     </message>
 </context>
 <context>
@@ -3167,7 +3396,7 @@ y cierre la sesión y vuelva a entrar.</translation>
     </message>
     <message>
         <location filename="../../src/ui/views/graphwidget.cpp" line="744"/>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="148"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="149"/>
         <source>Live</source>
         <translation>En vivo</translation>
     </message>
@@ -3247,132 +3476,132 @@ y cierre la sesión y vuelva a entrar.</translation>
         <translation>En vivo en pausa</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="103"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="104"/>
         <source>&amp;Edit note...</source>
         <translation>&amp;Editar nota…</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="106"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="107"/>
         <source>&amp;Remove mark</source>
         <translation>&amp;Quitar marca</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="144"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="145"/>
         <source>Stop recording</source>
         <translation>Detener grabación</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="146"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="147"/>
         <source>Start recording</source>
         <translation>Iniciar grabación</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="149"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="150"/>
         <source>Clear graph</source>
         <translation>Borrar gráfica</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="154"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="155"/>
         <source>Note here...</source>
         <translation>Nota aquí…</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="156"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="157"/>
         <source>Note now...</source>
         <translation>Nota ahora…</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="159"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="160"/>
         <source>Configure...</source>
         <translation>Configurar…</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="160"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="161"/>
         <source>Copy image</source>
         <translation>Copiar imagen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="161"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="162"/>
         <source>Export image...</source>
         <translation>Exportar imagen...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="167"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="168"/>
         <source>Graph &amp;colours</source>
         <translation>&amp;Colores de la gráfica</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="176"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="177"/>
         <source>&amp;Default: %1</source>
         <translation>&amp;Predeterminado: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="182"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="183"/>
         <source>&amp;Reference line</source>
         <translation>Línea de &amp;referencia</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="199"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="200"/>
         <source>At &amp;0</source>
         <translation>En &amp;0</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="200"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="201"/>
         <source>&amp;Mean of the window</source>
         <translation>&amp;Media de la ventana</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="201"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="202"/>
         <source>M&amp;inimum of the window</source>
         <translation>M&amp;ínimo de la ventana</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="202"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="203"/>
         <source>Ma&amp;ximum of the window</source>
         <translation>Má&amp;ximo de la ventana</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="206"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="207"/>
         <source>Alarm threshold %1</source>
         <translation>Umbral de alarma %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="210"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="211"/>
         <source>At %1 (dragged)</source>
         <translation>En %1 (arrastrada)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="213"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="214"/>
         <source>&amp;Off</source>
         <translation>&amp;Apagada</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="214"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="215"/>
         <source>Over&amp;view</source>
         <translation>&amp;Vista general</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="217"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="218"/>
         <source>Min/max &amp;band</source>
         <translation>&amp;Banda mín/máx</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="221"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="222"/>
         <source>Remove time cursors</source>
         <translation>Quitar cursores de tiempo</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="226"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="227"/>
         <source>Import data...</source>
         <translation>Importar datos…</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="350"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="351"/>
         <source>no value</source>
         <translation>sin valor</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="350"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="351"/>
         <source>fault</source>
         <translation>fallo</translation>
     </message>

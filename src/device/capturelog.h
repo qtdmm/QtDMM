@@ -6,6 +6,7 @@
 #include <QDateTime>
 #include <QList>
 #include <QString>
+#include <QStringList>
 #include <optional>
 
 #include "device/dmmdecoder.h"
@@ -33,6 +34,8 @@ public:
   {
     Frame   frame;
     QString shown;
+    QString step;       ///< the guided step it was kept in (CaptureSteps), or empty
+    bool    unexpected = false;   ///< QtDMM read something else than the step wants
   };
   /// The meter and how it is read, for the file's head.
   struct Header
@@ -55,8 +58,14 @@ public:
   /// Keeps frame @p index of frames() (-1: the newest) with @p shown; false
   /// when there is none.
   bool        keep(const QString &shown, int index = -1);
+  /// Marks the frame kept last as kept in guided step @p step; @p unexpected
+  /// when QtDMM read something else than the step wants.
+  void        setKeptStep(const QString &step, bool unexpected);
   void        removeKept(int index);
   const QList<Kept> &kept() const { return m_kept; }
+  /// The guided steps skipped (the meter has no such function), for the file.
+  void        setSkipped(const QStringList &steps) { m_skipped = steps; }
+  const QStringList &skipped() const { return m_skipped; }
 
   /// The file: head, the kept frames as vectors and with @p allFrames the
   /// list too.
@@ -73,4 +82,5 @@ public:
 private:
   QList<Frame> m_frames;
   QList<Kept>  m_kept;
+  QStringList  m_skipped;
 };
