@@ -569,6 +569,19 @@ static void testArranged()
   delete fresh;
   arranger.arrange();
   QTest::qWait(50);
+  // a new table (the project's window) goes to the right, as in the rule
+  // layout, not below the graph
+  QMdiSubWindow *table = area.addSubWindow(new QLabel("table"));
+  table->setObjectName("table");
+  table->show();
+  arranger.addWindow(table, R::Table);
+  QTest::qWait(50);
+  check(table->geometry().left() > wins[2]->geometry().right() && table->geometry().top() <= wins[1]->geometry().top()
+          && table->geometry().bottom() >= wins[2]->geometry().bottom(),
+        "Fixed: a new table stands at the right over the whole height");
+  delete table;
+  arranger.arrange();
+  QTest::qWait(50);
   // a resize keeps the proportions
   const double gShare = double(wins[2]->height()) / vp->height();
   area.resize(900, 700);

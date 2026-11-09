@@ -23,6 +23,12 @@ without an open project it makes a new one. Its arrow has **New
 project...**, **Open project...**, the projects opened last
 (the open one ticked) and **Close project**.
 
+A project you make, open or import shows its window; a bench loaded
+from another project switches to it and leaves the windows as the bench
+has them. A window not yet placed goes to the right, like the readings
+table. The list leaves out `project.json`, the file in which QtDMM keeps
+the project's name and description.
+
 The project stays open until you open or close another, also across
 restarts.
 

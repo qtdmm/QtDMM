@@ -159,6 +159,18 @@ BasketWidget::BasketWidget(QWidget *parent) :
   connect(m_view, &QTreeView::customContextMenuRequested, this, &BasketWidget::contextMenu);
   connect(m_model, &QFileSystemModel::directoryLoaded, this, &BasketWidget::updateEmpty);
   connect(m_model, &QAbstractItemModel::rowsInserted, this, &BasketWidget::updateEmpty);
+  // the project's own file is QtDMM's, not one of the person's: not listed
+  auto hideProjectFile = [this]
+  {
+    if (m_folder.isEmpty())
+      return;
+    const QModelIndex file = m_model->index(QDir(m_folder).filePath("project.json"));
+    if (file.isValid())
+      m_view->setRowHidden(file.row(), file.parent(), true);
+  };
+  connect(m_model, &QFileSystemModel::directoryLoaded, this, hideProjectFile);
+  connect(m_model, &QAbstractItemModel::rowsInserted, this, hideProjectFile);
+  connect(m_model, &QAbstractItemModel::layoutChanged, this, hideProjectFile);
   connect(m_model, &QAbstractItemModel::rowsRemoved, this, &BasketWidget::updateEmpty);
   m_pages->addWidget(page);
   showFolder();
@@ -216,6 +228,7 @@ void BasketWidget::newSLOT()
     return;
   }
   setFolder(dir);
+  Q_EMIT projectOpened();
 }
 
 bool BasketWidget::writeProjectFile(const QString &dir)
@@ -449,13 +462,16 @@ void BasketWidget::importSLOT()
     return;
   }
   setFolder(folder);
+  Q_EMIT projectOpened();
 }
 
 void BasketWidget::openSLOT()
 {
   const QString dir = QFileDialog::getExistingDirectory(this, tr("Open project"), m_folder);
-  if (!dir.isEmpty())
-    setFolder(dir);
+  if (dir.isEmpty())
+    return;
+  setFolder(dir);
+  Q_EMIT projectOpened();
 }
 
 void BasketWidget::showFolder()
@@ -479,7 +495,10 @@ void BasketWidget::showFolder()
 void BasketWidget::updateEmpty()
 {
   const bool there = !m_folder.isEmpty() && QFileInfo(m_folder).isDir();
-  m_empty->setVisible(!there || QDir(m_folder).isEmpty());
+  // project.json alone is empty to the person: it is not listed
+  const QStringList entries = there ? QDir(m_folder).entryList(QDir::AllEntries | QDir::NoDotAndDotDot)
+                                    : QStringList();
+  m_empty->setVisible(entries.isEmpty() || entries == QStringList { "project.json" });
 }
 
 QStringList BasketWidget::addFiles(const QStringList &files)

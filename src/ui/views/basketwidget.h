@@ -77,6 +77,9 @@ public:
 Q_SIGNALS:
   /// Another basket was opened, or none (empty).
   void        folderChanged(const QString &folder);
+  /// The person made, opened or imported a project here (not a switch by
+  /// loading a bench): the receiver shows the window.
+  void        projectOpened();
   /// A file to open (double click, Open): the receiver loads a bench or a
   /// QtDMM recording, anything else goes to openWithSystem().
   void        openRequested(const QString &path);

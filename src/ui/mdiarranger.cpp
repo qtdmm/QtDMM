@@ -768,8 +768,10 @@ void MdiArranger::addNew(int leaf)
       same = id;
   if (same < 0)
   {
+    // a table goes to the right as in the rule's layout, the others
+    // along the longer side
     const QRect a = m_area->viewport()->rect();
-    addAtEdge(m_root, leaf, a.width() > a.height() * 2, role == Instrument);
+    addAtEdge(m_root, leaf, role == Table || a.width() > a.height() * 2, role == Instrument);
     return;
   }
   QList<QRect> rects;

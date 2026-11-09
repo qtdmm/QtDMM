@@ -395,6 +395,9 @@ void MainWindow::createViews()
       m_basketAction->setChecked(false);
   });
   connect(m_basket, &BasketWidget::error, m_wid, &InstanceWidget::error);
+  // made, opened or imported: its window shows (a bench switching the
+  // project leaves the windows as the bench has them)
+  connect(m_basket, &BasketWidget::projectOpened, this, [this] { m_basketAction->setChecked(true); });
   connect(m_basket, &BasketWidget::openRequested, this, [this](const QString &path)
   {
     // a bench is loaded, a recording of QtDMM goes into the graph, anything
@@ -969,11 +972,7 @@ void MainWindow::fillViewToolbar()
   connect(m_projectAction, &QAction::triggered, this, [this]
   {
     if (m_basket->folder().isEmpty())
-    {
-      m_basket->newAction()->trigger();
-      if (!m_basket->folder().isEmpty())
-        m_basketAction->setChecked(true);
-    }
+      m_basket->newAction()->trigger();   // a new one shows its window (projectOpened)
     else
       m_basketAction->toggle();
     m_projectAction->setChecked(m_basketAction->isChecked());
@@ -1002,7 +1001,11 @@ void MainWindow::fillViewToolbar()
       a->setCheckable(true);
       a->setChecked(dir == m_basket->folder());
       a->setEnabled(QFileInfo(dir).isDir());
-      connect(a, &QAction::triggered, this, [this, dir] { m_basket->setFolder(dir); });
+      connect(a, &QAction::triggered, this, [this, dir]
+      {
+        m_basket->setFolder(dir);
+        m_basketAction->setChecked(true);
+      });
     }
     if (!m_basket->folder().isEmpty())
     {
@@ -3356,7 +3359,6 @@ void MainWindow::benchIntoNewProject()
   const QString project = m_basket->folder();
   if (project.isEmpty() || project == before)
     return;   // no new project made
-  m_basketAction->setChecked(true);
   // the bench into it: its name and file proposed, now in the project's folder
   saveWorkspace();
 }

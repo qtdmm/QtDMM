@@ -11,8 +11,12 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QLabel>
 #include <QSignalSpy>
 #include <QTemporaryDir>
+#include <QTest>
+#include <QTreeView>
+#include <QFileSystemModel>
 
 #include "core/projectfolder.h"
 #include "recording/zipfile.h"
@@ -82,6 +86,33 @@ int main(int argc, char **argv)
   check(BasketWidget::setProjectDescription(dir.filePath("Other"), "x")
           && BasketWidget::readProject(dir.filePath("Other")).value("format").toInt() == 1, "made first when missing");
   check(BasketWidget::readProject(dir.filePath("none")).isEmpty(), "no project.json: empty");
+
+  // project.json is QtDMM's: not listed, and alone it leaves the project empty
+  {
+    basket.setFolder(dir.filePath("Other"));
+    auto *view = basket.findChild<QTreeView *>();
+    auto *model = qobject_cast<QFileSystemModel *>(view ? view->model() : nullptr);
+    QLabel *empty = nullptr;
+    for (QLabel *l : basket.findChildren<QLabel *>())
+      if (l->text().startsWith("Empty"))
+        empty = l;
+    check(model && empty, "the list and the empty note are there");
+    if (model && empty)
+    {
+      const QModelIndex file = model->index(dir.filePath("Other/project.json"));
+      for (int i = 0; i < 100 && model->rowCount(file.parent()) == 0; ++i)
+        QTest::qWait(20);
+      check(view->isRowHidden(file.row(), file.parent()), "project.json not listed");
+      check(!empty->isHidden(), "project.json alone: empty");
+      write(dir.filePath("Other/a.csv"), "1");
+      for (int i = 0; i < 150 && !empty->isHidden(); ++i)
+        QTest::qWait(20);
+      check(empty->isHidden(), "a file in it: not empty");
+      const QModelIndex again = model->index(dir.filePath("Other/project.json"));
+      check(view->isRowHidden(again.row(), again.parent()), "project.json stays unlisted with a file next to it");
+    }
+    basket.setFolder(dir.filePath("Bench"));
+  }
 
   // the project as a ZIP: every file under the basket's name, hidden ones
   // and the archive itself left out, project.json with the file list
