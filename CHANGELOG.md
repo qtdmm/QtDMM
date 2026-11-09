@@ -4,6 +4,7 @@
 
 ### GUI
 
+- **Window title: project and bench** — "Ripple › Bench 1 – QtDMM" while a project and a bench are open, either alone without the other; with neither the device names as before.
 - **Loading a bench opens its project** — a bench belongs to the project in whose folder it lies (subfolders too); loading it opens that project, a bench outside every project closes the open one, the status bar says so. Before, the open project stayed and saving proposed its folder for a bench of another.
 - **Project and bench: two words** — the project basket is called project now (German: Projekt instead of Projektmappe), in menus, dialogs, messages and the help; a bench stays a bench (Messplatz).
 - **Project button in the toolbar** — the second button opens a project basket; its arrow makes a new one, has the ten opened last (the open one ticked) and closes the open one.

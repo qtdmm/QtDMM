@@ -223,7 +223,7 @@ protected:
   void        applyPoincareColors(PoincarePlot *plot);
   /// @}
   ReadingsWidget *m_readings;
-  BasketWidget *m_basket;
+  BasketWidget *m_basket = nullptr;
   PoincarePlot *m_poincare;
   AlarmBar   *m_alarmBar;
   class AlarmService *m_alarmService;

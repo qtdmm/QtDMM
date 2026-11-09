@@ -384,6 +384,7 @@ void MainWindow::createViews()
     m_wid->settings()->save();   // set only stages it: the next start reads the file
     if (!folder.isEmpty())
       recentProjects().add(folder);
+    updateWindowTitle();
     // without a basket everything is as before
     for (QAction *a : { m_graphToBasket, m_tableToBasket })
       a->setVisible(!folder.isEmpty());
@@ -1395,12 +1396,28 @@ QMap<QString, QString> MainWindow::placesInUse() const
   return inUse;
 }
 
-// "QtDMM: UT61E, Victron", with the --config-id when one is given
+// "Ripple › Bench 1 – QtDMM": the project and the bench in use, either
+// alone when the other is not; without both the devices, "QtDMM: UT61E,
+// Victron". With the --config-id when one is given
 void MainWindow::updateWindowTitle()
 {
   QString title = APP_NAME;
   if (!m_configId.isEmpty())
     title += QString(" [%1]").arg(m_configId);
+  QStringList where;
+  if (const QString project = m_basket ? m_basket->folder() : QString(); !project.isEmpty())
+  {
+    const QString name = BasketWidget::readProject(project).value("name").toString();
+    where << (name.isEmpty() ? QFileInfo(project).fileName() : name);
+  }
+  // a bench without a name of its own by its file, as the sidebar has it
+  if (!m_workspaceName.isEmpty() || !m_workspaceFile.isEmpty())
+    where << (m_workspaceName.isEmpty() ? QFileInfo(m_workspaceFile).completeBaseName() : m_workspaceName);
+  if (!where.isEmpty())
+  {
+    setWindowTitle(where.join(QStringLiteral(" \u203A ")) + QStringLiteral(" \u2013 ") + title);
+    return;
+  }
   QStringList names;
   for (const MeterController *ctl : m_session->controllers())
     names << ctl->deviceName();
@@ -3293,6 +3310,7 @@ void MainWindow::setCurrentWorkspace(const QString &file)
   m_workspaceDescription = ws ? ws->description : QString();
   m_wid->settings()->setString("Windows/workspace-current", m_workspaceFile);
   m_sidebar->setCurrentWorkspace(m_workspaceName, ws ? workspaceTooltip(file, *ws) : QString());
+  updateWindowTitle();
 }
 
 QString MainWindow::workspaceTooltip(const QString &file, const WorkspaceFile &ws)
