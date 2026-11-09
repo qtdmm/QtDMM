@@ -26,8 +26,10 @@
 #include <QPrinter>
 #include <iostream>
 #include <cmath>
+#include <optional>
 
 #include "core/applog.h"
+#include "core/projectfolder.h"
 #include "ui/dialogs/recordlengthdlg.h"
 #include "ui/alarmsound.h"
 #include "ui/instancewidget.h"
@@ -588,6 +590,14 @@ bool InstanceWidget::importFile(const QString &path)
 
 void InstanceWidget::printSLOT()
 {
+  // printing into a PDF with a project open: among its documents
+  std::optional<ProjectFolder::Proposal> where;
+  if (m_printer.outputFormat() == QPrinter::PdfFormat && !ProjectFolder::current().isEmpty())
+  {
+    where.emplace(m_printer.outputFileName().isEmpty() ? QStringLiteral("graph.pdf") : m_printer.outputFileName(),
+                  ProjectFolder::Documents);
+    m_printer.setOutputFileName(where->path());
+  }
   m_printDlg->setPrinter(&m_printer);
 
   if (m_printDlg->exec())

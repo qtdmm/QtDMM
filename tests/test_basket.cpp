@@ -23,6 +23,8 @@
 #include "ui/views/basketwidget.h"
 #include "testutil.h"
 
+#include <QLocale>
+
 static void write(const QString &path, const QByteArray &data)
 {
   QFile f(path);
@@ -59,6 +61,8 @@ int main(int argc, char **argv)
         "save dialogs: into the open basket, got " + ProjectFolder::proposal("/elsewhere/ripple.csv"));
 
   // copies in, the originals stay; the same name twice gets a second name
+  // (by kind off: into the project itself; folders of a kind further down)
+  ProjectFolder::setByType(false);
   const QStringList added = basket.addFiles({ dir.filePath("a.csv"), dir.filePath("a.csv"), dir.filePath("missing.pdf") });
   check(added == QStringList({ dir.filePath("Bench/a.csv"), dir.filePath("Bench/a (2).csv") }),
         "copied under free names: " + added.join(", "));
@@ -251,6 +255,88 @@ int main(int argc, char **argv)
     check(BasketWidget::projectOf(dir.filePath("Old/benches/d.qtdmm-ws"), old) == old,
           "the open project without project.json");
     check(BasketWidget::projectOf(dir.filePath("Old/benches/d.qtdmm-ws")) != old, "not open, no project.json: none");
+  }
+
+  // folders of a kind: English on disk, made with the first file, the names
+  // in each language in project.json
+  {
+    ProjectFolder::setByType(true);
+    const QString proj = QDir(dir.filePath("Kinds")).absolutePath();
+    QDir().mkpath(proj);
+    BasketWidget::writeProjectFile(proj);
+    check(ProjectFolder::kindOf("x.qtdmm-workspace") == ProjectFolder::Benches
+            && ProjectFolder::kindOf("x.CSV") == ProjectFolder::Recordings
+            && ProjectFolder::kindOf("x.qtdmm-rec") == ProjectFolder::Recordings
+            && ProjectFolder::kindOf("x.png") == ProjectFolder::Images
+            && ProjectFolder::kindOf("x.lml") == ProjectFolder::Analysis
+            && ProjectFolder::kindOf("x.pdf") == ProjectFolder::Documents
+            && ProjectFolder::kindOf("notes") == ProjectFolder::Documents,
+          "kinds by suffix");
+    check(!QFileInfo::exists(proj + "/recordings"), "no folder before its first file");
+    check(ProjectFolder::dirFor(proj, ProjectFolder::Recordings) == proj + "/recordings"
+            && QFileInfo(proj + "/recordings").isDir(), "made when wanted");
+    const QJsonObject names = BasketWidget::readProject(proj).value("folders").toObject().value("recordings").toObject();
+    check(names.value("de").toString() == "Aufzeichnungen" && names.value("pl").toString() == "Nagrania"
+            && BasketWidget::readProject(proj).value("name").toString() == "Kinds",
+          "project.json: its names, the other keys stay");
+    check(ProjectFolder::dirFor(proj, ProjectFolder::Root) == proj, "Root: the project");
+    ProjectFolder::setByType(false);
+    check(ProjectFolder::dirFor(proj, ProjectFolder::Images) == proj && !QFileInfo::exists(proj + "/images"),
+          "by kind off: the project");
+    ProjectFolder::setByType(true);
+
+    // added into the project: each into the folder of its kind; onto a folder: there
+    basket.setFolder(proj);
+    write(dir.filePath("plot.png"), "png");
+    write(dir.filePath("sheet.pdf"), "pdf");
+    write(dir.filePath("bench.qtdmm-workspace"), "{}");
+    const QStringList in = basket.addFiles({ dir.filePath("a.csv"), dir.filePath("plot.png"),
+                                             dir.filePath("sheet.pdf"), dir.filePath("bench.qtdmm-workspace") });
+    check(in == QStringList({ proj + "/recordings/a.csv", proj + "/images/plot.png", proj + "/documents/sheet.pdf",
+                              proj + "/benches/bench.qtdmm-workspace" }),
+          "sorted by kind: " + in.join(", "));
+    check(BasketWidget::projectOf(proj + "/benches/bench.qtdmm-workspace") == proj, "a bench in benches/ belongs");
+    QDir().mkpath(proj + "/mine");
+    check(basket.addFiles({ dir.filePath("plot.png") }, proj + "/mine") == QStringList { proj + "/mine/plot.png" },
+          "onto a folder: into it");
+
+    // a save dialog's folder: kept with a file, gone again without one
+    {
+      ProjectFolder::Proposal where("/elsewhere/run.log", ProjectFolder::Analysis);
+      check(where.path() == proj + "/analysis/run.log" && QFileInfo(proj + "/analysis").isDir(),
+            "proposed in its folder: " + where.path());
+    }
+    check(!QFileInfo::exists(proj + "/analysis"), "cancelled: the folder is gone again");
+    {
+      ProjectFolder::Proposal where("x.pdf", ProjectFolder::Documents);
+      check(where.path() == proj + "/documents/x.pdf", "an existing folder");
+    }
+    check(QFileInfo(proj + "/documents").isDir(), "and it stays");
+    {
+      ProjectFolder::Proposal where("x.png", ProjectFolder::Analysis);
+      where.keep(proj + "/analysis/x.png");
+    }
+    check(QFileInfo(proj + "/analysis").isDir(), "chosen there, written later: it stays");
+
+    // the view shows the names of the program's language, F2 without a change keeps the disk's
+    QLocale::setDefault(QLocale(QLocale::German));
+    auto *view = basket.findChild<QTreeView *>();
+    QAbstractItemModel *model = view ? view->model() : nullptr;
+    auto *fs = qobject_cast<QFileSystemModel *>(model);
+    if (fs)
+    {
+      const QModelIndex rec = fs->index(proj + "/recordings");
+      for (int i = 0; i < 100 && fs->rowCount(rec.parent()) < 5; ++i)
+        QTest::qWait(20);
+      check(fs->data(fs->index(proj + "/recordings")).toString() == "Aufzeichnungen",
+            "shown in German: " + fs->data(fs->index(proj + "/recordings")).toString());
+      check(fs->data(fs->index(proj + "/mine")).toString() == "mine", "a folder of one's own: its name");
+      check(fs->setData(fs->index(proj + "/recordings"), "Aufzeichnungen") && QFileInfo(proj + "/recordings").isDir(),
+            "renamed to the name shown: stays on disk");
+    }
+    else
+      check(false, "the list's model");
+    QLocale::setDefault(QLocale(QLocale::English));
   }
 
   if (failed == 0)

@@ -34,6 +34,7 @@
 
 #include "ui_uimainwindow.h"
 #include "core/limittest.h"
+#include "core/projectfolder.h"
 #include "core/recentfiles.h"
 #include "core/valueref.h"
 #include "ui/devicesidebar.h"
@@ -450,8 +451,8 @@ protected:
   /// a project in the project basket, else in Documents/QtDMM; again while
   /// it runs: LabPlot opens that project once more.
   void        labPlotLive();
-  /// A free path in the project basket: date, time, the leading device, @p what.
-  QString     basketName(const QString &what, const QString &suffix) const;
+  /// A free path in the project's folder for @p kind: date, time, the leading device.
+  QString     basketName(ProjectFolder::Kind kind, const QString &suffix) const;
   /// The workspaces used last, shared by all instances (workspaces.conf).
   RecentFiles recentWorkspaces() const;
   /// The project baskets opened last, shared by all instances (projects.conf).

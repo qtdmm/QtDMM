@@ -98,6 +98,10 @@ GeneralPrefs::GeneralPrefs(QWidget *parent) : SettingsPage(parent)
       ui_basketBase->setText(QDir::toNativeSeparators(dir));
   });
   form->addRow(tr("&Folder for new projects:"), row({ ui_basketBase, browseBase }, false));
+  ui_byType = check(tr("Files into folders by &type"), "ui_byType",
+                    tr("Benches, recordings, images, analysis and documents each go into a folder of their own in "
+                       "the project, made with the first file. Files already there stay where they are."));
+  form->addRow(QString(), ui_byType);
 }
 
 QString GeneralPrefs::defaultBasketBase()
@@ -145,6 +149,7 @@ void GeneralPrefs::defaultsSLOT()
   ui_sigrokExe->setText(m_cfg->getString("Port settings/sigrok_exe", "sigrok-cli"));
   ui_labPlotExe->setText(QDir::toNativeSeparators(m_cfg->getString("Programs/labplot")));
   ui_basketBase->setText(QDir::toNativeSeparators(m_cfg->getString("Basket/base-dir")));
+  ui_byType->setChecked(m_cfg->getBool("Basket/by-type", true));
 }
 
 void GeneralPrefs::factoryDefaultsSLOT()
@@ -155,6 +160,7 @@ void GeneralPrefs::factoryDefaultsSLOT()
   ui_sigrokExe->setText("sigrok-cli");
   ui_labPlotExe->clear();
   ui_basketBase->clear();
+  ui_byType->setChecked(true);
 }
 
 void GeneralPrefs::applySLOT()
@@ -165,4 +171,5 @@ void GeneralPrefs::applySLOT()
   m_cfg->setString("Port settings/sigrok_exe", sigrokExecutable());
   m_cfg->setString("Programs/labplot", labPlotExecutable());
   m_cfg->setString("Basket/base-dir", ui_basketBase->text().trimmed().isEmpty() ? QString() : basketBase());
+  m_cfg->setBool("Basket/by-type", ui_byType->isChecked());
 }

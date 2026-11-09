@@ -187,7 +187,8 @@ bool PoincarePlot::exportImageSLOT()
 {
   const QString png = tr("PNG image (*.png)"), svg = tr("SVG image (*.svg)");
   QString filter = png;
-  QString fn = QFileDialog::getSaveFileName(this, tr("Save image"), ProjectFolder::proposal("poincare.png"),
+  const ProjectFolder::Proposal where("poincare.png", ProjectFolder::Images);
+  QString fn = QFileDialog::getSaveFileName(this, tr("Save image"), where.path(),
                                             png + ";;" + svg, &filter);
   if (fn.isEmpty())
     return false;

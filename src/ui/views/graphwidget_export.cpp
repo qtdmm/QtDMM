@@ -113,7 +113,8 @@ QString GraphWidget::askExportFile(bool *raw)
   const QString rawFilter = tr("CSV, every reading (*.csv)");
   QString filter = fnSuffix == "xlsx" ? xlsxFilter : fnSuffix == "ods" ? odsFilter
                  : fnSuffix == RecordingFile::kSuffix ? qtdmmFilter : csvFilter;
-  fn = QFileDialog::getSaveFileName(this, tr("Export data"), ProjectFolder::proposal(fn),
+  ProjectFolder::Proposal where(fn, ProjectFolder::Recordings);
+  fn = QFileDialog::getSaveFileName(this, tr("Export data"), where.path(),
                                     csvFilter + ";;" + xlsxFilter + ";;" + odsFilter + ";;" + rawFilter + ";;"
                                       + qtdmmFilter, &filter);
 
@@ -124,6 +125,7 @@ QString GraphWidget::askExportFile(bool *raw)
     fn += filter == xlsxFilter ? ".xlsx" : filter == odsFilter ? ".ods"
           : filter == qtdmmFilter ? QString(".") + RecordingFile::kSuffix : ".csv";
   *raw = filter == rawFilter;
+  where.keep(fn);   // written by the caller
   m_cfg->setString("QtDMM/LastUsesPath", QDir().absoluteFilePath(fn));
   return fn;
 }
@@ -233,7 +235,8 @@ bool GraphWidget::exportImageSLOT()
                 pngFilter = tr("PNG image (*.png)"), jpgFilter = tr("JPEG image (*.jpg)");
   QString filter = suffix == "pdf" ? pdfFilter : suffix == "png" ? pngFilter
                  : suffix == "jpg" ? jpgFilter : svgFilter;
-  QString fn = QFileDialog::getSaveFileName(this, tr("Export image"), ProjectFolder::proposal(name + "." + suffix),
+  const ProjectFolder::Proposal where(name + "." + suffix, ProjectFolder::Images);
+  QString fn = QFileDialog::getSaveFileName(this, tr("Export image"), where.path(),
                                             svgFilter + ";;" + pdfFilter + ";;" + pngFilter + ";;" + jpgFilter,
                                             &filter);
   if (fn.isNull())

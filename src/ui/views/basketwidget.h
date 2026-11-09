@@ -5,7 +5,7 @@
 #include <QStringList>
 #include <QWidget>
 
-class QFileSystemModel;
+class ProjectFileModel;
 class QJsonObject;
 class QModelIndex;
 class QAction;
@@ -40,6 +40,8 @@ public:
   QAction    *importAction() const { return m_importAction; }
   /// Copies @p files into the basket (makes the folder first), or into its
   /// folder @p dir, under names not taken yet; returns the paths they got.
+  /// Into the basket itself each goes into the folder of its kind
+  /// (ProjectFolder::kindOf()) while ProjectFolder::byType() is on.
   /// Not a file, or not readable: left out, an error() names it.
   QStringList addFiles(const QStringList &files, const QString &dir = QString());
   /// Makes a folder in @p dir (a folder of the basket, empty: the basket)
@@ -138,5 +140,5 @@ private:
   QToolButton      *m_title;
   QLabel           *m_empty;
   QTreeView        *m_view;
-  QFileSystemModel *m_model;
+  ProjectFileModel *m_model;
 };

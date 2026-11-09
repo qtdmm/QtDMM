@@ -406,7 +406,8 @@ void ReadingsWidget::exportSLOT()
 {
   const QString csvFilter = tr("CSV (*.csv)"), xlsxFilter = tr("Excel (*.xlsx)"), odsFilter = tr("OpenDocument (*.ods)");
   QString filter = csvFilter;
-  QString path = QFileDialog::getSaveFileName(this, tr("Export readings"), ProjectFolder::proposal(QString()),
+  const ProjectFolder::Proposal where(QString(), ProjectFolder::Recordings);
+  QString path = QFileDialog::getSaveFileName(this, tr("Export readings"), where.path(),
                                               csvFilter + ";;" + xlsxFilter + ";;" + odsFilter, &filter);
   if (path.isEmpty())
     return;

@@ -27,7 +27,6 @@
 #include <QtPrintSupport>
 
 #include "ui/dialogs/printdlg.h"
-#include "core/projectfolder.h"
 namespace qtdmm
 {
   PrintDlg::PrintDlg(QWidget *parent) : QDialog(parent)
@@ -38,11 +37,6 @@ namespace qtdmm
   void PrintDlg::setPrinter(QPrinter *prt)
   {
     m_printer = prt;
-    // printing into a PDF with a project open: the file goes there too
-    if (m_printer->outputFormat() == QPrinter::PdfFormat && !ProjectFolder::current().isEmpty())
-      m_printer->setOutputFileName(ProjectFolder::proposal(m_printer->outputFileName().isEmpty()
-                                                             ? QStringLiteral("graph.pdf")
-                                                             : m_printer->outputFileName()));
     createPrinterString();
   }
 

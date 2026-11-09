@@ -27,6 +27,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QLabel>
+#include <QLocale>
 #include <QMenu>
 #include <QMimeData>
 #include <QPushButton>
@@ -39,6 +40,59 @@
 #include <QTreeView>
 #include <QUrl>
 #include <QVBoxLayout>
+
+/// The files of the basket; the folders of a kind directly in it show the
+/// name project.json has for them in the language of the program.
+class ProjectFileModel : public QFileSystemModel
+{
+public:
+  using QFileSystemModel::QFileSystemModel;
+
+  QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override
+  {
+    const QString shown = (role == Qt::DisplayRole || role == Qt::EditRole) ? shownName(index) : QString();
+    return shown.isEmpty() ? QFileSystemModel::data(index, role) : QVariant(shown);
+  }
+
+  // F2 and Enter without a change: the name on disk stays
+  bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override
+  {
+    const QString shown = role == Qt::EditRole ? shownName(index) : QString();
+    if (!shown.isEmpty() && value.toString() == shown)
+      return true;
+    return QFileSystemModel::setData(index, value, role);
+  }
+
+private:
+  QString shownName(const QModelIndex &index) const
+  {
+    if (index.column() != 0 || !isDir(index))
+      return QString();
+    const QString project = rootPath();
+    if (filePath(index.parent()) != project)
+      return QString();
+    // project.json read again only when it changed
+    const QDateTime changed = QFileInfo(QDir(project).filePath("project.json")).lastModified();
+    if (project != m_project || changed != m_changed)
+    {
+      m_project = project;
+      m_changed = changed;
+      m_shown.clear();
+      const QString language = QLocale().name().section('_', 0, 0);
+      const QJsonObject folders = BasketWidget::readProject(project).value("folders").toObject();
+      for (auto it = folders.begin(); it != folders.end(); ++it)
+        m_shown.insert(it.key(), it.value().toObject().value(language).toString());
+    }
+    // not fileName(): it asks data() for the name shown
+    const QString name = QFileSystemModel::data(index, FileNameRole).toString();
+    const QString shown = m_shown.value(name);   // none in this language: the name on disk
+    return shown == name ? QString() : shown;
+  }
+
+  mutable QString                 m_project;
+  mutable QDateTime               m_changed;
+  mutable QHash<QString, QString> m_shown;   ///< name on disk -> name shown
+};
 
 BasketWidget::BasketWidget(QWidget *parent) :
   QWidget(parent)
@@ -136,7 +190,7 @@ BasketWidget::BasketWidget(QWidget *parent) :
   m_empty->setWordWrap(true);
   m_empty->setEnabled(false);
   layout->addWidget(m_empty);
-  m_model = new QFileSystemModel(this);
+  m_model = new ProjectFileModel(this);
   m_model->setReadOnly(false);   // renaming in place
   m_model->setFilter(QDir::AllEntries | QDir::NoDotAndDotDot);
   m_view = new QTreeView(page);
@@ -524,15 +578,18 @@ QStringList BasketWidget::addFiles(const QStringList &files, const QString &dir)
   QStringList added;
   if (m_folder.isEmpty() || files.isEmpty())
     return added;
-  const QString into = dir.isEmpty() ? m_folder : dir;
-  if (!QDir().mkpath(into))
+  // into the project itself: each into the folder of its kind
+  const bool sort = dir.isEmpty() || QDir(dir) == QDir(m_folder);
+  if (!QDir().mkpath(sort ? m_folder : dir))
   {
-    Q_EMIT error(tr("Project: cannot make the folder %1").arg(QDir::toNativeSeparators(into)));
+    Q_EMIT error(tr("Project: cannot make the folder %1").arg(QDir::toNativeSeparators(sort ? m_folder : dir)));
     return added;
   }
   for (const QString &file : files)
   {
     const QFileInfo info(file);
+    const QString into = !sort ? dir : info.isFile() ? ProjectFolder::dirFor(m_folder, ProjectFolder::kindOf(file))
+                                                     : m_folder;
     // a file already there stays as it is
     if (info.absoluteDir() == QDir(into))
       continue;
