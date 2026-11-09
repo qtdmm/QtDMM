@@ -582,6 +582,19 @@ static void testArranged()
   delete table;
   arranger.arrange();
   QTest::qWait(50);
+  // held: the windows stay where they are, let go they are arranged again
+  {
+    const QRect before = wins[2]->geometry();
+    arranger.setHeld(true);
+    wins[2]->setGeometry(10, 10, 50, 50);
+    area.resize(area.width() + 20, area.height());
+    QTest::qWait(50);
+    check(wins[2]->geometry() == QRect(10, 10, 50, 50), "held: nothing arranged");
+    arranger.setHeld(false);
+    area.resize(area.width() - 20, area.height());
+    QTest::qWait(50);
+    check(wins[2]->geometry() == before, "let go: arranged again");
+  }
   // a resize keeps the proportions
   const double gShare = double(wins[2]->height()) / vp->height();
   area.resize(900, 700);
