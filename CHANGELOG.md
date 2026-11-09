@@ -4,6 +4,7 @@
 
 ### GUI
 
+- **One Export** — the graph's context menu has only *Export...* (the export dialog) now, *Export data...* is gone; Ctrl+E opens the export dialog (was Ctrl+Shift+E), the quick CSV export without it is gone, every format is in the dialog.
 - **LabPlot project** — the export dialog writes a LabPlot project (`.lml`): the numbers in a spreadsheet and a graph with a plot per unit, scaled and with a legend; it opens in LabPlot without the import dialog, and *Then open in LabPlot* now takes it (the CSV for LabPlot stays as a format). `QTDMM:RECord:SAVE` writes it too.
 - **Save dialogs start in the open project basket** — graph export and image, readings table, Poincaré picture, the export dialog's file, application log, printing into a PDF and Save bench (also for a bench loaded from elsewhere) propose the basket's folder while one is open.
 - **Import project** — *Import project...* at the project basket unpacks a project ZIP (*Export project*) into a new basket and opens it; files missing or changed since the export (size, SHA-256) or a path out of the folder stop it before anything is written.

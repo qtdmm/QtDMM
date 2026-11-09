@@ -33,8 +33,7 @@ handbook window are fixed.
 | Space | Record: start the recorder, or stop it when it is running |
 | Ctrl+Del | Clear the recording |
 | F4 | Reset the min/max memory of all devices |
-| Ctrl+E | Export the recording as CSV |
-| Ctrl+Shift+E | Export dialog: recording, readings table or picture, format and place |
+| Ctrl+E | Export dialog: recording, readings table or picture, format and place |
 | Ctrl+I | Import a CSV file |
 | Ctrl+P | Print the graph |
 | Ctrl+Shift+C | Copy the graph as an image to the clipboard |
