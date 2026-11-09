@@ -33,6 +33,10 @@ public:
   void        setFolder(const QString &folder);
   /// The basket's folder, empty while none is open.
   QString     folder() const { return m_folder; }
+  /// New, Open and Close of the menu, for the toolbar's project button.
+  QAction    *newAction() const { return m_newAction; }
+  QAction    *openAction() const { return m_openAction; }
+  QAction    *closeAction() const { return m_closeAction; }
   /// Copies @p files into the basket (makes the folder first) under names
   /// not taken yet; returns the paths they got. Not a file, or not
   /// readable: left out, an error() names it.

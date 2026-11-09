@@ -367,7 +367,10 @@ void MainWindow::createViews()
   m_basketWin = addView(m_basket, m_basket->windowTitle(), MdiArranger::Table, "basket");
   const QString basketDir = m_wid->settings()->getString("Basket/folder");
   if (QFileInfo(basketDir).isDir())
+  {
     m_basket->setFolder(basketDir);
+    recentProjects().add(basketDir);   // the one open at the start is one of the last ones too
+  }
   auto basketBase = [this]
   {
     const QString base = m_wid->settings()->getString("Basket/base-dir");
@@ -379,6 +382,8 @@ void MainWindow::createViews()
   {
     m_wid->settings()->setString("Basket/folder", folder);
     m_wid->settings()->save();   // set only stages it: the next start reads the file
+    if (!folder.isEmpty())
+      recentProjects().add(folder);
     // without a basket everything is as before
     for (QAction *a : { m_graphToBasket, m_tableToBasket })
       a->setVisible(!folder.isEmpty());
@@ -943,6 +948,44 @@ void MainWindow::fillViewToolbar()
                                      "goes into this window or a new one. It is kept in My devices.</p></body></html>"));
   connect(m_addDeviceAction, &QAction::triggered, this, &MainWindow::addDevice);
   toolBarDMM->insertAction(m_sidebarAction, m_addDeviceAction);
+
+  // the project basket, second: a click opens one, the arrow makes one,
+  // takes one of the last ones or closes the open one
+  m_projectAction = new QAction(QIcon::fromTheme("document-open", style()->standardIcon(QStyle::SP_DirOpenIcon)),
+                                tr("Open project basket"), this);
+  m_projectAction->setObjectName("action_ProjectBasket");
+  m_projectAction->setToolTip(tr("Open a project basket; the arrow: a new one, the last ones"));
+  connect(m_projectAction, &QAction::triggered, m_basket->openAction(), &QAction::trigger);
+  toolBarDMM->insertAction(m_sidebarAction, m_projectAction);
+  addViewMenu(m_projectAction, [this](QMenu *menu)
+  {
+    menu->addAction(m_basket->newAction());
+    menu->addAction(m_basket->openAction());
+    const QStringList dirs = recentProjects().list().mid(0, 10);
+    if (!dirs.isEmpty())
+      menu->addSeparator();
+    for (int i = 0; i < dirs.size(); ++i)
+    {
+      const QString &dir = dirs[i];
+      QString name = BasketWidget::readProject(dir).value("name").toString();
+      if (name.isEmpty())
+        name = QFileInfo(dir).fileName();
+      name.replace('&', "&&");
+      // 1 ... 9 as the letters, then none
+      QAction *a = menu->addAction(i < 9 ? QString("&%1 %2").arg(i + 1).arg(name) : name);
+      a->setToolTip(QDir::toNativeSeparators(dir));
+      a->setCheckable(true);
+      a->setChecked(dir == m_basket->folder());
+      a->setEnabled(QFileInfo(dir).isDir());
+      connect(a, &QAction::triggered, this, [this, dir] { m_basket->setFolder(dir); });
+    }
+    if (!m_basket->folder().isEmpty())
+    {
+      menu->addSeparator();
+      menu->addAction(m_basket->closeAction());
+    }
+    menu->setToolTipsVisible(true);
+  });
 
   toolBarDMM->insertSeparator(action_Connect);
   toolBarDMM->addSeparator();
@@ -3255,6 +3298,12 @@ QString MainWindow::workspaceTooltip(const QString &file, const WorkspaceFile &w
 RecentFiles MainWindow::recentWorkspaces() const
 {
   return RecentFiles(QDir(m_wid->settings()->configDir()).filePath("workspaces.conf"));
+}
+
+RecentFiles MainWindow::recentProjects() const
+{
+  return RecentFiles(QDir(m_wid->settings()->configDir()).filePath("projects.conf"), QStringLiteral("Projects/recent"),
+                     20);
 }
 
 void MainWindow::updateRecentWorkspaces()
