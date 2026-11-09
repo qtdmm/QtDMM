@@ -950,13 +950,30 @@ void MainWindow::fillViewToolbar()
   connect(m_addDeviceAction, &QAction::triggered, this, &MainWindow::addDevice);
   toolBarDMM->insertAction(m_sidebarAction, m_addDeviceAction);
 
-  // the project basket, second: a click opens one, the arrow makes one,
-  // takes one of the last ones or closes the open one
+  // the project, second: the arrow makes one, opens one, takes one of the
+  // last ones or closes the open one
   m_projectAction = new QAction(QIcon::fromTheme("document-open", style()->standardIcon(QStyle::SP_DirOpenIcon)),
-                                tr("Open project"), this);
+                                tr("Project"), this);
   m_projectAction->setObjectName("action_ProjectBasket");
-  m_projectAction->setToolTip(tr("Open a project; the arrow: a new one, the last ones"));
-  connect(m_projectAction, &QAction::triggered, m_basket->openAction(), &QAction::trigger);
+  m_projectAction->setToolTip(tr("Show or hide the project's window; without a project: a new one. "
+                                 "The arrow: new, open, the last ones"));
+  // [E 09.11.] with a project its window, without one a new project (whose
+  // window then shows); pressed while the window shows
+  m_projectAction->setCheckable(true);
+  connect(m_projectAction, &QAction::triggered, this, [this]
+  {
+    if (m_basket->folder().isEmpty())
+    {
+      m_basket->newAction()->trigger();
+      if (!m_basket->folder().isEmpty())
+        m_basketAction->setChecked(true);
+    }
+    else
+      m_basketAction->toggle();
+    m_projectAction->setChecked(m_basketAction->isChecked());
+  });
+  connect(m_basketAction, &QAction::toggled, m_projectAction, &QAction::setChecked);
+  m_projectAction->setChecked(m_basketAction->isChecked());
   toolBarDMM->insertAction(m_sidebarAction, m_projectAction);
   addViewMenu(m_projectAction, [this](QMenu *menu)
   {

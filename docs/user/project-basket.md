@@ -17,7 +17,8 @@ the same and **Close project**. New projects are made in the folder
 set under **Settings → General → Folder for new projects**
 (Documents/QtDMM at first).
 
-The second button of the toolbar opens a project too; its arrow has **New
+The second button of the toolbar shows and hides the project's window;
+without an open project it makes a new one. Its arrow has **New
 project...**, **Open project...**, the projects opened last
 (the open one ticked) and **Close project**.
 
