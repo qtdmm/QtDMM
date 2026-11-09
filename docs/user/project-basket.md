@@ -17,6 +17,10 @@ the same and **Close project basket**. New baskets are made in the folder
 set under **Settings → General → Folder for new projects**
 (Documents/QtDMM at first).
 
+The second button of the toolbar opens a basket too; its arrow has **New
+project basket...**, **Open project basket...**, the baskets opened last
+(the open one ticked) and **Close project basket**.
+
 The basket stays open until you open or close another, also across
 restarts and when you load a bench from somewhere else.
 

@@ -242,6 +242,7 @@ protected:
   QAction    *m_basketAction = nullptr;
   QAction    *m_graphToBasket = nullptr;   ///< the recording and the graph into the project basket
   QAction    *m_labPlotLive = nullptr;     ///< Live in LabPlot, while it records
+  QAction    *m_projectAction = nullptr;   ///< the toolbar's project button: open, the arrow new and the last ones
   QPointer<LabPlotLive> m_live;            ///< the recording live in LabPlot, while it goes on
   QAction    *m_tableToBasket = nullptr;   ///< the readings into the project basket
   QAction    *m_graphExport = nullptr;     ///< the export dialog, from the graph (Ctrl+E)
@@ -436,6 +437,8 @@ protected:
   QString     basketName(const QString &what, const QString &suffix) const;
   /// The workspaces used last, shared by all instances (workspaces.conf).
   RecentFiles recentWorkspaces() const;
+  /// The project baskets opened last, shared by all instances (projects.conf).
+  RecentFiles recentProjects() const;
   /// The sidebar's node and the menu "Recent workspaces" anew.
   void        updateRecentWorkspaces();
   /// The workspace in use: loaded or saved last (Windows/workspace-current).

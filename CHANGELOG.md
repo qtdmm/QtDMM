@@ -4,6 +4,7 @@
 
 ### GUI
 
+- **Project button in the toolbar** — the second button opens a project basket; its arrow makes a new one, has the ten opened last (the open one ticked) and closes the open one.
 - **Live in LabPlot** — while it records, *Live in LabPlot* in the graph's context menu starts LabPlot with a project whose live data source follows a CSV QtDMM writes row by row: LabPlot's plots (one per unit) grow with the recording. The CSV and the project go into the project basket or *Documents/QtDMM*.
 - **One Export** — the graph's context menu has only *Export...* (the export dialog) now, *Export data...* is gone; Ctrl+E opens the export dialog (was Ctrl+Shift+E), the quick CSV export without it is gone, every format is in the dialog.
 - **LabPlot project** — the export dialog writes a LabPlot project (`.lml`): the numbers in a spreadsheet and a graph with a plot per unit, scaled and with a legend; it opens in LabPlot without the import dialog, and *Then open in LabPlot* now takes it (the CSV for LabPlot stays as a format). `QTDMM:RECord:SAVE` writes it too.
