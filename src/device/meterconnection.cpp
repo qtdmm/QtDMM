@@ -505,6 +505,9 @@ void MeterConnection::readEventSLOT(const QByteArray &data, int id, qint64 t, qi
     else
       setState(LinkState::Connected, r->error.isEmpty() ? connectedMessage() : QString("%1 %2").arg(r->error, deviceName()));
   }
+  else if (m_decoder->getType() == FrameFormat::RawCapture)
+    // no value by design: the bytes are only for the capture window
+    setState(LinkState::Connected, tr("Capture only %1").arg(deviceName()));
   else
     setState(LinkState::Connected, tr("Error %1").arg(deviceName()));
 }

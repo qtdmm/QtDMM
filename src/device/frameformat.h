@@ -90,6 +90,7 @@ public:
     UniTUT8803,
     Eevblog121GW,
     BrymenBM78xBT,
+    RawCapture,            ///< no decoder: frames cut at a pause, only for the capture window
     EndOfList              // new stuff always before!
   };
 

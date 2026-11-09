@@ -80,8 +80,12 @@ CaptureDlg::CaptureDlg(MeterConnection *dmm, const QString &name, Settings *sett
                           this);
   head->setTextInteractionFlags(Qt::TextSelectableByMouse);
   top->addWidget(head);
-  auto *hint = new QLabel(tr("Set the meter to what it reads wrong, enter what its display shows and keep the frame. "
-                             "The export holds only the frames and what you entered, no port or address."), this);
+  auto *hint = new QLabel(raw() ? tr("QtDMM does not know the protocol of this meter: for each frame you keep, enter "
+                                     "what the meter's display shows. A new decoder is built from these pairs. "
+                                     "The export holds only the frames and what you entered, no port or address.")
+                                : tr("Set the meter to what it reads wrong, enter what its display shows and keep the frame. "
+                                     "The export holds only the frames and what you entered, no port or address."),
+                          this);
   hint->setWordWrap(true);
   top->addWidget(hint);
 
@@ -148,6 +152,8 @@ CaptureDlg::CaptureDlg(MeterConnection *dmm, const QString &name, Settings *sett
   const int em = fontMetrics().averageCharWidth();
   m_frames->setColumnWidth(0, 14 * em);
   m_frames->setColumnWidth(1, 60 * em);
+  if (raw())
+    m_frames->hideColumn(2);   // nothing is read
   top->addWidget(m_frames, 3);
 
   // what the meter showed, with the frame
@@ -170,6 +176,8 @@ CaptureDlg::CaptureDlg(MeterConnection *dmm, const QString &name, Settings *sett
   m_kept->setColumnWidth(0, 30 * em);
   m_kept->setColumnWidth(1, 30 * em);
   m_kept->setColumnWidth(2, 12 * em);
+  if (raw())
+    m_kept->hideColumn(1);
   top->addWidget(m_kept, 2);
 
   auto *bottom = new QHBoxLayout;
@@ -222,6 +230,11 @@ CaptureDlg::CaptureDlg(MeterConnection *dmm, const QString &name, Settings *sett
   showStep();
 }
 
+bool CaptureDlg::raw() const
+{
+  return m_dmm->format() == FrameFormat::RawCapture;
+}
+
 bool CaptureDlg::guided() const
 {
   return m_guided && m_guided->isChecked() && m_step < m_steps.size();
@@ -244,6 +257,8 @@ void CaptureDlg::showStep()
   const CaptureSteps::Step &step = m_steps.at(m_step);
   m_stepTitle->setText(tr("Step %1 of %2").arg(m_step + 1).arg(m_steps.size()));
   m_stepText->setText(CaptureSteps::instruction(step));
+  if (raw())
+    m_stepHint->setText(tr("Then enter what the meter shows and keep the newest frame."));
   // a key QtDMM can press on the meter itself
   const bool remote = !step.key.isEmpty() && m_dmm->keys().contains(step.key);
   m_sendKey->setVisible(remote);
@@ -318,7 +333,7 @@ void CaptureDlg::addFrame(const QByteArray &bytes, qint64 wall, const std::optio
     delete m_frames->takeTopLevelItem(0);
   if (atEnd)
     m_frames->scrollToBottom();
-  if (m_guided && m_watcher.add(CaptureSteps::stateOf(m_log.frames().last(), m_dmm->format()), wall))
+  if (m_guided && !raw() && m_watcher.add(CaptureSteps::stateOf(m_log.frames().last(), m_dmm->format()), wall))
     propose();
 }
 
@@ -338,7 +353,7 @@ void CaptureDlg::keep()
   {
     const CaptureSteps::Step &step = m_steps.at(m_step);
     const CaptureSteps::State state = CaptureSteps::stateOf(m_log.kept().last().frame, m_dmm->format());
-    m_log.setKeptStep(step.id, step.expect.isSet() && !CaptureSteps::matches(step.expect, state));
+    m_log.setKeptStep(step.id, !raw() && step.expect.isSet() && !CaptureSteps::matches(step.expect, state));
     // the next step starts from what the meter showed in this one
     m_watcher.setBaseline(state);
     ++m_step;

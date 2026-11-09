@@ -5,6 +5,7 @@
 #include <QRegularExpression>
 #include <QStringList>
 
+#include "device/decoders/raw_capture.h"
 #include "device/protocols.h"
 
 namespace
@@ -165,7 +166,12 @@ QString CaptureLog::yaml(const Header &header, bool allFrames) const
 {
   const ProtocolInfo *protocol = protocolInfo(header.protocol);
   const QString device = QString("%1 %2").arg(header.vendor, header.model).trimmed();
+  // a meter QtDMM does not know: frames cut at a pause, nothing read
+  const bool raw = header.protocol == FrameFormat::RawCapture;
   QStringList out;
+  if (raw)
+    out << "# QtDMM does not know the protocol of this meter yet: each frame is what"
+        << QString("# came before a pause of %1 ms, nothing was read from it.").arg(DecoderRawCapture::kGapMs);
   out << "# A capture of QtDMM: frames of the meter and what it showed, in the form of"
       << "# the test vectors in docs/protocols/spec. 'source_line' is what the meter"
       << "# showed, 'reading' and 'expect' what QtDMM read - where they differ, QtDMM"
@@ -186,7 +192,7 @@ QString CaptureLog::yaml(const Header &header, bool allFrames) const
     out << "  - source_line: " + quoted(k.shown) << "    bytes: " + hex(k.frame.bytes);
     if (k.frame.response)
       out << "    reading: " + reading(*k.frame.response) << "    expect: " + expect(*k.frame.response);
-    else
+    else if (!raw)
       out << "    # QtDMM did not understand this frame";
   }
   if (!m_skipped.isEmpty())
@@ -199,7 +205,10 @@ QString CaptureLog::yaml(const Header &header, bool allFrames) const
       QString line = QString("  - {t: %1, bytes: %2}")
                        .arg(quoted(QDateTime::fromMSecsSinceEpoch(f.wall).toString("HH:mm:ss.zzz")), hex(f.bytes));
       const QString read = readingText(f);
-      out << line + (read.isEmpty() ? QString("   # not understood") : "   # " + read);
+      if (raw)
+        out << line;
+      else
+        out << line + (read.isEmpty() ? QString("   # not understood") : "   # " + read);
     }
   }
   return out.join('\n') + '\n';

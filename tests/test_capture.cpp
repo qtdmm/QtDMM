@@ -5,6 +5,8 @@
 // with what the meter showed, the YAML in the form of the spec vectors with
 // no port or address in it, and the window fed by MeterConnection::frame().
 #include <QApplication>
+#include <QElapsedTimer>
+#include <QEventLoop>
 #include <QCheckBox>
 #include <QFile>
 #include <QGroupBox>
@@ -13,10 +15,13 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QTemporaryDir>
+#include <QTimer>
 #include <QTreeWidget>
 
 #include "device/capturelog.h"
 #include "device/capturesteps.h"
+#include "device/decoders/raw_capture.h"
+#include "device/framereader.h"
 #include "device/meterconnection.h"
 #include "ui/dialogs/capturedlg.h"
 #include "testutil.h"
@@ -36,6 +41,41 @@ CaptureLog::Frame decoded(const QString &val, const QString &unit, const QString
 }
 
 const QByteArray kDcVolt = QByteArray::fromHex("300D514D2C2D3132312E3433205644430D");
+
+// a port the test writes into: what feed() gives comes out as one readyRead()
+class FakePort : public QIODevice
+{
+public:
+  FakePort() { open(QIODevice::ReadWrite); }
+  void feed(const QByteArray &bytes)
+  {
+    m_data += bytes;
+    Q_EMIT readyRead();
+  }
+  bool isSequential() const override { return true; }
+  qint64 bytesAvailable() const override { return m_data.size() + QIODevice::bytesAvailable(); }
+
+protected:
+  qint64 readData(char *data, qint64 max) override
+  {
+    const qint64 n = qMin<qint64>(max, m_data.size());
+    memcpy(data, m_data.constData(), size_t(n));
+    m_data.remove(0, n);
+    return n;
+  }
+  qint64 writeData(const char *, qint64 len) override { return len; }
+
+private:
+  QByteArray m_data;
+};
+
+// runs the event loop for @p ms
+void wait(int ms)
+{
+  QEventLoop loop;
+  QTimer::singleShot(ms, &loop, &QEventLoop::quit);
+  loop.exec();
+}
 
 // feeds @p bytes through the connection as the frame reader does
 void feed(MeterConnection &dmm, const QByteArray &bytes, qint64 wall)
@@ -293,6 +333,58 @@ int main(int argc, char **argv)
     shown->setText("by hand");
     keep->click();
     check(dlg.step() == 2 && dlg.log().kept().last().step.isEmpty(), "without guided steps nothing moves on");
+  }
+
+  // 8. a meter QtDMM does not know: frames cut at a pause
+  {
+    FrameReader reader(nullptr);
+    reader.setDecoder(std::make_shared<DecoderRawCapture>(FrameFormat::RawCapture));
+    FakePort port;
+    reader.setHandle(&port);
+    QList<QByteArray> frames;
+    QObject::connect(&reader, &FrameReader::readEvent, [&frames](const QByteArray &bytes) { frames << bytes; });
+    port.feed(QByteArray::fromHex("AA0102"));
+    wait(DecoderRawCapture::kGapMs / 3);
+    port.feed(QByteArray::fromHex("0304"));   // the rest of the same frame
+    check(frames.isEmpty(), "no frame before the pause");
+    wait(DecoderRawCapture::kGapMs * 3);
+    check(frames.size() == 1 && frames.first() == QByteArray::fromHex("AA01020304"), "two pieces, one frame");
+    port.feed(QByteArray::fromHex("AA05"));
+    wait(DecoderRawCapture::kGapMs * 3);
+    check(frames.size() == 2 && frames.last() == QByteArray::fromHex("AA05"), "a pause, a new frame");
+    port.feed(QByteArray(FrameReader::kMaxGapFrame + 10, 'x'));
+    check(frames.size() == 3 && frames.last().size() == FrameReader::kMaxGapFrame, "a meter that never pauses");
+    wait(DecoderRawCapture::kGapMs * 3);
+    check(frames.size() == 4 && frames.last().size() == 10, "the rest after the pause");
+  }
+
+  // 9. its capture window: nothing read, nothing proposed
+  {
+    MeterConnection rawDmm(nullptr);
+    DmmDecoder::DMMInfo rInfo;
+    rInfo.vendor = "Manual";
+    rInfo.model = "Manual";
+    rInfo.protocol = FrameFormat::RawCapture;
+    rawDmm.setDmmInfo(rInfo);
+    rawDmm.setFormat(FrameFormat::RawCapture);
+    CaptureDlg dlg(&rawDmm, "x", nullptr);
+    auto *frames = dlg.findChild<QTreeWidget *>("ui_captureFrames");
+    auto *shown = dlg.findChild<QLineEdit *>("ui_captureShown");
+    auto *keep = dlg.findChild<QPushButton *>("ui_captureKeep");
+    auto *hint = dlg.findChild<QLabel *>("ui_captureStepHint");
+    check(frames && shown && keep && hint && frames->isColumnHidden(2), "no column of what QtDMM reads");
+    check(!hint->text().isEmpty() && dlg.step() == 0, "the multimeter steps, with the hint to type");
+    for (qint64 t = 20000; t <= 22000; t += 400)
+      feed(rawDmm, QByteArray::fromHex("AA55010203"), t);
+    check(dlg.log().frames().size() == 6 && shown->text().isEmpty(), "frames come, nothing proposed");
+    check(!keep->isEnabled(), "Keep only with what the meter shows");
+    shown->setText("1.234 V DC");
+    keep->click();
+    check(dlg.step() == 1 && dlg.log().kept().last().step == "dc_v" && !dlg.log().kept().last().unexpected,
+          "kept in its step, no hint of a wrong reading");
+    const QString yaml = dlg.yaml();
+    check(yaml.contains("protocol: RawCapture\n") && yaml.contains("pause of 50 ms")
+            && yaml.contains("bytes: AA 55 01 02 03\n") && !yaml.contains("did not understand"), yaml);
   }
 
   return failed == 0 ? 0 : 1;

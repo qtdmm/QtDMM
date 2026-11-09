@@ -23,6 +23,7 @@
 
 #include "core/devicelibrary.h"
 #include "device/dmmdecoder.h"
+#include "device/metersetup.h"
 #include "ui/devicesymbol.h"
 
 namespace
@@ -777,6 +778,14 @@ void DeviceSidebar::openMenu(QTreeWidgetItem *item, const QPoint &pos)
   menu.addSeparator();
   // its frames with what it showed, for a report of what is read wrong
   QAction *capture = menu.addAction(tr("&Capture..."));
+  // a meter whose protocol QtDMM does not know: the capture is all it is for
+  if (const std::optional<MyDevice> d = m_library->find(id);
+      d && MeterSetup::formatFromSetting(d->keys.value("DMM/data-format")) == FrameFormat::RawCapture)
+  {
+    QFont bold = capture->font();
+    bold.setBold(true);
+    capture->setFont(bold);
+  }
   menu.addSeparator();
   QAction *close = menu.addAction(QIcon::fromTheme("window-close"), tr("&Remove from bench"));
   QAction *chosen = menu.exec(pos);

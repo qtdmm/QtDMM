@@ -125,6 +125,10 @@ public:
   /// is everything received since the previous one (a line protocol whose
   /// checkFormat() fires on the terminator, see DecoderFlukeQM).
   virtual size_t                     getPacketLength() = 0;
+  /// Cuts frames by time instead: a pause of this many ms after the last
+  /// byte ends a frame (DecoderRawCapture, a meter whose protocol is not
+  /// known). 0, the default: getPacketLength() and checkFormat() cut them.
+  virtual int                        frameGapMs() const { return 0; }
   /// Frame delimiter: true when the ring buffer @p data, whose newest byte is
   /// at index @p len, ends with a complete frame (typically checked on the
   /// terminator and the high nibbles of the VC820-style byte counters).

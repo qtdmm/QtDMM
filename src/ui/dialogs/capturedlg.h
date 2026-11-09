@@ -49,6 +49,9 @@ private:
   void        keep();
   void        exportCapture();
   bool        guided() const;
+  /// The meter's protocol is not known (FrameFormat::RawCapture): no
+  /// reading, no proposal, only what the user enters.
+  bool        raw() const;
   void        showStep();
   void        skipStep();
   void        stepBack();
