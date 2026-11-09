@@ -5,7 +5,7 @@ frames_per_reading: 1
 unit_map:                      # spec spelling -> what the decoder emits
   "u": "µ"
 sources:
-  - "ablage/dmm-tools/docs/research/ut171/reverse-engineered-protocol.md (dmm-tools, GPL-3.0-or-later: from UNI-T's UT171C PC software and the manual, cross-checked with the captures of gulux's Uni-T-CP2110; no meter read there yet, issue #4)"
+  - "ablage/dmm-tools/docs/research/ut171/reverse-engineered-protocol.md (dmm-tools, GPL-3.0-or-later: re-read 07.11.2026 (0da7002) from the frame handler of UNI-T's UT171C software, the manual; no meter read or sent a command there yet, issue #4)"
 
 # UT-D09 cable (CP2110 or CH9329), 9600 8N1, or the UT-D07B adapter. The
 # UT181A's framing (§3): AB CD, a 16-bit LE length (payload + 2), the
@@ -13,83 +13,109 @@ sources:
 # streams with SETUP > Communication ON after the connect command
 # AB CD 04 00 0A 01 0F 00 (§4.3; pause: ... 0A 00 0E 00).
 #
-# Measurement (§5.1), 15 payload bytes: 02, flags (§5.3: bit 7 HOLD, bit 6
-# manual range, bit 2 low battery), frame type (01; 03 the extended frame,
-# 21 bytes, §5.2), mode (§6: 01 LoZ V, 02-04 V DC/AC/AC+DC, 05-07 mV,
-# 08 continuity, 09 F, 0A Ohm, 0B diode, 0C/0D C/F, 0E nS, 0F Hz, 10 %,
-# 11-13 uA, 14-16 mA, 17-19 A, 1A VFC, 1B % 4-20 mA, 1C/1D 600 A clamp,
-# 24 NCV), range (1-based, 0 auto), main float32 LE, status2, a byte,
-# aux float32 LE (the frequency in kHz on V AC and mV AC). The resistance
-# float is in kOhm on ranges 2-4 and MOhm from 5 (gulux); the other modes
-# in the base unit, UNVERIFIED for F, nS and Hz. A non-finite float: OL.
+# Measurement (§5.1), payload 02, status A (§5.3: bit 0 aux block, 1
+# auto-save and its minutes, 2 low battery - gulux only -, 3 bar float,
+# 4 REL, 5 MAX/MIN running, 6 Peak, 7 HOLD), status B (bit 0 AUTO, 1 the
+# high-voltage alarm, bits 6/5: 10 MAX, 01 AVG, 11 MIN), mode (§6: 01 LoZ,
+# 02-04 V DC/AC/AC+DC, 05-07 mV, 08/09 C/F, 0A Ohm, 0B capacitance,
+# 0C continuity, 0D diode, 0E nS, 0F Hz, 11-19 uA/mA/A, 1A NCV, 1B/1C the
+# 600 A clamp, 1D square wave out, 1E VFC, 1F % of 4-20 mA), range row
+# (1-based), float32 LE already in its unit, decimals (high nibble) and
+# display state (low: 0 value, 1 OL, 2 -OL, 3 dashes, 4 LEAD, 5 DISC,
+# 6 Lo, 7 Hi), unit code (§5.6: 00 VDC ... 10 kOhm, 11 MOhm, 13 kHz,
+# 16-18 nF/uF/mF, 19/1A C/F, 1B diode, 1C beep, 1D nS, 1E NCV, 1F ms).
+# Then by status A: the aux block (float, decimals/state, unit), the bar
+# float, the auto-save minutes. NCV (1A): nothing read after the mode.
+# Square wave (1D): frequency, duty, width floats, the width's decimals.
 #
-# The vectors are SYNTHETIC: frames built from the spec's layout, the values
-# of dmm-tools' unit tests where named. No capture of a real meter exists;
-# they test the decoder's reading of the spec.
+# This replaces the earlier reading (frame type in byte 6, the old mode
+# table, scaling by the range), which came from the software's database
+# engine, not its frame handler.
+#
+# The vectors are SYNTHETIC: frames built from the spec's layout, the
+# values of dmm-tools' unit tests where named. No capture of a real meter
+# exists; they test the decoder's reading of the spec.
 vectors:
-  - source_line: "V DC 12.345, auto range (dmm-tools parse_vdc)"
-    bytes: AB CD 11 00 02 00 01 02 01 1F 85 45 41 00 00 00 00 00 00 41 01
-    reading: {value: "12.345", unit: "V", range_mode: "auto"}
-    expect: {special: "DC"}
-  - source_line: "12.345 kOhm on range 3, manual range (parse_ohm, parse_manual_range)"
-    bytes: AB CD 11 00 02 40 01 0A 03 1F 85 45 41 00 00 00 00 00 00 8B 01
-    reading: {value: "12.345", unit: "kOhm", range_mode: "manual"}
+  - source_line: "V DC 1.2345, auto range, 4 decimals (dmm-tools parse_vdc)"
+    bytes: AB CD 0D 00 02 00 01 02 01 19 04 9E 3F 40 00 4D 01
+    reading: {value: "1.2345", unit: "V", coupling: DC, range_mode: "auto"}
+    expect: {special: "DC", val: "1.2345"}
+  - source_line: "12.34 kOhm: the unit is the unit code's (the_unit_comes_from_the_unit_code)"
+    bytes: AB CD 0D 00 02 00 01 0A 03 A4 70 45 41 20 10 E7 01
+    reading: {value: "12.34", unit: "kOhm", range_mode: "auto"}
     expect: {special: "OH"}
-  - source_line: "1.2345 MOhm on range 5"
-    bytes: AB CD 11 00 02 00 01 0A 05 19 04 9E 3F 00 00 00 00 00 00 1D 01
-    reading: {value: "1.2345", unit: "MOhm", range_mode: "auto"}
+  - source_line: "12.34 MOhm, unit code 0x11"
+    bytes: AB CD 0D 00 02 00 01 0A 06 A4 70 45 41 20 11 EB 01
+    reading: {value: "12.34", unit: "MOhm", range_mode: "auto"}
     expect: {special: "OH"}
-  - source_line: "V AC 230.1 with 0.05 kHz beside it (aux_value_populated_when_nonzero)"
-    bytes: AB CD 11 00 02 00 01 03 02 9A 19 66 43 00 00 CD CC 4C 3D 97 03
-    reading: {value: "230.1", unit: "V", range_mode: "auto"}
-    expect: {special: "AC", val2: "0.05", unit2: "kHz", id2: 1}
-  - source_line: "V AC 230.1, no frequency sent (aux_value_empty_when_zero)"
-    bytes: AB CD 11 00 02 00 01 03 02 9A 19 66 43 00 00 00 00 00 00 75 01
-    reading: {value: "230.1", unit: "V", range_mode: "auto"}
-    expect: {special: "AC"}
-  - source_line: "mV DC -12.5 with HOLD (parse_hold_flag)"
-    bytes: AB CD 11 00 02 80 01 05 01 00 00 48 C1 00 00 00 00 00 00 A3 01
-    reading: {value: "-12.5", unit: "mV", range_mode: "auto", flags: [HOLD]}
-    expect: {special: "DC"}
-  - source_line: "Ohm overload: NaN on range 6 (parse_nan_overload)"
-    bytes: AB CD 11 00 02 00 01 0A 06 00 00 C0 7F 00 00 00 00 00 00 63 01
-    reading: {value: "OL", unit: "MOhm", range_mode: "auto"}
-    expect: {special: "OH", val: "OL"}
-  - source_line: "NCV level 3 (parse_ncv)"
-    bytes: AB CD 11 00 02 00 01 24 00 00 00 40 40 00 00 00 00 00 00 B8 00
-    reading: {value: "3", unit: "", range_mode: "auto", shown: "none"}
-    expect: {special: "NCV", val: "3"}
-  - source_line: "uA DC 123.4 on range 1"
-    bytes: AB CD 11 00 02 00 01 11 01 CD CC F6 42 00 00 00 00 00 00 F7 02
-    reading: {value: "123.4", unit: "uA", range_mode: "auto"}
-    expect: {special: "DC"}
-  - source_line: "Temperature 23.5 C"
-    bytes: AB CD 11 00 02 00 01 0C 01 00 00 BC 41 00 00 00 00 00 00 1E 01
-    reading: {value: "23.5", unit: "C", range_mode: "auto"}
-    expect: {special: "TE"}
-  - source_line: "LoZ V 230"
-    bytes: AB CD 11 00 02 00 01 01 01 00 00 66 43 00 00 00 00 00 00 BF 00
-    reading: {value: "230", unit: "V", range_mode: "auto"}
-    expect: {special: "AC"}
-  - source_line: "50 Hz on range 1"
-    bytes: AB CD 11 00 02 00 01 0F 01 00 00 48 42 00 00 00 00 00 00 AE 00
-    reading: {value: "50", unit: "Hz", range_mode: "auto"}
-    expect: {special: "HZ"}
-  - source_line: "A DC 1.5 with low battery (parse_low_battery)"
-    bytes: AB CD 11 00 02 04 01 17 01 00 00 C0 3F 00 00 00 00 00 00 2F 01
-    reading: {value: "1.5", unit: "A", range_mode: "auto", flags: [LowBat]}
-    expect: {special: "DC"}
-  - source_line: "Capacitance 47 on range 2, in the base unit (scale UNVERIFIED)"
-    bytes: AB CD 11 00 02 00 01 09 02 00 00 3C 42 00 00 00 00 00 00 9D 00
-    reading: {value: "47", unit: "F", range_mode: "auto"}
-  - source_line: "4.7 nF as a float in F: no exponent, a letter would read as overload"
-    bytes: AB CD 11 00 02 00 01 09 02 A3 7D A1 31 00 00 00 00 00 00 11 02
-    reading: {value: "0.0000000047", unit: "F", range_mode: "auto"}
-    expect: {val: "0.0000000047"}
+  - source_line: "12.34 nF, capacitance is mode 0x0B, unit code 0x16"
+    bytes: AB CD 0D 00 02 00 01 0B 02 A4 70 45 41 20 16 ED 01
+    reading: {value: "12.34", unit: "nF", range_mode: "auto"}
     expect: {special: "CA"}
-  - source_line: "Conductance 12.5 nS"
-    bytes: AB CD 11 00 02 00 01 0E 01 00 00 48 41 00 00 00 00 00 00 AC 00
-    reading: {value: "12.5", unit: "nS", range_mode: "auto"}
-  - source_line: "4-20 mA loop 50 %"
-    bytes: AB CD 11 00 02 00 01 1B 01 00 00 48 42 00 00 00 00 00 00 BA 00
-    reading: {value: "50", unit: "%", range_mode: "auto"}
+  - source_line: "12.34 uF, unit code 0x17"
+    bytes: AB CD 0D 00 02 00 01 0B 05 A4 70 45 41 20 17 F1 01
+    reading: {value: "12.34", unit: "uF", range_mode: "auto"}
+    expect: {special: "CA"}
+  - source_line: "12.34 kHz, unit code 0x13"
+    bytes: AB CD 0D 00 02 00 01 0F 04 A4 70 45 41 20 13 F0 01
+    reading: {value: "12.34", unit: "kHz", range_mode: "auto"}
+    expect: {special: "HZ"}
+  - source_line: "diode 0.512 V: mode 0x0D, unit code 0x1B"
+    bytes: AB CD 0D 00 02 00 01 0D 00 6F 12 03 3F 30 1B 2B 01
+    reading: {value: "0.512", unit: "V", range_mode: "auto"}
+    expect: {special: "DI", port: "voltage.diode"}
+  - source_line: "25.3 C: mode 0x08, unit code 0x19"
+    bytes: AB CD 0D 00 02 00 01 08 01 66 66 CA 41 10 19 19 02
+    reading: {value: "25.3", unit: "C", range_mode: "auto"}
+    expect: {special: "TE"}
+  - source_line: "12.34 nS, unit code 0x1D"
+    bytes: AB CD 0D 00 02 00 01 0E 01 A4 70 45 41 20 1D F6 01
+    reading: {value: "12.34", unit: "nS", range_mode: "auto"}
+  - source_line: "V AC 230.08 with the aux block: 0.050 kHz (the_aux_block)"
+    bytes: AB CD 13 00 02 01 01 03 02 7B 14 66 43 20 01 D4 B7 4C 3D 30 13 CC 03
+    reading: {value: "230.08", unit: "V", coupling: AC, range_mode: "auto"}
+    expect: {special: "AC", val2: "0.050", unit2: "kHz", id2: 1}
+  - source_line: "Ohm open: display state 1, OL (the_display_states)"
+    bytes: AB CD 0D 00 02 00 01 0A 01 00 00 00 00 21 0F 4B 00
+    reading: {value: "OL", unit: "Ohm", range_mode: "auto"}
+    expect: {special: "OH", val: "OL"}
+  - source_line: "display state 2: -OL"
+    bytes: AB CD 0D 00 02 00 01 02 01 00 00 00 00 42 00 55 00
+    reading: {value: "-OL", unit: "V", coupling: DC, range_mode: "auto"}
+    expect: {val: "-OL"}
+  - source_line: "display state 3: dashes by the decimals, no reading"
+    bytes: AB CD 0D 00 02 00 01 02 02 00 00 00 00 23 00 37 00
+    reading: {value: "---.--", unit: "V", coupling: DC, range_mode: "auto", shown: none}
+  - source_line: "display state 4: LEAD"
+    bytes: AB CD 0D 00 02 00 01 0A 01 00 00 00 00 14 0F 3E 00
+    reading: {value: "LEAD", unit: "Ohm", range_mode: "auto", shown: none}
+  - source_line: "V DC with HOLD, manual range (status A bit 7, status B bit 0 clear)"
+    bytes: AB CD 0D 00 02 80 00 02 01 00 00 80 3F 40 00 91 01
+    reading: {value: "1.0000", unit: "V", coupling: DC, range_mode: "manual", flags: [HOLD]}
+  - source_line: "REL: status A bit 4"
+    bytes: AB CD 0D 00 02 10 01 02 01 00 00 00 3F 40 00 A2 00
+    reading: {value: "0.5000", unit: "V", coupling: DC, range_mode: "auto"}
+    expect: {relative: true}
+  - source_line: "MAX shown: status B bit 6 alone"
+    bytes: AB CD 0D 00 02 20 41 02 01 00 00 00 40 40 00 F3 00
+    reading: {value: "2.0000", unit: "V", coupling: DC, range_mode: "auto"}
+    expect: {max: true, min: false}
+  - source_line: "MIN shown: status B bits 6 and 5"
+    bytes: AB CD 0D 00 02 20 61 02 01 00 00 80 3E 40 00 91 01
+    reading: {value: "0.2500", unit: "V", coupling: DC, range_mode: "auto"}
+    expect: {max: false, min: true}
+  - source_line: "low battery: status A bit 2 (gulux's captures only)"
+    bytes: AB CD 0D 00 02 04 01 02 01 00 00 80 3F 40 00 16 01
+    reading: {value: "1.0000", unit: "V", coupling: DC, range_mode: "auto"}
+    expect: {lowBat: true}
+  - source_line: "square wave out, mode 0x1D: frequency and duty (the_square_wave)"
+    bytes: AB CD 14 00 02 00 00 1D 00 00 00 7A 44 00 00 48 42 00 00 00 3F 02 BC 01
+    reading: {value: "1000.0", unit: "Hz", range_mode: "manual"}
+    expect: {special: "HZ", val2: "50.0", unit2: "%"}
+  - source_line: "NCV, mode 0x1A: nothing read after the mode"
+    bytes: AB CD 06 00 02 00 01 1A 23 00
+    reading: {value: "----", unit: "", range_mode: "auto", shown: none}
+    expect: {special: "NCV"}
+  - source_line: "a unit code past the table: the digits, no unit"
+    bytes: AB CD 0D 00 02 00 01 02 01 00 00 C0 3F 10 25 47 01
+    reading: {value: "1.5", unit: "", range_mode: "auto", shown: none}

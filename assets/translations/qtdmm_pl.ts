@@ -7607,50 +7607,55 @@ Następnie wyloguj się i zaloguj ponownie, aby członkostwo w grupie zaczęło 
 <context>
     <name>UT171</name>
     <message>
-        <location filename="../../src/device/decoders/uni_t_ut171.cpp" line="36"/>
+        <location filename="../../src/device/decoders/uni_t_ut171.cpp" line="54"/>
         <source>LoZ</source>
         <translation>LoZ</translation>
     </message>
     <message>
-        <location filename="../../src/device/decoders/uni_t_ut171.cpp" line="45"/>
+        <location filename="../../src/device/decoders/uni_t_ut171.cpp" line="55"/>
         <source>VFC</source>
         <translation>VFC</translation>
     </message>
     <message>
-        <location filename="../../src/device/decoders/uni_t_ut171.cpp" line="46"/>
+        <location filename="../../src/device/decoders/uni_t_ut171.cpp" line="56"/>
         <source>4-20 mA loop</source>
         <translation>Pętla 4-20 mA</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/uni_t_ut171.cpp" line="208"/>
+        <source>Square wave out</source>
+        <translation>Wyjście fali prostokątnej</translation>
     </message>
 </context>
 <context>
     <name>UT181A</name>
     <message>
-        <location filename="../../src/device/decoders/uni_t_ut181a.cpp" line="238"/>
+        <location filename="../../src/device/decoders/uni_t_ut181a.cpp" line="247"/>
         <source>Reference</source>
         <translation>Odniesienie</translation>
     </message>
     <message>
-        <location filename="../../src/device/decoders/uni_t_ut181a.cpp" line="239"/>
+        <location filename="../../src/device/decoders/uni_t_ut181a.cpp" line="248"/>
         <source>Absolute</source>
         <translation>Bezwzględna</translation>
     </message>
     <message>
-        <location filename="../../src/device/decoders/uni_t_ut181a.cpp" line="254"/>
+        <location filename="../../src/device/decoders/uni_t_ut181a.cpp" line="263"/>
         <source>Max</source>
         <translation>Maks</translation>
     </message>
     <message>
-        <location filename="../../src/device/decoders/uni_t_ut181a.cpp" line="255"/>
+        <location filename="../../src/device/decoders/uni_t_ut181a.cpp" line="264"/>
         <source>Min</source>
         <translation>Min</translation>
     </message>
     <message>
-        <location filename="../../src/device/decoders/uni_t_ut181a.cpp" line="256"/>
+        <location filename="../../src/device/decoders/uni_t_ut181a.cpp" line="265"/>
         <source>Average</source>
         <translation>Średnia</translation>
     </message>
     <message>
-        <location filename="../../src/device/decoders/uni_t_ut181a.cpp" line="266"/>
+        <location filename="../../src/device/decoders/uni_t_ut181a.cpp" line="275"/>
         <source>Peak min</source>
         <translation>Szczyt min</translation>
     </message>
