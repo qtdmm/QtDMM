@@ -163,5 +163,29 @@ counted from 1.
 Check the model of the device (*Settings...* in the sidebar, Shift+F8) — several meters share a protocol and
 differ only in range or resolution, and a near match can decode with a wrong
 factor. If the model is right and a specific range or function still decodes
-wrongly, please report it with the meter model and, if possible, the debug
-output (`qtdmm --debug` prints every frame as hex) on the project page.
+wrongly, please report it with a capture of the meter's frames on the project
+page.
+
+### Capturing the frames of a meter
+
+Right-click the device in the sidebar and choose *Capture...*. The window
+lists the last 500 frames the meter sent: the time, the bytes and what
+QtDMM read from them, or *not understood*.
+
+1. Set the meter to the range or function QtDMM reads wrongly.
+2. Type what its display shows into *The meter shows* — the value, the unit
+   and what else is lit, e.g. `-1.234 V DC AUTO HOLD` — and press *Keep*
+   (or Enter). The newest frame is kept with your text; with a frame
+   selected in the list (*Pause* first), that one.
+3. Repeat for every reading that is wrong; a reading that is right helps too.
+4. *Export...* writes a `.yaml` file, in the folder you choose (it is
+   remembered for the next time). Attach it to the report.
+
+The file has the meter's vendor, model, protocol and the kind of connection,
+and the kept frames in the form of the test vectors in
+`docs/protocols/spec`, so a developer can add them as they are. It holds no
+port name, Bluetooth address or key. *Export also all frames of the list*
+adds the whole list, which helps when a reading changes over time.
+
+`qtdmm --debug` still prints every frame as hex on the console
+([Command line](command-line.md)).

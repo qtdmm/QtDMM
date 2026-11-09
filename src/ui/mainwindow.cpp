@@ -63,6 +63,7 @@
 
 static const char *kWorkspaceSuffix = "qtdmm-workspace";
 #include "ui/views/readingswidget.h"
+#include "ui/dialogs/capturedlg.h"
 #include "ui/dialogs/logdlg.h"
 #include "ui/dialogs/panelvaluesdlg.h"
 #include "ui/dialogs/sourcesdlg.h"
@@ -918,6 +919,21 @@ void MainWindow::createSidebar()
   {
     if (MeterController *ctl = openController(id))
       editLimits(ctl, false);
+  });
+  connect(m_sidebar, &DeviceSidebar::captureRequested, this, [this, openController](const QString &id)
+  {
+    MeterController *ctl = openController(id);
+    if (!ctl)
+      return;
+    QPointer<CaptureDlg> &dlg = m_captureDlgs[id];
+    if (!dlg)
+    {
+      const QString name = ctl->deviceName().isEmpty() ? ctl->dmm()->dmmInfo().name : ctl->deviceName();
+      dlg = new CaptureDlg(ctl->dmm(), name, m_wid->settings(), this);
+    }
+    dlg->show();
+    dlg->raise();
+    dlg->activateWindow();
   });
   // an alarm of a meter marks the graph while it shows a value of it
   connect(m_session, &DeviceSession::opened, this, [this](MeterController *ctl)

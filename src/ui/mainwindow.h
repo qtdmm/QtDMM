@@ -47,6 +47,7 @@ class WorkspaceFile;
 class MeterController;
 class LcdWidget;
 class HelpDlg;
+class CaptureDlg;
 class LogDlg;
 class AnalogMeter;
 class MeterView;
@@ -347,6 +348,9 @@ protected:
   HelpDlg    *m_helpDlg;
   QAction    *m_logAction = nullptr;
   LogDlg     *m_logDlg = nullptr;   ///< made when first opened
+  /// The capture windows of the open devices by their sidebar id, made when
+  /// first opened, gone with the device.
+  QHash<QString, QPointer<CaptureDlg>> m_captureDlgs;
   QString     m_configId;
 
   void        setupIcons();

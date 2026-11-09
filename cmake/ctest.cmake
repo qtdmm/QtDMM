@@ -117,6 +117,9 @@ if (BUILD_TESTING)
 	## the application's log and its window
 	qtdmm_add_test(app_log test_applog tests/test_applog.cpp)
 
+	## a meter's frames captured with what it showed, exported as spec vectors
+	qtdmm_add_test(capture test_capture tests/test_capture.cpp)
+
 	## the settings pages: keys through the pages, fields with their choice,
 	## the recording length asked by Record
 	qtdmm_add_test(settings_pages test_settingspages tests/test_settingspages.cpp)

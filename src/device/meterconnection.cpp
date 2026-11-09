@@ -483,10 +483,18 @@ void MeterConnection::readEventSLOT(const QByteArray &data, int id, qint64 t, qi
     return;
 
   m_lastFrame.restart();
-  if (auto r = m_decoder->decode(data, id); r)
+  auto r = m_decoder->decode(data, id);
+  if (r)
   {
     r->received = t;
     r->receivedWall = wall;
+  }
+  // a copy of every frame only while a capture window looks
+  static const QMetaMethod frameSignal = QMetaMethod::fromSignal(&MeterConnection::frame);
+  if (isSignalConnected(frameSignal))
+    Q_EMIT frame(data, wall, r);
+  if (r)
+  {
     Q_EMIT response(*r);
     for (const DmmDecoder::DmmChannel &c : r->channels)
       Q_EMIT value(c.dval, c.val, c.unit, c.special, r->range, r->hold, r->showBar, c.id);
