@@ -278,12 +278,12 @@ only; *Default* goes back to the setting.
 
 ## Export and import
 
-**Export...** (Ctrl+Shift+E, also in the context menus of the graph and the
+**Export...** (Ctrl+E, also in the context menus of the graph and the
 readings table) asks in one dialog what to export - the recording, the
 readings table or a picture of the graph -, in which format, and where to:
 a file, or the open [project basket](project-basket.md) with a name made of
-date, time and device. It keeps the last choice. *Export* (Ctrl+E) stays
-the quick way, straight to the file dialog:
+date, time and device. It keeps the last choice. The formats of the
+recording:
 
 - **QtDMM recording** (`.qtdmm-rec`) keeps what a CSV does not: the marks
   (alarms, trigger, your own) and, in its `meta.json`, start, end and
@@ -324,10 +324,9 @@ the quick way, straight to the file dialog:
   **Settings → General → Programs → LabPlot**. QtDMM as Flatpak cannot
   start other programs: open the file in LabPlot yourself.
 
-*Export* (Ctrl+E) writes the recording on the grid of **Sample every** as
-CSV, or - pick the file type in the dialog or just name the file `.xlsx` /
-`.ods` - as an Excel or OpenDocument spreadsheet with the same columns.
-The file type **CSV, every reading** writes each reading at its own time
+**CSV, on the recording's grid** writes the recording on the grid of
+**Sample every**; **Excel** and **OpenDocument** write a spreadsheet with
+the same columns. **CSV, every reading** writes each reading at its own time
 instead, a gap as a row of its own; *Import* reads its times back. In the spreadsheet
 the timestamps are date cells (shown with milliseconds) and the values
 numbers, so charts and formulas work without converting anything; the

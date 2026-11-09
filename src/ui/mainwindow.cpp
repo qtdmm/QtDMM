@@ -507,10 +507,10 @@ void MainWindow::createViews()
   connect(m_tableToBasket, &QAction::triggered, this, &MainWindow::tableToBasket);
   for (QAction *a : { m_graphToBasket, m_tableToBasket })
     a->setVisible(!m_basket->folder().isEmpty());
-  // what, which format, where to, in one dialog; Ctrl+E stays the quick way
+  // what, which format, where to, in one dialog
   m_graphExport = new QAction(tr("E&xport..."), this);
   m_graphExport->setObjectName("action_ExportDialog");
-  m_graphExport->setShortcut(QKeySequence("Ctrl+Shift+E"));
+  m_graphExport->setShortcut(QKeySequence("Ctrl+E"));
   m_graphExport->setToolTip(tr("Export the recording, the readings or a picture: format and place in a dialog"));
   connect(m_graphExport, &QAction::triggered, this, [this] { exportDialog(ExportDlg::Recording); });
   m_labPlotLive = new QAction(tr("Live in &LabPlot"), this);
@@ -1418,7 +1418,6 @@ void MainWindow::createActions()
   connect(action_Clear, &QAction::triggered, m_wid, &InstanceWidget::clearSLOT);
   connect(action_Print, &QAction::triggered, m_wid, &InstanceWidget::printSLOT);
   connect(action_Import, &QAction::triggered, m_wid, &InstanceWidget::importSLOT);
-  connect(action_Export, &QAction::triggered, m_wid, &InstanceWidget::exportSLOT);
   connect(action_Configure, &QAction::triggered, m_wid, &InstanceWidget::configSLOT);
   // Shift+F8: the settings of the device chosen in the sidebar, as its context menu there
   connect(action_ConfigureDMM, &QAction::triggered, this, [this]
@@ -1503,7 +1502,7 @@ void MainWindow::createExtraActions()
               m_fullScreen, m_toolbars, m_zoomIn, m_zoomOut, m_zoomFit, m_copyImage,
               // no buttons of their own: the keys stay, the graph's menu has them
               action_Connect, action_Reset, action_Record, action_Live, action_Clear,
-              action_Export, m_graphExport, action_Import, action_Print});
+              m_graphExport, action_Import, action_Print});
 }
 
 // Every command that may have a key, in the groups of the page Keyboard;
@@ -1517,7 +1516,7 @@ void MainWindow::createShortcuts(const QList<QAction *> &workspace)
   for (QAction *a : { action_Connect, action_Reset, action_ConfigureDMM, m_addDeviceAction })
     m_shortcuts->add(a, meter);
   m_shortcuts->add(action_Record, recording, tr("Record / Stop"));
-  for (QAction *a : { action_Live, action_Clear, m_zoomIn, m_zoomOut, m_zoomFit, m_copyImage, action_Export,
+  for (QAction *a : { action_Live, action_Clear, m_zoomIn, m_zoomOut, m_zoomFit, m_copyImage,
                       m_graphExport, action_Import, action_Print })
     m_shortcuts->add(a, recording);
   for (QAction *a : { m_sidebarAction, m_displayAction, m_meterAction, m_newMeterAction, action_Graph,
@@ -1602,7 +1601,6 @@ void MainWindow::runningSLOT(bool on)
   action_Start->setEnabled(!on);
   action_Stop->setEnabled(on);
   action_Print->setEnabled(!on);
-  action_Export->setEnabled(!on);
   action_Import->setEnabled(!on);
   updateRecorderActions();
 }

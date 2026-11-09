@@ -244,7 +244,7 @@ protected:
   QAction    *m_labPlotLive = nullptr;     ///< Live in LabPlot, while it records
   QPointer<LabPlotLive> m_live;            ///< the recording live in LabPlot, while it goes on
   QAction    *m_tableToBasket = nullptr;   ///< the readings into the project basket
-  QAction    *m_graphExport = nullptr;     ///< the export dialog, from the graph (Ctrl+Shift+E)
+  QAction    *m_graphExport = nullptr;     ///< the export dialog, from the graph (Ctrl+E)
   QAction    *m_tableExport = nullptr;     ///< the export dialog, from the readings table
   QAction    *m_addDeviceAction = nullptr;
   QDockWidget   *m_sidebarDock = nullptr;

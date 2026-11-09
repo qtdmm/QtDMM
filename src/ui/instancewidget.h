@@ -158,7 +158,6 @@ public Q_SLOTS:
   /// Opens the settings dialog on the SCPI server page.
   void        configScpiSLOT();
   void        printSLOT();
-  void        exportSLOT();
   void        importSLOT();
   /// Loads @p path into the graph as importSLOT() does, without the dialog.
   bool        importFile(const QString &path);

@@ -15,8 +15,7 @@ class Settings;
 /// of the graph), in which format, and where to (a file or the open project
 /// basket), and whether LabPlot opens the recording then. It only asks;
 /// MainWindow::exportDialog() writes. The last choice is kept
-/// (Export/format-<what>, Export/to-basket, Export/dir, Export/labplot). Ctrl+E stays the
-/// quick way without it.
+/// (Export/format-<what>, Export/to-basket, Export/dir, Export/labplot). Ctrl+E opens it.
 class ExportDlg : public QDialog
 {
   Q_OBJECT
