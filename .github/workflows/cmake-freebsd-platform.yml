@@ -36,4 +36,4 @@ jobs:
           cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           cmake --build build
-          ctest --test-dir build --output-on-failure --timeout 300
+          ctest --test-dir build --output-on-failure --timeout 300 --parallel 4
