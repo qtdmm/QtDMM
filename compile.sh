@@ -150,7 +150,8 @@ then
 			# a failed download says so; it used to end the build without a word
 			url="https://github.com/linuxdeploy/$(dirname ${tool})/releases/download/continuous/${file}"
 			# HTTPS only, also where GitHub redirects the release download to
-			if ! curl -fsSL --proto '=https' --proto-redir '=https' --retry 3 --retry-delay 10 -o "${file}" "${url}"
+			if ! curl -fsSL --proto '=https' --proto-redir '=https' --retry 5 --retry-delay 10 --retry-all-errors \
+				-o "${file}" "${url}"
 			then
 				echo "download failed: ${url}" >&2
 				rm -f "${file}"
@@ -159,6 +160,23 @@ then
 			chmod +x "${file}"
 		fi
 	done
+	# the AppImage runtime, fetched here: appimagetool would take it from the
+	# "continuous" release itself, and a 504 there failed the build. A fixed
+	# release, checked by its SHA-256 (GitHub's digest of the asset)
+	runtime="runtime-x86_64-20251108"
+	runtime_sha256="2fca8b443c92510f1483a883f60061ad09b46b978b2631c807cd873a47ec260d"
+	if ! echo "${runtime_sha256}  ${runtime}" | sha256sum -c --status 2>/dev/null
+	then
+		url="https://github.com/AppImage/type2-runtime/releases/download/20251108/runtime-x86_64"
+		if ! curl -fsSL --proto '=https' --proto-redir '=https' --retry 5 --retry-delay 10 --retry-all-errors \
+			-o "${runtime}" "${url}" || ! echo "${runtime_sha256}  ${runtime}" | sha256sum -c --status
+		then
+			echo "download failed or checksum wrong: ${url}" >&2
+			rm -f "${runtime}"
+			exit 1
+		fi
+	fi
+	export LDAI_RUNTIME_FILE="${PWD}/${runtime}"
 	DESTDIR=AppDir cmake --install .
 	# appimagetool looks the metadata up by the desktop file's name (the
 	# application id), as .appdata.xml
