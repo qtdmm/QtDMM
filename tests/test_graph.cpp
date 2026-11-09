@@ -2374,7 +2374,9 @@ int main(int argc, char **argv)
     graph.show();
     QTest::qWait(50);
     graph.setLineStyle(GraphWidget::Solid, GraphWidget::NoPoint, GraphWidget::NoLine, GraphWidget::Circle);
-    graph.setGraphSize(60);
+    // a short window: what a reading draws stays small, the recording's
+    // length is what the check is about (R14), and the test takes seconds
+    graph.setGraphSize(10);
     Feed feed(graph);
     graph.startSLOT();
     QElapsedTimer timer;
@@ -2408,7 +2410,9 @@ int main(int argc, char **argv)
     QTest::qWait(50);
     graph.setLineStyle(GraphWidget::Solid, GraphWidget::Circle, GraphWidget::Solid, GraphWidget::Circle);
     graph.setIntegration(true, 1, 0, 0);
-    graph.setGraphSize(60);
+    // a short window: what a reading draws stays small, the recording's
+    // length is what the check is about (R14), and the test takes seconds
+    graph.setGraphSize(10);
     Feed feed(graph);
     graph.startSLOT();
     QElapsedTimer timer;
