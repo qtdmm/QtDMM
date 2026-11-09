@@ -64,7 +64,8 @@ is about; the window shows it under the name.
 ## Putting files in
 
 - Drop files onto the window, or choose **Add...** (the + at the top).
-  Files are copied, the originals stay where they are.
+  Files are copied, the originals stay where they are. Dropped onto a
+  folder of the project (or a file in it) they go into that folder.
 - **Into the project** in the context menu of the graph writes the
   recording as CSV and the graph as a picture; in the readings table it
   writes the readings as CSV. The names begin with date and time and the
@@ -89,9 +90,12 @@ A file is never overwritten: a second `ripple.csv` becomes `ripple (2).csv`.
 | **Open with the system** | Opens a CSV in the spreadsheet or LabPlot instead |
 | **Rename** (F2) | Renames the file in the folder |
 | **Move to trash** | Moves the selected files to the system's trash, never deletes them for good |
+| **New folder** | Makes a folder in the folder clicked on (beside the file clicked on, else at the top) and lets you name it |
+| Dragging in the list | Moves files and folders into the folder they are dropped on; dragged out, they go to other programs |
 | **Open folder** (the folder at the top) | Shows the project in the file manager |
 
-The list shows the names, newest first.
+The list shows the names, newest first; folders open with the arrow or a
+double click. `project.json`, QtDMM's own file, is not listed.
 
 ## Exporting the project
 

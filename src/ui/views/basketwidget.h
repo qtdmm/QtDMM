@@ -38,10 +38,16 @@ public:
   QAction    *openAction() const { return m_openAction; }
   QAction    *closeAction() const { return m_closeAction; }
   QAction    *importAction() const { return m_importAction; }
-  /// Copies @p files into the basket (makes the folder first) under names
-  /// not taken yet; returns the paths they got. Not a file, or not
-  /// readable: left out, an error() names it.
-  QStringList addFiles(const QStringList &files);
+  /// Copies @p files into the basket (makes the folder first), or into its
+  /// folder @p dir, under names not taken yet; returns the paths they got.
+  /// Not a file, or not readable: left out, an error() names it.
+  QStringList addFiles(const QStringList &files, const QString &dir = QString());
+  /// Makes a folder in @p dir (a folder of the basket, empty: the basket)
+  /// under a name not taken yet; returns its path, empty when it failed.
+  QString     newFolder(const QString &dir = QString());
+  /// Moves @p paths (files or folders of the basket) into its folder @p dir;
+  /// returns the new paths. One into itself or under itself stays.
+  QStringList moveInto(const QStringList &paths, const QString &dir);
 
   /// Where newSLOT() proposes a new basket (settings: Basket/base-dir).
   void        setBaseFolder(const QString &folder) { m_baseFolder = folder; }
@@ -107,12 +113,16 @@ public Q_SLOTS:
 
 protected:
   void        dragEnterEvent(QDragEnterEvent *event) override;
+  void        dragMoveEvent(QDragMoveEvent *event) override;
   void        dropEvent(QDropEvent *event) override;
 
 private:
   void        showFolder();
   void        contextMenu(const QPoint &pos);
   QString     pathAt(const QModelIndex &index) const;
+  /// The folder a drop or a new folder at @p pos (view coordinates) goes
+  /// into: the folder there, the one of the file there, else the basket.
+  QString     dirAt(const QPoint &pos) const;
   void        updateEmpty();
 
   QString           m_folder;

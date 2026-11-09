@@ -4,6 +4,7 @@
 
 ### GUI
 
+- **Folders in the project** — the project's list opens its folders in place; *New folder* in its context menu makes one where you clicked (and names it at once), files dropped onto a folder go into it, and dragging inside the list moves files and folders into another folder.
 - **Project and bench without a device** — while My devices is empty, the project button with its arrow, Load/Save bench, Recent benches, *Put the bench into a new project...* and the project and benches in the sidebar are off: neither makes sense without a device.
 - **Project window beside the start page** — with devices but none connected, the start page covered the project's window (the button looked pressed, nothing showed, even right after *New project*); the window now stands at the right beside it.
 - **Project polish** — the title shows only the project while the open bench lies outside its folder; *New project* asks for a folder (no "All files (*)"); "Bench loaded" comes first in the status bar, the path in its tooltip; a message of the project before goes when another opens; Recent benches name their project.
