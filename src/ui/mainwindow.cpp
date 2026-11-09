@@ -46,6 +46,7 @@
 #include "core/devicelibrary.h"
 #include "core/sampletypes.h"
 #include "core/siprefix.h"
+#include "recording/labplotlive.h"
 #include "recording/recordingfile.h"
 #include "recording/recordingstore.h"
 #include "ui/instancewidget.h"
@@ -84,6 +85,7 @@ static const char *kWorkspaceSuffix = "qtdmm-workspace";
 #include <QBuffer>
 #include <QMdiArea>
 #include <QRegularExpression>
+#include <QStandardPaths>
 #include <QMdiSubWindow>
 #include <QLoggingCategory>
 #include <QIconEngine>
@@ -511,9 +513,15 @@ void MainWindow::createViews()
   m_graphExport->setShortcut(QKeySequence("Ctrl+Shift+E"));
   m_graphExport->setToolTip(tr("Export the recording, the readings or a picture: format and place in a dialog"));
   connect(m_graphExport, &QAction::triggered, this, [this] { exportDialog(ExportDlg::Recording); });
+  m_labPlotLive = new QAction(tr("Live in &LabPlot"), this);
+  m_labPlotLive->setObjectName("action_LabPlotLive");
+  m_labPlotLive->setToolTip(tr("LabPlot follows the recording while it goes on: its graph grows with it"));
+  m_labPlotLive->setEnabled(false);   // while it records (updateRecorderActions())
+  connect(m_labPlotLive, &QAction::triggered, this, &MainWindow::labPlotLive);
   m_tableExport = new QAction(m_graphExport->text(), this);
   connect(m_tableExport, &QAction::triggered, this, [this] { exportDialog(ExportDlg::Table); });
-  m_wid->graph()->setWindowActions({ hideWindow(m_graphWin), m_graphSources, m_graphToBasket, m_graphExport });
+  m_wid->graph()->setWindowActions(
+    { hideWindow(m_graphWin), m_graphSources, m_graphToBasket, m_graphExport, m_labPlotLive });
   m_wid->graph()->setPrintAction(action_Print);
   m_readings->setWindowActions({ hideWindow(m_readingsWin), m_tableSources, m_tableToBasket, m_tableExport });
   m_displayAction->setObjectName("action_WindowDisplay");
@@ -1620,6 +1628,8 @@ void MainWindow::updateRecorderActions()
   action_Record->setToolTip(QString("%1 (%2)").arg(recording ? tr("Stop recording") : tr("Start recording"), key));
   action_Live->setEnabled(!recording);
   action_Live->setChecked(state == RecordingStore::Live);
+  if (m_labPlotLive)
+    m_labPlotLive->setEnabled(recording || (m_live && m_live->isRunning()));
 }
 
 void MainWindow::on_action_Help_triggered()
@@ -3000,6 +3010,60 @@ void MainWindow::exportDialog(int view)
     Q_EMIT m_wid->error(tr("Exported to %1").arg(QDir::toNativeSeparators(path)));
   else if (dlg.what() != ExportDlg::Recording)
     Q_EMIT m_wid->error(tr("Export failed: %1").arg(error.isEmpty() ? QDir::toNativeSeparators(path) : error));
+}
+
+void MainWindow::labPlotLive()
+{
+  const QString program = m_wid->settings()->getString("Programs/labplot");
+  QString error;
+  if (m_live && m_live->isRunning())   // again: the same project
+  {
+    if (!LabPlot::open(m_live->projectPath(), program, &error))
+      Q_EMIT m_wid->error(error);
+    return;
+  }
+  QPointer<MeterController> lead = m_session->lead();
+  if (!lead || lead->recorder()->state() != RecordingStore::Record)
+  {
+    Q_EMIT m_wid->error(tr("Live in LabPlot: start a recording first"));
+    return;
+  }
+  QString dir = m_basket->folder();
+  if (dir.isEmpty())
+  {
+    dir = QDir(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).filePath("QtDMM");
+    QDir().mkpath(dir);
+  }
+  // "2026-11-09 1030 Sim A live.csv" and ".lml" beside it, both new
+  QString name = QDateTime::currentDateTime().toString("yyyy-MM-dd HHmm") + " " + lead->deviceName() + " "
+                 + tr("live");
+  name.replace(QRegularExpression(R"([/\\:*?"<>|])"), "_");
+  QString base = name;
+  auto taken = [&dir](const QString &b)
+  {
+    return QFileInfo::exists(QDir(dir).filePath(b + ".csv")) || QFileInfo::exists(QDir(dir).filePath(b + ".lml"));
+  };
+  for (int n = 2; taken(base); ++n)
+    base = QString("%1 (%2)").arg(name).arg(n);
+  if (m_live)
+    m_live->deleteLater();
+  m_live = new LabPlotLive([lead] { return lead ? lead->recording() : Recording(); },
+                           [lead] { return lead && lead->recorder()->state() == RecordingStore::Record; }, this);
+  connect(m_live, &LabPlotLive::stopped, this, [this]
+  {
+    Q_EMIT m_wid->error(tr("Live in LabPlot: the recording ended, the file has all of it"));
+    updateRecorderActions();
+  });
+  const QString csv = QDir(dir).filePath(base + ".csv"), project = QDir(dir).filePath(base + ".lml");
+  if (!m_live->start(csv, project, &error))
+  {
+    Q_EMIT m_wid->error(tr("Live in LabPlot: %1").arg(error));
+    return;
+  }
+  if (!LabPlot::open(project, program, &error))
+    Q_EMIT m_wid->error(error);
+  else
+    Q_EMIT m_wid->error(tr("Live in LabPlot: %1").arg(QDir::toNativeSeparators(csv)));
 }
 
 void MainWindow::tableToBasket()

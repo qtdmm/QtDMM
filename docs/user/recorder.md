@@ -302,6 +302,17 @@ the quick way, straight to the file dialog:
   one. The axes are scaled to the values; what is no number (OL, a gap)
   stays a gap in the curve. Made for LabPlot 2.12; *Import* does not read
   it back.
+- **Live in LabPlot** (in the graph's context menu, while it records)
+  lets LabPlot follow the recording as it goes on: QtDMM writes a CSV that
+  grows by each row (`… live.csv`, `#time[s];Sim A: value [V];…` as its
+  first line, `nan` where there is no number) and a LabPlot project
+  (`… live.lml`) with a *live data source* on that file and the graph as
+  above; LabPlot reads the file on each change and its plots grow and
+  scale along. Both go into the open project basket, else into
+  *Documents/QtDMM*. The columns are those at the start; a value that
+  ends is `nan` from then on. When the recording stops, the file has all of
+  it and stays; open the project later and LabPlot reads it again. Clicked
+  again while it runs, LabPlot opens the same project once more.
 - **CSV for LabPlot** (`.labplot.csv`) has numbers only, for
   LabPlot's import or any other analysis program: the time in
   seconds, then one column per value in its unit without SI prefix,

@@ -3,6 +3,7 @@
 #include "recording/labplotproject.h"
 
 #include <QCoreApplication>
+#include <QDir>
 #include <QFile>
 #include <QFileInfo>
 #include <QHash>
@@ -117,40 +118,36 @@ std::pair<double, double> LabPlotProject::niceRange(double lo, double hi)
   return { clean(std::floor(lo / step + 1e-9) * step), clean(std::ceil(hi / step - 1e-9) * step) };
 }
 
-QByteArray LabPlotProject::xml(const Recording &recording, const QString &name)
+namespace
+{
+QString columnName(const RecordingFile::NumberColumn &col)
+{
+  return aspectName(col.unit.isEmpty() ? col.name : QString("%1 [%2]").arg(col.name, col.unit));
+}
+
+const QString kTimeName = QStringLiteral("time[s]");
+
+// the whole project: @p source the data's aspect (a spreadsheet or a live
+// data source, named @p sourceName), a worksheet with a plot per unit of
+// @p columns over @p seconds, the graph in front
+QByteArray document(const QString &name, const QString &sourceName, const QString &source,
+                    const QList<RecordingFile::NumberColumn> &columns, const QVector<double> &seconds)
 {
   const QString plotTpl = part("plot.xml");
   const QString curveTpl = part("curve.xml");
   const QString legendTpl = part("legend.xml");
   if (plotTpl.isEmpty() || curveTpl.isEmpty() || legendTpl.isEmpty())
     return {};
-  QVector<double> seconds;
-  const QList<RecordingFile::NumberColumn> columns = RecordingFile::numberColumns(recording, &seconds);
   const QString project = aspectName(name);
-  const QString data = tr("Data");
   const QString graph = tr("Graph");
-  const QString timeName = QStringLiteral("time[s]");
-  auto columnName = [](const RecordingFile::NumberColumn &col)
-  {
-    return aspectName(col.unit.isEmpty() ? col.name : QString("%1 [%2]").arg(col.name, col.unit));
-  };
-
-  QString sheet = QString(R"(<column name="%1" rows="%2" designation="1" mode="0"><comment/>%3</column>)")
-                    .arg(esc(timeName))
-                    .arg(seconds.size())
-                    .arg(QString::fromLatin1(packed(seconds)));
-  for (const RecordingFile::NumberColumn &col : columns)
-    sheet += QString(R"(<column name="%1" rows="%2" designation="2" mode="0"><comment/>%3</column>)")
-               .arg(esc(columnName(col)))
-               .arg(col.values.size())
-               .arg(QString::fromLatin1(packed(col.values)));
 
   // a plot per unit, in the order the units come
   QStringList units;
   for (const RecordingFile::NumberColumn &col : columns)
     if (!units.contains(col.unit))
       units << col.unit;
-  const auto [x0, x1] = seconds.isEmpty() ? niceRange(qQNaN(), qQNaN()) : niceRange(seconds.first(), seconds.last());
+  const auto [x0, x1] = seconds.isEmpty() ? LabPlotProject::niceRange(qQNaN(), qQNaN())
+                                          : LabPlotProject::niceRange(seconds.first(), seconds.last());
   QString plots;
   for (const QString &unit : units)
   {
@@ -170,14 +167,14 @@ QByteArray LabPlotProject::xml(const Recording &recording, const QString &name)
         }
       const Rgb color = kColors[c % std::size(kColors)];
       curves += fill(curveTpl, { { "NAME", esc(aspectName(col.name)) },
-                                 { "X", esc(project + "/" + data + "/" + timeName) },
-                                 { "Y", esc(project + "/" + data + "/" + columnName(col)) },
+                                 { "X", esc(project + "/" + sourceName + "/" + kTimeName) },
+                                 { "Y", esc(project + "/" + sourceName + "/" + columnName(col)) },
                                  { "R", QString::number(color.r) },
                                  { "G", QString::number(color.g) },
                                  { "B", QString::number(color.b) } });
       ++count;
     }
-    const auto [y0, y1] = lo <= hi ? niceRange(lo, hi) : niceRange(qQNaN(), qQNaN());
+    const auto [y0, y1] = lo <= hi ? LabPlotProject::niceRange(lo, hi) : LabPlotProject::niceRange(qQNaN(), qQNaN());
     const QString title = unit.isEmpty() ? tr("value") : unit;
     plots += fill(plotTpl, { { "PLOT", esc(aspectName(title)) },
                              { "XTITLE", esc(tr("time [s]")) },
@@ -192,14 +189,14 @@ QByteArray LabPlotProject::xml(const Recording &recording, const QString &name)
                              { "LEGEND", count > 1 ? legendTpl : QString() } });
   }
 
-  const QString path = esc(project), dataPath = esc(project + "/" + data), graphPath = esc(project + "/" + graph);
+  const QString path = esc(project), dataPath = esc(project + "/" + sourceName), graphPath = esc(project + "/" + graph);
   QString out = QString(R"(<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE LabPlotXML>
 <project version="2.12.1" xmlVersion="16" name="%1">
 <comment/>
-<child_aspect><spreadsheet name="%2"><comment/>%3</spreadsheet></child_aspect>
+<child_aspect>%2</child_aspect>
 )")
-                  .arg(path, esc(data), sheet);
+                  .arg(path, source);
   // 16 cm wide, 9 cm a plot (LabPlot's unit here is 1/100 cm)
   out += QString(R"(<child_aspect><worksheet name="%1"><comment/>
 <geometry x="0" y="0" width="1600" height="%2" useViewSize="0" zoomFit="1"/>
@@ -220,6 +217,71 @@ QByteArray LabPlotProject::xml(const Recording &recording, const QString &name)
 )")
            .arg(path, dataPath, graphPath);
   return out.toUtf8();
+}
+}
+
+QByteArray LabPlotProject::xml(const Recording &recording, const QString &name)
+{
+  QVector<double> seconds;
+  const QList<RecordingFile::NumberColumn> columns = RecordingFile::numberColumns(recording, &seconds);
+  const QString data = tr("Data");
+  QString sheet = QString(R"(<column name="%1" rows="%2" designation="1" mode="0"><comment/>%3</column>)")
+                    .arg(esc(kTimeName))
+                    .arg(seconds.size())
+                    .arg(QString::fromLatin1(packed(seconds)));
+  for (const RecordingFile::NumberColumn &col : columns)
+    sheet += QString(R"(<column name="%1" rows="%2" designation="2" mode="0"><comment/>%3</column>)")
+               .arg(esc(columnName(col)))
+               .arg(col.values.size())
+               .arg(QString::fromLatin1(packed(col.values)));
+  return document(name, data, QString(R"(<spreadsheet name="%1"><comment/>%2</spreadsheet>)").arg(esc(data), sheet),
+                  columns, seconds);
+}
+
+QStringList LabPlotProject::liveColumnNames(const QList<RecordingFile::NumberColumn> &columns)
+{
+  // LabPlot splits its list of the names at ',', so none has one
+  QStringList out{ kTimeName };
+  for (const RecordingFile::NumberColumn &col : columns)
+    out << columnName(col).remove(',');
+  return out;
+}
+
+QByteArray LabPlotProject::liveXml(const QList<RecordingFile::NumberColumn> &columns, const QVector<double> &seconds,
+                                   const QString &file, const QString &name)
+{
+  // the names as liveColumnNames() has them, in the curves too
+  QList<RecordingFile::NumberColumn> named = columns;
+  for (RecordingFile::NumberColumn &col : named)
+  {
+    col.name.remove(',');
+    col.unit.remove(',');
+  }
+  const QStringList names = liveColumnNames(named);
+  const QString live = tr("Live");
+  QString cols;
+  QStringList modes;
+  for (int i = 0; i < names.size(); ++i)
+  {
+    cols += QString(R"(<column name="%1" rows="0" designation="%2" mode="0"><comment/></column>)")
+              .arg(esc(names[i]))
+              .arg(i == 0 ? 1 : 2);
+    modes << QStringLiteral("Double");
+  }
+  // a file that grows (FileOrPipe 0, Ascii 0), read on new data (1) till
+  // its end (2), every value kept; linked: LabPlot reads it when it loads
+  // the project. A line beginning with '#' is no data: the header.
+  const QString source = QString(R"(<liveDataSource name="%1"><comment/>
+<general fileName="%2" fileType="0" fileLinked="1" relativePath="0" updateType="1" readingType="2" sourceType="0"
+ keepNValues="0" sampleSize="1000" updateInterval="1000"/>
+<asciiFilter commentCharacter="#" separatingCharacterDetection="0" separatingCharacter=";" createIndex="0"
+ createTimestamp="0" header="0" headerLine="1" vectorNames="%3" skipEmptyParts="0" simplifyWhitespaces="1"
+ nanValue="nan" removeQuotes="0" startRow="1" endRow="-1" startColumn="1" endColumn="-1" columnModes="%4"
+ baseYear="1900" dateTimeFormat="yyyy-MM-dd hh:mm:ss.zzz" intAsDouble="1"/>
+%5</liveDataSource>)")
+                           .arg(esc(live), esc(QDir::toNativeSeparators(file)), esc(names.join(',')),
+                                modes.join(','), cols);
+  return document(name, live, source, named, seconds);
 }
 
 bool LabPlotProject::write(const Recording &recording, const QString &path, QString *error)
