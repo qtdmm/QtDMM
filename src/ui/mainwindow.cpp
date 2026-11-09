@@ -806,7 +806,7 @@ void MainWindow::openPending()
     const QScopedValueRollback<QStringList> opening(m_openingPending, ids);
     for (const QString &id : ids)
       if (!m_session->controller("device:" + id))
-        openBeside(id);
+        openBeside(id, true);   // one not plugged in yet: its panel waits for it
   }
   updateEmptyStart();
   // a layout naming panels takes once they are there
@@ -855,7 +855,7 @@ void MainWindow::createSidebar()
   {
     statusBar()->showMessage(text, 5000);
   });
-  connect(m_sidebar, &DeviceSidebar::openBesideRequested, this, &MainWindow::openBeside);
+  connect(m_sidebar, &DeviceSidebar::openBesideRequested, this, [this](const QString &id) { openBeside(id); });
   connect(m_sidebar, &DeviceSidebar::closeRequested, this, [this](const QString &id)
   {
     if (keepRecordingOf(id, tr("Closing it discards its recording, which is not saved.")))
@@ -2590,7 +2590,7 @@ QString MainWindow::deviceStatus(const QString &id) const
   return html;
 }
 
-void MainWindow::openBeside(const QString &id)
+void MainWindow::openBeside(const QString &id, bool waitForDevice)
 {
   const std::optional<MyDevice> device = m_wid->devices()->find(id);
   if (!device)
@@ -2604,7 +2604,9 @@ void MainWindow::openBeside(const QString &id)
     return;
   }
   QString error;
-  if (m_session->open(id, &error))
+  if (const MeterController *ctl = m_session->open(id, &error, waitForDevice); ctl && !ctl->dmm()->isOpen())
+    statusBar()->showMessage(tr("%1: waiting for the device").arg(device->name), 4000);
+  else if (ctl)
     statusBar()->showMessage(tr("%1 connected").arg(device->name), 4000);
   // one that does not connect said why in the status bar already
   else if (!error.startsWith("-240,"))

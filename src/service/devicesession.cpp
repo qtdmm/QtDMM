@@ -259,7 +259,7 @@ CalcDevice::Inputs DeviceSession::calcInputs() const
   };
 }
 
-MeterController *DeviceSession::open(const QString &id, QString *error)
+MeterController *DeviceSession::open(const QString &id, QString *error, bool waitForDevice)
 {
   const std::optional<MyDevice> entry = m_library ? m_library->find(id) : std::nullopt;
   if (!entry)
@@ -268,10 +268,11 @@ MeterController *DeviceSession::open(const QString &id, QString *error)
       *error = "-224,Illegal parameter value; no such device: " + id;
     return nullptr;
   }
-  return open(entry->id, entry->keys, entry->name, error);
+  return open(entry->id, entry->keys, entry->name, error, waitForDevice);
 }
 
-MeterController *DeviceSession::open(const QString &id, const QVariantMap &keys, const QString &name, QString *error)
+MeterController *DeviceSession::open(const QString &id, const QVariantMap &keys, const QString &name, QString *error,
+                                     bool waitForDevice)
 {
   if (controller("device:" + id))
   {
@@ -313,14 +314,18 @@ MeterController *DeviceSession::open(const QString &id, const QVariantMap &keys,
   // an alarm's program with "Disconnect first" has the port for a while
   connect(ctl, &MeterController::portReleased, ctl, [ctl](bool released) { ctl->connectMeter(!released); });
   applyRules(ctl, id);
-  if (!ctl->connectMeter(true))
+  if (!ctl->connectMeter(true, waitForDevice))
   {
     // SCPI in English, the reason in the status bar in the user's language
     if (error)
       *error = "-240,Hardware error; " + name + ": does not connect";
     Q_EMIT this->error(tr("%1: %2").arg(name, ctl->dmm()->errorString()));
-    delete ctl;
-    return nullptr;
+    if (!waitForDevice)
+    {
+      delete ctl;
+      return nullptr;
+    }
+    // it stays, not connected, and connects when the device comes
   }
   MeterController *leading = lead();   // before it is one of them
   m_opened << ctl;

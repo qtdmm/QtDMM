@@ -16,6 +16,7 @@
 #include "core/reading.h"
 #include "core/readingadapter.h"
 #include "core/sampletypes.h"
+#include "device/meterconnection.h"
 #include "recording/recordingstore.h"
 #include "service/devicesession.h"
 #include "service/metercontroller.h"
@@ -80,6 +81,20 @@ int main(int argc, char **argv)
   // 2. refused: twice, unknown
   check(!session.open(sim, &error) && error.startsWith("-221,"), "open twice: " + error);
   check(!session.open("nosuch", &error) && error.startsWith("-224,"), "unknown id: " + error);
+  // a workspace's meter that is not plugged in: refused, or with waiting it
+  // stays open, not connected, and tries again (a port path no system has)
+  {
+    const QString absent = lib.add("Absent", {{"DMM/model", "Uni-Trend UT61E"},
+                                              {"Port settings/device", "serial " + dir.filePath("no-such-tty")}});
+    check(!session.open(absent, &error) && error.startsWith("-240,"), "absent: refused - " + error);
+    error.clear();
+    MeterController *waiting = session.open(absent, &error, true);
+    check(waiting && !waiting->dmm()->isOpen() && error.startsWith("-240,")
+            && waiting->dmm()->linkState() == MeterConnection::LinkState::Error,
+          "absent, waiting for it: open, not connected, in error - " + error);
+    check(session.controller("device:" + absent) == waiting, "the waiting meter is one of the session's");
+    session.close(absent);
+  }
   // 3. SCPI: catalog, open, close
   const QString cat = ask("QTDMM:DEV:CAT?");
   check(cat.contains(QString("\"%1\",\"Bench sim\",1").arg(sim)) && cat.contains(QString("\"%1\",\"Power\",0").arg(calc)),

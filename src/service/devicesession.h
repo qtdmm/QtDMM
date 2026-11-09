@@ -59,9 +59,14 @@ public:
   /// Opens and connects the entry @p id of "My devices". Null and the
   /// reason in @p error (a SCPI error, "<code>,<text>", in English) when it
   /// is unknown, already open or does not connect.
-  MeterController *open(const QString &id, QString *error = nullptr);
+  /// With @p waitForDevice one that does not connect stays open, not
+  /// connected, and connects when it comes (a workspace's meter not
+  /// plugged in yet, MeterConnection::open()); the reason in @p error all the
+  /// same.
+  MeterController *open(const QString &id, QString *error = nullptr, bool waitForDevice = false);
   /// The same with the entry's keys and name given.
-  MeterController *open(const QString &id, const QVariantMap &keys, const QString &name, QString *error = nullptr);
+  MeterController *open(const QString &id, const QVariantMap &keys, const QString &name, QString *error = nullptr,
+                        bool waitForDevice = false);
   /// Closes a meter open() opened; false (and why) for one not open.
   bool        close(const QString &id, QString *error = nullptr);
 
