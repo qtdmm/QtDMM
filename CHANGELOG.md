@@ -4,6 +4,7 @@
 
 ### GUI
 
+- **The project's window** — making, opening (also from the last ones) or importing a project shows its window; arranged for the first time it goes to the right like the readings table, not below the graph. Its list leaves out `project.json`, and a project with nothing else in it says it is empty.
 - **Put the bench into a new project...** — in Arrange, at Recent benches and at the project button's arrow: makes a new project, opens it and saves the bench into it, the way from a single bench to a project.
 - **Sidebar: the project's benches** — while a project is open, "Project: name" at the top lists its benches (the one in use in bold, a double click loads one) and "+ New bench..." saves the set-up as a new bench of the project.
 - **Project button: the project's window** — a click shows or hides the project's window (pressed while it shows); without a project it makes a new one. The arrow stays: new, open, the last ones, close. *Close project* also hides the window, as does a bench outside every project.
