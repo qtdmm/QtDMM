@@ -16,6 +16,9 @@ constexpr quint32 kStateFlags = SampleFlag::Hold | SampleFlag::Max | SampleFlag:
                                 | SampleFlag::Relative | SampleFlag::Autorange | SampleFlag::Peak
                                 | SampleFlag::Reference;
 constexpr quint32 kDefining = SampleFlag::AC | SampleFlag::DC | SampleFlag::Diode;
+// below this many counts the sign is noise: open leads flicker between
+// -0.0002 and 0.0002 (UT61E)
+constexpr qint64 kSignCounts = 100;
 
 Expect quantity(Quantity q, quint32 defining = 0)
 {
@@ -177,7 +180,11 @@ State stateOf(const CaptureLog::Frame &frame, FrameFormat::DataFormat format)
   s.prefix = ps.sample.displayPrefix;
   s.quality = ps.sample.quality;
   const QString text = ps.sample.text.trimmed();
-  s.negative = text.startsWith('-');
+  QString digits;
+  for (const QChar c : text)
+    if (c.isDigit())
+      digits += c;
+  s.negative = text.startsWith('-') && digits.toLongLong() >= kSignCounts;
   const qsizetype point = text.indexOf('.');
   s.decimals = point < 0 ? 0 : int(text.size() - point - 1);
   for (const PortSample &p : samples)

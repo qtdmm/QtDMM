@@ -198,6 +198,9 @@ int main(int argc, char **argv)
     const State range = stateOf(decoded("12.345", "V", "DC"), f);
     const State ol = stateOf(decoded("0L", "MOhm", "OH"), f);
     check(a.understood && a == b, "another value, the same state");
+    check(stateOf(decoded("-0.0002", "V", "DC"), f) == stateOf(decoded("0.0002", "V", "DC"), f)
+            && !stateOf(decoded("-0.0099", "V", "DC"), f).negative && stateOf(decoded("-0.0100", "V", "DC"), f).negative,
+          "around zero the sign is noise");
     check(a != neg && a != range && a != stateOf(decoded("1.2345", "V", "AC"), f), "sign, range and coupling count");
     check(!stateOf(CaptureLog::Frame{ 0, "abc", std::nullopt }, f).understood, "a frame not understood");
 
@@ -250,7 +253,9 @@ int main(int argc, char **argv)
     feedFor("QM,+1.2345 V DC\r", 10000);
     check(shown->text().startsWith("1.2345 V DC") || shown->text().startsWith("+1.2345 V DC"), shown->text());
     check(hint->text().isEmpty(), "DC V is what the step wants");
+    feed(guidedDmm, "QM,+1.2391 V DC\r", 11300);   // the value moves on before Keep
     keep->click();
+    check(dlg.log().kept().last().frame.bytes == "QM,+1.2345 V DC\r", "the frame proposed is kept, not a newer one");
     check(dlg.step() == 1 && dlg.log().kept().last().step == "dc_v" && kept->topLevelItem(0)->text(2) == "dc_v",
           "kept in step dc_v, on to the next");
     feedFor("QM,+1.2391 V DC\r", 12000);

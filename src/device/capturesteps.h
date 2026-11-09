@@ -59,7 +59,7 @@ struct State
   QString  unit;
   QString  prefix;
   int      decimals = 0;      ///< digits after the point: the range
-  bool     negative = false;
+  bool     negative = false;   ///< from 100 counts on: around zero the sign is noise
   Quality  quality = Quality::Valid;
   int      values = 0;        ///< values with a number in the frame (a second probe)
 
