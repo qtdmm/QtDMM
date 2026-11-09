@@ -184,12 +184,12 @@ void MeterController::configure(const MeterSetup &setup)
   setDisplayCounts(setup.info.display);
 }
 
-bool MeterController::connectMeter(bool on)
+bool MeterController::connectMeter(bool on, bool waitForDevice)
 {
   bool ok = true;
   m_stale.reset();   // a new connection has its own rhythm
   if (on)
-    ok = m_dmm->open();
+    ok = m_dmm->open(waitForDevice);
   else
     m_dmm->close();
   // a "no readings" alarm watches a connected meter, so its clock starts here

@@ -261,7 +261,10 @@ protected:
   /// the last reading, the values; rich text.
   QString     deviceStatus(const QString &id) const;
   /// Connects the entry @p id (DeviceSession::open()), unless its port is in use.
-  void        openBeside(const QString &id);
+  /// Opens the entry @p id of My devices; @p waitForDevice: a workspace's
+  /// meter that is not there stays, its panel says so, and connects when it
+  /// comes (DeviceSession::open()).
+  void        openBeside(const QString &id, bool waitForDevice = false);
   void        showSidebar(bool show);
   /// The node "Open devices" anew: the meters of the session with their
   /// readings (each second while the sidebar is shown).

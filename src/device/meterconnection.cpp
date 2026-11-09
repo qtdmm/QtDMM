@@ -190,12 +190,22 @@ QStringList MeterConnection::keys() const
   return keys;
 }
 
-bool MeterConnection::open()
+bool MeterConnection::open(bool waitForDevice)
 {
   m_wanted = true;
   if (openPort())
     return true;
-  m_wanted = false;
+  if (!waitForDevice || m_reconnectSeconds <= 0)
+  {
+    m_wanted = false;
+    return false;
+  }
+  // not there yet: waited for as one that went away
+  closePort();
+  m_secondsInError = 0;
+  setState(LinkState::Error, m_error + "\n" + tr("Retrying every %1 s.").arg(m_reconnectSeconds));
+  if (m_delayTimer == 0)
+    m_delayTimer = startTimer(1000);
   return false;
 }
 

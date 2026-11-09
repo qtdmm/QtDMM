@@ -1502,9 +1502,9 @@
     </message>
     <message>
         <location filename="../../src/service/devicesession.cpp" line="221"/>
-        <location filename="../../src/service/devicesession.cpp" line="297"/>
-        <location filename="../../src/service/devicesession.cpp" line="302"/>
-        <location filename="../../src/service/devicesession.cpp" line="321"/>
+        <location filename="../../src/service/devicesession.cpp" line="298"/>
+        <location filename="../../src/service/devicesession.cpp" line="303"/>
+        <location filename="../../src/service/devicesession.cpp" line="322"/>
         <source>%1: %2</source>
         <translation>%1: %2</translation>
     </message>
@@ -4359,12 +4359,12 @@ Keine Berechtigung? Der Sensor braucht eine udev-Regel für die USB-ID %1:%2.</t
         <translation>&lt;h2&gt;QtDMM %1&lt;/h2&gt;&lt;p&gt;Anzeige und Transientenrekorder für digitale Multimeter.&lt;/p&gt;&lt;p&gt;Gebaut mit &lt;b&gt;Qt&lt;/b&gt; %2. Lizenziert unter der &lt;b&gt;GNU GPL 3 oder neuer&lt;/b&gt; (Versionen vor 0.9.0 unter GPL 2 oder neuer).&lt;/p&gt;&lt;p&gt;Ab 0.9.5: tuxmaster und Mitwirkende, siehe Datei AUTHORS.&lt;br&gt;0.9.3 und davor: &amp;copy; 2001-2016 M. Toussaint &amp;lt;&lt;a href=&apos;mailto:qtdmm@mtoussaint.de&apos;&gt;qtdmm@mtoussaint.de&lt;/a&gt;&amp;gt;&lt;/p&gt;&lt;p&gt;Website: &lt;a href=&apos;https://qtdmm.de&apos;&gt;qtdmm.de&lt;/a&gt; &amp;middot; Kontakt: &lt;a href=&apos;mailto:hello@qtdmm.de&apos;&gt;hello@qtdmm.de&lt;/a&gt;&lt;br&gt;Quellcode und Fehlermeldungen: &lt;a href=&apos;https://github.com/qtdmm/QtDMM&apos;&gt;github.com/qtdmm/QtDMM&lt;/a&gt;&lt;br&gt;Die Symbole stammen aus den Symbolthemen &lt;b&gt;Oxygen&lt;/b&gt; und &lt;b&gt;Breeze&lt;/b&gt; der KDE-Gemeinschaft (LGPL 3); die eigenen Symbole von QtDMM sind in seinem Stil gezeichnet.&lt;/p&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2672"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2674"/>
         <source>Show the toolbar</source>
         <translation>Werkzeugleiste einblenden</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="2672"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="2674"/>
         <source>Hide the toolbar</source>
         <translation>Werkzeugleiste ausblenden</translation>
     </message>
@@ -4394,7 +4394,7 @@ Keine Berechtigung? Der Sensor braucht eine udev-Regel für die USB-ID %1:%2.</t
         <location filename="../../src/ui/mainwindow.cpp" line="802"/>
         <location filename="../../src/ui/mainwindow.cpp" line="913"/>
         <location filename="../../src/ui/mainwindow.cpp" line="2369"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="3195"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3197"/>
         <source>%1: %2</source>
         <translation>%1: %2</translation>
     </message>
@@ -4703,85 +4703,90 @@ Keine Berechtigung? Der Sensor braucht eine udev-Regel für die USB-ID %1:%2.</t
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="2651"/>
+        <source>%1: waiting for the device</source>
+        <translation>%1: wartet auf das Gerät</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="2653"/>
         <source>%1 connected</source>
         <translation>%1 verbunden</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3011"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="3031"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3013"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3033"/>
         <source>recording</source>
         <translation>Aufnahme</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3017"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3019"/>
         <source>Project basket: cannot write %1</source>
         <translation>Projektmappe: %1 lässt sich nicht schreiben</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3019"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="3117"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3021"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3119"/>
         <source>Into the project basket: %1</source>
         <translation>In der Projektmappe: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3029"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="3112"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3031"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3114"/>
         <source>readings</source>
         <translation>Messwerte</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3030"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3032"/>
         <source>graph</source>
         <translation>Graph</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3051"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3053"/>
         <source>Exported to %1</source>
         <translation>Exportiert nach %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3053"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3055"/>
         <source>Export failed: %1</source>
         <translation>Export fehlgeschlagen: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3069"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3071"/>
         <source>Live in LabPlot: start a recording first</source>
         <translation>Live in LabPlot: zuerst eine Aufnahme starten</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3080"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3082"/>
         <source>live</source>
         <translation>live</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3095"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3097"/>
         <source>Live in LabPlot: the recording ended, the file has all of it</source>
         <translation>Live in LabPlot: Die Aufnahme ist zu Ende, die Datei enthält sie ganz</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3101"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="3107"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3103"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3109"/>
         <source>Live in LabPlot: %1</source>
         <translation>Live in LabPlot: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3115"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3117"/>
         <source>Project basket: cannot write %1: %2</source>
         <translation>Projektmappe: %1 lässt sich nicht schreiben: %2</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3266"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3268"/>
         <source>back in My devices: %1</source>
         <translation>wieder in Meine Geräte: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3268"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3270"/>
         <source>the programs of their alarms were left out, set them again in Alarms...</source>
         <translation>die Programme ihrer Alarme wurden weggelassen, bitte unter Alarme... neu setzen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3270"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3272"/>
         <source>%1 without its key: enter it in the device settings</source>
         <translation>%1 ohne Schlüssel: bitte in den Geräte-Einstellungen eingeben</translation>
     </message>
@@ -5032,54 +5037,54 @@ Keine Berechtigung? Der Sensor braucht eine udev-Regel für die USB-ID %1:%2.</t
         <translation>Die Batterie des Geräts ist schwach.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3140"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3142"/>
         <source>Save bench</source>
         <translation>Messplatz speichern</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3141"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="3183"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3143"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3185"/>
         <source>QtDMM bench (*.%1)</source>
         <translation>QtDMM-Messplatz (*.%1)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3165"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3167"/>
         <source>QtDMM: Save bench</source>
         <translation>QtDMM: Messplatz speichern</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3172"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3174"/>
         <source>Bench saved to %1</source>
         <translation>Messplatz gespeichert in %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3182"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3184"/>
         <source>Load bench</source>
         <translation>Messplatz laden</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3195"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="3212"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3197"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3214"/>
         <source>QtDMM: Load bench</source>
         <translation>QtDMM: Messplatz laden</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3213"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3215"/>
         <source>The bench closes %1, its recording is not saved.</source>
         <translation>Der Messplatz trennt %1, die Aufnahme ist nicht gespeichert.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3264"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3266"/>
         <source>Bench loaded from %1</source>
         <translation>Messplatz geladen aus %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3165"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3167"/>
         <source>Could not write %1.</source>
         <translation>%1 konnte nicht geschrieben werden.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3337"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3339"/>
         <source>&amp;Clear list</source>
         <translation>Liste &amp;leeren</translation>
     </message>
@@ -5087,134 +5092,135 @@ Keine Berechtigung? Der Sensor braucht eine udev-Regel für die USB-ID %1:%2.</t
 <context>
     <name>MeterConnection</name>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="208"/>
+        <location filename="../../src/device/meterconnection.cpp" line="218"/>
         <source>Error creating port %1.</source>
         <translation>Fehler beim erzeugen von port %1.</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="409"/>
+        <location filename="../../src/device/meterconnection.cpp" line="419"/>
         <source>Access denied for %1.</source>
         <translation>Zugriff auf %1 verweigert.</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="232"/>
+        <location filename="../../src/device/meterconnection.cpp" line="242"/>
         <source>No such device %1.</source>
         <translation>%1 existiert nicht.</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="207"/>
+        <location filename="../../src/device/meterconnection.cpp" line="217"/>
         <source>This QtDMM was built without Bluetooth support.</source>
         <translation>Dieses QtDMM wurde ohne Bluetooth-Unterstützung gebaut.</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="229"/>
+        <location filename="../../src/device/meterconnection.cpp" line="239"/>
         <source>Missing Permission</source>
         <translation>Berechtigung fehlt</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="235"/>
+        <location filename="../../src/device/meterconnection.cpp" line="245"/>
         <source>Error opening %1.
 DMM connected and switched on?</source>
         <translation>Fehler beim Öffnen von %1.
 Ist das DMM angeschlossen und eingeschaltet?</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="247"/>
+        <location filename="../../src/device/meterconnection.cpp" line="257"/>
         <source>Error configuring serial port %1.</source>
         <translation>Fehler beim Konfigurieren des Anschlusses %1.</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="291"/>
+        <location filename="../../src/device/meterconnection.cpp" line="301"/>
         <source>Connecting ...</source>
         <translation>Verbinde ...</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="315"/>
+        <location filename="../../src/device/meterconnection.cpp" line="325"/>
         <source>not connected</source>
         <translation>nicht verbunden</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="316"/>
+        <location filename="../../src/device/meterconnection.cpp" line="326"/>
         <source>connecting ...</source>
         <translation>verbinde …</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="318"/>
+        <location filename="../../src/device/meterconnection.cpp" line="328"/>
         <source>no data</source>
         <translation>keine Daten</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="319"/>
+        <location filename="../../src/device/meterconnection.cpp" line="329"/>
         <source>no connection</source>
         <translation>keine Verbindung</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="350"/>
+        <location filename="../../src/device/meterconnection.cpp" line="360"/>
         <source>Lost connection to %1.</source>
         <translation>Verbindung zu %1 verloren.</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="354"/>
-        <location filename="../../src/device/meterconnection.cpp" line="438"/>
+        <location filename="../../src/device/meterconnection.cpp" line="206"/>
+        <location filename="../../src/device/meterconnection.cpp" line="364"/>
+        <location filename="../../src/device/meterconnection.cpp" line="448"/>
         <source>Retrying every %1 s.</source>
         <translation>Neuer Versuch alle %1 s.</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="380"/>
+        <location filename="../../src/device/meterconnection.cpp" line="390"/>
         <source>Bluetooth</source>
         <translation>Bluetooth</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="383"/>
+        <location filename="../../src/device/meterconnection.cpp" line="393"/>
         <source>network</source>
         <translation>Netzwerk</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="391"/>
+        <location filename="../../src/device/meterconnection.cpp" line="401"/>
         <source>serial port</source>
         <translation>serielle Schnittstelle</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="399"/>
+        <location filename="../../src/device/meterconnection.cpp" line="409"/>
         <source>connected (%1)</source>
         <translation>verbunden (%1)</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="421"/>
+        <location filename="../../src/device/meterconnection.cpp" line="431"/>
         <source>Not connected</source>
         <translation>Nicht verbunden</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="451"/>
+        <location filename="../../src/device/meterconnection.cpp" line="461"/>
         <source>Connecting to %1 over Bluetooth ...</source>
         <translation>Verbinde mit %1 über Bluetooth ...</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="491"/>
+        <location filename="../../src/device/meterconnection.cpp" line="501"/>
         <source>Error %1</source>
         <translation>Fehler %1</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="330"/>
+        <location filename="../../src/device/meterconnection.cpp" line="340"/>
         <source>The USB cable answers, but the meter sends nothing.
 Switch on the meter&apos;s serial output (on UNI-T meters: hold the RS232/USB button).</source>
         <translation>Das USB-Kabel antwortet, aber das Multimeter sendet nichts.
 Serielle Ausgabe am Multimeter einschalten (bei UNI-T: RS232/USB-Taste gedrückt halten).</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="332"/>
+        <location filename="../../src/device/meterconnection.cpp" line="342"/>
         <source>Timeout on device %1.
 DMM connected and switched on?</source>
         <translation>Wartezeit abgelaufr für %1.
 Ist das DMM angeschlossen und eingeschaltet?</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="373"/>
+        <location filename="../../src/device/meterconnection.cpp" line="383"/>
         <source>Simulated</source>
         <translation>Simuliert</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="373"/>
+        <location filename="../../src/device/meterconnection.cpp" line="383"/>
         <source>Calculated</source>
         <translation>Berechnet</translation>
     </message>
