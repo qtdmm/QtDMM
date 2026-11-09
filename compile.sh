@@ -111,7 +111,7 @@ fi
 if ${CTEST}
 then
 	echo
-	ctest --test-dir . --output-on-failure --timeout 300 || exit 1
+	ctest --test-dir . --output-on-failure --timeout 300 --parallel ${JOBS} || exit 1
 	echo
 fi
 

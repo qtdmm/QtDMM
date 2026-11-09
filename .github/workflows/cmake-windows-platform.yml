@@ -76,7 +76,7 @@ jobs:
       run: cmake --build build
 
     - name: Test
-      run: ctest --test-dir build --output-on-failure --timeout 300
+      run: ctest --test-dir build --output-on-failure --timeout 300 --parallel 4
 
     # ZIP (portable) and Inno Setup installer from the same install tree;
     # cpack runs install + windeployqt + iscc (preinstalled on the runner).

@@ -75,7 +75,7 @@ jobs:
         test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIconFile' build/qtdmm.app/Contents/Info.plist)" = qtdmm.icns
 
     - name: Test
-      run: ctest --test-dir build --output-on-failure --timeout 300
+      run: ctest --test-dir build --output-on-failure --timeout 300 --parallel "$(sysctl -n hw.ncpu)"
 
     - name: Build universal (release only)
       if: inputs.release
