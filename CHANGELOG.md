@@ -4,6 +4,9 @@
 
 ### GUI
 
+- **Project and bench without a device** — while My devices is empty, the project button with its arrow, Load/Save bench, Recent benches, *Put the bench into a new project...* and the project and benches in the sidebar are off: neither makes sense without a device.
+- **Project window beside the start page** — with devices but none connected, the start page covered the project's window (the button looked pressed, nothing showed, even right after *New project*); the window now stands at the right beside it.
+- **Project polish** — the title shows only the project while the open bench lies outside its folder; *New project* asks for a folder (no "All files (*)"); "Bench loaded" comes first in the status bar, the path in its tooltip; a message of the project before goes when another opens; Recent benches name their project.
 - **The project's window** — making, opening (also from the last ones) or importing a project shows its window; arranged for the first time it goes to the right like the readings table, not below the graph. Its list leaves out `project.json`, and a project with nothing else in it says it is empty.
 - **Put the bench into a new project...** — in Arrange, at Recent benches and at the project button's arrow: makes a new project, opens it and saves the bench into it, the way from a single bench to a project.
 - **Sidebar: the project's benches** — while a project is open, "Project: name" at the top lists its benches (the one in use in bold, a double click loads one) and "+ New bench..." saves the set-up as a new bench of the project.

@@ -29,6 +29,14 @@ has them. A window not yet placed goes to the right, like the readings
 table. The list leaves out `project.json`, the file in which QtDMM keeps
 the project's name and description.
 
+Projects and benches need a device: while My devices is empty, the
+project button, the bench entries and the project in the sidebar are
+off. With devices but none connected, the project's window stands at
+the right beside the start page.
+
+The window title shows the project and the bench, the bench only once
+it lies in the project's folder.
+
 The project stays open until you open or close another, also across
 restarts.
 

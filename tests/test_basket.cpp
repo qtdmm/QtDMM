@@ -86,6 +86,8 @@ int main(int argc, char **argv)
   check(BasketWidget::setProjectDescription(dir.filePath("Other"), "x")
           && BasketWidget::readProject(dir.filePath("Other")).value("format").toInt() == 1, "made first when missing");
   check(BasketWidget::readProject(dir.filePath("none")).isEmpty(), "no project.json: empty");
+  check(BasketWidget::projectName(dir.filePath("Bench")) == "mine", "shown by the name in project.json");
+  check(BasketWidget::projectName(dir.filePath("none")) == "none", "without one by its folder");
 
   // project.json is QtDMM's: not listed, and alone it leaves the project empty
   {

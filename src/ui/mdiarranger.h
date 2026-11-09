@@ -106,6 +106,10 @@ public:
   /// The table column in the automatic modes is at least this wide (still
   /// at most half the area): the width the main window grew by for it.
   void setTableWidth(int width);
+  /// Held: arranges nothing and leaves the windows where they are (the
+  /// start page over them, the project's window placed beside it by hand);
+  /// let go, it arranges again.
+  void setHeld(bool held);
 
   /// The tree worth keeping as text over the windows' object names - in
   /// Fixed mode, or once the user changed an automatic layout; empty
@@ -194,6 +198,7 @@ private:
   QList<Fit> m_fits;               ///< parallel to m_order
   bool m_pending = false;
   int m_tableWidth = 0;            ///< see setTableWidth()
+  bool m_held = false;             ///< see setHeld()
 
   Node m_root;
   bool m_hasTree = false;

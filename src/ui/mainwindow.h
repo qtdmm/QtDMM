@@ -244,6 +244,8 @@ protected:
   QAction    *m_labPlotLive = nullptr;     ///< Live in LabPlot, while it records
   QAction    *m_projectAction = nullptr;   ///< the toolbar's project button: its window or a new one, the arrow the rest
   QAction    *m_benchIntoProject = nullptr;   ///< "Put the bench into a new project..."
+  QList<QAction *> m_benchActions;   ///< bench and project: off while My devices is empty
+  bool        m_basketBeside = false;   ///< the project's window beside the start page
   QPointer<LabPlotLive> m_live;            ///< the recording live in LabPlot, while it goes on
   QAction    *m_tableToBasket = nullptr;   ///< the readings into the project basket
   QAction    *m_graphExport = nullptr;     ///< the export dialog, from the graph (Ctrl+E)
@@ -286,6 +288,10 @@ protected:
   /// shows the big button "Add device", and "Connect from My devices" when
   /// it has entries, over the area instead of the views.
   void        updateEmptyStart();
+  /// The start page over the area, or left of the project's window while
+  /// that one shows (the arrangement keeps the left free for it).
+  void        placeEmptyStart();
+  QString     projectTip() const;
   QWidget    *m_emptyStart = nullptr;   ///< covers the area, with the buttons
   QPushButton *m_emptyConnect = nullptr;   ///< "Connect a device from My devices"
   QAction    *m_arrangeTop;
