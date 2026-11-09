@@ -339,6 +339,7 @@ protected:
   QAction    *m_zoomOut;
   QAction    *m_zoomFit;
   QAction    *m_copyImage;
+  QAction    *m_noteAction;   ///< a note in the graph (Ctrl+Shift+N)
   ShortcutRegistry *m_shortcuts = nullptr;
   bool        m_running;
   QLabel     *m_error;

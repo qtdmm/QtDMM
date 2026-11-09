@@ -241,6 +241,17 @@ were; the integration curve carries on across a gap.
   measures at the later cursor. A dashed line across the graph at the
   value of the left axis under each cursor shows the change as the distance between them;
   the cursors' names hang as flags under the graph, at the time labels.
+- **Notes** mark a moment of the measurement: *Note here...* in the
+  graph's context menu sets one where you clicked, *Note now...* (N in the
+  graph, Ctrl+Shift+N anywhere) at the newest reading. A note has a title,
+  shown on its flag under the graph next to the alarm marks, and an
+  optional longer text. The marks are numbered in the order of their time.
+  A click on a flag shows its title, time and text, a double click edits
+  them - an alarm's or the trigger's mark can get a text too -, and its
+  context menu removes the mark. A note also marks the reading nearest to
+  it in the readings table. The marks with their text go into a QtDMM
+  recording (`.qtdmm-rec`); a SCPI client sets a note with
+  `QTDMM:MARK "title","text"`.
 - **Integration** (**Settings → Graph → Integration curve**) draws a second curve: the
   integral over time of the readings above a threshold, in the unit times
   seconds (V·s, A·s, W·s), scaled and offset as configured — for charge or

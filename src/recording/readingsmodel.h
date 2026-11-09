@@ -95,6 +95,8 @@ public:
   void clear();
   /// An alarm raised on the newest reading: the row gets the colour.
   void markLast(const QColor &color, const QString &name);
+  /// The same on the reading nearest to @p when: a note of the graph.
+  void markAt(const QDateTime &when, const QColor &color, const QString &name);
 
 public Q_SLOTS:
   /// A reading from the MeterController.

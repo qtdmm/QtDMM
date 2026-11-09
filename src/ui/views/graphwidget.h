@@ -158,7 +158,11 @@ public:
     IDReference,     ///< properties "kind" and "value"
     IDClearCursors,
     IDMinimap,
-    IDEnvelope
+    IDEnvelope,
+    IDNoteHere,      ///< property "t": the time clicked (ms)
+    IDNoteNow,
+    IDEditMark,      ///< property "mark": its index in RecordingStore::marks()
+    IDRemoveMark     ///< property "mark"
   };
 
   GraphWidget(QWidget *parent, Settings *settings);
@@ -456,6 +460,19 @@ public:
   /// move with the data and go with clearSLOT().
   void             addMark(const QColor &color, const QString &name);
   int              markCount() const { return int(m_marks.size()); }
+  /// Asks for a note (NoteDlg) at @p t (ms of the recording; -1: now, or
+  /// on the newest reading) and sets it; its index in the marks, -1 when
+  /// cancelled.
+  int              askNote(qint64 t = -1);
+  /// Sets a note without asking (QTDMM:MARK); index as askNote(). No
+  /// noteAdded(): the caller marks the table itself.
+  int              addNote(qint64 t, const QString &title, const QString &note);
+  /// Asks for the new title and text of mark @p index.
+  bool             editMark(int index);
+  /// The mark whose flag is at @p viewPos (in the chart view), -1: none.
+  int              markAt(const QPoint &viewPos) const;
+  /// Shows mark @p index's title, time and text in a bubble at @p globalPos.
+  void             showMarkNote(int index, const QPoint &globalPos);
   /// Unsaved recorded data in memory.
   bool             dirty() const { return m_store->dirty(); }
   void             setAlertUnsaved(bool on) { m_alertUnsaved = on; }
@@ -506,6 +523,8 @@ Q_SIGNALS:
   void             referenceChanged();
   /// leftValue() is another one (the limit band to show).
   void             leftValueChanged(const ValueRef &value);
+  /// A note was set at @p when (askNote()): the readings table marks its reading.
+  void             noteAdded(const QDateTime &when, const QString &title);
   /// @name Context menu requests, handled by InstanceWidget
   /// @{
   void             connectDMM(bool);
@@ -884,6 +903,7 @@ protected:
   QLabel          *m_cursorInfo = nullptr;          ///< timeCursorText(), top right in the plot
   QPoint           m_pressPos;                      ///< where the left button went down
   bool             m_clickCandidate = false;        ///< a press that may become a click: sets a cursor
+  int              m_pressedMark = -1;              ///< the mark whose flag the left button went down on
   bool             m_pressShift = false;
   /// Places the lines and the text anew.
   void             updateTimeCursors();

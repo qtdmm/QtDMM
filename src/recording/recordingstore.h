@@ -110,12 +110,21 @@ public:
   };
   Q_ENUM(State)
 
-  /// An alarm mark at a time of the recording.
+  /// What set a mark.
+  enum class MarkKind
+  {
+    Alarm,     ///< an alarm, a fault, a function changed (MeterController::markRequested())
+    Trigger,   ///< where a pre-triggered recording was triggered
+    Note       ///< a note of the user's (addNote(), QTDMM:MARK)
+  };
+  /// A mark at a time of the recording: a line in the graph with a flag.
   struct Mark
   {
     qint64  t;       ///< ms since the start of the recording
     quint32 color;   ///< ARGB, as QColor::rgba()
-    QString name;
+    QString name;    ///< the title, on the flag
+    QString note = QString();   ///< longer text, may be empty
+    MarkKind kind = MarkKind::Alarm;
   };
 
   /// The most readings a series keeps; the oldest go beyond it.
@@ -124,6 +133,8 @@ public:
   static constexpr qint64 kLiveMaxMs = 3600 * 1000;
   /// The colour of the mark where a pre-triggered recording was triggered.
   static constexpr quint32 kTriggerColor = 0xff2e9b3a;
+  /// The colour of a note's mark.
+  static constexpr quint32 kNoteColor = 0xff1e90ff;
 
   explicit RecordingStore(QObject *parent = nullptr);
 
@@ -323,6 +334,9 @@ public:
   bool        readingsPaused() const { return m_readingsPaused; }
   /// An alarm raised on the newest reading: the row gets the colour.
   void        markLastReading(quint32 argb, const QString &name);
+  /// The same on the reading nearest to @p wall (ms since the epoch): a
+  /// note set at a time of the graph.
+  void        markReadingAt(qint64 wall, quint32 argb, const QString &name);
   /// @}
 
 public Q_SLOTS:
@@ -371,6 +385,16 @@ public Q_SLOTS:
   void        clear();
   /// A mark at the newest reading (now, while recording).
   void        addMark(quint32 argb, const QString &name);
+  /// A note at @p t (ms of the recording; -1: where addMark() would put
+  /// it) titled @p title; the marks stay in the order of their time.
+  /// Returns its index in marks().
+  int         addNote(qint64 t, const QString &title, const QString &note);
+  /// The time a mark set now gets: now while recording or live, else the
+  /// newest reading.
+  qint64      markTime() const;
+  /// New title and text of mark @p index.
+  void        setMarkText(int index, const QString &title, const QString &note);
+  void        removeMark(int index);
 
 Q_SIGNALS:
   /// A reading was stored (series().last()); @p shifted: older ones went

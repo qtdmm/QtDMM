@@ -318,6 +318,11 @@ void ReadingsModel::markLast(const QColor &color, const QString &name)
   m_store->markLastReading(color.rgba(), name);
 }
 
+void ReadingsModel::markAt(const QDateTime &when, const QColor &color, const QString &name)
+{
+  m_store->markReadingAt(when.toMSecsSinceEpoch(), color.rgba(), name);
+}
+
 void ReadingsModel::clear()
 {
   m_store->clearReadings();

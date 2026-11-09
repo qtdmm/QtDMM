@@ -355,6 +355,11 @@ void MainWindow::createViews()
 
   m_readings = new ReadingsWidget(this);
   m_wid->setReadingLog(m_readings->log());   // the row limit is the store's: set it after
+  // a note set in the graph marks its reading in the table
+  connect(m_wid->graph(), &GraphWidget::noteAdded, this, [this](const QDateTime &when, const QString &title)
+  {
+    m_readings->log()->markAt(when, QColor::fromRgba(RecordingStore::kNoteColor), title);
+  });
   m_readings->setMaxRows(m_wid->settings()->getInt("ReadingLog/max-rows", 10000));
   m_readingsWin = addView(m_readings, tr("Readings"), MdiArranger::Table, "readings");
 
@@ -944,6 +949,14 @@ void MainWindow::createSidebar()
       if (graph && std::any_of(shown.cbegin(), shown.cend(), [this, ctl](const ValueRef &v)
                                { return m_wid->graph()->resolved(v).source == ctl->source(); }))
         m_wid->graph()->addMark(color, tr("%1: %2").arg(ctl->deviceName(), name));
+    });
+    // a SCPI client's note in the graph (the table: markRequested())
+    connect(ctl, &MeterController::noteRequested, this, [this, ctl](const QString &title, const QString &note)
+    {
+      const QList<ValueRef> shown = m_wid->graph()->values();
+      if (std::any_of(shown.cbegin(), shown.cend(), [this, ctl](const ValueRef &v)
+                      { return m_wid->graph()->resolved(v).source == ctl->source(); }))
+        m_wid->graph()->addNote(-1, tr("%1: %2").arg(ctl->deviceName(), title), note);
     });
   });
   connect(m_session, &DeviceSession::opened, this, &MainWindow::updateOpenDevices);
@@ -1642,6 +1655,15 @@ void MainWindow::createExtraActions()
   m_zoomFit->setObjectName("action_ZoomFit");
   m_zoomFit->setShortcut(QKeySequence("Ctrl+0"));
   connect(m_zoomFit, &QAction::triggered, m_wid->graph(), &GraphWidget::zoomFitSLOT);
+  // a note in the graph at the newest reading, also while the graph has no focus
+  m_noteAction = new QAction(tr("&Note in the graph..."), this);
+  m_noteAction->setObjectName("action_Note");
+  m_noteAction->setShortcut(QKeySequence("Ctrl+Shift+N"));
+  m_noteAction->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">Note in the graph</span></p>"
+                                "<p>Sets a note at the newest reading: a flag with its title under the graph, "
+                                "its text on a click. In the graph's context menu also where you clicked; "
+                                "N in the graph does the same.</p></body></html>"));
+  connect(m_noteAction, &QAction::triggered, m_wid->graph(), [this] { m_wid->graph()->askNote(); });
   m_copyImage = new QAction(tr("Cop&y graph image"), this);
   m_copyImage->setObjectName("action_CopyImage");
   m_copyImage->setShortcut(QKeySequence("Ctrl+Shift+C"));
@@ -1654,7 +1676,7 @@ void MainWindow::createExtraActions()
   // button nor a key of their own any more
   addActions({action_Configure, action_ConfigureDMM, action_Direct_help, action_Help, action_Quit,
               m_displayAction, m_meterAction, m_readingsAction, m_poincareAction, m_basketAction, m_titleBars,
-              m_fullScreen, m_toolbars, m_zoomIn, m_zoomOut, m_zoomFit, m_copyImage,
+              m_fullScreen, m_toolbars, m_zoomIn, m_zoomOut, m_zoomFit, m_copyImage, m_noteAction,
               // no buttons of their own: the keys stay, the graph's menu has them
               action_Connect, action_Reset, action_Record, action_Live, action_Clear,
               m_graphExport, action_Import, action_Print});
@@ -1671,7 +1693,7 @@ void MainWindow::createShortcuts(const QList<QAction *> &workspace)
   for (QAction *a : { action_Connect, action_Reset, action_ConfigureDMM, m_addDeviceAction })
     m_shortcuts->add(a, meter);
   m_shortcuts->add(action_Record, recording, tr("Record / Stop"));
-  for (QAction *a : { action_Live, action_Clear, m_zoomIn, m_zoomOut, m_zoomFit, m_copyImage,
+  for (QAction *a : { action_Live, action_Clear, m_zoomIn, m_zoomOut, m_zoomFit, m_copyImage, m_noteAction,
                       m_graphExport, action_Import, action_Print })
     m_shortcuts->add(a, recording);
   for (QAction *a : { m_sidebarAction, m_displayAction, m_meterAction, m_newMeterAction, action_Graph,
