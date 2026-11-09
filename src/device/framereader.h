@@ -54,7 +54,11 @@ public:
   /// Protocol of the connected meter; decides whether polling is needed.
   void        setFormat(FrameFormat::DataFormat format) { m_format = format; };
   /// Decoder whose checkFormat()/getPacketLength() delimit the frames.
-  void        setDecoder(std::shared_ptr<DmmDecoder> decoder) { m_decoder = decoder; };
+  void        setDecoder(std::shared_ptr<DmmDecoder> decoder);
+  /// For a decoder that cuts frames by time (DmmDecoder::frameGapMs()): a
+  /// frame is never longer than this, so a meter that never pauses still
+  /// gives frames.
+  static constexpr int kMaxGapFrame = 256;
 
   /// Number of frames one reading consists of; the id passed with
   /// readEvent() cycles through 0..num-1.
@@ -87,6 +91,12 @@ protected Q_SLOTS:
 
 private:
   QIODevice *m_port;
+  QTimer    *m_gapTimer = nullptr;   ///< frameGapMs(): fires after the pause
+  QByteArray m_gapFrame;             ///< frameGapMs(): the bytes since the last frame
+  qint64     m_gapT = 0;             ///< frameGapMs(): Sample::now() of its first byte
+  qint64     m_gapWall = 0;
+  void       readByGap();
+  void       emitGapFrame();
 
 private Q_SLOTS:
   void timer();

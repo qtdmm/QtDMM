@@ -47,6 +47,7 @@ regression tests.
 | `unit_idmm.cpp` | `UniTiDMM` | UNI-T UT60BT over Bluetooth LE GATT (verified live, dial walk against the LCD) | `tmp/ut60bt/walk_all.log` (UT60BT captures); frames and tables from [ble-multimeter](https://github.com/deligent4/ut60bt_multimeter) and [ut61xpy](https://github.com/olegv142/ut61xpy), both in `ablage/` | yes |
 | `unit_idmm.cpp` | `UniTUT61Plus` | UNI-T UT61B+/D+/E+ over the UT-D09 USB-HID cable or the UT-D07B Bluetooth adapter, UT161B/D/E over Bluetooth (unconfirmed) | — (synthetic vectors from UNI-T's app range tables via [unit_ut61eplus](https://github.com/ljakob/unit_ut61eplus), matching [ut61xpy](https://github.com/olegv142/ut61xpy)) | yes, synthetic |
 | `vc940.cpp` | `VC940Continuous` | Tenma 72-7732, Uni-Trend UT71B/UT71CDE/UT804, Voltcraft VC 920/940/960 | `UT71BCDE.log`, `UT804.log` | yes |
+| `raw_capture.h` | `RawCapture` | none: a meter QtDMM does not know yet, frames cut at a pause of 50 ms for the capture window | — | no, it reads nothing |
 
 `FlukeQM` and `Fluke45` are polled protocols with variable-length frames:
 QtDMM sends the query once a second (`QM\r`, or `FUNC1?;AUTO?;MOD?;VAL1?\r`

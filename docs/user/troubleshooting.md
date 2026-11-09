@@ -210,6 +210,23 @@ also AC A through its clamp; the other kinds have shorter lists).
 - *Back* goes to the step before. Uncheck *Guided steps* to keep frames by
   hand as above.
 
+#### A meter QtDMM does not know
+
+For a meter whose protocol QtDMM does not know yet, set the device's model
+to *Manual* and the protocol to *Unknown meter: bytes only, for a capture*,
+with the port settings of its cable (baud rate, parity) or its USB-HID cable.
+QtDMM reads no value then; the status bar says *Capture only* and *Capture...*
+is in bold in the device's context menu. Bluetooth LE meters cannot be
+captured this way yet.
+
+- A frame is everything the meter sent before a pause of 50 ms (at most 256
+  bytes).
+- The window has no *QtDMM reads* column and proposes nothing: type what the
+  display shows for each step and press Enter, the newest frame is kept (or
+  the one selected).
+- The export says `protocol: RawCapture`. These pairs of bytes and display
+  are what a new decoder is written from: attach the file to an issue.
+
 In the file, each frame kept in a step has the step's name above it
 (`# step dc_v_neg`), with a note where QtDMM read something else, and the
 skipped steps are listed at the end.

@@ -1238,7 +1238,7 @@
     <name>CaptureDlg</name>
     <message>
         <location filename="../../src/ui/dialogs/capturedlg.cpp" line="42"/>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="344"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="365"/>
         <source>not understood</source>
         <translation>nicht verstanden</translation>
     </message>
@@ -1249,165 +1249,175 @@
     </message>
     <message>
         <location filename="../../src/ui/dialogs/capturedlg.cpp" line="83"/>
+        <source>QtDMM does not know the protocol of this meter: for each frame you keep, enter what the meter&apos;s display shows. A new decoder is built from these pairs. The export holds only the frames and what you entered, no port or address.</source>
+        <translation>QtDMM kennt das Protokoll dieses Geräts nicht: Geben Sie zu jedem Rahmen, den Sie festhalten, ein, was die Anzeige des Geräts zeigt. Aus diesen Paaren entsteht ein neuer Decoder. Der Export enthält nur die Rahmen und Ihre Eingaben, keinen Port und keine Adresse.</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="86"/>
         <source>Set the meter to what it reads wrong, enter what its display shows and keep the frame. The export holds only the frames and what you entered, no port or address.</source>
         <translation>Stellen Sie das Gerät auf das ein, was falsch gelesen wird, tragen Sie ein, was seine Anzeige zeigt, und halten Sie den Rahmen fest. Der Export enthält nur die Rahmen und Ihre Eingaben, keinen Port und keine Adresse.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="92"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="96"/>
         <source>&amp;Guided steps</source>
         <translation>&amp;Geführte Schritte</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="95"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="99"/>
         <source>Off: keep frames by hand, without steps</source>
         <translation>Aus: Rahmen von Hand festhalten, ohne Schritte</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="108"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="112"/>
         <source>&amp;Back</source>
         <translation>Z&amp;urück</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="109"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="113"/>
         <source>Sk&amp;ip</source>
         <translation>Übers&amp;pringen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="111"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="115"/>
         <source>The meter has no such function, or you cannot measure it now</source>
         <translation>Das Gerät hat diese Funktion nicht, oder Sie können sie gerade nicht messen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="136"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="140"/>
         <source>Last frames (up to %1):</source>
         <translation>Letzte Rahmen (bis zu %1):</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="137"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="141"/>
         <source>&amp;Pause</source>
         <translation>&amp;Anhalten</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="141"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="145"/>
         <source>Stop adding frames, to keep one of the list</source>
         <translation>Keine Rahmen mehr hinzufügen, um einen aus der Liste festzuhalten</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="142"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="146"/>
         <source>C&amp;lear</source>
         <translation>&amp;Leeren</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="146"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="150"/>
         <source>Time</source>
         <translation>Zeit</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="146"/>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="168"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="150"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="174"/>
         <source>Bytes</source>
         <translation>Bytes</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="146"/>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="168"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="150"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="174"/>
         <source>QtDMM reads</source>
         <translation>QtDMM liest</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="156"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="162"/>
         <source>The meter &amp;shows:</source>
         <translation>Das Gerät &amp;zeigt:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="159"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="165"/>
         <source>as on its display, e.g. -1.234 V DC AUTO HOLD</source>
         <translation>wie auf seiner Anzeige, z. B. -1.234 V DC AUTO HOLD</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="161"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="167"/>
         <source>&amp;Keep</source>
         <translation>&amp;Festhalten</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="164"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="170"/>
         <source>Keeps the frame selected, else the newest, with what the meter shows</source>
         <translation>Hält den gewählten Rahmen fest, sonst den neuesten, mit dem, was das Gerät zeigt</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="168"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="174"/>
         <source>The meter shows</source>
         <translation>Das Gerät zeigt</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="168"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="174"/>
         <source>Step</source>
         <translation>Schritt</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="177"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="185"/>
         <source>&amp;Remove</source>
         <translation>Entfe&amp;rnen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="180"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="188"/>
         <source>Export also all &amp;frames of the list</source>
         <translation>Auch alle Ra&amp;hmen der Liste exportieren</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="182"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="190"/>
         <source>&amp;Export...</source>
         <translation>&amp;Exportieren…</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="239"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="252"/>
         <source>All steps done</source>
         <translation>Alle Schritte erledigt</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="240"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="253"/>
         <source>Export the capture with Export... - it holds the frames kept, with what the meter showed.</source>
         <translation>Exportieren Sie den Mitschnitt mit Exportieren… – er enthält die festgehaltenen Rahmen mit dem, was das Gerät zeigte.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="245"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="258"/>
         <source>Step %1 of %2</source>
         <translation>Schritt %1 von %2</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="253"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="261"/>
+        <source>Then enter what the meter shows and keep the newest frame.</source>
+        <translation>Geben Sie dann ein, was das Gerät zeigt, und halten Sie den neuesten Rahmen fest.</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="268"/>
         <source>Se&amp;nd %1</source>
         <translation>%1 se&amp;nden</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="254"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="269"/>
         <source>Presses %1 on the meter</source>
         <translation>Drückt %1 am Gerät</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="290"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="307"/>
         <source>QtDMM does not read what this step wants (%1). If the meter shows it, keep the frame anyway: that is what the capture is for.</source>
         <translation>QtDMM liest nicht, was dieser Schritt erwartet (%1). Wenn das Gerät es zeigt, halten Sie den Rahmen trotzdem fest: genau dafür ist der Mitschnitt da.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="381"/>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="392"/>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="398"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="403"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="414"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="420"/>
         <source>Export capture</source>
         <translation>Mitschnitt exportieren</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="382"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="404"/>
         <source>No frame is kept with what the meter showed. Export anyway?</source>
         <translation>Kein Rahmen ist mit dem festgehalten, was das Gerät zeigte. Trotzdem exportieren?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="392"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="414"/>
         <source>Capture (*.yaml)</source>
         <translation>Mitschnitt (*.yaml)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="399"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="421"/>
         <source>Could not write %1: %2</source>
         <translation>%1 konnte nicht geschrieben werden: %2</translation>
     </message>
@@ -1415,168 +1425,168 @@
 <context>
     <name>CaptureSteps</name>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="55"/>
+        <location filename="../../src/device/capturesteps.cpp" line="58"/>
         <source>Set the meter to DC voltage and measure a battery.</source>
         <translation>Stellen Sie das Gerät auf Gleichspannung und messen Sie eine Batterie.</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="57"/>
+        <location filename="../../src/device/capturesteps.cpp" line="60"/>
         <source>Swap the test leads on the battery, so the meter shows a negative voltage.</source>
         <translation>Vertauschen Sie die Messleitungen an der Batterie, sodass das Gerät eine negative Spannung zeigt.</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="59"/>
+        <location filename="../../src/device/capturesteps.cpp" line="62"/>
         <source>Set the meter to AC voltage and measure a source that is safe to measure, such as the AC output of a small transformer. Without one, skip this step.</source>
         <translation>Stellen Sie das Gerät auf Wechselspannung und messen Sie eine Quelle, die sich gefahrlos messen lässt, etwa den Wechselspannungsausgang eines kleinen Transformators. Ohne eine solche Quelle überspringen Sie diesen Schritt.</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="63"/>
+        <location filename="../../src/device/capturesteps.cpp" line="66"/>
         <source>Set the meter to resistance and measure a resistor.</source>
         <translation>Stellen Sie das Gerät auf Widerstand und messen Sie einen Widerstand.</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="65"/>
+        <location filename="../../src/device/capturesteps.cpp" line="68"/>
         <source>Leave the test leads open, so the meter shows OL.</source>
         <translation>Lassen Sie die Messleitungen offen, sodass das Gerät OL zeigt.</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="66"/>
+        <location filename="../../src/device/capturesteps.cpp" line="69"/>
         <source>Set the meter to diode test and measure a diode in forward direction.</source>
         <translation>Stellen Sie das Gerät auf Diodentest und messen Sie eine Diode in Durchlassrichtung.</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="68"/>
+        <location filename="../../src/device/capturesteps.cpp" line="71"/>
         <source>Set the meter to continuity and short the test leads.</source>
         <translation>Stellen Sie das Gerät auf Durchgang und schließen Sie die Messleitungen kurz.</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="70"/>
+        <location filename="../../src/device/capturesteps.cpp" line="73"/>
         <source>Set the meter to capacitance and measure a discharged capacitor.</source>
         <translation>Stellen Sie das Gerät auf Kapazität und messen Sie einen entladenen Kondensator.</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="72"/>
+        <location filename="../../src/device/capturesteps.cpp" line="75"/>
         <source>Set the meter to frequency (Hz).</source>
         <translation>Stellen Sie das Gerät auf Frequenz (Hz).</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="73"/>
+        <location filename="../../src/device/capturesteps.cpp" line="76"/>
         <source>Set the meter to DC current in mA, put the red test lead into the mA socket and measure a small current, such as an LED with its resistor. Never measure a voltage source directly in this setting. Without such a circuit, skip this step.</source>
         <translation>Stellen Sie das Gerät auf Gleichstrom in mA, stecken Sie die rote Messleitung in die mA-Buchse und messen Sie einen kleinen Strom, etwa durch eine LED mit Vorwiderstand. Messen Sie in dieser Stellung nie direkt an einer Spannungsquelle. Ohne eine solche Schaltung überspringen Sie diesen Schritt.</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="80"/>
+        <location filename="../../src/device/capturesteps.cpp" line="83"/>
         <source>Set the meter to AC current and clamp one wire of a running appliance.</source>
         <translation>Stellen Sie das Gerät auf Wechselstrom und umfassen Sie mit der Zange eine Ader eines laufenden Geräts.</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="82"/>
+        <location filename="../../src/device/capturesteps.cpp" line="85"/>
         <source>Measure something and press HOLD.</source>
         <translation>Messen Sie etwas und drücken Sie HOLD.</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="83"/>
+        <location filename="../../src/device/capturesteps.cpp" line="86"/>
         <source>Release HOLD, then press REL (relative).</source>
         <translation>Lösen Sie HOLD und drücken Sie dann REL (relativ).</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="85"/>
+        <location filename="../../src/device/capturesteps.cpp" line="88"/>
         <source>Release REL, then press MIN/MAX.</source>
         <translation>Lösen Sie REL und drücken Sie dann MIN/MAX.</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="87"/>
+        <location filename="../../src/device/capturesteps.cpp" line="90"/>
         <source>Release MIN/MAX, then press RANGE to choose the range by hand.</source>
         <translation>Lösen Sie MIN/MAX und drücken Sie dann RANGE, um den Bereich von Hand zu wählen.</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="112"/>
+        <location filename="../../src/device/capturesteps.cpp" line="115"/>
         <source>Plug a probe into the first input (T1) and measure the room temperature.</source>
         <translation>Stecken Sie einen Fühler in den ersten Eingang (T1) und messen Sie die Raumtemperatur.</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="114"/>
+        <location filename="../../src/device/capturesteps.cpp" line="117"/>
         <source>Unplug the probe, so the meter shows that no probe is there.</source>
         <translation>Ziehen Sie den Fühler ab, sodass das Gerät zeigt, dass kein Fühler da ist.</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="115"/>
+        <location filename="../../src/device/capturesteps.cpp" line="118"/>
         <source>Plug probes into the first and the second input (T1 and T2). With one input only, skip this step.</source>
         <translation>Stecken Sie Fühler in den ersten und den zweiten Eingang (T1 und T2). Mit nur einem Eingang überspringen Sie diesen Schritt.</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="117"/>
+        <location filename="../../src/device/capturesteps.cpp" line="120"/>
         <source>Switch the unit between °C and °F.</source>
         <translation>Schalten Sie die Einheit zwischen °C und °F um.</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="118"/>
+        <location filename="../../src/device/capturesteps.cpp" line="121"/>
         <source>Switch back to °C and press HOLD.</source>
         <translation>Schalten Sie zurück auf °C und drücken Sie HOLD.</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="119"/>
+        <location filename="../../src/device/capturesteps.cpp" line="122"/>
         <source>Release HOLD, then press MAX/MIN.</source>
         <translation>Lösen Sie HOLD und drücken Sie dann MAX/MIN.</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="125"/>
+        <location filename="../../src/device/capturesteps.cpp" line="128"/>
         <source>Point the sensor at a lamp.</source>
         <translation>Richten Sie den Sensor auf eine Lampe.</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="126"/>
+        <location filename="../../src/device/capturesteps.cpp" line="129"/>
         <source>Change the range, with the RANGE key or by covering the sensor.</source>
         <translation>Wechseln Sie den Bereich, mit der Taste RANGE oder indem Sie den Sensor abdecken.</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="128"/>
+        <location filename="../../src/device/capturesteps.cpp" line="131"/>
         <source>Switch the unit between lx and fc.</source>
         <translation>Schalten Sie die Einheit zwischen lx und fc um.</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="129"/>
+        <location filename="../../src/device/capturesteps.cpp" line="132"/>
         <source>Switch back to lx and press HOLD.</source>
         <translation>Schalten Sie zurück auf lx und drücken Sie HOLD.</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="130"/>
-        <location filename="../../src/device/capturesteps.cpp" line="139"/>
+        <location filename="../../src/device/capturesteps.cpp" line="133"/>
+        <location filename="../../src/device/capturesteps.cpp" line="142"/>
         <source>Release HOLD, then press MAX.</source>
         <translation>Lösen Sie HOLD und drücken Sie dann MAX.</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="134"/>
+        <location filename="../../src/device/capturesteps.cpp" line="137"/>
         <source>Measure the sound level of the room.</source>
         <translation>Messen Sie den Schallpegel im Raum.</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="136"/>
+        <location filename="../../src/device/capturesteps.cpp" line="139"/>
         <source>Switch the weighting between dBA and dBC.</source>
         <translation>Schalten Sie die Bewertung zwischen dBA und dBC um.</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="137"/>
+        <location filename="../../src/device/capturesteps.cpp" line="140"/>
         <source>Switch the time weighting between FAST and SLOW.</source>
         <translation>Schalten Sie die Zeitbewertung zwischen FAST und SLOW um.</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="138"/>
+        <location filename="../../src/device/capturesteps.cpp" line="141"/>
         <source>Press HOLD.</source>
         <translation>Drücken Sie HOLD.</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="216"/>
+        <location filename="../../src/device/capturesteps.cpp" line="223"/>
         <source>diode</source>
         <translation>Diode</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="220"/>
+        <location filename="../../src/device/capturesteps.cpp" line="227"/>
         <source>negative</source>
         <translation>negativ</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="228"/>
+        <location filename="../../src/device/capturesteps.cpp" line="235"/>
         <source>manual range</source>
         <translation>Bereich von Hand</translation>
     </message>
@@ -2095,220 +2105,220 @@
 <context>
     <name>DeviceSidebar</name>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="211"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="212"/>
         <source>My devices</source>
         <translation>Meine Geräte</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="391"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="392"/>
         <source>Value %1: %2</source>
         <translation>Wert %1: %2</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="394"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="395"/>
         <source>Where it is shown; a click points to it</source>
         <translation>Wo er angezeigt wird; ein Klick zeigt darauf</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="484"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="485"/>
         <source>Favourite: stays on the list. A click takes the star away.</source>
         <translation>Favorit: bleibt in der Liste. Ein Klick nimmt den Stern weg.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="485"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="486"/>
         <source>A click makes it a favourite: first on the list, never dropped.</source>
         <translation>Ein Klick macht ihn zum Favoriten: oben in der Liste, fällt nie heraus.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="554"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="555"/>
         <source>Fa&amp;vourite</source>
         <translation>Als &amp;Favorit</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="574"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="575"/>
         <source>&amp;Settings...</source>
         <translation>&amp;Einstellungen ...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="637"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="638"/>
         <source>Connected, readings are coming in</source>
         <translation>Verbunden, Messwerte kommen an</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="637"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="638"/>
         <source>Connected</source>
         <translation>Verbunden</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="776"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="777"/>
         <source>Li&amp;mits...</source>
         <translation>&amp;Grenzen...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="839"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="848"/>
         <source>&amp;Rename</source>
         <translation>&amp;Umbenennen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="224"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="225"/>
         <source>Services</source>
         <translation>Dienste</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="228"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="229"/>
         <source>What this window offers to other programs over the network.</source>
         <translation>Was dieses Fenster anderen Programmen über das Netz anbietet.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="209"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="210"/>
         <source>The benches used last: a double click loads one.</source>
         <translation>Die zuletzt benutzten Messplätze: ein Doppelklick lädt einen.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="194"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="195"/>
         <source>Project</source>
         <translation>Projekt</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="217"/>
-        <location filename="../../src/ui/devicesidebar.cpp" line="540"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="218"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="541"/>
         <source>Bench</source>
         <translation>Messplatz</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="222"/>
-        <location filename="../../src/ui/devicesidebar.cpp" line="541"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="223"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="542"/>
         <source>The devices this window reads: each has its front panel and records with the others.</source>
         <translation>Die Geräte, die dieses Fenster liest: jedes hat seine Frontplatte und nimmt mit den anderen auf.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="492"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="493"/>
         <source>%1 (not found)</source>
         <translation>%1 (nicht gefunden)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="510"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="511"/>
         <source>Project: %1</source>
         <translation>Projekt: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="511"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="512"/>
         <source>The benches of the open project: a double click loads one.</source>
         <translation>Die Messplätze des offenen Projekts: Ein Doppelklick lädt einen.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="527"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="528"/>
         <source>+ New bench...</source>
         <translation>＋ Neuer Messplatz …</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="531"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="532"/>
         <source>Save the devices and windows as they are as a new bench of the project</source>
         <translation>Geräte und Fenster, wie sie gerade sind, als neuen Messplatz des Projekts speichern</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="540"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="541"/>
         <source>Bench · %1</source>
         <translation>Messplatz · %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="550"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="551"/>
         <source>&amp;Load</source>
         <translation>&amp;Laden</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="552"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="553"/>
         <source>Open &amp;folder</source>
         <translation>&amp;Ordner öffnen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="558"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="559"/>
         <source>&amp;Remove from list</source>
         <translation>Aus der Liste &amp;entfernen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="575"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="576"/>
         <source>&amp;Copy address</source>
         <translation>Adresse &amp;kopieren</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="608"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="609"/>
         <source>+ Add device...</source>
         <translation>＋ Gerät hinzufügen …</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="612"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="613"/>
         <source>Set up another meter (the assistant).</source>
         <translation>Ein weiteres Messgerät einrichten (der Assistent).</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="638"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="639"/>
         <source>Double-click: info and settings</source>
         <translation>Doppelklick: Info und Einstellungen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="768"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="769"/>
         <source>Show &amp;front panel</source>
         <translation>&amp;Frontplatte zeigen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="772"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="773"/>
         <source>&amp;Disconnect</source>
         <translation>&amp;Trennen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="772"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="773"/>
         <source>Co&amp;nnect</source>
         <translation>&amp;Verbinden</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="775"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="776"/>
         <source>&amp;Alarms...</source>
         <translation>&amp;Alarme...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="779"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="780"/>
         <source>&amp;Capture...</source>
         <translation>&amp;Mitschnitt…</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="781"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="790"/>
         <source>&amp;Remove from bench</source>
         <translation>Vom Messplatz &amp;entfernen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="840"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="849"/>
         <source>&amp;Use</source>
         <translation>&amp;Benutzen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="771"/>
-        <location filename="../../src/ui/devicesidebar.cpp" line="838"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="772"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="847"/>
         <source>&amp;Info and settings...</source>
         <translation>&amp;Info und Einstellungen…</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="203"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="204"/>
         <source>Recent benches</source>
         <translation>Letzte Messplätze</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="841"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="850"/>
         <source>Reads it with the other devices connected: recorded with them, in formulas and over SCPI</source>
         <translation>Liest es mit den anderen verbundenen Geräten: mit ihnen aufgezeichnet, in Formeln und über SCPI</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="844"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="853"/>
         <source>Re&amp;move from My devices</source>
         <translation>Aus Meine Geräte ent&amp;fernen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="859"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="868"/>
         <source>Remove device</source>
         <translation>Gerät entfernen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="859"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="868"/>
         <source>Remove &quot;%1&quot; from My devices?</source>
         <translation>„%1“ aus Meine Geräte entfernen?</translation>
     </message>
@@ -2417,67 +2427,67 @@
 <context>
     <name>DeviceType</name>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="183"/>
+        <location filename="../../src/device/devicetype.cpp" line="184"/>
         <source>Handheld multimeter</source>
         <translation>Hand-Multimeter</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="184"/>
+        <location filename="../../src/device/devicetype.cpp" line="185"/>
         <source>Bench multimeter</source>
         <translation>Tisch-Multimeter</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="185"/>
+        <location filename="../../src/device/devicetype.cpp" line="186"/>
         <source>Clamp meter</source>
         <translation>Zangenmessgerät</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="186"/>
+        <location filename="../../src/device/devicetype.cpp" line="187"/>
         <source>Thermometer</source>
         <translation>Thermometer</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="187"/>
+        <location filename="../../src/device/devicetype.cpp" line="188"/>
         <source>Luxmeter</source>
         <translation>Luxmeter</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="188"/>
+        <location filename="../../src/device/devicetype.cpp" line="189"/>
         <source>Air quality meter</source>
         <translation>Luftqualitätsmesser</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="189"/>
+        <location filename="../../src/device/devicetype.cpp" line="190"/>
         <source>Sound level meter</source>
         <translation>Schallpegelmesser</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="190"/>
+        <location filename="../../src/device/devicetype.cpp" line="191"/>
         <source>Anemometer</source>
         <translation>Anemometer</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="191"/>
+        <location filename="../../src/device/devicetype.cpp" line="192"/>
         <source>Battery monitor</source>
         <translation>Batteriewächter</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="192"/>
+        <location filename="../../src/device/devicetype.cpp" line="193"/>
         <source>Solar charge controller</source>
         <translation>Solarladeregler</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="193"/>
+        <location filename="../../src/device/devicetype.cpp" line="194"/>
         <source>Inverter</source>
         <translation>Wechselrichter</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="194"/>
+        <location filename="../../src/device/devicetype.cpp" line="195"/>
         <source>Virtual meter</source>
         <translation>Virtuelles Messgerät</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="195"/>
+        <location filename="../../src/device/devicetype.cpp" line="196"/>
         <source>Generic</source>
         <translation>Allgemein</translation>
     </message>
@@ -5669,7 +5679,12 @@ Ist das DMM angeschlossen und eingeschaltet?</translation>
         <translation>Verbinde mit %1 über Bluetooth ...</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="509"/>
+        <location filename="../../src/device/meterconnection.cpp" line="510"/>
+        <source>Capture only %1</source>
+        <translation>Nur Mitschnitt %1</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/meterconnection.cpp" line="512"/>
         <source>Error %1</source>
         <translation>Fehler %1</translation>
     </message>
@@ -6206,6 +6221,11 @@ Ist das DMM angeschlossen und eingeschaltet?</translation>
         <location filename="../../src/device/protocols.cpp" line="70"/>
         <source>32-byte reading packets with CRC-16 after a password login (Brymen BM788BT, BM787BT, Bluetooth LE)</source>
         <translation>32-Byte-Messwertpakete mit CRC-16 nach Passwort-Anmeldung (Brymen BM788BT, BM787BT, Bluetooth LE)</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/protocols.cpp" line="71"/>
+        <source>Unknown meter: bytes only, for a capture (Capture...)</source>
+        <translation>Unbekanntes Gerät: nur Bytes, für einen Mitschnitt (Mitschnitt…)</translation>
     </message>
 </context>
 <context>

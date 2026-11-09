@@ -68,6 +68,7 @@ const std::vector<ProtocolInfo> &protocols()
     { FrameFormat::UniTUT8803,            "UniTUT8803",            QT_TRANSLATE_NOOP("Protocols", "21 bytes from AB CD, ASCII display (UNI-T UT8803 bench meter with LCR, CP2110 USB)"), "", "", make<DecoderUT8803> },
     { FrameFormat::Eevblog121GW,          "Eevblog121GW",          QT_TRANSLATE_NOOP("Protocols", "19 bytes from F2 with an XOR check, main and secondary display (EEVblog 121GW, Bluetooth LE)"), "", "Bluetooth LE", make<Decoder121GW> },
     { FrameFormat::BrymenBM78xBT,         "BrymenBM78xBT",         QT_TRANSLATE_NOOP("Protocols", "32-byte reading packets with CRC-16 after a password login (Brymen BM788BT, BM787BT, Bluetooth LE)"), "", "Bluetooth LE", make<DecoderBM78xBT> },
+    { FrameFormat::RawCapture,            "RawCapture",            QT_TRANSLATE_NOOP("Protocols", "Unknown meter: bytes only, for a capture (Capture...)"),  "",                      "",                         make<DecoderRawCapture> },
   };
   return table;
 }
