@@ -137,9 +137,12 @@ std::optional<DmmDecoder::DmmResponse> DecoderCyrusTekES51986::decode(const QByt
       break;
     case 0xE:
       // hFE, a gain without a unit: UT803.exe lights its hFE and β for
-      // code E (dmm-tools 9757373; the manual says it is not sent)
+      // code E (dmm-tools 9757373); the manual says it is not sent, a real
+      // UT803 sends it all the same (capture 09.11.2026)
       m_result.main().special = "HFE";
       formatResultValue(0,"","");
+      // a whole number, "0011" as 11 (a real UT803 sends hFE, 09.11.2026)
+      m_result.main().val = QString::number(m_result.main().val.toInt());
       if (ovl) {
         m_result.main().val  = "OL";
         m_result.main().dval = 0;

@@ -8,6 +8,7 @@ unit_map:                      # log spelling -> what the decoder emits
   "°F": "F"
 sources:
   - docs/protocols/sources/UT803.log
+  - docs/protocols/sources/UT803_2026-11-09.txt
 
 # 'reading' is what the log says the meter displayed; dval, unit, range and
 # hold are derived from it. Put decoder-specific assertions (special, val)
@@ -110,6 +111,29 @@ vectors:
     reading: {value: "0.23", unit: "A", coupling: AC+DC, range_mode: manual, range_label: "10A"}
     remark: "// obwohl nichts angeschlossen: störempfindlich!!"
     expect: {port: "current.ac"}   # A+D is not in the frame (the log says so): the bits read AC
+
+  # A real UT803 over its UT-D04 cable (CH9325), 09.11.2026: MAX/MIN and
+  # hFE, confirming dmm-tools 8513a0d/9757373 (docs/protocols/sources/UT803_2026-11-09.txt)
+  - source_line: "DC 0.003 V, MAX shown: option bit 2, the range manual"
+    source: docs/protocols/sources/UT803_2026-11-09.txt
+    bytes: 30 30 30 30 33 3B 38 34 38 0D 0A
+    reading: {value: "0.003", unit: "V", coupling: DC, range_mode: manual, range_label: "6V"}
+    expect: {max: true, min: false, lowBat: false}
+  - source_line: "DC 0.002 V, MIN shown: option bit 1"
+    source: docs/protocols/sources/UT803_2026-11-09.txt
+    bytes: 30 30 30 30 32 3B 38 32 38 0D 0A
+    reading: {value: "0.002", unit: "V", coupling: DC, range_mode: manual, range_label: "6V"}
+    expect: {max: false, min: true}
+  - source_line: "hFE 11, no unit (code E)"
+    source: docs/protocols/sources/UT803_2026-11-09.txt
+    bytes: 30 30 30 31 31 3E 38 30 30 0D 0A
+    reading: {value: "11", unit: "", range_mode: manual}
+    expect: {special: "HFE", val: "11"}
+  - source_line: "hFE open: OL (status bit 0)"
+    source: docs/protocols/sources/UT803_2026-11-09.txt
+    bytes: 30 36 30 30 30 3E 39 30 30 0D 0A
+    reading: {value: "OL", unit: "", range_mode: manual}
+    expect: {special: "HFE", val: "OL"}
 
   # SYNTHETIC (no capture has them): the battery glyph and MAX/MIN as
   # UT803.exe lights them, status bit 1 and option bits 2/1 (dmm-tools
