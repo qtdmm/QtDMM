@@ -798,228 +798,245 @@
 <context>
     <name>BasketWidget</name>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="57"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="59"/>
         <source>&amp;Description...</source>
         <translation>&amp;Beschreibung...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="59"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="61"/>
         <source>E&amp;xport project...</source>
         <translation>Projekt e&amp;xportieren...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="61"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="63"/>
         <source>&amp;Import project...</source>
         <translation>Projekt &amp;importieren...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="107"/>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="591"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="109"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="649"/>
         <source>&amp;Add...</source>
         <translation>&amp;Hinzufügen...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="114"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="116"/>
         <source>Open &amp;folder</source>
         <translation>&amp;Ordner öffnen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="132"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="134"/>
         <source>Empty. Drop files here or add them with Add...</source>
         <translation>Leer. Dateien hierher ziehen oder mit Hinzufügen... aufnehmen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="223"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="227"/>
         <source>New project: the name of its folder</source>
         <translation>Neues Projekt: Name seines Ordners</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="227"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="231"/>
         <source>Project folder (*)</source>
         <translation>Projektordner (*)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="228"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="232"/>
         <source>Project:</source>
         <translation>Projekt:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="229"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="233"/>
         <source>Make</source>
         <translation>Anlegen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="282"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="286"/>
         <source>Project description</source>
         <translation>Projektbeschreibung</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="283"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="287"/>
         <source>What the project is about:</source>
         <translation>Worum es im Projekt geht:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="44"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="46"/>
         <source>Project</source>
         <translation>Projekt</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="51"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="53"/>
         <source>&amp;New project...</source>
         <translation>&amp;Neues Projekt...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="52"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="54"/>
         <source>&amp;Open project...</source>
         <translation>Projekt ö&amp;ffnen...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="53"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="55"/>
         <source>&amp;Close project</source>
         <translation>Projekt &amp;schließen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="67"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="69"/>
         <source>A project keeps its files in one folder: its benches, recordings, pictures, PDFs, LabPlot projects.</source>
         <translation>Ein Projekt hält seine Dateien in einem Ordner: seine Messplätze, Aufnahmen, Bilder, PDFs, LabPlot-Projekte.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="111"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="113"/>
         <source>Copy files into the project</source>
         <translation>Dateien in das Projekt kopieren</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="118"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="120"/>
         <source>Show the project in the file manager</source>
         <translation>Das Projekt im Dateimanager zeigen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="235"/>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="525"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="239"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="530"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="557"/>
         <source>Project: cannot make the folder %1</source>
         <translation>Projekt: Der Ordner %1 kann nicht angelegt werden</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="288"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="292"/>
         <source>Project: cannot write %1</source>
         <translation>Projekt: %1 kann nicht geschrieben werden</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="303"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="307"/>
         <source>there is no folder %1</source>
         <translation>es gibt keinen Ordner %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="329"/>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="384"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="333"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="388"/>
         <source>cannot read %1</source>
         <translation>kann %1 nicht lesen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="333"/>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="347"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="337"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="351"/>
         <source>the project is too large for a ZIP file (4 GB)</source>
         <translation>das Projekt ist zu groß für eine ZIP-Datei (4 GB)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="351"/>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="453"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="355"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="457"/>
         <source>cannot write %1</source>
         <translation>kann %1 nicht schreiben</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="361"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="365"/>
         <source>Export project</source>
         <translation>Projekt exportieren</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="363"/>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="465"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="367"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="469"/>
         <source>ZIP archives (*.zip)</source>
         <translation>ZIP-Archive (*.zip)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="371"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="375"/>
         <source>Export project: %1</source>
         <translation>Projekt exportieren: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="390"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="394"/>
         <source>%1 is no ZIP file, is damaged or unpacks to more than 4 GB</source>
         <translation>%1 ist keine ZIP-Datei, ist beschädigt oder ergibt ausgepackt mehr als 4 GB</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="393"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="397"/>
         <source>%1 is empty</source>
         <translation>%1 ist leer</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="402"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="406"/>
         <source>%1 has a file outside its folder: %2</source>
         <translation>%1 enthält eine Datei außerhalb seines Ordners: %2</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="435"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="439"/>
         <source>missing or changed since the export: %1</source>
         <translation>fehlt oder seit dem Export verändert: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="443"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="447"/>
         <source>cannot make the folder %1</source>
         <translation>kann den Ordner %1 nicht anlegen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="464"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="468"/>
         <source>Import project</source>
         <translation>Projekt importieren</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="475"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="479"/>
         <source>Import project: %1</source>
         <translation>Projekt importieren: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="484"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="488"/>
         <source>Open project</source>
         <translation>Projekt öffnen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="536"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="541"/>
         <source>Project: cannot copy %1</source>
         <translation>Projekt: %1 kann nicht kopiert werden</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="547"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="554"/>
+        <source>New folder</source>
+        <translation>Neuer Ordner</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="578"/>
+        <source>Project: cannot move %1</source>
+        <translation>Projekt: %1 lässt sich nicht verschieben</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="585"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="650"/>
         <source>Add to the project</source>
         <translation>Zum Projekt hinzufügen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="587"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="625"/>
         <source>Project: cannot move %1 to the trash</source>
         <translation>Projekt: %1 kann nicht in den Papierkorb verschoben werden</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="553"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="632"/>
+        <source>New &amp;folder</source>
+        <translation>Neuer &amp;Ordner</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="591"/>
         <source>No program opens %1</source>
         <translation>Kein Programm öffnet %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="568"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="606"/>
         <source>&amp;Open</source>
         <translation>Ö&amp;ffnen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="575"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="613"/>
         <source>Open &amp;with the system</source>
         <translation>Mit dem &amp;System öffnen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="577"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="615"/>
         <source>&amp;Rename</source>
         <translation>&amp;Umbenennen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="579"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="617"/>
         <source>Move to &amp;trash</source>
         <translation>In den &amp;Papierkorb</translation>
     </message>
@@ -4794,27 +4811,27 @@ Keine Berechtigung? Der Sensor braucht eine udev-Regel für die USB-ID %1:%2.</t
         <translation>Messplatz geladen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3375"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3376"/>
         <source>project %1 closed: the bench is not in it</source>
         <translation>Projekt %1 geschlossen: Der Messplatz liegt nicht darin</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3376"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3377"/>
         <source>project %1 opened: the bench is in it</source>
         <translation>Projekt %1 geöffnet: Der Messplatz liegt darin</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3379"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3380"/>
         <source>back in My devices: %1</source>
         <translation>wieder in Meine Geräte: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3381"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3382"/>
         <source>the programs of their alarms were left out, set them again in Alarms...</source>
         <translation>die Programme ihrer Alarme wurden weggelassen, bitte unter Alarme... neu setzen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3383"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3384"/>
         <source>%1 without its key: enter it in the device settings</source>
         <translation>%1 ohne Schlüssel: bitte in den Geräte-Einstellungen eingeben</translation>
     </message>
@@ -5149,7 +5166,7 @@ Keine Berechtigung? Der Sensor braucht eine udev-Regel für die USB-ID %1:%2.</t
         <translation>%1 konnte nicht geschrieben werden.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3495"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3496"/>
         <source>&amp;Clear list</source>
         <translation>Liste &amp;leeren</translation>
     </message>

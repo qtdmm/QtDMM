@@ -16,6 +16,7 @@
 #include <QDir>
 #include <QDirIterator>
 #include <QDragEnterEvent>
+#include <QDragMoveEvent>
 #include <QDropEvent>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -33,6 +34,7 @@
 #include <QRegularExpression>
 #include <QStackedWidget>
 #include <QStyle>
+#include <QTimer>
 #include <QToolButton>
 #include <QTreeView>
 #include <QUrl>
@@ -139,8 +141,10 @@ BasketWidget::BasketWidget(QWidget *parent) :
   m_model->setFilter(QDir::AllEntries | QDir::NoDotAndDotDot);
   m_view = new QTreeView(page);
   m_view->setModel(m_model);
-  m_view->setRootIsDecorated(false);
-  m_view->setItemsExpandable(false);
+  // folders open in place; files and folders are dragged into folders (or
+  // out to other programs), drops go to BasketWidget::dropEvent()
+  m_view->setDragEnabled(true);
+  m_view->setDragDropMode(QAbstractItemView::DragOnly);
   m_model->sort(3, Qt::DescendingOrder);   // newest first
   m_view->setEditTriggers(QAbstractItemView::EditKeyPressed);
   m_view->setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -515,23 +519,24 @@ void BasketWidget::updateEmpty()
   m_empty->setVisible(entries.isEmpty() || entries == QStringList { "project.json" });
 }
 
-QStringList BasketWidget::addFiles(const QStringList &files)
+QStringList BasketWidget::addFiles(const QStringList &files, const QString &dir)
 {
   QStringList added;
   if (m_folder.isEmpty() || files.isEmpty())
     return added;
-  if (!QDir().mkpath(m_folder))
+  const QString into = dir.isEmpty() ? m_folder : dir;
+  if (!QDir().mkpath(into))
   {
-    Q_EMIT error(tr("Project: cannot make the folder %1").arg(QDir::toNativeSeparators(m_folder)));
+    Q_EMIT error(tr("Project: cannot make the folder %1").arg(QDir::toNativeSeparators(into)));
     return added;
   }
   for (const QString &file : files)
   {
     const QFileInfo info(file);
-    // a file of the basket itself stays where it is
-    if (info.absoluteDir() == QDir(m_folder))
+    // a file already there stays as it is
+    if (info.absoluteDir() == QDir(into))
       continue;
-    const QString target = freeName(m_folder, info.fileName());
+    const QString target = freeName(into, info.fileName());
     if (!info.isFile() || !QFile::copy(file, target))
       Q_EMIT error(tr("Project: cannot copy %1").arg(QDir::toNativeSeparators(file)));
     else
@@ -540,6 +545,39 @@ QStringList BasketWidget::addFiles(const QStringList &files)
   if (!m_view->isVisible())
     showFolder();
   return added;
+}
+
+QString BasketWidget::newFolder(const QString &dir)
+{
+  if (m_folder.isEmpty())
+    return QString();
+  const QString path = freeName(dir.isEmpty() ? m_folder : dir, tr("New folder"));
+  if (!QDir().mkpath(path))
+  {
+    Q_EMIT error(tr("Project: cannot make the folder %1").arg(QDir::toNativeSeparators(path)));
+    return QString();
+  }
+  return path;
+}
+
+QStringList BasketWidget::moveInto(const QStringList &paths, const QString &dir)
+{
+  QStringList moved;
+  const QString into = QDir(dir).absolutePath();
+  for (const QString &path : paths)
+  {
+    const QFileInfo info(path);
+    const QString from = info.absoluteFilePath();
+    // not into itself or a folder under itself, nor where it is
+    if (into == from || into.startsWith(from + '/') || info.absolutePath() == into || !info.exists())
+      continue;
+    const QString target = freeName(into, info.fileName());
+    if (QFile::rename(from, target))
+      moved << target;
+    else
+      Q_EMIT error(tr("Project: cannot move %1").arg(QDir::toNativeSeparators(from)));
+  }
+  return moved;
 }
 
 void BasketWidget::addSLOT()
@@ -588,7 +626,28 @@ void BasketWidget::contextMenu(const QPoint &pos)
     });
     menu.addSeparator();
   }
-  connect(menu.addAction(tr("&Add...")), &QAction::triggered, this, &BasketWidget::addSLOT);
+  // in the folder clicked on, beside the file clicked on, else at the top;
+  // named at once
+  const QString dir = dirAt(pos);
+  connect(menu.addAction(QIcon::fromTheme("folder-new"), tr("New &folder")), &QAction::triggered, this, [this, dir]
+  {
+    const QString path = newFolder(dir);
+    if (path.isEmpty())
+      return;
+    m_view->expand(m_model->index(dir));
+    // the model sees the folder a moment later
+    QTimer::singleShot(200, this, [this, path]
+    {
+      const QModelIndex index = m_model->index(path);
+      if (index.isValid())
+      {
+        m_view->setCurrentIndex(index);
+        m_view->edit(index);
+      }
+    });
+  });
+  connect(menu.addAction(tr("&Add...")), &QAction::triggered, this,
+          [this, dir] { addFiles(QFileDialog::getOpenFileNames(this, tr("Add to the project")), dir); });
   menu.exec(m_view->viewport()->mapToGlobal(pos));
 }
 
@@ -598,12 +657,46 @@ void BasketWidget::dragEnterEvent(QDragEnterEvent *event)
     event->acceptProposedAction();
 }
 
+void BasketWidget::dragMoveEvent(QDragMoveEvent *event)
+{
+  // the folder it would go into, selected while over it
+  const QPoint pos = m_view->viewport()->mapFrom(this, event->position().toPoint());
+  const QModelIndex index = m_view->indexAt(pos);
+  if (index.isValid() && m_model->isDir(index))
+    m_view->setCurrentIndex(index);
+  if (event->source() == m_view)
+  {
+    event->setDropAction(Qt::MoveAction);
+    event->accept();
+  }
+  else
+    event->acceptProposedAction();
+}
+
+QString BasketWidget::dirAt(const QPoint &pos) const
+{
+  const QModelIndex index = m_view->indexAt(pos);
+  if (!index.isValid())
+    return m_folder;
+  const QString path = pathAt(index);
+  return m_model->isDir(index) ? path : QFileInfo(path).absolutePath();
+}
+
 void BasketWidget::dropEvent(QDropEvent *event)
 {
   QStringList files;
   for (const QUrl &url : event->mimeData()->urls())
     if (url.isLocalFile())
       files << url.toLocalFile();
-  addFiles(files);
+  const QString dir = dirAt(m_view->viewport()->mapFrom(this, event->position().toPoint()));
+  // from the list itself: moved into the folder; from elsewhere: copied
+  if (event->source() == m_view)
+  {
+    moveInto(files, dir);
+    event->setDropAction(Qt::MoveAction);
+    event->accept();
+    return;
+  }
+  addFiles(files, dir);
   event->acceptProposedAction();
 }

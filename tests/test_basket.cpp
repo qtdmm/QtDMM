@@ -67,6 +67,31 @@ int main(int argc, char **argv)
   // a file of the basket itself is not copied again
   check(basket.addFiles({ dir.filePath("Bench/a.csv") }).isEmpty(), "a basket file stays as it is");
 
+  // folders in a project: made under free names, files copied or moved in
+  {
+    basket.setFolder(dir.filePath("Folders"));
+    const QString f1 = basket.newFolder();
+    const QString f2 = basket.newFolder();
+    check(QFileInfo(f1).isDir() && QFileInfo(f2).isDir() && f1 != f2
+            && QFileInfo(f1).absolutePath() == dir.filePath("Folders"),
+          "two new folders at the top: " + f1 + ", " + f2);
+    const QString sub = basket.newFolder(f1);
+    check(QFileInfo(sub).absolutePath() == f1, "a folder in a folder");
+    const QStringList in = basket.addFiles({ dir.filePath("a.csv") }, f1);
+    check(in == QStringList { QDir(f1).filePath("a.csv") }, "copied into a folder: " + in.join(", "));
+    const QStringList moved = basket.moveInto(in, f2);
+    check(moved == QStringList { QDir(f2).filePath("a.csv") } && !QFileInfo::exists(in.value(0)),
+          "moved into another folder");
+    check(basket.moveInto({ f1 }, sub).isEmpty() && QFileInfo(f1).isDir(), "a folder not into one under itself");
+    check(basket.moveInto({ f1 }, f1).isEmpty(), "nor into itself");
+    check(basket.moveInto(moved, f2).isEmpty(), "nor where it is");
+    // its name is taken at the top: it gets a free one
+    const QString up = basket.moveInto({ sub }, dir.filePath("Folders")).value(0);
+    check(QFileInfo(up).isDir() && QFileInfo(up).absolutePath() == dir.filePath("Folders") && up != f1 && up != f2,
+          "a folder up to the top: " + up);
+    basket.setFolder(dir.filePath("Bench"));
+  }
+
   // project.json: written once, never over the user's
   check(BasketWidget::writeProjectFile(dir.filePath("Bench")), "project.json written");
   QFile project(dir.filePath("Bench/project.json"));
