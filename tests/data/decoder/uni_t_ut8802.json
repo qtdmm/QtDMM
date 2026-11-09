@@ -28,7 +28,7 @@
     },
     {
       "comment": "[reverse-engineered-protocol.md (dmm-tools, GPL-3.0-or-later: from UNI-T's UCI SDK uci.dll and its programming manual; no meter read there yet)] '-0.1500 V, the minus in the status byte (parse_negative)'",
-      "hex": "AC 03 00 15 00 04 00 80",
+      "hex": "AC 03 00 15 00 04 80 00",
       "expected": {
         "dval": -0.15,
         "unit": "V",
@@ -40,7 +40,7 @@
     },
     {
       "comment": "[reverse-engineered-protocol.md (dmm-tools, GPL-3.0-or-later: from UNI-T's UCI SDK uci.dll and its programming manual; no meter read there yet)] '0.1234 kOhm on the 2 kOhm position, manual range (parse_resistance)'",
-      "hex": "AC 1A 34 12 00 04 00 04",
+      "hex": "AC 1A 34 12 00 04 04 00",
       "expected": {
         "dval": 123.39999999999999,
         "unit": "kOhm",
@@ -52,7 +52,7 @@
     },
     {
       "comment": "[reverse-engineered-protocol.md (dmm-tools, GPL-3.0-or-later: from UNI-T's UCI SDK uci.dll and its programming manual; no meter read there yet)] 'OL on the 200 MOhm position, status bit 6 (overload_from_status_bit)'",
-      "hex": "AC 1F 00 00 00 00 00 40",
+      "hex": "AC 1F 00 00 00 00 40 00",
       "expected": {
         "unit": "MOhm",
         "range": "AUTO",
@@ -64,7 +64,7 @@
     },
     {
       "comment": "[reverse-engineered-protocol.md (dmm-tools, GPL-3.0-or-later: from UNI-T's UCI SDK uci.dll and its programming manual; no meter read there yet)] 'AC V 230.1 with HOLD (parse_hold_flag)'",
-      "hex": "AC 0B 01 23 00 01 00 10",
+      "hex": "AC 0B 01 23 00 01 10 00",
       "expected": {
         "dval": 230.1,
         "unit": "V",
@@ -76,7 +76,7 @@
     },
     {
       "comment": "[reverse-engineered-protocol.md (dmm-tools, GPL-3.0-or-later: from UNI-T's UCI SDK uci.dll and its programming manual; no meter read there yet)] '5.00 mA DC with REL (parse_rel_flag)'",
-      "hex": "AC 12 00 05 00 02 00 08",
+      "hex": "AC 12 00 05 00 02 08 00",
       "expected": {
         "dval": 0.005,
         "unit": "mA",
@@ -88,7 +88,7 @@
     },
     {
       "comment": "[reverse-engineered-protocol.md (dmm-tools, GPL-3.0-or-later: from UNI-T's UCI SDK uci.dll and its programming manual; no meter read there yet)] '1.000 A DC with MAX (parse_max_min_flags)'",
-      "hex": "AC 16 00 10 00 03 00 02",
+      "hex": "AC 16 00 10 00 03 02 00",
       "expected": {
         "dval": 1.0,
         "unit": "A",

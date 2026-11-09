@@ -89,6 +89,17 @@ int main(int argc, char **argv)
     expect(ut202bt, "peak", "");
     expect(ut60bt, "fn_a", "");
     expect(ut61plus, "fn_v", "");
+    // no PEAK on the UT61B+ and UT161B, whose manual has a plain MAX/MIN key
+    // (dmm-tools f2dea93); the other UT61+ have it
+    {
+      auto d = DmmDecoder::getInstance(ut61plus);
+      if (d->hasKey("peak", "UT61B+ *") || d->hasKey("peak_off", "UT161B (UT-D09 USB) *")
+          || !d->hasKey("minmax", "UT61B+ *") || !d->hasKey("peak", "UT61E+ *") || !d->hasKey("peak", "UT161D *"))
+      {
+        qWarning() << "UT61+ keys per model: PEAK only where the manual has it";
+        ++problems;
+      }
+    }
     expect(FrameFormat::Metex14, "hold", "");   // no remote control
 
     // the ZOTEK meters: AB CD 03 <key> 00 00 00 00 <sum>, scrambled with the
@@ -932,6 +943,8 @@ int main(int argc, char **argv)
     if (expected.contains("fault"))   check("fault",   main.fault,        expected["fault"]);
     if (expected.contains("lowBat"))  check("lowBat",  result->lowBat,    expected["lowBat"]);
     if (expected.contains("relative")) check("relative", bool(main.states & SampleFlag::Relative), expected["relative"]);
+    if (expected.contains("max"))     check("max",     bool(main.states & SampleFlag::Max), expected["max"]);
+    if (expected.contains("min"))     check("min",     bool(main.states & SampleFlag::Min), expected["min"]);
     if (expected.contains("dval2"))   check("dval2",   sub.dval,          expected["dval2"]);
     if (expected.contains("val2"))    check("val2",    sub.val,           expected["val2"]);
     if (expected.contains("unit2"))   check("unit2",   sub.unit,          expected["unit2"]);

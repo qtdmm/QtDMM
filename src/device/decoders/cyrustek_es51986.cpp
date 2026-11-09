@@ -1,5 +1,7 @@
 #include "device/decoders/cyrustek_es51986.h"
 
+#include "core/sampletypes.h"
+
 // same as es51981, but less features. no collisons between features
 
 static const bool registered = []() {
@@ -35,6 +37,13 @@ std::optional<DmmDecoder::DmmResponse> DecoderCyrusTekES51986::decode(const QByt
   m_result.main().id     = id;
   m_result.showBar= true;
   m_result.hold       = bit(data,7,3);
+  // the battery glyph and MAX/MIN, as UT803.exe lights them: status bit 1,
+  // option bits 2 and 1 (dmm-tools 8513a0d, UT80x spec §7.4)
+  m_result.lowBat     = bit(data,6,1);
+  if (bit(data,7,2))
+    m_result.main().states |= SampleFlag::Max;
+  if (bit(data,7,1))
+    m_result.main().states |= SampleFlag::Min;
   m_result.range      = bit(data,8,1) ? "AUTO":"MANU";
   m_result.main().val = makeValue(data,1,4, bit(data,6,2));
   m_result.main().special="";
@@ -127,9 +136,18 @@ std::optional<DmmDecoder::DmmResponse> DecoderCyrusTekES51986::decode(const QByt
       }
       break;
     case 0xE:
+      // hFE, a gain without a unit: UT803.exe lights its hFE and β for
+      // code E (dmm-tools 9757373); the manual says it is not sent, a real
+      // UT803 sends it all the same (capture 09.11.2026)
       m_result.main().special = "HFE";
-      formatResultValue(4,"m","A");
-      break;
+      formatResultValue(0,"","");
+      // a whole number, "0011" as 11 (a real UT803 sends hFE, 09.11.2026)
+      m_result.main().val = QString::number(m_result.main().val.toInt());
+      if (ovl) {
+        m_result.main().val  = "OL";
+        m_result.main().dval = 0;
+      }
+      return m_result;
   }
 
   if (ovl) {

@@ -43,6 +43,9 @@ public:
   std::optional<DmmDecoder::DmmResponse> decode(const QByteArray &data, int id) override;
   QByteArray pollRequest() const override;
   QByteArray keyRequest(const QString &key) const override;
+  /// The keys of keyRequest(), but no PEAK on the UT61B+ and UT161B: their
+  /// manual gives them a plain MAX/MIN key (dmm-tools f2dea93).
+  bool hasKey(const QString &key, const QString &model) const override;
   /// The frame for command byte @p cmd: AB CD 03 cmd and the 16-bit BE sum.
   static QByteArray commandFrame(quint8 cmd);
   bool checkFormat(const char *data, size_t idx) override;

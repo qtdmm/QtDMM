@@ -311,12 +311,14 @@ std::optional<DmmDecoder::DmmResponse> DecoderZotek::decode(const QByteArray &da
   main.unit = prefix + unit;
 
   // words: OL, Auto (auto mode before a reading), EF and dashes (NCV);
-  // nothing lit at all (a function change) is no reading
+  // nothing lit at all (a function change) is no reading. OL only for the
+  // meter's 0L: any other L was one vendor app's fallback, nothing the
+  // meter is known to show (dmm-tools 4087be5); such text shows as it is
   QString bare = *text;
   bare.remove('.').remove(' ');
   if (bare.isEmpty())
     return std::nullopt;
-  if (bare.contains('L'))
+  if (bare == QLatin1String("0L"))
   {
     main.val = minus ? "-OL" : "OL";
     main.dval = 0;
@@ -338,6 +340,7 @@ std::optional<DmmDecoder::DmmResponse> DecoderZotek::decode(const QByteArray &da
     const double shown = number.toDouble(&ok);
     main.val = number;
     main.dval = ok ? shown * prefixFactor(prefix) : 0;
+    main.noValue = !ok;   // text no table knows, or Auto: no number
     if (bare == QLatin1String("Auto"))
     {
       main.special.clear();

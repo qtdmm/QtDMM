@@ -22,6 +22,7 @@
 
 ### Meters
 
+- **dmm-tools sync (09.11.)** — what dmm-tools learned since 06.11.: the UT803 shows low battery and MAX/MIN, and hFE without a unit (was mA); the UT8802 reads its flags from frame byte 6 (as every uci.dll build does) and OL only from the status bit; the UT8803's lowest inductance range is µH (was mH); ZOTEK meters show OL only for the meter's 0L, other text as it is; a UT181A NaN without an overload bit is no reading (`?`); a UT61+ on a mode the table lacks shows its digits instead of looking dead; no PEAK key on the UT61B+ and UT161B, whose manual has none.
 - **Damaged frames of meters without a checksum are no reading** — ES51922, ES51962, ES51986 and VC940: a function or range byte they do not know gave a valid 0, now the reading is a gap.
 - **ES51962: the 4000 V range** — it was missing, its readings showed as overload.
 - **ES51962: overload compared the wrong bytes** — digits from the first byte on, not the second.
