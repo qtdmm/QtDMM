@@ -346,7 +346,10 @@ int main(int argc, char **argv)
   // double click or Enter loads one, not a gone one
   {
     QTreeWidgetItem *node = sidebar.workspacesNode();
-    check(sidebar.indexOfTopLevelItem(node) == 0, "Workspaces on top, before My devices");
+    // on top after the open project's node, which hides without one
+    check(sidebar.indexOfTopLevelItem(node) == 1 && sidebar.indexOfTopLevelItem(sidebar.projectNode()) == 0
+            && sidebar.projectNode()->isHidden(),
+          "Workspaces on top after the project, before My devices");
     check(node->isHidden(), "hidden without workspaces");
     QFile file(QDir(dir.path()).filePath("Bench.qtdmm-workspace"));
     check(file.open(QIODevice::WriteOnly), "a workspace file");
@@ -378,6 +381,24 @@ int main(int argc, char **argv)
     sidebar.setCurrentItem(node->child(0));
     QTest::keyClick(&sidebar, Qt::Key_Return);
     check(loaded.size() == 2, "Enter loads");
+    // the open project: its benches, the one in use in bold, "+ New bench..."
+    QTreeWidgetItem *project = sidebar.projectNode();
+    sidebar.setProject("Ripple", { { file.fileName(), "Bench test", {} }, { gone, {}, {} } }, file.fileName());
+    check(!project->isHidden() && project->text(0).contains("Ripple") && project->childCount() == 3
+            && project->child(0)->font(0).bold() && !project->child(1)->font(0).bold(),
+          "the project's benches, the one in use bold, then New bench: " + project->text(0));
+    int newBench = 0;
+    QObject::connect(&sidebar, &DeviceSidebar::newBenchRequested, [&] { ++newBench; });
+    Q_EMIT sidebar.itemClicked(project->child(2), 0);
+    check(newBench == 1, "+ New bench... asks for a new bench");
+    const qsizetype before = loaded.size();
+    Q_EMIT sidebar.itemDoubleClicked(project->child(0), 0);
+    Q_EMIT sidebar.itemDoubleClicked(project->child(2), 0);
+    check(loaded.size() == before + 1 && loaded.last() == file.fileName(),
+          "a double click loads a bench of the project, not New bench");
+    loaded.removeLast();
+    sidebar.setProject(QString(), {}, QString());
+    check(project->isHidden() && project->childCount() == 0, "no project: no node");
     Q_EMIT sidebar.itemClicked(node->child(0), 0);
     check(loaded.size() == 2, "a single click does nothing");
     sidebar.setWorkspaces({});

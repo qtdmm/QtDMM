@@ -190,6 +190,16 @@ DeviceSidebar::DeviceSidebar(DeviceLibrary *library, QWidget *parent)
   // only the node takes entries: they cannot become children of each other
   invisibleRootItem()->setFlags(Qt::ItemIsEnabled);
   // folded at the start: one look away, not in the way of the devices
+  // the open project with its benches, at the top; hidden without one
+  m_project = new QTreeWidgetItem(this, { tr("Project") });
+  m_project->setFlags(Qt::ItemIsEnabled);
+  {
+    QFont boldFont = m_project->font(0);
+    boldFont.setBold(true);
+    m_project->setFont(0, boldFont);
+  }
+  m_project->setFirstColumnSpanned(true);
+  m_project->setHidden(true);
   m_workspaces = new QTreeWidgetItem(this, { tr("Recent benches") });
   m_workspaces->setFlags(Qt::ItemIsEnabled);
   QFont bold = m_workspaces->font(0);
@@ -226,6 +236,8 @@ DeviceSidebar::DeviceSidebar(DeviceLibrary *library, QWidget *parent)
       return;
     if (item == m_addItem)
       Q_EMIT addDeviceRequested();
+    else if (item == m_newBenchItem)
+      Q_EMIT newBenchRequested();
     else if (item->parent() == m_workspaces && column == kShown)
       Q_EMIT favoriteRequested(item->data(0, Qt::UserRole).toString(), !item->data(0, Qt::UserRole + 1).toBool());
     else if (column == kShown && !item->data(kShown, kMarks).isNull())
@@ -448,7 +460,7 @@ void DeviceSidebar::setServices(const QList<Service> &services)
 
 QString DeviceSidebar::workspaceOf(const QTreeWidgetItem *item) const
 {
-  if (!item || item->parent() != m_workspaces)
+  if (!item || (item->parent() != m_workspaces && item->parent() != m_project) || item == m_newBenchItem)
     return QString();
   const QString file = item->data(0, Qt::UserRole).toString();
   return QFileInfo::exists(file) ? file : QString();
@@ -481,6 +493,42 @@ void DeviceSidebar::setWorkspaces(const QList<Workspace> &workspaces)
     }
   }
   m_workspaces->setHidden(workspaces.isEmpty());
+  m_filling = false;
+}
+
+void DeviceSidebar::setProject(const QString &name, const QList<Workspace> &benches, const QString &current)
+{
+  m_filling = true;
+  qDeleteAll(m_project->takeChildren());
+  m_newBenchItem = nullptr;
+  m_project->setHidden(name.isEmpty());
+  if (name.isEmpty())
+  {
+    m_filling = false;
+    return;
+  }
+  m_project->setText(0, tr("Project: %1").arg(name));
+  m_project->setToolTip(0, tr("The benches of the open project: a double click loads one."));
+  for (const Workspace &ws : benches)
+  {
+    auto *item = new QTreeWidgetItem(m_project, { ws.name.isEmpty() ? QFileInfo(ws.file).completeBaseName() : ws.name });
+    item->setData(0, Qt::UserRole, ws.file);
+    item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+    item->setFirstColumnSpanned(true);
+    item->setToolTip(0, ws.tooltip.isEmpty() ? QDir::toNativeSeparators(ws.file) : ws.tooltip);
+    if (ws.file == current)
+    {
+      QFont f = item->font(0);
+      f.setBold(true);
+      item->setFont(0, f);
+    }
+  }
+  m_newBenchItem = new QTreeWidgetItem(m_project, { tr("+ New bench...") });
+  m_newBenchItem->setFlags(Qt::ItemIsEnabled);
+  m_newBenchItem->setFirstColumnSpanned(true);
+  m_newBenchItem->setForeground(0, palette().color(QPalette::Disabled, QPalette::WindowText));
+  m_newBenchItem->setToolTip(0, tr("Save the devices and windows as they are as a new bench of the project"));
+  m_project->setExpanded(true);
   m_filling = false;
 }
 

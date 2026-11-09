@@ -25,6 +25,11 @@ project...**, **Open project...**, the projects opened last
 The project stays open until you open or close another, also across
 restarts.
 
+While a project is open, the sidebar shows **Project: name** at the top
+with its benches (the one in use in bold; a double click loads one) and
+**+ New bench...**, which saves the devices and windows as they are as a
+new bench of the project.
+
 A bench belongs to the project in whose folder it lies, also in a
 subfolder of it. Loading a bench opens its project; a bench that lies in
 no project closes the open one. The status bar says so, nothing asks.

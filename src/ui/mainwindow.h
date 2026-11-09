@@ -425,7 +425,11 @@ protected:
   void        loadWorkspace();
   /// Loads the workspace @p file; false (with a message) when it is none.
   bool        loadWorkspaceFile(const QString &file);
-  void        saveWorkspace();
+  /// Saves the set-up as a bench; @p asNew: a new one (no name, not the
+  /// file in use), as "+ New bench..." of the project in the sidebar.
+  void        saveWorkspace(bool asNew = false);
+  /// The project's node in the sidebar: its benches, the one in use.
+  void        updateProjectSidebar();
   /// The recording as CSV and the graph as PNG, into the project basket.
   void        graphToBasket();
   /// The readings table as CSV, into the project basket.

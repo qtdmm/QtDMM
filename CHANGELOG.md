@@ -4,6 +4,7 @@
 
 ### GUI
 
+- **Sidebar: the project's benches** — while a project is open, "Project: name" at the top lists its benches (the one in use in bold, a double click loads one) and "+ New bench..." saves the set-up as a new bench of the project.
 - **Project button: the project's window** — a click shows or hides the project's window (pressed while it shows); without a project it makes a new one. The arrow stays: new, open, the last ones, close.
 - **Window title: project and bench** — "Ripple › Bench 1 – QtDMM" while a project and a bench are open, either alone without the other; with neither the device names as before.
 - **Loading a bench opens its project** — a bench belongs to the project in whose folder it lies (subfolders too); loading it opens that project, a bench outside every project closes the open one, the status bar says so. Before, the open project stayed and saving proposed its folder for a bench of another.
