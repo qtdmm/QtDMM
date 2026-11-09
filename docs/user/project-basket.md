@@ -64,23 +64,51 @@ is about; the window shows it under the name.
 ## Putting files in
 
 - Drop files onto the window, or choose **Add...** (the + at the top).
-  Files are copied, the originals stay where they are. Dropped onto a
-  folder of the project (or a file in it) they go into that folder.
+  Files are copied, the originals stay where they are. Each goes into the
+  folder of its kind (see below); dropped onto a folder of the project (or
+  a file in it) they go into that folder.
 - **Into the project** in the context menu of the graph writes the
-  recording as CSV and the graph as a picture; in the readings table it
-  writes the readings as CSV. The names begin with date and time and the
-  device, `2026-11-08 0714 UT61E recording.csv`.
+  recording as CSV into `recordings` and the graph as a picture under the
+  same name into `images`; in the readings table it writes the readings as
+  CSV into `recordings`. The names are date and time and the device,
+  `recordings/2026-11-08 0714 UT61E.csv`.
+- **Live in LabPlot** writes its CSV and LabPlot project into `analysis`.
 - **Export...** (Ctrl+E) can write any format into the project, see
   [Export and import](recorder.md#export-and-import).
 - **Save bench...** and **Load bench...** start in the project while one is
   open.
-- Every other save dialog starts in the project too while one is open: the
-  graph's *Export* and *Export image*, the readings table's export, the
-  Poincaré plot's picture, the export dialog's file, the application log,
-  printing into a PDF, and a bench loaded from somewhere else. The name
-  proposed stays; you can still choose another folder.
+- Every other save dialog starts in the project too while one is open, in
+  the folder of the file's kind: the graph's *Export* and the readings
+  table's export in `recordings`, *Export image* and the Poincaré plot's
+  picture in `images`, the application log and printing into a PDF in
+  `documents`, a bench loaded from somewhere else in `benches`. A bench of
+  the project is saved where it lies. The name proposed stays; you can still
+  choose another folder.
 
 A file is never overwritten: a second `ripple.csv` becomes `ripple (2).csv`.
+
+### Folders by kind
+
+The files of a project sort themselves into folders:
+
+| Folder | What goes in |
+|---|---|
+| `benches` | benches (`.qtdmm-workspace`) |
+| `recordings` | recordings (`.qtdmm-rec`), CSV from the graph and the table, any CSV |
+| `images` | pictures of the graph and the Poincaré plot, any picture |
+| `analysis` | LabPlot projects and their CSV |
+| `documents` | PDF, printouts, the log, any other file |
+
+A folder is made with the first file of its kind, a new project starts
+empty. On disk the folders are always named in English, so a project passed
+on works in any language; `project.json` keeps their names in each language,
+and the window shows them in yours (*Aufzeichnungen* in German). A folder
+you rename is a folder of your own from then on; the next file of its kind
+makes the English one again.
+
+**Settings → General → Files into folders by type** (on at first) switches
+this off: files then go into the project itself. Files already in a project
+are never moved, either way.
 
 ## Working with the files
 

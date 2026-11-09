@@ -376,6 +376,7 @@ void MainWindow::createViews()
   {
     const QString base = m_wid->settings()->getString("Basket/base-dir");
     m_basket->setBaseFolder(base.isEmpty() ? GeneralPrefs::defaultBasketBase() : base);
+    ProjectFolder::setByType(m_wid->settings()->getBool("Basket/by-type", true));
   };
   basketBase();
   connect(m_wid, &InstanceWidget::configChanged, this, basketBase);
@@ -3093,23 +3094,23 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
 
 // A workspace file (WorkspaceFile): the window's keys, the devices connected,
 // a name, a description and a picture.
-QString MainWindow::basketName(const QString &what, const QString &suffix) const
+QString MainWindow::basketName(ProjectFolder::Kind kind, const QString &suffix) const
 {
-  // "2026-11-08 0714 Sim A recording.csv": sorts by time, says what it is
+  // "recordings/2026-11-08 0714 Sim A.csv": sorts by time, the folder says what it is
   const QString device = m_session->lead() ? m_session->lead()->deviceName() : QString();
-  QString name = QDateTime::currentDateTime().toString("yyyy-MM-dd HHmm") + (device.isEmpty() ? "" : " " + device)
-                 + " " + what;
+  QString name = QDateTime::currentDateTime().toString("yyyy-MM-dd HHmm") + (device.isEmpty() ? "" : " " + device);
   name.replace(QRegularExpression(R"([/\\:*?"<>|])"), "_");
-  return BasketWidget::freeName(m_basket->folder(), name + "." + suffix);
+  return BasketWidget::freeName(ProjectFolder::dirFor(m_basket->folder(), kind), name + "." + suffix);
 }
 
 void MainWindow::graphToBasket()
 {
-  const QString csv = basketName(tr("recording"), "csv");
+  const QString csv = basketName(ProjectFolder::Recordings, "csv");
   if (!m_wid->writeRecordingTo(csv))
     return;
-  // the picture beside it, with the same name
-  const QString png = BasketWidget::freeName(m_basket->folder(), QFileInfo(csv).completeBaseName() + ".png");
+  // the picture under the same name, among the pictures
+  const QString png = BasketWidget::freeName(ProjectFolder::dirFor(m_basket->folder(), ProjectFolder::Images),
+                                             QFileInfo(csv).completeBaseName() + ".png");
   if (!m_wid->graph()->exportImageFile(png))
     Q_EMIT m_wid->error(tr("Project: cannot write %1").arg(QDir::toNativeSeparators(png)));
   else
@@ -3123,9 +3124,9 @@ void MainWindow::exportDialog(int view)
     return;
   QString path = dlg.file();
   if (dlg.toBasket())
-    path = basketName(dlg.what() == ExportDlg::Table     ? tr("readings")
-                      : dlg.what() == ExportDlg::Picture ? tr("graph")
-                                                         : tr("recording"), dlg.format());
+    path = basketName(dlg.what() == ExportDlg::Picture ? ProjectFolder::Images
+                      : dlg.format() == QLatin1String(RecordingFile::kLabPlotProjectSuffix) ? ProjectFolder::Analysis
+                                                        : ProjectFolder::Recordings, dlg.format());
   bool ok = false;
   QString error;
   switch (dlg.what())
@@ -3166,15 +3167,18 @@ void MainWindow::labPlotLive()
     Q_EMIT m_wid->error(tr("Live in LabPlot: start a recording first"));
     return;
   }
-  QString dir = m_basket->folder();
-  if (dir.isEmpty())
+  QString dir = ProjectFolder::dirFor(m_basket->folder(), ProjectFolder::Analysis);
+  const bool inProject = !dir.isEmpty();
+  if (!inProject)
   {
     dir = QDir(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).filePath("QtDMM");
     QDir().mkpath(dir);
   }
-  // "2026-11-09 1030 Sim A live.csv" and ".lml" beside it, both new
-  QString name = QDateTime::currentDateTime().toString("yyyy-MM-dd HHmm") + " " + lead->deviceName() + " "
-                 + tr("live");
+  // "analysis/2026-11-09 1030 Sim A.csv" and ".lml" beside it, both new;
+  // outside a project "... Sim A live.csv"
+  QString name = QDateTime::currentDateTime().toString("yyyy-MM-dd HHmm") + " " + lead->deviceName();
+  if (!inProject)
+    name += " " + tr("live");
   name.replace(QRegularExpression(R"([/\\:*?"<>|])"), "_");
   QString base = name;
   auto taken = [&dir](const QString &b)
@@ -3206,7 +3210,7 @@ void MainWindow::labPlotLive()
 
 void MainWindow::tableToBasket()
 {
-  const QString csv = basketName(tr("readings"), "csv");
+  const QString csv = basketName(ProjectFolder::Recordings, "csv");
   QString error;
   if (!m_readings->log()->write(csv, &error))
     Q_EMIT m_wid->error(tr("Project: cannot write %1: %2").arg(QDir::toNativeSeparators(csv), error));
@@ -3236,8 +3240,13 @@ void MainWindow::saveWorkspace(bool asNew)
   const QString proposal = !currentFile.isEmpty() && (dlg.name() == currentName || base.isEmpty())
                              ? currentFile
                              : QDir(dir).filePath((base.isEmpty() ? QString("untitled") : base) + "." + kWorkspaceSuffix);
-  // a bench loaded from elsewhere: into the open basket all the same
-  QString file = QFileDialog::getSaveFileName(this, tr("Save bench"), ProjectFolder::proposal(proposal),
+  // a bench of the project stays where it is; one loaded from elsewhere goes
+  // into the project all the same, among its benches
+  const QString project = m_basket->folder();
+  const bool ofProject = proposal == currentFile && !project.isEmpty()
+                         && BasketWidget::projectOf(currentFile, project) == project;
+  const ProjectFolder::Proposal where(proposal, ofProject ? ProjectFolder::Root : ProjectFolder::Benches);
+  QString file = QFileDialog::getSaveFileName(this, tr("Save bench"), ofProject ? currentFile : where.path(),
                                               tr("QtDMM bench (*.%1)").arg(kWorkspaceSuffix));
   if (file.isEmpty())
     return;
@@ -3275,10 +3284,12 @@ void MainWindow::saveWorkspace(bool asNew)
 void MainWindow::loadWorkspace()
 {
   Settings *cfg = m_wid->settings();
-  const QString dir = !m_basket->folder().isEmpty()
-                        ? m_basket->folder()
-                        : cfg->getString("Windows/workspace-dir",
-                                         QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
+  // the project's benches, the project, else where the last one came from
+  const QString benches = QDir(m_basket->folder()).filePath(ProjectFolder::folderName(ProjectFolder::Benches));
+  const QString dir = m_basket->folder().isEmpty() ? cfg->getString("Windows/workspace-dir",
+                                                                    QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation))
+                      : QFileInfo(benches).isDir() ? benches
+                                                   : m_basket->folder();
   const QString file = QFileDialog::getOpenFileName(this, tr("Load bench"), dir,
                                                     tr("QtDMM bench (*.%1)").arg(kWorkspaceSuffix));
   if (!file.isEmpty())

@@ -256,8 +256,8 @@ void LogDlg::search(bool forward)
 void LogDlg::exportLog()
 {
   const QString dir = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
-  const QString proposal = ProjectFolder::proposal(QDir(dir).filePath(fileName(QDate::currentDate())));
-  const QString file = QFileDialog::getSaveFileName(this, tr("Export log"), proposal,
+  const ProjectFolder::Proposal where(QDir(dir).filePath(fileName(QDate::currentDate())), ProjectFolder::Documents);
+  const QString file = QFileDialog::getSaveFileName(this, tr("Export log"), where.path(),
                                                     tr("Log files (*.log)"));
   if (file.isEmpty())
     return;

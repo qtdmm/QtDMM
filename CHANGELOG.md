@@ -4,6 +4,7 @@
 
 ### GUI
 
+- **Project: folders by kind** — files sort themselves into `benches`, `recordings`, `images`, `analysis` and `documents`, each made with its first file; names on disk always English, `project.json` keeps them in each language and the window shows yours. *Into the project* drops the type word (`recordings/2026-11-08 0714 UT61E.csv`, the picture in `images`), save dialogs start in the folder of the kind, added and dropped files go into theirs. *Settings → General → Files into folders by type* (on) switches it off; nothing already there is moved.
 - **Folders in the project** — the project's list opens its folders in place; *New folder* in its context menu makes one where you clicked (and names it at once), files dropped onto a folder go into it, and dragging inside the list moves files and folders into another folder.
 - **Project and bench without a device** — while My devices is empty, the project button with its arrow, Load/Save bench, Recent benches, *Put the bench into a new project...* and the project and benches in the sidebar are off: neither makes sense without a device.
 - **Project window beside the start page** — with devices but none connected, the start page covered the project's window (the button looked pressed, nothing showed, even right after *New project*); the window now stands at the right beside it.
