@@ -390,6 +390,9 @@ void MainWindow::createViews()
     // without a basket everything is as before
     for (QAction *a : { m_graphToBasket, m_tableToBasket })
       a->setVisible(!folder.isEmpty());
+    // a closed project leaves nothing to show in its window
+    if (folder.isEmpty() && m_basketAction)
+      m_basketAction->setChecked(false);
   });
   connect(m_basket, &BasketWidget::error, m_wid, &InstanceWidget::error);
   connect(m_basket, &BasketWidget::openRequested, this, [this](const QString &path)
