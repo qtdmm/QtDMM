@@ -223,7 +223,7 @@ protected:
   void        applyPoincareColors(PoincarePlot *plot);
   /// @}
   ReadingsWidget *m_readings;
-  BasketWidget *m_basket;
+  BasketWidget *m_basket = nullptr;
   PoincarePlot *m_poincare;
   AlarmBar   *m_alarmBar;
   class AlarmService *m_alarmService;
@@ -242,7 +242,8 @@ protected:
   QAction    *m_basketAction = nullptr;
   QAction    *m_graphToBasket = nullptr;   ///< the recording and the graph into the project basket
   QAction    *m_labPlotLive = nullptr;     ///< Live in LabPlot, while it records
-  QAction    *m_projectAction = nullptr;   ///< the toolbar's project button: open, the arrow new and the last ones
+  QAction    *m_projectAction = nullptr;   ///< the toolbar's project button: its window or a new one, the arrow the rest
+  QAction    *m_benchIntoProject = nullptr;   ///< "Put the bench into a new project..."
   QPointer<LabPlotLive> m_live;            ///< the recording live in LabPlot, while it goes on
   QAction    *m_tableToBasket = nullptr;   ///< the readings into the project basket
   QAction    *m_graphExport = nullptr;     ///< the export dialog, from the graph (Ctrl+E)
@@ -425,7 +426,14 @@ protected:
   void        loadWorkspace();
   /// Loads the workspace @p file; false (with a message) when it is none.
   bool        loadWorkspaceFile(const QString &file);
-  void        saveWorkspace();
+  /// Saves the set-up as a bench; @p asNew: a new one (no name, not the
+  /// file in use), as "+ New bench..." of the project in the sidebar.
+  void        saveWorkspace(bool asNew = false);
+  /// The project's node in the sidebar: its benches, the one in use.
+  void        updateProjectSidebar();
+  /// The way from no project to one: a new project, opened, and the bench
+  /// in use saved into it (Save bench, proposed in the project's folder).
+  void        benchIntoNewProject();
   /// The recording as CSV and the graph as PNG, into the project basket.
   void        graphToBasket();
   /// The readings table as CSV, into the project basket.

@@ -4,6 +4,12 @@
 
 ### GUI
 
+- **Put the bench into a new project...** — in Arrange, at Recent benches and at the project button's arrow: makes a new project, opens it and saves the bench into it, the way from a single bench to a project.
+- **Sidebar: the project's benches** — while a project is open, "Project: name" at the top lists its benches (the one in use in bold, a double click loads one) and "+ New bench..." saves the set-up as a new bench of the project.
+- **Project button: the project's window** — a click shows or hides the project's window (pressed while it shows); without a project it makes a new one. The arrow stays: new, open, the last ones, close.
+- **Window title: project and bench** — "Ripple › Bench 1 – QtDMM" while a project and a bench are open, either alone without the other; with neither the device names as before.
+- **Loading a bench opens its project** — a bench belongs to the project in whose folder it lies (subfolders too); loading it opens that project, a bench outside every project closes the open one, the status bar says so. Before, the open project stayed and saving proposed its folder for a bench of another.
+- **Project and bench: two words** — the project basket is called project now (German: Projekt instead of Projektmappe), in menus, dialogs, messages and the help; a bench stays a bench (Messplatz).
 - **Project button in the toolbar** — the second button opens a project basket; its arrow makes a new one, has the ten opened last (the open one ticked) and closes the open one.
 - **A bench's meter not plugged in waits for it** — at the start and when a bench is loaded, a meter that does not connect gets its front panel as saved, showing *No connection*, and connects once it is there (tried every 5 s); before, QtDMM left it out and showed *Add device* when it was the only one.
 - **Live in LabPlot** — while it records, *Live in LabPlot* in the graph's context menu starts LabPlot with a project whose live data source follows a CSV QtDMM writes row by row: LabPlot's plots (one per unit) grow with the recording. The CSV and the project go into the project basket or *Documents/QtDMM*.

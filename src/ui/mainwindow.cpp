@@ -84,6 +84,7 @@ static const char *kWorkspaceSuffix = "qtdmm-workspace";
 #include "ui/dialogs/workspacedlg.h"
 #include <QBuffer>
 #include <QMdiArea>
+#include <QDirIterator>
 #include <QRegularExpression>
 #include <QStandardPaths>
 #include <QMdiSubWindow>
@@ -384,6 +385,8 @@ void MainWindow::createViews()
     m_wid->settings()->save();   // set only stages it: the next start reads the file
     if (!folder.isEmpty())
       recentProjects().add(folder);
+    updateWindowTitle();
+    updateProjectSidebar();
     // without a basket everything is as before
     for (QAction *a : { m_graphToBasket, m_tableToBasket })
       a->setVisible(!folder.isEmpty());
@@ -469,10 +472,10 @@ void MainWindow::createViews()
     const MeterController *ctl = m_session->controllers().value(0);
     newView(Added::Poincare, ctl ? ValueRef(0, ctl->source()) : ValueRef(), true);
   });
-  m_basketAction = windowAction(m_basketWin, tr("Project b&asket"), "Ctrl+6", "document-open",
-    tr("<html><head/><body><p><span style=\" font-weight:600;\">Project basket</span></p>"
-       "<p>The files of the bench: recordings, pictures, PDFs, LabPlot projects. A folder next to "
-       "the bench file; drop files in to copy them there.</p></body></html>"));
+  m_basketAction = windowAction(m_basketWin, tr("Pro&ject"), "Ctrl+6", "document-open",
+    tr("<html><head/><body><p><span style=\" font-weight:600;\">Project</span></p>"
+       "<p>The files of a project: its benches, recordings, pictures, PDFs, LabPlot projects. "
+       "A folder; drop files in to copy them there.</p></body></html>"));
   if (m_basketAction->icon().isNull())
     m_basketAction->setIcon(style()->standardIcon(QStyle::SP_DirIcon));
   m_poincareAction = windowAction(m_poincareWin, tr("Poi&ncaré plot"), "Ctrl+5", "qtdmm-poincare",
@@ -504,11 +507,11 @@ void MainWindow::createViews()
   connect(m_session, &DeviceSession::opened, this, sourcesShown);
   connect(m_session, &DeviceSession::closed, this, sourcesShown);
   // what the view shows, as files into the open project basket
-  m_graphToBasket = new QAction(tr("Into the pro&ject basket"), this);
-  m_graphToBasket->setToolTip(tr("The recording as CSV and the graph as a picture, into the project basket"));
+  m_graphToBasket = new QAction(tr("Into the pro&ject"), this);
+  m_graphToBasket->setToolTip(tr("The recording as CSV and the graph as a picture, into the project"));
   connect(m_graphToBasket, &QAction::triggered, this, &MainWindow::graphToBasket);
-  m_tableToBasket = new QAction(tr("Into the pro&ject basket"), this);
-  m_tableToBasket->setToolTip(tr("The readings as CSV, into the project basket"));
+  m_tableToBasket = new QAction(tr("Into the pro&ject"), this);
+  m_tableToBasket->setToolTip(tr("The readings as CSV, into the project"));
   connect(m_tableToBasket, &QAction::triggered, this, &MainWindow::tableToBasket);
   for (QAction *a : { m_graphToBasket, m_tableToBasket })
     a->setVisible(!m_basket->folder().isEmpty());
@@ -918,6 +921,7 @@ void MainWindow::createSidebar()
   connect(m_sidebar, &DeviceSidebar::addDeviceRequested, this, &MainWindow::addDevice);
   connect(m_sidebar, &DeviceSidebar::serviceSettingsRequested, m_wid, &InstanceWidget::configScpiSLOT);
   connect(m_sidebar, &DeviceSidebar::workspaceRequested, this, &MainWindow::loadWorkspaceFile);
+  connect(m_sidebar, &DeviceSidebar::newBenchRequested, this, [this] { saveWorkspace(true); });
   connect(m_sidebar, &DeviceSidebar::removeWorkspaceRequested, this, [this](const QString &file)
   {
     recentWorkspaces().remove(file);
@@ -949,18 +953,36 @@ void MainWindow::fillViewToolbar()
   connect(m_addDeviceAction, &QAction::triggered, this, &MainWindow::addDevice);
   toolBarDMM->insertAction(m_sidebarAction, m_addDeviceAction);
 
-  // the project basket, second: a click opens one, the arrow makes one,
-  // takes one of the last ones or closes the open one
+  // the project, second: the arrow makes one, opens one, takes one of the
+  // last ones or closes the open one
   m_projectAction = new QAction(QIcon::fromTheme("document-open", style()->standardIcon(QStyle::SP_DirOpenIcon)),
-                                tr("Open project basket"), this);
+                                tr("Project"), this);
   m_projectAction->setObjectName("action_ProjectBasket");
-  m_projectAction->setToolTip(tr("Open a project basket; the arrow: a new one, the last ones"));
-  connect(m_projectAction, &QAction::triggered, m_basket->openAction(), &QAction::trigger);
+  m_projectAction->setToolTip(tr("Show or hide the project's window; without a project: a new one. "
+                                 "The arrow: new, open, the last ones"));
+  // [E 09.11.] with a project its window, without one a new project (whose
+  // window then shows); pressed while the window shows
+  m_projectAction->setCheckable(true);
+  connect(m_projectAction, &QAction::triggered, this, [this]
+  {
+    if (m_basket->folder().isEmpty())
+    {
+      m_basket->newAction()->trigger();
+      if (!m_basket->folder().isEmpty())
+        m_basketAction->setChecked(true);
+    }
+    else
+      m_basketAction->toggle();
+    m_projectAction->setChecked(m_basketAction->isChecked());
+  });
+  connect(m_basketAction, &QAction::toggled, m_projectAction, &QAction::setChecked);
+  m_projectAction->setChecked(m_basketAction->isChecked());
   toolBarDMM->insertAction(m_sidebarAction, m_projectAction);
   addViewMenu(m_projectAction, [this](QMenu *menu)
   {
     menu->addAction(m_basket->newAction());
     menu->addAction(m_basket->openAction());
+    menu->addAction(m_benchIntoProject);
     const QStringList dirs = recentProjects().list().mid(0, 10);
     if (!dirs.isEmpty())
       menu->addSeparator();
@@ -1179,9 +1201,16 @@ QList<QAction *> MainWindow::createArrangeMenu()
                           "the windows: the devices connected (a copy of their entries in My devices), which "
                           "windows are shown with which values, the arrangement, "
                           "title bars, toolbar, design and the size of the main window.</p></body></html>"));
-  connect(saveWs, &QAction::triggered, this, &MainWindow::saveWorkspace);
+  connect(saveWs, &QAction::triggered, this, [this] { saveWorkspace(); });
+  m_benchIntoProject = m_arrangeMenu->addAction(tr("Put the bench into a &new project..."));
+  m_benchIntoProject->setObjectName("action_BenchIntoProject");
+  m_benchIntoProject->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">Put the bench into a "
+                                      "new project</span></p><p>Makes a new project, opens it and saves the bench "
+                                      "into its folder: the way from a single bench to a project of several."
+                                      "</p></body></html>"));
+  connect(m_benchIntoProject, &QAction::triggered, this, &MainWindow::benchIntoNewProject);
   // the same at the sidebar's Recent benches
-  m_sidebar->setWorkspaceActions({ loadWs, saveWs });
+  m_sidebar->setWorkspaceActions({ loadWs, saveWs, m_benchIntoProject });
   m_autoSaveLayout = m_arrangeMenu->addAction(tr("Save layout on e&xit"));
   m_autoSaveLayout->setCheckable(true);
   m_autoSaveLayout->setChecked(true);
@@ -1395,12 +1424,28 @@ QMap<QString, QString> MainWindow::placesInUse() const
   return inUse;
 }
 
-// "QtDMM: UT61E, Victron", with the --config-id when one is given
+// "Ripple › Bench 1 – QtDMM": the project and the bench in use, either
+// alone when the other is not; without both the devices, "QtDMM: UT61E,
+// Victron". With the --config-id when one is given
 void MainWindow::updateWindowTitle()
 {
   QString title = APP_NAME;
   if (!m_configId.isEmpty())
     title += QString(" [%1]").arg(m_configId);
+  QStringList where;
+  if (const QString project = m_basket ? m_basket->folder() : QString(); !project.isEmpty())
+  {
+    const QString name = BasketWidget::readProject(project).value("name").toString();
+    where << (name.isEmpty() ? QFileInfo(project).fileName() : name);
+  }
+  // a bench without a name of its own by its file, as the sidebar has it
+  if (!m_workspaceName.isEmpty() || !m_workspaceFile.isEmpty())
+    where << (m_workspaceName.isEmpty() ? QFileInfo(m_workspaceFile).completeBaseName() : m_workspaceName);
+  if (!where.isEmpty())
+  {
+    setWindowTitle(where.join(QStringLiteral(" \u203A ")) + QStringLiteral(" \u2013 ") + title);
+    return;
+  }
   QStringList names;
   for (const MeterController *ctl : m_session->controllers())
     names << ctl->deviceName();
@@ -3016,9 +3061,9 @@ void MainWindow::graphToBasket()
   // the picture beside it, with the same name
   const QString png = BasketWidget::freeName(m_basket->folder(), QFileInfo(csv).completeBaseName() + ".png");
   if (!m_wid->graph()->exportImageFile(png))
-    Q_EMIT m_wid->error(tr("Project basket: cannot write %1").arg(QDir::toNativeSeparators(png)));
+    Q_EMIT m_wid->error(tr("Project: cannot write %1").arg(QDir::toNativeSeparators(png)));
   else
-    Q_EMIT m_wid->error(tr("Into the project basket: %1").arg(QFileInfo(csv).completeBaseName()));
+    Q_EMIT m_wid->error(tr("Into the project: %1").arg(QFileInfo(csv).completeBaseName()));
 }
 
 void MainWindow::exportDialog(int view)
@@ -3114,17 +3159,20 @@ void MainWindow::tableToBasket()
   const QString csv = basketName(tr("readings"), "csv");
   QString error;
   if (!m_readings->log()->write(csv, &error))
-    Q_EMIT m_wid->error(tr("Project basket: cannot write %1: %2").arg(QDir::toNativeSeparators(csv), error));
+    Q_EMIT m_wid->error(tr("Project: cannot write %1: %2").arg(QDir::toNativeSeparators(csv), error));
   else
-    Q_EMIT m_wid->error(tr("Into the project basket: %1").arg(QFileInfo(csv).fileName()));
+    Q_EMIT m_wid->error(tr("Into the project: %1").arg(QFileInfo(csv).fileName()));
 }
 
-void MainWindow::saveWorkspace()
+void MainWindow::saveWorkspace(bool asNew)
 {
   Settings *cfg = m_wid->settings();
   // the picture: the windows as they stand
   const QPixmap shot = m_mdi->grab().scaledToWidth(480, Qt::SmoothTransformation);
-  WorkspaceDlg dlg(m_workspaceName, m_workspaceDescription, shot, this);
+  // a new one starts without the name and file of the one in use
+  const QString currentName = asNew ? QString() : m_workspaceName;
+  const QString currentFile = asNew ? QString() : m_workspaceFile;
+  WorkspaceDlg dlg(currentName, asNew ? QString() : m_workspaceDescription, shot, this);
   if (dlg.exec() != QDialog::Accepted)
     return;
   // a project basket open: the bench goes into it
@@ -3135,8 +3183,8 @@ void MainWindow::saveWorkspace()
   // the file of the workspace in use, else one named after it
   QString base = dlg.name();
   base.replace(QRegularExpression(R"([/\\:*?"<>|])"), "_");
-  const QString proposal = !m_workspaceFile.isEmpty() && (dlg.name() == m_workspaceName || base.isEmpty())
-                             ? m_workspaceFile
+  const QString proposal = !currentFile.isEmpty() && (dlg.name() == currentName || base.isEmpty())
+                             ? currentFile
                              : QDir(dir).filePath((base.isEmpty() ? QString("untitled") : base) + "." + kWorkspaceSuffix);
   // a bench loaded from elsewhere: into the open basket all the same
   QString file = QFileDialog::getSaveFileName(this, tr("Save bench"), ProjectFolder::proposal(proposal),
@@ -3264,6 +3312,18 @@ bool MainWindow::loadWorkspaceFile(const QString &file)
   setCurrentWorkspace(file);
   updateRecentWorkspaces();
   QString text = tr("Bench loaded from %1").arg(QDir::toNativeSeparators(file));
+  // the bench belongs to the project in whose folder it lies: loading it
+  // opens that one, or closes the open one when it lies outside; no
+  // question, the status bar says so
+  const QString before = m_basket->folder();
+  const QString project = BasketWidget::projectOf(file, before);
+  if (project != before)
+  {
+    m_basket->setFolder(project);
+    text += "; "
+            + (project.isEmpty() ? tr("project %1 closed: the bench is not in it").arg(QFileInfo(before).fileName())
+                                 : tr("project %1 opened: the bench is in it").arg(QFileInfo(project).fileName()));
+  }
   if (!restored.isEmpty())
     text += "; " + tr("back in My devices: %1").arg(restored.join(", "));
   if (programsLeft)
@@ -3282,6 +3342,47 @@ void MainWindow::setCurrentWorkspace(const QString &file)
   m_workspaceDescription = ws ? ws->description : QString();
   m_wid->settings()->setString("Windows/workspace-current", m_workspaceFile);
   m_sidebar->setCurrentWorkspace(m_workspaceName, ws ? workspaceTooltip(file, *ws) : QString());
+  updateWindowTitle();
+  updateProjectSidebar();
+}
+
+void MainWindow::benchIntoNewProject()
+{
+  const QString before = m_basket->folder();
+  m_basket->newAction()->trigger();
+  const QString project = m_basket->folder();
+  if (project.isEmpty() || project == before)
+    return;   // no new project made
+  m_basketAction->setChecked(true);
+  // the bench into it: its name and file proposed, now in the project's folder
+  saveWorkspace();
+}
+
+void MainWindow::updateProjectSidebar()
+{
+  const QString project = m_basket ? m_basket->folder() : QString();
+  if (project.isEmpty() || !QFileInfo(project).isDir())
+  {
+    m_sidebar->setProject(QString(), {}, QString());
+    return;
+  }
+  // its benches: the bench files in its folder and the folders under it
+  QList<DeviceSidebar::Workspace> benches;
+  QDirIterator it(project, { QString("*.") + kWorkspaceSuffix }, QDir::Files, QDirIterator::Subdirectories);
+  while (it.hasNext())
+  {
+    const QString file = it.next();
+    const std::optional<WorkspaceFile> ws = WorkspaceFile::read(file);
+    benches.append({ file, ws ? ws->name : QString(), ws ? workspaceTooltip(file, *ws) : QString(), false });
+  }
+  std::sort(benches.begin(), benches.end(), [](const DeviceSidebar::Workspace &a, const DeviceSidebar::Workspace &b)
+  {
+    const QString na = a.name.isEmpty() ? QFileInfo(a.file).completeBaseName() : a.name;
+    const QString nb = b.name.isEmpty() ? QFileInfo(b.file).completeBaseName() : b.name;
+    return na.localeAwareCompare(nb) < 0;
+  });
+  const QString name = BasketWidget::readProject(project).value("name").toString();
+  m_sidebar->setProject(name.isEmpty() ? QFileInfo(project).fileName() : name, benches, m_workspaceFile);
 }
 
 QString MainWindow::workspaceTooltip(const QString &file, const WorkspaceFile &ws)

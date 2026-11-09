@@ -176,6 +176,25 @@ int main(int argc, char **argv)
   check(!BasketWidget::importProject(dir.filePath("nozip.zip"), dir.filePath("base"), &folder, &why) && !why.isEmpty(),
         "no ZIP: an error");
 
+  // a bench belongs to the project in whose folder it lies, subfolders too;
+  // the open one counts without a project.json (made before 08.11.)
+  {
+    QDir().mkpath(dir.filePath("P/sub/deeper"));
+    BasketWidget::writeProjectFile(dir.filePath("P"));
+    QDir().mkpath(dir.filePath("Old/benches"));
+    QDir().mkpath(dir.filePath("Elsewhere"));
+    const QString proj = QDir(dir.filePath("P")).absolutePath();
+    check(BasketWidget::projectOf(dir.filePath("P/a.qtdmm-ws")) == proj, "in the project folder");
+    check(BasketWidget::projectOf(dir.filePath("P/sub/deeper/b.qtdmm-ws")) == proj, "in a subfolder of it");
+    check(BasketWidget::projectOf(dir.filePath("Elsewhere/c.qtdmm-ws")).isEmpty()
+            || !BasketWidget::projectOf(dir.filePath("Elsewhere/c.qtdmm-ws")).startsWith(dir.path() + "/Elsewhere"),
+          "outside: not a project of its own");
+    const QString old = QDir(dir.filePath("Old")).absolutePath();
+    check(BasketWidget::projectOf(dir.filePath("Old/benches/d.qtdmm-ws"), old) == old,
+          "the open project without project.json");
+    check(BasketWidget::projectOf(dir.filePath("Old/benches/d.qtdmm-ws")) != old, "not open, no project.json: none");
+  }
+
   if (failed == 0)
     qInfo() << "All basket tests passed.";
   else

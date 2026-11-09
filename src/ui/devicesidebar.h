@@ -131,6 +131,12 @@ public:
   void        setCurrentWorkspace(const QString &name, const QString &tooltip = QString());
   /// The node "Workspaces".
   QTreeWidgetItem *workspacesNode() const { return m_workspaces; }
+  /// The open project: the node "Project: @p name" at the top with its
+  /// benches (@p benches: file and name, @p current the one in use in
+  /// bold) and "+ New bench..."; @p name empty: no project, no node.
+  void        setProject(const QString &name, const QList<Workspace> &benches, const QString &current);
+  /// The node of the project.
+  QTreeWidgetItem *projectNode() const { return m_project; }
   /// The context menu of the node: load and save a bench, as in Arrange.
   void        setWorkspaceActions(const QList<QAction *> &actions) { m_workspaceActions = actions; }
 
@@ -169,6 +175,8 @@ Q_SIGNALS:
   void        valueMenuRequested(const ValueRef &value, const QPoint &globalPos);
   /// Load the workspace file @p path.
   void        workspaceRequested(const QString &path);
+  /// "+ New bench..." of the project: save the set-up as a new bench in it.
+  void        newBenchRequested();
   /// Take @p path off the list of workspaces used last.
   void        removeWorkspaceRequested(const QString &path);
   /// Make @p path a favourite (@p on) or no more: its star, its menu.
@@ -204,6 +212,8 @@ private:
   QString     workspaceOf(const QTreeWidgetItem *item) const;
 
   DeviceLibrary   *m_library = nullptr;
+  QTreeWidgetItem *m_project = nullptr;
+  QTreeWidgetItem *m_newBenchItem = nullptr;
   QTreeWidgetItem *m_workspaces = nullptr;
   QTreeWidgetItem *m_devices = nullptr;
   QTreeWidgetItem *m_open = nullptr;

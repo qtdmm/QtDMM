@@ -58,9 +58,9 @@ ExportDlg::ExportDlg(What what, const QString &basket, Settings *cfg, QWidget *p
   m_format = new QComboBox(this);
   form->addRow(tr("&Format:"), m_format);
 
-  m_toBasket = new QRadioButton(tr("Into the project &basket"), this);
+  m_toBasket = new QRadioButton(tr("Into the &project"), this);
   m_toBasket->setEnabled(!basket.isEmpty());
-  m_toBasket->setToolTip(basket.isEmpty() ? tr("No project basket is open") : QDir::toNativeSeparators(basket));
+  m_toBasket->setToolTip(basket.isEmpty() ? tr("No project is open") : QDir::toNativeSeparators(basket));
   m_toFile = new QRadioButton(tr("To a f&ile:"), this);
   m_file = new QLineEdit(this);
   m_file->setMinimumWidth(fontMetrics().horizontalAdvance('x') * 40);
