@@ -52,7 +52,9 @@ bool LabPlotLive::start(const QString &csvPath, const QString &projectPath, QStr
     return false;
   }
   m_file.setFileName(csvPath);
-  if (!m_file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)
+  // without Text: '\n' on every system, as the rows write it, so the file
+  // grows by whole lines alike on Windows (LabPlot reads either)
+  if (!m_file.open(QIODevice::WriteOnly | QIODevice::Truncate)
       || m_file.write(("#" + names.join(';') + "\n").toUtf8()) < 0)
   {
     m_file.close();
