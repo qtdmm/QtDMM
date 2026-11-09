@@ -46,7 +46,8 @@ QString proposal(const QString &proposal);
 
 /// A save dialog's proposal in the folder of its kind: the folder is made for
 /// the dialog and removed again when it stays empty (cancelled, or the file
-/// went elsewhere). Keep it until the file is written.
+/// went elsewhere). project.json names a folder made so only once a file is
+/// in it (keep(), or when it goes). Keep it until the file is written.
 class Proposal
 {
 public:
@@ -56,11 +57,14 @@ public:
   Proposal &operator=(const Proposal &) = delete;
   /// The path to propose.
   QString path() const { return m_path; }
-  /// The file chosen in the dialog, written later: its folder stays.
+  /// The file chosen in the dialog, written later: its folder stays and is
+  /// named in project.json.
   void    keep(const QString &chosen);
 
 private:
   QString m_path;
-  QString m_made;   ///< the folder made for the dialog, empty: none
+  Kind    m_kind;
+  QString m_project;  ///< the project of m_made
+  QString m_made;     ///< the folder made for the dialog, empty: none
 };
 }
