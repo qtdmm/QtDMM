@@ -59,7 +59,9 @@ panels take the LCD colours of the settings, one can have its own (see
 *PASS/FAIL test*, *Limits...* and *Alarms...* are in the context menu of
 its front panel and of its row. The window layout remembers the meters
 connected and connects them again at the next start; a bench file does
-the same when it is loaded. **Services** shows what this window offers to other
+the same when it is loaded. A meter that is not plugged in or switched on
+then gets its front panel all the same, showing *No connection*, and
+connects as soon as it is there (QtDMM tries every 5 seconds). **Services** shows what this window offers to other
 programs: the [SCPI server and HiSLIP](scpi-server.md) with their port, or
 *off*.
 

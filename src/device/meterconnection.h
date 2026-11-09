@@ -67,8 +67,11 @@ public:
   /// Transport::availablePorts() or a host:port for RFC2217.
   void    setDevice(const QString &);
   /// Creates, opens and configures the port and starts reading. On failure
-  /// error() carries the reason and false is returned.
-  bool    open();
+  /// error() carries the reason and false is returned; with
+  /// @p waitForDevice it stays wanted and tries again every
+  /// setReconnectInterval() seconds, as after a lost connection (a meter
+  /// of a workspace, not plugged in yet).
+  bool    open(bool waitForDevice = false);
   /// Stops reading and closes the port; emits error("Not connected").
   void    close();
   /// Presses the meter's key @p key once (DmmDecoder::keyRequest()). False
