@@ -196,7 +196,6 @@ InstanceWidget::InstanceWidget(QString instanceId, QString configPath, DeviceSes
   });
   connect(ui_graph, &GraphWidget::configure, this, [this] { openConfig(SettingsDialog::Graph); });
   connect(ui_graph, &GraphWidget::clearRequested, this, &InstanceWidget::clearSLOT);
-  connect(ui_graph, &GraphWidget::exportData, this, &InstanceWidget::exportSLOT);
   connect(ui_graph, &GraphWidget::importData, this, &InstanceWidget::importSLOT);
 
   connect(ui_graph, &GraphWidget::zoomOut, m_configDlg, &SettingsDialog::zoomOutSLOT);
@@ -517,11 +516,6 @@ void InstanceWidget::applyScpi()
 void InstanceWidget::zoomedSLOT()
 {
   ui_graph->setGraphSize(m_configDlg->graphPage()->windowSeconds());
-}
-
-void InstanceWidget::exportSLOT()
-{
-  exportRecording();
 }
 
 QPointer<MeterController> InstanceWidget::recordingLead() const

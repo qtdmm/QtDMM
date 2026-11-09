@@ -240,7 +240,7 @@ protected:
   QAction    *m_basketAction = nullptr;
   QAction    *m_graphToBasket = nullptr;   ///< the recording and the graph into the project basket
   QAction    *m_tableToBasket = nullptr;   ///< the readings into the project basket
-  QAction    *m_graphExport = nullptr;     ///< the export dialog, from the graph (Ctrl+Shift+E)
+  QAction    *m_graphExport = nullptr;     ///< the export dialog, from the graph (Ctrl+E)
   QAction    *m_tableExport = nullptr;     ///< the export dialog, from the readings table
   QAction    *m_addDeviceAction = nullptr;
   QDockWidget   *m_sidebarDock = nullptr;

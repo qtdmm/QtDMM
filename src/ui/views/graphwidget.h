@@ -150,7 +150,6 @@ public:
     IDStartRecorder,
     IDClearGraph,
     IDConfigure,
-    IDExportData,
     IDImportData,
     IDCopyImage,
     IDExportImage,
@@ -519,7 +518,6 @@ Q_SIGNALS:
   void             recordRequested(bool start);
   /// "Live" in the context menu (InstanceWidget::liveSLOT()).
   void             liveRequested();
-  void             exportData();
   void             importData();
   /// importCsvFile() loaded a file: it wants to be seen.
   void             fileImported();

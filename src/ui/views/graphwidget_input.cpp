@@ -181,7 +181,6 @@ void GraphWidget::handleChartMousePress(QMouseEvent *ev)
     if (!m_store->isRunning())
     {
       m_popup->addSeparator();
-      item(tr("Export data..."), IDExportData);
       item(tr("Import data..."), IDImportData);
     }
 
@@ -389,9 +388,6 @@ void GraphWidget::popupSLOT(QAction *action)
       break;
     case IDConfigure:
       Q_EMIT configure();
-      break;
-    case IDExportData:
-      Q_EMIT exportData();
       break;
     case IDImportData:
       Q_EMIT importData();

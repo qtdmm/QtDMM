@@ -67,26 +67,6 @@
     <bool>false</bool>
    </attribute>
   </widget>
-  <action name="action_Export">
-   <property name="icon">
-    <iconset theme="document-export"/>
-   </property>
-   <property name="text">
-    <string>&amp;Export</string>
-   </property>
-   <property name="toolTip">
-    <string>Export graph</string>
-   </property>
-   <property name="whatsThis">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Export the recording&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Writes the recording as CSV, Excel or OpenDocument: one row per sample time, or every reading at its time.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-   </property>
-   <property name="shortcut">
-    <string notr="true">Ctrl+E</string>
-   </property>
-   <property name="iconVisibleInMenu">
-    <bool>true</bool>
-   </property>
-  </action>
   <action name="action_Import">
    <property name="icon">
     <iconset theme="document-import"/>
