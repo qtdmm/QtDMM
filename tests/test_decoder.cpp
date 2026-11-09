@@ -333,17 +333,59 @@ int main(int argc, char **argv)
       ucheck(u->keyRequest("minmax") == DecoderUT181A::command(0x04, QByteArray::fromHex("01")), "MAX/MIN on");
     }
 
-    // the UT171 (dmm-tools UT171 spec §4.3): the UT181A's framing, connect
-    // while no measurement came, no keys
+    // the UT171 (dmm-tools UT171 spec §4): the UT181A's framing, connect while
+    // no measurement came; the keys as UNI-T's software sends them, RANGE and
+    // REL from the reading shown
     {
       auto u = DmmDecoder::getInstance(FrameFormat::UniTUT171);
-      const bool before = u->pollRequest() == QByteArray::fromHex("abcd04000a010f00");
-      const bool read = u->decode(QByteArray::fromHex("abcd1100 02000102011f854541 0000 00000000 4101"), 0).has_value();
-      if (!before || !read || !u->pollRequest().isEmpty() || u->hasKey("hold", "UT171A *"))
+      int bad = 0;
+      auto ucheck = [&](bool ok, const char *what)
       {
-        qWarning() << "UT171: connect before the first measurement, none after it, no keys";
-        ++problems;
-      }
+        if (!ok)
+        {
+          qWarning() << "UT171:" << what;
+          ++bad;
+        }
+      };
+      // a measurement: 02, status A, status B, mode, range, float, decimals/state, unit
+      auto measurement = [](quint8 a, quint8 b, quint8 mode, quint8 range, float v)
+      {
+        QByteArray p = QByteArray::fromHex("02") + char(a) + char(b) + char(mode) + char(range);
+        p.append(reinterpret_cast<const char *>(&v), 4).append(char(0x40)).append(char(0x00));
+        QByteArray f = QByteArray::fromHex("abcd") + char((p.size() + 2) & 0xFF) + char(0);
+        f += p;
+        quint16 sum = 0;
+        for (int i = 2; i < f.size(); ++i)
+          sum = quint16(sum + quint8(f[i]));
+        return f + char(sum & 0xFF) + char(sum >> 8);
+      };
+      auto cmd = [](const char *hex) { return DecoderUT181A::command(quint8(QByteArray::fromHex(hex)[0]),
+                                                                     QByteArray::fromHex(hex).mid(1)); };
+      ucheck(u->pollRequest() == QByteArray::fromHex("abcd04000a010f00"), "connect before the first measurement");
+      ucheck(u->keyRequest("range").isEmpty() && u->keyRequest("rel").isEmpty(), "RANGE and REL need a reading");
+      ucheck(u->keyRequest("hold") == QByteArray::fromHex("abcd0400075a6500"), "HOLD 07 5A as the software's frame");
+      ucheck(u->keyRequest("auto") == cmd("0200") && u->keyRequest("select2") == cmd("035a")
+               && u->keyRequest("minmax") == cmd("0501") && u->keyRequest("minmax_off") == cmd("0500")
+               && u->keyRequest("peak") == cmd("0601") && u->keyRequest("peak_off") == cmd("0600"),
+             "AUTO, Hz%, MAX/MIN and Peak");
+      // V DC, manual range 2 of 4: RANGE to row 3, REL with the float shown
+      const float v = 1.2345f;
+      ucheck(u->decode(measurement(0x00, 0x00, 0x02, 2, v), 0).has_value(), "V DC reads");
+      ucheck(u->pollRequest().isEmpty(), "no connect while measurements come");
+      ucheck(u->keyRequest("range") == cmd("0203"), "RANGE in manual: the next row");
+      const QByteArray shown(reinterpret_cast<const char *>(&v), 4);
+      ucheck(u->keyRequest("rel") == DecoderUT181A::command(0x04, QByteArray(1, '\x01') + shown),
+             "REL: 04 01 with the float shown");
+      u->decode(measurement(0x00, 0x00, 0x02, 4, v), 0);
+      ucheck(u->keyRequest("range") == cmd("0201"), "RANGE after the last row: the first");
+      u->decode(measurement(0x00, 0x01, 0x02, 2, v), 0);
+      ucheck(u->keyRequest("range") == cmd("0202"), "RANGE in auto: manual on the row shown");
+      u->decode(measurement(0x10, 0x01, 0x02, 2, 0.0f), 0);
+      ucheck(u->keyRequest("rel") == cmd("0400"), "REL while REL is on: leave it");
+      u->decode(measurement(0x00, 0x01, 0x0D, 0, 0.5f), 0);
+      ucheck(u->keyRequest("range").isEmpty(), "no RANGE on the diode, which has no rows");
+      ucheck(u->hasKey("hold", "UT171A *") && !u->hasKey("lamp", "UT171C *"), "the software's keys only");
+      problems += bad;
     }
 
     // the EEVblog 121GW (dmm-tools 121GW spec §11.1): F4 and the code twice
