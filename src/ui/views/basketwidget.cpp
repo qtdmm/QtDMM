@@ -41,16 +41,16 @@
 BasketWidget::BasketWidget(QWidget *parent) :
   QWidget(parent)
 {
-  setWindowTitle(tr("Project basket"));
+  setWindowTitle(tr("Project"));
   setAcceptDrops(true);
   m_pages = new QStackedWidget(this);
   auto *outer = new QVBoxLayout(this);
   outer->setContentsMargins(0, 0, 0, 0);
   outer->addWidget(m_pages);
 
-  m_newAction = new QAction(tr("&New project basket..."), this);
-  m_openAction = new QAction(tr("&Open project basket..."), this);
-  m_closeAction = new QAction(tr("&Close project basket"), this);
+  m_newAction = new QAction(tr("&New project..."), this);
+  m_openAction = new QAction(tr("&Open project..."), this);
+  m_closeAction = new QAction(tr("&Close project"), this);
   connect(m_newAction, &QAction::triggered, this, &BasketWidget::newSLOT);
   connect(m_openAction, &QAction::triggered, this, &BasketWidget::openSLOT);
   connect(m_closeAction, &QAction::triggered, this, [this] { setFolder(QString()); });
@@ -64,8 +64,8 @@ BasketWidget::BasketWidget(QWidget *parent) :
   // no basket open: what it is and how to get one
   auto *none = new QWidget(m_pages);
   auto *noneLayout = new QVBoxLayout(none);
-  auto *what = new QLabel(tr("A project basket keeps the files of a project: its benches, recordings, "
-                             "pictures, PDFs, LabPlot projects. It is a folder."), none);
+  auto *what = new QLabel(tr("A project keeps its files in one folder: its benches, recordings, "
+                             "pictures, PDFs, LabPlot projects."), none);
   what->setWordWrap(true);
   what->setAlignment(Qt::AlignCenter);
   auto *create = new QPushButton(m_newAction->text(), none);
@@ -108,14 +108,14 @@ BasketWidget::BasketWidget(QWidget *parent) :
   add->setIcon(QIcon::fromTheme("list-add", style()->standardIcon(QStyle::SP_FileDialogNewFolder)));
   add->setToolButtonStyle(Qt::ToolButtonIconOnly);
   add->setAutoRaise(true);
-  add->setToolTip(tr("Copy files into the basket"));
+  add->setToolTip(tr("Copy files into the project"));
   connect(add, &QToolButton::clicked, this, &BasketWidget::addSLOT);
   auto *open = new QToolButton(page);
   open->setText(tr("Open &folder"));
   open->setIcon(QIcon::fromTheme("document-open", style()->standardIcon(QStyle::SP_DirOpenIcon)));
   open->setToolButtonStyle(Qt::ToolButtonIconOnly);
   open->setAutoRaise(true);
-  open->setToolTip(tr("Show the basket in the file manager"));
+  open->setToolTip(tr("Show the project in the file manager"));
   connect(open, &QToolButton::clicked, this, [this]
   {
     QDir().mkpath(m_folder);
@@ -194,12 +194,12 @@ void BasketWidget::setFolder(const QString &folder)
 void BasketWidget::newSLOT()
 {
   QDir().mkpath(m_baseFolder);
-  const QString dir = QFileDialog::getSaveFileName(this, tr("New project basket"), m_baseFolder);
+  const QString dir = QFileDialog::getSaveFileName(this, tr("New project"), m_baseFolder);
   if (dir.isEmpty())
     return;
   if (!QDir().mkpath(dir) || !writeProjectFile(dir))
   {
-    Q_EMIT error(tr("Project basket: cannot make the folder %1").arg(QDir::toNativeSeparators(dir)));
+    Q_EMIT error(tr("Project: cannot make the folder %1").arg(QDir::toNativeSeparators(dir)));
     return;
   }
   setFolder(dir);
@@ -245,7 +245,7 @@ void BasketWidget::describeSLOT()
   if (!ok)
     return;
   if (!setProjectDescription(m_folder, text.trimmed()))
-    Q_EMIT error(tr("Project basket: cannot write %1")
+    Q_EMIT error(tr("Project: cannot write %1")
                    .arg(QDir::toNativeSeparators(QDir(m_folder).filePath("project.json"))));
   showFolder();
 }
@@ -440,7 +440,7 @@ void BasketWidget::importSLOT()
 
 void BasketWidget::openSLOT()
 {
-  const QString dir = QFileDialog::getExistingDirectory(this, tr("Open project basket"), m_folder);
+  const QString dir = QFileDialog::getExistingDirectory(this, tr("Open project"), m_folder);
   if (!dir.isEmpty())
     setFolder(dir);
 }
@@ -476,7 +476,7 @@ QStringList BasketWidget::addFiles(const QStringList &files)
     return added;
   if (!QDir().mkpath(m_folder))
   {
-    Q_EMIT error(tr("Project basket: cannot make the folder %1").arg(QDir::toNativeSeparators(m_folder)));
+    Q_EMIT error(tr("Project: cannot make the folder %1").arg(QDir::toNativeSeparators(m_folder)));
     return added;
   }
   for (const QString &file : files)
@@ -487,7 +487,7 @@ QStringList BasketWidget::addFiles(const QStringList &files)
       continue;
     const QString target = freeName(m_folder, info.fileName());
     if (!info.isFile() || !QFile::copy(file, target))
-      Q_EMIT error(tr("Project basket: cannot copy %1").arg(QDir::toNativeSeparators(file)));
+      Q_EMIT error(tr("Project: cannot copy %1").arg(QDir::toNativeSeparators(file)));
     else
       added << target;
   }
@@ -498,7 +498,7 @@ QStringList BasketWidget::addFiles(const QStringList &files)
 
 void BasketWidget::addSLOT()
 {
-  addFiles(QFileDialog::getOpenFileNames(this, tr("Add to the project basket")));
+  addFiles(QFileDialog::getOpenFileNames(this, tr("Add to the project")));
 }
 
 void BasketWidget::openWithSystem(const QString &path)
@@ -538,7 +538,7 @@ void BasketWidget::contextMenu(const QPoint &pos)
         paths << pathAt(row);
       for (const QString &p : std::as_const(paths))
         if (!QFile::moveToTrash(p))
-          Q_EMIT error(tr("Project basket: cannot move %1 to the trash").arg(QDir::toNativeSeparators(p)));
+          Q_EMIT error(tr("Project: cannot move %1 to the trash").arg(QDir::toNativeSeparators(p)));
     });
     menu.addSeparator();
   }

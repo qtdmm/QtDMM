@@ -798,26 +798,6 @@
 <context>
     <name>BasketWidget</name>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="44"/>
-        <source>Project basket</source>
-        <translation>Teczka projektu</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="51"/>
-        <source>&amp;New project basket...</source>
-        <translation>&amp;Nowa teczka projektu...</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="52"/>
-        <source>&amp;Open project basket...</source>
-        <translation>&amp;Otwórz teczkę projektu...</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="53"/>
-        <source>&amp;Close project basket</source>
-        <translation>&amp;Zamknij teczkę projektu</translation>
-    </message>
-    <message>
         <location filename="../../src/ui/views/basketwidget.cpp" line="57"/>
         <source>&amp;Description...</source>
         <translation>O&amp;pis...</translation>
@@ -833,20 +813,10 @@
         <translation>&amp;Importuj projekt...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="67"/>
-        <source>A project basket keeps the files of a project: its benches, recordings, pictures, PDFs, LabPlot projects. It is a folder.</source>
-        <translation>Teczka projektu zbiera pliki projektu: jego stanowiska pomiarowe, nagrania, obrazy, pliki PDF, projekty LabPlot. Jest to folder.</translation>
-    </message>
-    <message>
         <location filename="../../src/ui/views/basketwidget.cpp" line="107"/>
         <location filename="../../src/ui/views/basketwidget.cpp" line="545"/>
         <source>&amp;Add...</source>
         <translation>&amp;Dodaj...</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="111"/>
-        <source>Copy files into the basket</source>
-        <translation>Kopiuj pliki do teczki projektu</translation>
     </message>
     <message>
         <location filename="../../src/ui/views/basketwidget.cpp" line="114"/>
@@ -854,25 +824,9 @@
         <translation>Otwórz &amp;folder</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="118"/>
-        <source>Show the basket in the file manager</source>
-        <translation>Pokaż teczkę projektu w menedżerze plików</translation>
-    </message>
-    <message>
         <location filename="../../src/ui/views/basketwidget.cpp" line="132"/>
         <source>Empty. Drop files here or add them with Add...</source>
         <translation>Pusto. Upuść tu pliki lub dodaj je przyciskiem Dodaj...</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="197"/>
-        <source>New project basket</source>
-        <translation>Nowa teczka projektu</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="202"/>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="479"/>
-        <source>Project basket: cannot make the folder %1</source>
-        <translation>Teczka projektu: nie można utworzyć folderu %1</translation>
     </message>
     <message>
         <location filename="../../src/ui/views/basketwidget.cpp" line="242"/>
@@ -885,9 +839,55 @@
         <translation>Czego dotyczy projekt:</translation>
     </message>
     <message>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="44"/>
+        <source>Project</source>
+        <translation>Projekt</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="51"/>
+        <source>&amp;New project...</source>
+        <translation>&amp;Nowy projekt...</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="52"/>
+        <source>&amp;Open project...</source>
+        <translation>&amp;Otwórz projekt...</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="53"/>
+        <source>&amp;Close project</source>
+        <translation>&amp;Zamknij projekt</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="67"/>
+        <source>A project keeps its files in one folder: its benches, recordings, pictures, PDFs, LabPlot projects.</source>
+        <translation>Projekt przechowuje swoje pliki w jednym folderze: stanowiska pomiarowe, nagrania, obrazy, PDF, projekty LabPlot.</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="111"/>
+        <source>Copy files into the project</source>
+        <translation>Kopiuj pliki do projektu</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="118"/>
+        <source>Show the project in the file manager</source>
+        <translation>Pokaż projekt w menedżerze plików</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="197"/>
+        <source>New project</source>
+        <translation>Nowy projekt</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="202"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="479"/>
+        <source>Project: cannot make the folder %1</source>
+        <translation>Projekt: nie można utworzyć folderu %1</translation>
+    </message>
+    <message>
         <location filename="../../src/ui/views/basketwidget.cpp" line="248"/>
-        <source>Project basket: cannot write %1</source>
-        <translation>Teczka projektu: nie można zapisać %1</translation>
+        <source>Project: cannot write %1</source>
+        <translation>Projekt: nie można zapisać %1</translation>
     </message>
     <message>
         <location filename="../../src/ui/views/basketwidget.cpp" line="263"/>
@@ -965,18 +965,23 @@
     </message>
     <message>
         <location filename="../../src/ui/views/basketwidget.cpp" line="443"/>
-        <source>Open project basket</source>
-        <translation>Otwórz teczkę projektu</translation>
+        <source>Open project</source>
+        <translation>Otwórz projekt</translation>
     </message>
     <message>
         <location filename="../../src/ui/views/basketwidget.cpp" line="490"/>
-        <source>Project basket: cannot copy %1</source>
-        <translation>Teczka projektu: nie można skopiować %1</translation>
+        <source>Project: cannot copy %1</source>
+        <translation>Projekt: nie można skopiować %1</translation>
     </message>
     <message>
         <location filename="../../src/ui/views/basketwidget.cpp" line="501"/>
-        <source>Add to the project basket</source>
-        <translation>Dodaj do teczki projektu</translation>
+        <source>Add to the project</source>
+        <translation>Dodaj do projektu</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="541"/>
+        <source>Project: cannot move %1 to the trash</source>
+        <translation>Projekt: nie można przenieść %1 do kosza</translation>
     </message>
     <message>
         <location filename="../../src/ui/views/basketwidget.cpp" line="507"/>
@@ -1002,11 +1007,6 @@
         <location filename="../../src/ui/views/basketwidget.cpp" line="533"/>
         <source>Move to &amp;trash</source>
         <translation>Przenieś do &amp;kosza</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="541"/>
-        <source>Project basket: cannot move %1 to the trash</source>
-        <translation>Teczka projektu: nie można przenieść %1 do kosza</translation>
     </message>
 </context>
 <context>
@@ -2310,13 +2310,13 @@ a potem wyloguj się i zaloguj ponownie.</translation>
     </message>
     <message>
         <location filename="../../src/ui/dialogs/exportdlg.cpp" line="61"/>
-        <source>Into the project &amp;basket</source>
-        <translation>Do te&amp;czki projektu</translation>
+        <source>Into the &amp;project</source>
+        <translation>Do p&amp;rojektu</translation>
     </message>
     <message>
         <location filename="../../src/ui/dialogs/exportdlg.cpp" line="63"/>
-        <source>No project basket is open</source>
-        <translation>Żadna teczka projektu nie jest otwarta</translation>
+        <source>No project is open</source>
+        <translation>Żaden projekt nie jest otwarty</translation>
     </message>
     <message>
         <location filename="../../src/ui/dialogs/exportdlg.cpp" line="64"/>
@@ -2469,13 +2469,13 @@ a potem wyloguj się i zaloguj ponownie.</translation>
     </message>
     <message>
         <location filename="../../src/ui/settings/generalprefs.cpp" line="85"/>
-        <source>Project basket</source>
-        <translation>Teczka projektu</translation>
+        <source>Project</source>
+        <translation>Projekt</translation>
     </message>
     <message>
         <location filename="../../src/ui/settings/generalprefs.cpp" line="89"/>
-        <source>New project baskets are made in this folder.</source>
-        <translation>Nowe teczki projektów są tworzone w tym folderze.</translation>
+        <source>New projects are made in this folder.</source>
+        <translation>Nowe projekty są tworzone w tym folderze.</translation>
     </message>
     <message>
         <location filename="../../src/ui/settings/generalprefs.cpp" line="93"/>
@@ -4414,36 +4414,10 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Dodaj wykres Poincarégo&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Kolejne okno z wykresem Poincarégo: najpierw wybiera się wartość, później przez Źródła w menu okna; zamknięcie usuwa je.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="472"/>
-        <source>Project b&amp;asket</source>
-        <translation>Te&amp;czka projektu</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="473"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Project basket&lt;/span&gt;&lt;/p&gt;&lt;p&gt;The files of the bench: recordings, pictures, PDFs, LabPlot projects. A folder next to the bench file; drop files in to copy them there.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Teczka projektu&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Pliki stanowiska pomiarowego: nagrania, obrazy, pliki PDF, projekty LabPlot. Folder obok pliku stanowiska; upuszczone pliki są do niego kopiowane.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
         <location filename="../../src/ui/mainwindow.cpp" line="488"/>
         <location filename="../../src/ui/mainwindow.cpp" line="1901"/>
         <source>&amp;Hide view</source>
         <translation>&amp;Ukryj widok</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="507"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="510"/>
-        <source>Into the pro&amp;ject basket</source>
-        <translation>Do te&amp;czki projektu</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="508"/>
-        <source>The recording as CSV and the graph as a picture, into the project basket</source>
-        <translation>Nagranie jako CSV i wykres jako obraz do teczki projektu</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="511"/>
-        <source>The readings as CSV, into the project basket</source>
-        <translation>Odczyty jako CSV do teczki projektu</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="516"/>
@@ -4479,16 +4453,6 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
         <location filename="../../src/ui/mainwindow.cpp" line="866"/>
         <source>Closing it discards its recording, which is not saved.</source>
         <translation>Zamknięcie odrzuca jego nagranie, które nie jest zapisane.</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="955"/>
-        <source>Open project basket</source>
-        <translation>Otwórz teczkę projektu</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="957"/>
-        <source>Open a project basket; the arrow: a new one, the last ones</source>
-        <translation>Otwórz teczkę projektu; strzałka: nowa, ostatnio otwarte</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="1012"/>
@@ -4718,17 +4682,6 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
         <translation>nagranie</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3019"/>
-        <source>Project basket: cannot write %1</source>
-        <translation>Teczka projektu: nie można zapisać %1</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3021"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="3119"/>
-        <source>Into the project basket: %1</source>
-        <translation>W teczce projektu: %1</translation>
-    </message>
-    <message>
         <location filename="../../src/ui/mainwindow.cpp" line="3031"/>
         <location filename="../../src/ui/mainwindow.cpp" line="3114"/>
         <source>readings</source>
@@ -4769,11 +4722,6 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
         <location filename="../../src/ui/mainwindow.cpp" line="3109"/>
         <source>Live in LabPlot: %1</source>
         <translation>Na żywo w LabPlot: %1</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3117"/>
-        <source>Project basket: cannot write %1: %2</source>
-        <translation>Teczka projektu: nie można zapisać %1: %2</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="3268"/>
@@ -4876,9 +4824,45 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
         <translation>Doda&amp;j wykres Poincarégo</translation>
     </message>
     <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="472"/>
+        <source>Pro&amp;ject</source>
+        <translation>Pro&amp;jekt</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="473"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Project&lt;/span&gt;&lt;/p&gt;&lt;p&gt;The files of a project: its benches, recordings, pictures, PDFs, LabPlot projects. A folder; drop files in to copy them there.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Projekt&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Pliki projektu: stanowiska pomiarowe, nagrania, obrazy, PDF, projekty LabPlot. Folder; upuszczone pliki są tam kopiowane.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="507"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="510"/>
+        <source>Into the pro&amp;ject</source>
+        <translation>Do p&amp;rojektu</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="508"/>
+        <source>The recording as CSV and the graph as a picture, into the project</source>
+        <translation>Nagranie jako CSV i wykres jako obraz, do projektu</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="511"/>
+        <source>The readings as CSV, into the project</source>
+        <translation>Odczyty jako CSV, do projektu</translation>
+    </message>
+    <message>
         <location filename="../../src/ui/mainwindow.cpp" line="658"/>
         <source>Needle meter %1</source>
         <translation>Miernik wskazówkowy %1</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="955"/>
+        <source>Open project</source>
+        <translation>Otwórz projekt</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="957"/>
+        <source>Open a project; the arrow: a new one, the last ones</source>
+        <translation>Otwórz projekt; strzałka: nowy, ostatnio otwarte</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="1163"/>
@@ -5037,6 +5021,22 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
         <location filename="../../src/ui/mainwindow.cpp" line="2622"/>
         <source>The meter&apos;s battery is low.</source>
         <translation>Bateria miernika jest słaba.</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="3019"/>
+        <source>Project: cannot write %1</source>
+        <translation>Projekt: nie można zapisać %1</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="3021"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3119"/>
+        <source>Into the project: %1</source>
+        <translation>Do projektu: %1</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="3117"/>
+        <source>Project: cannot write %1: %2</source>
+        <translation>Projekt: nie można zapisać %1: %2</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="3142"/>

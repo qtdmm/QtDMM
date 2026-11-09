@@ -4,6 +4,7 @@
 
 ### GUI
 
+- **Project and bench: two words** — the project basket is called project now (German: Projekt instead of Projektmappe), in menus, dialogs, messages and the help; a bench stays a bench (Messplatz).
 - **Project button in the toolbar** — the second button opens a project basket; its arrow makes a new one, has the ten opened last (the open one ticked) and closes the open one.
 - **A bench's meter not plugged in waits for it** — at the start and when a bench is loaded, a meter that does not connect gets its front panel as saved, showing *No connection*, and connects once it is there (tried every 5 s); before, QtDMM left it out and showed *Add device* when it was the only one.
 - **Live in LabPlot** — while it records, *Live in LabPlot* in the graph's context menu starts LabPlot with a project whose live data source follows a CSV QtDMM writes row by row: LabPlot's plots (one per unit) grow with the recording. The CSV and the project go into the project basket or *Documents/QtDMM*.

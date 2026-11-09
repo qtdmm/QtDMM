@@ -281,7 +281,7 @@ only; *Default* goes back to the setting.
 **Export...** (Ctrl+E, also in the context menus of the graph and the
 readings table) asks in one dialog what to export - the recording, the
 readings table or a picture of the graph -, in which format, and where to:
-a file, or the open [project basket](project-basket.md) with a name made of
+a file, or the open [project](project-basket.md) with a name made of
 date, time and device. It keeps the last choice. The formats of the
 recording:
 
@@ -308,7 +308,7 @@ recording:
   first line, `nan` where there is no number) and a LabPlot project
   (`… live.lml`) with a *live data source* on that file and the graph as
   above; LabPlot reads the file on each change and its plots grow and
-  scale along. Both go into the open project basket, else into
+  scale along. Both go into the open project, else into
   *Documents/QtDMM*. The columns are those at the start; a value that
   ends is `nan` from then on. When the recording stops, the file has all of
   it and stays; open the project later and LabPlot reads it again. Clicked

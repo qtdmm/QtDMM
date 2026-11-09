@@ -469,10 +469,10 @@ void MainWindow::createViews()
     const MeterController *ctl = m_session->controllers().value(0);
     newView(Added::Poincare, ctl ? ValueRef(0, ctl->source()) : ValueRef(), true);
   });
-  m_basketAction = windowAction(m_basketWin, tr("Project b&asket"), "Ctrl+6", "document-open",
-    tr("<html><head/><body><p><span style=\" font-weight:600;\">Project basket</span></p>"
-       "<p>The files of the bench: recordings, pictures, PDFs, LabPlot projects. A folder next to "
-       "the bench file; drop files in to copy them there.</p></body></html>"));
+  m_basketAction = windowAction(m_basketWin, tr("Pro&ject"), "Ctrl+6", "document-open",
+    tr("<html><head/><body><p><span style=\" font-weight:600;\">Project</span></p>"
+       "<p>The files of a project: its benches, recordings, pictures, PDFs, LabPlot projects. "
+       "A folder; drop files in to copy them there.</p></body></html>"));
   if (m_basketAction->icon().isNull())
     m_basketAction->setIcon(style()->standardIcon(QStyle::SP_DirIcon));
   m_poincareAction = windowAction(m_poincareWin, tr("Poi&ncaré plot"), "Ctrl+5", "qtdmm-poincare",
@@ -504,11 +504,11 @@ void MainWindow::createViews()
   connect(m_session, &DeviceSession::opened, this, sourcesShown);
   connect(m_session, &DeviceSession::closed, this, sourcesShown);
   // what the view shows, as files into the open project basket
-  m_graphToBasket = new QAction(tr("Into the pro&ject basket"), this);
-  m_graphToBasket->setToolTip(tr("The recording as CSV and the graph as a picture, into the project basket"));
+  m_graphToBasket = new QAction(tr("Into the pro&ject"), this);
+  m_graphToBasket->setToolTip(tr("The recording as CSV and the graph as a picture, into the project"));
   connect(m_graphToBasket, &QAction::triggered, this, &MainWindow::graphToBasket);
-  m_tableToBasket = new QAction(tr("Into the pro&ject basket"), this);
-  m_tableToBasket->setToolTip(tr("The readings as CSV, into the project basket"));
+  m_tableToBasket = new QAction(tr("Into the pro&ject"), this);
+  m_tableToBasket->setToolTip(tr("The readings as CSV, into the project"));
   connect(m_tableToBasket, &QAction::triggered, this, &MainWindow::tableToBasket);
   for (QAction *a : { m_graphToBasket, m_tableToBasket })
     a->setVisible(!m_basket->folder().isEmpty());
@@ -952,9 +952,9 @@ void MainWindow::fillViewToolbar()
   // the project basket, second: a click opens one, the arrow makes one,
   // takes one of the last ones or closes the open one
   m_projectAction = new QAction(QIcon::fromTheme("document-open", style()->standardIcon(QStyle::SP_DirOpenIcon)),
-                                tr("Open project basket"), this);
+                                tr("Open project"), this);
   m_projectAction->setObjectName("action_ProjectBasket");
-  m_projectAction->setToolTip(tr("Open a project basket; the arrow: a new one, the last ones"));
+  m_projectAction->setToolTip(tr("Open a project; the arrow: a new one, the last ones"));
   connect(m_projectAction, &QAction::triggered, m_basket->openAction(), &QAction::trigger);
   toolBarDMM->insertAction(m_sidebarAction, m_projectAction);
   addViewMenu(m_projectAction, [this](QMenu *menu)
@@ -3016,9 +3016,9 @@ void MainWindow::graphToBasket()
   // the picture beside it, with the same name
   const QString png = BasketWidget::freeName(m_basket->folder(), QFileInfo(csv).completeBaseName() + ".png");
   if (!m_wid->graph()->exportImageFile(png))
-    Q_EMIT m_wid->error(tr("Project basket: cannot write %1").arg(QDir::toNativeSeparators(png)));
+    Q_EMIT m_wid->error(tr("Project: cannot write %1").arg(QDir::toNativeSeparators(png)));
   else
-    Q_EMIT m_wid->error(tr("Into the project basket: %1").arg(QFileInfo(csv).completeBaseName()));
+    Q_EMIT m_wid->error(tr("Into the project: %1").arg(QFileInfo(csv).completeBaseName()));
 }
 
 void MainWindow::exportDialog(int view)
@@ -3114,9 +3114,9 @@ void MainWindow::tableToBasket()
   const QString csv = basketName(tr("readings"), "csv");
   QString error;
   if (!m_readings->log()->write(csv, &error))
-    Q_EMIT m_wid->error(tr("Project basket: cannot write %1: %2").arg(QDir::toNativeSeparators(csv), error));
+    Q_EMIT m_wid->error(tr("Project: cannot write %1: %2").arg(QDir::toNativeSeparators(csv), error));
   else
-    Q_EMIT m_wid->error(tr("Into the project basket: %1").arg(QFileInfo(csv).fileName()));
+    Q_EMIT m_wid->error(tr("Into the project: %1").arg(QFileInfo(csv).fileName()));
 }
 
 void MainWindow::saveWorkspace()

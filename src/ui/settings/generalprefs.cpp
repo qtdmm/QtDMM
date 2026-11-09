@@ -82,11 +82,11 @@ GeneralPrefs::GeneralPrefs(QWidget *parent) : SettingsPage(parent)
   form->addRow(tr("&LabPlot:"), row({ ui_labPlotExe, browseLabPlot }, false));
 
   // where New project basket starts; the basket itself is optional
-  addSection(form, tr("Project basket"));
+  addSection(form, tr("Project"));
   ui_basketBase = new QLineEdit(this);
   ui_basketBase->setObjectName("ui_basketBase");
   ui_basketBase->setPlaceholderText(defaultBasketBase());
-  ui_basketBase->setToolTip(tr("New project baskets are made in this folder."));
+  ui_basketBase->setToolTip(tr("New projects are made in this folder."));
   auto *browseBase = new QToolButton(this);
   browseBase->setObjectName("ui_basketBaseButton");
   browseBase->setIcon(QIcon::fromTheme("document-open"));

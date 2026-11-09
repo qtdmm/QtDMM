@@ -18,7 +18,7 @@ side, one window each, and can be combined into calculated values.
   zoom, pan and cursor; integration; CSV export and import.
 - [Readings table](readings-table.md) — every reading the meter sent, with
   time, mode and range; copy to a spreadsheet or export as CSV.
-- [Project basket](project-basket.md) — optional: the files of a project in one folder,
+- [Project](project-basket.md) — optional: the files of a project in one folder,
   its benches, recordings, pictures, PDFs, LabPlot projects.
 - [Poincaré plot](poincare-plot.md) — each reading against the next: how
   much the value scatters, noise against drift, SD1 and SD2.
