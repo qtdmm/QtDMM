@@ -58,6 +58,8 @@ public:
   /// Keeps frame @p index of frames() (-1: the newest) with @p shown; false
   /// when there is none.
   bool        keep(const QString &shown, int index = -1);
+  /// Keeps @p frame (one that was in the list) with @p shown.
+  void        keep(const Frame &frame, const QString &shown);
   /// Marks the frame kept last as kept in guided step @p step; @p unexpected
   /// when QtDMM read something else than the step wants.
   void        setKeptStep(const QString &step, bool unexpected);

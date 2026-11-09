@@ -77,6 +77,11 @@ bool CaptureLog::keep(const QString &shown, int index)
   return true;
 }
 
+void CaptureLog::keep(const Frame &frame, const QString &shown)
+{
+  m_kept.append(Kept{ frame, shown.simplified() });
+}
+
 void CaptureLog::setKeptStep(const QString &step, bool unexpected)
 {
   if (m_kept.isEmpty())

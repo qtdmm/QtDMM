@@ -262,6 +262,7 @@ void CaptureDlg::skipStep()
   if (!m_skipped.contains(m_steps.at(m_step).id))
     m_skipped << m_steps.at(m_step).id;
   m_log.setSkipped(m_skipped);
+  m_proposedFrame.reset();
   // what the meter shows now is not the next step's
   m_watcher.setBaseline(m_watcher.steady() ? m_watcher.steady() : m_watcher.current());
   ++m_step;
@@ -275,6 +276,7 @@ void CaptureDlg::stepBack()
   --m_step;
   m_skipped.removeAll(m_steps.at(m_step).id);
   m_log.setSkipped(m_skipped);
+  m_proposedFrame.reset();
   m_watcher.setBaseline(std::nullopt);
   showStep();
 }
@@ -292,7 +294,8 @@ void CaptureDlg::propose()
                           .arg(CaptureSteps::describe(step.expect)));
   else
     m_stepHint->clear();
-  const QString read = CaptureLog::readingText(m_log.frames().last());
+  m_proposedFrame = m_log.frames().last();
+  const QString read = CaptureLog::readingText(*m_proposedFrame);
   const QString typed = m_shown->text();
   if (typed.isEmpty() || typed == m_proposed)
   {
@@ -326,7 +329,10 @@ void CaptureDlg::keep()
     return;
   const QList<QTreeWidgetItem *> selected = m_frames->selectedItems();
   const int row = selected.isEmpty() ? -1 : m_frames->indexOfTopLevelItem(selected.first());
-  if (!m_log.keep(shown, row))
+  // in a step the frame proposed, not a newer one: the value may have moved on
+  if (guided() && row < 0 && m_proposedFrame)
+    m_log.keep(*m_proposedFrame, shown);
+  else if (!m_log.keep(shown, row))
     return;
   if (guided())
   {
@@ -347,6 +353,7 @@ void CaptureDlg::keep()
   m_kept->scrollToBottom();
   m_shown->clear();
   m_proposed.clear();
+  m_proposedFrame.reset();
 }
 
 QString CaptureDlg::yaml() const

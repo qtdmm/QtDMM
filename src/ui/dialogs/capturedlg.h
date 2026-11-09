@@ -69,6 +69,7 @@ private:
   QStringList  m_skipped;
   CaptureWatcher m_watcher;
   QString      m_proposed;   ///< the text put into "The meter shows:", replaced by the next one
+  std::optional<CaptureLog::Frame> m_proposedFrame;   ///< the frame it was read from, the one Keep takes
   QGroupBox   *m_guided = nullptr;
   QLabel      *m_stepTitle = nullptr;
   QLabel      *m_stepText = nullptr;
