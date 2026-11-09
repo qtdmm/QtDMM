@@ -164,6 +164,8 @@ Q_SIGNALS:
   void        alarmsRequested(const QString &id);
   /// The PASS/FAIL test's limits of the open device @p id.
   void        limitsRequested(const QString &id);
+  /// The capture window of the open device @p id (CaptureDlg).
+  void        captureRequested(const QString &id);
   /// The row "+ Add device..." at the end of My devices.
   void        addDeviceRequested();
   /// The settings of the services (Settings, SCPI server).

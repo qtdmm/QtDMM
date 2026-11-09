@@ -113,8 +113,14 @@ public:
   void    setConsoleName(const QString &name) { m_consoleName = name; }
   /// The inputs of a calculated value (PortType::Calc, CalcDevice).
   void    setCalcInputs(CalcDevice::Inputs inputs);
+  /// How the meter is reached (setDevice()).
+  Transport::PortType portType() const { return m_portType; }
 
 Q_SIGNALS:
+  /// Every frame as it came, before response(): its bytes, when (ms since
+  /// the epoch) and what the decoder made of it, none when it did not
+  /// understand it. For the capture window (CaptureLog).
+  void    frame(const QByteArray &bytes, qint64 wall, const std::optional<DmmDecoder::DmmResponse> &response);
   /// The whole decoded frame, for ReadingAdapter (MeterController); value()
   /// is the same split into its values.
   void    response(const DmmDecoder::DmmResponse &response);
@@ -166,7 +172,7 @@ protected:
   int                   m_delayTimer;
   std::shared_ptr<DmmDecoder> m_decoder;
   DmmDecoder::DMMInfo   m_dmmInfo;
-  Transport::PortType m_portType;
+  Transport::PortType m_portType = Transport::PortType::None;
 
   void                  timerEvent(QTimerEvent *) Q_DECL_OVERRIDE;
 

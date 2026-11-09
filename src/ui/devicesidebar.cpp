@@ -775,6 +775,9 @@ void DeviceSidebar::openMenu(QTreeWidgetItem *item, const QPoint &pos)
   QAction *alarms = menu.addAction(tr("&Alarms..."));
   QAction *limits = menu.addAction(tr("Li&mits..."));
   menu.addSeparator();
+  // its frames with what it showed, for a report of what is read wrong
+  QAction *capture = menu.addAction(tr("&Capture..."));
+  menu.addSeparator();
   QAction *close = menu.addAction(QIcon::fromTheme("window-close"), tr("&Remove from bench"));
   QAction *chosen = menu.exec(pos);
   if (chosen && chosen == info)
@@ -787,6 +790,8 @@ void DeviceSidebar::openMenu(QTreeWidgetItem *item, const QPoint &pos)
     Q_EMIT alarmsRequested(id);
   else if (chosen == limits)
     Q_EMIT limitsRequested(id);
+  else if (chosen == capture)
+    Q_EMIT captureRequested(id);
   else if (chosen && chosen == close)
     Q_EMIT closeRequested(id);
 }
