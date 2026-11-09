@@ -29,6 +29,11 @@ sources:
 # meters leave the bit clear in AC V and AC A, it marks only the AC frames
 # of the alternating positions.
 vectors:
+  - source_line: "mode 0x1F, which the table lacks (the app's dBV): its digits, no unit (dmm-tools 2738c05)"
+    source: "dmm-tools 2738c05 (synthetic, the first frame with mode 0x1F)"
+    bytes: AB CD 10 1F 30 20 31 2E 35 39 34 30 00 00 00 00 00 03 28
+    reading: {value: "1.5940", unit: "", range_mode: auto}
+    expect: {special: "", val: "1.5940", dval: 1.594}
   - source_line: "DCV r0: 1.5940 V (the 2.2 V range - volts, not mV as on the UT60BT)"
     bytes: AB CD 10 02 30 20 31 2E 35 39 34 30 00 00 00 00 00 03 0B
     reading: {value: "1.5940", unit: "V", range_mode: auto}

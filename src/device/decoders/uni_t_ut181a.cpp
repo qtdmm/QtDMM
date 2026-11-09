@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "device/decoders/uni_t_ut181a.h"
 
+#include <cmath>
+
 #include "core/sampletypes.h"
 
 #include <QCoreApplication>
@@ -141,6 +143,13 @@ void fill(DmmDecoder::DmmChannel &c, const QByteArray &d, int at, const QString 
   {
     c.val = negOl && !ol ? QStringLiteral("-OL") : QStringLiteral("OL");
     c.dval = 0;
+  }
+  else if (!std::isfinite(v))
+  {
+    // NaN or infinity without either bit: no number the meter measured,
+    // and nothing says it shows OL for it (dmm-tools 7abe03f)
+    c.val = QStringLiteral("?");
+    c.noValue = true;
   }
   else
   {

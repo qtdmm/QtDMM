@@ -230,6 +230,15 @@ QByteArray DecoderUniTiDMM::keyRequest(const QString &key) const
   return QByteArray();
 }
 
+bool DecoderUniTiDMM::hasKey(const QString &key, const QString &model) const
+{
+  // whether a UT61B+ reacts to 0x4D stays open (dmm-tools, UT61 family #7)
+  if ((key == QLatin1String("peak") || key == QLatin1String("peak_off"))
+      && (model.startsWith(QLatin1String("UT61B+")) || model.startsWith(QLatin1String("UT161B"))))
+    return false;
+  return !keyRequest(key).isEmpty();
+}
+
 bool DecoderUniTiDMM::frameValid(const unsigned char *f)
 {
   if (f[0] != 0xAB || f[1] != 0xCD || f[2] != kFrameLength - 3)
@@ -267,11 +276,17 @@ std::optional<DmmDecoder::DmmResponse> DecoderUniTiDMM::decode(const QByteArray 
   const int fn = f[3] & 0x7F;
   const bool plus = m_type == FrameFormat::UniTUT61Plus;
   const bool clamp = m_type == FrameFormat::UniTUT202BT;
-  if (fn >= (plus ? kFunctionCount61Plus : clamp ? kFunctionCount202 : kFunctionCount))
+  // a function the table lacks: its digits, without a unit, so a meter on
+  // it does not look dead (dmm-tools 2738c05). A second display's frame of
+  // one stays refused: as a reading it would switch the value every frame
+  static const Function unknown = { "unknown", "", "", { "" } };
+  const int count = plus ? kFunctionCount61Plus : clamp ? kFunctionCount202 : kFunctionCount;
+  const Function *listed = fn < count ? (plus ? &kFunctions61Plus[fn] : clamp ? &kFunctions202[fn] : &kFunctions[fn])
+                                      : nullptr;
+  const bool known = listed && listed->name;
+  if (!known && second)
     return std::nullopt;
-  const Function &func = plus ? kFunctions61Plus[fn] : clamp ? kFunctions202[fn] : kFunctions[fn];
-  if (!func.name)
-    return std::nullopt;
+  const Function &func = known ? *listed : unknown;
   const int range = f[4] - '0';
   const unsigned char flagsA = f[14], flagsB = f[15], flagsC = f[16];
 
@@ -284,8 +299,9 @@ std::optional<DmmDecoder::DmmResponse> DecoderUniTiDMM::decode(const QByteArray 
       break;
     }
 
-  m_result.main().special = *func.special ? QString::fromLatin1(func.special)
-                                   : QString::fromLatin1(flagsC & 0x08 ? "AC" : "DC");
+  m_result.main().special = !known         ? QString()
+                            : *func.special ? QString::fromLatin1(func.special)
+                                            : QString::fromLatin1(flagsC & 0x08 ? "AC" : "DC");
   // UT61E+ DC V position with AC shown alongside: the meter alternates, the
   // AC frames become the second value (display line 2, "2nd" in the table)
   if ((plus && fn == 25 && (flagsC & 0x08)) || second)

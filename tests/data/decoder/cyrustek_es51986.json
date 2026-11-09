@@ -316,6 +316,48 @@
         "hold": false,
         "port": "current.ac"
       }
+    },
+    {
+      "comment": "[dmm-tools 8513a0d (synthetic)] 'DC  0.000 V AUTO 6V, low battery (status bit 1)'",
+      "hex": "30 30 30 30 30 3B 3A 30 3A 0D 0A",
+      "expected": {
+        "dval": 0.0,
+        "unit": "V",
+        "range": "AUTO",
+        "hold": false,
+        "port": "voltage.dc",
+        "lowBat": true,
+        "max": false,
+        "min": false
+      }
+    },
+    {
+      "comment": "[dmm-tools 8513a0d (synthetic)] 'DC  0.000 V AUTO 6V, MAX (option bit 2)'",
+      "hex": "30 30 30 30 30 3B 38 34 3A 0D 0A",
+      "expected": {
+        "dval": 0.0,
+        "unit": "V",
+        "range": "AUTO",
+        "hold": false,
+        "port": "voltage.dc",
+        "lowBat": false,
+        "max": true,
+        "min": false
+      }
+    },
+    {
+      "comment": "[dmm-tools 8513a0d (synthetic)] 'DC  0.000 V AUTO 6V, MIN (option bit 1)'",
+      "hex": "30 30 30 30 30 3B 38 32 3A 0D 0A",
+      "expected": {
+        "dval": 0.0,
+        "unit": "V",
+        "range": "AUTO",
+        "hold": false,
+        "port": "voltage.dc",
+        "lowBat": false,
+        "max": false,
+        "min": true
+      }
     }
   ]
 }

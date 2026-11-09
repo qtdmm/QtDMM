@@ -111,6 +111,25 @@ vectors:
     remark: "// obwohl nichts angeschlossen: störempfindlich!!"
     expect: {port: "current.ac"}   # A+D is not in the frame (the log says so): the bits read AC
 
+  # SYNTHETIC (no capture has them): the battery glyph and MAX/MIN as
+  # UT803.exe lights them, status bit 1 and option bits 2/1 (dmm-tools
+  # 8513a0d, UT80x spec §7.4), on the first frame above
+  - source_line: "DC  0.000 V AUTO 6V, low battery (status bit 1)"
+    source: "dmm-tools 8513a0d (synthetic)"
+    bytes: 30 30 30 30 30 3B 3A 30 3A 0D 0A
+    reading: {value: "0.000", unit: "V", coupling: DC, range_mode: auto, range_label: "6V"}
+    expect: {lowBat: true, max: false, min: false}
+  - source_line: "DC  0.000 V AUTO 6V, MAX (option bit 2)"
+    source: "dmm-tools 8513a0d (synthetic)"
+    bytes: 30 30 30 30 30 3B 38 34 3A 0D 0A
+    reading: {value: "0.000", unit: "V", coupling: DC, range_mode: auto, range_label: "6V"}
+    expect: {lowBat: false, max: true, min: false}
+  - source_line: "DC  0.000 V AUTO 6V, MIN (option bit 1)"
+    source: "dmm-tools 8513a0d (synthetic)"
+    bytes: 30 30 30 30 30 3B 38 32 3A 0D 0A
+    reading: {value: "0.000", unit: "V", coupling: DC, range_mode: auto, range_label: "6V"}
+    expect: {lowBat: false, max: false, min: true}
+
 skipped:
   - source_line: "A+D 00210 µA MAN 6000µ"
     bytes: 31 30 30 32 31 3D 38 30 34 0D 0A
