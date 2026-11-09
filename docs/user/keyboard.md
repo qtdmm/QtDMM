@@ -37,6 +37,7 @@ handbook window are fixed.
 | Ctrl+I | Import a CSV file |
 | Ctrl+P | Print the graph |
 | Ctrl+Shift+C | Copy the graph as an image to the clipboard |
+| Ctrl+Shift+N | A note in the graph at the newest reading |
 | F8 | Settings |
 | Shift+F8 | Settings of the device chosen in the sidebar |
 | Ctrl+F8 | Settings, Recording page |
@@ -63,7 +64,7 @@ handbook window are fixed.
 ## Graph
 
 The zoom shortcuts work anywhere in the main window; the plain keys
-(`+`, `-`, `0`, arrows, Home, End) after a click into the graph.
+(`+`, `-`, `0`, arrows, Home, End, N) after a click into the graph.
 
 | Input | Effect |
 |---|---|
@@ -80,9 +81,12 @@ The zoom shortcuts work anywhere in the main window; the plain keys
 | Click / Shift+click | Time cursor A / B: time and value, with both the span, the change, the mean and the integral |
 | Left button drag on a time cursor | Move it |
 | Esc | Remove the time cursors |
+| N | A note at the newest reading |
+| Click on a flag | Its title, time and text |
+| Double click on a flag | Edit its title and text |
 | Drag in the overview | Move the window; while live it pauses there, a click at the right end follows again |
 | Drag a bracket of the overview | Widen or narrow the window |
-| Right button | Menu: connect, start/stop, clear, configure, copy image, colours, reference line, time cursors, overview, min/max band, import/export |
+| Right button | Menu: connect, start/stop, clear, note here or now, configure, copy image, colours, reference line, time cursors, overview, min/max band, import/export; on a flag: edit note, remove mark |
 
 ## Readings table
 

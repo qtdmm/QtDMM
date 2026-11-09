@@ -146,8 +146,9 @@ Q_SIGNALS:
   void resetMinMaxRequested();
   /// QTDMM:ALARm:ACKnowledge
   void acknowledgeAlarmsRequested();
-  /// QTDMM:MARK "text": a mark in the graph and the readings table.
-  void markRequested(const QString &text);
+  /// QTDMM:MARK "title"[,"text"]: a note in the graph and a mark in the
+  /// readings table.
+  void markRequested(const QString &title, const QString &note);
 
 private:
   friend class ScpiServer;

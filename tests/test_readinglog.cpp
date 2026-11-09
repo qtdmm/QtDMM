@@ -7,6 +7,8 @@
 // filter.
 
 #include <QtCore>
+#include <QJsonArray>
+#include <QJsonObject>
 #include <QAbstractItemModelTester>
 #include <QApplication>
 #include <QLabel>
@@ -16,6 +18,7 @@
 
 #include "recording/readingsmodel.h"
 #include "core/reading.h"
+#include "recording/recordingfile.h"
 #include "recording/recordingstore.h"
 #include "ui/views/readingswidget.h"
 #include "testutil.h"
@@ -225,6 +228,51 @@ int main(int argc, char **argv)
     QFile jf(p);
     check(judged.write(p, &error) && jf.open(QIODevice::ReadOnly | QIODevice::Text)
           && QString::fromUtf8(jf.readAll()).split('\n').value(2).endsWith(";AUTO;0;FAIL HI"), "limit: the CSV has the column");
+  }
+
+  // --- 5b. a note of the graph marks the reading nearest to its time;
+  //          the store's marks: notes in the order of time, meta.json ---
+  {
+    ReadingsModel noted;
+    for (int secs : { 0, 10, 20 })
+      noted.append(entry(1.0, "1.000", "V", secs));
+    const QDateTime t0 = entry(0, "", "V", 0).when;
+    noted.markAt(t0.addSecs(12), QColor(0x1e, 0x90, 0xff), "Load on");
+    noted.markAt(t0.addSecs(16), QColor(0x1e, 0x90, 0xff), "Load off");
+    noted.markAt(t0.addSecs(99), QColor(0x1e, 0x90, 0xff), "Late");
+    check(noted.data(noted.index(1, 0), Qt::ToolTipRole).toString() == "Load on"
+            && noted.data(noted.index(2, 0), Qt::ToolTipRole).toString() == "Late"
+            && noted.data(noted.index(0, 0), Qt::ToolTipRole).toString().isEmpty(),
+          "notes: the nearest reading marked");
+
+    Recording rec;
+    rec.start = t0;
+    rec.sampleTimeTenths = 10;
+    rec.unit = "V";
+    rec.values = { 1.0, 2.0, 3.0, 4.0 };
+    // a file of before: a mark without kind is an alarm's
+    rec.meta["marks"] = QJsonArray{ QJsonObject{ { "t", 2000.0 }, { "color", "#ffd03030" }, { "name", "Alarm Hi" } } };
+    RecordingStore store;
+    store.load(rec);
+    check(store.marks().size() == 1 && store.marks().at(0).kind == RecordingStore::MarkKind::Alarm, "notes: an old mark is an alarm's");
+    check(store.addNote(1000, "Start", "R1 10 k") == 0 && store.addNote(2000, "Same time", {}) == 2
+            && store.addNote(-1, "Now", {}) == 3 && store.marks().at(3).t == store.markTime(),
+          "notes: by time, after those of the same time; -1 at the newest reading");
+    store.setMarkText(1, "Alarm Hi", "fuse checked");
+    store.removeMark(2);
+    const QJsonArray marks = store.toRecording().meta.value("marks").toArray();
+    check(marks.size() == 3 && marks.at(0).toObject().value("kind").toString() == "note"
+            && marks.at(0).toObject().value("note").toString() == "R1 10 k"
+            && !marks.at(1).toObject().contains("kind") && marks.at(1).toObject().value("note").toString() == "fuse checked",
+          "notes: kind and text in meta.json, an alarm's mark without kind");
+    Recording again = rec;
+    again.meta["marks"] = marks;
+    RecordingStore back;
+    back.load(again);
+    check(back.marks().size() == 3 && back.marks().at(0).kind == RecordingStore::MarkKind::Note
+            && back.marks().at(0).note == "R1 10 k" && back.marks().at(0).color == RecordingStore::kNoteColor
+            && back.marks().at(1).note == "fuse checked",
+          "notes: read back");
   }
 
   // --- 6. spreadsheet export ---

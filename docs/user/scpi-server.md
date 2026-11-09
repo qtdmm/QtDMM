@@ -107,7 +107,7 @@ Bluetooth meter, the other open devices - is under `QTDMM:`.
 | `QTDMM:ALARm:ACKnowledge` | acknowledges the alarms, as the banner's button |
 | `QTDMM:LIMit:VERDict?` | the PASS/FAIL test's verdict on the last reading of its value: `PASS`, `HI`, `LO`, `NONE` (off, not connected, no number) |
 | `QTDMM:LIMit:COUNt?` | the verdicts counted since the last reset: `<pass>,<high>,<low>` |
-| `QTDMM:MARK "text"` | a mark at the newest reading, in the graph and the readings table (`SCPI` without text) |
+| `QTDMM:MARK "title"[,"text"]` | a note at the newest reading: in the graph with its title on the flag and the text on a click, and a mark in the readings table (`SCPI` without title) |
 | `QTDMM:KEY "hold"`, `QTDMM:KEY:CATalog?` | presses a key of the meter (UNI-T UT60BT, UT61B+/D+/E+, UT161, UT202BT, the iENV meters UT333BT, UT353BT, UT363BT, UT383BT, the ZOTEK and OWON Bluetooth meters), lists the keys it has: `"SELECT1","RANGE","AUTO","HOLD",...`; a meter without keys gives error -241, a key not sent (the meter not connected) -240 |
 | `QTDMM:CHANnel:CATalog?` | the channels of `READ? (@n)`: number, what it measures and unit - `1,"carbon_dioxide","ppm",2,"temperature","C"`; empty strings before a channel's first reading |
 | `QTDMM:DEVice:CATalog?` | the entries of *My devices*: id, name, and 1 when this QtDMM has it open - `"ab12cd34","UT61E bench",1,"9f3e01aa","SmartShunt",0` |

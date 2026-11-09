@@ -238,9 +238,12 @@ Q_SIGNALS:
   /// An alarm wants the recorder started (true) or stopped.
   void        recordingRequested(bool start);
   /// A mark in the graph and/or the readings table: an alarm ("Alarm
-  /// Overvoltage"), a change of function, a SCPI client (QTDMM:MARK);
+  /// Overvoltage"), a change of function, a SCPI client's note (QTDMM:MARK,
+  /// table only: the graph takes noteRequested());
   /// @p name is the text shown.
   void        markRequested(const QColor &color, const QString &name, bool graph, bool table);
+  /// A SCPI client set a note (QTDMM:MARK "title","text") for the graph.
+  void        noteRequested(const QString &title, const QString &note);
 
   /// A SCPI client asked to connect/disconnect the meter.
   void        connectRequested(bool on);

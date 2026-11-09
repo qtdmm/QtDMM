@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "recording/recordingstore.h"
 
+#include <algorithm>
+
 #include <QCoreApplication>
 #include <QJsonArray>
 #include <cmath>
@@ -454,8 +456,15 @@ Recording RecordingStore::toRecording(bool raw, const QList<int> &extras, const 
   // what the columns do not keep, for a QtDMM recording
   QJsonArray marks;
   for (const Mark &m : m_marks)
-    marks.append(QJsonObject{ { "t", double(m.t) }, { "color", QString("#%1").arg(m.color, 8, 16, QChar('0')) },
-                              { "name", m.name } });
+  {
+    QJsonObject o{ { "t", double(m.t) }, { "color", QString("#%1").arg(m.color, 8, 16, QChar('0')) }, { "name", m.name } };
+    // an alarm's mark as before: older QtDMM read it the same
+    if (!m.note.isEmpty())
+      o["note"] = m.note;
+    if (m.kind != MarkKind::Alarm)
+      o["kind"] = m.kind == MarkKind::Note ? "note" : "trigger";
+    marks.append(o);
+  }
   if (!marks.isEmpty())
     rec.meta["marks"] = marks;
   return rec;
@@ -548,8 +557,10 @@ void RecordingStore::load(const Recording &rec)
   for (const QJsonValue &v : rec.meta.value("marks").toArray())
   {
     const QJsonObject m = v.toObject();
+    const QString kind = m.value("kind").toString();
     m_marks.append(Mark{ qint64(m.value("t").toDouble()), m.value("color").toString().mid(1).toUInt(nullptr, 16),
-                         m.value("name").toString() });
+                         m.value("name").toString(), m.value("note").toString(),
+                         kind == "note" ? MarkKind::Note : kind == "trigger" ? MarkKind::Trigger : MarkKind::Alarm });
   }
   Q_EMIT marksChanged();
   Q_EMIT loaded();
@@ -980,7 +991,7 @@ void RecordingStore::begin(qint64 preMs)
     m_start = m_start.addMSecs(-back);
     m_preUsed = back;
     appendLivePart(pre);
-    m_marks.append(Mark { back, kTriggerColor, QCoreApplication::translate("RecordingStore", "Trigger") });
+    m_marks.append(Mark { back, kTriggerColor, QCoreApplication::translate("RecordingStore", "Trigger"), {}, MarkKind::Trigger });
     Q_EMIT marksChanged();
   }
   else
@@ -1155,11 +1166,44 @@ void RecordingStore::clear()
     Q_EMIT marksChanged();
 }
 
-void RecordingStore::addMark(quint32 argb, const QString &name)
+qint64 RecordingStore::markTime() const
 {
   // now while recording or live; else on the newest reading
-  const qint64 t = m_state != View ? elapsed() : m_series.isEmpty() ? 0 : m_series.last().t;
-  m_marks.append(Mark { t, argb, name });
+  return m_state != View ? elapsed() : m_series.isEmpty() ? 0 : m_series.last().t;
+}
+
+void RecordingStore::addMark(quint32 argb, const QString &name)
+{
+  m_marks.append(Mark { markTime(), argb, name });
+  Q_EMIT marksChanged();
+}
+
+int RecordingStore::addNote(qint64 t, const QString &title, const QString &note)
+{
+  if (t < 0)
+    t = markTime();
+  // after the marks of the same time: numbered as they came
+  const auto at = std::upper_bound(m_marks.begin(), m_marks.end(), t, [](qint64 v, const Mark &m) { return v < m.t; });
+  const int index = int(at - m_marks.begin());
+  m_marks.insert(index, Mark { t, kNoteColor, title, note, MarkKind::Note });
+  Q_EMIT marksChanged();
+  return index;
+}
+
+void RecordingStore::setMarkText(int index, const QString &title, const QString &note)
+{
+  if (index < 0 || index >= m_marks.size())
+    return;
+  m_marks[index].name = title;
+  m_marks[index].note = note;
+  Q_EMIT marksChanged();
+}
+
+void RecordingStore::removeMark(int index)
+{
+  if (index < 0 || index >= m_marks.size())
+    return;
+  m_marks.removeAt(index);
   Q_EMIT marksChanged();
 }
 
@@ -1334,6 +1378,21 @@ void RecordingStore::clearReadings()
   Q_EMIT readingsAboutToClear();
   m_readings.clear();
   Q_EMIT readingsCleared();
+}
+
+void RecordingStore::markReadingAt(qint64 wall, quint32 argb, const QString &name)
+{
+  if (m_readings.isEmpty())
+    return;
+  // the readings come in the order of their time
+  const auto at = std::lower_bound(m_readings.cbegin(), m_readings.cend(), wall,
+                                   [](const LoggedReading &r, qint64 v) { return r.when < v; });
+  int row = int(at - m_readings.cbegin());
+  if (row == m_readings.size() || (row > 0 && wall - m_readings[row - 1].when < m_readings[row].when - wall))
+    --row;
+  m_readings[row].alarmArgb = argb;
+  m_readings[row].alarmName = name;
+  Q_EMIT readingMarked(row);
 }
 
 void RecordingStore::markLastReading(quint32 argb, const QString &name)

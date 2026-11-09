@@ -1608,6 +1608,36 @@ int main(int argc, char **argv)
           markFlag = static_cast<GraphFlagItem *>(item);
       check(markFlag && markFlag->text() == QString::fromUtf8("1 · Above 3 A") && markFlag->tagRect().top() >= plot.bottom(),
             "time cursors: the mark's flag '1 · Above 3 A' (no 'Alarm') under the plot, got " + (markFlag ? markFlag->text() : "none"));
+      // a note before it: numbered by time, its flag found under the mouse
+      const int note = graph.addNote(2000, "Load on", "R1 10 k");
+      check(note == 0 && graph.store()->marks().at(0).kind == RecordingStore::MarkKind::Note
+              && graph.store()->marks().at(0).color == RecordingStore::kNoteColor && graph.store()->marks().at(1).name == "Alarm Above 3 A",
+            "notes: in the order of time, the note first");
+      GraphFlagItem *noteFlag = nullptr;
+      for (QGraphicsItem *item : chart->childItems())
+        if (item->data(0).toString() == "mark-flag" && item->isVisible()
+            && static_cast<GraphFlagItem *>(item)->text().startsWith(QString::fromUtf8("1 · Load")))
+          noteFlag = static_cast<GraphFlagItem *>(item);
+      check(noteFlag && noteFlag->toolTip() == "Load on\nR1 10 k", "notes: flag '1 · Load on', title and text as its tooltip");
+      if (noteFlag)
+      {
+        const QPoint at = view->mapFromScene(noteFlag->mapRectToScene(noteFlag->tagRect()).center());
+        check(graph.markAt(at) == 0, "notes: the flag under the mouse");
+        const qint64 before = graph.timeCursor(0);
+        QMouseEvent press(QEvent::MouseButtonPress, at, viewport->mapToGlobal(at), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+        QCoreApplication::sendEvent(viewport, &press);
+        QMouseEvent release(QEvent::MouseButtonRelease, at, viewport->mapToGlobal(at), Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
+        QCoreApplication::sendEvent(viewport, &release);
+        check(graph.timeCursor(0) == before, "notes: a click on a flag moves no cursor");
+        check(QToolTip::isVisible() && QToolTip::text().contains("Load on") && QToolTip::text().contains("R1 10 k"),
+              "notes: the click shows title and text, got " + QToolTip::text());
+        QToolTip::hideText();
+      }
+      check(graph.markAt(view->mapFromScene(plot.center())) == -1, "notes: no flag in the plot");
+      graph.store()->setMarkText(1, "Alarm Above 3 A", "fuse checked");
+      check(graph.store()->marks().at(1).note == "fuse checked", "notes: an alarm's mark gets a text");
+      graph.store()->removeMark(0);
+      check(graph.store()->marks().size() == 1 && graph.store()->marks().at(0).name == "Alarm Above 3 A", "notes: removed");
       // out of the scale: no level
       graph.setScale(false, false, 0, 3);
       int shown = 0;

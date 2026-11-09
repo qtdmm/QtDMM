@@ -37,6 +37,7 @@
 #include "core/nicestep.h"
 #include "ui/views/graphflags.h"
 #include "core/siprefix.h"
+#include "ui/dialogs/notedlg.h"
 
 void GraphWidget::hideCrosshair()
 {
@@ -514,6 +515,68 @@ void GraphWidget::addMark(const QColor &color, const QString &name)
   m_store->addMark(color.rgba(), name);
 }
 
+namespace
+{
+// "14:03:12 (0:42 into the recording)"
+QString markWhen(const RecordingStore *store, qint64 t)
+{
+  return GraphWidget::tr("%1 (%2 into the recording)")
+    .arg(store->startDateTime().addMSecs(t).toString("HH:mm:ss"), durationText(t / 1000));
+}
+}
+
+int GraphWidget::askNote(qint64 t)
+{
+  if (t < 0)
+    t = m_store->markTime();
+  NoteDlg dlg(tr("At %1").arg(markWhen(m_store, t)), this);
+  if (dlg.exec() != QDialog::Accepted || dlg.title().isEmpty())
+    return -1;
+  const int index = addNote(t, dlg.title(), dlg.text());
+  Q_EMIT noteAdded(m_store->startDateTime().addMSecs(t), dlg.title());
+  return index;
+}
+
+int GraphWidget::addNote(qint64 t, const QString &title, const QString &note)
+{
+  return m_store->addNote(t, title, note);
+}
+
+bool GraphWidget::editMark(int index)
+{
+  const QList<RecordingStore::Mark> marks = m_store->marks();
+  if (index < 0 || index >= marks.size())
+    return false;
+  NoteDlg dlg(tr("Mark %1 at %2").arg(index + 1).arg(markWhen(m_store, marks[index].t)), this);
+  dlg.setTitle(marks[index].name);
+  dlg.setText(marks[index].note);
+  if (dlg.exec() != QDialog::Accepted || dlg.title().isEmpty())
+    return false;
+  m_store->setMarkText(index, dlg.title(), dlg.text());
+  return true;
+}
+
+int GraphWidget::markAt(const QPoint &viewPos) const
+{
+  const QPointF scenePos = m_chartView->mapToScene(viewPos);
+  for (int i = 0; i < m_markFlags.size(); ++i)
+    if (m_markFlags[i]->isVisible() && m_markFlags[i]->mapRectToScene(m_markFlags[i]->tagRect()).contains(scenePos))
+      return i;
+  return -1;
+}
+
+void GraphWidget::showMarkNote(int index, const QPoint &globalPos)
+{
+  const QList<RecordingStore::Mark> marks = m_store->marks();
+  if (index < 0 || index >= marks.size())
+    return;
+  const RecordingStore::Mark &m = marks[index];
+  QString html = QString("<b>%1 · %2</b><br>%3").arg(index + 1).arg(m.name.toHtmlEscaped(), markWhen(m_store, m.t));
+  if (!m.note.isEmpty())
+    html += "<p>" + m.note.toHtmlEscaped().replace('\n', "<br>") + "</p>";
+  QToolTip::showText(globalPos, html, m_chartView);
+}
+
 void GraphWidget::syncMarks()
 {
   qDeleteAll(m_marks);
@@ -525,11 +588,12 @@ void GraphWidget::syncMarks()
     auto *line = new QGraphicsLineItem(m_chart);
     line->setPen(QPen(QColor::fromRgba(m.color), 2, Qt::DashLine));
     line->setZValue(999);
-    line->setToolTip(m.name);
+    const QString tip = m.note.isEmpty() ? m.name : m.name + '\n' + m.note;
+    line->setToolTip(tip);
     m_marks << line;
     auto *flag = new GraphFlagItem(m_chart);
     flag->setColor(QColor::fromRgba(m.color));
-    flag->setToolTip(m.name);
+    flag->setToolTip(tip);
     flag->setZValue(999);
     flag->setData(0, QStringLiteral("mark-flag"));
     flag->setVisible(false);

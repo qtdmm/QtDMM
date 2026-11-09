@@ -330,9 +330,13 @@ if args.allow_control:
         return command("ABORt")
 
     @mcp.tool()
-    def mark(text: str = "") -> str:
-        """A mark at the newest reading in the graph and the readings table (QTDMM:MARK)."""
-        return command('QTDMM:MARK "' + text.replace('"', '""') + '"')
+    def mark(text: str = "", note: str = "") -> str:
+        """A note at the newest reading: title `text` on its flag in the graph, the longer `note` on a click,
+        and a mark in the readings table (QTDMM:MARK)."""
+        cmd = 'QTDMM:MARK "' + text.replace('"', '""') + '"'
+        if note:
+            cmd += ',"' + note.replace('"', '""') + '"'
+        return command(cmd)
 
     @mcp.tool()
     def reset_min_max() -> str:

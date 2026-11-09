@@ -31,6 +31,7 @@
 #include "ui/views/graphwidget.h"
 #include "ui/views/graphwidget_p.h"
 #include "core/siprefix.h"
+#include "ui/dialogs/notedlg.h"
 
 // m_chartView is a child widget covering the whole graph area, so mouse/wheel
 // events over it are delivered to its viewport, not to GraphWidget's own
@@ -49,6 +50,19 @@ bool GraphWidget::eventFilter(QObject *watched, QEvent *event)
       case QEvent::MouseButtonPress:
         handleChartMousePress(static_cast<QMouseEvent *>(event));
         return true;
+      case QEvent::MouseButtonDblClick:
+      {
+        // a mark's flag: its title and text
+        auto *ev = static_cast<QMouseEvent *>(event);
+        const int mark = ev->button() == Qt::LeftButton ? markAt(ev->position().toPoint()) : -1;
+        if (mark >= 0)
+        {
+          editMark(mark);
+          return true;
+        }
+        handleChartMousePress(ev);
+        return true;
+      }
       case QEvent::MouseMove:
         handleChartMouseMove(static_cast<QMouseEvent *>(event));
         return true;
@@ -74,6 +88,28 @@ void GraphWidget::handleChartMousePress(QMouseEvent *ev)
   QPoint pos(qRound(ev->position().x()), qRound(ev->position().y()));
   QPoint globalPos(qRound(ev->globalPosition().x()), qRound(ev->globalPosition().y()));
 
+  const int mark = markAt(pos);
+  if (ev->button() == Qt::LeftButton && mark >= 0)
+  {
+    // a click on a flag tells its note (on release: a tooltip goes with
+    // the release), it sets no cursor
+    m_mouseDown = false;
+    m_clickCandidate = false;
+    m_pressedMark = mark;
+    return;
+  }
+  if (ev->button() == Qt::RightButton && mark >= 0)
+  {
+    m_popup->clear();
+    QAction *edit = m_popup->addAction(tr("&Edit note..."));
+    edit->setProperty("ID", IDEditMark);
+    edit->setProperty("mark", mark);
+    QAction *remove = m_popup->addAction(tr("&Remove mark"));
+    remove->setProperty("ID", IDRemoveMark);
+    remove->setProperty("mark", mark);
+    m_popup->popup(globalPos);
+    return;
+  }
   if (ev->button() == Qt::LeftButton)
   {
     m_mouseDown = true;
@@ -112,6 +148,13 @@ void GraphWidget::handleChartMousePress(QMouseEvent *ev)
     if (m_store->state() == RecordingStore::View)
       item(tr("Live"), IDLive);
     item(tr("Clear graph"), IDClearGraph);
+    m_popup->addSeparator();
+    // a note where the menu was opened, or at the newest reading
+    const QPointF scenePos = m_chartView->mapToScene(pos);
+    if (m_chart->plotArea().contains(scenePos))
+      item(tr("Note here..."), IDNoteHere)
+        ->setProperty("t", qMax<qint64>(0, qRound64(m_chart->mapToValue(scenePos, m_dataSeries).x() * 1000)));
+    item(tr("Note now..."), IDNoteNow)->setShortcut(QKeySequence(Qt::Key_N));
     m_popup->addSeparator();
 
     item(tr("Configure..."), IDConfigure);
@@ -331,6 +374,13 @@ void GraphWidget::handleChartMouseMove(QMouseEvent *ev)
 
 void GraphWidget::handleChartMouseRelease(QMouseEvent *ev)
 {
+  if (m_pressedMark >= 0 && ev->button() == Qt::LeftButton)
+  {
+    if (markAt(ev->position().toPoint()) == m_pressedMark)
+      showMarkNote(m_pressedMark, ev->globalPosition().toPoint());
+    m_pressedMark = -1;
+    return;
+  }
   if (m_clickCandidate && ev->button() == Qt::LeftButton)
   {
     const QPointF scenePos = m_chartView->mapToScene(m_pressPos);
@@ -414,6 +464,18 @@ void GraphWidget::popupSLOT(QAction *action)
     case IDEnvelope:
       setEnvelopeVisible(action->isChecked());
       break;
+    case IDNoteHere:
+      askNote(action->property("t").toLongLong());
+      break;
+    case IDNoteNow:
+      askNote();
+      break;
+    case IDEditMark:
+      editMark(action->property("mark").toInt());
+      break;
+    case IDRemoveMark:
+      m_store->removeMark(action->property("mark").toInt());
+      break;
   }
 }
 
@@ -450,6 +512,11 @@ bool GraphWidget::handleChartKey(QKeyEvent *ev)
       return true;
     case Qt::Key_End:
       scrollToEnd();
+      return true;
+    case Qt::Key_N:
+      if (ev->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))
+        return false;
+      askNote();
       return true;
     case Qt::Key_Escape:
       if (m_cursorT[0] < 0 && m_cursorT[1] < 0)

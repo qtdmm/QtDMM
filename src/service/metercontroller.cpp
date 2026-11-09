@@ -121,9 +121,11 @@ MeterController::MeterController(QObject *parent, ServiceHost *host)
   });
   connect(m_scpiDevice, &ScpiDevice::resetMinMaxRequested, this, &MeterController::resetMinMax);
   connect(m_scpiDevice, &ScpiDevice::acknowledgeAlarmsRequested, this, &MeterController::acknowledgeAlarms);
-  connect(m_scpiDevice, &ScpiDevice::markRequested, this, [this](const QString &text)
+  connect(m_scpiDevice, &ScpiDevice::markRequested, this, [this](const QString &title, const QString &note)
   {
-    Q_EMIT markRequested(QColor(0x1e, 0x90, 0xff), text, true, true);
+    // a note in the graph, a mark in the readings table
+    Q_EMIT noteRequested(title, note);
+    Q_EMIT markRequested(QColor::fromRgba(RecordingStore::kNoteColor), title, false, true);
   });
   installScpiSources();
 
