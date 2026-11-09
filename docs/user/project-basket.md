@@ -13,7 +13,8 @@ Switch the window on with **Project** in the menu (Ctrl+6).
 
 Without a project the window offers **New project...** and **Open
 project...**; later the project's name at the top of the window has
-the same and **Close project**. New projects are made in the folder
+the same and **Close project**, which also hides the window. New
+projects are made in the folder
 set under **Settings → General → Folder for new projects**
 (Documents/QtDMM at first).
 
