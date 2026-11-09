@@ -300,13 +300,20 @@ int main(int argc, char **argv)
     check(basket.addFiles({ dir.filePath("plot.png") }, proj + "/mine") == QStringList { proj + "/mine/plot.png" },
           "onto a folder: into it");
 
-    // a save dialog's folder: kept with a file, gone again without one
+    // a save dialog's folder: kept with a file, gone again without one; only
+    // a folder with a file is named in project.json
+    auto named = [&proj](const char *folder)
+    {
+      QFile f(proj + "/project.json");
+      return f.open(QIODevice::ReadOnly)
+             && QJsonDocument::fromJson(f.readAll()).object().value("folders").toObject().contains(folder);
+    };
     {
       ProjectFolder::Proposal where("/elsewhere/run.log", ProjectFolder::Analysis);
       check(where.path() == proj + "/analysis/run.log" && QFileInfo(proj + "/analysis").isDir(),
             "proposed in its folder: " + where.path());
     }
-    check(!QFileInfo::exists(proj + "/analysis"), "cancelled: the folder is gone again");
+    check(!QFileInfo::exists(proj + "/analysis") && !named("analysis"), "cancelled: the folder is gone again, not named");
     {
       ProjectFolder::Proposal where("x.pdf", ProjectFolder::Documents);
       check(where.path() == proj + "/documents/x.pdf", "an existing folder");
@@ -316,7 +323,22 @@ int main(int argc, char **argv)
       ProjectFolder::Proposal where("x.png", ProjectFolder::Analysis);
       where.keep(proj + "/analysis/x.png");
     }
-    check(QFileInfo(proj + "/analysis").isDir(), "chosen there, written later: it stays");
+    check(QFileInfo(proj + "/analysis").isDir() && named("analysis"), "chosen there, written later: it stays, named");
+    {
+      // a project of its own, without any folder yet
+      const QString other = dir.filePath("other");
+      QDir().mkpath(other);
+      ProjectFolder::set(other);
+      {
+        ProjectFolder::Proposal where("y.png", ProjectFolder::Images);
+        write(other + "/images/y.png", "png");
+      }
+      QFile f(other + "/project.json");
+      check(f.open(QIODevice::ReadOnly)
+              && QJsonDocument::fromJson(f.readAll()).object().value("folders").toObject().contains("images"),
+            "a file written while the dialog's proposal lives: named");
+      ProjectFolder::set(proj);
+    }
 
     // the view shows the names of the program's language, F2 without a change keeps the disk's
     QLocale::setDefault(QLocale(QLocale::German));
