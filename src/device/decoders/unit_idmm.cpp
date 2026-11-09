@@ -119,8 +119,13 @@ const Function kFunctions61Plus[] = {
   /* 19 */ { "Live",   "NCV", "",    { "" } },
   /* 20 */ { "NCV",    "NCV", "",    { "" } },
   /* 21 */ { "LozV",   "AC",    "V",   { "" } },
-  /* 22 */ { "ACA",    "AC",    "A",   { "" } },
-  /* 23 */ { "DCA",    "DC",    "A",   { "" } },
+  // 22 and 23 as UNI-T's UT61E+ software V2.02 has them, Hz on the 6,000
+  // count ladder and duty, not the clamp's AC A and DC A of the protocol
+  // deck, which spans the family's clamps (dmm-tools a0f661c, ut61eplus spec
+  // §2.5). No UT61+ dial position is known to send them; the UT61D+ manual's
+  // LoZ Hz and duty (short press of Hz%/USB) may (dmm-tools #7). UNVERIFIED
+  /* 22 */ { "Hz",     "HZ",  "Hz",  { "", "", "k", "k", "k", "M" } },
+  /* 23 */ { "%",      "DU",  "%",   { "" } },
   /* 24 */ { "LPF",    "AC",    "V",   { "" } },
   /* 25 */ { "AC/DC",  "",    "V",   { "" } },
   /* 26 */ { "LPF",    "AC",    "V",   { "" } },
