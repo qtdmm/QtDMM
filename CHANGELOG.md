@@ -4,6 +4,7 @@
 
 ### GUI
 
+- **Put the bench into a new project...** — in Arrange, at Recent benches and at the project button's arrow: makes a new project, opens it and saves the bench into it, the way from a single bench to a project.
 - **Sidebar: the project's benches** — while a project is open, "Project: name" at the top lists its benches (the one in use in bold, a double click loads one) and "+ New bench..." saves the set-up as a new bench of the project.
 - **Project button: the project's window** — a click shows or hides the project's window (pressed while it shows); without a project it makes a new one. The arrow stays: new, open, the last ones, close.
 - **Window title: project and bench** — "Ripple › Bench 1 – QtDMM" while a project and a bench are open, either alone without the other; with neither the device names as before.

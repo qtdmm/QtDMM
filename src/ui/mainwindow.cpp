@@ -982,6 +982,7 @@ void MainWindow::fillViewToolbar()
   {
     menu->addAction(m_basket->newAction());
     menu->addAction(m_basket->openAction());
+    menu->addAction(m_benchIntoProject);
     const QStringList dirs = recentProjects().list().mid(0, 10);
     if (!dirs.isEmpty())
       menu->addSeparator();
@@ -1201,8 +1202,15 @@ QList<QAction *> MainWindow::createArrangeMenu()
                           "windows are shown with which values, the arrangement, "
                           "title bars, toolbar, design and the size of the main window.</p></body></html>"));
   connect(saveWs, &QAction::triggered, this, [this] { saveWorkspace(); });
+  m_benchIntoProject = m_arrangeMenu->addAction(tr("Put the bench into a &new project..."));
+  m_benchIntoProject->setObjectName("action_BenchIntoProject");
+  m_benchIntoProject->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">Put the bench into a "
+                                      "new project</span></p><p>Makes a new project, opens it and saves the bench "
+                                      "into its folder: the way from a single bench to a project of several."
+                                      "</p></body></html>"));
+  connect(m_benchIntoProject, &QAction::triggered, this, &MainWindow::benchIntoNewProject);
   // the same at the sidebar's Recent benches
-  m_sidebar->setWorkspaceActions({ loadWs, saveWs });
+  m_sidebar->setWorkspaceActions({ loadWs, saveWs, m_benchIntoProject });
   m_autoSaveLayout = m_arrangeMenu->addAction(tr("Save layout on e&xit"));
   m_autoSaveLayout->setCheckable(true);
   m_autoSaveLayout->setChecked(true);
@@ -3312,8 +3320,9 @@ bool MainWindow::loadWorkspaceFile(const QString &file)
   if (project != before)
   {
     m_basket->setFolder(project);
-    text += "; " + (project.isEmpty() ? tr("project %1 closed: the bench is not in it").arg(QFileInfo(before).fileName())
-                                      : tr("project %1 opened: the bench is in it").arg(QFileInfo(project).fileName()));
+    text += "; "
+            + (project.isEmpty() ? tr("project %1 closed: the bench is not in it").arg(QFileInfo(before).fileName())
+                                 : tr("project %1 opened: the bench is in it").arg(QFileInfo(project).fileName()));
   }
   if (!restored.isEmpty())
     text += "; " + tr("back in My devices: %1").arg(restored.join(", "));
@@ -3335,6 +3344,18 @@ void MainWindow::setCurrentWorkspace(const QString &file)
   m_sidebar->setCurrentWorkspace(m_workspaceName, ws ? workspaceTooltip(file, *ws) : QString());
   updateWindowTitle();
   updateProjectSidebar();
+}
+
+void MainWindow::benchIntoNewProject()
+{
+  const QString before = m_basket->folder();
+  m_basket->newAction()->trigger();
+  const QString project = m_basket->folder();
+  if (project.isEmpty() || project == before)
+    return;   // no new project made
+  m_basketAction->setChecked(true);
+  // the bench into it: its name and file proposed, now in the project's folder
+  saveWorkspace();
 }
 
 void MainWindow::updateProjectSidebar()

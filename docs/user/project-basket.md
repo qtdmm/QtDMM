@@ -30,6 +30,11 @@ with its benches (the one in use in bold; a double click loads one) and
 **+ New bench...**, which saves the devices and windows as they are as a
 new bench of the project.
 
+**Put the bench into a new project...** (in Arrange, at Recent benches
+in the sidebar and at the project button's arrow) is the way from a
+single bench to a project: it makes a new project, opens it and saves the
+bench into its folder.
+
 A bench belongs to the project in whose folder it lies, also in a
 subfolder of it. Loading a bench opens its project; a bench that lies in
 no project closes the open one. The status bar says so, nothing asks.

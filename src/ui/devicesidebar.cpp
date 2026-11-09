@@ -511,7 +511,8 @@ void DeviceSidebar::setProject(const QString &name, const QList<Workspace> &benc
   m_project->setToolTip(0, tr("The benches of the open project: a double click loads one."));
   for (const Workspace &ws : benches)
   {
-    auto *item = new QTreeWidgetItem(m_project, { ws.name.isEmpty() ? QFileInfo(ws.file).completeBaseName() : ws.name });
+    const QString shown = ws.name.isEmpty() ? QFileInfo(ws.file).completeBaseName() : ws.name;
+    auto *item = new QTreeWidgetItem(m_project, { shown });
     item->setData(0, Qt::UserRole, ws.file);
     item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
     item->setFirstColumnSpanned(true);
