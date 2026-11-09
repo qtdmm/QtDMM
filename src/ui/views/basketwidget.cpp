@@ -180,6 +180,19 @@ QString BasketWidget::freeName(const QString &dir, const QString &name)
   }
 }
 
+QString BasketWidget::projectOf(const QString &file, const QString &open)
+{
+  const QString openDir = open.isEmpty() ? QString() : QDir(open).absolutePath();
+  QDir dir = QFileInfo(file).absoluteDir();
+  while (true)
+  {
+    if (dir.absolutePath() == openDir || dir.exists("project.json"))
+      return dir.absolutePath();
+    if (!dir.cdUp())
+      return QString();
+  }
+}
+
 void BasketWidget::setFolder(const QString &folder)
 {
   const QString dir = folder.isEmpty() ? QString() : QDir(folder).absolutePath();

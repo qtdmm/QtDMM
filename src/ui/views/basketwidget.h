@@ -67,6 +67,10 @@ public:
   /// reason in @p failed.
   static bool importProject(const QString &zipFile, const QString &baseDir, QString *folder,
                             QString *failed = nullptr);
+  /// The project @p file lies in: the nearest folder above it that is the
+  /// open project @p open or has a project.json (subfolders count); empty
+  /// when it lies in none. A bench belongs to that project.
+  static QString projectOf(const QString &file, const QString &open = QString());
   /// @p name in @p dir if free, else "name (2).ext", "name (3).ext" ...
   static QString freeName(const QString &dir, const QString &name);
 

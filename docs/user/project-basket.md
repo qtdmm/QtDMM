@@ -22,7 +22,11 @@ project...**, **Open project...**, the projects opened last
 (the open one ticked) and **Close project**.
 
 The project stays open until you open or close another, also across
-restarts and when you load a bench from somewhere else.
+restarts.
+
+A bench belongs to the project in whose folder it lies, also in a
+subfolder of it. Loading a bench opens its project; a bench that lies in
+no project closes the open one. The status bar says so, nothing asks.
 
 A project is a plain folder. QtDMM puts a `project.json` into a new one,
 with its name, a description and when it was made; it is kept for what a

@@ -3264,6 +3264,17 @@ bool MainWindow::loadWorkspaceFile(const QString &file)
   setCurrentWorkspace(file);
   updateRecentWorkspaces();
   QString text = tr("Bench loaded from %1").arg(QDir::toNativeSeparators(file));
+  // the bench belongs to the project in whose folder it lies: loading it
+  // opens that one, or closes the open one when it lies outside; no
+  // question, the status bar says so
+  const QString before = m_basket->folder();
+  const QString project = BasketWidget::projectOf(file, before);
+  if (project != before)
+  {
+    m_basket->setFolder(project);
+    text += "; " + (project.isEmpty() ? tr("project %1 closed: the bench is not in it").arg(QFileInfo(before).fileName())
+                                      : tr("project %1 opened: the bench is in it").arg(QFileInfo(project).fileName()));
+  }
   if (!restored.isEmpty())
     text += "; " + tr("back in My devices: %1").arg(restored.join(", "));
   if (programsLeft)
