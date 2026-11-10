@@ -541,18 +541,24 @@ void GraphWidget::updateRightAxis()
       min -= half;
       max += half;
     }
-    // its ticks on the left axis' grid lines: the same count, a round step
+    // its ticks on the left axis' grid lines: the same count, a round step;
+    // a fixed range also takes steps of 1.5, 3, 4, 6, 8 (0 .. 100 % in 8
+    // divisions: 0 .. 120 in 15)
     const int ticks = qMax(2, m_yAxis->tickCount());
-    const double step = niceStep((max - min) / (ticks - 1));
-    const double first = std::floor(min / step + 1e-9) * step;
-    double top = first + (ticks - 1) * step;
-    double s = step;
-    while (top < max - s * 1e-9)
+    double from = 0, s = 1;
+    if (!m_zoomed && m_fixedRanges.contains(a.unit))
+      std::tie(from, s) = fixedRangeGrid(min, max, ticks - 1);
+    else
     {
-      s = niceStep(s * 1.01);
-      top = std::floor(min / s + 1e-9) * s + (ticks - 1) * s;
+      s = niceStep((max - min) / (ticks - 1));
+      double top = std::floor(min / s + 1e-9) * s + (ticks - 1) * s;
+      while (top < max - s * 1e-9)
+      {
+        s = niceStep(s * 1.01);
+        top = std::floor(min / s + 1e-9) * s + (ticks - 1) * s;
+      }
+      from = std::floor(min / s + 1e-9) * s;
     }
-    const double from = std::floor(min / s + 1e-9) * s;
     a.axis->setTickCount(ticks);
     a.axis->setRange(from, from + (ticks - 1) * s);
     a.title->setText(QString("[%1]").arg(SiPrefix::displayText(a.unit)));
