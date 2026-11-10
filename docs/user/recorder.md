@@ -268,6 +268,17 @@ were; the integration curve carries on across a gap.
   counts it (16.874 s); the tooltip of the column has the clock times.
   Curves of other devices in the graph are listed too, under the device's
   name.
+- **Meter states:** a strip at the bottom of the plot shows what the meter
+  reported with the readings of the value on the left axis, as bars over
+  the time it held: **HOLD** (the display was frozen, the flat line is no
+  measurement), **MIN**, **MAX** or **PEAK** (a stored extreme, not the
+  value at that time), **REL** (a difference to a reference) and **OL**
+  (overload). Each state has a lane, a colour and its name in the bar; the
+  line under the mouse names the state of the reading. Without such a state
+  in the window there is no strip. **View → Meter states** in the
+  right-click menu switches it off, kept with the graph. The states are
+  those of the readings taken in this session: a file loaded does not have
+  them.
 - **Buttons beside the time buttons:** ⊟ the overview, ≋ the min/max
   band, ― the reference line (its menu), **A B ✕** removes the time
   cursors and ✎ sets a note now. The right-click menu has the same under

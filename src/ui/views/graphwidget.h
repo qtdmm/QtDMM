@@ -43,6 +43,7 @@
 
 class GraphFlagItem;
 class GraphLegend;
+class GraphStateStrip;
 class GraphMinimap;
 class Settings;
 struct Recording;
@@ -168,7 +169,8 @@ public:
     IDAxisAuto,      ///< property "unit": its right axis automatic again
     IDAxisFixed,     ///< property "unit": asks for its fixed range
     IDStats,         ///< the statistics beside the plot on or off
-    IDViewButtons    ///< the buttons beside the time buttons on or off
+    IDViewButtons,   ///< the buttons beside the time buttons on or off
+    IDStates         ///< the strip of the meter's states on or off
   };
 
   GraphWidget(QWidget *parent, Settings *settings);
@@ -284,6 +286,14 @@ public:
   void             setStatsLeft(bool left);
   /// The buttons beside the time buttons: overview, band, reference line,
   /// remove the cursors, a note now; kept with the layout.
+  /// The strip at the bottom of the plot with the states the meter reported
+  /// for the value on the left axis (HOLD, MIN/MAX/PEAK, REL, OL); on at
+  /// first, kept with the graph.
+  void             setStatesVisible(bool on);
+  bool             statesVisible() const { return m_statesOn; }
+  /// The states in the window as text, "HOLD 5.0-10.0 | OL 12.0-13.0"
+  /// (seconds; for the tests), empty without any or while off.
+  QString          statesText() const;
   void             setViewButtonsVisible(bool on);
   bool             viewButtonsVisible() const { return m_viewButtonsOn; }
   /// What they say, as plain text (also while hidden).
@@ -851,6 +861,22 @@ protected:
   bool             m_mainShown = true;   ///< the main value's curve, setValueShown(0)
   int              m_intValueId = 0;     ///< setIntegrationValue()
   GraphLegend     *m_legend = nullptr;
+  GraphStateStrip *m_stateStrip = nullptr;
+  bool             m_statesOn = true;
+  /// A state of the left axis' value from @p from to @p to (ms).
+  struct StateSpan
+  {
+    int     kind = 0;   ///< GraphStateStrip::Kind
+    QString label;
+    qint64  from = 0;
+    qint64  to = 0;
+  };
+  /// The states in the window shown, each kind's stretches joined.
+  QList<StateSpan> stateSpans() const;
+  /// The states of a reading's flags and quality as words ("HOLD REL"), for the hover line.
+  static QString   stateWords(quint32 flags, Quality quality);
+  /// Places the strip at the bottom of the plot and asks it to paint anew.
+  void             updateStateStrip();
   QColor           extraColor(int i) const;
   /// The line of value @p id (1 = value 2 ...): its colour, valueStyle().
   QPen             extraPen(int id) const;

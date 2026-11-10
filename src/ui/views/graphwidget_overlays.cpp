@@ -38,6 +38,79 @@
 #include "ui/views/graphflags.h"
 #include "core/siprefix.h"
 #include "ui/dialogs/notedlg.h"
+#include "ui/views/graphstatestrip.h"
+
+QString GraphWidget::stateWords(quint32 flags, Quality quality)
+{
+  QStringList words;
+  if (quality == Quality::Overload)
+    words << QStringLiteral("OL");
+  if (flags & SampleFlag::Hold)
+    words << QStringLiteral("HOLD");
+  if (flags & SampleFlag::Peak)
+    words << QStringLiteral("PEAK");
+  if (flags & SampleFlag::Min)
+    words << QStringLiteral("MIN");
+  if (flags & SampleFlag::Max)
+    words << QStringLiteral("MAX");
+  if (flags & SampleFlag::Relative)
+    words << QStringLiteral("REL");
+  return words.join(' ');
+}
+
+QList<GraphWidget::StateSpan> GraphWidget::stateSpans() const
+{
+  QList<StateSpan> out;
+  if (!m_statesOn)
+    return out;
+  // the value on the left axis, as the hover line and the reference line
+  const qint64 from = qRound64(m_xAxis->min() * 1000), to = qRound64(m_xAxis->max() * 1000);
+  const RefSeries ref = refSeries(qMin(to, m_store->duration()));
+  if (!ref.series || ref.series->isEmpty())
+    return out;
+  const RecordingSeries &s = *ref.series;
+  const qint64 end = qMax(ref.store->duration(), s.last().t) + ref.shift;
+  // the open stretch of each kind; a reading holds until the next one
+  int open[GraphStateStrip::KindCount];
+  std::fill(std::begin(open), std::end(open), -1);
+  auto put = [&](int kind, const QString &label, qint64 t0, qint64 t1)
+  {
+    if (open[kind] >= 0 && out[open[kind]].label == label && out[open[kind]].to >= t0)
+      out[open[kind]].to = t1;
+    else
+    {
+      open[kind] = int(out.size());
+      out << StateSpan{ kind, label, t0, t1 };
+    }
+  };
+  for (int i = qMax(0, s.holding(from - ref.shift)); i < s.count(); ++i)
+  {
+    const qint64 t0 = s.at(i).t + ref.shift;
+    if (t0 > to)
+      break;
+    const qint64 t1 = i + 1 < s.count() ? s.at(i + 1).t + ref.shift : qMax(t0, end);
+    const quint32 flags = s.at(i).flags;
+    if (s.at(i).quality == Quality::Overload)
+      put(GraphStateStrip::Overload, QStringLiteral("OL"), t0, t1);
+    if (flags & SampleFlag::Hold)
+      put(GraphStateStrip::Hold, QStringLiteral("HOLD"), t0, t1);
+    if (flags & (SampleFlag::Peak | SampleFlag::Min | SampleFlag::Max))
+      put(GraphStateStrip::Extreme, flags & SampleFlag::Peak ? QStringLiteral("PEAK")
+                                    : (flags & SampleFlag::Min) && (flags & SampleFlag::Max) ? QStringLiteral("MIN MAX")
+                                    : flags & SampleFlag::Min ? QStringLiteral("MIN") : QStringLiteral("MAX"), t0, t1);
+    if (flags & SampleFlag::Relative)
+      put(GraphStateStrip::Relative, QStringLiteral("REL"), t0, t1);
+  }
+  return out;
+}
+
+QString GraphWidget::statesText() const
+{
+  QStringList parts;
+  for (const StateSpan &s : stateSpans())
+    parts << QString("%1 %2-%3").arg(s.label).arg(s.from / 1000.0, 0, 'f', 1).arg(s.to / 1000.0, 0, 'f', 1);
+  return parts.join(" | ");
+}
 
 void GraphWidget::hideCrosshair()
 {

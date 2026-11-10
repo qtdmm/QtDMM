@@ -3138,6 +3138,7 @@ void MainWindow::applyGraphState(const GraphView *view, const WorkspaceGet &get,
   graph->setFixedRangesSetting(get(key + "-fixed-ranges", QString()).toString());
   graph->setStatsVisible(get(key + "-stats", false).toBool());
   graph->setViewButtonsVisible(get(key + "-buttons", true).toBool());
+  graph->setStatesVisible(get(key + "-states", true).toBool());
   // its time window; without one the settings'
   if (const int seconds = get(key + "-window", 0).toInt(); seconds > 0)
     m_wid->setGraphWindow(graph, seconds);
@@ -3194,6 +3195,7 @@ void MainWindow::storeGraphState(const GraphView *view, const WorkspaceSet &set)
   set(key + "-fixed-ranges", graph->fixedRangesSetting());
   set(key + "-stats", graph->statsVisible());
   set(key + "-buttons", graph->viewButtonsVisible());
+  set(key + "-states", graph->statesVisible());
   set(key + "-window", graph->windowSetting());
   QStringList shown;
   for (const ValueRef &v : graph->values())

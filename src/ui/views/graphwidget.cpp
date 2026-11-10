@@ -32,6 +32,7 @@
 
 #include "ui/frameclock.h"
 #include "ui/views/graphlegend.h"
+#include "ui/views/graphstatestrip.h"
 #include "ui/views/graphwidget.h"
 #include "ui/views/graphwidget_p.h"
 #include "ui/views/graphflags.h"
@@ -347,6 +348,19 @@ GraphWidget::GraphWidget(QWidget *parent, Settings *settings) :
   connect(&m_otherTimer, &QTimer::timeout, this, &GraphWidget::onOtherReadings);
   m_legend->setObjectName("ui_graphLegend");
   m_legend->hide();
+  // the meter's states over the time, at the bottom of the plot
+  m_stateStrip = new GraphStateStrip(m_chartView);
+  m_stateStrip->setObjectName("ui_graphStates");
+  m_stateStrip->setProvider([this]
+  {
+    QList<GraphStateStrip::Span> out;
+    const double from = m_xAxis->min() * 1000, width = (m_xAxis->max() - m_xAxis->min()) * 1000;
+    if (width > 0)
+      for (const StateSpan &s : stateSpans())
+        out << GraphStateStrip::Span{ GraphStateStrip::Kind(s.kind), s.label, qBound(0.0, (s.from - from) / width, 1.0),
+                                      qBound(0.0, (s.to - from) / width, 1.0) };
+    return out;
+  });
 
   connectStore();
   // Live runs on with the time between the readings
@@ -570,6 +584,26 @@ void GraphWidget::setStatsLeft(bool left)
     return;
   m_statsLeft = left;
   layoutParts();
+}
+
+void GraphWidget::setStatesVisible(bool on)
+{
+  m_statesOn = on;
+  updateStateStrip();
+}
+
+void GraphWidget::updateStateStrip()
+{
+  if (!m_stateStrip)
+    return;
+  // over the plot's bottom, as wide as it; it draws only what there is
+  const QRectF plot = m_chart->plotArea();
+  const QPoint bottomLeft = m_chartView->mapFromScene(plot.bottomLeft());
+  m_stateStrip->setGeometry(bottomLeft.x(), bottomLeft.y() - GraphStateStrip::fullHeight(), int(plot.width()),
+                            GraphStateStrip::fullHeight());
+  m_stateStrip->setVisible(m_statesOn);
+  m_stateStrip->raise();
+  m_stateStrip->update();
 }
 
 void GraphWidget::setViewButtonsVisible(bool on)
