@@ -419,6 +419,9 @@ public:
   /// nullptr while it is not open, and its name for the legend.
   void             setOtherStores(std::function<RecordingStore *(const QString &source)> store,
                                   std::function<QString(const QString &source)> name);
+  /// The vendors' names ("Uni-Trend"): the legend leaves one at the start
+  /// of a meter's name out first when its row has no room.
+  void             setVendorNames(const QStringList &vendors) { m_vendors = vendors; }
   void             setOtherValues(const QList<ValueRef> &values);
   QList<ValueRef>  otherValues() const;
   /// Shows or hides one of them (at the end of otherValues()).
@@ -786,6 +789,8 @@ protected:
     bool         shown = false;
     QString      unit;
     QString      name;    ///< in the legend: the meter's name and the value's
+    QString      meter;   ///< the meter's name alone, empty without one
+    QString      label;   ///< the value's name alone (curveName())
     QList<QPointF> points;
   };
   std::vector<OtherCurve> m_otherCurves;
@@ -793,6 +798,7 @@ protected:
   QList<QPointer<RecordingStore>> m_otherConnected;   ///< the stores connected to
   std::function<RecordingStore *(const QString &)> m_otherStore;
   std::function<QString(const QString &)> m_otherName;
+  QStringList      m_vendors;   ///< setVendorNames()
   /// The other meters of a file viewed (importCsvFile()), a store each, and
   /// their values among the curves (source "file:<index>"), not in otherValues().
   QList<RecordingStore *> m_fileStores;

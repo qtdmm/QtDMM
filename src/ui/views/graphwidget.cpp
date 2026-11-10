@@ -667,6 +667,7 @@ void GraphWidget::resizeEvent(QResizeEvent *)
 {
   layoutParts();
   placeTimeBar();
+  updateLegend();   // its names as long as the plot has room for
 
   // Simpler than tracking/restoring hover state across a resize: just hide it,
   // the next mouse move will reposition it correctly.

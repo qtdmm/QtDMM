@@ -8,21 +8,23 @@
 
 /// The legend top left in the plot: a piece of each curve's line - its
 /// colour and its style, so the values tell apart also without colour -
-/// and its name, in a row.
+/// and its name, in a row. Each name comes in shorter forms; the legend
+/// takes the longest form of all names that fits its room.
 class GraphLegend : public QWidget
 {
 public:
   struct Entry
   {
-    QPen    pen;
-    QString name;
+    QPen        pen;
+    QStringList names;   ///< from the full one to the shortest (the unit alone); at least one
   };
 
   explicit GraphLegend(QWidget *parent);
 
-  /// The curves, and the colour of the names.
-  void setEntries(const QList<Entry> &entries, const QColor &ink);
-  /// The names, two spaces between them (for the tests).
+  /// The curves, the colour of the names, and the width there is for the
+  /// row (0: any): the first form of the names that fits, else the shortest.
+  void setEntries(const QList<Entry> &entries, const QColor &ink, int room = 0);
+  /// The names as shown, two spaces between them (for the tests).
   QString text() const;
 
   QSize sizeHint() const override;
@@ -36,5 +38,9 @@ private:
   static constexpr int kSpace = 14;    ///< between two entries
 
   QList<Entry> m_entries;
+  int          m_form = 0;   ///< the form of the names shown
+  /// The name of @p e in form @p form, its shortest when it has fewer.
+  static QString name(const Entry &e, int form) { return e.names.value(qMin(form, int(e.names.size()) - 1)); }
+  int          widthOf(int form) const;
   QColor       m_ink;
 };
