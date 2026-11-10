@@ -293,7 +293,7 @@ int main(int argc, char **argv)
     QString err;
     check(RecordingFile::write(withMarks, csv, &err), "marks: CSV written " + err);
     QFile cf(csv);
-    cf.open(QIODevice::ReadOnly | QIODevice::Text);
+    check(cf.open(QIODevice::ReadOnly | QIODevice::Text), "marks: CSV opened");
     const QString text = QString::fromUtf8(cf.readAll());
     cf.close();
     check(text.section('\n', 0, 0).endsWith(";status;mark;note")
