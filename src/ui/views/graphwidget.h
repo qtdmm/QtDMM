@@ -164,7 +164,9 @@ public:
     IDEditMark,      ///< property "mark": its index in RecordingStore::marks()
     IDRemoveMark,    ///< property "mark"
     IDCursorHere,    ///< properties "which" (0 = A, 1 = B) and "t" (ms)
-    IDResetZoom
+    IDResetZoom,
+    IDAxisAuto,      ///< property "unit": its right axis automatic again
+    IDAxisFixed      ///< property "unit": asks for its fixed range
   };
 
   GraphWidget(QWidget *parent, Settings *settings);
@@ -237,6 +239,17 @@ public:
   /// "off".
   QString          referenceSetting() const;
   void             setReferenceSetting(const QString &text);
+  /// Fixed ranges of the right axes by unit ("Hz" 49.5 .. 50.5): the axis
+  /// of that unit covers at least them, on round ticks; a unit without one
+  /// scales itself. The left axis has its range in the settings.
+  void             setFixedRange(const QString &unit, double min, double max);
+  void             clearFixedRange(const QString &unit);
+  bool             hasFixedRange(const QString &unit) const { return m_fixedRanges.contains(unit); }
+  /// The ranges as kept with the window layout: {"Hz":[49.5,50.5]}.
+  QString          fixedRangesSetting() const;
+  void             setFixedRangesSetting(const QString &text);
+  /// The y axis under @p pos (in the view): 0 left, 1 right, 2 third, -1 none.
+  int              axisSideAt(const QPoint &pos) const;
   /// The alarms' thresholds (base units): the reference line snaps to them.
   /// A line on a threshold that went stays where it is.
   void             setAlarmThresholds(const QList<double> &values);
@@ -1005,6 +1018,11 @@ protected:
   /// The right-click menu at @p pos (in the view; a point outside the plot:
   /// no entries for a time).
   void             showMenu(const QPoint &pos, const QPoint &globalPos);
+  /// The menu of a right axis: automatic or a fixed range (@p side 1 or 2).
+  void             addAxisEntries(QMenu *menu, int side);
+  /// Asks for the fixed range of the axis of @p unit.
+  void             askFixedRange(const QString &unit);
+  QMap<QString, std::pair<double, double>> m_fixedRanges;   ///< setFixedRange()
 
   void             resizeEvent(QResizeEvent *)Q_DECL_OVERRIDE;
   void             showEvent(QShowEvent *) override;
