@@ -255,6 +255,7 @@ void GraphWidget::showMenu(const QPoint &pos, const QPoint &globalPos)
   toggle(tr("&Statistics"), IDStats, m_statsOn);
   toggle(tr("Over&view"), IDMinimap, m_minimapOn);
   toggle(tr("Min/max &band"), IDEnvelope, m_envelopeOn);
+  toggle(tr("Meter st&ates"), IDStates, m_statesOn);
   fillReferenceMenu(view->addMenu(tr("&Reference line")));
   view->addSeparator();
   toggle(tr("Bu&ttons"), IDViewButtons, m_viewButtonsOn);
@@ -447,6 +448,9 @@ void GraphWidget::handleChartMouseMove(QMouseEvent *ev)
       QString prefix;
       const QString number = SiPrefix::format(val, base, &prefix);
       text += "   " + QString("%1 %2").arg(number, prefix + base);
+      // what the meter said about it: a frozen or stored value, a difference
+      if (const QString state = stateWords(series->at(idx).flags, Quality::Valid); !state.isEmpty())
+        text += "   " + state;
     }
     else
       m_crosshairHLine->setVisible(false);
@@ -581,6 +585,9 @@ void GraphWidget::popupSLOT(QAction *action)
       break;
     case IDViewButtons:
       setViewButtonsVisible(action->isChecked());
+      break;
+    case IDStates:
+      setStatesVisible(action->isChecked());
       break;
     case IDAxisAuto:
       clearFixedRange(action->property("unit").toString());

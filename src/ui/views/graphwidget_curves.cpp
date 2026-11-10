@@ -31,6 +31,7 @@
 #include <climits>
 
 #include "ui/views/graphlegend.h"
+#include "ui/views/graphstatestrip.h"
 #include "ui/views/graphwidget.h"
 #include "ui/views/graphwidget_p.h"
 #include "ui/views/graphminimap.h"
@@ -344,6 +345,8 @@ void GraphWidget::onAppended(bool shifted)
 {
   const RawPoint &p = m_store->series().last();
   scheduleStats();   // a new reading: the statistics, at most 4 times a second
+  if (m_stateStrip)
+    m_stateStrip->update();   // and its state, when the window stands still
 
   // "All": the window grows once the recording fills it. The new window
   // rebuilds the series with this reading in it: then it must not be

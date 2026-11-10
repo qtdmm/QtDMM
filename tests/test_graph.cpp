@@ -1881,7 +1881,7 @@ int main(int argc, char **argv)
           for (QAction *a : view->menu()->actions())
             if (!a->isSeparator())
               inView << a->text();
-        check(inView == QStringList({ "&Statistics", "Over&view", "Min/max &band", "&Reference line", "Bu&ttons" })
+        check(inView == QStringList({ "&Statistics", "Over&view", "Min/max &band", "Meter st&ates", "&Reference line", "Bu&ttons" })
                 && !entry("Over&view") && !entry("&Statistics"),
               "menu: View holds statistics, overview, band, reference line, buttons: " + inView.join(", "));
       }
@@ -3135,6 +3135,73 @@ int main(int argc, char **argv)
     check(graph.timeAxisStart() == back, "clock: scrolled back, the window stays");
     graph.stopSLOT();
     check(!clock->wanted(&graph), "clock: viewing a recording, not wanted");
+  }
+
+  // --- the meter's states as a strip at the bottom of the plot: HOLD,
+  //     MIN/MAX, REL and OL over the time they held ---
+  {
+    Settings cfg("states", tmpDir.path());
+    GraphWidget graph(nullptr, &cfg);
+    graph.resize(800, 500);
+    graph.show();
+    QTest::qWait(50);
+    QObject::connect(&graph, &GraphWidget::windowRequested, [&](int s) { graph.setGraphSize(s); });
+    Feed feed(graph, 100);
+    graph.liveSLOT();
+    graph.setCrosshair(true);
+    auto put = [&](double v, quint32 flags)
+    {
+      Reading r;
+      r.overload = std::isnan(v);
+      r.value = v;
+      r.flags = flags;
+      r.hold = flags & SampleFlag::Hold;
+      r.text = r.overload ? QStringLiteral("OL") : QString::number(v);
+      r.t = feed.now;
+      r.msecs = Feed::wall(feed.now).toMSecsSinceEpoch();
+      graph.store()->setReading(r);
+      feed.now += feed.step;
+    };
+    // 0-1 s plain, 1-2 s HOLD, 2-3 s plain, 3-4 s REL, 4-5 s REL and MAX, 5-6 s OL, 6-7 s plain
+    for (int i = 0; i < 70; ++i)
+      put(i >= 50 && i < 60 ? std::nan("") : 1.0 + i * 0.01,
+          i >= 10 && i < 20 ? SampleFlag::Hold : i >= 30 && i < 40 ? SampleFlag::Relative
+          : i >= 40 && i < 50 ? SampleFlag::Relative | SampleFlag::Max : 0u);
+    feed.now -= feed.step;
+    QTest::qWait(50);
+    QWidget *strip = graph.findChild<QWidget *>("ui_graphStates");
+    check(graph.statesVisible() && strip && strip->isVisible(), "states: the strip is on at first");
+    check(graph.statesText() == "HOLD 1.0-2.0 | REL 3.0-5.0 | MAX 4.0-5.0 | OL 5.0-6.0",
+          "states: each state over the time it held, got " + graph.statesText());
+    // inside the plot, at its bottom
+    QChartView *cv = graph.findChild<QChartView *>();
+    const QRect plot = cv->mapFromScene(cv->chart()->plotArea()).boundingRect();
+    check(strip && strip->geometry().bottom() <= plot.bottom() + 1 && strip->geometry().left() == plot.left()
+            && qAbs(strip->width() - plot.width()) <= 1,
+          "states: the strip lies over the bottom of the plot");
+    // the hover line names the state of the reading
+    {
+      const QPoint at = cv->mapFromScene(QPointF(cv->chart()->mapToPosition(QPointF(1.5, 0), cv->chart()->series().first()).x(),
+                                                 cv->chart()->plotArea().center().y()));
+      QMouseEvent move(QEvent::MouseMove, QPointF(at), QPointF(cv->viewport()->mapToGlobal(at)), Qt::NoButton, Qt::NoButton, Qt::NoModifier);
+      QCoreApplication::sendEvent(cv->viewport(), &move);
+      QString hover;
+      for (const QLabel *l : cv->findChildren<QLabel *>())
+        if (l->isVisible() && l->objectName() != "ui_graphState")
+          hover += l->text();
+      check(hover.endsWith("HOLD"), "states: the hover line says HOLD, got " + hover);
+    }
+    // a picture to look at: QTDMM_SHOT=<dir>
+    if (qEnvironmentVariableIsSet("QTDMM_SHOT"))
+    {
+      QTest::qWait(50);
+      graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/graph_states.png");
+    }
+    // off: nothing, and kept with the graph's switch
+    graph.setStatesVisible(false);
+    check(strip && !strip->isVisible() && graph.statesText().isEmpty(), "states: off, no strip");
+    graph.setStatesVisible(true);
+    check(!graph.statesText().isEmpty(), "states: on again");
   }
 
   if (failed == 0)

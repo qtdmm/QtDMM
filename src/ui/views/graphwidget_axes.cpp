@@ -98,6 +98,7 @@ void GraphWidget::updateXAxisRange()
   updateTimeAxis();
   updateReferenceLine();   // the window's mean, minimum or maximum
   updateEnvelope();
+  updateStateStrip();      // the meter's states over the window
   scheduleStats();         // the window's statistics
 }
 
