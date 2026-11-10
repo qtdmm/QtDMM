@@ -2328,6 +2328,26 @@ int main(int argc, char **argv)
     check(!amps.isEmpty() && qAbs(amps.first().x() - 2.0) < 0.15,
           QString("its time: from 2 s on, %1").arg(amps.isEmpty() ? -1 : amps.first().x()));
     check(graph.legendText().contains("Sim B"), "its name in the legend: " + graph.legendText());
+    // the legend in a narrow graph: the vendor goes first, then the meter,
+    // at last all but the units
+    {
+      const QString full = graph.legendText();
+      graph.setVendorNames({ "Sim" });
+      QStringList forms;
+      for (int w = 800; w >= 160; w -= 20)
+      {
+        graph.resize(w, 500);
+        QTest::qWait(10);
+        if (forms.isEmpty() || forms.last() != graph.legendText())
+          forms << graph.legendText();
+      }
+      graph.resize(800, 500);
+      QTest::qWait(10);
+      check(forms.size() == 4 && forms[0] == full && forms[1].contains(QString::fromUtf8("B · ")) && !forms[1].contains("Sim B")
+              && !forms[2].contains(QString::fromUtf8("·")) && forms[2].contains("(") && !forms[3].contains("(")
+              && forms[3].contains("A") && graph.legendText() == full,
+            "legend: shorter names as the graph gets narrow, the full ones back: " + forms.join(" | "));
+    }
     // an axis chosen: its V on the right is no room (A is there), with a notice
     QSignalSpy notices(&graph, &GraphWidget::notice);
     graph.setOtherValueAxis(ValueRef(1, "device:b"), GraphWidget::AxisRight);

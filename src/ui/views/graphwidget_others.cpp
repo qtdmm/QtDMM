@@ -228,8 +228,10 @@ bool GraphWidget::rebuildOtherCurves()
     for (const RecordingSeries *s : std::as_const(parts))
       if (c.value.id != 0 && !s->unit.isEmpty())
         c.unit = s->unit;
-    c.name = parts.isEmpty() ? QString() : curveName(*parts.last(), c.unit);
+    c.label = parts.isEmpty() ? QString() : curveName(*parts.last(), c.unit);
+    c.name = c.label;
     const QString meter = otherName(c.value.source);
+    c.meter = meter;
     if (!meter.isEmpty())
       c.name = c.name.isEmpty() ? meter : meter + " · " + c.name;
     // its axis: the one chosen if its unit fits there, else the left one

@@ -176,7 +176,9 @@ were; the integration curve carries on across a gap.
   temperature of a hygrometer or an anemometer, the frequency of a UT61E,
   the second value of a Victron or a Fluke 45) shows it as another curve,
   recorded with the main value on the same time axis. Each value has a
-  colour of its own; a legend at the top left names the curves. A value in
+  colour of its own; a legend at the top left names the curves (in a
+  narrow graph with shorter names: first without the device's vendor, then
+  without the device, at last the units alone). A value in
   the main value's unit shares its axis, the first other unit gets an axis
   on the right with a scale of its own, a third unit a third axis outside
   it. The titles of the right axes ([°C], [Hz]) are in the colour of their
