@@ -626,6 +626,14 @@ QString GraphWidget::legendText() const
   return m_legend && m_legend->isVisible() ? m_legend->text() : QString();
 }
 
+// A name of this meter's value in the legend's forms: as it is in the
+// first three (no vendor, no meter to leave out), then its unit alone.
+static QStringList nameForms(const QString &name, const QString &unit)
+{
+  const QString u = SiPrefix::displayText(unit);
+  return { name, name, name, u.isEmpty() ? name : u };
+}
+
 void GraphWidget::updateLegend()
 {
   if (!m_legend)
@@ -639,11 +647,21 @@ void GraphWidget::updateLegend()
     if (seen.contains(s.id) || i >= int(m_extraCurves.size()) || !m_extraCurves[size_t(i)].shown)
       continue;
     seen.insert(s.id);
-    entries.prepend({ extraPen(s.id), curveName(s, s.unit) });
+    entries.prepend({ extraPen(s.id), nameForms(curveName(s, s.unit), s.unit) });
   }
   for (int i = 0; i < int(m_otherCurves.size()); ++i)
-    if (m_otherCurves[size_t(i)].shown)
-      entries.append({ otherPen(i), m_otherCurves[size_t(i)].name });
+    if (const OtherCurve &c = m_otherCurves[size_t(i)]; c.shown)
+    {
+      // another meter's: without the vendor, without the meter, the unit alone
+      QString model = c.meter;
+      for (const QString &vendor : std::as_const(m_vendors))
+        if (c.meter.startsWith(vendor + ' ', Qt::CaseInsensitive) && c.meter.size() - vendor.size() - 1 < model.size())
+          model = c.meter.mid(vendor.size() + 1);
+      const QString label = c.label.isEmpty() ? c.meter : c.label;
+      const QStringList own = nameForms(label, c.unit);
+      entries.append({ otherPen(i), { c.name, c.label.isEmpty() || model.isEmpty() ? c.name : model + " · " + c.label,
+                                      label, own.last() } });
+    }
   // the main value alone needs none; without it, the axis does not say which
   if (entries.isEmpty() && m_mainShown)
   {
@@ -651,16 +669,18 @@ void GraphWidget::updateLegend()
     return;
   }
   if (m_mainShown)
-    entries.prepend({ QPen(dataColor(), m_lineWidth, penStyle(m_lineMode)), curveName(m_store->series(), m_store->unit()) });
+    entries.prepend({ QPen(dataColor(), m_lineWidth, penStyle(m_lineMode)),
+                      nameForms(curveName(m_store->series(), m_store->unit()), m_store->unit()) });
   if (entries.isEmpty())
   {
     m_legend->hide();
     return;
   }
   const QColor ink = m_xLabelColor.isValid() ? m_xLabelColor : palette().color(QPalette::WindowText);
-  m_legend->setEntries(entries, ink);
-  // top left inside the plot, below the state ("LIVE", "REC")
+  // top left inside the plot, below the state ("LIVE", "REC"); as wide as
+  // the plot (a graph not shown has no width to go by)
   const QPoint topLeft = m_chartView->mapFromScene(m_chart->plotArea().topLeft());
+  m_legend->setEntries(entries, ink, isVisible() ? qMax(1, int(m_chart->plotArea().width()) - 12) : 0);
   const int below = m_stateLabel && m_stateLabel->isVisible() ? m_stateLabel->height() : 0;
   m_legend->move(topLeft.x() + 6, topLeft.y() + 4 + below);
   m_legend->show();

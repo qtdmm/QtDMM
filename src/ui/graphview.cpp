@@ -5,6 +5,7 @@
 #include <QScopedValueRollback>
 
 #include "core/alarm.h"
+#include "device/dmmdecoder.h"
 #include "recording/recordingstore.h"
 #include "service/devicesession.h"
 #include "service/metercontroller.h"
@@ -32,6 +33,12 @@ GraphView::GraphView(DeviceSession *session, GraphWidget *graph, const QString &
     const MeterController *ctl = m_session->controller(source);
     return ctl ? ctl->deviceName() : QString();
   });
+  // the vendors, for the legend to leave out when it gets narrow
+  QStringList vendors;
+  for (const DmmDecoder::DMMInfo &info : DmmDecoder::getDeviceConfigurations())
+    if (!info.vendor.isEmpty() && !vendors.contains(info.vendor))
+      vendors << info.vendor;
+  m_graph->setVendorNames(vendors);
   connect(m_session, &DeviceSession::opened, m_graph, &GraphWidget::otherStoresChanged);
   connect(m_session, &DeviceSession::closed, m_graph, &GraphWidget::otherStoresChanged);
   // the graph's store: of the meter of its first value while it shows none
