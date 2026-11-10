@@ -106,8 +106,11 @@ enum : quint32
   Limit     = LimitPass | LimitHigh | LimitLow,
   LowBattery = 1u << 28,   ///< QtDMM
   Peak       = 1u << 29,   ///< QtDMM
-  /// What the meter said about a value beyond its number: a recording keeps them with each reading.
-  State      = Hold | Max | Min | Relative | Avg | Peak,
+  GapLost    = 1u << 30,   ///< QtDMM, on a gap: the connection was lost (not just a silent meter)
+  GapPause   = 1u << 31,   ///< QtDMM, on a gap: the port was released on purpose (an alarm's program had it)
+  /// What the meter said about a value beyond its number, and why a gap is
+  /// one: a recording keeps them with each reading.
+  State      = Hold | Max | Min | Relative | Avg | Peak | GapLost | GapPause,
 
   /// The flags that tell two ports of a meter apart (V DC and V AC are two
   /// ports); the others describe a state of the value.

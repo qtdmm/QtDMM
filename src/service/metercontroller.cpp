@@ -46,6 +46,9 @@ MeterController::MeterController(QObject *parent, ServiceHost *host)
   connect(m_dmm, &MeterConnection::linkStateChanged, this, [this](MeterConnection::LinkState state)
   {
     m_scpiDevice->setConnected(state == MeterConnection::LinkState::Connected);
+    // the gap the recorder stands in is one of a lost connection, not of a silent meter
+    if (state == MeterConnection::LinkState::Error && !m_reopenAfter)
+      m_recorder->setGapCause(SampleFlag::GapLost);
   });
 
   // the recorder keeps every reading of the main value, and a gap where it
@@ -54,7 +57,14 @@ MeterController::MeterController(QObject *parent, ServiceHost *host)
   // in its base unit, as the values come (the graph sets the same)
   connect(this, &MeterController::unitChanged, m_recorder,
           [this](const QString &unit) { m_recorder->setUnit(SiPrefix::split(unit).baseUnit); });
-  connect(this, &MeterController::staleChanged, m_recorder, &RecordingStore::setStale);
+  // with why, when it is more than a silent meter: the port given away on
+  // purpose, or the connection lost
+  connect(this, &MeterController::staleChanged, m_recorder, [this](bool stale)
+  {
+    const quint32 cause = m_reopenAfter ? SampleFlag::GapPause
+                          : m_dmm->linkState() == MeterConnection::LinkState::Error ? SampleFlag::GapLost : 0u;
+    m_recorder->setStale(stale, cause);
+  });
   connect(m_recorder, &RecordingStore::runningChanged, this, &MeterController::setRecording);
   // another function at the meter ended the recording: say so, and mark
   // where in the graph
@@ -640,7 +650,7 @@ void MeterController::onAlarmRaised(int index, const Alarm &alarm, double value)
           if (m_reopenAfter)
           {
             // the recording goes on: no readings while the program runs
-            m_recorder->setStale(true);
+            m_recorder->setStale(true, SampleFlag::GapPause);
             Q_EMIT portReleased(true);
           }
           m_external->start(program, args);

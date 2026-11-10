@@ -13,11 +13,14 @@
 /// held - HOLD (the display is frozen), MIN / MAX / PEAK (a stored extreme,
 /// not the value now), REL (a difference), OL (overload). A lane has its
 /// colour and names its state in the bar, so it reads without colour too.
+/// The gaps have a lane too, each cause with a hatching of its own: the
+/// port released on purpose, the connection lost, a silent meter, no
+/// number, a fault.
 /// Only the lanes of states in the window are drawn; without any, nothing.
 class GraphStateStrip : public QWidget
 {
 public:
-  enum Kind { Overload, Hold, Extreme, Relative, KindCount };
+  enum Kind { Gap, Overload, Hold, Extreme, Relative, KindCount };
   /// A state over a stretch of the window, in fractions of its width (0..1).
   struct Span
   {
@@ -25,6 +28,7 @@ public:
     QString label;   ///< "HOLD", "MIN", "MAX", "PEAK", "REL", "OL"
     double  from = 0;
     double  to = 0;
+    Qt::BrushStyle pattern = Qt::SolidPattern;   ///< a gap's cause
   };
 
   explicit GraphStateStrip(QWidget *parent);

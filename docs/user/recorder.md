@@ -141,7 +141,16 @@ Where the meter showed no value, the curve has a gap instead of a line:
   line says it, and the graph and the readings table get a red mark where
   it began.
 
-Hovering over a gap shows "OL", "fault" or "no value". In the export, an interval
+The strip of meter states at the bottom of the plot (see below) has a lane
+for the gaps and tells their causes apart by a hatching and a word each:
+**no value** (the meter fell silent for longer than its rhythm allows),
+**connection lost** (the port went away, QtDMM reconnects), **paused**
+(QtDMM gave the port away on purpose, to an alarm's program with
+*Disconnect first*), **no number** and **fault**. A recording saved keeps
+the cause (`LOST`, `PAUSE` in the column `flags`).
+
+Hovering over a gap shows "OL", "fault", "no value", "connection lost" or
+"paused". In the export, an interval
 that holds some values and some gaps is the average of the values there
 were; the integration curve carries on across a gap.
 
@@ -454,7 +463,9 @@ again.
 
 When the meter reported a state with a reading, a column `flags` after it
 keeps the states: `HOLD`, `MIN`, `MAX`, `PEAK`, `AVG`, `REL`, several
-separated by a space, empty where there was none. On the grid a step has
+separated by a space, empty where there was none. A gap has `LOST` there
+when the connection was lost and `PAUSE` when QtDMM gave the port away on
+purpose. On the grid a step has
 the states of all readings in it. A file read back shows them in the
 graph's strip of meter states. A recording without any state has no such
 column.

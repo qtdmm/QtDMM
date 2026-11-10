@@ -3195,6 +3195,28 @@ int main(int argc, char **argv)
           hover += l->text();
       check(hover.endsWith("HOLD"), "states: the hover line says HOLD, got " + hover);
     }
+    // gaps by their cause, in a lane of their own: a silent meter, the
+    // connection lost, the port released on purpose
+    {
+      feed.now += 1000;                                     // 6.9 s the last reading, silent since
+      graph.store()->setStale(true);
+      feed.now += 1000;
+      put(2.0, 0);                                          // 8.9 s: back
+      feed.now += 900;
+      graph.store()->setStale(true, SampleFlag::GapLost);   // 9.9 s
+      feed.now += 1000;
+      put(2.0, 0);                                          // 10.9 s
+      feed.now += 900;
+      graph.store()->setStale(true);                        // 11.9 s, silent ...
+      graph.store()->setGapCause(SampleFlag::GapPause);     // ... on purpose after all
+      feed.now += 1000;
+      put(2.0, 0);
+      feed.now -= feed.step;
+      QTest::qWait(50);
+      const QString text = graph.statesText();
+      const qsizetype silent = text.indexOf("no value "), lost = text.indexOf("connection lost "), paused = text.indexOf("paused ");
+      check(silent > 0 && lost > silent && paused > lost, "states: the gaps by their cause, in time order: " + text);
+    }
     // a picture to look at: QTDMM_SHOT=<dir>
     if (qEnvironmentVariableIsSet("QTDMM_SHOT"))
     {

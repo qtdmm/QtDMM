@@ -172,7 +172,8 @@ ColumnName columnName(const QString &text)
 // the meter's states of a reading as words, as the graph's strip names them
 const std::pair<quint32, const char *> kStateWords[] = { { SampleFlag::Hold, "HOLD" }, { SampleFlag::Min, "MIN" },
                                                           { SampleFlag::Max, "MAX" }, { SampleFlag::Peak, "PEAK" },
-                                                          { SampleFlag::Avg, "AVG" }, { SampleFlag::Relative, "REL" } };
+                                                          { SampleFlag::Avg, "AVG" }, { SampleFlag::Relative, "REL" },
+                                                          { SampleFlag::GapLost, "LOST" }, { SampleFlag::GapPause, "PAUSE" } };
 
 QString stateFlagsText(quint32 flags)
 {
