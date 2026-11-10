@@ -1020,6 +1020,8 @@ protected:
   void             showMenu(const QPoint &pos, const QPoint &globalPos);
   /// The menu of a right axis: automatic or a fixed range (@p side 1 or 2).
   void             addAxisEntries(QMenu *menu, int side);
+  /// "Right axis [Hz]", "Third axis [Hz]".
+  QString          axisMenuTitle(int side) const;
   /// Asks for the fixed range of the axis of @p unit.
   void             askFixedRange(const QString &unit);
   QMap<QString, std::pair<double, double>> m_fixedRanges;   ///< setFixedRange()

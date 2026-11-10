@@ -614,8 +614,22 @@ int GraphWidget::axisSideAt(const QPoint &pos) const
     return 0;
   if (scene.x() <= plot.right() || m_right[0].unit.isEmpty())
     return -1;
-  // the third axis is the outermost; its title stands above its labels
-  if (!m_right[1].unit.isEmpty() && scene.x() >= m_right[1].title->x() - 4)
-    return 2;
-  return 1;
+  if (m_right[1].unit.isEmpty())
+    return 1;
+  // the third axis is the outermost: its tick labels begin furthest
+  // right (its title is often narrower than they are)
+  double thirdLeft = m_right[1].title->x();
+  double labelsLeft = -1;
+  for (QGraphicsItem *item : m_chart->scene()->items())
+  {
+    const auto *label = dynamic_cast<const QGraphicsTextItem *>(item);
+    if (!label || !label->isVisible())
+      continue;
+    const QRectF r = label->sceneBoundingRect();
+    if (r.left() > plot.right() && r.center().y() >= plot.top() - 2 && r.center().y() <= plot.bottom() + 2)
+      labelsLeft = qMax(labelsLeft, r.left());
+  }
+  if (labelsLeft > 0)
+    thirdLeft = qMin(thirdLeft, labelsLeft);
+  return scene.x() >= thirdLeft - 3 ? 2 : 1;
 }

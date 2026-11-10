@@ -2421,6 +2421,13 @@ int main(int argc, char **argv)
       check(graph.axisSideAt(at(plot.left() - 10)) == 0 && graph.axisSideAt(at(plot.right() + 8)) == 1
               && graph.axisSideAt(at(view->width() - 6)) == 2 && graph.axisSideAt(at(plot.center().x())) == -1,
             QString("axes: left, right and third under the mouse, none in the plot (plot %1..%2)").arg(plot.left()).arg(plot.right()));
+      // the third axis' labels may be wider than its title "[Hz]": their left edge is the third axis already
+      double thirdLabels = 0;
+      for (QGraphicsItem *item : chart->scene()->items())
+        if (auto *label = dynamic_cast<QGraphicsTextItem *>(item); label && label->isVisible() && label->toPlainText() == "50.5")
+          thirdLabels = label->sceneBoundingRect().left();
+      check(thirdLabels > plot.right() && graph.axisSideAt(at(thirdLabels + 1)) == 2 && graph.axisSideAt(at(thirdLabels - 6)) == 1,
+            QString("axes: the third begins where its labels begin (%1)").arg(thirdLabels));
       const QPoint on = at(view->width() - 6);
       QMouseEvent right(QEvent::MouseButtonPress, on, view->viewport()->mapToGlobal(on), Qt::RightButton, Qt::RightButton, Qt::NoModifier);
       QCoreApplication::sendEvent(view->viewport(), &right);
@@ -2431,8 +2438,9 @@ int main(int argc, char **argv)
       QAction *automatic = nullptr, *fixed = nullptr;
       for (QAction *a : menu ? menu->actions() : QList<QAction *>())
         (a->text() == "&Automatic" ? automatic : a->text().startsWith("&Fixed") ? fixed : a) = a;
-      check(menu && menu->actions().size() == 2 && automatic && !automatic->isChecked() && fixed && fixed->isChecked(),
-            "the third axis' menu: Automatic, Fixed (ticked)");
+      check(menu && menu->actions().size() == 3 && menu->actions().first()->text() == "Third axis [Hz]"
+              && automatic && !automatic->isChecked() && fixed && fixed->isChecked(),
+            "the third axis' menu: its name, Automatic, Fixed (ticked)");
       if (automatic)
         automatic->trigger();
       check(!graph.hasFixedRange("Hz"), "Automatic from the axis' menu");
