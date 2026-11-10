@@ -541,18 +541,24 @@ void GraphWidget::updateRightAxis()
       min -= half;
       max += half;
     }
-    // its ticks on the left axis' grid lines: the same count, a round step
+    // its ticks on the left axis' grid lines: the same count, a round step;
+    // a fixed range also takes steps of 1.5, 3, 4, 6, 8 (0 .. 100 % in 8
+    // divisions: 0 .. 120 in 15)
     const int ticks = qMax(2, m_yAxis->tickCount());
-    const double step = niceStep((max - min) / (ticks - 1));
-    const double first = std::floor(min / step + 1e-9) * step;
-    double top = first + (ticks - 1) * step;
-    double s = step;
-    while (top < max - s * 1e-9)
+    double from = 0, s = 1;
+    if (!m_zoomed && m_fixedRanges.contains(a.unit))
+      std::tie(from, s) = fixedRangeGrid(min, max, ticks - 1);
+    else
     {
-      s = niceStep(s * 1.01);
-      top = std::floor(min / s + 1e-9) * s + (ticks - 1) * s;
+      s = niceStep((max - min) / (ticks - 1));
+      double top = std::floor(min / s + 1e-9) * s + (ticks - 1) * s;
+      while (top < max - s * 1e-9)
+      {
+        s = niceStep(s * 1.01);
+        top = std::floor(min / s + 1e-9) * s + (ticks - 1) * s;
+      }
+      from = std::floor(min / s + 1e-9) * s;
     }
-    const double from = std::floor(min / s + 1e-9) * s;
     a.axis->setTickCount(ticks);
     a.axis->setRange(from, from + (ticks - 1) * s);
     a.title->setText(QString("[%1]").arg(SiPrefix::displayText(a.unit)));
@@ -614,8 +620,22 @@ int GraphWidget::axisSideAt(const QPoint &pos) const
     return 0;
   if (scene.x() <= plot.right() || m_right[0].unit.isEmpty())
     return -1;
-  // the third axis is the outermost; its title stands above its labels
-  if (!m_right[1].unit.isEmpty() && scene.x() >= m_right[1].title->x() - 4)
-    return 2;
-  return 1;
+  if (m_right[1].unit.isEmpty())
+    return 1;
+  // the third axis is the outermost: its tick labels begin furthest
+  // right (its title is often narrower than they are)
+  double thirdLeft = m_right[1].title->x();
+  double labelsLeft = -1;
+  for (QGraphicsItem *item : m_chart->scene()->items())
+  {
+    const auto *label = dynamic_cast<const QGraphicsTextItem *>(item);
+    if (!label || !label->isVisible())
+      continue;
+    const QRectF r = label->sceneBoundingRect();
+    if (r.left() > plot.right() && r.center().y() >= plot.top() - 2 && r.center().y() <= plot.bottom() + 2)
+      labelsLeft = qMax(labelsLeft, r.left());
+  }
+  if (labelsLeft > 0)
+    thirdLeft = qMin(thirdLeft, labelsLeft);
+  return scene.x() >= thirdLeft - 3 ? 2 : 1;
 }

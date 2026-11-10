@@ -184,7 +184,10 @@ were; the integration curve carries on across a gap.
   axis (or its entry in the graph's menu, **Right axis [Hz]**) chooses
   **Automatic** or **Fixed range...**: a minimum and a maximum, 49.5 to
   50.5 Hz say, while the left axis scales itself. The axis then shows at
-  least that range, on round ticks, whatever the readings do; it is kept
+  least that range, whatever the readings do, its ticks on the grid lines
+  of the left axis and on round numbers: steps of 1, 1.5, 2, 3, 4, 5, 6 or
+  8 (times a power of ten), the one that needs the fewest decimals - 0 to
+  100 % over 8 divisions becomes 0 to 120 in steps of 15. It is kept
   per unit with the window layout and in a saved bench. A right click on
   the left axis opens the graph's settings, where its range is. At most three units are
   drawn at a time: putting a value in a fourth unit on an axis switches off

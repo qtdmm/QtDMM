@@ -1165,6 +1165,14 @@ int main(int argc, char **argv)
     check(niceStep(0.3) == 0.5 && niceStep(1) == 1 && niceStep(1.01) == 2
           && niceStep(4.9) == 5 && niceStep(6) == 10 && qFuzzyCompare(niceStep(0.0021), 0.005),
           "niceStep follows 1-2-5");
+    // a fixed range over 8 divisions: also 1.5, 3, 4, 6, 8; fewest decimals first
+    auto grid = [](double min, double max) { return fixedRangeGrid(min, max, 8); };
+    check(grid(0, 100) == std::pair(0.0, 15.0), QString("fixed 0..100 %: 0 in 15 (to 120), got %1 in %2")
+          .arg(grid(0, 100).first).arg(grid(0, 100).second));
+    check(std::abs(grid(49.5, 50.5).first - 49.4) < 1e-9 && std::abs(grid(49.5, 50.5).second - 0.2) < 1e-9,
+          QString("fixed 49.5..50.5 Hz: 49.4 in 0.2, got %1 in %2").arg(grid(49.5, 50.5).first).arg(grid(49.5, 50.5).second));
+    check(grid(0, 80) == std::pair(0.0, 10.0) && grid(0, 1000) == std::pair(0.0, 150.0) && grid(-10, 10) == std::pair(-12.0, 3.0),
+          QString("fixed 0..80: 10; 0..1000: 150; -10..10: -12 in 3, got %1 in %2").arg(grid(-10, 10).first).arg(grid(-10, 10).second));
     for (auto v : { GraphWidget::Neutral, GraphWidget::ScopeBlue, GraphWidget::PhosphorGreen, GraphWidget::PhosphorAmber,
                     GraphWidget::ChartRecorder, GraphWidget::Custom })
       check(GraphWidget::variantFromName(GraphWidget::variantName(v)) == v, "variant name round-trip " + GraphWidget::variantName(v));
@@ -2395,8 +2403,16 @@ int main(int argc, char **argv)
       const double step = (third->max() - third->min()) / (third->tickCount() - 1);
       const double rounded = std::pow(10.0, std::floor(std::log10(step)));
       const double mantissa = step / rounded;
-      check(third->min() <= 49.5 && third->max() >= 50.5 && third->max() - third->min() <= 4.0
-              && (std::abs(mantissa - 1) < 1e-6 || std::abs(mantissa - 2) < 1e-6 || std::abs(mantissa - 5) < 1e-6),
+      // the steps of a fixed range: 1, 1.5, 2, 3, 4, 5, 6, 8 times a power of ten
+      auto round = [](double m)
+      {
+        for (double r : { 1.0, 1.5, 2.0, 3.0, 4.0, 5.0, 6.0, 8.0 })
+          if (std::abs(m - r) < 1e-6)
+            return true;
+        return false;
+      };
+      check(third->min() <= 49.5 + 1e-9 && third->max() >= 50.5 - 1e-9 && third->max() - third->min() <= 4.0
+              && round(mantissa),
             QString("fixed Hz: %1..%2 holds 49.5..50.5 on a round step %3").arg(third->min()).arg(third->max()).arg(step));
       const QString kept = graph.fixedRangesSetting();
       check(kept == "{\"Hz\":[49.5,50.5]}", "fixed ranges kept as " + kept);
@@ -2421,6 +2437,14 @@ int main(int argc, char **argv)
       check(graph.axisSideAt(at(plot.left() - 10)) == 0 && graph.axisSideAt(at(plot.right() + 8)) == 1
               && graph.axisSideAt(at(view->width() - 6)) == 2 && graph.axisSideAt(at(plot.center().x())) == -1,
             QString("axes: left, right and third under the mouse, none in the plot (plot %1..%2)").arg(plot.left()).arg(plot.right()));
+      // the third axis' labels may be wider than its title "[Hz]": their left edge is the third axis already
+      double thirdLabels = 0;
+      for (QGraphicsItem *item : chart->scene()->items())
+        if (auto *label = dynamic_cast<QGraphicsTextItem *>(item); label && label->isVisible()
+            && label->sceneBoundingRect().left() > plot.right() && label->sceneBoundingRect().center().y() < plot.bottom())
+          thirdLabels = qMax(thirdLabels, label->sceneBoundingRect().left());
+      check(thirdLabels > plot.right() && graph.axisSideAt(at(thirdLabels + 1)) == 2 && graph.axisSideAt(at(thirdLabels - 6)) == 1,
+            QString("axes: the third begins where its labels begin (%1)").arg(thirdLabels));
       const QPoint on = at(view->width() - 6);
       QMouseEvent right(QEvent::MouseButtonPress, on, view->viewport()->mapToGlobal(on), Qt::RightButton, Qt::RightButton, Qt::NoModifier);
       QCoreApplication::sendEvent(view->viewport(), &right);
@@ -2431,8 +2455,9 @@ int main(int argc, char **argv)
       QAction *automatic = nullptr, *fixed = nullptr;
       for (QAction *a : menu ? menu->actions() : QList<QAction *>())
         (a->text() == "&Automatic" ? automatic : a->text().startsWith("&Fixed") ? fixed : a) = a;
-      check(menu && menu->actions().size() == 2 && automatic && !automatic->isChecked() && fixed && fixed->isChecked(),
-            "the third axis' menu: Automatic, Fixed (ticked)");
+      check(menu && menu->actions().size() == 3 && menu->actions().first()->text() == "Third axis [Hz]"
+              && automatic && !automatic->isChecked() && fixed && fixed->isChecked(),
+            "the third axis' menu: its name, Automatic, Fixed (ticked)");
       if (automatic)
         automatic->trigger();
       check(!graph.hasFixedRange("Hz"), "Automatic from the axis' menu");

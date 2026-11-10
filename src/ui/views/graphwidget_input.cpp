@@ -161,7 +161,11 @@ void GraphWidget::showMenu(const QPoint &pos, const QPoint &globalPos)
       a->setProperty("ID", IDConfigure);
     }
     else
+    {
+      // which one: the right axes can be close together
+      m_popup->addSection(axisMenuTitle(side));
       addAxisEntries(m_popup, side);
+    }
     m_popup->popup(globalPos);
     return;
   }
@@ -264,9 +268,7 @@ void GraphWidget::showMenu(const QPoint &pos, const QPoint &globalPos)
   // the right axes' ranges, also from the keyboard
   for (int side = 1; side <= 2; ++side)
     if (!m_right[size_t(side - 1)].unit.isEmpty())
-      addAxisEntries(m_popup->addMenu((side == 1 ? tr("Right axis [%1]") : tr("Third axis [%1]"))
-                                        .arg(SiPrefix::displayText(m_right[size_t(side - 1)].unit))),
-                     side);
+      addAxisEntries(m_popup->addMenu(axisMenuTitle(side)), side);
   QAction *overview = item(tr("Over&view"), IDMinimap);
   overview->setCheckable(true);
   overview->setChecked(m_minimapOn);
@@ -594,6 +596,12 @@ void GraphWidget::popupSLOT(QAction *action)
       askFixedRange(action->property("unit").toString());
       break;
   }
+}
+
+QString GraphWidget::axisMenuTitle(int side) const
+{
+  const QString unit = SiPrefix::displayText(m_right[size_t(side - 1)].unit);
+  return side == 1 ? tr("Right axis [%1]").arg(unit) : tr("Third axis [%1]").arg(unit);
 }
 
 void GraphWidget::addAxisEntries(QMenu *menu, int side)
