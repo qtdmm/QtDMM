@@ -44,6 +44,15 @@ int main(int argc, char **argv)
   write(dir.filePath("a (2).csv"), "2");
   check(BasketWidget::freeName(tmp.path(), "b.csv") == dir.filePath("b.csv"), "a free name stays");
   check(BasketWidget::freeName(tmp.path(), "a.csv") == dir.filePath("a (3).csv"), "a taken name counts on");
+  // the symbols of the list, by suffix
+  check(BasketWidget::fileIconName("Bilder", true) == "folder", "symbol: a folder");
+  check(BasketWidget::fileIconName("2026-11-09 UT61E.CSV", false) == "text-csv"
+          && BasketWidget::fileIconName("a.png", false) == "image-x-generic"
+          && BasketWidget::fileIconName("a.lml", false) == "office-chart-line"
+          && BasketWidget::fileIconName("solar.qtdmm-workspace", false) == "qtdmm-arrange"
+          && BasketWidget::fileIconName("a.xlsx", false) == "x-office-spreadsheet",
+        "symbols: CSV, picture, LabPlot project, bench, spreadsheet");
+  check(BasketWidget::fileIconName("a.xyz", false).isEmpty(), "symbol: an unknown suffix leaves it to Qt");
   check(BasketWidget::freeName(tmp.path(), "notes") == dir.filePath("notes"), "no suffix");
 
   BasketWidget basket;

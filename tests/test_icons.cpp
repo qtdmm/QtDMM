@@ -65,6 +65,33 @@ int main(int argc, char **argv)
   Designs::setIconSet(Designs::Coloured);
   check(!QIcon::fromTheme("qtdmm-dmm").pixmap(22).isNull(), "Coloured: QtDMM's own symbol");
 
+  // System + coloured: the desktop's first, the coloured set for the rest
+  Designs::setIconSet(Designs::SystemColoured);
+  check(Designs::iconTheme() == "qtdmm-oxygen", "System + coloured: the coloured set fills the gaps");
+  const QImage colouredSave = QIcon::fromTheme("document-save").pixmap(22).toImage();
+  check(!colouredSave.isNull() && colouredSave.pixelColor(11, 11) == QColor(Qt::red), "System + coloured: the desktop's own symbol wins");
+  check(!QIcon::fromTheme("media-record").pixmap(22).isNull(), "System + coloured: what the desktop lacks");
+  Designs::setIconSet(Designs::SystemIcons);
+  check(Designs::iconTheme().startsWith("qtdmm-breeze"), "System + plain: the plain set fills the gaps");
+  // the names in the settings; "system" from before by the desktop's theme
+  check(Designs::iconSetFromName("system-colored") == Designs::SystemColoured
+          && Designs::iconSetFromName("system-plain") == Designs::SystemIcons
+          && Designs::iconSetName(Designs::SystemColoured) == "system-colored"
+          && Designs::iconSetName(Designs::SystemIcons) == "system-plain", "settings names of the two");
+  check(Designs::systemThemeColoured("oxygen") && Designs::systemThemeColoured("ePapirus-Dark")
+          && !Designs::systemThemeColoured("breeze") && !Designs::systemThemeColoured("Adwaita"),
+        "coloured desktop themes: Oxygen, Papirus yes; Breeze, Adwaita no");
+  check(Designs::iconSetFromName("system") == Designs::SystemIcons, "old 'system' with a theme not known as coloured: plain");
+
+  // the project's list: folders and file types in every built-in set
+  for (Designs::IconSet set : { Designs::Coloured, Designs::Plain })
+  {
+    Designs::setIconSet(set);
+    for (const QString &name : { "folder", "text-csv", "x-office-spreadsheet", "image-x-generic", "application-pdf",
+                                 "office-chart-line", "qtdmm-arrange", "text-x-generic" })
+      check(!QIcon::fromTheme(name).pixmap(16).isNull(), Designs::iconTheme() + ": " + name);
+  }
+
   if (failed)
     qWarning() << failed << "check(s) failed";
   else

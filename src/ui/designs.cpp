@@ -40,7 +40,7 @@ void saveSystem()
 void applyIcons()
 {
   const QString builtIn = Designs::iconTheme();
-  if (g_iconSet == Designs::SystemIcons && Designs::systemIconsAvailable())
+  if ((g_iconSet == Designs::SystemIcons || g_iconSet == Designs::SystemColoured) && Designs::systemIconsAvailable())
   {
     QIcon::setThemeName(g_systemIconTheme);
     QIcon::setFallbackThemeName(builtIn);
@@ -312,7 +312,7 @@ QString Designs::iconTheme()
 {
   // System falls back on the plain set: its monochrome symbols sit better
   // among a desktop theme's than the coloured ones
-  if (g_iconSet == Coloured)
+  if (g_iconSet == Coloured || g_iconSet == SystemColoured)
     return "qtdmm-oxygen";   // good on light and dark alike
   // by the window colour, so System on a dark desktop gets the dark set
   return QApplication::palette().color(QPalette::Window).lightness() < 128 ? "qtdmm-breeze-dark" : "qtdmm-breeze";
@@ -329,19 +329,42 @@ QString Designs::iconSetName(IconSet set)
 {
   switch (set)
   {
-    case SystemIcons: return "system";
-    case Plain:       return "plain";
-    default:          return "colored";
+    case SystemIcons:    return "system-plain";
+    case SystemColoured: return "system-colored";
+    case Plain:          return "plain";
+    default:             return "colored";
   }
 }
 
 Designs::IconSet Designs::iconSetFromName(const QString &name)
 {
-  if (name == "system")
+  if (name == "system")   // before System + plain/coloured: by the desktop's theme
+    return systemThemeColoured(systemIconTheme()) ? SystemColoured : SystemIcons;
+  if (name == "system-plain")
     return SystemIcons;
+  if (name == "system-colored")
+    return SystemColoured;
   if (name == "plain")
     return Plain;
   return Coloured;
+}
+
+bool Designs::systemThemeColoured(const QString &theme)
+{
+  // the ones that draw in colour; Breeze, Adwaita, Yaru ... are plain
+  static const QStringList coloured = { "oxygen", "kde_classic", "papirus", "epapirus", "humanity",
+                                        "tango", "gnome", "elementary", "faenza", "numix" };
+  const QString t = theme.toLower();
+  for (const QString &c : coloured)
+    if (t.startsWith(c))
+      return true;
+  return false;
+}
+
+QString Designs::systemIconTheme()
+{
+  saveSystem();
+  return g_systemIconTheme;
 }
 
 bool Designs::systemIconsAvailable()

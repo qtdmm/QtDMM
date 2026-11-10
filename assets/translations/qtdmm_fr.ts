@@ -798,245 +798,245 @@
 <context>
     <name>BasketWidget</name>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="113"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="122"/>
         <source>&amp;Description...</source>
         <translation>&amp;Description...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="115"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="124"/>
         <source>E&amp;xport project...</source>
         <translation>&amp;Exporter le projet...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="117"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="126"/>
         <source>&amp;Import project...</source>
         <translation>&amp;Importer un projet...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="163"/>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="706"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="172"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="734"/>
         <source>&amp;Add...</source>
         <translation>&amp;Ajouter...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="170"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="179"/>
         <source>Open &amp;folder</source>
         <translation>Ouvrir le &amp;dossier</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="188"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="197"/>
         <source>Empty. Drop files here or add them with Add...</source>
         <translation>Vide. Déposez des fichiers ici ou ajoutez-les avec Ajouter...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="281"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="309"/>
         <source>New project: the name of its folder</source>
         <translation>Nouveau projet : nom de son dossier</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="285"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="313"/>
         <source>Project folder (*)</source>
         <translation>Dossier de projet (*)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="286"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="314"/>
         <source>Project:</source>
         <translation>Projet :</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="287"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="315"/>
         <source>Make</source>
         <translation>Créer</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="340"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="368"/>
         <source>Project description</source>
         <translation>Description du projet</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="341"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="369"/>
         <source>What the project is about:</source>
         <translation>De quoi traite le projet :</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="100"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="109"/>
         <source>Project</source>
         <translation>Projet</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="107"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="116"/>
         <source>&amp;New project...</source>
         <translation>&amp;Nouveau projet...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="108"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="117"/>
         <source>&amp;Open project...</source>
         <translation>&amp;Ouvrir un projet...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="109"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="118"/>
         <source>&amp;Close project</source>
         <translation>&amp;Fermer le projet</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="123"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="132"/>
         <source>A project keeps its files in one folder: its benches, recordings, pictures, PDFs, LabPlot projects.</source>
         <translation>Un projet garde ses fichiers dans un dossier : ses bancs de mesure, enregistrements, images, PDF, projets LabPlot.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="167"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="176"/>
         <source>Copy files into the project</source>
         <translation>Copier des fichiers dans le projet</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="174"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="183"/>
         <source>Show the project in the file manager</source>
         <translation>Afficher le projet dans le gestionnaire de fichiers</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="293"/>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="585"/>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="614"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="321"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="613"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="642"/>
         <source>Project: cannot make the folder %1</source>
         <translation>Projet : impossible de créer le dossier %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="346"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="374"/>
         <source>Project: cannot write %1</source>
         <translation>Projet : impossible d&apos;écrire %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="361"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="389"/>
         <source>there is no folder %1</source>
         <translation>le dossier %1 n&apos;existe pas</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="387"/>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="442"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="415"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="470"/>
         <source>cannot read %1</source>
         <translation>impossible de lire %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="391"/>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="405"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="419"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="433"/>
         <source>the project is too large for a ZIP file (4 GB)</source>
         <translation>le projet est trop volumineux pour un fichier ZIP (4 Go)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="409"/>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="511"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="437"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="539"/>
         <source>cannot write %1</source>
         <translation>impossible d&apos;écrire %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="419"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="447"/>
         <source>Export project</source>
         <translation>Exporter le projet</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="421"/>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="523"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="449"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="551"/>
         <source>ZIP archives (*.zip)</source>
         <translation>Archives ZIP (*.zip)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="429"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="457"/>
         <source>Export project: %1</source>
         <translation>Exporter le projet : %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="448"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="476"/>
         <source>%1 is no ZIP file, is damaged or unpacks to more than 4 GB</source>
         <translation>%1 n&apos;est pas un fichier ZIP, est endommagé ou dépasse 4 Go une fois décompressé</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="451"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="479"/>
         <source>%1 is empty</source>
         <translation>%1 est vide</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="460"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="488"/>
         <source>%1 has a file outside its folder: %2</source>
         <translation>%1 contient un fichier hors de son dossier : %2</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="493"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="521"/>
         <source>missing or changed since the export: %1</source>
         <translation>manquant ou modifié depuis l&apos;export : %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="501"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="529"/>
         <source>cannot make the folder %1</source>
         <translation>impossible de créer le dossier %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="522"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="550"/>
         <source>Import project</source>
         <translation>Importer un projet</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="533"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="561"/>
         <source>Import project: %1</source>
         <translation>Importer un projet : %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="542"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="570"/>
         <source>Open project</source>
         <translation>Ouvrir un projet</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="598"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="626"/>
         <source>Project: cannot copy %1</source>
         <translation>Projet : impossible de copier %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="611"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="639"/>
         <source>New folder</source>
         <translation>Nouveau dossier</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="635"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="663"/>
         <source>Project: cannot move %1</source>
         <translation>Projet : impossible de déplacer %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="642"/>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="707"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="670"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="735"/>
         <source>Add to the project</source>
         <translation>Ajouter au projet</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="682"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="710"/>
         <source>Project: cannot move %1 to the trash</source>
         <translation>Projet : impossible de mettre %1 à la corbeille</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="689"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="717"/>
         <source>New &amp;folder</source>
         <translation>Nouveau &amp;dossier</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="648"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="676"/>
         <source>No program opens %1</source>
         <translation>Aucun programme n&apos;ouvre %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="663"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="691"/>
         <source>&amp;Open</source>
         <translation>&amp;Ouvrir</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="670"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="698"/>
         <source>Open &amp;with the system</source>
         <translation>Ouvrir avec le &amp;système</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="672"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="700"/>
         <source>&amp;Rename</source>
         <translation>Re&amp;nommer</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="674"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="702"/>
         <source>Move to &amp;trash</source>
         <translation>Mettre à la &amp;corbeille</translation>
     </message>
@@ -3815,7 +3815,6 @@ puis déconnectez-vous et reconnectez-vous.</translation>
     </message>
     <message>
         <location filename="../../src/ui/settings/guiprefs.cpp" line="49"/>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="63"/>
         <source>System</source>
         <translation>Système</translation>
     </message>
@@ -3850,192 +3849,202 @@ puis déconnectez-vous et reconnectez-vous.</translation>
         <translation>&amp;Apparence :</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="64"/>
-        <source>&lt;b&gt;Coloured&lt;/b&gt;: QtDMM&apos;s coloured symbols (Oxygen). &lt;b&gt;Plain&lt;/b&gt;: monochrome symbols (Breeze), light or dark to match the design. &lt;b&gt;System&lt;/b&gt;: the icon theme of your desktop, where it has one; QtDMM&apos;s own symbols and what the theme lacks come from the plain set.</source>
-        <translation>&lt;b&gt;Coloré&lt;/b&gt; : les symboles en couleur de QtDMM (Oxygen). &lt;b&gt;Sobre&lt;/b&gt; : symboles monochromes (Breeze), clairs ou sombres selon l&apos;apparence. &lt;b&gt;Système&lt;/b&gt; : le thème d&apos;icônes de votre bureau, s&apos;il en a un ; les symboles propres à QtDMM et ce qui manque au thème viennent du jeu sobre.</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="68"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="72"/>
         <source>S&amp;ymbols:</source>
         <translation>S&amp;ymboles :</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="69"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="73"/>
         <source>Symbols &amp;with text</source>
         <translation>Icônes avec te&amp;xte</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="71"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="75"/>
         <source>The toolbar buttons with their names under the symbols.</source>
         <translation>Les boutons des barres d&apos;outils avec leur nom sous l&apos;icône.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="74"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="78"/>
         <source>Digital display (LCD)</source>
         <translation>Afficheur numérique (LCD)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="75"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="79"/>
         <source>Sh&amp;ow</source>
         <translation>A&amp;fficher</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="77"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="81"/>
         <source>The digital display in the window.</source>
         <translation>L&apos;afficheur numérique dans la fenêtre.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="78"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="82"/>
         <source>&amp;Bargraph</source>
         <translation>&amp;Bargraphe</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="80"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="84"/>
         <source>The bar under the digits, as on the meter.</source>
         <translation>La barre sous les chiffres, comme sur l&apos;appareil.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="81"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="85"/>
         <source>&amp;Min/Max</source>
         <translation>&amp;Min/max</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="83"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="87"/>
         <source>The smallest and largest reading beside the value.</source>
         <translation>La plus petite et la plus grande mesure à côté de la valeur.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="87"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="91"/>
         <source>Classic</source>
         <translation>Classique</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="88"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="92"/>
         <source>Backlight blue</source>
         <translation>Rétroéclairage bleu</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="89"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="93"/>
         <source>Amber</source>
         <translation>Ambre</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="90"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="94"/>
         <source>High contrast</source>
         <translation>Contraste élevé</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="91"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="95"/>
         <source>Custom</source>
         <translation>Personnalisé</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="93"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="97"/>
         <source>The colours of the digital displays. One display can have others: its context menu, LCD colours.</source>
         <translation>Les couleurs des afficheurs numériques. Un afficheur peut avoir les siennes : son menu contextuel, Couleurs du LCD.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="97"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="101"/>
         <source>Tint of the LCD face for the colours Custom. The default is a classic greenish LCD.</source>
         <translation>Teinte de la face LCD pour les couleurs Personnalisé. Par défaut, un LCD verdâtre classique.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="102"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="106"/>
         <source>LCD &amp;colours:</source>
         <translation>&amp;Couleurs du LCD :</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="103"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="107"/>
         <source>Custom &amp;face:</source>
         <translation>&amp;Teinte personnalisée :</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="105"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="109"/>
         <source>Needle meter</source>
         <translation>Galvanomètre</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="109"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="113"/>
         <source>How the needle meter lays out its scale. &lt;b&gt;Automatic&lt;/b&gt; starts with zero at the left and switches to a centre-zero scale as soon as a clearly negative reading arrives (until the min/max memory is reset). &lt;b&gt;Zero left&lt;/b&gt; and &lt;b&gt;Centre zero&lt;/b&gt; fix one layout.</source>
         <translation>Disposition de l&apos;échelle du galvanomètre. &lt;b&gt;Automatique&lt;/b&gt; commence avec le zéro à gauche et passe à un zéro central dès qu&apos;une valeur nettement négative arrive (jusqu&apos;à la remise à zéro de la mémoire min/max). &lt;b&gt;Zéro à gauche&lt;/b&gt; et &lt;b&gt;Zéro central&lt;/b&gt; fixent une disposition.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="117"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="121"/>
         <source>Colour scheme of the needle meter: a dark studio dial with a white scale, or a classic ivory dial with a black scale.</source>
         <translation>Couleurs du galvanomètre : un cadran sombre de studio avec échelle blanche, ou un cadran ivoire classique avec échelle noire.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="138"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="142"/>
         <source>How many of the benches loaded or saved last the sidebar and the menu Arrange &gt; Recent benches show. The list is shared by all windows.</source>
         <translation>Combien des derniers bancs de mesure chargés ou enregistrés la barre latérale et le menu Disposer &gt; Bancs de mesure récents affichent. La liste est commune à toutes les fenêtres.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="140"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="144"/>
         <source>Recent benc&amp;hes:</source>
         <translation>Bancs de mesure &amp;récents :</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="108"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="112"/>
         <source>Automatic</source>
         <translation>Automatique</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="108"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="64"/>
+        <source>System + plain</source>
+        <translation>Système + sobre</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="65"/>
+        <source>System + coloured</source>
+        <translation>Système + coloré</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="67"/>
+        <source>&lt;b&gt;Coloured&lt;/b&gt;: QtDMM&apos;s coloured symbols (Oxygen). &lt;b&gt;Plain&lt;/b&gt;: monochrome symbols (Breeze), light or dark to match the design. &lt;b&gt;System + plain&lt;/b&gt;, &lt;b&gt;System + coloured&lt;/b&gt;: the icon theme of your desktop, where it has one; QtDMM&apos;s own symbols and what the theme lacks come from the plain or the coloured set.</source>
+        <translation>&lt;b&gt;Coloré&lt;/b&gt; : les symboles colorés de QtDMM (Oxygen). &lt;b&gt;Sobre&lt;/b&gt; : symboles monochromes (Breeze), clairs ou sombres selon le thème. &lt;b&gt;Système + sobre&lt;/b&gt;, &lt;b&gt;Système + coloré&lt;/b&gt; : le thème d’icônes de votre bureau, s’il en a un ; les symboles propres à QtDMM et ce qui manque au thème viennent du jeu sobre ou du jeu coloré.</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="112"/>
         <source>Zero left</source>
         <translation>Zéro à gauche</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="108"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="112"/>
         <source>Centre zero</source>
         <translation>Zéro central</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="113"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="117"/>
         <source>&amp;Scale:</source>
         <translation>&amp;Échelle :</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="116"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="120"/>
         <source>Dark studio</source>
         <translation>Studio sombre</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="116"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="120"/>
         <source>Classic ivory</source>
         <translation>Ivoire classique</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="119"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="123"/>
         <source>S&amp;tyle:</source>
         <translation>Sty&amp;le :</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="120"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="124"/>
         <source>&amp;Needle inertia</source>
         <translation>&amp;Inertie de l&apos;aiguille</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="122"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="126"/>
         <source>Move the needle with the inertia of a real moving-coil instrument instead of jumping to each new reading.</source>
         <translation>Déplacer l&apos;aiguille avec l&apos;inertie d&apos;un vrai galvanomètre au lieu de sauter à chaque nouvelle valeur.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="129"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="133"/>
         <source>Start of the red zone at the top end of the scale, as a percentage of full scale.</source>
         <translation>Début de la zone rouge en haut de l&apos;échelle, en pourcentage de la pleine échelle.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="131"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="135"/>
         <source>&amp;Red zone from:</source>
         <translation>&amp;Zone rouge à partir de :</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="133"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="137"/>
         <source>Sidebar</source>
         <translation>Barre latérale</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/guiprefs.cpp" line="137"/>
+        <location filename="../../src/ui/settings/guiprefs.cpp" line="141"/>
         <source>none</source>
         <translation>aucun</translation>
     </message>
