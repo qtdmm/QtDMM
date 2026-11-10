@@ -52,6 +52,7 @@ public:
     bool    onPanel = false;   ///< on its device's front panel, big or small
     int     meters = 0;        ///< the needle meters showing it
     int     poincares = 0;     ///< the Poincaré plots showing it
+    int     histograms = 0;    ///< histograms showing it
     QStringList views;      ///< the windows showing it, for the marks' tooltip
   };
 

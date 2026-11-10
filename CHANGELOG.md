@@ -4,6 +4,7 @@
 
 ### GUI
 
+- **Histogram** — show the distribution of one measured value in a live histogram. Add several histograms from the toolbar and assign each one its source in *Sources...*; source and visibility are kept with the workspace, while each plot summarizes the latest readings.
 - **XY diagram** — an XY diagram plots two values from open meters against each other. Add several diagrams from the toolbar; assign each X and Y source in its *Sources...* dialog. The diagrams follow the selected window design and identify their sources above the plot.
 - **Graph: gaps by their cause** — the strip of meter states has a lane for the gaps: *no value* (the meter fell silent), *connection lost* (the port went away), *paused* (the port given to an alarm's program on purpose), *no number* and *fault*, each with a hatching of its own and its word in the bar; the line under the mouse says it too. QtDMM now keeps why a gap is one; recording files have it as `LOST` and `PAUSE` in the column `flags`.
 - **Recording files keep the meter's states** — CSV, Excel and OpenDocument exports and QtDMM recordings get a column `flags` (per value, after `limit`) with what the meter reported with a reading: `HOLD`, `MIN`, `MAX`, `PEAK`, `AVG`, `REL`. A file loaded shows them again in the graph's strip of meter states; a recording without any state has no such column, older files read as before.

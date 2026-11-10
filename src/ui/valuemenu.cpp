@@ -81,6 +81,9 @@ void ValueMenu::fill(QMenu *menu, const Target &target, const ValueRef &value)
   if (target.newPoincare)
     QObject::connect(menu->addAction(tr("New &Poincaré plot")), &QAction::triggered, menu,
                      [add = target.newPoincare, ref] { add(ref); });
+  if (target.newHistogram)
+    QObject::connect(menu->addAction(tr("New &histogram")), &QAction::triggered, menu,
+                     [add = target.newHistogram, ref] { add(ref); });
   // the graph: off, or on an axis. A unit the axis has already joins it,
   // another one takes its place there (GraphWidget::setValueAxis())
   QList<std::pair<QString, GraphWidget *>> graphs;
