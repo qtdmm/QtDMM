@@ -732,6 +732,62 @@ int main(int argc, char **argv)
     check(back.count() == 3 && (back.series().at(1).flags & SampleFlag::LimitHigh), "limit: loaded with the verdicts");
   }
 
+  // --- 5a1b. what the meter said about a reading (HOLD, REL, MAX) goes
+  //           into the file too, in a flags column of its own beside the
+  //           verdict, and comes back with the readings ---
+  {
+    RecordingStore store;
+    TestClock clock;
+    clock.attach(store);
+    store.setUnit("V");
+    store.setSampleTime(10);
+    store.start();
+    auto flagged = [](Reading r, quint32 flags) { r.flags |= flags; return r; };
+    store.setReading(clock.at(0, flagged(reading(5.0, "5.000", "DC"), SampleFlag::LimitPass)));
+    store.setReading(clock.at(400, flagged(reading(5.0, "5.000", "DC"), SampleFlag::LimitPass | SampleFlag::Hold)));
+    store.setReading(clock.at(900, flagged(reading(0.2, "0.200", "DC"), SampleFlag::Relative | SampleFlag::Max)));
+    clock.now = 2000;
+    store.stop();
+    QTemporaryDir dir;
+    const QString raw = dir.path() + "/flags_raw.csv";
+    QString err;
+    check(store.write(raw, &err, true), "flags: raw write: " + err);
+    QFile f(raw);
+    const QStringList lines = f.open(QIODevice::ReadOnly | QIODevice::Text) ? QString::fromUtf8(f.readAll()).split('\n') : QStringList();
+    check(lines.value(0).endsWith(";status;limit;flags") && lines.value(1).endsWith(";ok;PASS;") && lines.value(2).endsWith(";ok;PASS;HOLD")
+            && lines.value(3).endsWith(";ok;;MAX REL"),
+          "flags: raw rows: " + lines.join(" | "));
+    RecordingStore back;
+    if (const auto rec = RecordingFile::read(raw, &err))
+      back.load(*rec);
+    check(back.count() == 3 && back.series().at(0).flags == SampleFlag::LimitPass
+            && back.series().at(1).flags == (SampleFlag::LimitPass | SampleFlag::Hold)
+            && back.series().at(2).flags == (SampleFlag::Relative | SampleFlag::Max),
+          "flags: loaded with verdicts and states: " + err);
+    // on the grid a state in a step stays, as a FAIL does
+    const Recording grid = store.toRecording();
+    check(grid.limits.size() == 3 && (grid.limits[1] & SampleFlag::Hold) && (grid.limits[2] & SampleFlag::Relative),
+          "flags: on the grid, the states of a step stay");
+    // without a verdict: the flags column alone; a file without states has none
+    RecordingStore plain;
+    TestClock clock2;
+    clock2.attach(plain);
+    plain.setUnit("V");
+    plain.start();
+    plain.setReading(clock2.at(0, flagged(reading(1.0, "1.000", "DC"), SampleFlag::Hold)));
+    clock2.now = 1000;
+    plain.stop();
+    const QString only = dir.path() + "/flags_only.csv";
+    check(plain.write(only, &err, true), "flags: write without a verdict: " + err);
+    QFile g(only);
+    const QString head = g.open(QIODevice::ReadOnly | QIODevice::Text) ? QString::fromUtf8(g.readAll()).section('\n', 0, 0) : QString();
+    check(head.endsWith(";status;flags"), "flags: alone after the status: " + head);
+    RecordingStore back2;
+    if (const auto rec = RecordingFile::read(only, &err))
+      back2.load(*rec);
+    check(back2.count() == 1 && back2.series().at(0).flags == SampleFlag::Hold, "flags: loaded from the flags column alone: " + err);
+  }
+
   // --- 5a2. the other values in the export: a column group each, on the
   //          grid and raw; empty before the value began; the status tells
   //          OL, -OL and a gap apart; import and export again the same ---

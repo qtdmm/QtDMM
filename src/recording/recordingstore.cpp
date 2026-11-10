@@ -211,7 +211,7 @@ QVector<GridPoint> RecordingStore::gridOf(const RecordingSeries &series, int ten
     for (int i = 0; i < n; ++i)
     {
       const RawPoint &p = series.at(i);
-      out.append({ p.t, p.value, p.integral, p.quality, p.flags & SampleFlag::Limit });
+      out.append({ p.t, p.value, p.integral, p.quality, p.flags & (SampleFlag::Limit | SampleFlag::State) });
     }
     return out;
   }
@@ -261,7 +261,7 @@ QVector<GridPoint> RecordingStore::gridOf(const RecordingSeries &series, int ten
       const int j = before(0);
       g.value = j < 0 ? qQNaN() : series.at(j).value;
       g.quality = j < 0 ? Quality::Stale : series.at(j).quality;
-      g.limit = j < 0 ? 0 : series.at(j).flags & SampleFlag::Limit;
+      g.limit = j < 0 ? 0 : series.at(j).flags & (SampleFlag::Limit | SampleFlag::State);
     }
     else
     {
@@ -283,7 +283,7 @@ QVector<GridPoint> RecordingStore::gridOf(const RecordingSeries &series, int ten
         const qint64 from = qMax(p.t, a), to = qMin(until, b);
         if (to <= from)
           continue;
-        g.limit |= p.flags & SampleFlag::Limit;   // a FAIL in the step is not hidden by a PASS
+        g.limit |= p.flags & (SampleFlag::Limit | SampleFlag::State);   // a FAIL in the step is not hidden by a PASS
         if (p.gap())
         {
           q = worse(q, p.quality == Quality::Valid ? Quality::Stale : p.quality);
@@ -426,14 +426,14 @@ Recording RecordingStore::toRecording(bool raw, const QList<int> &extras, const 
       const RawPoint &p = m_series.at(qMax(0, m_series.holding(t)));
       rec.values << p.value;
       rec.states << cellState(p.value, p.quality);
-      rec.limits << (p.flags & SampleFlag::Limit);
+      rec.limits << (p.flags & (SampleFlag::Limit | SampleFlag::State));
       rec.times << t - t0;
       for (int c = 0; c < others.size(); ++c)
       {
         const int j = others[c]->holding(t);
         rec.extra[c].values << (j < 0 ? qQNaN() : others[c]->at(j).value);
         rec.extra[c].states << (j < 0 ? CellState::None : cellState(others[c]->at(j).value, others[c]->at(j).quality));
-        rec.extra[c].limits << (j < 0 ? 0u : others[c]->at(j).flags & SampleFlag::Limit);
+        rec.extra[c].limits << (j < 0 ? 0u : others[c]->at(j).flags & (SampleFlag::Limit | SampleFlag::State));
       }
     }
     return rec;
