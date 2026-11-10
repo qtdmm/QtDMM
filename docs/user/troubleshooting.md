@@ -168,15 +168,16 @@ page.
 
 ### Capturing the frames of a meter
 
-Right-click the device in the sidebar and choose *Capture...*. The window
-lists the last 500 frames the meter sent: the time, the bytes and what
-QtDMM read from them, or *not understood*.
+Right-click the device in the sidebar - on the bench or under My devices,
+which connects it first - and choose *Capture...*. The window lists the
+last 500 frames the meter sent: the time, the bytes and what QtDMM read
+from them as a display would show it, or *not understood*.
 
 1. Set the meter to the range or function QtDMM reads wrongly.
 2. Type what its display shows into *The meter shows* — the value, the unit
    and what else is lit, e.g. `-1.234 V DC AUTO HOLD` — and press *Keep*
    (or Enter). The newest frame is kept with your text; with a frame
-   selected in the list (*Pause* first), that one.
+   selected in the list (*Pause* first, *Continue* goes on), that one.
 3. Repeat for every reading that is wrong; a reading that is right helps too.
 4. *Export...* writes a `.yaml` file, in the folder you choose (it is
    remembered for the next time). Attach it to the report.

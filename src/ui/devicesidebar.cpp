@@ -757,6 +757,20 @@ void DeviceSidebar::keyPressEvent(QKeyEvent *event)
   QTreeWidget::keyPressEvent(event);
 }
 
+QAction *DeviceSidebar::addCaptureAction(QMenu &menu, const QString &id) const
+{
+  QAction *capture = menu.addAction(tr("&Capture..."));
+  // a meter whose protocol QtDMM does not know: the capture is all it is for
+  if (const std::optional<MyDevice> d = m_library->find(id);
+      d && MeterSetup::formatFromSetting(d->keys.value("DMM/data-format")) == FrameFormat::RawCapture)
+  {
+    QFont bold = capture->font();
+    bold.setBold(true);
+    capture->setFont(bold);
+  }
+  return capture;
+}
+
 void DeviceSidebar::openMenu(QTreeWidgetItem *item, const QPoint &pos)
 {
   const QString id = openOf(item);
@@ -777,15 +791,7 @@ void DeviceSidebar::openMenu(QTreeWidgetItem *item, const QPoint &pos)
   QAction *limits = menu.addAction(tr("Li&mits..."));
   menu.addSeparator();
   // its frames with what it showed, for a report of what is read wrong
-  QAction *capture = menu.addAction(tr("&Capture..."));
-  // a meter whose protocol QtDMM does not know: the capture is all it is for
-  if (const std::optional<MyDevice> d = m_library->find(id);
-      d && MeterSetup::formatFromSetting(d->keys.value("DMM/data-format")) == FrameFormat::RawCapture)
-  {
-    QFont bold = capture->font();
-    bold.setBold(true);
-    capture->setFont(bold);
-  }
+  QAction *capture = addCaptureAction(menu, id);
   menu.addSeparator();
   QAction *close = menu.addAction(QIcon::fromTheme("window-close"), tr("&Remove from bench"));
   QAction *chosen = menu.exec(pos);
@@ -850,6 +856,9 @@ void DeviceSidebar::contextMenuEvent(QContextMenuEvent *event)
   beside->setToolTip(tr("Reads it with the other devices connected: recorded with them, in formulas and over SCPI"));
   beside->setEnabled(!isConnected(id));
   menu.addSeparator();
+  // its frames with what it showed; not connected yet, it is connected first
+  QAction *capture = addCaptureAction(menu, id);
+  menu.addSeparator();
   QAction *remove = menu.addAction(QIcon::fromTheme("list-remove"), tr("Re&move from My devices"));
   menu.setToolTipsVisible(true);
   QAction *chosen = menu.exec(event->globalPos());
@@ -864,6 +873,8 @@ void DeviceSidebar::contextMenuEvent(QContextMenuEvent *event)
   }
   else if (chosen == beside)
     Q_EMIT openBesideRequested(id);
+  else if (chosen == capture)
+    Q_EMIT captureRequested(id);
   else if (chosen == remove
            && QMessageBox::question(this, tr("Remove device"), tr("Remove \"%1\" from My devices?").arg(d->name))
                 == QMessageBox::Yes)

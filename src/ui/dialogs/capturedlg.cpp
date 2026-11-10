@@ -31,12 +31,12 @@ namespace
 {
 const char *kFolderKey = "Capture/folder";
 
-QTreeWidgetItem *frameItem(const CaptureLog::Frame &frame)
+QTreeWidgetItem *frameItem(const CaptureLog::Frame &frame, FrameFormat::DataFormat format)
 {
   auto *item = new QTreeWidgetItem;
   item->setText(0, QDateTime::fromMSecsSinceEpoch(frame.wall).toString("HH:mm:ss.zzz"));
   item->setText(1, QString::fromLatin1(frame.bytes.toHex(' ').toUpper()));
-  const QString read = CaptureLog::readingText(frame);
+  const QString read = CaptureLog::readingText(frame, format);
   if (read.isEmpty())
   {
     item->setText(2, CaptureDlg::tr("not understood"));
@@ -108,6 +108,13 @@ CaptureDlg::CaptureDlg(MeterConnection *dmm, const QString &name, Settings *sett
     m_stepHint = new QLabel(m_guided);
     m_stepHint->setObjectName("ui_captureStepHint");
     m_stepHint->setWordWrap(true);
+    // room for two lines of text and one of hint: a longer step does not
+    // move the buttons below
+    const int line = fontMetrics().lineSpacing();
+    m_stepText->setMinimumHeight(2 * line);
+    m_stepText->setAlignment(Qt::AlignLeft | Qt::AlignTop);
+    m_stepHint->setMinimumHeight(2 * line);
+    m_stepHint->setAlignment(Qt::AlignLeft | Qt::AlignTop);
     auto *stepBar = new QHBoxLayout;
     m_back = new QPushButton(tr("&Back"), m_guided);
     m_skip = new QPushButton(tr("Sk&ip"), m_guided);
@@ -143,6 +150,12 @@ CaptureDlg::CaptureDlg(MeterConnection *dmm, const QString &name, Settings *sett
   m_pause->setCheckable(true);
   m_pause->setAutoDefault(false);
   m_pause->setToolTip(tr("Stop adding frames, to keep one of the list"));
+  // pressed it says what a click does then
+  connect(m_pause, &QPushButton::toggled, this, [this](bool paused)
+  {
+    m_pause->setText(paused ? tr("&Continue") : tr("&Pause"));
+    m_pause->setToolTip(paused ? tr("Add the frames again") : tr("Stop adding frames, to keep one of the list"));
+  });
   auto *clear = new QPushButton(tr("C&lear"), this);
   clear->setAutoDefault(false);
   bar->addWidget(m_pause);
@@ -310,7 +323,7 @@ void CaptureDlg::propose()
   else
     m_stepHint->clear();
   m_proposedFrame = m_log.frames().last();
-  const QString read = CaptureLog::readingText(*m_proposedFrame);
+  const QString read = CaptureLog::readingText(*m_proposedFrame, m_dmm->format());
   const QString typed = m_shown->text();
   if (typed.isEmpty() || typed == m_proposed)
   {
@@ -328,7 +341,7 @@ void CaptureDlg::addFrame(const QByteArray &bytes, qint64 wall, const std::optio
   m_log.add(CaptureLog::Frame{ wall, bytes, response });
   QScrollBar *scroll = m_frames->verticalScrollBar();
   const bool atEnd = scroll->value() >= scroll->maximum() - 1;
-  m_frames->addTopLevelItem(frameItem(m_log.frames().last()));
+  m_frames->addTopLevelItem(frameItem(m_log.frames().last(), m_dmm->format()));
   while (m_frames->topLevelItemCount() > m_log.frames().size())
     delete m_frames->takeTopLevelItem(0);
   if (atEnd)
@@ -360,7 +373,7 @@ void CaptureDlg::keep()
     showStep();
   }
   const CaptureLog::Kept &k = m_log.kept().last();
-  const QString read = CaptureLog::readingText(k.frame);
+  const QString read = CaptureLog::readingText(k.frame, m_dmm->format());
   const QString bytes = QString::fromLatin1(k.frame.bytes.toHex(' ').toUpper());
   auto *item = new QTreeWidgetItem({ k.shown, read.isEmpty() ? tr("not understood") : read, k.step, bytes });
   item->setToolTip(3, bytes);

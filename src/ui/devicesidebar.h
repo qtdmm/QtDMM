@@ -9,6 +9,8 @@
 #include "core/valueref.h"
 
 class DeviceLibrary;
+class QAction;
+class QMenu;
 
 /// The sidebar "Devices": the node "My devices" with the entries of the
 /// DeviceLibrary in their order: the cupboard, each with its picture. A click
@@ -164,7 +166,8 @@ Q_SIGNALS:
   void        alarmsRequested(const QString &id);
   /// The PASS/FAIL test's limits of the open device @p id.
   void        limitsRequested(const QString &id);
-  /// The capture window of the open device @p id (CaptureDlg).
+  /// The capture window of device @p id (CaptureDlg); one of My devices not
+  /// connected yet is connected first.
   void        captureRequested(const QString &id);
   /// The row "+ Add device..." at the end of My devices.
   void        addDeviceRequested();
@@ -208,6 +211,9 @@ private:
   /// The id of an open device's row, else empty.
   QString     openOf(const QTreeWidgetItem *item) const;
   void        openMenu(QTreeWidgetItem *item, const QPoint &pos);
+  /// "Capture..." in @p menu for device @p id, bold for a meter QtDMM does
+  /// not know (FrameFormat::RawCapture).
+  QAction    *addCaptureAction(QMenu &menu, const QString &id) const;
   void        serviceMenu(QTreeWidgetItem *item, const QPoint &pos);
   void        workspaceMenu(QTreeWidgetItem *item, const QPoint &pos);
   /// The file of a workspace row that is still there, else empty.

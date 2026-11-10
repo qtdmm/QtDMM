@@ -5,6 +5,7 @@
 #include <QRegularExpression>
 #include <QStringList>
 
+#include "core/readingadapter.h"
 #include "device/decoders/raw_capture.h"
 #include "device/protocols.h"
 
@@ -97,21 +98,28 @@ void CaptureLog::removeKept(int index)
     m_kept.removeAt(index);
 }
 
-QString CaptureLog::readingText(const Frame &frame)
+QString CaptureLog::readingText(const Frame &frame, FrameFormat::DataFormat format)
 {
   if (!frame.response)
     return QString();
   const DmmDecoder::DmmResponse &r = *frame.response;
+  // what the views make of it (ReadingAdapter), not the decoder's codes
+  static const QRegularExpression leadingZeros(QStringLiteral("^([-+]?)0+(?=\\d)"));
+  ReadingAdapter adapter(format);
   QStringList values;
-  for (const DmmDecoder::DmmChannel &c : r.channels)
+  for (const PortSample &ps : adapter.adapt(r, frame.wall))
   {
-    if (c.val.isEmpty())
+    QString number = ps.sample.text.trimmed();
+    if (number.isEmpty())
       continue;
-    QStringList v{ c.val.trimmed() };
-    if (!c.unit.isEmpty())
-      v << c.unit;
-    if (!c.special.isEmpty())
-      v << c.special;
+    number.replace(leadingZeros, QStringLiteral("\\1"));   // 00.270 -> 0.270
+    QStringList v{ number };
+    if (!ps.unit.base.isEmpty())
+      v << ps.sample.displayPrefix + ps.unit.base;
+    if (const QString coupling = couplingText(ps.port.defining); !coupling.isEmpty())
+      v << coupling;
+    if (ps.port.defining & SampleFlag::Diode)
+      v << QStringLiteral("Diode");
     values << v.join(' ');
   }
   QStringList text{ values.join(" | ") };
@@ -204,7 +212,7 @@ QString CaptureLog::yaml(const Header &header, bool allFrames) const
     {
       QString line = QString("  - {t: %1, bytes: %2}")
                        .arg(quoted(QDateTime::fromMSecsSinceEpoch(f.wall).toString("HH:mm:ss.zzz")), hex(f.bytes));
-      const QString read = readingText(f);
+      const QString read = readingText(f, header.protocol);
       if (raw)
         out << line;
       else

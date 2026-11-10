@@ -1238,7 +1238,7 @@
     <name>CaptureDlg</name>
     <message>
         <location filename="../../src/ui/dialogs/capturedlg.cpp" line="42"/>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="365"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="378"/>
         <source>not understood</source>
         <translation>nie rozpoznano</translation>
     </message>
@@ -1268,156 +1268,168 @@
         <translation>Wyłączone: zachowuj ramki ręcznie, bez kroków</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="112"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="119"/>
         <source>&amp;Back</source>
         <translation>Ws&amp;tecz</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="113"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="120"/>
         <source>Sk&amp;ip</source>
         <translation>P&amp;omiń</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="115"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="122"/>
         <source>The meter has no such function, or you cannot measure it now</source>
         <translation>Miernik nie ma tej funkcji albo nie możesz jej teraz zmierzyć</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="140"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="147"/>
         <source>Last frames (up to %1):</source>
         <translation>Ostatnie ramki (do %1):</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="141"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="148"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="156"/>
         <source>&amp;Pause</source>
         <translation>&amp;Wstrzymaj</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="145"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="152"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="157"/>
         <source>Stop adding frames, to keep one of the list</source>
         <translation>Nie dodawaj więcej ramek, aby zachować jedną z listy</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="146"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="156"/>
+        <source>&amp;Continue</source>
+        <translation>&amp;Wznów</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="157"/>
+        <source>Add the frames again</source>
+        <translation>Znów dodawaj ramki</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="159"/>
         <source>C&amp;lear</source>
         <translation>Wy&amp;czyść</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="150"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="163"/>
         <source>Time</source>
         <translation>Czas</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="150"/>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="174"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="163"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="187"/>
         <source>Bytes</source>
         <translation>Bajty</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="150"/>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="174"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="163"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="187"/>
         <source>QtDMM reads</source>
         <translation>QtDMM odczytuje</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="162"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="175"/>
         <source>The meter &amp;shows:</source>
         <translation>Miernik &amp;pokazuje:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="165"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="178"/>
         <source>as on its display, e.g. -1.234 V DC AUTO HOLD</source>
         <translation>jak na wyświetlaczu, np. -1.234 V DC AUTO HOLD</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="167"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="180"/>
         <source>&amp;Keep</source>
         <translation>&amp;Zachowaj</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="170"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="183"/>
         <source>Keeps the frame selected, else the newest, with what the meter shows</source>
         <translation>Zachowuje wybraną ramkę, w przeciwnym razie najnowszą, z tym, co pokazuje miernik</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="174"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="187"/>
         <source>The meter shows</source>
         <translation>Miernik pokazuje</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="174"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="187"/>
         <source>Step</source>
         <translation>Krok</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="185"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="198"/>
         <source>&amp;Remove</source>
         <translation>&amp;Usuń</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="188"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="201"/>
         <source>Export also all &amp;frames of the list</source>
         <translation>Eksportuj też wszystkie &amp;ramki z listy</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="190"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="203"/>
         <source>&amp;Export...</source>
         <translation>&amp;Eksportuj…</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="252"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="265"/>
         <source>All steps done</source>
         <translation>Wszystkie kroki wykonane</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="253"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="266"/>
         <source>Export the capture with Export... - it holds the frames kept, with what the meter showed.</source>
         <translation>Wyeksportuj zapis przyciskiem Eksportuj… – zawiera zachowane ramki z tym, co pokazywał miernik.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="258"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="271"/>
         <source>Step %1 of %2</source>
         <translation>Krok %1 z %2</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="261"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="274"/>
         <source>Then enter what the meter shows and keep the newest frame.</source>
         <translation>Następnie wpisz, co pokazuje miernik, i zachowaj najnowszą ramkę.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="268"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="281"/>
         <source>Se&amp;nd %1</source>
         <translation>Wyś&amp;lij %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="269"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="282"/>
         <source>Presses %1 on the meter</source>
         <translation>Naciska %1 na mierniku</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="307"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="320"/>
         <source>QtDMM does not read what this step wants (%1). If the meter shows it, keep the frame anyway: that is what the capture is for.</source>
         <translation>QtDMM nie odczytuje tego, czego oczekuje ten krok (%1). Jeśli miernik to pokazuje, i tak zachowaj ramkę: właśnie do tego służy zapis.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="403"/>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="414"/>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="420"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="416"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="427"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="433"/>
         <source>Export capture</source>
         <translation>Eksportuj zapis</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="404"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="417"/>
         <source>No frame is kept with what the meter showed. Export anyway?</source>
         <translation>Żadna ramka nie jest zachowana z tym, co pokazywał miernik. Eksportować mimo to?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="414"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="427"/>
         <source>Capture (*.yaml)</source>
         <translation>Zapis (*.yaml)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="421"/>
+        <location filename="../../src/ui/dialogs/capturedlg.cpp" line="434"/>
         <source>Could not write %1: %2</source>
         <translation>Nie można zapisać %1: %2</translation>
     </message>
@@ -2150,12 +2162,12 @@
         <translation>Połączone</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="777"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="791"/>
         <source>Li&amp;mits...</source>
         <translation>&amp;Granice...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="848"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="854"/>
         <source>&amp;Rename</source>
         <translation>Zmień &amp;nazwę</translation>
     </message>
@@ -2257,43 +2269,43 @@
         <translation>Dwuklik: informacje i ustawienia</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="769"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="783"/>
         <source>Show &amp;front panel</source>
         <translation>Pokaż panel &amp;przedni</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="773"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="787"/>
         <source>&amp;Disconnect</source>
         <translation>&amp;Rozłącz</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="773"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="787"/>
         <source>Co&amp;nnect</source>
         <translation>Połą&amp;cz</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="776"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="790"/>
         <source>&amp;Alarms...</source>
         <translation>&amp;Alarmy...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="780"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="762"/>
         <source>&amp;Capture...</source>
         <translation>&amp;Zapis ramek…</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="790"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="796"/>
         <source>&amp;Remove from bench</source>
         <translation>&amp;Usuń ze stanowiska</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="849"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="855"/>
         <source>&amp;Use</source>
         <translation>&amp;Użyj</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="772"/>
-        <location filename="../../src/ui/devicesidebar.cpp" line="847"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="786"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="853"/>
         <source>&amp;Info and settings...</source>
         <translation>&amp;Informacje i ustawienia…</translation>
     </message>
@@ -2303,22 +2315,22 @@
         <translation>Ostatnie stanowiska pomiarowe</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="850"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="856"/>
         <source>Reads it with the other devices connected: recorded with them, in formulas and over SCPI</source>
         <translation>Odczytuje je razem z innymi połączonymi urządzeniami: nagrywane z nimi, w formułach i przez SCPI</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="853"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="862"/>
         <source>Re&amp;move from My devices</source>
         <translation>U&amp;suń z Moich urządzeń</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="868"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="879"/>
         <source>Remove device</source>
         <translation>Usuń urządzenie</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesidebar.cpp" line="868"/>
+        <location filename="../../src/ui/devicesidebar.cpp" line="879"/>
         <source>Remove &quot;%1&quot; from My devices?</source>
         <translation>Usunąć „%1” z Moich urządzeń?</translation>
     </message>
