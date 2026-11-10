@@ -250,15 +250,19 @@ were; the integration curve carries on across a gap.
   gets its integral too, in its unit times seconds (V·s). When a value
   changed what it measures in between (Hz to %), the values are of what it
   measures at the later cursor.
-- **Statistics:** beside the graph, on its right, a column with the
+- **Statistics:** beside the graph, on its left, a column with the
   cursors (as above) and, under **Shown**, each value's mean, σ, minimum,
   maximum, peak-peak and number of readings over the window the graph
-  shows; it follows the readings a few times a second. The **Σ** button
-  beside the time buttons, or **View → Statistics** in the right-click
-  menu, hides and shows it; whether it shows is kept with the graph (window
-  layout and bench). *Settings → Graph → Statistics* puts it left or right
-  of the graph, for every graph. The mean and σ weigh each reading for as
-  long as it held.
+  shows; it follows the readings a few times a second. It is hidden at
+  first: the **Σ** button beside the time buttons, or **View → Statistics**
+  in the right-click menu, shows and hides it; whether it shows is kept with
+  the graph (window layout and bench). *Settings → Graph → Statistics* puts
+  it left or right of the graph, for every graph. The mean and σ weigh each
+  reading for as long as it held.
+  The numbers of a value share one prefix and one number of decimals, so
+  they stand below each other (3.000 V, 0.075 V), a unit stays with its
+  number, and a long name is cut. A cursor's time is given as the time axis
+  counts it (16.874 s); the tooltip of the column has the clock times.
 - **Buttons beside the time buttons:** ⊟ the overview, ≋ the min/max
   band, ― the reference line (its menu), **A B ✕** removes the time
   cursors and ✎ sets a note now. The right-click menu has the same under
@@ -303,7 +307,8 @@ were; the integration curve carries on across a gap.
 graph window (with more than one value to choose from it asks for its values
 first); *New graph* in the menu of a value in the sidebar, or dropping a
 value on the free area, opens one with that value. A click on the button
-shows or hides all of them.
+shows or hides all of them. In a layout you arranged, a new graph goes
+below the last one, as wide as it.
 
 All graphs are alike and show the same readings, the recording is one for
 the whole bench: Record, Stop, Live and Clear in any graph act on all. Each

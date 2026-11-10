@@ -265,7 +265,7 @@ void GraphPrefs::defaultsSLOT()
   ui_lineMode->setCurrentIndex(m_cfg->getInt("Graph/line-mode", 1));
   ui_pointMode->setCurrentIndex(m_cfg->getInt("Graph/point-mode"));
   ui_crosshair->setChecked(m_cfg->getBool("Graph/crosshair-cursor", true));
-  ui_statsSide->setCurrentIndex(m_cfg->getString("Graph/stats-side", "right") == "left" ? 1 : 0);
+  ui_statsSide->setCurrentIndex(m_cfg->getString("Graph/stats-side", "left") == "left" ? 1 : 0);
   ui_lineWidth->setValue(m_cfg->getInt("Graph/line-width", 2));
 
   if (m_cfg->getBool("Scale/automatic", true))

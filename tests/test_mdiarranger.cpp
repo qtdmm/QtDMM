@@ -610,6 +610,38 @@ static void testArranged()
   }
 }
 
+// A graph new to a kept arrangement goes below the last graph, not beside it
+static void testNewGraph()
+{
+  QMdiArea area;
+  area.resize(1200, 700);
+  MdiArranger arranger(&area);
+  QList<QMdiSubWindow *> wins;
+  for (const char *name : { "a", "g", "t" })
+  {
+    QMdiSubWindow *w = area.addSubWindow(new QLabel(name));
+    w->setObjectName(name);
+    wins << w;
+  }
+  arranger.addWindow(wins[0], R::Instrument);
+  arranger.addWindow(wins[1], R::Graph);
+  arranger.addWindow(wins[2], R::Table);
+  area.show();
+  arranger.setMode(MdiArranger::Fixed);
+  QTest::qWait(50);
+  const QRect before = wins[1]->geometry();
+  check(before.width() > before.height(), "new graph: the first one is wider than tall");
+  QMdiSubWindow *g2 = area.addSubWindow(new QLabel("g2"));
+  g2->setObjectName("g2");
+  arranger.addWindow(g2, R::Graph);
+  g2->show();
+  QTest::qWait(50);
+  const QRect g = wins[1]->geometry(), n = g2->geometry();
+  check(n.top() > g.bottom() && n.left() == g.left() && n.width() == g.width() && g.width() == before.width(),
+        QString("new graph: below the first, as wide: %1,%2 %3x%4 and %5,%6 %7x%8")
+          .arg(g.x()).arg(g.y()).arg(g.width()).arg(g.height()).arg(n.x()).arg(n.y()).arg(n.width()).arg(n.height()));
+}
+
 int main(int argc, char **argv)
 {
   qputenv("QT_QPA_PLATFORM", "offscreen");
@@ -622,6 +654,7 @@ int main(int argc, char **argv)
   testText();
   testDerive();
   testArranged();
+  testNewGraph();
   if (failed)
     qWarning() << failed << "check(s) failed";
   else

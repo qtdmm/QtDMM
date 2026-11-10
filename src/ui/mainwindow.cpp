@@ -3136,7 +3136,7 @@ void MainWindow::applyGraphState(const GraphView *view, const WorkspaceGet &get,
   graph->setMinimapVisible(get(key + "-minimap", true).toBool());
   graph->setEnvelopeVisible(get(key + "-envelope", false).toBool());
   graph->setFixedRangesSetting(get(key + "-fixed-ranges", QString()).toString());
-  graph->setStatsVisible(get(key + "-stats", true).toBool());
+  graph->setStatsVisible(get(key + "-stats", false).toBool());
   graph->setViewButtonsVisible(get(key + "-buttons", true).toBool());
   // its time window; without one the settings'
   if (const int seconds = get(key + "-window", 0).toInt(); seconds > 0)

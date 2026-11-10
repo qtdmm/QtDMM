@@ -413,42 +413,43 @@ void GraphWidget::handleChartMouseMove(QMouseEvent *ev)
 
     double xValue = m_chart->mapToValue(QPointF(x, scenePos.y()), m_dataSeries).x();
     const qint64 t = qRound64(xValue * 1000);
-    const RecordingSeries &series = m_store->series();
+    // the value on the left axis, as the graph shows it: not the store's main
+    // value while it is off, also another meter's (on its own time)
+    const RefSeries ref = refSeries(t);
+    const RecordingSeries *series = ref.series;
+    const qint64 at = t - ref.shift;
     // the reading whose value holds there; the next one if it is nearer
-    int idx = series.holding(t);
-    if (idx + 1 < series.count() && (idx < 0 || (!series.at(idx).gap() && !series.at(idx + 1).gap()
-                                                 && series.at(idx + 1).t - t < t - series.at(idx).t)))
+    int idx = series ? series->holding(at) : -1;
+    if (series && idx + 1 < series->count() && (idx < 0 || (!series->at(idx).gap() && !series->at(idx + 1).gap()
+                                                            && series->at(idx + 1).t - at < at - series->at(idx).t)))
       idx++;
-    const bool inside = idx >= 0 && idx < series.count() && t <= qMax(m_store->duration(), series.last().t);
+    const bool inside = series && idx >= 0 && idx < series->count() && at <= qMax(ref.store->duration(), series->last().t);
 
-    QString text = m_store->startDateTime().addMSecs(inside ? series.at(idx).t : t).time().toString("HH:mm:ss.zzz");
+    QString text = m_store->startDateTime().addMSecs(inside ? series->at(idx).t + ref.shift : t).time().toString("HH:mm:ss.zzz");
 
-    if (inside && series.at(idx).gap())
+    if (inside && series->at(idx).gap())
     {
       // a gap: say why there is no value
       m_crosshairHLine->setVisible(false);
-      const Quality q = series.at(idx).quality;
+      const Quality q = series->at(idx).quality;
       text += "   " + (q == Quality::Overload ? QStringLiteral("OL") : q == Quality::Fault ? tr("fault") : tr("no value"));
     }
     else if (inside)
     {
-      double val = series.at(idx).value;
-      QPointF scenePoint = m_chart->mapToPosition(QPointF(series.at(idx).t / 1000.0, val), m_dataSeries);
+      double val = series->at(idx).value;
+      QPointF scenePoint = m_chart->mapToPosition(QPointF((series->at(idx).t + ref.shift) / 1000.0, val), m_dataSeries);
       m_crosshairHLine->setLine(plot.left(), scenePoint.y(), plot.right(), scenePoint.y());
-      m_crosshairHLine->setVisible(true);
-      QString unit;
-      text += "   " + QString("%1 %2").arg(formatEngineeringValue(val, &unit)).arg(unit);
+      m_crosshairHLine->setVisible(scenePoint.y() >= plot.top() && scenePoint.y() <= plot.bottom());
+      const QString base = series == &m_store->series() ? m_store->unit() : SiPrefix::displayText(leftUnit());
+      QString prefix;
+      const QString number = SiPrefix::format(val, base, &prefix);
+      text += "   " + QString("%1 %2").arg(number, prefix + base);
     }
     else
       m_crosshairHLine->setVisible(false);
 
-    // fixed above the plot, left-aligned so only its end moves with the text
     m_cursorLabel->setText(text);
-    m_cursorLabel->adjustSize();
-    const QPoint topLeft = m_chartView->mapFromScene(plot.topLeft());
-    m_cursorLabel->move(topLeft.x() + 4, 3);
-    m_cursorLabel->show();
-    m_cursorLabel->raise();
+    placeCursorLabel();
   }
 }
 
