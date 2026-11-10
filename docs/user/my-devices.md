@@ -137,7 +137,9 @@ The context menu of a device:
   - **Info**: the device at a glance as on the assistant's last page
     (picture, name, model, type, protocol, connection); whether it is
     connected, how long ago the last reading came, a low battery, and its
-    values with their readings, updated every second. Below
+    values with their readings, updated every second; for a connected device
+    the sample rate in Hz, the frames the meter sent in the last 10 s
+    (counted only while the dialog is open). Below
     a link to the maker's website (in the browser) and to the list of
     supported devices in this help.
   - **Data** (only for some meters - UNI-T UT803, UT804, UT61B+/D+/E+,

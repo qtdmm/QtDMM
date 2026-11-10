@@ -2683,6 +2683,11 @@ void MainWindow::deviceSettings(const QString &id, bool settingsTab)
   dlg.settings()->setCalcInputs(m_session->calcInputs());
   dlg.load(device->keys);
   dlg.setStatus([this, id] { return deviceStatus(id); });
+  dlg.setFrameSource([this, id]
+  {
+    const MeterController *ctl = m_session->controller("device:" + id);
+    return ctl ? ctl->dmm() : nullptr;
+  });
   // Connect, as the sidebar's menu
   dlg.setConnect([this, id] { return m_sidebar->isConnected(id); }, [this, id] { openBeside(id); });
   if (settingsTab)
