@@ -276,9 +276,9 @@ were; the integration curve carries on across a gap.
   (overload). Each state has a lane, a colour and its name in the bar; the
   line under the mouse names the state of the reading. Without such a state
   in the window there is no strip. **View → Meter states** in the
-  right-click menu switches it off, kept with the graph. The states are
-  those of the readings taken in this session: a file loaded does not have
-  them.
+  right-click menu switches it off, kept with the graph. A recording saved
+  keeps the states (see Export), so a file loaded shows them again; files
+  written before 27.1 have only OL.
 - **Buttons beside the time buttons:** ⊟ the overview, ≋ the min/max
   band, ― the reference line (its menu), **A B ✕** removes the time
   cursors and ✎ sets a note now. The right-click menu has the same under
@@ -451,6 +451,13 @@ end of the row keeps its verdict: `PASS`, `FAIL HI`, `FAIL LO`, or empty
 where the test was off. On the grid a step with a FAIL in it is FAIL, even
 when the other readings in it passed. A file read back shows the verdicts
 again.
+
+When the meter reported a state with a reading, a column `flags` after it
+keeps the states: `HOLD`, `MIN`, `MAX`, `PEAK`, `AVG`, `REL`, several
+separated by a space, empty where there was none. On the grid a step has
+the states of all readings in it. A file read back shows them in the
+graph's strip of meter states. A recording without any state has no such
+column.
 
 The other values of the meter follow, three columns each - `value 2;unit 2;status 2`, then
 `value 3` ... - on the same rows. On the grid each is the mean over the step

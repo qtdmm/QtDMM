@@ -34,8 +34,9 @@ struct RecordingColumn
   QString unit;               ///< without SI prefix
   QVector<double> values;     ///< NaN for anything but Ok
   QVector<CellState> states;  ///< one per row
-  /// The limit test's verdict per row as SampleFlag::Limit* bits (LimitTest);
-  /// empty: the value had no test.
+  /// The limit test's verdict per row as SampleFlag::Limit* bits (LimitTest)
+  /// and what the meter said about the value (SampleFlag::State: HOLD, MIN,
+  /// MAX, REL ...); empty: the value had neither.
   QVector<quint32> limits;
 };
 
@@ -57,7 +58,7 @@ struct Recording
   QVector<CellState> states;
   /// ms since start for each value; empty = value i at i x the sample time
   QVector<qint64> times;
-  /// The limit test's verdict per row, as RecordingColumn::limits.
+  /// The limit test's verdict and the meter's states per row, as RecordingColumn::limits.
   QVector<quint32> limits;
   /// The other values, a column group each (value 2, value 3 ...).
   QList<RecordingColumn> extra;

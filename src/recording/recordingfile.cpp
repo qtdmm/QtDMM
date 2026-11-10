@@ -169,6 +169,30 @@ ColumnName columnName(const QString &text)
   return name;
 }
 
+// the meter's states of a reading as words, as the graph's strip names them
+const std::pair<quint32, const char *> kStateWords[] = { { SampleFlag::Hold, "HOLD" }, { SampleFlag::Min, "MIN" },
+                                                          { SampleFlag::Max, "MAX" }, { SampleFlag::Peak, "PEAK" },
+                                                          { SampleFlag::Avg, "AVG" }, { SampleFlag::Relative, "REL" } };
+
+QString stateFlagsText(quint32 flags)
+{
+  QStringList words;
+  for (const auto &[bit, word] : kStateWords)
+    if (flags & bit)
+      words << QLatin1String(word);
+  return words.join(' ');
+}
+
+quint32 stateFlagsFrom(const QString &text)
+{
+  quint32 flags = 0;
+  for (const QString &w : text.split(' ', Qt::SkipEmptyParts))
+    for (const auto &[bit, word] : kStateWords)
+      if (w.compare(QLatin1String(word), Qt::CaseInsensitive) == 0)
+        flags |= bit;
+  return flags;
+}
+
 std::optional<CellState> stateFrom(const QString &text)
 {
   for (CellState s : { CellState::Ok, CellState::Overload, CellState::NegativeOverload, CellState::Gap,
@@ -268,7 +292,7 @@ std::optional<Recording> RecordingFile::read(const QString &path, QString *error
   int groups = 1;
   bool header = false;
   QStringList headerNames;
-  QStringList limitNames;   // the limit columns at the end: "limit", "limit 2" ...
+  QStringList limitNames;   // the limit and flags columns at the end: "limit", "limit 2", "flags" ...
   bool withMarks = false;   // mark;note at the very end (since 27.1)
   if (line.startsWith("timestamp"))   // the CSV header
   {
@@ -279,7 +303,8 @@ std::optional<Recording> RecordingFile::read(const QString &path, QString *error
       withMarks = true;
       headerNames.resize(headerNames.size() - 2);
     }
-    while (headerNames.size() > 5 && columnName(headerNames.last()).word == QLatin1String("limit"))
+    while (headerNames.size() > 5 && (columnName(headerNames.last()).word == QLatin1String("limit")
+                                      || columnName(headerNames.last()).word == QLatin1String("flags")))
       limitNames.prepend(headerNames.takeLast());
     withStatus = columnName(headerNames.value(4)).word == QLatin1String("status");
     groups = withStatus ? qMax(1, int(headerNames.size() - 2) / 3) : 1;
@@ -322,9 +347,11 @@ std::optional<Recording> RecordingFile::read(const QString &path, QString *error
   // each limit column's group: "limit" the main value, "limit 3" value 3,
   // "Sim B: limit" another meter's main value
   QList<int> limitGroup;
+  QList<bool> limitIsFlags;   // the meter's states ("flags", since 27.1) instead of a verdict
   for (const QString &text : std::as_const(limitNames))
   {
     const ColumnName name = columnName(text);
+    limitIsFlags << (name.word == QLatin1String("flags"));
     int g = name.device == rec.device && name.number <= 1 ? 0 : -1;
     for (int e = 0; g < 0 && e < rec.extra.size(); ++e)
     {
@@ -420,14 +447,16 @@ std::optional<Recording> RecordingFile::read(const QString &path, QString *error
         col.states << c.state;
       }
       if (!isLegacy)
+      {
+        // a value's verdict and its states are one entry of the row
+        QMap<int, quint32> rowBits;
         for (int k = 0; k < limitGroup.size(); ++k)
-        {
-          const quint32 bits = LimitTest::flags(LimitTest::fromText(f.value(2 + 3 * groups + k)));
-          if (limitGroup[k] == 0)
-            rec.limits << bits;
-          else if (limitGroup[k] > 0)
-            rec.extra[limitGroup[k] - 1].limits << bits;
-        }
+          if (limitGroup[k] >= 0)
+            rowBits[limitGroup[k]] |= limitIsFlags[k] ? stateFlagsFrom(f.value(2 + 3 * groups + k))
+                                                      : LimitTest::flags(LimitTest::fromText(f.value(2 + 3 * groups + k)));
+        for (auto it = rowBits.cbegin(); it != rowBits.cend(); ++it)
+          (it.key() == 0 ? rec.limits : rec.extra[it.key() - 1].limits) << it.value();
+      }
       if (withMarks && !f.value(f.size() - 2).isEmpty())
       {
         // back as notes at the row's time; several on one row were joined
@@ -537,12 +566,30 @@ QList<QPair<QString, QString>> rowMarks(const Recording &rec)
   return out;
 }
 
-bool hasVerdict(const QVector<quint32> &limits)
+bool hasVerdict(const QVector<quint32> &limits, quint32 mask = SampleFlag::Limit)
 {
   for (quint32 bits : limits)
-    if (bits)
+    if (bits & mask)
       return true;
   return false;
+}
+
+// the values the meter reported a state of (HOLD, REL ...): -1 the main value, else the column's index
+QList<int> flagColumns(const Recording &rec)
+{
+  QList<int> out;
+  if (hasVerdict(rec.limits, SampleFlag::State))
+    out << -1;
+  for (int g = 0; g < rec.extra.size(); ++g)
+    if (hasVerdict(rec.extra[g].limits, SampleFlag::State))
+      out << g;
+  return out;
+}
+
+QString flagCell(const Recording &rec, int column, int row)
+{
+  const QVector<quint32> &limits = column < 0 ? rec.limits : rec.extra[column].limits;
+  return stateFlagsText(limits.value(row));
 }
 
 // the values with a limit test: -1 the main value, else the column's index
@@ -585,9 +632,12 @@ static bool writeCsv(const Recording &recording, const QString &path, QString *e
 
   QTextStream ts(&file);
   const QList<int> limits = limitColumns(recording);
+  const QList<int> flags = flagColumns(recording);
   ts << "timestamp;time (s);" << columnNames(recording, { "value", "unit", "status" }).join(';');
   for (int c : limits)
     ts << ';' << limitName(recording, c, QStringLiteral("limit"));
+  for (int c : flags)
+    ts << ';' << limitName(recording, c, QStringLiteral("flags"));
   const QList<QPair<QString, QString>> marks = withMarks ? rowMarks(recording) : QList<QPair<QString, QString>>();
   if (!marks.isEmpty())
     ts << ";mark;note";
@@ -610,6 +660,8 @@ static bool writeCsv(const Recording &recording, const QString &path, QString *e
       ts << ';' << cell(col.values.value(i, qQNaN()), col.states.value(i, CellState::None), col.unit);
     for (int c : limits)
       ts << ';' << limitCell(recording, c, i);
+    for (int c : flags)
+      ts << ';' << flagCell(recording, c, i);
     if (!marks.isEmpty())
       ts << ';' << csvField(marks[i].first) << ';' << csvField(marks[i].second);
     ts << '\n';
@@ -744,6 +796,9 @@ bool RecordingFile::writeAny(const Recording &recording, const QString &path, QS
   QStringList head = QStringList{ tr("timestamp"), tr("time (s)") } + columnNames(recording, { tr("value"), tr("unit"), tr("status") });
   for (int c : limits)
     head << limitName(recording, c, tr("limit"));
+  const QList<int> flags = flagColumns(recording);
+  for (int c : flags)
+    head << limitName(recording, c, tr("flags"));
   const QList<QPair<QString, QString>> marks = rowMarks(recording);
   if (!marks.isEmpty())
     head << tr("mark") << tr("note");
@@ -764,6 +819,8 @@ bool RecordingFile::writeAny(const Recording &recording, const QString &path, QS
       cells(row, col.values.value(i, qQNaN()), col.states.value(i, CellState::None), col.unit);
     for (int c : limits)
       row << limitCell(recording, c, i);
+    for (int c : flags)
+      row << flagCell(recording, c, i);
     if (!marks.isEmpty())
       row << marks[i].first << marks[i].second;
     sheet.addRow(row);
