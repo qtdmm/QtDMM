@@ -15,6 +15,7 @@
 #include <QMimeData>
 
 #include "core/devicelibrary.h"
+#include "device/meterconnection.h"
 #include "ui/devicesettings.h"
 #include "ui/devicesidebar.h"
 #include "ui/devicespecs.h"
@@ -99,6 +100,10 @@ int main(int argc, char **argv)
   check(DeviceSidebar::shownAtStart(QVariant(), 2), "two devices, never set: open");
   check(!DeviceSidebar::shownAtStart(QVariant(false), 3), "closed by the user: stays closed");
   check(DeviceSidebar::shownAtStart(QVariant(true), 1), "opened by the user: stays open");
+  check(DeviceSettingsDlg::sampleRate({}) == "-", "sample rate: none");
+  check(DeviceSettingsDlg::sampleRate({ 1000 }) == "-", "sample rate: one frame");
+  check(DeviceSettingsDlg::sampleRate({ 0, 500, 1000, 1500, 2000 }) == QLocale().toString(2.0, 'f', 1) + " Hz", "sample rate: 2 Hz");
+  check(DeviceSettingsDlg::sampleRate({ 0, 2000, 4000 }) == QLocale().toString(0.5, 'f', 2) + " Hz", "sample rate: below 1 Hz");
   check(DeviceSidebar::opensAfterAdd(1, 2), "the second device opens it");
   check(!DeviceSidebar::opensAfterAdd(0, 1), "the first does not");
   check(!DeviceSidebar::opensAfterAdd(2, 3), "the third does not");
@@ -138,6 +143,26 @@ int main(int argc, char **argv)
     QObject::connect(&dlg, &DeviceSettingsDlg::helpRequested, [&](const QString &p) { page = p; });
     Q_EMIT dlg.findChild<QLabel *>("ui_deviceLinks")->linkActivated("help:supported-devices.md");
     check(page == "supported-devices.md", "Info: the help link asks for its page");
+    // the sample rate: only with a connection, from its frames while the dialog is open
+    check(!dlg.statusText().contains("Sample rate"), "Info: no sample rate without a connection");
+    MeterConnection dmm(nullptr);
+    MeterConnection *source = nullptr;
+    dlg.setFrameSource([&] { return source; });
+    source = &dmm;
+    dlg.setFrameSource([&] { return source; });
+    check(dlg.statusText().contains("Sample rate: -"), "Info: sample rate - before two frames: " + dlg.statusText());
+    for (int i = 0; i < 3; ++i)
+    {
+      Q_EMIT dmm.frame(QByteArray("x"), 0, std::nullopt);
+      QTest::qWait(100);
+    }
+    dlg.setFrameSource([&] { return source; });
+    check(dlg.statusText().contains(" Hz") && !dlg.statusText().contains("Sample rate: -"),
+          "Info: sample rate from the frames: " + dlg.statusText());
+    source = nullptr;
+    dlg.setFrameSource([&] { return source; });
+    check(!dlg.statusText().contains("Sample rate") && !QObject::disconnect(&dmm, &MeterConnection::frame, &dlg, nullptr),
+          "Info: no counting after the connection went");
     dlg.showTab(DeviceSettingsDlg::SettingsTab);
     check(dlg.currentTab() == DeviceSettingsDlg::SettingsTab && dlg.settings()->isVisibleTo(&dlg), "the Settings tab");
     check(!dlg.hasData(), "UT61E: no specifications, no Data tab");

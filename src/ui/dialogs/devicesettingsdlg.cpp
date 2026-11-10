@@ -2,17 +2,20 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "ui/dialogs/devicesettingsdlg.h"
 
+#include <QDateTime>
 #include <QDesktopServices>
 #include <QDialogButtonBox>
 #include <QHBoxLayout>
 #include <QFrame>
 #include <QLabel>
+#include <QLocale>
 #include <QPushButton>
 #include <QTabWidget>
 #include <QTextBrowser>
 #include <QUrl>
 #include <QVBoxLayout>
 
+#include "device/meterconnection.h"
 #include "ui/devicesettings.h"
 #include "ui/devicespecs.h"
 #include "ui/devicesummary.h"
@@ -146,6 +149,20 @@ void DeviceSettingsDlg::setConnect(const std::function<bool()> &connected, const
   m_connect->setEnabled(!m_connected());
 }
 
+void DeviceSettingsDlg::setFrameSource(const std::function<MeterConnection *()> &source)
+{
+  m_frameSource = source;
+  updateStatus();
+}
+
+QString DeviceSettingsDlg::sampleRate(const QList<qint64> &times)
+{
+  if (times.size() < 2 || times.last() <= times.first())
+    return QStringLiteral("-");
+  const double hz = (times.size() - 1) * 1000.0 / double(times.last() - times.first());
+  return QLocale().toString(hz, 'f', hz < 1.0 ? 2 : 1) + QStringLiteral(" Hz");
+}
+
 QString DeviceSettingsDlg::statusText() const
 {
   return m_status->text();
@@ -180,5 +197,25 @@ void DeviceSettingsDlg::updateStatus()
 {
   if (m_connected)
     m_connect->setEnabled(!m_connected());
-  m_status->setText(m_statusText ? m_statusText() : QString());
+  QString html = m_statusText ? m_statusText() : QString();
+  // the sample rate: the frames of the last 10 s, counted only while the dialog is open
+  MeterConnection *source = m_frameSource ? m_frameSource() : nullptr;
+  if (source != m_counted)
+  {
+    if (m_counted)
+      m_counted->disconnect(this);
+    m_counted = source;
+    m_frameTimes.clear();
+    if (source)
+      connect(source, &MeterConnection::frame, this,
+              [this] { m_frameTimes << QDateTime::currentMSecsSinceEpoch(); });
+  }
+  if (source)
+  {
+    const qint64 since = QDateTime::currentMSecsSinceEpoch() - 10000;
+    while (!m_frameTimes.isEmpty() && m_frameTimes.first() < since)
+      m_frameTimes.removeFirst();
+    html += QString("<p>%1</p>").arg(tr("Sample rate: %1").arg(sampleRate(m_frameTimes)).toHtmlEscaped());
+  }
+  m_status->setText(html);
 }
