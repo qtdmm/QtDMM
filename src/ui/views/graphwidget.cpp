@@ -222,6 +222,9 @@ GraphWidget::GraphWidget(QWidget *parent, Settings *settings) :
 
   m_chartView = new QChartView(m_chart, this);
   m_chartView->setRenderHint(QPainter::Antialiasing);
+  // the whole view each time: the plot changes all over with each reading anyway, and partial updates
+  // left pieces of old axis labels behind in a graph just added
+  m_chartView->setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
   // the graph background fills the widget edge to edge, without Qt Charts'
   // inset and rounded corners, so the scrollbar below lines up with it
   m_chart->setBackgroundRoundness(0);
@@ -440,9 +443,6 @@ void GraphWidget::updateTimeButtons()
   for (QToolButton *b : m_timeButtons)
   {
     const int seconds = b->property("seconds").toInt();
-    // a window longer than the recording is no choice
-    const int limit = lengthLimit();
-    b->setVisible(seconds == 0 || limit <= 0 || seconds <= limit);
     b->setChecked(seconds == 0 ? m_followAll : !m_followAll && seconds == m_windowSeconds);
   }
   placeTimeBar();
@@ -464,6 +464,13 @@ void GraphWidget::placeTimeBar()
   // they begin after the left axis' title; the graph's switches give way
   // first when there is no room (the menu's View has them too)
   const int left = m_yTitle ? m_chartView->mapFromScene(m_yTitle->sceneBoundingRect().topRight()).x() + 6 : 0;
+  // a window longer than the recording is no choice
+  const int limit = lengthLimit();
+  for (QToolButton *b : m_timeButtons)
+  {
+    const int seconds = b->property("seconds").toInt();
+    b->setVisible(seconds == 0 || limit <= 0 || seconds <= limit);
+  }
   if (m_viewButtons)
   {
     m_viewButtons->setVisible(m_viewButtonsOn);
@@ -471,20 +478,54 @@ void GraphWidget::placeTimeBar()
     if (m_viewButtonsOn && m_timeBar->width() > right - left)
       m_viewButtons->hide();
   }
+  // still no room: the longest windows go, "All" stays (a graph not shown
+  // has no width to go by)
+  for (auto it = m_timeButtons.crbegin(); isVisible() && it != m_timeButtons.crend(); ++it)
+  {
+    m_timeBar->adjustSize();
+    if (m_timeBar->width() <= right - left)
+      break;
+    if ((*it)->property("seconds").toInt() != 0)
+      (*it)->hide();
+  }
   m_timeBar->adjustSize();
-  m_timeBar->move(right - m_timeBar->width(), 3);
+  m_timeBar->move(qMax(left, right - m_timeBar->width()), 3);
   m_timeBar->raise();
+}
+
+void GraphWidget::placeCursorLabel()
+{
+  // above the plot, left-aligned so only its end moves with the text; with
+  // no room beside the buttons inside the plot
+  m_cursorLabel->adjustSize();
+  const QPoint topLeft = m_chartView->mapFromScene(m_chart->plotArea().topLeft());
+  const bool room = !m_timeBar || topLeft.x() + 4 + m_cursorLabel->width() + 4 <= m_timeBar->x();
+  // inside: at the bottom, the legend is at the top
+  const int bottom = m_chartView->mapFromScene(m_chart->plotArea().bottomLeft()).y();
+  m_cursorLabel->move(topLeft.x() + 4, room ? 3 : bottom - m_cursorLabel->height() - 2);
+  m_cursorLabel->show();
+  m_cursorLabel->raise();
 }
 
 GraphWidget::~GraphWidget()
 {
 }
 
+int GraphWidget::statsWidth() const
+{
+  if (!m_statsOn)
+    return 0;
+  // as wide as its widest row wants (in steps of 16), at least for a short
+  // name and a number, at most half of the graph
+  const int want = (qMax(170, m_statsWant) + 15) / 16 * 16;
+  return qMin(want, qMax(120, width() / 2));
+}
+
 void GraphWidget::layoutParts()
 {
   const int strip = m_minimapOn ? GraphMinimap::kHeight : 16;
-  // the statistics at the right (or left), at most a third of the graph
-  const int side = m_statsOn ? qMin(230, width() / 3) : 0;
+  // the statistics at the left (or right), about a third of the graph
+  const int side = statsWidth();
   const int w = width() - side;
   const int x = m_statsLeft ? side : 0;
   m_chartView->setGeometry(x, 0, w, height() - strip);

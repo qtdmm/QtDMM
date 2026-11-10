@@ -174,22 +174,25 @@ double GraphWidget::timeStep(double v)
 }
 
 // Seconds, minutes or hours, as the step reads best; the title says which.
+double GraphWidget::timeAxisUnit() const
+{
+  if (m_xStep >= 3600 && std::fmod(m_xStep, 3600) == 0)
+    return 3600;
+  return m_xStep >= 60 && std::fmod(m_xStep, 60) == 0 ? 60 : 1;
+}
+
+QString GraphWidget::axisTimeText(qint64 t) const
+{
+  const double unit = timeAxisUnit();
+  return QString::number(t / 1000.0 / unit, 'f', 3) + QChar(0xa0) + (unit == 3600 ? tr("h") : unit == 60 ? tr("min") : tr("s"));
+}
+
 void GraphWidget::updateXLabels()
 {
   if (!m_xAxis || m_xStep <= 0)
     return;
-  double unit = 1;
-  QString title = tr("[sec]");
-  if (m_xStep >= 3600 && std::fmod(m_xStep, 3600) == 0)
-  {
-    unit = 3600;
-    title = tr("[h]");
-  }
-  else if (m_xStep >= 60 && std::fmod(m_xStep, 60) == 0)
-  {
-    unit = 60;
-    title = tr("[min]");
-  }
+  const double unit = timeAxisUnit();
+  const QString title = unit == 3600 ? tr("[h]") : unit == 60 ? tr("[min]") : tr("[sec]");
   if (m_xAxis->titleText() != title)
     m_xAxis->setTitleText(title);
 

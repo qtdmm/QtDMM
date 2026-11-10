@@ -52,6 +52,8 @@ class LogDlg;
 class AnalogMeter;
 class MeterView;
 class PoincareView;
+class GraphView;
+class GraphWidget;
 class BasketWidget;
 class ReadingsWidget;
 class PoincarePlot;
@@ -197,10 +199,11 @@ protected:
   /// the menu, each with its value (a meter also its style), and go when
   /// closed.
   /// @{
-  enum class Added { Meter, Poincare };
+  enum class Added { Meter, Poincare, Graph };
   QList<QMdiSubWindow *> m_added;
   QAction    *m_newMeterAction = nullptr;
   QAction    *m_newPoincareAction = nullptr;
+  QAction    *m_newGraphAction = nullptr;
   /// A window with another view of @p kind showing @p value, numbered
   /// @p number (the next free one for 0); not shown yet.
   QMdiSubWindow *addViewWindow(Added kind, const ValueRef &value, int number = 0);
@@ -212,6 +215,25 @@ protected:
   /// The analog meter or Poincaré plot in @p win, nullptr for another window.
   MeterView  *meterViewOf(const QMdiSubWindow *win) const;
   PoincareView *poincareViewOf(const QMdiSubWindow *win) const;
+  /// @name Graphs
+  /// The first one ("graph", InstanceWidget's own) is always there, more
+  /// ("graph-2", ...) come from the menu and go when closed. All work alike
+  /// on the session's readings: each with its curves, axes, time window,
+  /// cursors and statistics. The window's actions (print, export, zoom, note)
+  /// are for the one used last (InstanceWidget::graph()).
+  /// @{
+  GraphView  *graphViewOf(const QMdiSubWindow *win) const;
+  QMdiSubWindow *graphWindowOf(const GraphWidget *graph) const;
+  QList<QMdiSubWindow *> graphWindows() const;
+  /// The graphs showing a value of @p ctl, one of those sharing a store.
+  QList<GraphWidget *> graphsShowing(const MeterController *ctl) const;
+  /// Shows a graph's window: the first one by its action.
+  void        showGraphWindow(QMdiSubWindow *win);
+  /// The window's entry of a view's own menu: Hide view, Close window for one added.
+  QAction    *hideAction(QMdiSubWindow *win);
+  /// A graph's signals and its menu's window actions.
+  void        hookGraph(GraphWidget *graph, QMdiSubWindow *win);
+  /// @}
   /// The windows of all analog meters or Poincaré plots, the first one first.
   QList<QMdiSubWindow *> meterWindows() const;
   QList<QMdiSubWindow *> poincareWindows() const;
@@ -391,7 +413,8 @@ protected:
   /// "Sources..." of a view: the values of the open meters it shows.
   /// "Sources..." of a view; for View::Meter the analog meter @p meter,
   /// nullptr for the first. False when cancelled.
-  bool        editSources(ValueMenu::View view, MeterView *meter = nullptr, PoincareView *plot = nullptr);
+  bool        editSources(ValueMenu::View view, MeterView *meter = nullptr, PoincareView *plot = nullptr,
+                          GraphWidget *graph = nullptr);
   /// Values... of a front panel: its device's values on the big and small line.
   void        editPanelValues(FrontPanel *panel);
   QAction    *m_graphSources = nullptr;   ///< in the graph's menu, with more than one meter
@@ -435,6 +458,10 @@ protected:
   /// Shows the windows, mode, tree, title bars, design and (Free) positions.
   void        applyWorkspace(const WorkspaceGet &get);
   void        storeWorkspace(const WorkspaceSet &set);
+  /// One graph's part of it, under its key (GraphView::key()).
+  void        applyGraphState(const GraphView *view, const WorkspaceGet &get,
+                              const std::function<ValueRef(const QString &)> &valueOf);
+  void        storeGraphState(const GraphView *view, const WorkspaceSet &set) const;
   void        loadWorkspace();
   /// Loads the workspace @p file; false (with a message) when it is none.
   bool        loadWorkspaceFile(const QString &file);

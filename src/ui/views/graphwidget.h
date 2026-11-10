@@ -178,6 +178,8 @@ public:
   /// without a recording length). A window other than the last one ends
   /// "All"; the same one keeps it, and the window of "All" stays.
   void             setGraphSize(int size);
+  /// The window last set with setGraphSize(), in seconds (0: none yet).
+  int              windowSetting() const { return m_savedWindow; }
   /// The visible window in seconds: the settings' one, or that of "All".
   int              windowSeconds() const { return m_windowSeconds; }
   /// The recorder behind the graph.
@@ -526,6 +528,9 @@ public:
   static bool      migrateIntegralScale(Settings *cfg);
 
 Q_SIGNALS:
+  /// The user works in this graph (a click, a key, its menu): with several
+  /// graphs the one the window's actions are for.
+  void             used();
   /// values() changed (setValues(), setValueShown()).
   void             valuesChanged();
   /// Status bar text: sample time, window and remaining length.
@@ -939,8 +944,11 @@ protected:
   QLabel          *m_statsLabel = nullptr;
   QToolButton     *m_statsButton = nullptr;   ///< on the time bar: on or off
   QTimer           m_statsTimer;               ///< gathers updates: at most 4 a second
-  bool             m_statsOn = true;
-  bool             m_statsLeft = false;
+  bool             m_statsOn = false;
+  bool             m_statsLeft = true;
+  mutable int      m_statsWant = 0;   ///< the width the widest row of statsHtml() wants
+  /// The statistics column's width: 0 while off.
+  int              statsWidth() const;
   bool             m_viewButtonsOn = true;
   QWidget         *m_viewButtons = nullptr;   ///< beside the time buttons
   QToolButton     *m_overviewButton = nullptr;
@@ -955,6 +963,22 @@ protected:
   void             scheduleStats();
   /// "1.234 mV", "--" for none.
   static QString   withUnit(double v, const QString &unit);
+  /// One prefix and one number of decimals for the numbers of a value in
+  /// the statistics, so they stand below each other: four significant
+  /// digits for the largest of @p values; the smallest of @p fine (a σ, a
+  /// peak-peak) keeps two, within six decimals.
+  struct ColumnScale
+  {
+    double  factor = 1;
+    QString unit;
+    int     decimals = 0;
+    QString text(double v) const;
+  };
+  static ColumnScale columnScale(const QList<double> &values, const QList<double> &fine, const QString &unit);
+  /// A time of the recording as the time axis counts it ("16.874 s", "2.281 min").
+  QString          axisTimeText(qint64 t) const;
+  /// What a unit of the time axis is in seconds: 1, 60 or 3600.
+  double           timeAxisUnit() const;
   /// The values drawn at @p t: id (0 the main one) and the series that holds then.
   QList<std::pair<int, const RecordingSeries *>> drawnSeries(qint64 t) const;
   QString          seriesUnit(const RecordingSeries *s) const;
@@ -1058,6 +1082,8 @@ protected:
   /// The right-click menu at @p pos (in the view; a point outside the plot:
   /// no entries for a time).
   void             showMenu(const QPoint &pos, const QPoint &globalPos);
+  /// The hover line (m_cursorLabel) above the plot, or inside it at the bottom when the buttons leave no room.
+  void             placeCursorLabel();
   /// The menu of a right axis: automatic or a fixed range (@p side 1 or 2).
   void             addAxisEntries(QMenu *menu, int side);
   /// "Right axis [Hz]", "Third axis [Hz]".

@@ -15,6 +15,7 @@
 #include "service/devicesession.h"
 #include "service/metercontroller.h"
 #include "ui/frontpanel.h"
+#include "ui/graphview.h"
 #include "ui/instancewidget.h"
 #include "ui/valuemenu.h"
 #include "ui/views/graphwidget.h"
@@ -133,6 +134,57 @@ int main(int argc, char **argv)
     action(menu, { "Li&mits..." })->trigger();
     check(alarmFor == QList<ValueRef>{ ValueRef(1, source) } && limitsFor == alarmFor, "the meter's value");
     delete menu;
+  }
+
+  // 3b. a second graph: its own values and time window on the same store;
+  // what is done in one makes it the current one; the menu lists both
+  {
+    GraphWidget second;
+    GraphView *view = wid.addGraph(&second, "graph-2");
+    GraphWidget *first = wid.graph();
+    first->setValues({ ValueRef(0, source) });
+    second.setValues({ ValueRef(1, source) });
+    check(first->values() == QList<ValueRef>{ ValueRef(0, source) } && second.values() == QList<ValueRef>{ ValueRef(1, source) },
+          "each graph its own values");
+    check(first->store() == ctl->recorder() && second.store() == ctl->recorder(), "both on the meter's store");
+    Q_EMIT first->windowRequested(30);
+    wid.setGraphWindow(&second, 60);
+    check(first->windowSetting() == 30 && second.windowSetting() == 60,
+          QString("each its own window, got %1 and %2").arg(first->windowSetting()).arg(second.windowSetting()));
+    Q_EMIT second.used();
+    check(wid.graph() == &second, "used: the second graph is the current one");
+    Q_EMIT second.windowRequested(120);
+    check(first->windowSetting() == 30 && second.windowSetting() == 120,
+          QString("a time button of the second: its window alone, got %1 and %2").arg(first->windowSetting()).arg(second.windowSetting()));
+    Q_EMIT first->zoomOut(2.0);
+    check(wid.graph() == first && first->windowSetting() > 30 && second.windowSetting() == 120,
+          QString("a zoom in the first: current again, its window alone, got %1 and %2").arg(first->windowSetting()).arg(second.windowSetting()));
+
+    const GraphWidget *shownGraph = nullptr;
+    ValueRef added;
+    target.graphs = [&] { return QList<std::pair<QString, GraphWidget *>>{ { "Graph", first }, { "Graph 2", &second } }; };
+    target.showGraph = [&](const GraphWidget *g) { shownGraph = g; };
+    target.newGraph = [&](const ValueRef &v) { added = v; };
+    QMenu *menu = menuFor(ValueRef(1, source));
+    QAction *right = action(menu, { "&Graph", "Graph", "&Right axis" });
+    check(right && action(menu, { "&Graph", "Graph", "&Off" })->isChecked()
+            && action(menu, { "&Graph", "Graph 2", "&Off" }) && !action(menu, { "&Graph", "Graph 2", "&Off" })->isChecked(),
+          "two graphs: a submenu each, with what each shows");
+    if (right)
+      right->trigger();
+    check(first->valueShown(ValueRef(1, source)) && first->valueAxis(ValueRef(1, source)) == GraphWidget::AxisRight
+            && shownGraph == first && second.values() == QList<ValueRef>{ ValueRef(1, source) },
+          "on the first graph's right axis: that graph alone, its window shown");
+    if (QAction *a = action(menu, { "&Graph", "&New graph" }))
+      a->trigger();
+    check(added == ValueRef(1, source), "New graph: with the value");
+    delete menu;
+    target.graphs = nullptr;
+    target.showGraph = nullptr;
+    target.newGraph = nullptr;
+    wid.removeGraph(view);
+    check(wid.graph() == first && wid.graphs().size() == 1, "removed: the first graph is the current one");
+    first->setValues({});
   }
 
   // 4. the graph's store follows its values: Sim B's value, Sim B's store

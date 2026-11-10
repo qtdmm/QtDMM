@@ -764,7 +764,7 @@ void MdiArranger::restoreSaved(const QList<int> &present)
 }
 
 // A window new to the tree: beside the last of its kind, along the longer
-// side of that cell. With none of its kind at the edge, an instrument at the
+// side of that cell (a graph below the last graph). With none of its kind at the edge, an instrument at the
 // start, as the rules have it.
 void MdiArranger::addNew(int leaf)
 {
@@ -785,7 +785,8 @@ void MdiArranger::addNew(int leaf)
   QList<QRect> rects;
   applyTree(m_root, cellArea(), rects);
   const QRect cell = rects.value(same);
-  const Qt::Orientation o = cell.width() >= cell.height() ? Qt::Horizontal : Qt::Vertical;
+  // graphs stack, as the rules have it: their time axes want the width
+  const Qt::Orientation o = role != Graph && cell.width() >= cell.height() ? Qt::Horizontal : Qt::Vertical;
   Node *node = findLeaf(m_root, same);
   Node *split = parentOf(m_root, node);
   if (split && split->orient == o)

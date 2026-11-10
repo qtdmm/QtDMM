@@ -216,7 +216,7 @@ the graph, the [readings table](readings-table.md) and the
 [Poincaré plot](poincare-plot.md). The toolbar buttons (or Ctrl+1 … Ctrl+5)
 show and hide them, all of a kind at once; the arrow beside one lists the
 windows of that kind to tick, the front panels by device, and *New...* opens
-another needle meter or Poincaré plot. Recording, Live, Clear, Export, Import
+another needle meter, Poincaré plot or graph. Recording, Live, Clear, Export, Import
 and Print are in the graph's right-click menu, with their keys; Record also
 in the menu, as it records the whole bench. A fresh QtDMM starts as a
 compact instrument with display and meter only; starting a recording shows
