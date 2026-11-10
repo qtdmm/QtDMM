@@ -361,7 +361,11 @@ public Q_SLOTS:
   /// The main value went stale (MeterController::staleChanged()): the live
   /// window or the recording gets a gap from where the last value stopped
   /// holding.
-  void        setStale(bool stale);
+  /// @p cause: why, when it is more than a silent meter (SampleFlag::GapLost, GapPause).
+  void        setStale(bool stale, quint32 cause = 0);
+  /// The gap the values stand in now has this cause after all (the
+  /// connection turned out to be lost): its points get the flag.
+  void        setGapCause(quint32 cause);
   /// The clock: the start at a clock time and the recording length.
   /// A timer calls it every second.
   void        poll();

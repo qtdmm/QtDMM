@@ -788,6 +788,46 @@ int main(int argc, char **argv)
     check(back2.count() == 1 && back2.series().at(0).flags == SampleFlag::Hold, "flags: loaded from the flags column alone: " + err);
   }
 
+  // --- 5a1c. why a gap is one goes with it: the connection lost, the port
+  //           released on purpose; known later, the gap in hand gets it;
+  //           the file keeps it ---
+  {
+    RecordingStore store;
+    TestClock clock;
+    clock.attach(store);
+    store.setUnit("V");
+    store.start();
+    store.setReading(clock.at(0, reading(1.0, "1.000", "DC")));
+    clock.now = 1000;
+    store.setStale(true, SampleFlag::GapLost);
+    store.setReading(clock.at(2000, reading(1.0, "1.000", "DC")));
+    clock.now = 3000;
+    store.setStale(true);
+    store.setGapCause(SampleFlag::GapPause);
+    store.setReading(clock.at(4000, reading(1.0, "1.000", "DC")));
+    store.setGapCause(SampleFlag::GapLost);   // no gap in hand: nothing
+    clock.now = 5000;
+    store.stop();
+    const RecordingSeries &s = store.series();
+    check(s.count() == 5 && s.at(1).gap() && s.at(1).flags == SampleFlag::GapLost && s.at(3).gap()
+            && s.at(3).flags == SampleFlag::GapPause && !(s.at(4).flags & (SampleFlag::GapLost | SampleFlag::GapPause)),
+          QString("gap cause: lost and paused on their gaps, %1 points, flags %2 %3 %4").arg(s.count())
+            .arg(s.count() > 1 ? s.at(1).flags : 0).arg(s.count() > 3 ? s.at(3).flags : 0).arg(s.count() > 4 ? s.at(4).flags : 0));
+    QTemporaryDir dir;
+    const QString raw = dir.path() + "/gap_cause.csv";
+    QString err;
+    check(store.write(raw, &err, true), "gap cause: write: " + err);
+    QFile f(raw);
+    const QStringList lines = f.open(QIODevice::ReadOnly | QIODevice::Text) ? QString::fromUtf8(f.readAll()).split('\n') : QStringList();
+    check(lines.value(0).endsWith(";status;flags") && lines.value(2).endsWith(";gap;LOST") && lines.value(4).endsWith(";gap;PAUSE"),
+          "gap cause: in the file: " + lines.join(" | "));
+    RecordingStore back;
+    if (const auto rec = RecordingFile::read(raw, &err))
+      back.load(*rec);
+    check(back.count() == 5 && back.series().at(1).flags == SampleFlag::GapLost && back.series().at(3).flags == SampleFlag::GapPause,
+          "gap cause: loaded again: " + err);
+  }
+
   // --- 5a2. the other values in the export: a column group each, on the
   //          grid and raw; empty before the value began; the status tells
   //          OL, -OL and a gap apart; import and export again the same ---

@@ -870,7 +870,10 @@ protected:
     QString label;
     qint64  from = 0;
     qint64  to = 0;
+    Qt::BrushStyle pattern = Qt::SolidPattern;
   };
+  /// Why a gap is one, in a word, and the hatching of that cause.
+  static std::pair<QString, Qt::BrushStyle> gapCause(const RawPoint &p);
   /// The states in the window shown, each kind's stretches joined.
   QList<StateSpan> stateSpans() const;
   /// The states of a reading's flags and quality as words ("HOLD REL"), for the hover line.

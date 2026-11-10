@@ -436,7 +436,7 @@ void GraphWidget::handleChartMouseMove(QMouseEvent *ev)
       // a gap: say why there is no value
       m_crosshairHLine->setVisible(false);
       const Quality q = series->at(idx).quality;
-      text += "   " + (q == Quality::Overload ? QStringLiteral("OL") : q == Quality::Fault ? tr("fault") : tr("no value"));
+      text += "   " + (q == Quality::Overload ? QStringLiteral("OL") : q == Quality::NoValue ? tr("no value") : gapCause(series->at(idx)).first);
     }
     else if (inside)
     {
