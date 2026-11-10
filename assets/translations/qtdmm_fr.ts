@@ -3330,7 +3330,7 @@ puis déconnectez-vous et reconnectez-vous.</translation>
     <name>GraphWidget</name>
     <message>
         <location filename="../../src/ui/views/graphwidget.cpp" line="107"/>
-        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="178"/>
+        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="181"/>
         <source>[sec]</source>
         <translation>[s]</translation>
     </message>
@@ -3387,12 +3387,12 @@ puis déconnectez-vous et reconnectez-vous.</translation>
         <translation>%1 secondes</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="182"/>
+        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="185"/>
         <source>[h]</source>
         <translation>[h]</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="187"/>
+        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="190"/>
         <source>[min]</source>
         <translation>[min]</translation>
     </message>
@@ -3423,7 +3423,7 @@ puis déconnectez-vous et reconnectez-vous.</translation>
     </message>
     <message>
         <location filename="../../src/ui/views/graphwidget.cpp" line="745"/>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="173"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="186"/>
         <source>Live</source>
         <translation>Direct</translation>
     </message>
@@ -3513,139 +3513,184 @@ puis déconnectez-vous et reconnectez-vous.</translation>
         <translation>&amp;Retirer la marque</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="169"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="160"/>
+        <source>Range of the left axis...</source>
+        <translation>Plage de l’axe gauche…</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="182"/>
         <source>Stop recording</source>
         <translation>Arrêter l&apos;enregistrement</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="171"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="184"/>
         <source>Start recording</source>
         <translation>Démarrer l&apos;enregistrement</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="174"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="187"/>
         <source>Reset &amp;zoom</source>
         <translation>Réinitialiser le &amp;zoom</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="175"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="188"/>
         <source>Clear graph</source>
         <translation>Effacer le graphe</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="180"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="193"/>
         <source>Note here...</source>
         <translation>Note ici…</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="182"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="195"/>
         <source>Note now...</source>
         <translation>Note maintenant…</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="189"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="202"/>
         <source>Cursor A here</source>
         <translation>Curseur A ici</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="189"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="202"/>
         <source>Cursor B here</source>
         <translation>Curseur B ici</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="196"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="209"/>
         <source>Configure...</source>
         <translation>Configurer…</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="197"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="210"/>
         <source>Copy image</source>
         <translation>Copier l’image</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="198"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="211"/>
         <source>Export image...</source>
         <translation>Exporter l&apos;image...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="204"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="217"/>
         <source>Graph &amp;colours</source>
         <translation>&amp;Couleurs du graphe</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="213"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="226"/>
         <source>&amp;Default: %1</source>
         <translation>Par &amp;défaut : %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="219"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="232"/>
         <source>&amp;Reference line</source>
         <translation>Ligne de &amp;référence</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="236"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="249"/>
         <source>At &amp;0</source>
         <translation>À &amp;0</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="237"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="250"/>
         <source>&amp;Mean of the window</source>
         <translation>&amp;Moyenne de la fenêtre</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="238"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="251"/>
         <source>M&amp;inimum of the window</source>
         <translation>M&amp;inimum de la fenêtre</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="239"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="252"/>
         <source>Ma&amp;ximum of the window</source>
         <translation>Ma&amp;ximum de la fenêtre</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="243"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="256"/>
         <source>Alarm threshold %1</source>
         <translation>Seuil d&apos;alarme %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="247"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="260"/>
         <source>At %1 (dragged)</source>
         <translation>À %1 (déplacée)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="250"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="263"/>
         <source>&amp;Off</source>
         <translation>&amp;Désactivée</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="251"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="267"/>
+        <source>Right axis [%1]</source>
+        <translation>Axe droit [%1]</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="267"/>
+        <source>Third axis [%1]</source>
+        <translation>Troisième axe [%1]</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="270"/>
         <source>Over&amp;view</source>
         <translation>&amp;Vue d’ensemble</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="254"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="273"/>
         <source>Min/max &amp;band</source>
         <translation>&amp;Bande min/max</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="258"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="277"/>
         <source>Remove time cursors</source>
         <translation>Retirer les curseurs de temps</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="263"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="282"/>
         <source>Import data...</source>
         <translation>Importer des données…</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="427"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="446"/>
         <source>no value</source>
         <translation>pas de valeur</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="427"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="446"/>
         <source>fault</source>
         <translation>défaut</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="603"/>
+        <source>&amp;Automatic</source>
+        <translation>&amp;Automatique</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="608"/>
+        <source>&amp;Fixed: %1 .. %2 %3...</source>
+        <translation>&amp;Fixe : %1 .. %2 %3…</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="612"/>
+        <source>&amp;Fixed range...</source>
+        <translation>Plage &amp;fixe…</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="628"/>
+        <source>Fixed range [%1]</source>
+        <translation>Plage fixe [%1]</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="643"/>
+        <source>M&amp;inimum:</source>
+        <translation>M&amp;inimum :</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="644"/>
+        <source>M&amp;aximum:</source>
+        <translation>M&amp;aximum :</translation>
     </message>
     <message>
         <location filename="../../src/ui/views/graphwidget_export.cpp" line="109"/>
@@ -4900,7 +4945,7 @@ Pas de permission ? Le capteur a besoin d’une règle udev pour l’ID USB %1:%
         <location filename="../../src/ui/mainwindow.cpp" line="959"/>
         <location filename="../../src/ui/mainwindow.cpp" line="967"/>
         <location filename="../../src/ui/mainwindow.cpp" line="2511"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="3357"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3359"/>
         <source>%1: %2</source>
         <translation>%1 : %2</translation>
     </message>
@@ -5217,63 +5262,63 @@ Pas de permission ? Le capteur a besoin d’une règle udev pour l’ID USB %1:%
         <translation>%1 connecté</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3200"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3202"/>
         <source>Exported to %1</source>
         <translation>Exporté vers %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3202"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3204"/>
         <source>Export failed: %1</source>
         <translation>Échec de l&apos;export : %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3218"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3220"/>
         <source>Live in LabPlot: start a recording first</source>
         <translation>En direct dans LabPlot : démarrez d&apos;abord un enregistrement</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3232"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3234"/>
         <source>live</source>
         <translation>direct</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3247"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3249"/>
         <source>Live in LabPlot: the recording ended, the file has all of it</source>
         <translation>En direct dans LabPlot : l&apos;enregistrement est terminé, le fichier le contient en entier</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3253"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="3259"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3255"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3261"/>
         <source>Live in LabPlot: %1</source>
         <translation>En direct dans LabPlot : %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3427"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3429"/>
         <source>Bench loaded</source>
         <translation>Banc de mesure chargé</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3438"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3440"/>
         <source>project %1 closed: the bench is not in it</source>
         <translation>projet %1 fermé : le banc de mesure n&apos;en fait pas partie</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3439"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3441"/>
         <source>project %1 opened: the bench is in it</source>
         <translation>projet %1 ouvert : le banc de mesure en fait partie</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3442"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3444"/>
         <source>back in My devices: %1</source>
         <translation>de retour dans Mes appareils : %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3444"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3446"/>
         <source>the programs of their alarms were left out, set them again in Alarms...</source>
         <translation>les programmes de leurs alarmes ont été omis, à redéfinir dans Alarmes...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3446"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3448"/>
         <source>%1 without its key: enter it in the device settings</source>
         <translation>%1 sans sa clé : saisissez-la dans les réglages de l&apos;appareil</translation>
     </message>
@@ -5550,65 +5595,65 @@ Pas de permission ? Le capteur a besoin d’une règle udev pour l’ID USB %1:%
         <translation>La pile de l&apos;appareil est faible.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3166"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3168"/>
         <source>Project: cannot write %1</source>
         <translation>Projet : impossible d&apos;écrire %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3168"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="3269"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3170"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3271"/>
         <source>Into the project: %1</source>
         <translation>Dans le projet : %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3267"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3269"/>
         <source>Project: cannot write %1: %2</source>
         <translation>Projet : impossible d&apos;écrire %1 : %2</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3300"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3302"/>
         <source>Save bench</source>
         <translation>Enregistrer le banc de mesure</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3301"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="3345"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3303"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3347"/>
         <source>QtDMM bench (*.%1)</source>
         <translation>Banc de mesure QtDMM (*.%1)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3325"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3327"/>
         <source>QtDMM: Save bench</source>
         <translation>QtDMM : Enregistrer le banc de mesure</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3332"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3334"/>
         <source>Bench saved to %1</source>
         <translation>Banc de mesure enregistré dans %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3344"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3346"/>
         <source>Load bench</source>
         <translation>Charger le banc de mesure</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3357"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="3374"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3359"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3376"/>
         <source>QtDMM: Load bench</source>
         <translation>QtDMM : Charger le banc de mesure</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3375"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3377"/>
         <source>The bench closes %1, its recording is not saved.</source>
         <translation>Le banc de mesure ferme %1, son enregistrement n&apos;est pas sauvegardé.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3325"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3327"/>
         <source>Could not write %1.</source>
         <translation>Impossible d&apos;écrire %1.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3558"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3560"/>
         <source>&amp;Clear list</source>
         <translation>&amp;Vider la liste</translation>
     </message>

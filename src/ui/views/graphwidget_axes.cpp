@@ -26,6 +26,9 @@
 
 #include <QtGui>
 #include <QtWidgets>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <cmath>
 
 #include "ui/frameclock.h"
@@ -516,6 +519,12 @@ void GraphWidget::updateRightAxis()
       min = m_yZoom[size_t(k + 1)].first;
       max = m_yZoom[size_t(k + 1)].second;
     }
+    else if (const auto fixed = m_fixedRanges.constFind(a.unit); fixed != m_fixedRanges.cend())
+    {
+      // fixed: at least this range, the ticks round as ever
+      min = fixed->first;
+      max = fixed->second;
+    }
     else if (m_includeZero)
     {
       min = qMin(min, 0.0);
@@ -554,4 +563,59 @@ void GraphWidget::updateRightAxis()
   placeTimeBar();
   if (m_intValueId > 0)
     updateThresholdLinePositions();
+}
+
+void GraphWidget::setFixedRange(const QString &unit, double min, double max)
+{
+  if (unit.isEmpty() || !std::isfinite(min) || !std::isfinite(max))
+    return;
+  m_fixedRanges[unit] = { qMin(min, max), qMax(min, max) };
+  updateRightAxis();
+  updateThresholdLinePositions();
+}
+
+void GraphWidget::clearFixedRange(const QString &unit)
+{
+  if (m_fixedRanges.remove(unit) == 0)
+    return;
+  updateRightAxis();
+  updateThresholdLinePositions();
+}
+
+QString GraphWidget::fixedRangesSetting() const
+{
+  QJsonObject o;
+  for (auto it = m_fixedRanges.cbegin(); it != m_fixedRanges.cend(); ++it)
+    o.insert(it.key(), QJsonArray{ it->first, it->second });
+  return o.isEmpty() ? QString() : QString::fromUtf8(QJsonDocument(o).toJson(QJsonDocument::Compact));
+}
+
+void GraphWidget::setFixedRangesSetting(const QString &text)
+{
+  m_fixedRanges.clear();
+  const QJsonObject o = QJsonDocument::fromJson(text.toUtf8()).object();
+  for (auto it = o.begin(); it != o.end(); ++it)
+  {
+    const QJsonArray r = it.value().toArray();
+    if (r.size() == 2 && r[0].isDouble() && r[1].isDouble())
+      m_fixedRanges[it.key()] = { qMin(r[0].toDouble(), r[1].toDouble()), qMax(r[0].toDouble(), r[1].toDouble()) };
+  }
+  updateRightAxis();
+  updateThresholdLinePositions();
+}
+
+int GraphWidget::axisSideAt(const QPoint &pos) const
+{
+  const QPointF scene = m_chartView->mapToScene(pos);
+  const QRectF plot = m_chart->plotArea();
+  if (scene.y() < plot.top() - 30 || scene.y() > plot.bottom() + 4)
+    return -1;
+  if (scene.x() < plot.left())
+    return 0;
+  if (scene.x() <= plot.right() || m_right[0].unit.isEmpty())
+    return -1;
+  // the third axis is the outermost; its title stands above its labels
+  if (!m_right[1].unit.isEmpty() && scene.x() >= m_right[1].title->x() - 4)
+    return 2;
+  return 1;
 }

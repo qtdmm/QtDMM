@@ -2388,6 +2388,58 @@ int main(int argc, char **argv)
           QString("°C goes on: %1 -> %2 points, axis up to %3").arg(before).arg(graph.extraCurve(celsius)->count())
             .arg(graph.rightAxis()->max()));
 
+    // a fixed range for a right axis, by unit: at least that range, on round ticks
+    {
+      QValueAxis *third = graph.thirdAxis();
+      graph.setFixedRange("Hz", 49.5, 50.5);
+      const double step = (third->max() - third->min()) / (third->tickCount() - 1);
+      const double rounded = std::pow(10.0, std::floor(std::log10(step)));
+      const double mantissa = step / rounded;
+      check(third->min() <= 49.5 && third->max() >= 50.5 && third->max() - third->min() <= 4.0
+              && (std::abs(mantissa - 1) < 1e-6 || std::abs(mantissa - 2) < 1e-6 || std::abs(mantissa - 5) < 1e-6),
+            QString("fixed Hz: %1..%2 holds 49.5..50.5 on a round step %3").arg(third->min()).arg(third->max()).arg(step));
+      const QString kept = graph.fixedRangesSetting();
+      check(kept == "{\"Hz\":[49.5,50.5]}", "fixed ranges kept as " + kept);
+      // the reading of 50 Hz stays inside, readings far away do not move it
+      for (int i = 0; i < 3; ++i)
+      {
+        feed.value(1.0);
+        feed.other(3, 80, "Hz", Quantity::Frequency);
+      }
+      check(third->max() <= 54, QString("fixed Hz: 80 Hz leaves the axis at %1").arg(third->max()));
+      graph.clearFixedRange("Hz");
+      check(third->max() >= 80 && graph.fixedRangesSetting().isEmpty(), "Hz automatic again: grows to 80");
+      graph.setFixedRangesSetting(kept);
+      check(graph.hasFixedRange("Hz") && third->max() <= 54, "fixed ranges read back from the layout");
+
+      // which axis is under the mouse; a right click there opens its menu
+      QTest::qWait(50);   // the chart lays out the axes in its event loop
+      QChartView *view = graph.findChild<QChartView *>();
+      QChart *chart = view->chart();
+      const QRectF plot = chart->plotArea();
+      auto at = [&](double x) { return view->mapFromScene(QPointF(x, plot.center().y())); };
+      check(graph.axisSideAt(at(plot.left() - 10)) == 0 && graph.axisSideAt(at(plot.right() + 8)) == 1
+              && graph.axisSideAt(at(view->width() - 6)) == 2 && graph.axisSideAt(at(plot.center().x())) == -1,
+            QString("axes: left, right and third under the mouse, none in the plot (plot %1..%2)").arg(plot.left()).arg(plot.right()));
+      const QPoint on = at(view->width() - 6);
+      QMouseEvent right(QEvent::MouseButtonPress, on, view->viewport()->mapToGlobal(on), Qt::RightButton, Qt::RightButton, Qt::NoModifier);
+      QCoreApplication::sendEvent(view->viewport(), &right);
+      QMenu *menu = nullptr;
+      for (QMenu *m : graph.findChildren<QMenu *>())
+        if (m->isVisible())
+          menu = m;
+      QAction *automatic = nullptr, *fixed = nullptr;
+      for (QAction *a : menu ? menu->actions() : QList<QAction *>())
+        (a->text() == "&Automatic" ? automatic : a->text().startsWith("&Fixed") ? fixed : a) = a;
+      check(menu && menu->actions().size() == 2 && automatic && !automatic->isChecked() && fixed && fixed->isChecked(),
+            "the third axis' menu: Automatic, Fixed (ticked)");
+      if (automatic)
+        automatic->trigger();
+      check(!graph.hasFixedRange("Hz"), "Automatic from the axis' menu");
+      if (menu)
+        menu->hide();
+    }
+
     // the integration curve of value 2: its series' integral, on its axis
     {
       auto *intSeries = qobject_cast<QXYSeries *>(graph.findChild<QChartView *>()->chart()->series().at(2));

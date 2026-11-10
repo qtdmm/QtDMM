@@ -152,6 +152,19 @@ void GraphWidget::showMenu(const QPoint &pos, const QPoint &globalPos)
     m_popup->popup(globalPos);
     return;
   }
+  // on an axis: its range (the left one's is in the settings)
+  if (const int side = axisSideAt(pos); side >= 0)
+  {
+    if (side == 0)
+    {
+      QAction *a = m_popup->addAction(tr("Range of the left axis..."));
+      a->setProperty("ID", IDConfigure);
+    }
+    else
+      addAxisEntries(m_popup, side);
+    m_popup->popup(globalPos);
+    return;
+  }
   // an entry of the menu; popupSLOT() acts on its "ID"
   auto item = [this](const QString &text, int id)
   {
@@ -248,6 +261,12 @@ void GraphWidget::showMenu(const QPoint &pos, const QPoint &globalPos)
   }
   reference->addSeparator();
   refEntry(tr("&Off"), RefOff);
+  // the right axes' ranges, also from the keyboard
+  for (int side = 1; side <= 2; ++side)
+    if (!m_right[size_t(side - 1)].unit.isEmpty())
+      addAxisEntries(m_popup->addMenu((side == 1 ? tr("Right axis [%1]") : tr("Third axis [%1]"))
+                                        .arg(SiPrefix::displayText(m_right[size_t(side - 1)].unit))),
+                     side);
   QAction *overview = item(tr("Over&view"), IDMinimap);
   overview->setCheckable(true);
   overview->setChecked(m_minimapOn);
@@ -568,7 +587,71 @@ void GraphWidget::popupSLOT(QAction *action)
     case IDResetZoom:
       endZoom(true);
       break;
+    case IDAxisAuto:
+      clearFixedRange(action->property("unit").toString());
+      break;
+    case IDAxisFixed:
+      askFixedRange(action->property("unit").toString());
+      break;
   }
+}
+
+void GraphWidget::addAxisEntries(QMenu *menu, int side)
+{
+  const QString unit = m_right[size_t(side - 1)].unit;
+  const bool fixed = hasFixedRange(unit);
+  QAction *automatic = menu->addAction(tr("&Automatic"));
+  automatic->setProperty("ID", IDAxisAuto);
+  automatic->setProperty("unit", unit);
+  automatic->setCheckable(true);
+  automatic->setChecked(!fixed);
+  QAction *range = menu->addAction(fixed ? tr("&Fixed: %1 .. %2 %3...")
+                                             .arg(QLocale().toString(m_fixedRanges.value(unit).first),
+                                                  QLocale().toString(m_fixedRanges.value(unit).second),
+                                                  SiPrefix::displayText(unit))
+                                         : tr("&Fixed range..."));
+  range->setProperty("ID", IDAxisFixed);
+  range->setProperty("unit", unit);
+  range->setCheckable(true);
+  range->setChecked(fixed);
+}
+
+void GraphWidget::askFixedRange(const QString &unit)
+{
+  // the range kept, else the one shown now
+  std::pair<double, double> r = m_fixedRanges.value(unit, { 0.0, 1.0 });
+  if (!hasFixedRange(unit))
+    for (const SideAxis &a : m_right)
+      if (a.unit == unit)
+        r = { a.axis->min(), a.axis->max() };
+  QDialog dlg(this);
+  dlg.setWindowTitle(tr("Fixed range [%1]").arg(SiPrefix::displayText(unit)));
+  auto *form = new QFormLayout(&dlg);
+  auto spin = [&](double v)
+  {
+    auto *s = new QDoubleSpinBox(&dlg);
+    s->setDecimals(6);
+    s->setRange(-1e12, 1e12);
+    s->setSuffix(" " + SiPrefix::displayText(unit));
+    s->setValue(v);
+    return s;
+  };
+  QDoubleSpinBox *min = spin(r.first);
+  QDoubleSpinBox *max = spin(r.second);
+  min->setObjectName("ui_axisMin");
+  max->setObjectName("ui_axisMax");
+  form->addRow(tr("M&inimum:"), min);
+  form->addRow(tr("M&aximum:"), max);
+  auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dlg);
+  connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
+  connect(buttons, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
+  form->addRow(buttons);
+  auto check = [=] { buttons->button(QDialogButtonBox::Ok)->setEnabled(max->value() > min->value()); };
+  connect(min, &QDoubleSpinBox::valueChanged, &dlg, check);
+  connect(max, &QDoubleSpinBox::valueChanged, &dlg, check);
+  check();
+  if (dlg.exec() == QDialog::Accepted)
+    setFixedRange(unit, min->value(), max->value());
 }
 
 void GraphWidget::endZoomDrag()
