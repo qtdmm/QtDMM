@@ -273,6 +273,44 @@ int main(int argc, char **argv)
             && back.marks().at(0).note == "R1 10 k" && back.marks().at(0).color == RecordingStore::kNoteColor
             && back.marks().at(1).note == "fuse checked",
           "notes: read back");
+
+    // dragged: the mark goes to its new time, in the order of time
+    check(back.setMarkTime(0, 2500) == 1 && back.marks().at(1).name == "Start" && back.marks().at(0).name == "Alarm Hi",
+          "notes: moved after the alarm's mark");
+    // the readings table's mark goes along
+    noted.moveMark(t0.addSecs(12), t0.addSecs(1), QColor(0x1e, 0x90, 0xff), "Load on");
+    check(noted.data(noted.index(1, 0), Qt::ToolTipRole).toString().isEmpty()
+            && noted.data(noted.index(0, 0), Qt::ToolTipRole).toString() == "Load on",
+          "notes: the table's mark moved");
+
+    // in a CSV: mark;note on the nearest row, quoted, and back as notes
+    Recording withMarks = rec;
+    withMarks.meta["marks"] = QJsonArray{
+      QJsonObject{ { "t", 1100.0 }, { "color", "#ff1e90ff" }, { "name", "Load on" }, { "note", "R1; 10 k\n\"hot\"" }, { "kind", "note" } },
+      QJsonObject{ { "t", 1200.0 }, { "color", "#ffd03030" }, { "name", "Alarm Hi" } },
+      QJsonObject{ { "t", 2900.0 }, { "color", "#ff1e90ff" }, { "name", "End" }, { "kind", "note" } } };
+    const QString csv = tmp.filePath("marks.csv");
+    QString err;
+    check(RecordingFile::write(withMarks, csv, &err), "marks: CSV written " + err);
+    QFile cf(csv);
+    check(cf.open(QIODevice::ReadOnly | QIODevice::Text), "marks: CSV opened");
+    const QString text = QString::fromUtf8(cf.readAll());
+    cf.close();
+    check(text.section('\n', 0, 0).endsWith(";status;mark;note")
+            && text.contains(";Load on | Alarm Hi;\"R1; 10 k\n\"\"hot\"\" | \"\n") && text.contains(";End;\n"),
+          "marks: the columns, two on one row, quoted: " + text);
+    const std::optional<Recording> csvBack = RecordingFile::read(csv, &err);
+    const QJsonArray rm = csvBack ? csvBack->meta.value("marks").toArray() : QJsonArray();
+    check(csvBack && csvBack->values.size() == 4 && rm.size() == 3 && rm.at(0).toObject().value("t").toDouble() == 1000
+            && rm.at(0).toObject().value("note").toString() == "R1; 10 k\n\"hot\""
+            && rm.at(1).toObject().value("name").toString() == "Alarm Hi" && rm.at(2).toObject().value("t").toDouble() == 3000
+            && rm.at(2).toObject().value("kind").toString() == "note",
+          "marks: read back as notes at their rows");
+    const QString rpath = tmp.filePath("marks.qtdmm-rec");
+    check(RecordingFile::writeAny(withMarks, rpath, &err), "marks: recording written " + err);
+    const std::optional<Recording> recBack = RecordingFile::read(rpath, &err);
+    check(recBack && recBack->meta.value("marks").toArray().at(0).toObject().value("t").toDouble() == 1100,
+          "marks: a .qtdmm-rec keeps them exactly in meta.json, not in its CSV");
   }
 
   // --- 6. spreadsheet export ---

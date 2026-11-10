@@ -97,6 +97,8 @@ public:
   void markLast(const QColor &color, const QString &name);
   /// The same on the reading nearest to @p when: a note of the graph.
   void markAt(const QDateTime &when, const QColor &color, const QString &name);
+  /// A note dragged in the graph from @p from to @p to: its mark moves along.
+  void moveMark(const QDateTime &from, const QDateTime &to, const QColor &color, const QString &name);
 
 public Q_SLOTS:
   /// A reading from the MeterController.

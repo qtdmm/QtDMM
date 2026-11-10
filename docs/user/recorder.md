@@ -248,9 +248,12 @@ were; the integration curve carries on across a gap.
   optional longer text. The marks are numbered in the order of their time.
   A click on a flag shows its title, time and text, a double click edits
   them - an alarm's or the trigger's mark can get a text too -, and its
-  context menu removes the mark. A note also marks the reading nearest to
-  it in the readings table. The marks with their text go into a QtDMM
-  recording (`.qtdmm-rec`); a SCPI client sets a note with
+  context menu removes the mark. Drag a note's flag along the time axis
+  to move it (Esc while dragging puts it back); alarm and trigger marks
+  stay where it happened. A note also marks the reading nearest to it in
+  the readings table, and that mark moves along. The marks with their text
+  go into a QtDMM recording (`.qtdmm-rec`) and into the columns `mark` and
+  `note` of a CSV or spreadsheet; a SCPI client sets a note with
   `QTDMM:MARK "title","text"`.
 - **Integration** (**Settings → Graph → Integration curve**) draws a second curve: the
   integral over time of the readings above a threshold, in the unit times
@@ -343,6 +346,13 @@ the timestamps are date cells (shown with milliseconds) and the values
 numbers, so charts and formulas work without converting anything; the
 header row is bold and stays put when you scroll. CSV is what *Import*
 reads back (spreadsheets are not imported; save as CSV from there).
+
+With marks, each row ends with **mark** and **note**: the title and text
+of the marks nearest to that row's time (several on one row joined by
+` | `). A text with `;`, `"` or a line break is in quotes, as spreadsheets
+read it. *Import* brings them back as notes at the row's time - to the
+row, not to the millisecond, and alarm marks as notes too; the QtDMM
+recording keeps them exactly.
 
 The CSV is semicolon-separated:
 

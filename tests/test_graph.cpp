@@ -1632,6 +1632,53 @@ int main(int argc, char **argv)
         check(QToolTip::isVisible() && QToolTip::text().contains("Load on") && QToolTip::text().contains("R1 10 k"),
               "notes: the click shows title and text, got " + QToolTip::text());
         QToolTip::hideText();
+
+        // dragged along the time axis: the note moves, the readings table is told
+        QList<QPair<QDateTime, QDateTime>> moved;
+        QObject::connect(&graph, &GraphWidget::noteMoved,
+                         [&moved](const QDateTime &from, const QDateTime &to, const QString &) { moved << qMakePair(from, to); });
+        const auto drag = [&](const QPoint &from, const QPoint &to, bool escape)
+        {
+          QMouseEvent down(QEvent::MouseButtonPress, from, viewport->mapToGlobal(from), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+          QCoreApplication::sendEvent(viewport, &down);
+          for (const QPoint &p : { from + QPoint(2, 0), to })
+          {
+            QMouseEvent move(QEvent::MouseMove, p, viewport->mapToGlobal(p), Qt::NoButton, Qt::LeftButton, Qt::NoModifier);
+            QCoreApplication::sendEvent(viewport, &move);
+          }
+          if (escape)
+          {
+            QKeyEvent esc(QEvent::KeyPress, Qt::Key_Escape, Qt::NoModifier);
+            QCoreApplication::sendEvent(view, &esc);
+          }
+          QMouseEvent up(QEvent::MouseButtonRelease, to, viewport->mapToGlobal(to), Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
+          QCoreApplication::sendEvent(viewport, &up);
+        };
+        const QPoint to(view->mapFromScene(QPointF(xOf(4000), 0)).x(), at.y());
+        drag(at, to, false);
+        const qint64 noteT = graph.store()->marks().at(0).t;
+        check(qAbs(noteT - 4000) < 200 && graph.store()->marks().at(0).name == "Load on" && graph.timeCursor(0) == before,
+              QString("notes: dragged to 4 s, got %1 ms; no cursor set").arg(noteT));
+        check(moved.size() == 1 && moved.first().first.msecsTo(moved.first().second) == noteT - 2000,
+              "notes: noteMoved from 2 s to where it went");
+        check(!QToolTip::isVisible(), "notes: a drag shows no note");
+        drag(to, QPoint(view->mapFromScene(QPointF(xOf(8000), 0)).x(), at.y()), true);
+        check(graph.store()->marks().at(0).t == noteT && moved.size() == 1, "notes: Esc puts it back");
+        // an alarm's mark stays where the alarm was
+        const qint64 alarmT = graph.store()->marks().at(1).t;
+        GraphFlagItem *alarmFlag = nullptr;
+        for (QGraphicsItem *item : chart->childItems())
+          if (item->data(0).toString() == "mark-flag" && item->isVisible()
+              && static_cast<GraphFlagItem *>(item)->text().contains("Above 3 A"))
+            alarmFlag = static_cast<GraphFlagItem *>(item);
+        if (alarmFlag)
+        {
+          const QPoint a = view->mapFromScene(alarmFlag->mapRectToScene(alarmFlag->tagRect()).center());
+          drag(a, a - QPoint(60, 0), false);
+        }
+        check(alarmFlag && graph.store()->marks().at(1).t == alarmT, "notes: an alarm's mark is not dragged");
+        QToolTip::hideText();
+        graph.store()->setMarkTime(0, 2000);
       }
       check(graph.markAt(view->mapFromScene(plot.center())) == -1, "notes: no flag in the plot");
       graph.store()->setMarkText(1, "Alarm Above 3 A", "fuse checked");

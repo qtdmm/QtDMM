@@ -1207,6 +1207,20 @@ void RecordingStore::removeMark(int index)
   Q_EMIT marksChanged();
 }
 
+int RecordingStore::setMarkTime(int index, qint64 t)
+{
+  if (index < 0 || index >= m_marks.size())
+    return index;
+  Mark mark = m_marks.takeAt(index);
+  mark.t = t;
+  // after the marks of the same time, as addNote() puts it
+  const auto at = std::upper_bound(m_marks.begin(), m_marks.end(), t, [](qint64 v, const Mark &m) { return v < m.t; });
+  const int moved = int(at - m_marks.begin());
+  m_marks.insert(moved, mark);
+  Q_EMIT marksChanged();
+  return moved;
+}
+
 void RecordingStore::appendPoint(RawPoint p)
 {
   if (!m_series.isEmpty())
@@ -1380,16 +1394,34 @@ void RecordingStore::clearReadings()
   Q_EMIT readingsCleared();
 }
 
-void RecordingStore::markReadingAt(qint64 wall, quint32 argb, const QString &name)
+int RecordingStore::readingNearest(qint64 wall) const
 {
   if (m_readings.isEmpty())
-    return;
+    return -1;
   // the readings come in the order of their time
   const auto at = std::lower_bound(m_readings.cbegin(), m_readings.cend(), wall,
                                    [](const LoggedReading &r, qint64 v) { return r.when < v; });
   int row = int(at - m_readings.cbegin());
   if (row == m_readings.size() || (row > 0 && wall - m_readings[row - 1].when < m_readings[row].when - wall))
     --row;
+  return row;
+}
+
+void RecordingStore::unmarkReadingAt(qint64 wall, const QString &name)
+{
+  const int row = readingNearest(wall);
+  if (row < 0 || m_readings[row].alarmName != name)
+    return;
+  m_readings[row].alarmArgb = 0;
+  m_readings[row].alarmName.clear();
+  Q_EMIT readingMarked(row);
+}
+
+void RecordingStore::markReadingAt(qint64 wall, quint32 argb, const QString &name)
+{
+  const int row = readingNearest(wall);
+  if (row < 0)
+    return;
   m_readings[row].alarmArgb = argb;
   m_readings[row].alarmName = name;
   Q_EMIT readingMarked(row);
