@@ -98,6 +98,7 @@ void GraphWidget::updateXAxisRange()
   updateTimeAxis();
   updateReferenceLine();   // the window's mean, minimum or maximum
   updateEnvelope();
+  scheduleStats();         // the window's statistics
 }
 
 void GraphWidget::updateTimeAxis()

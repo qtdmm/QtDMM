@@ -166,7 +166,8 @@ public:
     IDCursorHere,    ///< properties "which" (0 = A, 1 = B) and "t" (ms)
     IDResetZoom,
     IDAxisAuto,      ///< property "unit": its right axis automatic again
-    IDAxisFixed      ///< property "unit": asks for its fixed range
+    IDAxisFixed,     ///< property "unit": asks for its fixed range
+    IDStats          ///< the statistics beside the plot on or off
   };
 
   GraphWidget(QWidget *parent, Settings *settings);
@@ -271,14 +272,17 @@ public:
   /// the recording; -1 takes it away.
   void             setTimeCursor(int which, qint64 t);
   qint64           timeCursor(int which) const { return m_cursorT[which & 1]; }
+  /// The statistics beside the plot: the values at the cursors, between
+  /// them and over the window shown; on at first, kept with the layout.
+  void             setStatsVisible(bool on);
+  bool             statsVisible() const { return m_statsOn; }
+  /// What they say, as plain text (also while hidden).
+  QString          statsText() const;
   /// Zoomed on a frame (Shift + drag): "Reset zoom" undoes it.
   bool             zoomed() const { return m_zoomed; }
   /// "Reset zoom": the window of before the zoom, the axes as before.
   void             resetZoom() { endZoom(true); }
   void             clearTimeCursors();
-  /// What the cursors say, as shown top right in the plot; empty without
-  /// cursor. Public for the tests.
-  QString          timeCursorText() const;
   /// @}
   /// @name The overview strip below the graph (GraphMinimap)
   /// All the store keeps, the window between two brackets; in place of
@@ -921,7 +925,24 @@ protected:
   /// across the plot at the value under each cursor: the change is the
   /// distance between the two
   QGraphicsLineItem *m_cursorLevel[2] = {};
-  QLabel          *m_cursorInfo = nullptr;          ///< timeCursorText(), top right in the plot
+  /// @name The statistics beside the plot (statsText())
+  /// @{
+  QScrollArea     *m_statsPanel = nullptr;
+  QLabel          *m_statsLabel = nullptr;
+  QToolButton     *m_statsButton = nullptr;   ///< on the time bar: on or off
+  QTimer           m_statsTimer;               ///< gathers updates: at most 4 a second
+  bool             m_statsOn = true;
+  /// Updates the statistics soon (m_statsTimer), not with every reading.
+  void             scheduleStats();
+  /// "1.234 mV", "--" for none.
+  static QString   withUnit(double v, const QString &unit);
+  /// The values drawn at @p t: id (0 the main one) and the series that holds then.
+  QList<std::pair<int, const RecordingSeries *>> drawnSeries(qint64 t) const;
+  QString          seriesUnit(const RecordingSeries *s) const;
+  void             updateStats();
+  /// The statistics as HTML: the cursors, from A to B, the window shown.
+  QString          statsHtml() const;
+  /// @}
   QPoint           m_pressPos;                      ///< where the left button went down
   bool             m_clickCandidate = false;        ///< a press that may become a click: sets a cursor
   int              m_pressedMark = -1;              ///< the mark whose flag the left button went down on

@@ -203,8 +203,8 @@ were; the integration curve carries on across a gap.
   goes with it. Every change sets the axes and
   scales afresh from the curves shown; the recording stays as it is, and
   the main value is still recorded and exported. The choice is kept with
-  the window layout. They are recorded either way. The time cursors show
-  every value drawn, with a line of statistics each; the overview shows
+  the window layout. They are recorded either way. The statistics beside
+  the graph show every value drawn; the overview shows
   the value of the left axis (with none there the first one on the right),
   in its colour. With none of the graph's device (the device of its first
   value) on the left axis, the first value of another device there is the
@@ -241,14 +241,23 @@ were; the integration curve carries on across a gap.
 - **Time cursors:** a click into the graph sets cursor **A**, Shift+click
   cursor **B** (or **Cursor A here** / **Cursor B here** in the right-click
   menu); drag them to move them, Esc or **Remove time cursors** in
-  the right-click menu takes them away. Top right the graph shows the time
-  and the values drawn at each cursor and, with both, the time between them
-  and a line for each value: its change (Δ), its mean and for a current or
-  a power its integral, in Ah, Wh or VAh - the charge a battery took
-  between two points, for instance. The value of the integration curve
+  the right-click menu takes them away. The statistics beside the graph
+  show the time and the values drawn at each cursor and, with both, the
+  time between them and for each value its change (Δ), its mean, standard
+  deviation (σ), minimum, maximum, the number of readings and for a
+  current or a power its integral, in Ah, Wh or VAh - the charge a battery
+  took between two points, for instance. The value of the integration curve
   gets its integral too, in its unit times seconds (V·s). When a value
-  changed what it measures in between (Hz to %), the line is of what it
-  measures at the later cursor. A dashed line across the graph at the
+  changed what it measures in between (Hz to %), the values are of what it
+  measures at the later cursor.
+- **Statistics:** beside the graph, on its right, a column with the
+  cursors (as above) and, under **Shown**, each value's mean, σ, minimum,
+  maximum, peak-peak and number of readings over the window the graph
+  shows; it follows the readings a few times a second. The **Σ** button
+  beside the time buttons, or **Statistics** in the right-click menu,
+  hides and shows it; whether it shows is kept with the graph (window
+  layout and bench). The mean and σ weigh each reading for as long as it
+  held. A dashed line across the graph at the
   value of the left axis under each cursor shows the change as the distance between them;
   the cursors' names hang as flags under the graph, at the time labels.
 - **Zoom on a frame:** hold Shift and drag a frame over the graph: the
