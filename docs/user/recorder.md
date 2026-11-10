@@ -254,10 +254,15 @@ were; the integration curve carries on across a gap.
   cursors (as above) and, under **Shown**, each value's mean, σ, minimum,
   maximum, peak-peak and number of readings over the window the graph
   shows; it follows the readings a few times a second. The **Σ** button
-  beside the time buttons, or **Statistics** in the right-click menu,
-  hides and shows it; whether it shows is kept with the graph (window
-  layout and bench). The mean and σ weigh each reading for as long as it
-  held. A dashed line across the graph at the
+  beside the time buttons, or **View → Statistics** in the right-click
+  menu, hides and shows it; whether it shows is kept with the graph (window
+  layout and bench). *Settings → Graph → Statistics* puts it left or right
+  of the graph, for every graph. The mean and σ weigh each reading for as
+  long as it held.
+- **Buttons beside the time buttons:** ⊟ the overview, ≋ the min/max
+  band, ― the reference line (its menu), **A B ✕** removes the time
+  cursors and ✎ sets a note now. The right-click menu has the same under
+  **View**, where **Buttons** hides them (kept with the graph). A dashed line across the graph at the
   value of the left axis under each cursor shows the change as the distance between them;
   the cursors' names hang as flags under the graph, at the time labels.
 - **Zoom on a frame:** hold Shift and drag a frame over the graph: the

@@ -1058,6 +1058,24 @@ int main(int argc, char **argv)
       check(s.count == 1 && s.mean == -1 && s.covered == 1000, "stats past now: up to now; got " + text(s));
       s = st.stats(2500, 2500);
       check(s.count == 0 && s.covered == 0, "stats of no time: nothing; got " + text(s));
+      // σ weighted by time: 2 and 4 for 1 s, -1 for 2 s around the mean 1: √4.5
+      s = st.stats(0, 5000);
+      check(std::abs(s.sigma - std::sqrt(4.5)) < 1e-12, QString("stats: σ √4.5, got %1").arg(s.sigma));
+      s = st.stats(1500, 500);
+      check(std::abs(s.sigma - 1) < 1e-12, QString("stats: σ of 2 and 4 half each is 1, got %1").arg(s.sigma));
+    }
+    // a steady large value has no spread, not a rounding error's
+    {
+      RecordingStore st;
+      TestClock c;
+      c.attach(st);
+      st.setLiveWidth(120);
+      st.live();
+      for (int i = 0; i < 100; ++i)
+        st.setReading(c.at(i * 100, reading(1000.001, "1000.001", "DC")));
+      c.now = 10000;
+      const RecordingStore::Stats s = st.stats(0, 10000);
+      check(s.sigma == 0 && std::abs(s.mean - 1000.001) < 1e-9, QString("stats: steady 1000.001: σ 0, got %1").arg(s.sigma));
     }
 
     // stats of a loaded file: the last reading counts although nothing comes

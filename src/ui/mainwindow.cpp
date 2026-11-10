@@ -2970,6 +2970,7 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
   m_wid->graph()->setEnvelopeVisible(get("Windows/graph-envelope", false).toBool());
   m_wid->graph()->setFixedRangesSetting(get("Windows/graph-fixed-ranges", QString()).toString());
   m_wid->graph()->setStatsVisible(get("Windows/graph-stats", true).toBool());
+  m_wid->graph()->setViewButtonsVisible(get("Windows/graph-buttons", true).toBool());
   // "1@device:ab12cd34" (ValueRef)
   meterViewOf(m_meterWin)->setValue(valueOf(get("Windows/meter-value", 0).toString()));
   poincareViewOf(m_poincareWin)->setValue(valueOf(get("Windows/poincare-value", 0).toString()));
@@ -3099,6 +3100,7 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
   set("Windows/graph-envelope", m_wid->graph()->envelopeVisible());
   set("Windows/graph-fixed-ranges", m_wid->graph()->fixedRangesSetting());
   set("Windows/graph-stats", m_wid->graph()->statsVisible());
+  set("Windows/graph-buttons", m_wid->graph()->viewButtonsVisible());
   set("Windows/meter-value", meterViewOf(m_meterWin)->value().toString());
   const auto styleText = [](int style) { return style < 0 ? QString() : QString::number(style); };
   set("Windows/meter-style", styleText(meterViewOf(m_meterWin)->style()));

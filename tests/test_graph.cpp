@@ -1592,6 +1592,72 @@ int main(int argc, char **argv)
       check(button && button->isChecked() && panel && panel->isVisible() && view->width() == wide, "statistics on again");
       QTest::qWait(300);   // the label follows within a quarter of a second
       check(info && info->text().contains("8.333 mAh"), "statistics: the panel shows them");
+      // left of the plot (Settings, Graph): the plot moves right
+      graph.setStatsLeft(true);
+      check(panel && panel->geometry().left() == 0 && view->geometry().left() == panel->width() && view->width() == wide,
+            "statistics left: the panel first, the plot after it");
+      graph.setStatsLeft(false);
+      check(panel && view->geometry().left() == 0 && panel->geometry().left() == wide, "statistics right again");
+    }
+
+    // the graph's switches beside the time buttons, the same in the menu's View
+    {
+      auto button = [&](const char *name) { return graph.findChild<QToolButton *>(name); };
+      QToolButton *overview = button("ui_graphOverviewButton");
+      QToolButton *band = button("ui_graphEnvelopeButton");
+      QToolButton *reference = button("ui_graphReferenceButton");
+      QToolButton *clear = button("ui_graphClearCursorsButton");
+      QToolButton *note = button("ui_graphNoteButton");
+      check(overview && band && reference && clear && note, "buttons: overview, band, reference line, remove cursors, note");
+      if (overview && band && reference && clear && note)
+      {
+        check(overview->isChecked() == graph.minimapVisible() && band->isChecked() == graph.envelopeVisible(),
+              "buttons: as the graph is");
+        const bool wasOverview = graph.minimapVisible();
+        overview->click();
+        check(graph.minimapVisible() != wasOverview, "buttons: overview switched");
+        graph.setMinimapVisible(wasOverview);
+        check(overview->isChecked() == wasOverview, "buttons: follow the graph's setting");
+        band->click();
+        check(graph.envelopeVisible() && band->isChecked(), "buttons: the band on");
+        graph.setEnvelopeVisible(false);
+        check(!band->isChecked(), "buttons: the band off again");
+        check(clear->isEnabled(), "buttons: remove cursors with cursors");
+        // the reference line: its button has the menu's entries
+        QMenu *refMenu = reference->menu();
+        check(refMenu != nullptr, "buttons: the reference line opens a menu");
+        if (refMenu)
+        {
+          Q_EMIT refMenu->aboutToShow();
+          QAction *mean = nullptr;
+          for (QAction *a : refMenu->actions())
+            if (a->text() == "&Mean of the window")
+              mean = a;
+          check(mean != nullptr, "buttons: the reference menu has Mean of the window");
+          if (mean)
+            mean->trigger();
+          check(graph.referenceShown() && reference->isChecked(), "buttons: reference on the mean, the button pressed");
+          graph.setReference(GraphWidget::RefOff);
+          check(!reference->isChecked(), "buttons: reference off, the button up");
+        }
+        graph.setViewButtonsVisible(false);
+        check(!overview->isVisibleTo(&graph) && graph.findChild<QToolButton *>("ui_graphStatsButton")->isVisibleTo(&graph),
+              "buttons hidden; Σ stays");
+        graph.setViewButtonsVisible(true);
+        check(overview->isVisibleTo(&graph), "buttons shown again");
+        // a narrow graph: the switches give way to the time buttons and the axis title
+        graph.resize(420, 500);
+        QTest::qWait(50);
+        check(!overview->isVisibleTo(&graph) && graph.findChild<QToolButton *>("ui_graphStatsButton")->isVisibleTo(&graph),
+              "buttons: a narrow graph has no room for them, Σ stays");
+        graph.resize(800, 500);
+        QTest::qWait(50);
+        check(overview->isVisibleTo(&graph), "buttons: back with the room");
+        clear->click();
+        check(graph.timeCursor(0) < 0 && graph.timeCursor(1) < 0 && !clear->isEnabled(), "buttons: remove cursors, then greyed");
+        graph.setTimeCursor(0, 5000);
+        graph.setTimeCursor(1, 15000);
+      }
     }
 
     // a dashed line across the plot at each cursor's value: at 2 A and 4 A,
@@ -1802,6 +1868,17 @@ int main(int argc, char **argv)
       check(menu && entry("Cursor A here") && entry("Cursor B here") && entry("Reset &zoom")
               && !entry("Reset &zoom")->isEnabled(),
             "menu: the keyboard opens it, Cursor A/B here, Reset zoom greyed without a zoom");
+      {
+        // the graph's switches in one submenu, View
+        QStringList inView;
+        if (QAction *view = entry("&View"); view && view->menu())
+          for (QAction *a : view->menu()->actions())
+            if (!a->isSeparator())
+              inView << a->text();
+        check(inView == QStringList({ "&Statistics", "Over&view", "Min/max &band", "&Reference line", "Bu&ttons" })
+                && !entry("Over&view") && !entry("&Statistics"),
+              "menu: View holds statistics, overview, band, reference line, buttons: " + inView.join(", "));
+      }
       if (QAction *b = entry("Cursor B here"))
       {
         const qint64 at = b->property("t").toLongLong();
@@ -2090,7 +2167,7 @@ int main(int argc, char **argv)
           QString("overview: the left bracket widens to %1 s, Live follows").arg(graph.windowSeconds()));
     bool anyChecked = false;
     for (QToolButton *b : graph.findChildren<QToolButton *>())
-      if (b->isCheckable() && b->isChecked() && b->property("seconds").toInt() != graph.windowSeconds())
+      if (b->property("seconds").isValid() && b->isChecked() && b->property("seconds").toInt() != graph.windowSeconds())
         anyChecked = true;
     check(!anyChecked, "overview: no time button for a window of its own");
     // the right bracket 50 px back: narrower, paused

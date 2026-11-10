@@ -77,8 +77,11 @@ RecordingStore::Stats RecordingStore::statsOf(const RecordingSeries &series, qin
   const bool loaded = m_state == View && m_stopT < 0;
   const qint64 step = loaded ? qint64(m_loadedGrid) * 100 : 0;
   double sum = 0;
-  double sumSq = 0;   // of the readings, for a file of no time
-  double squares = 0; // value² x s, as the integral
+  // σ from the values less the first one: E[v²] - mean² of large values
+  // with a small spread loses its digits (3 V steady gave 42 nV)
+  double ref = qQNaN();
+  double sumD = 0, sumD2 = 0;   // of the readings, for a file of no time
+  double intD = 0, intD2 = 0;   // (v - ref) x s and (v - ref)² x s
   for (int i = qMax(0, series.holding(from)); i < n; ++i)
   {
     const RawPoint &p = series.at(i);
@@ -107,23 +110,30 @@ RecordingStore::Stats RecordingStore::statsOf(const RecordingSeries &series, qin
     st.min = st.count == 1 ? p.value : qMin(st.min, p.value);
     st.max = st.count == 1 ? p.value : qMax(st.max, p.value);
     sum += p.value;
-    sumSq += p.value * p.value;
+    if (std::isnan(ref))
+      ref = p.value;
+    const double d = p.value - ref;
+    sumD += d;
+    sumD2 += d * d;
     if (end > begin)
     {
       st.integral += p.value * double(end - begin) / 1000;
-      squares += p.value * p.value * double(end - begin) / 1000;
+      intD += d * double(end - begin) / 1000;
+      intD2 += d * d * double(end - begin) / 1000;
       st.covered += end - begin;
     }
   }
   if (st.covered > 0)
   {
     st.mean = st.integral * 1000 / double(st.covered);
-    st.sigma = std::sqrt(qMax(0.0, squares * 1000 / double(st.covered) - st.mean * st.mean));
+    const double m = intD * 1000 / double(st.covered);
+    st.sigma = std::sqrt(qMax(0.0, intD2 * 1000 / double(st.covered) - m * m));
   }
   else if (st.count > 0)
   {
     st.mean = sum / st.count; // readings that held for no time (a file of one row)
-    st.sigma = std::sqrt(qMax(0.0, sumSq / st.count - st.mean * st.mean));
+    const double m = sumD / st.count;
+    st.sigma = std::sqrt(qMax(0.0, sumD2 / st.count - m * m));
   }
   return st;
 }

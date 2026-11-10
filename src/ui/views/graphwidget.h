@@ -167,7 +167,8 @@ public:
     IDResetZoom,
     IDAxisAuto,      ///< property "unit": its right axis automatic again
     IDAxisFixed,     ///< property "unit": asks for its fixed range
-    IDStats          ///< the statistics beside the plot on or off
+    IDStats,         ///< the statistics beside the plot on or off
+    IDViewButtons    ///< the buttons beside the time buttons on or off
   };
 
   GraphWidget(QWidget *parent, Settings *settings);
@@ -276,6 +277,13 @@ public:
   /// them and over the window shown; on at first, kept with the layout.
   void             setStatsVisible(bool on);
   bool             statsVisible() const { return m_statsOn; }
+  /// The statistics left of the plot instead of right (Settings, Graph;
+  /// the same for every graph).
+  void             setStatsLeft(bool left);
+  /// The buttons beside the time buttons: overview, band, reference line,
+  /// remove the cursors, a note now; kept with the layout.
+  void             setViewButtonsVisible(bool on);
+  bool             viewButtonsVisible() const { return m_viewButtonsOn; }
   /// What they say, as plain text (also while hidden).
   QString          statsText() const;
   /// Zoomed on a frame (Shift + drag): "Reset zoom" undoes it.
@@ -932,6 +940,17 @@ protected:
   QToolButton     *m_statsButton = nullptr;   ///< on the time bar: on or off
   QTimer           m_statsTimer;               ///< gathers updates: at most 4 a second
   bool             m_statsOn = true;
+  bool             m_statsLeft = false;
+  bool             m_viewButtonsOn = true;
+  QWidget         *m_viewButtons = nullptr;   ///< beside the time buttons
+  QToolButton     *m_overviewButton = nullptr;
+  QToolButton     *m_envelopeButton = nullptr;
+  QToolButton     *m_referenceButton = nullptr;
+  QToolButton     *m_clearCursorsButton = nullptr;
+  /// The buttons as the graph is: pressed, greyed.
+  void             updateViewButtons();
+  /// The reference line's entries (the menu's submenu and its button).
+  void             fillReferenceMenu(QMenu *menu);
   /// Updates the statistics soon (m_statsTimer), not with every reading.
   void             scheduleStats();
   /// "1.234 mV", "--" for none.
