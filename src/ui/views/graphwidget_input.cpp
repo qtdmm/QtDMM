@@ -96,6 +96,7 @@ void GraphWidget::handleChartMousePress(QMouseEvent *ev)
     m_mouseDown = false;
     m_clickCandidate = false;
     m_pressedMark = mark;
+    m_pressPos = pos;   // a note dragged from here (dragMark())
     return;
   }
   if (ev->button() == Qt::RightButton && mark >= 0)
@@ -255,6 +256,14 @@ void GraphWidget::handleChartMouseMove(QMouseEvent *ev)
     return;
   }
 
+  if (m_pressedMark >= 0)
+  {
+    // a flag pressed on: a note follows the mouse along the time axis
+    if (ev->buttons() & Qt::LeftButton)
+      dragMark(pos);
+    return;
+  }
+
   if (m_clickCandidate && (pos - m_pressPos).manhattanLength() > 3)
     m_clickCandidate = false;
 
@@ -314,6 +323,14 @@ void GraphWidget::handleChartMouseMove(QMouseEvent *ev)
       m_cursorMode = TimeCursorA;
     else
       m_cursorMode = NoCursor;
+
+    // over a note's flag: it can be dragged
+    if (m_cursorMode == NoCursor && markDraggable(markAt(pos)))
+    {
+      m_chartView->viewport()->setCursor(Qt::SplitHCursor);
+      hideCrosshair();
+      return;
+    }
 
     m_chartView->viewport()->setCursor(m_cursorMode == NoCursor ? Qt::ArrowCursor
                                        : m_cursorMode == TimeCursorA || m_cursorMode == TimeCursorB ? Qt::SplitHCursor
@@ -376,9 +393,9 @@ void GraphWidget::handleChartMouseRelease(QMouseEvent *ev)
 {
   if (m_pressedMark >= 0 && ev->button() == Qt::LeftButton)
   {
-    if (markAt(ev->position().toPoint()) == m_pressedMark)
+    if (!m_markDragging && markAt(ev->position().toPoint()) == m_pressedMark)
       showMarkNote(m_pressedMark, ev->globalPosition().toPoint());
-    m_pressedMark = -1;
+    endMarkDrag(false);
     return;
   }
   if (m_clickCandidate && ev->button() == Qt::LeftButton)
@@ -482,6 +499,12 @@ void GraphWidget::popupSLOT(QAction *action)
 bool GraphWidget::handleChartKey(QKeyEvent *ev)
 {
   const bool shift = ev->modifiers() & Qt::ShiftModifier;
+
+  if (m_markDragging && ev->key() == Qt::Key_Escape)
+  {
+    endMarkDrag(true);
+    return true;
+  }
 
   switch (ev->key())
   {

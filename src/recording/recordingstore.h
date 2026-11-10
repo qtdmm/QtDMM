@@ -134,7 +134,7 @@ public:
   /// The colour of the mark where a pre-triggered recording was triggered.
   static constexpr quint32 kTriggerColor = 0xff2e9b3a;
   /// The colour of a note's mark.
-  static constexpr quint32 kNoteColor = 0xff1e90ff;
+  static constexpr quint32 kNoteColor = RecordingFile::kNoteColor;
 
   explicit RecordingStore(QObject *parent = nullptr);
 
@@ -337,6 +337,9 @@ public:
   /// The same on the reading nearest to @p wall (ms since the epoch): a
   /// note set at a time of the graph.
   void        markReadingAt(qint64 wall, quint32 argb, const QString &name);
+  /// Takes the mark named @p name off the reading nearest to @p wall (a
+  /// note dragged away); another mark there stays.
+  void        unmarkReadingAt(qint64 wall, const QString &name);
   /// @}
 
 public Q_SLOTS:
@@ -395,6 +398,9 @@ public Q_SLOTS:
   /// New title and text of mark @p index.
   void        setMarkText(int index, const QString &title, const QString &note);
   void        removeMark(int index);
+  /// Moves mark @p index to @p t (ms of the recording); the marks stay in
+  /// the order of their time. Returns its new index in marks().
+  int         setMarkTime(int index, qint64 t);
 
 Q_SIGNALS:
   /// A reading was stored (series().last()); @p shifted: older ones went
@@ -436,6 +442,8 @@ Q_SIGNALS:
   void        readingMarked(int row);
 
 private:
+  /// The row of m_readings nearest to @p wall, -1 when there is none.
+  int         readingNearest(qint64 wall) const;
   /// ms since the start of the recording, now.
   qint64      elapsed() const { return m_monotonic() - m_t0; }
   /// Adds a point with the integral up to it.

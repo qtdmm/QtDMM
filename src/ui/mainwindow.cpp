@@ -360,6 +360,11 @@ void MainWindow::createViews()
   {
     m_readings->log()->markAt(when, QColor::fromRgba(RecordingStore::kNoteColor), title);
   });
+  connect(m_wid->graph(), &GraphWidget::noteMoved, this,
+          [this](const QDateTime &from, const QDateTime &to, const QString &title)
+  {
+    m_readings->log()->moveMark(from, to, QColor::fromRgba(RecordingStore::kNoteColor), title);
+  });
   m_readings->setMaxRows(m_wid->settings()->getInt("ReadingLog/max-rows", 10000));
   m_readingsWin = addView(m_readings, tr("Readings"), MdiArranger::Table, "readings");
 

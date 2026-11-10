@@ -99,7 +99,12 @@ struct Recording
 /// main value) or `limit 2` ... at the end of the row: `PASS`, `FAIL HI`,
 /// `FAIL LO` or empty. The values of other meters recorded with it follow,
 /// their columns named after the meter: `Sim B: value;Sim B: unit;Sim B:
-/// status`, `Sim B: value 2` ..., `Sim B: limit`.
+/// status`, `Sim B: value 2` ..., `Sim B: limit`. A recording with marks
+/// (Recording::meta "marks") ends each row with `mark;note`: the title and
+/// text of the marks nearest to that row's time, several joined by ` | `,
+/// quoted as RFC 4180 where they hold `;`, `"` or a line break; read back
+/// they are notes at the row's time. Not in the CSV of a `.qtdmm-rec`, whose
+/// meta.json keeps them exactly.
 /// Read: that format, the one before it without status
 /// (`timestamp;time (s);value;unit`, `nan` a gap), and the legacy
 /// tab-separated export of QtDMM < 0.9
@@ -120,6 +125,9 @@ namespace RecordingFile
 {
 /// The suffix of a QtDMM recording.
 inline constexpr const char *kSuffix = "qtdmm-rec";
+/// The colour of a note's mark (RecordingStore::kNoteColor); a CSV's marks
+/// come back as notes.
+inline constexpr quint32 kNoteColor = 0xff1e90ff;
 /// The suffix of a CSV for LabPlot, after the dot ("x.labplot.csv").
 inline constexpr const char *kLabPlotSuffix = "labplot.csv";
 /// The suffix of a LabPlot project.

@@ -525,6 +525,8 @@ Q_SIGNALS:
   void             leftValueChanged(const ValueRef &value);
   /// A note was set at @p when (askNote()): the readings table marks its reading.
   void             noteAdded(const QDateTime &when, const QString &title);
+  /// A note was dragged from @p from to @p to: the readings table moves its mark.
+  void             noteMoved(const QDateTime &from, const QDateTime &to, const QString &title);
   /// @name Context menu requests, handled by InstanceWidget
   /// @{
   void             connectDMM(bool);
@@ -904,6 +906,15 @@ protected:
   QPoint           m_pressPos;                      ///< where the left button went down
   bool             m_clickCandidate = false;        ///< a press that may become a click: sets a cursor
   int              m_pressedMark = -1;              ///< the mark whose flag the left button went down on
+  bool             m_markDragging = false;          ///< m_pressedMark is a note being dragged along the time axis
+  qint64           m_markDragFrom = 0;              ///< its time before the drag, for Esc and noteMoved()
+  /// Moves the note pressed on (m_pressedMark) to the time under @p pos once
+  /// the mouse went far enough; false when it is no note or not yet dragged.
+  bool             dragMark(const QPoint &pos);
+  /// Ends a drag: the note stays (noteMoved()) or goes back (@p cancel).
+  void             endMarkDrag(bool cancel);
+  /// True when mark @p index can be dragged: a note.
+  bool             markDraggable(int index) const;
   bool             m_pressShift = false;
   /// Places the lines and the text anew.
   void             updateTimeCursors();
