@@ -9,7 +9,6 @@
 
 class QTreeWidget;
 class QTreeWidgetItem;
-class QComboBox;
 
 /// "Sources...": which values of the open meters a view shows. The meters
 /// with their values below them; the graph and the table take several
@@ -29,14 +28,9 @@ public:
 
   /// @p view names the view in the title; @p several: check boxes, else one value.
   SourcesDlg(const QString &view, bool several, const QList<Meter> &meters, QWidget *parent = nullptr);
-  /// The two independently selected values of an XY diagram.
-  SourcesDlg(const QString &view, const QList<Meter> &meters, const ValueRef &x, const ValueRef &y,
-             QWidget *parent = nullptr);
   void            setChosen(const QList<ValueRef> &values);
   /// The values ticked, meter by meter in their order.
   QList<ValueRef> chosen() const;
-  ValueRef        xValue() const;
-  ValueRef        yValue() const;
   /// The tree, for the tests.
   QTreeWidget    *tree() const { return m_tree; }
 
@@ -47,6 +41,4 @@ private:
   QTreeWidget *m_tree;
   bool         m_several;
   bool         m_filling = false;
-  QComboBox   *m_x = nullptr;
-  QComboBox   *m_y = nullptr;
 };
