@@ -97,8 +97,11 @@ void ValueFeed::updateTexts()
         case MeterConnection::LinkState::Connecting: notice = tr("Connecting ..."); break;
         case MeterConnection::LinkState::Timeout:    notice = tr("No data"); break;
         case MeterConnection::LinkState::Error:      notice = tr("No connection"); break;
-        // frames arrive, but not of this value yet
-        case MeterConnection::LinkState::Connected:  notice = tr("Waiting for data"); break;
+        // frames arrive, but not of this value yet - or never, from a meter
+        // QtDMM does not know: its bytes are only for the capture window
+        case MeterConnection::LinkState::Connected:
+          notice = m_ctl->dmm()->format() == FrameFormat::RawCapture ? tr("Capture only") : tr("Waiting for data");
+          break;
       }
   }
   else if (!m_value.source.isEmpty())

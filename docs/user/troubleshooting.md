@@ -215,7 +215,7 @@ also AC A through its clamp; the other kinds have shorter lists).
 For a meter whose protocol QtDMM does not know yet, set the device's model
 to *Manual* and the protocol to *Unknown meter: bytes only, for a capture*,
 with the port settings of its cable (baud rate, parity) or its USB-HID cable.
-QtDMM reads no value then; the status bar says *Capture only* and *Capture...*
+QtDMM reads no value then; the status bar and the front panel say *Capture only*, and *Capture...*
 is in bold in the device's context menu. Bluetooth LE meters cannot be
 captured this way yet.
 
