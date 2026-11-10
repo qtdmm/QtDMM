@@ -8230,7 +8230,7 @@ Después cierre la sesión y vuelva a iniciarla para que la pertenencia al grupo
     <name>ValueFeed</name>
     <message>
         <location filename="../../src/service/valuefeed.cpp" line="96"/>
-        <location filename="../../src/service/valuefeed.cpp" line="110"/>
+        <location filename="../../src/service/valuefeed.cpp" line="113"/>
         <source>Not connected</source>
         <translation>No conectado</translation>
     </message>
@@ -8250,9 +8250,14 @@ Después cierre la sesión y vuelva a iniciarla para que la pertenencia al grupo
         <translation>Sin conexión</translation>
     </message>
     <message>
-        <location filename="../../src/service/valuefeed.cpp" line="101"/>
+        <location filename="../../src/service/valuefeed.cpp" line="103"/>
         <source>Waiting for data</source>
         <translation>Esperando datos</translation>
+    </message>
+    <message>
+        <location filename="../../src/service/valuefeed.cpp" line="103"/>
+        <source>Capture only</source>
+        <translation>Solo captura</translation>
     </message>
 </context>
 <context>

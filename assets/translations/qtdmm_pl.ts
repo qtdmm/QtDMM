@@ -8233,7 +8233,7 @@ Następnie wyloguj się i zaloguj ponownie, aby członkostwo w grupie zaczęło 
     <name>ValueFeed</name>
     <message>
         <location filename="../../src/service/valuefeed.cpp" line="96"/>
-        <location filename="../../src/service/valuefeed.cpp" line="110"/>
+        <location filename="../../src/service/valuefeed.cpp" line="113"/>
         <source>Not connected</source>
         <translation>Niepołączony</translation>
     </message>
@@ -8253,9 +8253,14 @@ Następnie wyloguj się i zaloguj ponownie, aby członkostwo w grupie zaczęło 
         <translation>Brak połączenia</translation>
     </message>
     <message>
-        <location filename="../../src/service/valuefeed.cpp" line="101"/>
+        <location filename="../../src/service/valuefeed.cpp" line="103"/>
         <source>Waiting for data</source>
         <translation>Oczekiwanie na dane</translation>
+    </message>
+    <message>
+        <location filename="../../src/service/valuefeed.cpp" line="103"/>
+        <source>Capture only</source>
+        <translation>Tylko zapis ramek</translation>
     </message>
 </context>
 <context>
