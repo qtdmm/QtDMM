@@ -699,6 +699,7 @@ void InstanceWidget::readConfig()
   applyRecordingSetup();
   ui_graph->setGraphSize(graph->windowSeconds());
   ui_graph->setCrosshair(graph->crosshair());
+  ui_graph->setStatsLeft(graph->statsLeft());
 
   ui_graph->setScale(graph->automaticScale(), graph->includeZero(), graph->scaleMin(), graph->scaleMax());
 

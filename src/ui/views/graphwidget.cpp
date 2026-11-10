@@ -282,6 +282,45 @@ GraphWidget::GraphWidget(QWidget *parent, Settings *settings) :
   m_statsTimer.setInterval(250);
   connect(&m_statsTimer, &QTimer::timeout, this, &GraphWidget::updateStats);
   bar->addSpacing(6);
+  // the graph's switches, also in the menu's View (and hidden there)
+  m_viewButtons = new QWidget(m_timeBar);
+  auto *views = new QHBoxLayout(m_viewButtons);
+  views->setContentsMargins(0, 0, 0, 0);
+  views->setSpacing(2);
+  auto viewButton = [this, views](const char *name, const QString &text, const QString &tip, bool checkable)
+  {
+    auto *b = new QToolButton(m_viewButtons);
+    b->setObjectName(name);
+    b->setText(text);
+    b->setToolTip(tip);
+    b->setCheckable(checkable);
+    b->setAutoRaise(true);
+    b->setFocusPolicy(Qt::NoFocus);
+    b->setCursor(Qt::ArrowCursor);
+    views->addWidget(b);
+    return b;
+  };
+  m_overviewButton = viewButton("ui_graphOverviewButton", QString(QChar(0x229f)), tr("Overview below the graph"), true);   // ⊟
+  connect(m_overviewButton, &QToolButton::toggled, this, &GraphWidget::setMinimapVisible);
+  m_envelopeButton = viewButton("ui_graphEnvelopeButton", QString(QChar(0x224b)), tr("Min/max band"), true);   // ≋
+  connect(m_envelopeButton, &QToolButton::toggled, this, &GraphWidget::setEnvelopeVisible);
+  m_referenceButton = viewButton("ui_graphReferenceButton", QString(QChar(0x2015)), tr("Reference line"), true);   // ―
+  {
+    auto *menu = new QMenu(m_referenceButton);
+    connect(menu, &QMenu::aboutToShow, this, [this, menu] { fillReferenceMenu(menu); });
+    connect(menu, &QMenu::triggered, this, &GraphWidget::popupSLOT);
+    // pressed while a line shows, whatever a click did to it
+    connect(menu, &QMenu::aboutToHide, this, [this] { QTimer::singleShot(0, this, &GraphWidget::updateViewButtons); });
+    m_referenceButton->setMenu(menu);
+    m_referenceButton->setPopupMode(QToolButton::InstantPopup);
+  }
+  m_clearCursorsButton = viewButton("ui_graphClearCursorsButton", QStringLiteral("A\u2009B\u2009") + QChar(0x2715),
+                                    tr("Remove time cursors (Esc)"), false);   // A B ✕
+  connect(m_clearCursorsButton, &QToolButton::clicked, this, &GraphWidget::clearTimeCursors);
+  QToolButton *note = viewButton("ui_graphNoteButton", QString(QChar(0x270e)), tr("Note now... (N)"), false);   // ✎
+  connect(note, &QToolButton::clicked, this, [this] { askNote(); });
+  bar->addWidget(m_viewButtons);
+  updateViewButtons();
   m_statsButton = new QToolButton(m_timeBar);
   m_statsButton->setObjectName("ui_graphStatsButton");
   m_statsButton->setText(QString(QChar(0x03a3)));   // Σ
@@ -413,7 +452,6 @@ void GraphWidget::placeTimeBar()
 {
   if (!m_timeBar)
     return;
-  m_timeBar->adjustSize();
   // with a right axis its title takes the corner: the buttons end at the
   // plot, and before the titles of the right axes
   int right = m_chartView->width() - 6;
@@ -423,6 +461,17 @@ void GraphWidget::placeTimeBar()
       right = qMin(right, m_chartView->mapFromScene(m_chart->plotArea().topRight()).x());
       right = qMin(right, m_chartView->mapFromScene(side.title->scenePos()).x() - 4);
     }
+  // they begin after the left axis' title; the graph's switches give way
+  // first when there is no room (the menu's View has them too)
+  const int left = m_yTitle ? m_chartView->mapFromScene(m_yTitle->sceneBoundingRect().topRight()).x() + 6 : 0;
+  if (m_viewButtons)
+  {
+    m_viewButtons->setVisible(m_viewButtonsOn);
+    m_timeBar->adjustSize();
+    if (m_viewButtonsOn && m_timeBar->width() > right - left)
+      m_viewButtons->hide();
+  }
+  m_timeBar->adjustSize();
   m_timeBar->move(right - m_timeBar->width(), 3);
   m_timeBar->raise();
 }
@@ -434,15 +483,16 @@ GraphWidget::~GraphWidget()
 void GraphWidget::layoutParts()
 {
   const int strip = m_minimapOn ? GraphMinimap::kHeight : 16;
-  // the statistics at the right, at most a third of the graph
+  // the statistics at the right (or left), at most a third of the graph
   const int side = m_statsOn ? qMin(230, width() / 3) : 0;
   const int w = width() - side;
-  m_chartView->setGeometry(0, 0, w, height() - strip);
-  scrollbar->setGeometry(0, height() - 16, w, 16);
-  m_minimap->setGeometry(0, height() - strip, w, strip);
+  const int x = m_statsLeft ? side : 0;
+  m_chartView->setGeometry(x, 0, w, height() - strip);
+  scrollbar->setGeometry(x, height() - 16, w, 16);
+  m_minimap->setGeometry(x, height() - strip, w, strip);
   if (m_statsPanel)
   {
-    m_statsPanel->setGeometry(w, 0, side, height());
+    m_statsPanel->setGeometry(m_statsLeft ? 0 : w, 0, side, height());
     m_statsPanel->setVisible(m_statsOn);
   }
   scrollbar->setVisible(!m_minimapOn);
@@ -458,6 +508,7 @@ void GraphWidget::setMinimapVisible(bool on)
   if (!on)
     followEnd();
   layoutParts();
+  updateViewButtons();
 }
 
 void GraphWidget::setStatsVisible(bool on)
@@ -472,12 +523,39 @@ void GraphWidget::setStatsVisible(bool on)
     updateStats();
 }
 
+void GraphWidget::setStatsLeft(bool left)
+{
+  if (left == m_statsLeft)
+    return;
+  m_statsLeft = left;
+  layoutParts();
+}
+
+void GraphWidget::setViewButtonsVisible(bool on)
+{
+  m_viewButtonsOn = on;
+  placeTimeBar();   // shows them where there is room
+}
+
+void GraphWidget::updateViewButtons()
+{
+  if (!m_viewButtons)
+    return;
+  const QSignalBlocker a(m_overviewButton), b(m_envelopeButton), c(m_referenceButton);
+  m_overviewButton->setChecked(m_minimapOn);
+  m_envelopeButton->setChecked(m_envelopeOn);
+  // pressed while a reference line shows
+  m_referenceButton->setChecked(m_referenceKind != RefOff);
+  m_clearCursorsButton->setEnabled(m_cursorT[0] >= 0 || m_cursorT[1] >= 0);
+}
+
 void GraphWidget::setEnvelopeVisible(bool on)
 {
   if (on == m_envelopeOn)
     return;
   m_envelopeOn = on;
   updateEnvelope();
+  updateViewButtons();
 }
 
 void GraphWidget::updateMinimapView()

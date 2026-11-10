@@ -53,6 +53,8 @@ public:
   int           lineMode() const;
   int           pointMode() const;
   bool          crosshair() const;
+  /// The statistics left of the graph (else right), for every graph.
+  bool          statsLeft() const;
 
   /// @name Y axis and the visible window
   /// @{
@@ -105,6 +107,7 @@ private:
   QLineEdit    *ui_scaleMin, *ui_scaleMax;
   QSpinBox     *ui_winSize;
   QComboBox    *sizeUnit;
+  QComboBox    *ui_statsSide;
 
   QCheckBox    *ui_showInt;
   QComboBox    *ui_intValue;

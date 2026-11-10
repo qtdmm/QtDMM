@@ -233,51 +233,26 @@ void GraphWidget::showMenu(const QPoint &pos, const QPoint &globalPos)
     variant(variantTitle(v), v);
 
   // where the reference line stands (it can also be dragged)
-  QMenu *reference = m_popup->addMenu(tr("&Reference line"));
-  auto refEntry = [this, reference](const QString &text, ReferenceKind kind, double value = 0)
-  {
-    QAction *a = reference->addAction(text);
-    a->setProperty("ID", IDReference);
-    a->setProperty("kind", int(kind));
-    a->setProperty("value", value);
-    a->setCheckable(true);
-    a->setChecked(m_referenceKind == kind && (kind != RefAlarm || m_reference == value));
-    return a;
-  };
-  auto valueText = [this](double v)
-  {
-    QString unit;
-    const QString number = formatEngineeringValue(v, &unit);
-    return QString("%1 %2").arg(number, unit).trimmed();
-  };
-  refEntry(tr("At &0"), RefZero);
-  refEntry(tr("&Mean of the window"), RefMean);
-  refEntry(tr("M&inimum of the window"), RefMin);
-  refEntry(tr("Ma&ximum of the window"), RefMax);
-  if (!m_alarmThresholds.isEmpty())
-    reference->addSeparator();
-  for (double a : m_alarmThresholds)
-    refEntry(tr("Alarm threshold %1").arg(valueText(a)), RefAlarm, a);
-  if (m_referenceKind == RefValue)
-  {
-    reference->addSeparator();
-    refEntry(tr("At %1 (dragged)").arg(valueText(m_reference)), RefValue, m_reference)->setEnabled(false);
-  }
-  reference->addSeparator();
-  refEntry(tr("&Off"), RefOff);
   // the right axes' ranges, also from the keyboard
   for (int side = 1; side <= 2; ++side)
     if (!m_right[size_t(side - 1)].unit.isEmpty())
       addAxisEntries(m_popup->addMenu(axisMenuTitle(side)), side);
-  QAction *stats = item(tr("&Statistics"), IDStats);
-  stats->setCheckable(true);
-  stats->setChecked(m_statsOn);
-  QAction *overview = item(tr("Over&view"), IDMinimap);
-  overview->setCheckable(true);
-  overview->setChecked(m_minimapOn);
-  QAction *envelope = item(tr("Min/max &band"), IDEnvelope);
-  envelope->setCheckable(true);
-  envelope->setChecked(m_envelopeOn);
+  // what the graph shows besides its curves; the buttons beside the time
+  // buttons switch the same
+  QMenu *view = m_popup->addMenu(tr("&View"));
+  auto toggle = [view](const QString &text, int id, bool on)
+  {
+    QAction *a = view->addAction(text);
+    a->setProperty("ID", id);
+    a->setCheckable(true);
+    a->setChecked(on);
+  };
+  toggle(tr("&Statistics"), IDStats, m_statsOn);
+  toggle(tr("Over&view"), IDMinimap, m_minimapOn);
+  toggle(tr("Min/max &band"), IDEnvelope, m_envelopeOn);
+  fillReferenceMenu(view->addMenu(tr("&Reference line")));
+  view->addSeparator();
+  toggle(tr("Bu&ttons"), IDViewButtons, m_viewButtonsOn);
   if (m_cursorT[0] >= 0 || m_cursorT[1] >= 0)
     item(tr("Remove time cursors"), IDClearCursors);
 
@@ -595,6 +570,9 @@ void GraphWidget::popupSLOT(QAction *action)
     case IDStats:
       setStatsVisible(action->isChecked());
       break;
+    case IDViewButtons:
+      setViewButtonsVisible(action->isChecked());
+      break;
     case IDAxisAuto:
       clearFixedRange(action->property("unit").toString());
       break;
@@ -608,6 +586,42 @@ QString GraphWidget::axisMenuTitle(int side) const
 {
   const QString unit = SiPrefix::displayText(m_right[size_t(side - 1)].unit);
   return side == 1 ? tr("Right axis [%1]").arg(unit) : tr("Third axis [%1]").arg(unit);
+}
+
+void GraphWidget::fillReferenceMenu(QMenu *reference)
+{
+  reference->clear();
+  auto refEntry = [this, reference](const QString &text, ReferenceKind kind, double value = 0)
+  {
+    QAction *a = reference->addAction(text);
+    a->setProperty("ID", IDReference);
+    a->setProperty("kind", int(kind));
+    a->setProperty("value", value);
+    a->setCheckable(true);
+    a->setChecked(m_referenceKind == kind && (kind != RefAlarm || m_reference == value));
+    return a;
+  };
+  auto valueText = [this](double v)
+  {
+    QString unit;
+    const QString number = formatEngineeringValue(v, &unit);
+    return QString("%1 %2").arg(number, unit).trimmed();
+  };
+  refEntry(tr("At &0"), RefZero);
+  refEntry(tr("&Mean of the window"), RefMean);
+  refEntry(tr("M&inimum of the window"), RefMin);
+  refEntry(tr("Ma&ximum of the window"), RefMax);
+  if (!m_alarmThresholds.isEmpty())
+    reference->addSeparator();
+  for (double a : m_alarmThresholds)
+    refEntry(tr("Alarm threshold %1").arg(valueText(a)), RefAlarm, a);
+  if (m_referenceKind == RefValue)
+  {
+    reference->addSeparator();
+    refEntry(tr("At %1 (dragged)").arg(valueText(m_reference)), RefValue, m_reference)->setEnabled(false);
+  }
+  reference->addSeparator();
+  refEntry(tr("&Off"), RefOff);
 }
 
 void GraphWidget::addAxisEntries(QMenu *menu, int side)

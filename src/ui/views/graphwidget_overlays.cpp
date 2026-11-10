@@ -190,6 +190,7 @@ void GraphWidget::updateTimeCursors()
     m_cursorLine[i]->setLine(px, plot.top(), px, plot.bottom());
   }
   updateFlags();
+  updateViewButtons();   // Remove time cursors: greyed without
   scheduleStats();
 }
 
@@ -226,6 +227,7 @@ void GraphWidget::setReference(ReferenceKind kind, double value)
   else if (kind == RefValue || kind == RefAlarm)
     m_reference = value;
   updateReferenceLine();
+  updateViewButtons();
   if (changed)
     Q_EMIT referenceChanged();
 }

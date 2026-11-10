@@ -181,6 +181,11 @@ GraphPrefs::GraphPrefs(QWidget *parent) : SettingsPage(parent)
   ui_crosshair->setObjectName("ui_crosshair");
   ui_crosshair->setToolTip(tr("Lines through the mouse pointer, with the time and the value."));
   m_form->addRow(QString(), ui_crosshair);
+  // the statistics beside every graph: which side
+  ui_statsSide = combo("ui_statsSide", { tr("Right of the graph"), tr("Left of the graph") });
+  ui_statsSide->setToolTip(tr("Where the statistics stand beside the graph (the cursors, from A to B, the "
+                              "window shown); the Σ button hides them."));
+  m_form->addRow(tr("Statistics:"), ui_statsSide);
 
   // the integration curve: a section of its own, open while it is shown
   ui_showInt = new QCheckBox(tr("I&ntegration curve"), this);
@@ -260,6 +265,7 @@ void GraphPrefs::defaultsSLOT()
   ui_lineMode->setCurrentIndex(m_cfg->getInt("Graph/line-mode", 1));
   ui_pointMode->setCurrentIndex(m_cfg->getInt("Graph/point-mode"));
   ui_crosshair->setChecked(m_cfg->getBool("Graph/crosshair-cursor", true));
+  ui_statsSide->setCurrentIndex(m_cfg->getString("Graph/stats-side", "right") == "left" ? 1 : 0);
   ui_lineWidth->setValue(m_cfg->getInt("Graph/line-width", 2));
 
   if (m_cfg->getBool("Scale/automatic", true))
@@ -295,6 +301,7 @@ void GraphPrefs::factoryDefaultsSLOT()
   ui_pointMode->setCurrentIndex(0);
   ui_lineWidth->setValue(2);
   ui_crosshair->setChecked(true);
+  ui_statsSide->setCurrentIndex(0);
 
   autoScaleBut->setChecked(true);
   ui_includeZero->setChecked(false);
@@ -328,6 +335,7 @@ void GraphPrefs::applySLOT()
   m_cfg->setInt("Graph/line-mode", ui_lineMode->currentIndex());
   m_cfg->setInt("Graph/point-mode", ui_pointMode->currentIndex());
   m_cfg->setBool("Graph/crosshair-cursor", ui_crosshair->isChecked());
+  m_cfg->setString("Graph/stats-side", statsLeft() ? "left" : "right");
 
   m_cfg->setBool("Scale/automatic", automaticScale());
   m_cfg->setBool("Scale/automatic-include-zero", includeZero());
@@ -357,6 +365,7 @@ int GraphPrefs::lineWidth() const { return ui_lineWidth->value(); }
 int GraphPrefs::lineMode() const { return ui_lineMode->currentIndex(); }
 int GraphPrefs::pointMode() const { return ui_pointMode->currentIndex(); }
 bool GraphPrefs::crosshair() const { return ui_crosshair->isChecked(); }
+bool GraphPrefs::statsLeft() const { return ui_statsSide->currentIndex() == 1; }
 
 bool GraphPrefs::includeZero() const { return ui_includeZero->isChecked(); }
 bool GraphPrefs::automaticScale() const { return autoScaleBut->isChecked(); }
