@@ -553,7 +553,7 @@ void MainWindow::createViews()
     tr("<html><head/><body><p><span style=\" font-weight:600;\">Poincaré plot</span></p>"
        "<p>Each reading against the next one: noise widens the cloud across the diagonal, "
        "drift stretches it along it. SD1 and SD2 put both in numbers.</p></body></html>"));
-  m_histogramAction = windowAction(m_histogramWin, tr("&Histogram"), "", "qtdmm-histogram",
+  m_histogramAction = windowAction(m_histogramWin, tr("H&istogram"), "", "qtdmm-histogram",
     tr("Show the distribution of recent readings for one measured value."));
   // the graph keeps its action from the .ui (toolbar button with Ctrl+3)
   bindWindowAction(action_Graph, m_graphWin);
@@ -1984,7 +1984,7 @@ void MainWindow::createShortcuts(const QList<QAction *> &workspace)
     m_shortcuts->add(a, recording);
   for (QAction *a : { m_sidebarAction, m_displayAction, m_meterAction, m_newMeterAction, action_Graph,
                       m_readingsAction, m_poincareAction, m_newPoincareAction, m_histogramAction, m_newHistogramAction,
-                      m_newGraphAction, m_basketAction, m_titleBars, m_toolbars,
+                      m_xyAction, m_newXYAction, m_newGraphAction, m_basketAction, m_titleBars, m_toolbars,
                       m_fullScreen })
     m_shortcuts->add(a, windows);
   for (QAction *a : workspace)
