@@ -187,6 +187,37 @@ QList<std::pair<int, const RecordingSeries *>> GraphWidget::drawnSeries(qint64 t
   return out;
 }
 
+QList<GraphWidget::StatCurve> GraphWidget::statCurves(qint64 t) const
+{
+  QList<StatCurve> out;
+  for (const auto &[id, s] : drawnSeries(t))
+    out << StatCurve{ id, s, m_store, 0, curveName(*s, s == &m_store->series() ? m_store->unit() : s->unit), seriesUnit(s),
+                      id == 0 ? dataColor() : extraPen(s->id).color() };
+  for (int i = 0; i < int(m_otherCurves.size()); ++i)
+  {
+    const OtherCurve &c = m_otherCurves[size_t(i)];
+    if (!c.shown || !c.store)
+      continue;
+    // its series that holds at t, on its store's time
+    const qint64 shift = m_store->offsetOf(*c.store);
+    const RecordingSeries *series = c.value.id == 0 ? &c.store->series() : nullptr;
+    qint64 latest = -1;
+    for (int j = 0; c.value.id != 0 && j < c.store->extraCount(); ++j)
+    {
+      const RecordingSeries &s = c.store->extra(j);
+      const int k = s.id == c.value.id ? s.holding(t - shift) : -1;
+      if (k >= 0 && s.at(k).t >= latest)
+      {
+        series = &s;
+        latest = s.at(k).t;
+      }
+    }
+    if (series)
+      out << StatCurve{ -1, series, c.store, shift, c.name, c.value.id == 0 ? c.unit : SiPrefix::displayText(c.unit), otherColor(i) };
+  }
+  return out;
+}
+
 QString GraphWidget::seriesUnit(const RecordingSeries *s) const
 {
   return s == &m_store->series() ? m_store->unit() : SiPrefix::displayText(s->unit);
@@ -710,12 +741,14 @@ QString GraphWidget::statsHtml() const
   {
     return room > 0 ? m_statsLabel->fontMetrics().elidedText(name, Qt::ElideRight, room) : name;
   };
-  auto head = [&](int id, const RecordingSeries *s)
+  auto head = [&](const StatCurve &c)
   {
-    const QColor colour = id == 0 ? dataColor() : extraPen(s->id).color();
     return QString("<tr><td colspan=\"2\"><span style=\"color:%1\">&#9632;</span>&nbsp;%2</td></tr>")
-      .arg(colour.name(), solid(fitted(curveName(*s, s == &m_store->series() ? m_store->unit() : s->unit))));
+      .arg(c.colour.name(), solid(fitted(c.name)));
   };
+  // a curve's value at a time of this graph, its statistics between two
+  auto at = [this](const StatCurve &c, qint64 t) { return valueAt(c.series, t - c.shift, c.store); };
+  auto between = [](const StatCurve &c, qint64 from, qint64 to) { return c.store->statsOf(*c.series, from - c.shift, to - c.shift); };
   // a row: the number in full, its name cut to what the column leaves; the
   // widest row says how wide the column wants to be (layoutParts())
   const QFontMetrics fm = m_statsLabel ? m_statsLabel->fontMetrics() : fontMetrics();
@@ -748,15 +781,14 @@ QString GraphWidget::statsHtml() const
     {
       // the time as the axis counts it (the clock time: the panel's tooltip)
       rows += QString("<tr><td colspan=\"2\"><b>%1</b>&nbsp;%2</td></tr>").arg(i ? "B" : "A", solid(axisTimeText(m_cursorT[i])));
-      for (const auto &[id, s] : drawnSeries(m_cursorT[i]))
+      for (const StatCurve &c : statCurves(m_cursorT[i]))
       {
         // A and B of a value on one scale
         QList<double> both;
         for (qint64 t : m_cursorT)
           if (t >= 0)
-            both << valueAt(s, t);
-        rows += row(curveName(*s, s == &m_store->series() ? m_store->unit() : s->unit),
-                    columnScale(both, {}, seriesUnit(s)).text(valueAt(s, m_cursorT[i])));
+            both << at(c, t);
+        rows += row(c.name, columnScale(both, {}, c.unit).text(at(c, m_cursorT[i])));
       }
     }
   html += table(rows);
@@ -767,14 +799,15 @@ QString GraphWidget::statsHtml() const
     html += title(QString("A %1 B   %2 %3").arg(QChar(0x2013), QChar(0x0394) + QStringLiteral("t"),
                                                 spanText(std::abs(m_cursorT[1] - m_cursorT[0]))));
     rows.clear();
-    for (const auto &[id, s] : drawnSeries(qMax(m_cursorT[0], m_cursorT[1])))
+    for (const StatCurve &curve : statCurves(qMax(m_cursorT[0], m_cursorT[1])))
     {
-      const QString base = seriesUnit(s);
-      const RecordingStore::Stats st = m_store->statsOf(*s, m_cursorT[0], m_cursorT[1]);
-      const double delta = valueAt(s, m_cursorT[1]) - valueAt(s, m_cursorT[0]);
+      const int id = curve.id;
+      const QString base = curve.unit;
+      const RecordingStore::Stats st = between(curve, m_cursorT[0], m_cursorT[1]);
+      const double delta = at(curve, m_cursorT[1]) - at(curve, m_cursorT[0]);
       const ColumnScale c = st.count ? columnScale({ delta, st.mean, st.min, st.max }, { st.sigma }, base)
                                      : columnScale({ delta }, {}, base);
-      rows += head(id, s);
+      rows += head(curve);
       rows += row(QString(QChar(0x0394)), c.text(delta));
       rows += statRows(st, c);
       rows += row(tr("readings"), QString::number(st.count));
@@ -794,13 +827,13 @@ QString GraphWidget::statsHtml() const
   const qint64 to = from + qint64(m_windowSeconds) * 1000;
   html += title(tr("Shown") + QStringLiteral("   ") + spanText(to - from));
   rows.clear();
-  for (const auto &[id, s] : drawnSeries(qMin(to, m_store->duration())))
+  for (const StatCurve &curve : statCurves(qMin(to, m_store->duration())))
   {
-    const QString base = seriesUnit(s);
-    const RecordingStore::Stats st = m_store->statsOf(*s, from, to);
+    const QString base = curve.unit;
+    const RecordingStore::Stats st = between(curve, from, to);
     const ColumnScale c = st.count ? columnScale({ st.mean, st.min, st.max }, { st.sigma, st.max - st.min }, base)
                                    : ColumnScale();
-    rows += head(id, s);
+    rows += head(curve);
     rows += statRows(st, c);
     rows += row(tr("peak-peak"), st.count ? c.text(st.max - st.min) : QStringLiteral("--"));
     rows += row(tr("readings"), QString::number(st.count));

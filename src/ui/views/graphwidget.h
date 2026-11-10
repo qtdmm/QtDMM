@@ -988,6 +988,21 @@ protected:
   /// The values drawn at @p t: id (0 the main one) and the series that holds then.
   QList<std::pair<int, const RecordingSeries *>> drawnSeries(qint64 t) const;
   QString          seriesUnit(const RecordingSeries *s) const;
+  /// A curve for the statistics: of this graph's meter or of another one
+  /// (then on its store's time, @p shift ms from this one's).
+  struct StatCurve
+  {
+    int     id = 0;            ///< the value's id; -1 for another meter's
+    const RecordingSeries *series = nullptr;
+    const RecordingStore *store = nullptr;
+    qint64  shift = 0;
+    QString name;
+    QString unit;
+    QColor  colour;
+  };
+  /// The curves drawn at @p t: the main one first, the meter's other
+  /// values, then the other meters' in their order.
+  QList<StatCurve> statCurves(qint64 t) const;
   void             updateStats();
   /// The statistics as HTML: the cursors, from A to B, the window shown.
   QString          statsHtml() const;
