@@ -50,6 +50,15 @@ public:
 
   QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override
   {
+    // the symbols of the set chosen (with System the desktop's first), not
+    // whatever Qt finds: a dark folder on a dark window was hard to see
+    if (role == Qt::DecorationRole && index.column() == 0)
+    {
+      const QString name = BasketWidget::fileIconName(fileName(index), isDir(index));
+      const QIcon icon = name.isEmpty() ? QIcon() : QIcon::fromTheme(name);
+      if (!icon.isNull())
+        return icon;
+    }
     const QString shown = (role == Qt::DisplayRole || role == Qt::EditRole) ? shownName(index) : QString();
     return shown.isEmpty() ? QFileSystemModel::data(index, role) : QVariant(shown);
   }
@@ -232,6 +241,25 @@ BasketWidget::BasketWidget(QWidget *parent) :
   connect(m_model, &QAbstractItemModel::rowsRemoved, this, &BasketWidget::updateEmpty);
   m_pages->addWidget(page);
   showFolder();
+}
+
+QString BasketWidget::fileIconName(const QString &fileName, bool dir)
+{
+  if (dir)
+    return QStringLiteral("folder");
+  const QString suffix = QFileInfo(fileName).suffix().toLower();
+  static const QHash<QString, QString> names = {
+    { "csv", "text-csv" }, { "qtdmm-rec", "text-csv" },
+    { "xlsx", "x-office-spreadsheet" }, { "ods", "x-office-spreadsheet" },
+    { "png", "image-x-generic" }, { "jpg", "image-x-generic" }, { "jpeg", "image-x-generic" },
+    { "svg", "image-x-generic" }, { "bmp", "image-x-generic" },
+    { "pdf", "application-pdf" },
+    { "lml", "office-chart-line" },               // a LabPlot project: the analysis
+    { "qtdmm-workspace", "qtdmm-arrange" },       // a bench: its arrangement
+    { "txt", "text-x-generic" }, { "log", "text-x-generic" }, { "md", "text-x-generic" },
+    { "yaml", "text-x-generic" }, { "json", "text-x-generic" },
+  };
+  return names.value(suffix);
 }
 
 QString BasketWidget::freeName(const QString &dir, const QString &name)

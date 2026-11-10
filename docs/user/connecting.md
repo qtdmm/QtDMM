@@ -317,7 +317,12 @@ colours and the style of the needle meter are chosen separately.
 **Settings → Appearance → Symbols** chooses the toolbar and menu symbols:
 *Coloured* (KDE's Oxygen icons, the default), *Plain* (KDE's monochrome Breeze
 icons, light or dark to match the window) or, on Linux and BSD where the
-desktop has an icon theme, *System* - your desktop's symbols, with the
-plain set for QtDMM's own symbols and anything the theme lacks. **Symbols
+desktop has an icon theme, *System + plain* or *System + coloured* - your
+desktop's symbols, with the plain or the coloured set for QtDMM's own
+symbols and anything the theme lacks. Choose the one that matches your
+theme: *coloured* for Oxygen, Papirus or Humanity, *plain* for Breeze or
+Adwaita. Settings from before the two entries take the one that suits the
+desktop's theme. The list of a project shows folders and files with the
+symbols of the set chosen too. **Symbols
 with text** below it puts the names under the toolbar buttons. The toolbars
 cannot be moved; Ctrl+M hides and shows them.
