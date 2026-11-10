@@ -927,6 +927,9 @@ void MainWindow::createSidebar()
   });
   connect(m_sidebar, &DeviceSidebar::captureRequested, this, [this, openController](const QString &id)
   {
+    // from My devices: connected first, beside the others
+    if (!openController(id))
+      openBeside(id);
     MeterController *ctl = openController(id);
     if (!ctl)
       return;

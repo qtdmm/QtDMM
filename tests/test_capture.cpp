@@ -387,5 +387,45 @@ int main(int argc, char **argv)
             && yaml.contains("bytes: AA 55 01 02 03\n") && !yaml.contains("did not understand"), yaml);
   }
 
+  // 10. what QtDMM reads, as a display shows it: no decoder codes (CA, OH,
+  //     DI), no surplus leading zeros (UT61E frames of the spec)
+  {
+    const auto readUt61e = [](const char *hex)
+    {
+      const QByteArray bytes = QByteArray::fromHex(hex);
+      auto decoder = DmmDecoder::getInstance(FrameFormat::CyrustekES51922);
+      const CaptureLog::Frame frame{ 0, bytes, decoder->decode(bytes, 0) };
+      return CaptureLog::readingText(frame, FrameFormat::CyrustekES51922);
+    };
+    const QString nf = readUt61e("3030303034323630303032300D0A");
+    check(nf == "0.042 nF AUTO", "capacitance as on the display, got " + nf);
+    const QString ohm = readUt61e("3630303030303330303030300D0A");
+    check(ohm.startsWith("0.00 M") && !ohm.contains("OH") && !ohm.contains("Ohm"), "resistance in Ω, got " + ohm);
+    const QString diode = readUt61e("3032323538303131303030300D0A");
+    check(diode.contains("Diode") && !diode.contains(" DI"), "diode in words, got " + diode);
+
+    // the pause button says what a click does then; a long step does not
+    // move what is below
+    MeterConnection dmm(nullptr);
+    DmmDecoder::DMMInfo info;
+    info.vendor = "Uni-Trend";
+    info.model = "UT61E";
+    info.protocol = FrameFormat::CyrustekES51922;
+    dmm.setDmmInfo(info);
+    dmm.setFormat(FrameFormat::CyrustekES51922);
+    CaptureDlg dlg(&dmm, "x", nullptr);
+    auto *pause = dlg.findChild<QPushButton *>("ui_capturePause");
+    auto *text = dlg.findChild<QLabel *>("ui_captureStepText");
+    auto *hint = dlg.findChild<QLabel *>("ui_captureStepHint");
+    check(pause && pause->text() == "&Pause", "pause");
+    pause->setChecked(true);
+    check(pause->text() == "&Continue", "pressed: continue, got " + pause->text());
+    pause->setChecked(false);
+    check(pause->text() == "&Pause", "released: pause again");
+    const int line = dlg.fontMetrics().lineSpacing();
+    check(text && hint && text->minimumHeight() >= 2 * line && hint->minimumHeight() >= 2 * line,
+          "the step's text and hint keep room for two lines");
+  }
+
   return failed == 0 ? 0 : 1;
 }

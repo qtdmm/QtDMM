@@ -73,9 +73,12 @@ public:
   /// list too.
   QString     yaml(const Header &header, bool allFrames) const;
 
-  /// What QtDMM read in @p frame, in a line ("1.234 V DC AUTO HOLD"); empty
-  /// when it did not understand it.
-  static QString readingText(const Frame &frame);
+  /// What QtDMM read in @p frame, read as @p format reads it, in a line as
+  /// a display shows it ("0.270 nF AUTO", "-1.234 V DC AUTO HOLD"): the
+  /// value without surplus leading zeros, the unit with its prefix and the
+  /// coupling, none of the decoders' codes (CA, OH, DI ...); empty when it
+  /// did not understand it.
+  static QString readingText(const Frame &frame, FrameFormat::DataFormat format);
   /// "qtdmm-capture-uni-t-ut61e-2026-11-09-1403.yaml".
   static QString fileName(const QString &vendor, const QString &model, const QDateTime &date);
   /// The kind of connection in a word ("serial", "Bluetooth LE"), no address.
