@@ -4,6 +4,7 @@
 
 ### GUI
 
+- **XY diagram** — an XY diagram plots two values from open meters against each other. Add several diagrams from the toolbar; assign each X and Y source in its *Sources...* dialog. The diagrams follow the selected window design and identify their sources above the plot.
 - **Graph: the meter's states as a strip** — a strip at the bottom of the plot shows, for the value on the left axis, when the meter reported HOLD (a frozen display instead of a flat curve), MIN / MAX / PEAK (a stored extreme), REL (a difference) or OL (overload): a lane per state with its colour and its name in the bar, only while such a state is in the window. The line under the mouse names the state of the reading. *View → Meter states* in the graph's menu switches it off, per graph.
 - **Graph: statistics for other devices' curves, hover time as the axis** — the statistics column lists the curves of other devices in the graph too (cursor values, A to B, window shown), under the device's name; it had only the values of the graph's own device. The line under the mouse gives the time as the axis counts it, like the cursors; the clock time is in the tooltip.
 - **Graph legend: shorter names in a narrow graph** — when the names do not fit the plot's width, the legend first leaves out the vendor of another device (*AIRCO2NTROL Coach · Carbon dioxide (ppm)*), then the device (*Carbon dioxide (ppm)*), at last all but the unit (*ppm*); the full names come back with the room.
