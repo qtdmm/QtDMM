@@ -6551,202 +6551,202 @@ Puis déconnectez-vous et reconnectez-vous pour que l&apos;appartenance au group
 <context>
     <name>Quantity</name>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="136"/>
+        <location filename="../../src/core/sampletypes.h" line="138"/>
         <source>Unknown</source>
         <translation>Inconnu</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="137"/>
+        <location filename="../../src/core/sampletypes.h" line="139"/>
         <source>Voltage</source>
         <translation>Tension</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="138"/>
+        <location filename="../../src/core/sampletypes.h" line="140"/>
         <source>Current</source>
         <translation>Courant</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="139"/>
+        <location filename="../../src/core/sampletypes.h" line="141"/>
         <source>Resistance</source>
         <translation>Résistance</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="140"/>
+        <location filename="../../src/core/sampletypes.h" line="142"/>
         <source>Capacitance</source>
         <translation>Capacité</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="141"/>
+        <location filename="../../src/core/sampletypes.h" line="143"/>
         <source>Temperature</source>
         <translation>Température</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="142"/>
+        <location filename="../../src/core/sampletypes.h" line="144"/>
         <source>Frequency</source>
         <translation>Fréquence</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="143"/>
+        <location filename="../../src/core/sampletypes.h" line="145"/>
         <source>Duty cycle</source>
         <translation>Rapport cyclique</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="144"/>
+        <location filename="../../src/core/sampletypes.h" line="146"/>
         <source>Continuity</source>
         <translation>Continuité</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="145"/>
+        <location filename="../../src/core/sampletypes.h" line="147"/>
         <source>Pulse width</source>
         <translation>Largeur d&apos;impulsion</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="146"/>
+        <location filename="../../src/core/sampletypes.h" line="148"/>
         <source>Conductance</source>
         <translation>Conductance</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="147"/>
+        <location filename="../../src/core/sampletypes.h" line="149"/>
         <source>Power</source>
         <translation>Puissance</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="148"/>
+        <location filename="../../src/core/sampletypes.h" line="150"/>
         <source>Gain</source>
         <translation>Gain</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="149"/>
+        <location filename="../../src/core/sampletypes.h" line="151"/>
         <source>Sound pressure level</source>
         <translation>Niveau de pression acoustique</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="150"/>
+        <location filename="../../src/core/sampletypes.h" line="152"/>
         <source>Carbon monoxide</source>
         <translation>Monoxyde de carbone</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="151"/>
+        <location filename="../../src/core/sampletypes.h" line="153"/>
         <source>Relative humidity</source>
         <translation>Humidité relative</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="152"/>
+        <location filename="../../src/core/sampletypes.h" line="154"/>
         <source>Time</source>
         <translation>Temps</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="153"/>
+        <location filename="../../src/core/sampletypes.h" line="155"/>
         <source>Wind speed</source>
         <translation>Vitesse du vent</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="154"/>
+        <location filename="../../src/core/sampletypes.h" line="156"/>
         <source>Pressure</source>
         <translation>Pression</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="155"/>
+        <location filename="../../src/core/sampletypes.h" line="157"/>
         <source>Parallel inductance</source>
         <translation>Inductance parallèle</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="156"/>
+        <location filename="../../src/core/sampletypes.h" line="158"/>
         <source>Parallel capacitance</source>
         <translation>Capacité parallèle</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="157"/>
+        <location filename="../../src/core/sampletypes.h" line="159"/>
         <source>Parallel resistance</source>
         <translation>Résistance parallèle</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="158"/>
+        <location filename="../../src/core/sampletypes.h" line="160"/>
         <source>Series inductance</source>
         <translation>Inductance série</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="159"/>
+        <location filename="../../src/core/sampletypes.h" line="161"/>
         <source>Series capacitance</source>
         <translation>Capacité série</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="160"/>
+        <location filename="../../src/core/sampletypes.h" line="162"/>
         <source>Series resistance</source>
         <translation>Résistance série</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="161"/>
+        <location filename="../../src/core/sampletypes.h" line="163"/>
         <source>Dissipation factor</source>
         <translation>Facteur de dissipation</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="162"/>
+        <location filename="../../src/core/sampletypes.h" line="164"/>
         <source>Quality factor</source>
         <translation>Facteur de qualité</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="163"/>
+        <location filename="../../src/core/sampletypes.h" line="165"/>
         <source>Phase angle</source>
         <translation>Angle de phase</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="164"/>
+        <location filename="../../src/core/sampletypes.h" line="166"/>
         <source>Difference</source>
         <translation>Différence</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="165"/>
+        <location filename="../../src/core/sampletypes.h" line="167"/>
         <source>Count</source>
         <translation>Comptage</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="166"/>
+        <location filename="../../src/core/sampletypes.h" line="168"/>
         <source>Power factor</source>
         <translation>Facteur de puissance</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="167"/>
+        <location filename="../../src/core/sampletypes.h" line="169"/>
         <source>Apparent power</source>
         <translation>Puissance apparente</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="168"/>
+        <location filename="../../src/core/sampletypes.h" line="170"/>
         <source>Mass</source>
         <translation>Masse</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="169"/>
+        <location filename="../../src/core/sampletypes.h" line="171"/>
         <source>Harmonic ratio</source>
         <translation>Taux d&apos;harmoniques</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="170"/>
+        <location filename="../../src/core/sampletypes.h" line="172"/>
         <source>Energy</source>
         <translation>Énergie</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="171"/>
+        <location filename="../../src/core/sampletypes.h" line="173"/>
         <source>Electric charge</source>
         <translation>Charge électrique</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="172"/>
+        <location filename="../../src/core/sampletypes.h" line="174"/>
         <source>State of charge</source>
         <translation>État de charge</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="173"/>
+        <location filename="../../src/core/sampletypes.h" line="175"/>
         <source>Time to go</source>
         <translation>Autonomie restante</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="174"/>
+        <location filename="../../src/core/sampletypes.h" line="176"/>
         <source>Carbon dioxide</source>
         <translation>Dioxyde de carbone</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="175"/>
+        <location filename="../../src/core/sampletypes.h" line="177"/>
         <source>Illuminance</source>
         <translation>Éclairement</translation>
     </message>
@@ -7211,73 +7211,78 @@ Puis déconnectez-vous et reconnectez-vous pour que l&apos;appartenance au group
 <context>
     <name>RecordingFile</name>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="236"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="260"/>
         <source>Cannot open file.</source>
         <translation>Impossible d&apos;ouvrir le fichier.</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="249"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="273"/>
         <source>No recording in the file (recording.csv is missing).</source>
         <translation>Aucun enregistrement dans le fichier (recording.csv manque).</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="263"/>
-        <location filename="../../src/recording/recordingfile.cpp" line="395"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="287"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="422"/>
         <source>Oops! Seems not to be a valid file</source>
         <translation>Oups ! Ce fichier ne semble pas valide</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="290"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="315"/>
         <source>File contains only header</source>
         <translation>Le fichier ne contient que l&apos;en-tête</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="739"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="791"/>
         <source>Nothing to export.</source>
         <translation>Rien à exporter.</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="742"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="794"/>
         <source>Recording</source>
         <translation>Enregistrement</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="744"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="796"/>
         <source>timestamp</source>
         <translation>horodatage</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="744"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="796"/>
         <source>time (s)</source>
         <translation>temps (s)</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="744"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="796"/>
         <source>value</source>
         <translation>valeur</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="744"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="796"/>
         <source>unit</source>
         <translation>unité</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="744"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="796"/>
         <source>status</source>
         <translation>état</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="746"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="798"/>
         <source>limit</source>
         <translation>limite</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="749"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="801"/>
+        <source>flags</source>
+        <translation>indicateurs</translation>
+    </message>
+    <message>
+        <location filename="../../src/recording/recordingfile.cpp" line="804"/>
         <source>mark</source>
         <translation>marque</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="749"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="804"/>
         <source>note</source>
         <translation>note</translation>
     </message>
