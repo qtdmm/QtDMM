@@ -3176,9 +3176,13 @@ int main(int argc, char **argv)
     // inside the plot, at its bottom
     QChartView *cv = graph.findChild<QChartView *>();
     const QRect plot = cv->mapFromScene(cv->chart()->plotArea()).boundingRect();
-    check(strip && strip->geometry().bottom() <= plot.bottom() + 1 && strip->geometry().left() == plot.left()
-            && qAbs(strip->width() - plot.width()) <= 1,
-          "states: the strip lies over the bottom of the plot");
+    // (the plot's edges are fractions of a pixel: a pixel or two of rounding, by font and platform)
+    check(strip && qAbs(strip->geometry().bottom() - plot.bottom()) <= 2 && qAbs(strip->geometry().left() - plot.left()) <= 2
+            && qAbs(strip->width() - plot.width()) <= 2 && strip->geometry().top() > plot.center().y(),
+          strip ? QString("states: the strip lies over the bottom of the plot: strip %1,%2 %3x%4, plot %5,%6 %7x%8")
+                    .arg(strip->x()).arg(strip->y()).arg(strip->width()).arg(strip->height())
+                    .arg(plot.x()).arg(plot.y()).arg(plot.width()).arg(plot.height())
+                : QStringLiteral("states: no strip"));
     // the hover line names the state of the reading
     {
       const QPoint at = cv->mapFromScene(QPointF(cv->chart()->mapToPosition(QPointF(1.5, 0), cv->chart()->series().first()).x(),
