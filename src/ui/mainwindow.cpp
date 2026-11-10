@@ -33,6 +33,7 @@
 #include "ui/meterview.h"
 #include "ui/graphview.h"
 #include "ui/poincareview.h"
+#include "ui/xyview.h"
 #include "ui/histogramview.h"
 #include "ui/dialogs/helpdlg.h"
 #include "ui/dialogs/devicesettingsdlg.h"
@@ -55,6 +56,7 @@
 #include "ui/views/graphwidget.h"
 #include "ui/views/lcdwidget.h"
 #include "ui/views/poincareplot.h"
+#include "ui/views/xyplot.h"
 #include "ui/views/histogramplot.h"
 #include "ui/settings/settingsdialog.h"
 #include "ui/settings/alarmprefs.h"
@@ -365,6 +367,18 @@ void MainWindow::createViews()
   m_poincare->setSettings(m_wid->settings());
   m_poincareWin = addView(m_poincare, m_poincare->windowTitle(), MdiArranger::Table, "poincare");
 
+  m_xyPlot = new XYPlot(this);
+  m_xyPlot->setWindowTitle(tr("XY diagram"));
+  auto *xy = new XYView(m_session, m_xyPlot, this);
+  m_xyViews.insert(m_xyPlot, xy);
+  applyXYColors(m_xyPlot);
+  m_xyPlot->setContextMenuPolicy(Qt::CustomContextMenu);
+  m_xyWin = addView(m_xyPlot, m_xyPlot->windowTitle(), MdiArranger::Table, "xy");
+  connect(m_xyPlot, &QWidget::customContextMenuRequested, this, [this](const QPoint &pos)
+  {
+    windowMenu(m_xyWin, m_xyPlot->mapToGlobal(pos));
+  });
+
   m_histogram = new HistogramPlot(this);
   m_histogram->setWindowTitle(tr("Histogram"));
   auto *histogram = new HistogramView(m_session, m_histogram, this);
@@ -518,6 +532,17 @@ void MainWindow::createViews()
     const MeterController *ctl = m_session->controllers().value(0);
     newView(Added::Graph, ctl ? ValueRef(0, ctl->source()) : ValueRef(), true);
   });
+  m_newXYAction = new QAction(QIcon::fromTheme("qtdmm-xy"), tr("Add &XY diagram"), this);
+  m_newXYAction->setObjectName("action_NewXY");
+  m_newXYAction->setToolTip(tr("Add an XY diagram"));
+  connect(m_newXYAction, &QAction::triggered, this, [this]
+  {
+    const MeterController *ctl = m_session->controllers().value(0);
+    newView(Added::XY, ctl ? ValueRef(0, ctl->source()) : ValueRef(), true);
+  });
+  m_xyAction = windowAction(m_xyWin, tr("&XY diagram"), "", "qtdmm-xy",
+    tr("Plot one measured value against another in an XY diagram."));
+  m_xyAction->setObjectName("action_WindowXY");
   m_basketAction = windowAction(m_basketWin, tr("Pro&ject"), "Ctrl+6", "document-open",
     tr("<html><head/><body><p><span style=\" font-weight:600;\">Project</span></p>"
        "<p>The files of a project: its benches, recordings, pictures, PDFs, LabPlot projects. "
@@ -590,7 +615,7 @@ void MainWindow::createViews()
   connect(m_session, &DeviceSession::opened, this, &MainWindow::addPanel);
   // a meter of the table opened again: its readings come in again
   // an empty view takes the meter connected: the graph its main value, the
-  // analog meter and the Poincaré plot it when theirs is not connected -
+  // analog meter and the Poincaré plot and XY plots it when theirs is not connected -
   // while the workspace's meters open one by one only when none was chosen
   connect(m_session, &DeviceSession::opened, this, [this](MeterController *ctl)
   {
@@ -605,6 +630,14 @@ void MainWindow::createViews()
     for (PoincareView *plot : m_wid->poincares())
       if (free(plot->value()))
         plot->setValue(ValueRef(0, ctl->source()));
+    for (XYView *view : m_xyViews)
+    {
+      ValueRef x = view->xValue(), y = view->yValue();
+      if (free(x)) x = ValueRef(0, ctl->source());
+      if (free(y)) y = ValueRef(0, ctl->source());
+      if (x != view->xValue() || y != view->yValue())
+        view->setValues(x, y);
+    }
     for (HistogramView *histogram : m_histogramViews)
       if (free(histogram->value()))
         histogram->setValue(ValueRef(0, ctl->source()));
@@ -699,6 +732,7 @@ QMdiSubWindow *MainWindow::addViewWindow(Added kind, const ValueRef &value, int 
 {
   const QString prefix = kind == Added::Meter ? QStringLiteral("meter-")
                          : kind == Added::Graph ? QStringLiteral("graph-")
+                         : kind == Added::XY ? QStringLiteral("xy-")
                          : kind == Added::Histogram ? QStringLiteral("histogram-") : QStringLiteral("poincare-");
   if (number < 2)
   {
@@ -722,6 +756,24 @@ QMdiSubWindow *MainWindow::addViewWindow(Added kind, const ValueRef &value, int 
     graph->setThemeColors(g.background, g.grid, g.labels, g.data);
     if (!value.source.isEmpty())
       graph->setValues({ value });
+    return win;
+  }
+  if (kind == Added::XY)
+  {
+    auto *plot = new XYPlot(this);
+    plot->setWindowTitle(tr("XY diagram %1").arg(number));
+    auto *view = new XYView(m_session, plot, this);
+    m_xyViews.insert(plot, view);
+    applyXYColors(plot);
+    if (!value.source.isEmpty())
+      view->setValues(value, value);
+    win = addView(plot, plot->windowTitle(), MdiArranger::Table, prefix + QString::number(number));
+    view->plot()->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(plot, &QWidget::customContextMenuRequested, this, [this, plot, win](const QPoint &pos)
+    {
+      windowMenu(win, plot->mapToGlobal(pos));
+    });
+    m_added << win;
     return win;
   }
   if (kind == Added::Meter)
@@ -772,18 +824,29 @@ void MainWindow::newView(Added kind, const ValueRef &value, bool ask)
   // nothing to pick from.
   if (ask && !m_session->controllers().isEmpty())
   {
-    MeterView *meter = meterViewOf(win);
-    PoincareView *plot = poincareViewOf(win);
-    HistogramView *histogram = histogramViewOf(win);
-    const GraphView *graph = graphViewOf(win);
-    // a graph with one device and one value has nothing to choose from
-    const bool choice = !graph || m_session->controllers().size() > 1 || m_session->controllers().first()->valueCount() > 1;
-    if (choice && !editSources(graph ? ValueMenu::View::Graph : meter ? ValueMenu::View::Meter
-                                             : histogram ? ValueMenu::View::Histogram : ValueMenu::View::Poincare,
-                               meter, plot, graph ? graph->graph() : nullptr, histogram))
+    if (kind == Added::XY)
     {
-      removeAddedWindow(win);
-      return;
+      if (!editXYSources(xyViewOf(win)))
+      {
+        removeAddedWindow(win);
+        return;
+      }
+    }
+    else
+    {
+      MeterView *meter = meterViewOf(win);
+      PoincareView *plot = poincareViewOf(win);
+      HistogramView *histogram = histogramViewOf(win);
+      const GraphView *graph = graphViewOf(win);
+      // a graph with one device and one value has nothing to choose from
+      const bool choice = !graph || m_session->controllers().size() > 1 || m_session->controllers().first()->valueCount() > 1;
+      if (choice && !editSources(graph ? ValueMenu::View::Graph : meter ? ValueMenu::View::Meter
+                                               : histogram ? ValueMenu::View::Histogram : ValueMenu::View::Poincare,
+                                 meter, plot, graph ? graph->graph() : nullptr, histogram))
+      {
+        removeAddedWindow(win);
+        return;
+      }
     }
   }
   win->show();
@@ -804,6 +867,11 @@ void MainWindow::removeAddedWindow(QMdiSubWindow *win)
   {
     m_histogramViews.remove(histogram->plot());
     delete histogram;
+  }
+  if (XYView *view = xyViewOf(win))
+  {
+    m_xyViews.remove(view->plot());
+    delete view;
   }
   if (GraphView *graph = graphViewOf(win))
     m_wid->removeGraph(graph);
@@ -832,6 +900,14 @@ PoincareView *MainWindow::poincareViewOf(const QMdiSubWindow *win) const
 HistogramView *MainWindow::histogramViewOf(const QMdiSubWindow *win) const
 {
   for (HistogramView *view : m_histogramViews)
+    if (win && view->plot() == win->widget())
+      return view;
+  return nullptr;
+}
+
+XYView *MainWindow::xyViewOf(const QMdiSubWindow *win) const
+{
+  for (XYView *view : m_xyViews)
     if (win && view->plot() == win->widget())
       return view;
   return nullptr;
@@ -964,9 +1040,18 @@ QList<QMdiSubWindow *> MainWindow::histogramWindows() const
   return wins;
 }
 
+QList<QMdiSubWindow *> MainWindow::xyWindows() const
+{
+  QList<QMdiSubWindow *> wins { m_xyWin };
+  for (QMdiSubWindow *win : m_added)
+    if (xyViewOf(win))
+      wins << win;
+  return wins;
+}
+
 bool MainWindow::isColumn(const QMdiSubWindow *win) const
 {
-  return win == m_readingsWin || poincareViewOf(win) || histogramViewOf(win);
+  return win == m_readingsWin || poincareViewOf(win) || xyViewOf(win) || histogramViewOf(win);
 }
 
 bool MainWindow::isInstrument(const QMdiSubWindow *win) const
@@ -1242,6 +1327,7 @@ void MainWindow::fillViewToolbar()
   toolBarDMM->addAction(m_displayAction);
   toolBarDMM->addAction(m_meterAction);
   toolBarDMM->addAction(m_poincareAction);
+  toolBarDMM->addAction(m_xyAction);
   toolBarDMM->addAction(m_histogramAction);
   toolBarDMM->addAction(action_Graph);
   toolBarDMM->addAction(m_readingsAction);
@@ -1268,6 +1354,13 @@ void MainWindow::fillViewToolbar()
       addViewEntry(menu, win, viewName(win, poincareViewOf(win)->value()));
     menu->addSeparator();
     connect(menu->addAction(tr("&New...")), &QAction::triggered, m_newPoincareAction, &QAction::trigger);
+  });
+  addViewMenu(m_xyAction, [this](QMenu *menu)
+  {
+    for (QMdiSubWindow *win : xyWindows())
+      addViewEntry(menu, win, win->windowTitle());
+    menu->addSeparator();
+    connect(menu->addAction(tr("&New...")), &QAction::triggered, m_newXYAction, &QAction::trigger);
   });
   addViewMenu(m_histogramAction, [this](QMenu *menu)
   {
@@ -1319,6 +1412,12 @@ void MainWindow::fillViewToolbar()
     return !none || m_session->controllers().isEmpty()
            || editSources(ValueMenu::View::Poincare, nullptr, poincareViewOf(m_poincareWin));
   });
+  kindClicked(m_xyAction, [this] { return xyWindows(); }, [this]
+  {
+    const XYView *view = m_xyViews.value(m_xyPlot);
+    const bool none = view->xValue().source.isEmpty() || view->yValue().source.isEmpty();
+    return !none || m_session->controllers().isEmpty() || editXYSources(m_xyViews.value(m_xyPlot));
+  });
   kindClicked(m_histogramAction, [this] { return histogramWindows(); }, [this]
   {
     const bool none = histogramViewOf(m_histogramWin)->value().source.isEmpty();
@@ -1350,7 +1449,7 @@ void MainWindow::addViewEntry(QMenu *menu, QMdiSubWindow *win, const QString &na
   connect(entry, &QAction::toggled, this, [this, win](bool on)
   {
     // the windows with an action of their own through it, it follows them
-    for (QAction *a : { m_meterAction, m_poincareAction, m_histogramAction, action_Graph })
+    for (QAction *a : { m_meterAction, m_poincareAction, m_xyAction, m_histogramAction, action_Graph })
       if (a->property("window").value<QObject *>() == win)
       {
         a->setChecked(on);
@@ -1598,7 +1697,7 @@ void MainWindow::updateEmptyStart()
   const bool noDevices = m_wid->devices()->list().isEmpty();
   m_emptyConnect->setVisible(!noDevices);
   // nothing to see behind the start page; checked stays what comes back
-  for (QAction *a : { m_displayAction, m_meterAction, m_poincareAction, m_histogramAction, action_Graph, m_readingsAction })
+  for (QAction *a : { m_displayAction, m_meterAction, m_poincareAction, m_xyAction, m_histogramAction, action_Graph, m_readingsAction })
     a->setEnabled(!empty);
   // [E 09.11.] a project or a bench makes no sense without a device
   if (m_benchActions.constFirst()->isEnabled() == noDevices)
@@ -2284,6 +2383,15 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
       editSources(meter ? ValueMenu::View::Meter : histogram ? ValueMenu::View::Histogram : ValueMenu::View::Poincare,
                   meter, plot, nullptr, histogram);
     });
+  if (XYView *xy = xyViewOf(win))
+  {
+    if (!m_session->controllers().isEmpty())
+      connect(menu.addAction(tr("S&ources...")), &QAction::triggered, this, [this, xy] { editXYSources(xy); });
+    connect(menu.addAction(m_newXYAction->text()), &QAction::triggered, this, [this, xy]
+    {
+      newView(Added::XY, xy->xValue());
+    });
+  }
   if (meter)
   {
     // this meter's own, the settings' until one is picked
@@ -2558,6 +2666,27 @@ bool MainWindow::editSources(ValueMenu::View view, MeterView *meter, PoincareVie
       break;
   }
   updateOpenDevices();
+  return true;
+}
+
+bool MainWindow::editXYSources(XYView *view)
+{
+  if (!view)
+    return false;
+  QList<SourcesDlg::Meter> meters;
+  for (const MeterController *ctl : m_session->controllers())
+  {
+    SourcesDlg::Meter meter;
+    meter.source = ctl->source();
+    meter.name = ctl->deviceName();
+    for (int id = 0; id < ctl->valueCount(); ++id)
+      meter.values << otherValueRow(ctl, id).name;
+    meters << meter;
+  }
+  SourcesDlg dlg(view->plot()->windowTitle(), meters, view->xValue(), view->yValue(), this);
+  if (dlg.exec() != QDialog::Accepted)
+    return false;
+  view->setValues(dlg.xValue(), dlg.yValue());
   return true;
 }
 
@@ -4030,6 +4159,8 @@ void MainWindow::setDesign(int design)
     view->graph()->setThemeColors(g.background, g.grid, g.labels, g.data);
   for (QMdiSubWindow *win : poincareWindows())
     applyPoincareColors(static_cast<PoincarePlot *>(win->widget()));
+  for (QMdiSubWindow *win : xyWindows())
+    applyXYColors(static_cast<XYPlot *>(win->widget()));
   for (QMdiSubWindow *win : histogramWindows())
     applyHistogramColors(static_cast<HistogramPlot *>(win->widget()));
   for (QAction *a : m_designMenu->actions())
@@ -4049,6 +4180,17 @@ void MainWindow::applyPoincareColors(PoincarePlot *plot)
   // graph's: it stands next to the display and the meter. Not on a texture
   // though, the points would get lost in it: there on the graph's
   QBrush background = frame.style() != Qt::NoBrush ? frame : QApplication::palette().window();
+  if (frame.style() == Qt::TexturePattern)
+    background = g.background;
+  plot->setThemeColors(background, g.grid, g.labels, g.data);
+}
+
+void MainWindow::applyXYColors(XYPlot *plot)
+{
+  const Designs::Design d = Designs::current();
+  const QBrush frame = Designs::frameBrush(d);
+  const Designs::GraphColors g = Designs::graphColors(d);
+  QBrush background = frame.style() != Qt::NoBrush ? frame : QApplication::palette().base();
   if (frame.style() == Qt::TexturePattern)
     background = g.background;
   plot->setThemeColors(background, g.grid, g.labels, g.data);

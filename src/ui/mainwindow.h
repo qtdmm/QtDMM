@@ -57,6 +57,8 @@ class GraphWidget;
 class BasketWidget;
 class ReadingsWidget;
 class PoincarePlot;
+class XYPlot;
+class XYView;
 class HistogramPlot;
 class HistogramView;
 class AlarmBar;
@@ -201,10 +203,15 @@ protected:
   /// the menu, each with its value (a meter also its style), and go when
   /// closed.
   /// @{
-  enum class Added { Meter, Poincare, Histogram, Graph };
+  enum class Added { Meter, Poincare, XY, Histogram, Graph };
   QList<QMdiSubWindow *> m_added;
   QAction    *m_newMeterAction = nullptr;
   QAction    *m_newPoincareAction = nullptr;
+  QAction    *m_xyAction = nullptr;
+  QAction    *m_newXYAction = nullptr;
+  XYPlot     *m_xyPlot = nullptr;
+  QMdiSubWindow *m_xyWin = nullptr;
+  QHash<XYPlot *, XYView *> m_xyViews;
   QAction    *m_newHistogramAction = nullptr;
   QAction    *m_histogramAction = nullptr;
   QAction    *m_newGraphAction = nullptr;
@@ -219,6 +226,10 @@ protected:
   /// The analog meter or Poincaré plot in @p win, nullptr for another window.
   MeterView  *meterViewOf(const QMdiSubWindow *win) const;
   PoincareView *poincareViewOf(const QMdiSubWindow *win) const;
+  XYView      *xyViewOf(const QMdiSubWindow *win) const;
+  QList<QMdiSubWindow *> xyWindows() const;
+  bool        editXYSources(XYView *view);
+  void        applyXYColors(XYPlot *plot);
   HistogramView *histogramViewOf(const QMdiSubWindow *win) const;
   /// @name Graphs
   /// The first one ("graph", InstanceWidget's own) is always there, more
