@@ -2328,6 +2328,15 @@ int main(int argc, char **argv)
     check(!amps.isEmpty() && qAbs(amps.first().x() - 2.0) < 0.15,
           QString("its time: from 2 s on, %1").arg(amps.isEmpty() ? -1 : amps.first().x()));
     check(graph.legendText().contains("Sim B"), "its name in the legend: " + graph.legendText());
+    // the statistics: the other meter's curves too, under their names, on their own time
+    {
+      graph.setTimeCursor(0, 3000);
+      const QString stats = graph.statsText().replace(QChar('\n'), " | ");
+      const qsizetype shownAt = stats.indexOf("Shown");
+      check(stats.count("Sim B") >= 4 && shownAt > 0 && stats.mid(shownAt).count(QChar(0x25a0)) == 3,
+            "statistics: the other meter's two curves beside the main one: " + stats);
+      graph.clearTimeCursors();
+    }
     // an axis chosen: its V on the right is no room (A is there), with a notice
     QSignalSpy notices(&graph, &GraphWidget::notice);
     graph.setOtherValueAxis(ValueRef(1, "device:b"), GraphWidget::AxisRight);
@@ -2856,6 +2865,8 @@ int main(int argc, char **argv)
           if (l->isVisible())
             hover += l->text();
         check(hover.contains(QString::fromUtf8("°C")) && hover.contains("22."), "main hidden: the hover line gives the temperature, got " + hover);
+        check(hover.startsWith("2.000") && !hover.contains("12:00") && cv->viewport()->toolTip().startsWith("12:00:0"),
+              "hover line: the time as the axis counts it, the clock time in the tooltip: " + hover + " / " + cv->viewport()->toolTip());
       }
       int levels = 0;
       for (QGraphicsItem *item : graph.findChild<QChartView *>()->chart()->childItems())

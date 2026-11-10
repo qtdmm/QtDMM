@@ -224,8 +224,9 @@ were; the integration curve carries on across a gap.
   sharp at any size and can be edited in Inkscape or dropped into a document;
   **PNG** and **JPEG** are pixels. The picture is what the graph shows, so zoom
   and pan first.
-- Hovering shows a crosshair with the time (to the millisecond) and the
-  value of the reading at the cursor.
+- Hovering shows a crosshair with the time as the axis counts it (to the
+  millisecond; the clock time is in the tooltip) and the value on the left
+  axis of the reading at the cursor.
 - The **reference line** runs across the graph at 0 whenever 0 lies inside
   the vertical scale, with its value small at the right end (`0 A`): a
   current that charges and discharges, or a voltage around zero, reads
@@ -263,6 +264,8 @@ were; the integration curve carries on across a gap.
   they stand below each other (3.000 V, 0.075 V), a unit stays with its
   number, and a long name is cut. A cursor's time is given as the time axis
   counts it (16.874 s); the tooltip of the column has the clock times.
+  Curves of other devices in the graph are listed too, under the device's
+  name.
 - **Buttons beside the time buttons:** ⊟ the overview, ≋ the min/max
   band, ― the reference line (its menu), **A B ✕** removes the time
   cursors and ✎ sets a note now. The right-click menu has the same under

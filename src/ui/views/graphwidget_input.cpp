@@ -425,7 +425,10 @@ void GraphWidget::handleChartMouseMove(QMouseEvent *ev)
       idx++;
     const bool inside = series && idx >= 0 && idx < series->count() && at <= qMax(ref.store->duration(), series->last().t);
 
-    QString text = m_store->startDateTime().addMSecs(inside ? series->at(idx).t + ref.shift : t).time().toString("HH:mm:ss.zzz");
+    // the time as the axis counts it; the clock time in the tooltip
+    const qint64 when = inside ? series->at(idx).t + ref.shift : t;
+    QString text = axisTimeText(when);
+    m_chartView->viewport()->setToolTip(m_store->startDateTime().addMSecs(when).time().toString("HH:mm:ss.zzz"));
 
     if (inside && series->at(idx).gap())
     {
