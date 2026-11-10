@@ -565,6 +565,58 @@ int GraphWidget::markAt(const QPoint &viewPos) const
   return -1;
 }
 
+bool GraphWidget::markDraggable(int index) const
+{
+  const QList<RecordingStore::Mark> marks = m_store->marks();
+  // alarm and trigger marks tell when something happened: they stay
+  return index >= 0 && index < marks.size() && marks[index].kind == RecordingStore::MarkKind::Note;
+}
+
+bool GraphWidget::dragMark(const QPoint &pos)
+{
+  if (!markDraggable(m_pressedMark))
+    return false;
+  if (!m_markDragging)
+  {
+    if (qAbs(pos.x() - m_pressPos.x()) <= 4)
+      return false;
+    m_markDragging = true;
+    m_markDragFrom = m_store->marks().at(m_pressedMark).t;
+    QToolTip::hideText();
+  }
+  const QPointF scenePos = m_chartView->mapToScene(pos);
+  const RecordingSeries &series = m_store->series();
+  const qint64 end = qMax(m_store->duration(), series.isEmpty() ? qint64(0) : series.last().t);
+  const qint64 t = qBound(qint64(0), qRound64(m_chart->mapToValue(scenePos, m_dataSeries).x() * 1000), end);
+  m_pressedMark = m_store->setMarkTime(m_pressedMark, t);
+  m_cursorLabel->setText(markWhen(m_store, t));
+  m_cursorLabel->adjustSize();
+  const QPoint topLeft = m_chartView->mapFromScene(m_chart->plotArea().topLeft());
+  m_cursorLabel->move(topLeft.x() + 4, 3);
+  m_cursorLabel->show();
+  m_cursorLabel->raise();
+  return true;
+}
+
+void GraphWidget::endMarkDrag(bool cancel)
+{
+  if (m_markDragging && m_pressedMark >= 0 && m_pressedMark < m_store->marks().size())
+  {
+    if (cancel)
+      m_store->setMarkTime(m_pressedMark, m_markDragFrom);
+    else
+    {
+      const RecordingStore::Mark &m = m_store->marks().at(m_pressedMark);
+      if (m.t != m_markDragFrom)
+        Q_EMIT noteMoved(m_store->startDateTime().addMSecs(m_markDragFrom), m_store->startDateTime().addMSecs(m.t),
+                         m.name);
+    }
+    m_cursorLabel->hide();
+  }
+  m_markDragging = false;
+  m_pressedMark = -1;
+}
+
 void GraphWidget::showMarkNote(int index, const QPoint &globalPos)
 {
   const QList<RecordingStore::Mark> marks = m_store->marks();

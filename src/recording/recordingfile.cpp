@@ -6,6 +6,7 @@
 #include <QCoreApplication>
 #include <QFile>
 #include <QFileInfo>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QRegularExpression>
 #include <QSaveFile>
@@ -26,6 +27,41 @@ QString tr(const char *text)
 {
   return QCoreApplication::translate("RecordingFile", text);
 }
+
+// the fields of a CSV line, quotes as RFC 4180
+QStringList csvFields(const QString &line)
+{
+  QStringList out;
+  QString field;
+  bool quoted = false;
+  for (int i = 0; i < line.size(); ++i)
+  {
+    const QChar c = line[i];
+    if (quoted)
+    {
+      if (c == '"' && i + 1 < line.size() && line[i + 1] == '"')
+        field += line[++i];
+      else if (c == '"')
+        quoted = false;
+      else
+        field += c;
+    }
+    else if (c == '"')
+      quoted = true;
+    else if (c == ';')
+    {
+      out << field;
+      field.clear();
+    }
+    else
+      field += c;
+  }
+  out << field;
+  return out;
+}
+
+// several marks on one row of a CSV
+const char *const kMarkSeparator = " | ";
 
 void setError(QString *error, const QString &text)
 {
@@ -233,9 +269,16 @@ std::optional<Recording> RecordingFile::read(const QString &path, QString *error
   bool header = false;
   QStringList headerNames;
   QStringList limitNames;   // the limit columns at the end: "limit", "limit 2" ...
+  bool withMarks = false;   // mark;note at the very end (since 27.1)
   if (line.startsWith("timestamp"))   // the CSV header
   {
     headerNames = line.split(';');
+    if (headerNames.size() > 4 && headerNames.last() == QLatin1String("note")
+        && headerNames.value(headerNames.size() - 2) == QLatin1String("mark"))
+    {
+      withMarks = true;
+      headerNames.resize(headerNames.size() - 2);
+    }
     while (headerNames.size() > 5 && columnName(headerNames.last()).word == QLatin1String("limit"))
       limitNames.prepend(headerNames.takeLast());
     withStatus = columnName(headerNames.value(4)).word == QLatin1String("status");
@@ -293,6 +336,7 @@ std::optional<Recording> RecordingFile::read(const QString &path, QString *error
     limitGroup << g;
   }
   QDateTime end;
+  QJsonArray marks;   // from the mark;note columns
   auto when = [](const QRegularExpressionMatch &m)
   {
     return QDateTime(QDate(m.captured("year").toInt(), m.captured("month").toInt(), m.captured("day").toInt()),
@@ -301,10 +345,19 @@ std::optional<Recording> RecordingFile::read(const QString &path, QString *error
   };
   do
   {
+    // a quoted note may hold line breaks: the line goes on until its quotes close
+    while (withMarks && line.count('"') % 2 == 1)
+    {
+      const QString more = ts.readLine();
+      if (more.isNull())
+        break;
+      line += '\n' + more;
+    }
     if (!line.trimmed().isEmpty())
     {
       QDateTime at;
       QList<Cell> cells;
+      QStringList f;
       bool valid = true;
       if (isLegacy)
       {
@@ -320,10 +373,10 @@ std::optional<Recording> RecordingFile::read(const QString &path, QString *error
       }
       else
       {
-        const QStringList f = line.split(';');
+        f = withMarks ? csvFields(line) : line.split(';');
         const QRegularExpressionMatch match = reTime.match(f.value(0));
         valid = match.hasMatch() && reDelta.match(f.value(1)).hasMatch()
-                && (withStatus ? f.size() == 2 + 3 * groups + limitNames.size() : f.size() >= 4);
+                && (withStatus ? f.size() == 2 + 3 * groups + limitNames.size() + (withMarks ? 2 : 0) : f.size() >= 4);
         for (int g = 0; valid && g < groups; ++g)
         {
           // before the status the unit was all the rest of the row
@@ -369,12 +422,24 @@ std::optional<Recording> RecordingFile::read(const QString &path, QString *error
       if (!isLegacy)
         for (int k = 0; k < limitGroup.size(); ++k)
         {
-          const quint32 bits = LimitTest::flags(LimitTest::fromText(line.section(';', 2 + 3 * groups + k, 2 + 3 * groups + k)));
+          const quint32 bits = LimitTest::flags(LimitTest::fromText(f.value(2 + 3 * groups + k)));
           if (limitGroup[k] == 0)
             rec.limits << bits;
           else if (limitGroup[k] > 0)
             rec.extra[limitGroup[k] - 1].limits << bits;
         }
+      if (withMarks && !f.value(f.size() - 2).isEmpty())
+      {
+        // back as notes at the row's time; several on one row were joined
+        const QStringList titles = f.value(f.size() - 2).split(QLatin1String(kMarkSeparator));
+        const QStringList texts = f.value(f.size() - 1).split(QLatin1String(kMarkSeparator));
+        for (int k = 0; k < titles.size(); ++k)
+          marks.append(QJsonObject{ { "t", double(rec.start.msecsTo(at)) },
+                                    { "color", QString("#%1").arg(RecordingFile::kNoteColor, 8, 16, QChar('0')) },
+                                    { "name", titles[k] },
+                                    { "note", titles.size() == texts.size() ? texts[k] : (k == 0 ? f.last() : QString()) },
+                                    { "kind", "note" } });
+      }
     }
     line = ts.readLine();
   }
@@ -387,6 +452,8 @@ std::optional<Recording> RecordingFile::read(const QString &path, QString *error
   const qint64 spanMs = rec.start.msecsTo(end);
   rec.sampleTimeTenths = count > 1 ? qMax(1, qRound(spanMs / 100.0 / (count - 1))) : 1;
   rec.meta = meta;
+  if (!marks.isEmpty() && !rec.meta.contains("marks"))
+    rec.meta["marks"] = marks;
   return rec;
 }
 
@@ -425,6 +492,51 @@ QStringList columnNames(const Recording &rec, const QStringList &names)
   return out;
 }
 
+// a CSV field: quoted where it holds the separator, a quote or a line break
+QString csvField(const QString &text)
+{
+  static const QRegularExpression special(QStringLiteral("[;\"\r\n]"));
+  if (!text.contains(special))
+    return text;
+  return '"' + QString(text).replace('"', QLatin1String("\"\"")) + '"';
+}
+
+const QString kMarkJoin = QString::fromLatin1(kMarkSeparator);
+
+// the marks of meta.json by the row nearest to their time: title and text
+// per row, several joined; empty when the recording has none
+QList<QPair<QString, QString>> rowMarks(const Recording &rec)
+{
+  const QJsonArray marks = rec.meta.value("marks").toArray();
+  QList<QPair<QString, QString>> out;
+  if (marks.isEmpty() || rec.values.isEmpty())
+    return out;
+  out.resize(rec.values.size());
+  for (const QJsonValue &v : marks)
+  {
+    const QJsonObject m = v.toObject();
+    const qint64 t = qint64(m.value("t").toDouble());
+    // the rows come in the order of their time
+    int lo = 0;
+    int hi = int(rec.values.size()) - 1;
+    while (lo < hi)
+    {
+      const int mid = (lo + hi) / 2;
+      if (rec.timeAt(mid) < t)
+        lo = mid + 1;
+      else
+        hi = mid;
+    }
+    if (lo > 0 && t - rec.timeAt(lo - 1) <= rec.timeAt(lo) - t)
+      --lo;
+    QPair<QString, QString> &cell = out[lo];
+    const bool first = cell.first.isEmpty() && cell.second.isEmpty();
+    cell.first += (first ? QString() : kMarkJoin) + m.value("name").toString();
+    cell.second += (first ? QString() : kMarkJoin) + m.value("note").toString();
+  }
+  return out;
+}
+
 bool hasVerdict(const QVector<quint32> &limits)
 {
   for (quint32 bits : limits)
@@ -457,7 +569,7 @@ QString limitCell(const Recording &rec, int column, int row)
 }
 }
 
-bool RecordingFile::write(const Recording &recording, const QString &path, QString *error)
+static bool writeCsv(const Recording &recording, const QString &path, QString *error, bool withMarks)
 {
   if (recording.values.isEmpty())
   {
@@ -476,6 +588,9 @@ bool RecordingFile::write(const Recording &recording, const QString &path, QStri
   ts << "timestamp;time (s);" << columnNames(recording, { "value", "unit", "status" }).join(';');
   for (int c : limits)
     ts << ';' << limitName(recording, c, QStringLiteral("limit"));
+  const QList<QPair<QString, QString>> marks = withMarks ? rowMarks(recording) : QList<QPair<QString, QString>>();
+  if (!marks.isEmpty())
+    ts << ";mark;note";
   ts << '\n';
   auto cell = [&](double v, CellState state, const QString &unit)
   {
@@ -495,9 +610,16 @@ bool RecordingFile::write(const Recording &recording, const QString &path, QStri
       ts << ';' << cell(col.values.value(i, qQNaN()), col.states.value(i, CellState::None), col.unit);
     for (int c : limits)
       ts << ';' << limitCell(recording, c, i);
+    if (!marks.isEmpty())
+      ts << ';' << csvField(marks[i].first) << ';' << csvField(marks[i].second);
     ts << '\n';
   }
   return true;
+}
+
+bool RecordingFile::write(const Recording &recording, const QString &path, QString *error)
+{
+  return writeCsv(recording, path, error, true);
 }
 
 static bool writeQtdmm(const Recording &recording, const QString &path, QString *error)
@@ -505,7 +627,8 @@ static bool writeQtdmm(const Recording &recording, const QString &path, QString 
   // the CSV as it is, beside it what it does not keep
   QTemporaryDir tmp;
   const QString csvPath = tmp.filePath("recording.csv");
-  if (!tmp.isValid() || !RecordingFile::write(recording, csvPath, error))
+  // the marks are in meta.json, to the ms and with their kind
+  if (!tmp.isValid() || !writeCsv(recording, csvPath, error, false))
     return false;
   QFile csv(csvPath);
   if (!csv.open(QIODevice::ReadOnly))
@@ -621,6 +744,9 @@ bool RecordingFile::writeAny(const Recording &recording, const QString &path, QS
   QStringList head = QStringList{ tr("timestamp"), tr("time (s)") } + columnNames(recording, { tr("value"), tr("unit"), tr("status") });
   for (int c : limits)
     head << limitName(recording, c, tr("limit"));
+  const QList<QPair<QString, QString>> marks = rowMarks(recording);
+  if (!marks.isEmpty())
+    head << tr("mark") << tr("note");
   sheet.setHeader(head);
   // a value that is no number is an empty cell: a spreadsheet has no NaN
   auto cells = [](QList<QVariant> &row, double v, CellState state, const QString &unit)
@@ -638,6 +764,8 @@ bool RecordingFile::writeAny(const Recording &recording, const QString &path, QS
       cells(row, col.values.value(i, qQNaN()), col.states.value(i, CellState::None), col.unit);
     for (int c : limits)
       row << limitCell(recording, c, i);
+    if (!marks.isEmpty())
+      row << marks[i].first << marks[i].second;
     sheet.addRow(row);
   }
   return sheet.write(path, *format, error);
