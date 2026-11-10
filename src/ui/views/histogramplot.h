@@ -1,0 +1,40 @@
+// Copyright (c) 2026 The QtDMM developers
+// SPDX-License-Identifier: GPL-3.0-or-later
+#pragma once
+
+#include <QBrush>
+#include <QColor>
+#include <QVector>
+#include <QWidget>
+
+#include "core/reading.h"
+
+/// A live histogram of the selected value's recent readings.
+class HistogramPlot : public QWidget
+{
+  Q_OBJECT
+public:
+  explicit HistogramPlot(QWidget *parent = nullptr);
+  void        setThemeColors(const QBrush &background, const QColor &grid, const QColor &labels, const QColor &data);
+  void        setValueId(int id);
+
+public Q_SLOTS:
+  void        addReading(const Reading &reading);
+  void        clear();
+  void        setCaption(const QString &caption);
+  void        setNotice(const QString &notice);
+
+protected:
+  void        paintEvent(QPaintEvent *) override;
+
+private:
+  QVector<double> m_values;
+  int         m_valueId = 0;
+  QString     m_caption;
+  QString     m_notice;
+  QString     m_unit;
+  QBrush      m_background;
+  QColor      m_grid;
+  QColor      m_labels;
+  QColor      m_data;
+};

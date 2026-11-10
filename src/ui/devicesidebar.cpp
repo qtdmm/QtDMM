@@ -72,7 +72,7 @@ QIcon dot(const QColor &color, qreal dpr)
 
 // where a value is shown, as a legend: a stroke of its curve's colour
 // (not a dot, unlike the states before the names), then one symbol for each
-// kind of view: front panel, needle meter, Poincaré plot (the tooltip names
+// kind of view: front panel, needle meter, Poincaré plot, histogram (the tooltip names
 // the windows)
 QPixmap shownMarks(const DeviceSidebar::Value &value, qreal dpr)
 {
@@ -83,6 +83,8 @@ QPixmap shownMarks(const DeviceSidebar::Value &value, qreal dpr)
     views << QIcon::fromTheme("qtdmm-meter");
   if (value.poincares > 0)
     views << QIcon::fromTheme("qtdmm-poincare");
+  if (value.histograms > 0)
+    views << QIcon::fromTheme("qtdmm-histogram");
   const int marks = int(views.size()) + (value.color.isValid() ? 1 : 0);
   if (marks == 0)
     return QPixmap();

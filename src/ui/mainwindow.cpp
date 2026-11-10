@@ -33,7 +33,7 @@
 #include "ui/meterview.h"
 #include "ui/graphview.h"
 #include "ui/poincareview.h"
-#include "ui/xyview.h"
+#include "ui/histogramview.h"
 #include "ui/dialogs/helpdlg.h"
 #include "ui/dialogs/devicesettingsdlg.h"
 #include "ui/devicesettings.h"
@@ -55,7 +55,7 @@
 #include "ui/views/graphwidget.h"
 #include "ui/views/lcdwidget.h"
 #include "ui/views/poincareplot.h"
-#include "ui/views/xyplot.h"
+#include "ui/views/histogramplot.h"
 #include "ui/settings/settingsdialog.h"
 #include "ui/settings/alarmprefs.h"
 #include "ui/settings/generalprefs.h"
@@ -365,16 +365,16 @@ void MainWindow::createViews()
   m_poincare->setSettings(m_wid->settings());
   m_poincareWin = addView(m_poincare, m_poincare->windowTitle(), MdiArranger::Table, "poincare");
 
-  m_xyPlot = new XYPlot(this);
-  m_xyPlot->setWindowTitle(tr("XY diagram"));
-  auto *xy = new XYView(m_session, m_xyPlot, this);
-  m_xyViews.insert(m_xyPlot, xy);
-  applyXYColors(m_xyPlot);
-  m_xyPlot->setContextMenuPolicy(Qt::CustomContextMenu);
-  m_xyWin = addView(m_xyPlot, m_xyPlot->windowTitle(), MdiArranger::Table, "xy");
-  connect(m_xyPlot, &QWidget::customContextMenuRequested, this, [this](const QPoint &pos)
+  m_histogram = new HistogramPlot(this);
+  m_histogram->setWindowTitle(tr("Histogram"));
+  auto *histogram = new HistogramView(m_session, m_histogram, this);
+  m_histogramViews.insert(m_histogram, histogram);
+  m_histogramWin = addView(m_histogram, m_histogram->windowTitle(), MdiArranger::Table, "histogram");
+  applyHistogramColors(m_histogram);
+  m_histogram->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(m_histogram, &QWidget::customContextMenuRequested, this, [this](const QPoint &pos)
   {
-    windowMenu(m_xyWin, m_xyPlot->mapToGlobal(pos));
+    windowMenu(m_histogramWin, m_histogram->mapToGlobal(pos));
   });
 
   // the files of a project, a folder; it stays open until another is
@@ -500,6 +500,13 @@ void MainWindow::createViews()
     const MeterController *ctl = m_session->controllers().value(0);
     newView(Added::Poincare, ctl ? ValueRef(0, ctl->source()) : ValueRef(), true);
   });
+  m_newHistogramAction = new QAction(QIcon::fromTheme("qtdmm-histogram"), tr("Add &histogram"), this);
+  m_newHistogramAction->setObjectName("action_NewHistogram");
+  connect(m_newHistogramAction, &QAction::triggered, this, [this]
+  {
+    const MeterController *ctl = m_session->controllers().value(0);
+    newView(Added::Histogram, ctl ? ValueRef(0, ctl->source()) : ValueRef(), true);
+  });
   m_newGraphAction = new QAction(action_Graph->icon(), tr("Add g&raph"), this);
   m_newGraphAction->setObjectName("action_NewGraph");
   m_newGraphAction->setWhatsThis(
@@ -511,17 +518,6 @@ void MainWindow::createViews()
     const MeterController *ctl = m_session->controllers().value(0);
     newView(Added::Graph, ctl ? ValueRef(0, ctl->source()) : ValueRef(), true);
   });
-  m_newXYAction = new QAction(QIcon::fromTheme("qtdmm-xy"), tr("Add &XY diagram"), this);
-  m_newXYAction->setObjectName("action_NewXY");
-  m_newXYAction->setToolTip(tr("Add an XY diagram"));
-  connect(m_newXYAction, &QAction::triggered, this, [this]
-  {
-    const MeterController *ctl = m_session->controllers().value(0);
-    newView(Added::XY, ctl ? ValueRef(0, ctl->source()) : ValueRef(), true);
-  });
-  m_xyAction = windowAction(m_xyWin, tr("&XY diagram"), "", "qtdmm-xy",
-    tr("Plot one measured value against another in an XY diagram."));
-  m_xyAction->setObjectName("action_WindowXY");
   m_basketAction = windowAction(m_basketWin, tr("Pro&ject"), "Ctrl+6", "document-open",
     tr("<html><head/><body><p><span style=\" font-weight:600;\">Project</span></p>"
        "<p>The files of a project: its benches, recordings, pictures, PDFs, LabPlot projects. "
@@ -532,6 +528,8 @@ void MainWindow::createViews()
     tr("<html><head/><body><p><span style=\" font-weight:600;\">Poincaré plot</span></p>"
        "<p>Each reading against the next one: noise widens the cloud across the diagonal, "
        "drift stretches it along it. SD1 and SD2 put both in numbers.</p></body></html>"));
+  m_histogramAction = windowAction(m_histogramWin, tr("&Histogram"), "", "qtdmm-histogram",
+    tr("Show the distribution of recent readings for one measured value."));
   // the graph keeps its action from the .ui (toolbar button with Ctrl+3)
   bindWindowAction(action_Graph, m_graphWin);
   // graph and table have menus of their own: they begin with the window's
@@ -585,13 +583,14 @@ void MainWindow::createViews()
   m_meterAction->setObjectName("action_WindowMeter");
   m_readingsAction->setObjectName("action_WindowReadings");
   m_poincareAction->setObjectName("action_WindowPoincare");
+  m_histogramAction->setObjectName("action_WindowHistogram");
   m_basketAction->setObjectName("action_WindowBasket");
 
   // a front panel for each meter, also those opened before the window
   connect(m_session, &DeviceSession::opened, this, &MainWindow::addPanel);
   // a meter of the table opened again: its readings come in again
   // an empty view takes the meter connected: the graph its main value, the
-  // analog meter, Poincaré and XY plots it when theirs is not connected -
+  // analog meter and the Poincaré plot it when theirs is not connected -
   // while the workspace's meters open one by one only when none was chosen
   connect(m_session, &DeviceSession::opened, this, [this](MeterController *ctl)
   {
@@ -606,14 +605,9 @@ void MainWindow::createViews()
     for (PoincareView *plot : m_wid->poincares())
       if (free(plot->value()))
         plot->setValue(ValueRef(0, ctl->source()));
-    for (XYView *view : m_xyViews)
-    {
-      ValueRef x = view->xValue(), y = view->yValue();
-      if (free(x)) x = ValueRef(0, ctl->source());
-      if (free(y)) y = ValueRef(0, ctl->source());
-      if (x != view->xValue() || y != view->yValue())
-        view->setValues(x, y);
-    }
+    for (HistogramView *histogram : m_histogramViews)
+      if (free(histogram->value()))
+        histogram->setValue(ValueRef(0, ctl->source()));
   });
   // a meter opened or closed: in the table when it shows all, else only its readings to it
   auto tableFollows = [this]
@@ -705,7 +699,7 @@ QMdiSubWindow *MainWindow::addViewWindow(Added kind, const ValueRef &value, int 
 {
   const QString prefix = kind == Added::Meter ? QStringLiteral("meter-")
                          : kind == Added::Graph ? QStringLiteral("graph-")
-                         : kind == Added::XY ? QStringLiteral("xy-") : QStringLiteral("poincare-");
+                         : kind == Added::Histogram ? QStringLiteral("histogram-") : QStringLiteral("poincare-");
   if (number < 2)
   {
     QStringList taken;
@@ -730,24 +724,6 @@ QMdiSubWindow *MainWindow::addViewWindow(Added kind, const ValueRef &value, int 
       graph->setValues({ value });
     return win;
   }
-  if (kind == Added::XY)
-  {
-    auto *plot = new XYPlot(this);
-    plot->setWindowTitle(tr("XY diagram %1").arg(number));
-    auto *view = new XYView(m_session, plot, this);
-    m_xyViews.insert(plot, view);
-    applyXYColors(plot);
-    if (!value.source.isEmpty())
-      view->setValues(value, value);
-    win = addView(plot, plot->windowTitle(), MdiArranger::Table, prefix + QString::number(number));
-    view->plot()->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(plot, &QWidget::customContextMenuRequested, this, [this, plot, win](const QPoint &pos)
-    {
-      windowMenu(win, plot->mapToGlobal(pos));
-    });
-    m_added << win;
-    return win;
-  }
   if (kind == Added::Meter)
   {
     auto *meter = new AnalogMeter(this);
@@ -757,6 +733,17 @@ QMdiSubWindow *MainWindow::addViewWindow(Added kind, const ValueRef &value, int 
     m_arranger->setContentAspect(win, AnalogMeter::kMinAspect, AnalogMeter::kMaxAspect);
     applyFrame(meter);
     view = meter;
+  }
+  else if (kind == Added::Histogram)
+  {
+    auto *plot = new HistogramPlot(this);
+    plot->setWindowTitle(tr("Histogram %1").arg(number));
+    auto *source = new HistogramView(m_session, plot, this);
+    m_histogramViews.insert(plot, source);
+    source->setValue(value);
+    win = addView(plot, plot->windowTitle(), MdiArranger::Table, prefix + QString::number(number));
+    applyHistogramColors(plot);
+    view = plot;
   }
   else
   {
@@ -785,27 +772,18 @@ void MainWindow::newView(Added kind, const ValueRef &value, bool ask)
   // nothing to pick from.
   if (ask && !m_session->controllers().isEmpty())
   {
-    if (kind == Added::XY)
-    {
-      if (!editXYSources(xyViewOf(win)))
-      {
-        removeAddedWindow(win);
-        return;
-      }
-    }
-    else
-    {
     MeterView *meter = meterViewOf(win);
     PoincareView *plot = poincareViewOf(win);
+    HistogramView *histogram = histogramViewOf(win);
     const GraphView *graph = graphViewOf(win);
     // a graph with one device and one value has nothing to choose from
     const bool choice = !graph || m_session->controllers().size() > 1 || m_session->controllers().first()->valueCount() > 1;
-    if (choice && !editSources(graph ? ValueMenu::View::Graph : meter ? ValueMenu::View::Meter : ValueMenu::View::Poincare,
-                               meter, plot, graph ? graph->graph() : nullptr))
+    if (choice && !editSources(graph ? ValueMenu::View::Graph : meter ? ValueMenu::View::Meter
+                                             : histogram ? ValueMenu::View::Histogram : ValueMenu::View::Poincare,
+                               meter, plot, graph ? graph->graph() : nullptr, histogram))
     {
       removeAddedWindow(win);
       return;
-    }
     }
   }
   win->show();
@@ -822,10 +800,10 @@ void MainWindow::removeAddedWindow(QMdiSubWindow *win)
     m_wid->removeMeter(meter);
   if (PoincareView *plot = poincareViewOf(win))
     m_wid->removePoincare(plot);
-  if (XYView *view = xyViewOf(win))
+  if (HistogramView *histogram = histogramViewOf(win))
   {
-    m_xyViews.remove(view->plot());
-    delete view;
+    m_histogramViews.remove(histogram->plot());
+    delete histogram;
   }
   if (GraphView *graph = graphViewOf(win))
     m_wid->removeGraph(graph);
@@ -833,23 +811,6 @@ void MainWindow::removeAddedWindow(QMdiSubWindow *win)
   m_grown.remove(win);
   delete win;
   m_arranger->arrange();
-}
-
-XYView *MainWindow::xyViewOf(const QMdiSubWindow *win) const
-{
-  for (XYView *view : m_xyViews)
-    if (win && view->plot() == win->widget())
-      return view;
-  return nullptr;
-}
-
-QList<QMdiSubWindow *> MainWindow::xyWindows() const
-{
-  QList<QMdiSubWindow *> wins { m_xyWin };
-  for (QMdiSubWindow *win : m_added)
-    if (xyViewOf(win))
-      wins << win;
-  return wins;
 }
 
 MeterView *MainWindow::meterViewOf(const QMdiSubWindow *win) const
@@ -863,6 +824,14 @@ MeterView *MainWindow::meterViewOf(const QMdiSubWindow *win) const
 PoincareView *MainWindow::poincareViewOf(const QMdiSubWindow *win) const
 {
   for (PoincareView *view : m_wid->poincares())
+    if (win && view->plot() == win->widget())
+      return view;
+  return nullptr;
+}
+
+HistogramView *MainWindow::histogramViewOf(const QMdiSubWindow *win) const
+{
+  for (HistogramView *view : m_histogramViews)
     if (win && view->plot() == win->widget())
       return view;
   return nullptr;
@@ -986,9 +955,18 @@ QList<QMdiSubWindow *> MainWindow::poincareWindows() const
   return wins;
 }
 
+QList<QMdiSubWindow *> MainWindow::histogramWindows() const
+{
+  QList<QMdiSubWindow *> wins { m_histogramWin };
+  for (QMdiSubWindow *w : m_added)
+    if (histogramViewOf(w))
+      wins << w;
+  return wins;
+}
+
 bool MainWindow::isColumn(const QMdiSubWindow *win) const
 {
-  return win == m_readingsWin || poincareViewOf(win) || xyViewOf(win);
+  return win == m_readingsWin || poincareViewOf(win) || histogramViewOf(win);
 }
 
 bool MainWindow::isInstrument(const QMdiSubWindow *win) const
@@ -1264,14 +1242,7 @@ void MainWindow::fillViewToolbar()
   toolBarDMM->addAction(m_displayAction);
   toolBarDMM->addAction(m_meterAction);
   toolBarDMM->addAction(m_poincareAction);
-  toolBarDMM->addAction(m_xyAction);
-  addViewMenu(m_xyAction, [this](QMenu *menu)
-  {
-    for (QMdiSubWindow *win : xyWindows())
-      addViewEntry(menu, win, win->windowTitle());
-    menu->addSeparator();
-    connect(menu->addAction(tr("&New...")), &QAction::triggered, m_newXYAction, &QAction::trigger);
-  });
+  toolBarDMM->addAction(m_histogramAction);
   toolBarDMM->addAction(action_Graph);
   toolBarDMM->addAction(m_readingsAction);
   connect(m_displayAction, &QAction::toggled, this, &MainWindow::storeDisplaySLOT);
@@ -1297,6 +1268,13 @@ void MainWindow::fillViewToolbar()
       addViewEntry(menu, win, viewName(win, poincareViewOf(win)->value()));
     menu->addSeparator();
     connect(menu->addAction(tr("&New...")), &QAction::triggered, m_newPoincareAction, &QAction::trigger);
+  });
+  addViewMenu(m_histogramAction, [this](QMenu *menu)
+  {
+    for (QMdiSubWindow *win : histogramWindows())
+      addViewEntry(menu, win, viewName(win, histogramViewOf(win)->value()));
+    menu->addSeparator();
+    connect(menu->addAction(tr("&New...")), &QAction::triggered, m_newHistogramAction, &QAction::trigger);
   });
   addViewMenu(action_Graph, [this](QMenu *menu)
   {
@@ -1341,11 +1319,11 @@ void MainWindow::fillViewToolbar()
     return !none || m_session->controllers().isEmpty()
            || editSources(ValueMenu::View::Poincare, nullptr, poincareViewOf(m_poincareWin));
   });
-  kindClicked(m_xyAction, [this] { return xyWindows(); }, [this]
+  kindClicked(m_histogramAction, [this] { return histogramWindows(); }, [this]
   {
-    const XYView *view = m_xyViews.value(m_xyPlot);
-    const bool none = view->xValue().source.isEmpty() || view->yValue().source.isEmpty();
-    return !none || m_session->controllers().isEmpty() || editXYSources(m_xyViews.value(m_xyPlot));
+    const bool none = histogramViewOf(m_histogramWin)->value().source.isEmpty();
+    return !none || m_session->controllers().isEmpty()
+           || editSources(ValueMenu::View::Histogram, nullptr, nullptr, nullptr, histogramViewOf(m_histogramWin));
   });
 }
 
@@ -1372,7 +1350,7 @@ void MainWindow::addViewEntry(QMenu *menu, QMdiSubWindow *win, const QString &na
   connect(entry, &QAction::toggled, this, [this, win](bool on)
   {
     // the windows with an action of their own through it, it follows them
-    for (QAction *a : { m_meterAction, m_poincareAction, m_xyAction, action_Graph })
+    for (QAction *a : { m_meterAction, m_poincareAction, m_histogramAction, action_Graph })
       if (a->property("window").value<QObject *>() == win)
       {
         a->setChecked(on);
@@ -1582,10 +1560,10 @@ void MainWindow::placeWindow()
     move(winRect.x(), winRect.y());
   // the views shown at the start count as grown for; the table column gets
   // the width the window has for it
-  for (QMdiSubWindow *w : { m_meterWin, m_graphWin, m_readingsWin, m_poincareWin })
+  for (QMdiSubWindow *w : { m_meterWin, m_graphWin, m_readingsWin, m_poincareWin, m_histogramWin })
     if (!w->isHidden())
       m_grown.insert(w);
-  if (m_grown.contains(m_readingsWin) || m_grown.contains(m_poincareWin))
+  if (m_grown.contains(m_readingsWin) || m_grown.contains(m_poincareWin) || m_grown.contains(m_histogramWin))
     m_arranger->setTableWidth(growthFor(m_readingsWin).width());
   if (stored && m_wid->settingsDialog()->generalPage()->saveWindowSize())
   {
@@ -1597,7 +1575,7 @@ void MainWindow::placeWindow()
     // from the content: an instrument, plus what each shown view adds; the
     // front panels grow it when their meters connect
     QSize start(28 * em(), 22 * em());
-    for (QMdiSubWindow *w : { m_graphWin, m_readingsWin, m_poincareWin })
+    for (QMdiSubWindow *w : { m_graphWin, m_readingsWin, m_poincareWin, m_histogramWin })
       if (m_grown.contains(w))
         start += growthFor(w);
     // at least 800×600 at the first start, the views fill it; they grow
@@ -1620,7 +1598,7 @@ void MainWindow::updateEmptyStart()
   const bool noDevices = m_wid->devices()->list().isEmpty();
   m_emptyConnect->setVisible(!noDevices);
   // nothing to see behind the start page; checked stays what comes back
-  for (QAction *a : { m_displayAction, m_meterAction, m_poincareAction, m_xyAction, action_Graph, m_readingsAction })
+  for (QAction *a : { m_displayAction, m_meterAction, m_poincareAction, m_histogramAction, action_Graph, m_readingsAction })
     a->setEnabled(!empty);
   // [E 09.11.] a project or a bench makes no sense without a device
   if (m_benchActions.constFirst()->isEnabled() == noDevices)
@@ -1884,7 +1862,7 @@ void MainWindow::createExtraActions()
   // Space (Record) toggles the recorder; Start and Stop have neither a
   // button nor a key of their own any more
   addActions({action_Configure, action_ConfigureDMM, action_Direct_help, action_Help, action_Quit,
-              m_displayAction, m_meterAction, m_readingsAction, m_poincareAction, m_basketAction, m_titleBars,
+              m_displayAction, m_meterAction, m_readingsAction, m_poincareAction, m_histogramAction, m_basketAction, m_titleBars,
               m_fullScreen, m_toolbars, m_zoomIn, m_zoomOut, m_zoomFit, m_copyImage, m_noteAction,
               // no buttons of their own: the keys stay, the graph's menu has them
               action_Connect, action_Reset, action_Record, action_Live, action_Clear,
@@ -1906,7 +1884,8 @@ void MainWindow::createShortcuts(const QList<QAction *> &workspace)
                       m_graphExport, action_Import, action_Print })
     m_shortcuts->add(a, recording);
   for (QAction *a : { m_sidebarAction, m_displayAction, m_meterAction, m_newMeterAction, action_Graph,
-                      m_readingsAction, m_poincareAction, m_newPoincareAction, m_newGraphAction, m_basketAction, m_titleBars, m_toolbars,
+                      m_readingsAction, m_poincareAction, m_newPoincareAction, m_histogramAction, m_newHistogramAction,
+                      m_newGraphAction, m_basketAction, m_titleBars, m_toolbars,
                       m_fullScreen })
     m_shortcuts->add(a, windows);
   for (QAction *a : workspace)
@@ -2074,6 +2053,7 @@ void MainWindow::on_action_Menu_triggered()
     m_menu->addAction(m_displayAction);
     m_menu->addAction(m_meterAction);
     m_menu->addAction(m_poincareAction);
+    m_menu->addAction(m_histogramAction);
     m_menu->addAction(action_Graph);
     m_menu->addAction(m_readingsAction);
     m_menu->addAction(m_basketAction);
@@ -2217,7 +2197,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
   // minimizing the main window hides its children spontaneously; they are
   // not closed, so only explicit show/hide counts (isHidden() stays false)
   if ((event->type() == QEvent::Show || event->type() == QEvent::Hide) && !event->spontaneous())
-    for (QAction *a : { m_displayAction, m_meterAction, m_readingsAction, m_poincareAction, action_Graph,
+    for (QAction *a : { m_displayAction, m_meterAction, m_readingsAction, m_poincareAction, m_histogramAction, action_Graph,
                         m_basketAction })
       if (a && a->property("window").value<QObject *>() == watched)
       {
@@ -2241,6 +2221,7 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
   MeterView *meter = meterViewOf(win);
   const bool added = m_added.contains(win);
   PoincareView *plot = poincareViewOf(win);
+  HistogramView *histogram = histogramViewOf(win);
   QAction *hide = menu.addAction(added ? tr("&Close window") : tr("&Hide view"));
   FrontPanel *panel = panelOf(win);
   // a front panel goes with its device, also while the menu is open
@@ -2297,20 +2278,12 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
     addRulesMenu(&menu, panel->controller());
   }
   // the value it shows, of any open meter
-  if ((meter || plot) && !m_session->controllers().isEmpty())
-    connect(menu.addAction(tr("S&ources...")), &QAction::triggered, this, [this, meter, plot]
+  if ((meter || plot || histogram) && !m_session->controllers().isEmpty())
+    connect(menu.addAction(tr("S&ources...")), &QAction::triggered, this, [this, meter, plot, histogram]
     {
-      editSources(meter ? ValueMenu::View::Meter : ValueMenu::View::Poincare, meter, plot);
+      editSources(meter ? ValueMenu::View::Meter : histogram ? ValueMenu::View::Histogram : ValueMenu::View::Poincare,
+                  meter, plot, nullptr, histogram);
     });
-  if (XYView *xy = xyViewOf(win))
-  {
-    if (!m_session->controllers().isEmpty())
-      connect(menu.addAction(tr("S&ources...")), &QAction::triggered, this, [this, xy] { editXYSources(xy); });
-    connect(menu.addAction(m_newXYAction->text()), &QAction::triggered, this, [this, xy]
-    {
-      newView(Added::XY, xy->xValue());
-    });
-  }
   if (meter)
   {
     // this meter's own, the settings' until one is picked
@@ -2335,6 +2308,11 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
     menu.addSeparator();
     plot->plot()->addMenuActions(&menu);
   }
+  if (histogram)
+    connect(menu.addAction(m_newHistogramAction->text()), &QAction::triggered, this, [this, histogram]
+    {
+      newView(Added::Histogram, histogram->value());
+    });
   if (menu.exec(globalPos) != hide || !window)
     return;
   if (added)
@@ -2476,12 +2454,15 @@ static QString readingText(const Reading &r)
     .trimmed();
 }
 
-bool MainWindow::editSources(ValueMenu::View view, MeterView *meter, PoincareView *plot, GraphWidget *graph)
+bool MainWindow::editSources(ValueMenu::View view, MeterView *meter, PoincareView *plot, GraphWidget *graph,
+                             HistogramView *histogram)
 {
   if (!meter)
     meter = meterViewOf(m_meterWin);
   if (!plot)
     plot = poincareViewOf(m_poincareWin);
+  if (!histogram)
+    histogram = histogramViewOf(m_histogramWin);
   // the open meters with their values
   QList<SourcesDlg::Meter> meters;
   QList<ValueRef> all;
@@ -2517,6 +2498,10 @@ bool MainWindow::editSources(ValueMenu::View view, MeterView *meter, PoincareVie
     case ValueMenu::View::Meter:
       name = meter->meter()->windowTitle();
       chosen << meter->value();
+      break;
+    case ValueMenu::View::Histogram:
+      name = histogram->plot()->windowTitle();
+      chosen << histogram->value();
       break;
     default:
       name = plot->plot()->windowTitle();
@@ -2561,6 +2546,11 @@ bool MainWindow::editSources(ValueMenu::View view, MeterView *meter, PoincareVie
       if (meter == meterViewOf(m_meterWin))
         m_meterAction->setChecked(true);
       break;
+    case ValueMenu::View::Histogram:
+      histogram->setValue(picked.first());
+      if (histogram == histogramViewOf(m_histogramWin))
+        m_histogramAction->setChecked(true);
+      break;
     default:
       plot->setValue(picked.first());
       if (plot == poincareViewOf(m_poincareWin))
@@ -2568,27 +2558,6 @@ bool MainWindow::editSources(ValueMenu::View view, MeterView *meter, PoincareVie
       break;
   }
   updateOpenDevices();
-  return true;
-}
-
-bool MainWindow::editXYSources(XYView *view)
-{
-  if (!view)
-    return false;
-  QList<SourcesDlg::Meter> meters;
-  for (const MeterController *ctl : m_session->controllers())
-  {
-    SourcesDlg::Meter meter;
-    meter.source = ctl->source();
-    meter.name = ctl->deviceName();
-    for (int id = 0; id < ctl->valueCount(); ++id)
-      meter.values << otherValueRow(ctl, id).name;
-    meters << meter;
-  }
-  SourcesDlg dlg(view->plot()->windowTitle(), meters, view->xValue(), view->yValue(), this);
-  if (dlg.exec() != QDialog::Accepted)
-    return false;
-  view->setValues(dlg.xValue(), dlg.yValue());
   return true;
 }
 
@@ -2604,6 +2573,8 @@ void MainWindow::dropValue(const ValueRef &value, const QPoint &pos)
     meter->setValue(value);
   else if (PoincareView *plot = poincareViewOf(win))
     plot->setValue(value);
+  else if (HistogramView *histogram = histogramViewOf(win))
+    histogram->setValue(value);
   else if (const GraphView *graph = graphViewOf(win))
     graph->graph()->setValueShown(value, true);
   else if (win == m_readingsWin)
@@ -2630,6 +2601,7 @@ void MainWindow::dropValue(const ValueRef &value, const QPoint &pos)
     QMenu menu(this);
     QAction *meter = menu.addAction(m_newMeterAction->icon(), tr("New &needle meter"));
     QAction *plot = menu.addAction(m_newPoincareAction->icon(), tr("New &Poincaré plot"));
+    QAction *histogram = menu.addAction(m_newHistogramAction->icon(), tr("New &histogram"));
     QAction *graph = menu.addAction(action_Graph->icon(), tr("In the &graph"));
     QAction *newGraph = menu.addAction(action_Graph->icon(), tr("New g&raph"));
     QAction *chosen = menu.exec(m_mdi->viewport()->mapToGlobal(pos));
@@ -2637,6 +2609,8 @@ void MainWindow::dropValue(const ValueRef &value, const QPoint &pos)
       newView(Added::Meter, value);
     else if (chosen == plot)
       newView(Added::Poincare, value);
+    else if (chosen == histogram)
+      newView(Added::Histogram, value);
     else if (chosen == newGraph)
       newView(Added::Graph, value);
     else if (chosen == graph)
@@ -2790,6 +2764,12 @@ DeviceSidebar::Value MainWindow::otherValueRow(const MeterController *ctl, int i
       ++row.poincares;
       row.views << win->windowTitle();
     }
+  for (QMdiSubWindow *win : histogramWindows())
+    if (const HistogramView *histogram = histogramViewOf(win); histogram && !win->isHidden() && histogram->value() == value)
+    {
+      ++row.histograms;
+      row.views << win->windowTitle();
+    }
   return row;
 }
 
@@ -2841,6 +2821,9 @@ void MainWindow::pointToViews(const ValueRef &value)
   for (QMdiSubWindow *win : poincareWindows())
     if (const PoincareView *plot = poincareViewOf(win); plot && !win->isHidden() && plot->value() == value)
       wins << win;
+  for (QMdiSubWindow *win : histogramWindows())
+    if (const HistogramView *histogram = histogramViewOf(win); histogram && !win->isHidden() && histogram->value() == value)
+      wins << win;
   // a frame in the selection colour for a moment, above what the view draws
   for (QMdiSubWindow *win : std::as_const(wins))
   {
@@ -2878,6 +2861,7 @@ void MainWindow::fillValueMenu(QMenu *menu, const ValueRef &value)
   };
   target.newMeter = [this](const ValueRef &v) { newMeter(v); };
   target.newPoincare = [this](const ValueRef &v) { newView(Added::Poincare, v); };
+  target.newHistogram = [this](const ValueRef &v) { newView(Added::Histogram, v); };
   target.newGraph = [this](const ValueRef &v) { newView(Added::Graph, v); };
   target.graphs = [this]
   {
@@ -2899,7 +2883,7 @@ void MainWindow::fillValueMenu(QMenu *menu, const ValueRef &value)
     }
     QAction *action = view == ValueMenu::View::Lcd   ? m_displayAction
                     : view == ValueMenu::View::Table ? m_readingsAction
-                                                      : action_Graph;
+                    : view == ValueMenu::View::Histogram ? m_histogramAction : action_Graph;
     action->setChecked(true);
   };
   ValueMenu::fill(menu, target, value);
@@ -3184,13 +3168,9 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
   for (const QString &number : get("Windows/poincares", QString()).toString().split(' ', Qt::SkipEmptyParts))
     addViewWindow(Added::Poincare, valueOf(get("Windows/poincare-" + number + "-value", QString()).toString()),
                   number.toInt())->show();
-  for (const QString &number : get("Windows/xys", QString()).toString().split(' ', Qt::SkipEmptyParts))
-  {
-    QMdiSubWindow *win = addViewWindow(Added::XY, ValueRef(), number.toInt());
-    xyViewOf(win)->setValues(ValueRef::fromString(get("Windows/xy-" + number + "-x", QString()).toString()),
-                             ValueRef::fromString(get("Windows/xy-" + number + "-y", QString()).toString()));
-    win->show();
-  }
+  for (const QString &number : get("Windows/histograms", QString()).toString().split(' ', Qt::SkipEmptyParts))
+    addViewWindow(Added::Histogram, valueOf(get("Windows/histogram-" + number + "-value", QString()).toString()),
+                  number.toInt())->show();
   const QString layout = get("Windows/layout", QString()).toString();
   if (!m_arranger->setLayoutText(layout))
   {
@@ -3204,14 +3184,14 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
   if (free)
   {
     QMap<QString, QString> geometry;
-    for (QMdiSubWindow *w : meterWindows() + poincareWindows() + xyWindows() + graphWindows() + QList<QMdiSubWindow *>{ m_readingsWin })
+    for (QMdiSubWindow *w : meterWindows() + poincareWindows() + histogramWindows() + graphWindows() + QList<QMdiSubWindow *>{ m_readingsWin })
       geometry[w->objectName()] = get("Windows/geometry-" + w->objectName(), QString()).toString();
     // once the window is shown and the area has its size: the automatic
     // layout for a start, then the stored positions on top of it
     QTimer::singleShot(0, this, [this, geometry]
     {
       m_arranger->arrangeNow();
-      for (QMdiSubWindow *w : meterWindows() + poincareWindows() + xyWindows() + graphWindows() + QList<QMdiSubWindow *>{ m_readingsWin })
+      for (QMdiSubWindow *w : meterWindows() + poincareWindows() + histogramWindows() + graphWindows() + QList<QMdiSubWindow *>{ m_readingsWin })
       {
         const QStringList g = geometry.value(w->objectName()).split(' ');
         if (g.size() == 4)
@@ -3224,13 +3204,12 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
   action_Graph->setChecked(get("MainWindow/show-graph", false).toBool());   // a fresh start is a compact instrument
   m_readingsAction->setChecked(get("Windows/readings", false).toBool());
   m_poincareAction->setChecked(get("Windows/poincare", false).toBool());
-  m_xyAction->setChecked(get("Windows/xy", false).toBool());
+  m_histogramAction->setChecked(get("Windows/histogram", false).toBool());
   m_basketAction->setChecked(get("Windows/basket", false).toBool());
   // "1@device:ab12cd34" (ValueRef)
   meterViewOf(m_meterWin)->setValue(valueOf(get("Windows/meter-value", 0).toString()));
   poincareViewOf(m_poincareWin)->setValue(valueOf(get("Windows/poincare-value", 0).toString()));
-  m_xyViews.value(m_xyPlot)->setValues(ValueRef::fromString(get("Windows/xy-x", QString()).toString()),
-                                       ValueRef::fromString(get("Windows/xy-y", QString()).toString()));
+  histogramViewOf(m_histogramWin)->setValue(valueOf(get("Windows/histogram-value", QString()).toString()));
   for (QMdiSubWindow *win : graphWindows())
     applyGraphState(graphViewOf(win), get, valueOf);
   // the values the readings table leaves out, "1 2", another meter's
@@ -3256,7 +3235,7 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
     applyTableSources();
   }
   // an unchecked action did not toggle: hide its window explicitly
-  for (QAction *a : { m_meterAction, action_Graph, m_readingsAction, m_poincareAction, m_basketAction })
+  for (QAction *a : { m_meterAction, action_Graph, m_readingsAction, m_poincareAction, m_histogramAction, m_basketAction })
     qobject_cast<QWidget *>(a->property("window").value<QObject *>())->setVisible(a->isChecked());
   if (!m_displayAction->isChecked())
     for (QMdiSubWindow *win : std::as_const(m_panelWins))
@@ -3365,7 +3344,7 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
   set("Windows/toolbar-hidden", m_toolbars->isChecked());
   set("Windows/design", Designs::name(Designs::current()));
   if (m_arranger->mode() == MdiArranger::Free)
-    for (QMdiSubWindow *w : meterWindows() + poincareWindows() + xyWindows() + graphWindows() + QList<QMdiSubWindow *>{ m_readingsWin }
+    for (QMdiSubWindow *w : meterWindows() + poincareWindows() + histogramWindows() + graphWindows() + QList<QMdiSubWindow *>{ m_readingsWin }
                             + panelWindows())
     {
       const QRect g = w->geometry();
@@ -3399,7 +3378,7 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
   set("Windows/meter", m_meterAction->isChecked());
   set("Windows/readings", m_readingsAction->isChecked());
   set("Windows/poincare", m_poincareAction->isChecked());
-  set("Windows/xy", m_xyAction->isChecked());
+  set("Windows/histogram", m_histogramAction->isChecked());
   set("Windows/basket", m_basketAction->isChecked());
   set("MainWindow/show-graph", action_Graph->isChecked());
   set("Windows/meter-value", meterViewOf(m_meterWin)->value().toString());
@@ -3415,8 +3394,7 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
   }
   set("Windows/meters", meters.join(' '));
   set("Windows/poincare-value", poincareViewOf(m_poincareWin)->value().toString());
-  set("Windows/xy-x", m_xyViews.value(m_xyPlot)->xValue().toString());
-  set("Windows/xy-y", m_xyViews.value(m_xyPlot)->yValue().toString());
+  set("Windows/histogram-value", histogramViewOf(m_histogramWin)->value().toString());
   QStringList plots;
   for (QMdiSubWindow *w : poincareWindows().mid(1))
   {
@@ -3425,15 +3403,14 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
     set("Windows/poincare-" + number + "-value", poincareViewOf(w)->value().toString());
   }
   set("Windows/poincares", plots.join(' '));
-  QStringList xys;
-  for (QMdiSubWindow *w : xyWindows())
+  QStringList histograms;
+  for (QMdiSubWindow *w : histogramWindows().mid(1))
   {
     const QString number = w->objectName().section('-', 1);
-    xys << number;
-    set("Windows/xy-" + number + "-x", xyViewOf(w)->xValue().toString());
-    set("Windows/xy-" + number + "-y", xyViewOf(w)->yValue().toString());
+    histograms << number;
+    set("Windows/histogram-" + number + "-value", histogramViewOf(w)->value().toString());
   }
-  set("Windows/xys", xys.join(' '));
+  set("Windows/histograms", histograms.join(' '));
   QStringList graphs;
   for (QMdiSubWindow *w : graphWindows())
   {
@@ -4053,8 +4030,8 @@ void MainWindow::setDesign(int design)
     view->graph()->setThemeColors(g.background, g.grid, g.labels, g.data);
   for (QMdiSubWindow *win : poincareWindows())
     applyPoincareColors(static_cast<PoincarePlot *>(win->widget()));
-  for (QMdiSubWindow *win : xyWindows())
-    applyXYColors(static_cast<XYPlot *>(win->widget()));
+  for (QMdiSubWindow *win : histogramWindows())
+    applyHistogramColors(static_cast<HistogramPlot *>(win->widget()));
   for (QAction *a : m_designMenu->actions())
     a->setChecked(a->data().toInt() == design);
   // at once, so the settings dialog shows the design of the menu (and its
@@ -4077,7 +4054,7 @@ void MainWindow::applyPoincareColors(PoincarePlot *plot)
   plot->setThemeColors(background, g.grid, g.labels, g.data);
 }
 
-void MainWindow::applyXYColors(XYPlot *plot)
+void MainWindow::applyHistogramColors(HistogramPlot *plot)
 {
   const Designs::Design d = Designs::current();
   const QBrush frame = Designs::frameBrush(d);

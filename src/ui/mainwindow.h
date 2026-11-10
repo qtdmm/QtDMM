@@ -57,8 +57,8 @@ class GraphWidget;
 class BasketWidget;
 class ReadingsWidget;
 class PoincarePlot;
-class XYPlot;
-class XYView;
+class HistogramPlot;
+class HistogramView;
 class AlarmBar;
 class ShortcutRegistry;
 class FrontPanel;
@@ -201,16 +201,13 @@ protected:
   /// the menu, each with its value (a meter also its style), and go when
   /// closed.
   /// @{
-  enum class Added { Meter, Poincare, XY, Graph };
+  enum class Added { Meter, Poincare, Histogram, Graph };
   QList<QMdiSubWindow *> m_added;
   QAction    *m_newMeterAction = nullptr;
   QAction    *m_newPoincareAction = nullptr;
+  QAction    *m_newHistogramAction = nullptr;
+  QAction    *m_histogramAction = nullptr;
   QAction    *m_newGraphAction = nullptr;
-  QAction    *m_xyAction = nullptr;
-  QAction    *m_newXYAction = nullptr;
-  XYPlot     *m_xyPlot = nullptr;
-  QMdiSubWindow *m_xyWin = nullptr;
-  QHash<XYPlot *, XYView *> m_xyViews;
   /// A window with another view of @p kind showing @p value, numbered
   /// @p number (the next free one for 0); not shown yet.
   QMdiSubWindow *addViewWindow(Added kind, const ValueRef &value, int number = 0);
@@ -222,10 +219,7 @@ protected:
   /// The analog meter or Poincaré plot in @p win, nullptr for another window.
   MeterView  *meterViewOf(const QMdiSubWindow *win) const;
   PoincareView *poincareViewOf(const QMdiSubWindow *win) const;
-  XYView      *xyViewOf(const QMdiSubWindow *win) const;
-  QList<QMdiSubWindow *> xyWindows() const;
-  bool        editXYSources(XYView *view);
-  void        applyXYColors(XYPlot *plot);
+  HistogramView *histogramViewOf(const QMdiSubWindow *win) const;
   /// @name Graphs
   /// The first one ("graph", InstanceWidget's own) is always there, more
   /// ("graph-2", ...) come from the menu and go when closed. All work alike
@@ -248,6 +242,7 @@ protected:
   /// The windows of all analog meters or Poincaré plots, the first one first.
   QList<QMdiSubWindow *> meterWindows() const;
   QList<QMdiSubWindow *> poincareWindows() const;
+  QList<QMdiSubWindow *> histogramWindows() const;
   /// The readings table or a Poincaré plot: a window of the column on the right.
   bool        isColumn(const QMdiSubWindow *win) const;
   /// @p value dragged out of the sidebar and dropped at @p pos of the area:
@@ -256,10 +251,13 @@ protected:
   void        dropValue(const ValueRef &value, const QPoint &pos);
   /// The design's colours for @p plot.
   void        applyPoincareColors(PoincarePlot *plot);
+  void        applyHistogramColors(HistogramPlot *plot);
   /// @}
   ReadingsWidget *m_readings;
   BasketWidget *m_basket = nullptr;
   PoincarePlot *m_poincare;
+  HistogramPlot *m_histogram = nullptr;
+  QHash<HistogramPlot *, HistogramView *> m_histogramViews;
   AlarmBar   *m_alarmBar;
   class AlarmService *m_alarmService;
   QMdiArea   *m_mdi;
@@ -269,6 +267,7 @@ protected:
   QMdiSubWindow *m_graphWin;
   QMdiSubWindow *m_readingsWin;
   QMdiSubWindow *m_poincareWin;
+  QMdiSubWindow *m_histogramWin = nullptr;
   QMdiSubWindow *m_basketWin;
   QAction    *m_displayAction = nullptr;
   QAction    *m_meterAction = nullptr;
@@ -425,7 +424,7 @@ protected:
   /// "Sources..." of a view; for View::Meter the analog meter @p meter,
   /// nullptr for the first. False when cancelled.
   bool        editSources(ValueMenu::View view, MeterView *meter = nullptr, PoincareView *plot = nullptr,
-                          GraphWidget *graph = nullptr);
+                          GraphWidget *graph = nullptr, HistogramView *histogram = nullptr);
   /// Values... of a front panel: its device's values on the big and small line.
   void        editPanelValues(FrontPanel *panel);
   QAction    *m_graphSources = nullptr;   ///< in the graph's menu, with more than one meter
