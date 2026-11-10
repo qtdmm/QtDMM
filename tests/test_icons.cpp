@@ -87,9 +87,9 @@ int main(int argc, char **argv)
   for (Designs::IconSet set : { Designs::Coloured, Designs::Plain })
   {
     Designs::setIconSet(set);
-    for (const QString &name : { "folder", "text-csv", "x-office-spreadsheet", "image-x-generic", "application-pdf",
-                                 "office-chart-line", "qtdmm-arrange", "text-x-generic" })
-      check(!QIcon::fromTheme(name).pixmap(16).isNull(), Designs::iconTheme() + ": " + name);
+    for (const char *name : { "folder", "text-csv", "x-office-spreadsheet", "image-x-generic", "application-pdf",
+                              "office-chart-line", "qtdmm-arrange", "text-x-generic" })
+      check(!QIcon::fromTheme(QString::fromLatin1(name)).pixmap(16).isNull(), Designs::iconTheme() + ": " + QString::fromLatin1(name));
   }
 
   if (failed)
