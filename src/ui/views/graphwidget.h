@@ -162,7 +162,9 @@ public:
     IDNoteHere,      ///< property "t": the time clicked (ms)
     IDNoteNow,
     IDEditMark,      ///< property "mark": its index in RecordingStore::marks()
-    IDRemoveMark     ///< property "mark"
+    IDRemoveMark,    ///< property "mark"
+    IDCursorHere,    ///< properties "which" (0 = A, 1 = B) and "t" (ms)
+    IDResetZoom
   };
 
   GraphWidget(QWidget *parent, Settings *settings);
@@ -256,6 +258,10 @@ public:
   /// the recording; -1 takes it away.
   void             setTimeCursor(int which, qint64 t);
   qint64           timeCursor(int which) const { return m_cursorT[which & 1]; }
+  /// Zoomed on a frame (Shift + drag): "Reset zoom" undoes it.
+  bool             zoomed() const { return m_zoomed; }
+  /// "Reset zoom": the window of before the zoom, the axes as before.
+  void             resetZoom() { endZoom(true); }
   void             clearTimeCursors();
   /// What the cursors say, as shown top right in the plot; empty without
   /// cursor. Public for the tests.
@@ -975,6 +981,30 @@ protected:
   /// The flags under the plot, the cursors' and the marks', in one row.
   void             updateFlags();
   void             updateMarkPositions();
+  /// @name Zoom on a frame (Shift + drag) and "Reset zoom"
+  /// @{
+  bool             m_zoomDragging = false;          ///< Shift + left button drags a frame
+  QGraphicsRectItem *m_zoomBand = nullptr;          ///< the frame while it is dragged
+  bool             m_zoomed = false;                ///< zoomToRect(): the axes show m_yZoom
+  std::array<std::pair<double, double>, 3> m_yZoom; ///< min and max per side while m_zoomed
+  struct ZoomBefore
+  {
+    qint64 start = 0;
+    int    seconds = 0;
+    bool   atEnd = false;
+    bool   all = false;
+  } m_zoomBefore;                                   ///< the window before the first zoom
+  /// Shows the plot's part @p frame (scene coordinates): its time as the
+  /// window, its height on every y axis.
+  void             zoomToRect(const QRectF &frame);
+  /// The axes automatic again (or fixed), @p restoreWindow: the window of
+  /// before the first zoom.
+  void             endZoom(bool restoreWindow);
+  void             endZoomDrag();
+  /// @}
+  /// The right-click menu at @p pos (in the view; a point outside the plot:
+  /// no entries for a time).
+  void             showMenu(const QPoint &pos, const QPoint &globalPos);
 
   void             resizeEvent(QResizeEvent *)Q_DECL_OVERRIDE;
   void             showEvent(QShowEvent *) override;

@@ -230,7 +230,8 @@ were; the integration curve carries on across a gap.
   line follows the readings and says what it is (`mean 1.83 A`). Where it
   stands is kept with the window layout and in a saved bench.
 - **Time cursors:** a click into the graph sets cursor **A**, Shift+click
-  cursor **B**; drag them to move them, Esc or **Remove time cursors** in
+  cursor **B** (or **Cursor A here** / **Cursor B here** in the right-click
+  menu); drag them to move them, Esc or **Remove time cursors** in
   the right-click menu takes them away. Top right the graph shows the time
   and the values drawn at each cursor and, with both, the time between them
   and a line for each value: its change (Δ), its mean and for a current or
@@ -241,6 +242,11 @@ were; the integration curve carries on across a gap.
   measures at the later cursor. A dashed line across the graph at the
   value of the left axis under each cursor shows the change as the distance between them;
   the cursors' names hang as flags under the graph, at the time labels.
+- **Zoom on a frame:** hold Shift and drag a frame over the graph: the
+  graph shows its time and its height, on the right axes too. New readings
+  leave the height alone. **Reset zoom** in the right-click menu gives back
+  the window and the axes of before, **Live** follows the readings again
+  with the axes automatic. A drag without Shift does what it did.
 - **Notes** mark a moment of the measurement: *Note here...* in the
   graph's context menu sets one where you clicked, *Note now...* (N in the
   graph, Ctrl+Shift+N anywhere) at the newest reading. A note has a title,

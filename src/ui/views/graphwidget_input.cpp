@@ -43,6 +43,20 @@ bool GraphWidget::eventFilter(QObject *watched, QEvent *event)
   if (watched == m_chartView && event->type() == QEvent::KeyPress)
     return handleChartKey(static_cast<QKeyEvent *>(event)) || QWidget::eventFilter(watched, event);
 
+  // the menu from the keyboard (Shift+F10, the menu key): where the mouse
+  // is over the plot, else in its middle; the mouse opens it on its press
+  if ((watched == m_chartView || watched == m_chartView->viewport()) && event->type() == QEvent::ContextMenu
+      && static_cast<QContextMenuEvent *>(event)->reason() == QContextMenuEvent::Keyboard)
+  {
+    QWidget *vp = m_chartView->viewport();
+    const QRect plot = m_chartView->mapFromScene(m_chart->plotArea()).boundingRect();
+    QPoint pos = vp->mapFromGlobal(QCursor::pos());
+    if (!plot.contains(pos))
+      pos = plot.center();
+    showMenu(pos, vp->mapToGlobal(pos));
+    return true;
+  }
+
   if (watched == m_chartView->viewport())
   {
     switch (event->type())
@@ -99,16 +113,11 @@ void GraphWidget::handleChartMousePress(QMouseEvent *ev)
     m_pressPos = pos;   // a note dragged from here (dragMark())
     return;
   }
-  if (ev->button() == Qt::RightButton && mark >= 0)
+  if (ev->button() == Qt::RightButton)
   {
-    m_popup->clear();
-    QAction *edit = m_popup->addAction(tr("&Edit note..."));
-    edit->setProperty("ID", IDEditMark);
-    edit->setProperty("mark", mark);
-    QAction *remove = m_popup->addAction(tr("&Remove mark"));
-    remove->setProperty("ID", IDRemoveMark);
-    remove->setProperty("mark", mark);
-    m_popup->popup(globalPos);
+    m_mouseDown = false;
+    m_clickCandidate = false;
+    showMenu(pos, globalPos);
     return;
   }
   if (ev->button() == Qt::LeftButton)
@@ -126,110 +135,135 @@ void GraphWidget::handleChartMousePress(QMouseEvent *ev)
     m_mousePan = true;
     m_mpos = pos;
   }
-  else if (ev->button() == Qt::RightButton)
+}
+
+void GraphWidget::showMenu(const QPoint &pos, const QPoint &globalPos)
+{
+  m_popup->clear();
+  const int mark = markAt(pos);
+  if (mark >= 0)
   {
-    m_popup->clear();
-    // an entry of the menu; popupSLOT() acts on its "ID"
-    auto item = [this](const QString &text, int id)
-    {
-      QAction *a = m_popup->addAction(text);
-      a->setProperty("ID", id);
-      return a;
-    };
-
-    if (!m_windowActions.isEmpty())
-    {
-      m_popup->addActions(m_windowActions);
-      m_popup->addSeparator();
-    }
-    if (m_store->isRunning())
-      item(tr("Stop recording"), IDStopRecorder);
-    else
-      item(tr("Start recording"), IDStartRecorder);
-    if (m_store->state() == RecordingStore::View)
-      item(tr("Live"), IDLive);
-    item(tr("Clear graph"), IDClearGraph);
-    m_popup->addSeparator();
-    // a note where the menu was opened, or at the newest reading
-    const QPointF scenePos = m_chartView->mapToScene(pos);
-    if (m_chart->plotArea().contains(scenePos))
-      item(tr("Note here..."), IDNoteHere)
-        ->setProperty("t", qMax<qint64>(0, qRound64(m_chart->mapToValue(scenePos, m_dataSeries).x() * 1000)));
-    item(tr("Note now..."), IDNoteNow)->setShortcut(QKeySequence(Qt::Key_N));
-    m_popup->addSeparator();
-
-    item(tr("Configure..."), IDConfigure);
-    item(tr("Copy image"), IDCopyImage);
-    item(tr("Export image..."), IDExportImage);
-    if (m_printAction)
-      m_popup->addAction(m_printAction);
-
-    // this graph's colours: the default from the settings page, or one of
-    // the variants for this graph only
-    QMenu *colours = m_popup->addMenu(tr("Graph &colours"));
-    auto variant = [this, colours](const QString &text, int v)
-    {
-      QAction *a = colours->addAction(text);
-      a->setProperty("ID", IDColorVariant);
-      a->setProperty("variant", v);
-      a->setCheckable(true);
-      a->setChecked(m_variantOverride == v);
-    };
-    variant(tr("&Default: %1").arg(variantTitle(m_defaultVariant)), -1);
-    colours->addSeparator();
-    for (ColorVariant v : { Neutral, ScopeBlue, PhosphorGreen, PhosphorAmber, ChartRecorder, Custom })
-      variant(variantTitle(v), v);
-
-    // where the reference line stands (it can also be dragged)
-    QMenu *reference = m_popup->addMenu(tr("&Reference line"));
-    auto refEntry = [this, reference](const QString &text, ReferenceKind kind, double value = 0)
-    {
-      QAction *a = reference->addAction(text);
-      a->setProperty("ID", IDReference);
-      a->setProperty("kind", int(kind));
-      a->setProperty("value", value);
-      a->setCheckable(true);
-      a->setChecked(m_referenceKind == kind && (kind != RefAlarm || m_reference == value));
-      return a;
-    };
-    auto valueText = [this](double v)
-    {
-      QString unit;
-      const QString number = formatEngineeringValue(v, &unit);
-      return QString("%1 %2").arg(number, unit).trimmed();
-    };
-    refEntry(tr("At &0"), RefZero);
-    refEntry(tr("&Mean of the window"), RefMean);
-    refEntry(tr("M&inimum of the window"), RefMin);
-    refEntry(tr("Ma&ximum of the window"), RefMax);
-    if (!m_alarmThresholds.isEmpty())
-      reference->addSeparator();
-    for (double a : m_alarmThresholds)
-      refEntry(tr("Alarm threshold %1").arg(valueText(a)), RefAlarm, a);
-    if (m_referenceKind == RefValue)
-    {
-      reference->addSeparator();
-      refEntry(tr("At %1 (dragged)").arg(valueText(m_reference)), RefValue, m_reference)->setEnabled(false);
-    }
-    reference->addSeparator();
-    refEntry(tr("&Off"), RefOff);
-    QAction *overview = item(tr("Over&view"), IDMinimap);
-    overview->setCheckable(true);
-    overview->setChecked(m_minimapOn);
-    QAction *envelope = item(tr("Min/max &band"), IDEnvelope);
-    envelope->setCheckable(true);
-    envelope->setChecked(m_envelopeOn);
-    if (m_cursorT[0] >= 0 || m_cursorT[1] >= 0)
-      item(tr("Remove time cursors"), IDClearCursors);
-
-    if (!m_store->isRunning())
-    {
-      m_popup->addSeparator();
-      item(tr("Import data..."), IDImportData);
-    }
-
+    QAction *edit = m_popup->addAction(tr("&Edit note..."));
+    edit->setProperty("ID", IDEditMark);
+    edit->setProperty("mark", mark);
+    QAction *remove = m_popup->addAction(tr("&Remove mark"));
+    remove->setProperty("ID", IDRemoveMark);
+    remove->setProperty("mark", mark);
     m_popup->popup(globalPos);
+    return;
   }
+  // an entry of the menu; popupSLOT() acts on its "ID"
+  auto item = [this](const QString &text, int id)
+  {
+    QAction *a = m_popup->addAction(text);
+    a->setProperty("ID", id);
+    return a;
+  };
+
+  if (!m_windowActions.isEmpty())
+  {
+    m_popup->addActions(m_windowActions);
+    m_popup->addSeparator();
+  }
+  if (m_store->isRunning())
+    item(tr("Stop recording"), IDStopRecorder);
+  else
+    item(tr("Start recording"), IDStartRecorder);
+  if (m_store->state() == RecordingStore::View)
+    item(tr("Live"), IDLive);
+  item(tr("Reset &zoom"), IDResetZoom)->setEnabled(m_zoomed);
+  item(tr("Clear graph"), IDClearGraph);
+  m_popup->addSeparator();
+  // a note where the menu was opened, or at the newest reading
+  const QPointF scenePos = m_chartView->mapToScene(pos);
+  if (m_chart->plotArea().contains(scenePos))
+    item(tr("Note here..."), IDNoteHere)
+      ->setProperty("t", qMax<qint64>(0, qRound64(m_chart->mapToValue(scenePos, m_dataSeries).x() * 1000)));
+  item(tr("Note now..."), IDNoteNow)->setShortcut(QKeySequence(Qt::Key_N));
+  // the time cursors where the menu was opened (a click sets A, Shift+click B)
+  if (m_chart->plotArea().contains(scenePos))
+  {
+    const qint64 t = qRound64(m_chart->mapToValue(scenePos, m_dataSeries).x() * 1000);
+    for (int which : { 0, 1 })
+    {
+      QAction *a = item(which == 0 ? tr("Cursor A here") : tr("Cursor B here"), IDCursorHere);
+      a->setProperty("which", which);
+      a->setProperty("t", t);
+    }
+  }
+  m_popup->addSeparator();
+
+  item(tr("Configure..."), IDConfigure);
+  item(tr("Copy image"), IDCopyImage);
+  item(tr("Export image..."), IDExportImage);
+  if (m_printAction)
+    m_popup->addAction(m_printAction);
+
+  // this graph's colours: the default from the settings page, or one of
+  // the variants for this graph only
+  QMenu *colours = m_popup->addMenu(tr("Graph &colours"));
+  auto variant = [this, colours](const QString &text, int v)
+  {
+    QAction *a = colours->addAction(text);
+    a->setProperty("ID", IDColorVariant);
+    a->setProperty("variant", v);
+    a->setCheckable(true);
+    a->setChecked(m_variantOverride == v);
+  };
+  variant(tr("&Default: %1").arg(variantTitle(m_defaultVariant)), -1);
+  colours->addSeparator();
+  for (ColorVariant v : { Neutral, ScopeBlue, PhosphorGreen, PhosphorAmber, ChartRecorder, Custom })
+    variant(variantTitle(v), v);
+
+  // where the reference line stands (it can also be dragged)
+  QMenu *reference = m_popup->addMenu(tr("&Reference line"));
+  auto refEntry = [this, reference](const QString &text, ReferenceKind kind, double value = 0)
+  {
+    QAction *a = reference->addAction(text);
+    a->setProperty("ID", IDReference);
+    a->setProperty("kind", int(kind));
+    a->setProperty("value", value);
+    a->setCheckable(true);
+    a->setChecked(m_referenceKind == kind && (kind != RefAlarm || m_reference == value));
+    return a;
+  };
+  auto valueText = [this](double v)
+  {
+    QString unit;
+    const QString number = formatEngineeringValue(v, &unit);
+    return QString("%1 %2").arg(number, unit).trimmed();
+  };
+  refEntry(tr("At &0"), RefZero);
+  refEntry(tr("&Mean of the window"), RefMean);
+  refEntry(tr("M&inimum of the window"), RefMin);
+  refEntry(tr("Ma&ximum of the window"), RefMax);
+  if (!m_alarmThresholds.isEmpty())
+    reference->addSeparator();
+  for (double a : m_alarmThresholds)
+    refEntry(tr("Alarm threshold %1").arg(valueText(a)), RefAlarm, a);
+  if (m_referenceKind == RefValue)
+  {
+    reference->addSeparator();
+    refEntry(tr("At %1 (dragged)").arg(valueText(m_reference)), RefValue, m_reference)->setEnabled(false);
+  }
+  reference->addSeparator();
+  refEntry(tr("&Off"), RefOff);
+  QAction *overview = item(tr("Over&view"), IDMinimap);
+  overview->setCheckable(true);
+  overview->setChecked(m_minimapOn);
+  QAction *envelope = item(tr("Min/max &band"), IDEnvelope);
+  envelope->setCheckable(true);
+  envelope->setChecked(m_envelopeOn);
+  if (m_cursorT[0] >= 0 || m_cursorT[1] >= 0)
+    item(tr("Remove time cursors"), IDClearCursors);
+
+  if (!m_store->isRunning())
+  {
+    m_popup->addSeparator();
+    item(tr("Import data..."), IDImportData);
+  }
+
+  m_popup->popup(globalPos);
 }
 
 void GraphWidget::handleChartMouseMove(QMouseEvent *ev)
@@ -265,7 +299,32 @@ void GraphWidget::handleChartMouseMove(QMouseEvent *ev)
   }
 
   if (m_clickCandidate && (pos - m_pressPos).manhattanLength() > 3)
+  {
     m_clickCandidate = false;
+    // Shift + drag: a frame to zoom on (without Shift a drag does what it did)
+    m_zoomDragging = m_pressShift && (ev->buttons() & Qt::LeftButton)
+                     && m_chart->plotArea().contains(m_chartView->mapToScene(m_pressPos));
+  }
+  if (m_zoomDragging)
+  {
+    const QRectF plot = m_chart->plotArea();
+    const QPointF a = m_chartView->mapToScene(m_pressPos);
+    QPointF b = m_chartView->mapToScene(pos);
+    b.setX(qBound(plot.left(), b.x(), plot.right()));
+    b.setY(qBound(plot.top(), b.y(), plot.bottom()));
+    if (!m_zoomBand)
+    {
+      m_zoomBand = new QGraphicsRectItem;   // the scene owns it
+      m_zoomBand->setZValue(100);
+      m_chart->scene()->addItem(m_zoomBand);
+    }
+    const QColor c = palette().color(QPalette::Highlight);
+    m_zoomBand->setPen(QPen(c, 1, Qt::DashLine));
+    m_zoomBand->setBrush(QColor(c.red(), c.green(), c.blue(), 50));
+    m_zoomBand->setRect(QRectF(a, b).normalized());
+    m_zoomBand->show();
+    return;
+  }
 
   if (m_mouseDown && m_cursorMode != NoCursor)
   {
@@ -398,6 +457,16 @@ void GraphWidget::handleChartMouseRelease(QMouseEvent *ev)
     endMarkDrag(false);
     return;
   }
+  if (m_zoomDragging && ev->button() == Qt::LeftButton)
+  {
+    const QRectF frame = m_zoomBand ? m_zoomBand->rect() : QRectF();
+    endZoomDrag();
+    m_mouseDown = false;
+    // a frame of a few pixels is a slip, no zoom
+    if (frame.width() >= 5 && frame.height() >= 5)
+      zoomToRect(frame);
+    return;
+  }
   if (m_clickCandidate && ev->button() == Qt::LeftButton)
   {
     const QPointF scenePos = m_chartView->mapToScene(m_pressPos);
@@ -493,7 +562,65 @@ void GraphWidget::popupSLOT(QAction *action)
     case IDRemoveMark:
       m_store->removeMark(action->property("mark").toInt());
       break;
+    case IDCursorHere:
+      setTimeCursor(action->property("which").toInt(), action->property("t").toLongLong());
+      break;
+    case IDResetZoom:
+      endZoom(true);
+      break;
   }
+}
+
+void GraphWidget::endZoomDrag()
+{
+  m_zoomDragging = false;
+  if (m_zoomBand)
+    m_zoomBand->hide();
+}
+
+void GraphWidget::zoomToRect(const QRectF &frame)
+{
+  const QRectF plot = m_chart->plotArea();
+  if (plot.height() <= 0)
+    return;
+  if (!m_zoomed)
+  {
+    m_zoomBefore.start = windowStart();
+    m_zoomBefore.seconds = m_windowSeconds;
+    m_zoomBefore.all = m_followAll;
+    m_zoomBefore.atEnd = m_store->state() == RecordingStore::Live ? !m_liveHold : following();
+  }
+  // each y axis: the frame's height in its own scale
+  for (int side = 0; side < 3; ++side)
+  {
+    const QValueAxis *axis = yAxisOf(side);
+    const double span = axis->max() - axis->min();
+    m_yZoom[size_t(side)] = { axis->min() + (plot.bottom() - frame.bottom()) / plot.height() * span,
+                              axis->min() + (plot.bottom() - frame.top()) / plot.height() * span };
+  }
+  m_zoomed = true;
+  setYRange(m_scaleMin, m_scaleMax);
+  updateRightAxis();
+  const double t0 = m_chart->mapToValue(frame.topLeft(), m_dataSeries).x();
+  const double t1 = m_chart->mapToValue(frame.bottomRight(), m_dataSeries).x();
+  showSpan(qRound64(t0 * 1000), qRound64((t1 - t0) * 1000), false);
+  updateThresholdLinePositions();
+}
+
+void GraphWidget::endZoom(bool restoreWindow)
+{
+  if (!m_zoomed)
+    return;
+  m_zoomed = false;
+  setYRange(m_scaleMin, m_scaleMax);
+  updateRightAxis();
+  updateThresholdLinePositions();
+  if (!restoreWindow)
+    return;
+  if (m_zoomBefore.all)
+    requestAll(true);
+  else
+    showSpan(m_zoomBefore.start, qint64(m_zoomBefore.seconds) * 1000, m_zoomBefore.atEnd);
 }
 
 bool GraphWidget::handleChartKey(QKeyEvent *ev)
@@ -503,6 +630,11 @@ bool GraphWidget::handleChartKey(QKeyEvent *ev)
   if (m_markDragging && ev->key() == Qt::Key_Escape)
   {
     endMarkDrag(true);
+    return true;
+  }
+  if (m_zoomDragging && ev->key() == Qt::Key_Escape)
+  {
+    endZoomDrag();
     return true;
   }
 

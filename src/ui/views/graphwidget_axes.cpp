@@ -297,6 +297,11 @@ void GraphWidget::setYRange(double min, double max)
   // +-1e40, or 0..0 with "include zero"), or one value that stays the same
   // (0 V on a shorted input) - draws no grid and no labels: show 0..1
   // while there is no value, else a tenth of the value around it (0: +-1)
+  if (m_zoomed)   // a frame zoomed on (Shift + drag)
+  {
+    min = m_yZoom[0].first;
+    max = m_yZoom[0].second;
+  }
   const bool noWidth = !std::isfinite(min) || !std::isfinite(max) || !(max > min);
   if (noWidth && (m_store->count() == 0 || !std::isfinite(min) || !std::isfinite(max) || min > max))
   {
@@ -506,7 +511,12 @@ void GraphWidget::updateRightAxis()
     if (!on)
       continue;
     double min = a.scaleMin, max = a.scaleMax;
-    if (m_includeZero)
+    if (m_zoomed)
+    {
+      min = m_yZoom[size_t(k + 1)].first;
+      max = m_yZoom[size_t(k + 1)].second;
+    }
+    else if (m_includeZero)
     {
       min = qMin(min, 0.0);
       max = qMax(max, 0.0);
