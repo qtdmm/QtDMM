@@ -77,6 +77,8 @@ RecordingStore::Stats RecordingStore::statsOf(const RecordingSeries &series, qin
   const bool loaded = m_state == View && m_stopT < 0;
   const qint64 step = loaded ? qint64(m_loadedGrid) * 100 : 0;
   double sum = 0;
+  double sumSq = 0;   // of the readings, for a file of no time
+  double squares = 0; // value² x s, as the integral
   for (int i = qMax(0, series.holding(from)); i < n; ++i)
   {
     const RawPoint &p = series.at(i);
@@ -105,16 +107,24 @@ RecordingStore::Stats RecordingStore::statsOf(const RecordingSeries &series, qin
     st.min = st.count == 1 ? p.value : qMin(st.min, p.value);
     st.max = st.count == 1 ? p.value : qMax(st.max, p.value);
     sum += p.value;
+    sumSq += p.value * p.value;
     if (end > begin)
     {
       st.integral += p.value * double(end - begin) / 1000;
+      squares += p.value * p.value * double(end - begin) / 1000;
       st.covered += end - begin;
     }
   }
   if (st.covered > 0)
+  {
     st.mean = st.integral * 1000 / double(st.covered);
+    st.sigma = std::sqrt(qMax(0.0, squares * 1000 / double(st.covered) - st.mean * st.mean));
+  }
   else if (st.count > 0)
+  {
     st.mean = sum / st.count; // readings that held for no time (a file of one row)
+    st.sigma = std::sqrt(qMax(0.0, sumSq / st.count - st.mean * st.mean));
+  }
   return st;
 }
 

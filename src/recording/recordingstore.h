@@ -232,6 +232,7 @@ public:
     double  min = std::nan("");
     double  max = std::nan("");
     double  mean = std::nan(""); ///< over time: each value for as long as it held
+    double  sigma = std::nan("");///< standard deviation, weighted over time as the mean
     double  integral = 0;        ///< value x s over the span; gaps count nothing
     qint64  covered = 0;         ///< ms of the span with a value
   };

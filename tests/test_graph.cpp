@@ -1528,7 +1528,7 @@ int main(int argc, char **argv)
     QChartView *view = graph.findChild<QChartView *>();
     QChart *chart = view->chart();
     QWidget *viewport = view->viewport();
-    QLabel *info = graph.findChild<QLabel *>("ui_graphCursors");
+    QLabel *info = graph.findChild<QLabel *>("ui_graphStats");
     // 2 A for 10 s, then 4 A for 10 s
     Feed feed(graph, 1000);
     graph.liveSLOT();
@@ -1536,7 +1536,10 @@ int main(int argc, char **argv)
     for (int i = 0; i < 21; ++i)
       feed.value(i < 10 ? 2.0 : 4.0);
     feed.now -= 1000;   // now is the last reading
-    check(graph.timeCursorText().isEmpty() && info && info->isHidden(), "time cursors: none at first");
+    // the statistics beside the plot, on at first: the cursors' place says how to set them
+    auto stats = [&] { return graph.statsText().replace(QChar('\n'), " | "); };
+    check(graph.statsVisible() && info && info->isVisible() && !stats().contains("A 12:") && stats().contains("Click: cursor A"),
+          "time cursors: none at first, the statistics say how: " + stats());
 
     auto xOf = [&](qint64 t)
     {
@@ -1558,9 +1561,8 @@ int main(int argc, char **argv)
     click(xOf(5000));
     check(std::abs(graph.timeCursor(0) - 5000) < 200 && graph.timeCursor(1) < 0,
           QString("time cursors: a click sets A at 5 s, got %1").arg(graph.timeCursor(0)));
-    check(info && !info->isHidden() && graph.timeCursorText().count('\n') == 0
-            && graph.timeCursorText().startsWith("A  12:00:0") && graph.timeCursorText().endsWith("  2 A"),
-          "time cursors: A says time and value, got " + graph.timeCursorText());
+    check(stats().contains("A 12:00:0") && stats().contains("|   A | 2 A") && !stats().contains("B 12:") && !stats().contains("A – B"),
+          "time cursors: A says time and value, got " + stats());
     click(xOf(15000), Qt::ShiftModifier);
     check(std::abs(graph.timeCursor(1) - 15000) < 200 && std::abs(graph.timeCursor(0) - 5000) < 200,
           QString("time cursors: Shift+click sets B, A stays: %1, %2").arg(graph.timeCursor(0)).arg(graph.timeCursor(1)));
@@ -1568,13 +1570,29 @@ int main(int argc, char **argv)
     // exactly: 5 s of 2 A, 5 s of 4 A
     graph.setTimeCursor(0, 5000);
     graph.setTimeCursor(1, 15000);
-    const QStringList lines = graph.timeCursorText().split('\n');
-    check(lines.size() == 4 && lines[1].endsWith("  4 A"), "time cursors: two lines for A and B, got " + lines.join(" | "));
-    check(lines.size() == 4 && lines[2] == QString::fromUtf8("Δt 10.00 s"),
-          "time cursors: 'Δt 10.00 s', got " + lines.value(2));
-    // 30 A s = 8.333 mAh
-    check(lines.size() == 4 && lines[3] == QString::fromUtf8("Δ 2 A  mean 3 A  ∫ 8.333 mAh"),
-          "time cursors: 'Δ 2 A  mean 3 A  ∫ 8.333 mAh', got " + lines.value(3));
+    check(stats().contains("B 12:00:15.000 |   A | 4 A"), "time cursors: B with its value, got " + stats());
+    check(stats().contains(QString::fromUtf8("A – B Δt 10.00 s")), "time cursors: 'Δt 10.00 s', got " + stats());
+    // 30 A s = 8.333 mAh; 2 A and 4 A for 5 s each: σ 1 A
+    check(stats().contains(QString::fromUtf8("Δ | 2 A |   mean | 3 A |   σ | 1 A |   min | 2 A |   max | 4 A"))
+            && stats().contains(QString::fromUtf8("∫ | 8.333 mAh")),
+          "time cursors: Δ 2 A, mean 3 A, σ 1 A, min, max, ∫ 8.333 mAh, got " + stats());
+    // the window shown: from 0 to 22 s here
+    check(stats().contains("Shown") && stats().contains("peak-peak | 2 A"), "statistics of the window shown, got " + stats());
+    // off and on again: the button on the time bar and the graph's setting
+    {
+      QToolButton *button = graph.findChild<QToolButton *>("ui_graphStatsButton");
+      QWidget *panel = graph.findChild<QWidget *>("ui_graphStatsPanel");
+      const int wide = view->width();
+      check(button && button->isChecked() && panel && panel->isVisible() && panel->geometry().left() >= wide,
+            "statistics: on at first, beside the plot");
+      if (button)
+        button->click();
+      check(!graph.statsVisible() && panel && !panel->isVisible() && view->width() > wide, "statistics off: the plot takes the room");
+      graph.setStatsVisible(true);
+      check(button && button->isChecked() && panel && panel->isVisible() && view->width() == wide, "statistics on again");
+      QTest::qWait(300);   // the label follows within a quarter of a second
+      check(info && info->text().contains("8.333 mAh"), "statistics: the panel shows them");
+    }
 
     // a dashed line across the plot at each cursor's value: at 2 A and 4 A,
     // the change their distance
@@ -1804,17 +1822,17 @@ int main(int argc, char **argv)
     }
     // a voltage: no integral, unless it is the integration curve's (in V s)
     graph.setUnit("V");
-    check(!graph.timeCursorText().contains(QChar(0x222b)), "time cursors: a voltage has no integral, got "
-          + graph.timeCursorText());
+    check(!graph.statsText().contains(QChar(0x222b)), "time cursors: a voltage has no integral, got "
+          + graph.statsText());
     graph.setIntegration(true, 1.0, 0.0, 0.0);
-    check(graph.timeCursorText().contains(QString::fromUtf8("V·s")), "time cursors: the integrated voltage in V·s, got "
-          + graph.timeCursorText());
+    check(graph.statsText().contains(QString::fromUtf8("V·s")), "time cursors: the integrated voltage in V·s, got "
+          + graph.statsText());
     graph.setIntegration(false, 1.0, 0.0, 0.0);
     graph.setUnit("A");
 
     QKeyEvent esc(QEvent::KeyPress, Qt::Key_Escape, Qt::NoModifier);
     QCoreApplication::sendEvent(view, &esc);
-    check(graph.timeCursor(0) < 0 && graph.timeCursor(1) < 0 && info->isHidden(), "time cursors: Esc takes them away");
+    check(graph.timeCursor(0) < 0 && graph.timeCursor(1) < 0 && !graph.statsText().contains("A 12:"), "time cursors: Esc takes them away");
     graph.setTimeCursor(0, 3000);
     graph.clearSLOT();
     check(graph.timeCursor(0) < 0, "time cursors: go with the graph cleared");
@@ -1969,6 +1987,7 @@ int main(int argc, char **argv)
     Settings cfg("minimap", tmpDir.path());
     GraphWidget graph(nullptr, &cfg);
     graph.resize(800, 500);
+    graph.setStatsVisible(false);   // the overview as wide as the graph, as these pixels count
     graph.show();
     QTest::qWait(50);
     QObject::connect(&graph, &GraphWidget::windowRequested, [&](int s) { graph.setGraphSize(s); });
@@ -2518,9 +2537,9 @@ int main(int argc, char **argv)
 
     // a time cursor shows the other values drawn there
     graph.setTimeCursor(0, 2000);
-    check(graph.timeCursorText().contains("°C") && graph.timeCursorText().contains("500 mV")
-            && graph.timeCursorText().contains("50 Hz"),
-          "time cursor with the other values: " + graph.timeCursorText());
+    check(graph.statsText().contains("°C") && graph.statsText().contains("500 mV")
+            && graph.statsText().contains("50 Hz"),
+          "time cursor with the other values: " + graph.statsText());
     // a picture to look at: QTDMM_SHOT=<dir>
     if (qEnvironmentVariableIsSet("QTDMM_SHOT"))
     {
@@ -2736,10 +2755,10 @@ int main(int argc, char **argv)
     graph.setTimeCursor(0, 200);
     graph.setTimeCursor(1, 3000);
     {
-      const QStringList lines = graph.timeCursorText().split('\n');
-      check(lines.size() == 5 && lines[3].startsWith(QString::fromUtf8("Δ 0.28 °C  mean 22.")) && lines[3].endsWith("°C")
-              && lines[4] == QString::fromUtf8("Δ 0 %  mean 45 %") && !graph.timeCursorText().contains("ppm"),
-            "main hidden: a line per value, no ppm, no integral: " + lines.join(" | "));
+      const QString s = graph.statsText().replace(QChar('\n'), " | ");
+      check(s.contains(QString::fromUtf8("Δ | 0.28 °C |   mean | 22.")) && s.contains(QString::fromUtf8("Δ | 0 % |   mean | 45 %"))
+              && !s.contains("ppm") && !s.contains(QChar(0x222b)),
+            "main hidden: each value, no ppm, no integral: " + s);
       int levels = 0;
       for (QGraphicsItem *item : graph.findChild<QChartView *>()->chart()->childItems())
         levels += item->data(0).toString() == "cursor-level" && item->isVisible();

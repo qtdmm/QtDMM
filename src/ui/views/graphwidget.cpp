@@ -264,10 +264,35 @@ GraphWidget::GraphWidget(QWidget *parent, Settings *settings) :
   m_cursorLabel->setAttribute(Qt::WA_TransparentForMouseEvents);   // no Leave for the view
   m_cursorLabel->hide();
 
-  m_cursorInfo = new QLabel(m_chartView);
-  m_cursorInfo->setObjectName("ui_graphCursors");
-  m_cursorInfo->setAttribute(Qt::WA_TransparentForMouseEvents);
-  m_cursorInfo->hide();
+  // the statistics beside the plot, on or off with a button on the time bar
+  m_statsPanel = new QScrollArea(this);
+  m_statsPanel->setObjectName("ui_graphStatsPanel");
+  m_statsPanel->setWidgetResizable(true);
+  m_statsPanel->setFrameShape(QFrame::NoFrame);
+  m_statsPanel->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  m_statsLabel = new QLabel(m_statsPanel);
+  m_statsLabel->setObjectName("ui_graphStats");
+  m_statsLabel->setTextFormat(Qt::RichText);
+  m_statsLabel->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+  m_statsLabel->setWordWrap(true);
+  m_statsLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
+  m_statsLabel->setMargin(6);
+  m_statsPanel->setWidget(m_statsLabel);
+  m_statsTimer.setSingleShot(true);
+  m_statsTimer.setInterval(250);
+  connect(&m_statsTimer, &QTimer::timeout, this, &GraphWidget::updateStats);
+  bar->addSpacing(6);
+  m_statsButton = new QToolButton(m_timeBar);
+  m_statsButton->setObjectName("ui_graphStatsButton");
+  m_statsButton->setText(QString(QChar(0x03a3)));   // Σ
+  m_statsButton->setCheckable(true);
+  m_statsButton->setChecked(m_statsOn);
+  m_statsButton->setAutoRaise(true);
+  m_statsButton->setFocusPolicy(Qt::NoFocus);
+  m_statsButton->setCursor(Qt::ArrowCursor);
+  m_statsButton->setToolTip(tr("Statistics beside the graph: the cursors, from A to B, the window shown"));
+  connect(m_statsButton, &QToolButton::toggled, this, &GraphWidget::setStatsVisible);
+  bar->addWidget(m_statsButton);
 
   m_stateLabel = new QLabel(m_chartView);
   m_stateLabel->setObjectName("ui_graphState");
@@ -409,9 +434,17 @@ GraphWidget::~GraphWidget()
 void GraphWidget::layoutParts()
 {
   const int strip = m_minimapOn ? GraphMinimap::kHeight : 16;
-  m_chartView->setGeometry(0, 0, width(), height() - strip);
-  scrollbar->setGeometry(0, height() - 16, width(), 16);
-  m_minimap->setGeometry(0, height() - strip, width(), strip);
+  // the statistics at the right, at most a third of the graph
+  const int side = m_statsOn ? qMin(230, width() / 3) : 0;
+  const int w = width() - side;
+  m_chartView->setGeometry(0, 0, w, height() - strip);
+  scrollbar->setGeometry(0, height() - 16, w, 16);
+  m_minimap->setGeometry(0, height() - strip, w, strip);
+  if (m_statsPanel)
+  {
+    m_statsPanel->setGeometry(w, 0, side, height());
+    m_statsPanel->setVisible(m_statsOn);
+  }
   scrollbar->setVisible(!m_minimapOn);
   m_minimap->setVisible(m_minimapOn);
 }
@@ -425,6 +458,18 @@ void GraphWidget::setMinimapVisible(bool on)
   if (!on)
     followEnd();
   layoutParts();
+}
+
+void GraphWidget::setStatsVisible(bool on)
+{
+  if (on == m_statsOn)
+    return;
+  m_statsOn = on;
+  m_statsButton->setChecked(on);
+  layoutParts();
+  placeTimeBar();
+  if (on)
+    updateStats();
 }
 
 void GraphWidget::setEnvelopeVisible(bool on)

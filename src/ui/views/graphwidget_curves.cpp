@@ -343,6 +343,7 @@ void GraphWidget::integralOnAxis(QAbstractAxis *axis)
 void GraphWidget::onAppended(bool shifted)
 {
   const RawPoint &p = m_store->series().last();
+  scheduleStats();   // a new reading: the statistics, at most 4 times a second
 
   // "All": the window grows once the recording fills it. The new window
   // rebuilds the series with this reading in it: then it must not be

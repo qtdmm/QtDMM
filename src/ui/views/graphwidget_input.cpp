@@ -269,6 +269,9 @@ void GraphWidget::showMenu(const QPoint &pos, const QPoint &globalPos)
   for (int side = 1; side <= 2; ++side)
     if (!m_right[size_t(side - 1)].unit.isEmpty())
       addAxisEntries(m_popup->addMenu(axisMenuTitle(side)), side);
+  QAction *stats = item(tr("&Statistics"), IDStats);
+  stats->setCheckable(true);
+  stats->setChecked(m_statsOn);
   QAction *overview = item(tr("Over&view"), IDMinimap);
   overview->setCheckable(true);
   overview->setChecked(m_minimapOn);
@@ -588,6 +591,9 @@ void GraphWidget::popupSLOT(QAction *action)
       break;
     case IDResetZoom:
       endZoom(true);
+      break;
+    case IDStats:
+      setStatsVisible(action->isChecked());
       break;
     case IDAxisAuto:
       clearFixedRange(action->property("unit").toString());

@@ -378,13 +378,6 @@ void GraphWidget::applyThemeColors()
     m_cursorLevel[i]->setPen(QPen(cursor, 1, Qt::DashLine));
     m_cursorName[i]->setColor(cursor);
   }
-  if (m_cursorInfo)
-  {
-    const QColor bg = background.color().isValid() ? background.color() : palette().color(QPalette::Base);
-    m_cursorInfo->setStyleSheet(QString("QLabel { color: %1; background: %2; border: 1px solid %3; padding: 2px 4px; }")
-                                  .arg(labels.name(), QColor(bg.red(), bg.green(), bg.blue(), 220).name(QColor::HexArgb),
-                                       QColor(labels.red(), labels.green(), labels.blue(), 110).name(QColor::HexArgb)));
-  }
   m_triggerLine->setPen(QPen(pick(m_startColor, Qt::magenta, start), 1, lineStyle));
   // dotted: by default it takes the integration curve's colour and must not
   // pass for a curve (phosphor dashes the curve)

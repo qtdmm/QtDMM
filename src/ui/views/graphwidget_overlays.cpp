@@ -135,60 +135,30 @@ static QString spanText(qint64 ms)
   return durationText(qRound64(ms / 1000.0));
 }
 
-QString GraphWidget::timeCursorText() const
+QString GraphWidget::withUnit(double v, const QString &unit)
 {
-  auto withUnit = [](double v, const QString &unit)
-  {
-    if (!std::isfinite(v))
-      return QStringLiteral("--");
-    QString prefix;
-    const double x = SiPrefix::scale(v, unit, &prefix);
-    return QString("%1 %2%3").arg(QString::number(x, 'g', 4), prefix, unit).trimmed();
-  };
-  // the values drawn, the main one first: of each the series that holds at
-  // the time
-  auto drawn = [&](qint64 t)
-  {
-    QList<std::pair<int, const RecordingSeries *>> out;
-    if (m_mainShown)
-      out << std::pair{ 0, &m_store->series() };
-    for (int id : shownValues())
-      if (const int i = drawnExtra(id, t, false); i >= 0)
-        out << std::pair{ id, &m_store->extra(i) };
-    return out;
-  };
-  auto unitOf = [&](const RecordingSeries *s) { return s == &m_store->series() ? m_store->unit() : SiPrefix::displayText(s->unit); };
-  QStringList lines;
-  for (int i = 0; i < 2; ++i)
-    if (m_cursorT[i] >= 0)
-    {
-      QString line = QString("%1  %2").arg(i ? "B" : "A", m_store->startDateTime().addMSecs(m_cursorT[i]).time().toString("HH:mm:ss.zzz"));
-      for (const auto &[id, s] : drawn(m_cursorT[i]))
-        line += QStringLiteral("  ") + withUnit(valueAt(s, m_cursorT[i]), unitOf(s));
-      lines << line;
-    }
-  if (m_cursorT[0] < 0 || m_cursorT[1] < 0)
-    return lines.join('\n');
-  lines << QString("%1 %2").arg(QChar(0x0394) + QStringLiteral("t"), spanText(std::abs(m_cursorT[1] - m_cursorT[0])));
-  // a line per value, its series the one at the later cursor
-  for (const auto &[id, s] : drawn(qMax(m_cursorT[0], m_cursorT[1])))
-  {
-    const QString base = unitOf(s);
-    const RecordingStore::Stats st = m_store->statsOf(*s, m_cursorT[0], m_cursorT[1]);
-    QString line = QString("%1 %2  ").arg(QChar(0x0394), withUnit(valueAt(s, m_cursorT[1]) - valueAt(s, m_cursorT[0]), base))
-                   + tr("mean %1").arg(withUnit(st.mean, base));
-    // the integral: in hours for a current or a power (Ah, Wh, VAh), x s
-    // for the value of the integration curve, else none
-    const bool hours = base == QLatin1String("A") || base == QLatin1String("W") || base == QLatin1String("VA");
-    if (hours || (m_showIntegration && id == m_intValueId))
-    {
-      const QString integral = hours ? withUnit(st.integral / 3600, base + "h")
-                                     : withUnit(st.integral, base.isEmpty() ? QStringLiteral("s") : base + QStringLiteral("·s"));
-      line += QString("  %1 %2").arg(QChar(0x222b), st.count ? integral : QStringLiteral("--"));
-    }
-    lines << line;
-  }
-  return lines.join('\n');
+  if (!std::isfinite(v))
+    return QStringLiteral("--");
+  QString prefix;
+  const double x = SiPrefix::scale(v, unit, &prefix);
+  return QString("%1 %2%3").arg(QString::number(x, 'g', 4), prefix, unit).trimmed();
+}
+
+QList<std::pair<int, const RecordingSeries *>> GraphWidget::drawnSeries(qint64 t) const
+{
+  // the main one first; of each value the series that holds at the time
+  QList<std::pair<int, const RecordingSeries *>> out;
+  if (m_mainShown)
+    out << std::pair{ 0, &m_store->series() };
+  for (int id : shownValues())
+    if (const int i = drawnExtra(id, t, false); i >= 0)
+      out << std::pair{ id, &m_store->extra(i) };
+  return out;
+}
+
+QString GraphWidget::seriesUnit(const RecordingSeries *s) const
+{
+  return s == &m_store->series() ? m_store->unit() : SiPrefix::displayText(s->unit);
 }
 
 void GraphWidget::updateTimeCursors()
@@ -220,18 +190,7 @@ void GraphWidget::updateTimeCursors()
     m_cursorLine[i]->setLine(px, plot.top(), px, plot.bottom());
   }
   updateFlags();
-  if (!m_cursorInfo)
-    return;
-  const QString text = timeCursorText();
-  m_cursorInfo->setVisible(!text.isEmpty());
-  if (text.isEmpty())
-    return;
-  m_cursorInfo->setText(text);
-  m_cursorInfo->adjustSize();
-  // top right in the plot, below the time buttons
-  const QPoint topRight = m_chartView->mapFromScene(plot.topRight());
-  m_cursorInfo->move(topRight.x() - m_cursorInfo->width() - 6, topRight.y() + 4);
-  m_cursorInfo->raise();
+  scheduleStats();
 }
 
 double GraphWidget::referenceY() const
@@ -678,4 +637,104 @@ void GraphWidget::setThresholds(double falling, double raising)
   m_store->setThresholds(falling, raising);
 
   updateThresholdLinesVisibility();
+}
+
+void GraphWidget::scheduleStats()
+{
+  if (m_statsOn && !m_statsTimer.isActive())
+    m_statsTimer.start();
+}
+
+void GraphWidget::updateStats()
+{
+  if (m_statsLabel && m_statsOn)
+    m_statsLabel->setText(statsHtml());
+}
+
+QString GraphWidget::statsText() const
+{
+  QTextDocument doc;
+  doc.setHtml(statsHtml());
+  return doc.toPlainText();
+}
+
+QString GraphWidget::statsHtml() const
+{
+  // a value's name in its curve's colour
+  auto head = [this](int id, const RecordingSeries *s)
+  {
+    const QColor colour = id == 0 ? dataColor() : extraPen(s->id).color();
+    return QString("<tr><td colspan=\"2\"><span style=\"color:%1\">&#9632;</span> %2</td></tr>")
+      .arg(colour.name(), curveName(*s, s == &m_store->series() ? m_store->unit() : s->unit).toHtmlEscaped());
+  };
+  auto row = [](const QString &name, const QString &value)
+  {
+    return QString("<tr><td>&nbsp;&nbsp;%1</td><td align=\"right\">%2</td></tr>").arg(name.toHtmlEscaped(), value.toHtmlEscaped());
+  };
+  auto table = [](const QString &rows) { return "<table cellspacing=\"0\" cellpadding=\"1\" width=\"100%\">" + rows + "</table>"; };
+  auto title = [](const QString &text) { return QString("<p style=\"margin-top:8px\"><b>%1</b></p>").arg(text.toHtmlEscaped()); };
+  auto statRows = [&](const RecordingStore::Stats &st, const QString &unit)
+  {
+    QString rows = row(tr("mean"), withUnit(st.mean, unit)) + row(QString(QChar(0x03c3)), withUnit(st.sigma, unit))
+                   + row(tr("min"), withUnit(st.min, unit)) + row(tr("max"), withUnit(st.max, unit));
+    return rows;
+  };
+
+  QString html;
+  // the cursors
+  html += title(tr("Cursors"));
+  if (m_cursorT[0] < 0 && m_cursorT[1] < 0)
+    html += QString("<p>%1</p>").arg(tr("Click: cursor A, Shift+click: B").toHtmlEscaped());
+  QString rows;
+  for (int i = 0; i < 2; ++i)
+    if (m_cursorT[i] >= 0)
+    {
+      rows += QString("<tr><td colspan=\"2\"><b>%1</b> %2</td></tr>")
+                .arg(i ? "B" : "A", m_store->startDateTime().addMSecs(m_cursorT[i]).time().toString("HH:mm:ss.zzz"));
+      for (const auto &[id, s] : drawnSeries(m_cursorT[i]))
+        rows += row(curveName(*s, s == &m_store->series() ? m_store->unit() : s->unit), withUnit(valueAt(s, m_cursorT[i]), seriesUnit(s)));
+    }
+  html += table(rows);
+
+  // from A to B
+  if (m_cursorT[0] >= 0 && m_cursorT[1] >= 0)
+  {
+    html += title(QString("A %1 B   %2 %3").arg(QChar(0x2013), QChar(0x0394) + QStringLiteral("t"),
+                                                spanText(std::abs(m_cursorT[1] - m_cursorT[0]))));
+    rows.clear();
+    for (const auto &[id, s] : drawnSeries(qMax(m_cursorT[0], m_cursorT[1])))
+    {
+      const QString base = seriesUnit(s);
+      const RecordingStore::Stats st = m_store->statsOf(*s, m_cursorT[0], m_cursorT[1]);
+      rows += head(id, s);
+      rows += row(QString(QChar(0x0394)), withUnit(valueAt(s, m_cursorT[1]) - valueAt(s, m_cursorT[0]), base));
+      rows += statRows(st, base);
+      rows += row(tr("readings"), QString::number(st.count));
+      // the integral: in hours for a current or a power, x s for the
+      // value of the integration curve
+      const bool hours = base == QLatin1String("A") || base == QLatin1String("W") || base == QLatin1String("VA");
+      if (hours || (m_showIntegration && id == m_intValueId))
+        rows += row(QString(QChar(0x222b)), !st.count ? QStringLiteral("--")
+                                            : hours ? withUnit(st.integral / 3600, base + "h")
+                                                    : withUnit(st.integral, base.isEmpty() ? QStringLiteral("s") : base + QStringLiteral("·s")));
+    }
+    html += table(rows);
+  }
+
+  // the window shown
+  const qint64 from = windowStart();
+  const qint64 to = from + qint64(m_windowSeconds) * 1000;
+  html += title(tr("Shown") + QStringLiteral("   ") + spanText(to - from));
+  rows.clear();
+  for (const auto &[id, s] : drawnSeries(qMin(to, m_store->duration())))
+  {
+    const QString base = seriesUnit(s);
+    const RecordingStore::Stats st = m_store->statsOf(*s, from, to);
+    rows += head(id, s);
+    rows += statRows(st, base);
+    rows += row(tr("peak-peak"), st.count ? withUnit(st.max - st.min, base) : QStringLiteral("--"));
+    rows += row(tr("readings"), QString::number(st.count));
+  }
+  html += table(rows);
+  return html;
 }
