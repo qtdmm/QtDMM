@@ -14,6 +14,7 @@ QColor GraphStateStrip::colorOf(Kind kind)
 {
   switch (kind)
   {
+    case Gap:      return QColor(0xa4, 0xaa, 0xb2);
     case Overload: return QColor(0xe0, 0x4a, 0x4a);
     case Hold:     return QColor(0xe6, 0xa2, 0x2e);
     case Extreme:  return QColor(0x3f, 0x9c, 0xdc);
@@ -49,8 +50,14 @@ void GraphStateStrip::paintEvent(QPaintEvent *)
     QColor fill = colorOf(s.kind);
     fill.setAlpha(205);
     p.fillRect(bar, fill);
+    // a gap's cause: hatched, so the causes tell apart without a colour each
+    if (s.pattern != Qt::SolidPattern)
+      p.fillRect(bar, QBrush(QColor(0x30, 0x34, 0x3a), s.pattern));
     if (fm.horizontalAdvance(s.label) + 6 <= bar.width())
     {
+      // on a hatching the name gets a plain ground
+      if (s.pattern != Qt::SolidPattern)
+        p.fillRect(QRect(bar.left() + 1, bar.top(), fm.horizontalAdvance(s.label) + 4, bar.height()), colorOf(s.kind));
       p.setPen(Qt::black);
       p.drawText(bar.adjusted(3, 0, 0, 0), Qt::AlignVCenter | Qt::AlignLeft, s.label);
     }

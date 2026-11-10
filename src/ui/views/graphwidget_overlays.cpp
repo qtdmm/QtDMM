@@ -58,6 +58,19 @@ QString GraphWidget::stateWords(quint32 flags, Quality quality)
   return words.join(' ');
 }
 
+std::pair<QString, Qt::BrushStyle> GraphWidget::gapCause(const RawPoint &p)
+{
+  if (p.quality == Quality::Fault)
+    return { tr("fault"), Qt::FDiagPattern };
+  if (p.quality == Quality::NoValue)
+    return { tr("no number"), Qt::Dense5Pattern };
+  if (p.flags & SampleFlag::GapPause)
+    return { tr("paused"), Qt::HorPattern };
+  if (p.flags & SampleFlag::GapLost)
+    return { tr("connection lost"), Qt::DiagCrossPattern };
+  return { tr("no value"), Qt::BDiagPattern };
+}
+
 QList<GraphWidget::StateSpan> GraphWidget::stateSpans() const
 {
   QList<StateSpan> out;
@@ -73,14 +86,14 @@ QList<GraphWidget::StateSpan> GraphWidget::stateSpans() const
   // the open stretch of each kind; a reading holds until the next one
   int open[GraphStateStrip::KindCount];
   std::fill(std::begin(open), std::end(open), -1);
-  auto put = [&](int kind, const QString &label, qint64 t0, qint64 t1)
+  auto put = [&](int kind, const QString &label, qint64 t0, qint64 t1, Qt::BrushStyle pattern = Qt::SolidPattern)
   {
     if (open[kind] >= 0 && out[open[kind]].label == label && out[open[kind]].to >= t0)
       out[open[kind]].to = t1;
     else
     {
       open[kind] = int(out.size());
-      out << StateSpan{ kind, label, t0, t1 };
+      out << StateSpan{ kind, label, t0, t1, pattern };
     }
   };
   for (int i = qMax(0, s.holding(from - ref.shift)); i < s.count(); ++i)
@@ -92,6 +105,12 @@ QList<GraphWidget::StateSpan> GraphWidget::stateSpans() const
     const quint32 flags = s.at(i).flags;
     if (s.at(i).quality == Quality::Overload)
       put(GraphStateStrip::Overload, QStringLiteral("OL"), t0, t1);
+    else if (s.at(i).gap() && t1 > t0)
+    {
+      // a gap, by its cause
+      const auto [word, pattern] = gapCause(s.at(i));
+      put(GraphStateStrip::Gap, word, t0, t1, pattern);
+    }
     if (flags & SampleFlag::Hold)
       put(GraphStateStrip::Hold, QStringLiteral("HOLD"), t0, t1);
     if (flags & (SampleFlag::Peak | SampleFlag::Min | SampleFlag::Max))

@@ -64,6 +64,8 @@ public:
   int holding(qint64 t) const { return lowerBound(t + 1) - 1; }
 
   void append(const RawPoint &p) { m_points.append(p); }
+  /// More flags for the last point (a gap's cause known only later).
+  void addLastFlags(quint32 flags) { m_points.last().flags |= flags; }
   /// Drops the @p n oldest points.
   void removeFirst(int n)
   {

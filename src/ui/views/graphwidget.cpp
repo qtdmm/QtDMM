@@ -358,7 +358,7 @@ GraphWidget::GraphWidget(QWidget *parent, Settings *settings) :
     if (width > 0)
       for (const StateSpan &s : stateSpans())
         out << GraphStateStrip::Span{ GraphStateStrip::Kind(s.kind), s.label, qBound(0.0, (s.from - from) / width, 1.0),
-                                      qBound(0.0, (s.to - from) / width, 1.0) };
+                                      qBound(0.0, (s.to - from) / width, 1.0), s.pattern };
     return out;
   });
 

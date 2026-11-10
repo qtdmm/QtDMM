@@ -923,7 +923,21 @@ bool RecordingStore::trigger(double val)
   return started;
 }
 
-void RecordingStore::setStale(bool stale)
+void RecordingStore::setGapCause(quint32 cause)
+{
+  if (m_state == View)
+    return;
+  auto mark = [cause](RecordingSeries &s)
+  {
+    if (!s.isEmpty() && s.last().gap() && s.last().quality == Quality::Stale)
+      s.addLastFlags(cause);
+  };
+  mark(m_series);
+  for (RecordingSeries &s : m_extra)
+    mark(s);
+}
+
+void RecordingStore::setStale(bool stale, quint32 cause)
 {
   if (!stale || m_state == View)
     return;
@@ -938,6 +952,7 @@ void RecordingStore::setStale(bool stale)
     p.t = qMin(s.last().t + m_staleMs, qMax(s.last().t, elapsed()));
     p.value = qQNaN();
     p.quality = Quality::Stale;
+    p.flags = cause;
     appendExtraPoint(i, p);
     extras = true;
   }
@@ -950,6 +965,7 @@ void RecordingStore::setStale(bool stale)
   p.t = qMin(m_series.last().t + m_staleMs, qMax(m_series.last().t, elapsed()));
   p.value = qQNaN();
   p.quality = Quality::Stale;
+  p.flags = cause;
   append(p);
 }
 
