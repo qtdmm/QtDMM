@@ -80,13 +80,14 @@ The zoom shortcuts work anywhere in the main window; the plain keys
 | Left button drag on the reference line | Move it; it snaps to 0, the mean, minimum and maximum shown and the alarm thresholds |
 | Click / Shift+click | Time cursor A / B: time and value, with both the span, the change, the mean and the integral |
 | Left button drag on a time cursor | Move it |
+| Shift + left button drag | Zoom on the frame: its time and the height on every axis; **Reset zoom** in the menu goes back (Esc while dragging: no zoom) |
 | Esc | Remove the time cursors |
 | N | A note at the newest reading |
 | Click on a flag | Its title, time and text |
 | Double click on a flag | Edit its title and text |
 | Drag in the overview | Move the window; while live it pauses there, a click at the right end follows again |
 | Drag a bracket of the overview | Widen or narrow the window |
-| Right button | Menu: connect, start/stop, clear, note here or now, configure, copy image, colours, reference line, time cursors, overview, min/max band, import/export; on a flag: edit note, remove mark |
+| Right button, Shift+F10 or the menu key | Menu: connect, start/stop, Live, reset zoom, clear, note here or now, cursor A or B here, configure, copy image, colours, reference line, time cursors, overview, min/max band, import/export; on a flag: edit note, remove mark. From the keyboard it opens where the mouse is over the graph, else in its middle |
 
 ## Readings table
 

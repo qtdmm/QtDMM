@@ -598,6 +598,7 @@ void GraphWidget::recordingSetupChanged()
 
 void GraphWidget::liveSLOT()
 {
+  endZoom(false);   // Live: the axes automatic again, the window follows
   followEnd();
   if (m_control.live)
     m_control.live();

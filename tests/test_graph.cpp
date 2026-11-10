@@ -1707,6 +1707,93 @@ int main(int argc, char **argv)
     mouse(QEvent::MouseMove, xOf(11000), Qt::LeftButton);
     mouse(QEvent::MouseButtonRelease, xOf(11000), Qt::LeftButton);
     check(graph.timeCursor(0) == 5000, "time cursors: a drag is no click");
+
+    // Shift + a frame dragged: zoom on its time and height; Reset zoom goes back
+    {
+      auto *left = qobject_cast<QValueAxis *>(chart->axes(Qt::Vertical, chart->series().first()).first());
+      const QRectF plot = chart->plotArea();
+      auto yOf = [&](double v) { return chart->mapToPosition(QPointF(0, v), chart->series().first()).y(); };
+      auto frame = [&](double x0, double v0, double x1, double v1, bool esc = false)
+      {
+        auto send = [&](QEvent::Type type, QPointF scene, Qt::MouseButton button)
+        {
+          const QPointF at = view->mapFromScene(scene);
+          QMouseEvent ev(type, at, viewport->mapToGlobal(at), button,
+                         type == QEvent::MouseButtonRelease ? Qt::NoButton : Qt::MouseButtons(Qt::LeftButton), Qt::ShiftModifier);
+          QCoreApplication::sendEvent(viewport, &ev);
+        };
+        send(QEvent::MouseButtonPress, QPointF(x0, yOf(v0)), Qt::LeftButton);
+        send(QEvent::MouseMove, QPointF((x0 + x1) / 2, (yOf(v0) + yOf(v1)) / 2), Qt::NoButton);
+        send(QEvent::MouseMove, QPointF(x1, yOf(v1)), Qt::NoButton);
+        if (esc)
+        {
+          QKeyEvent key(QEvent::KeyPress, Qt::Key_Escape, Qt::NoModifier);
+          QCoreApplication::sendEvent(view, &key);
+        }
+        send(QEvent::MouseButtonRelease, QPointF(x1, yOf(v1)), Qt::LeftButton);
+      };
+      // the settings' window, as InstanceWidget wires it
+      QObject::connect(&graph, &GraphWidget::windowRequested, &graph, &GraphWidget::setGraphSize);
+      const int window = graph.windowSeconds();   // "All" since Live
+      frame(xOf(6000), 4.5, xOf(14000), 1.5, true);
+      check(!graph.zoomed() && graph.timeCursor(0) == 5000, "zoom: Esc while dragging the frame: no zoom");
+      frame(xOf(6000), 3.0, xOf(6000) + 2, 2.9);
+      check(!graph.zoomed(), "zoom: a frame of 2 px is a slip");
+      frame(xOf(6000), 4.5, xOf(14000), 1.5);
+      check(graph.zoomed() && graph.windowSeconds() == 8 && std::abs(left->min() - 1.5) < 0.05 && std::abs(left->max() - 4.5) < 0.05,
+            QString("zoom: the frame's 8 s and 1.5..4.5 A, got %1 s, %2..%3").arg(graph.windowSeconds()).arg(left->min()).arg(left->max()));
+      check(graph.timeCursor(0) == 5000 && std::abs(graph.timeCursor(1) - 18000) < 200, "zoom: Shift + drag sets no cursor");
+      check(std::abs(chart->mapToValue(QPointF(plot.left(), 0), chart->series().first()).x() - 6.0) < 0.6,
+            "zoom: the window starts at the frame's left edge");
+      // a reading that would grow the scale leaves the zoom alone
+      feed.value(9.0);
+      check(std::abs(left->max() - 4.5) < 0.05, "zoom: new readings keep the zoomed height");
+      graph.resetZoom();
+      // "All" again: the whole recording, grown by the reading since
+      check(!graph.zoomed() && graph.windowSeconds() >= window && left->min() == 0 && left->max() == 5,
+            QString("zoom: Reset zoom gives back All (%1 s) and 0..5 A, got %2 s, %3..%4")
+              .arg(window).arg(graph.windowSeconds()).arg(left->min()).arg(left->max()));
+
+      // the menu from the keyboard (Shift+F10, menu key): Cursor A/B here, Reset zoom
+      QMenu *menu = nullptr;
+      auto openMenu = [&]
+      {
+        QContextMenuEvent key(QContextMenuEvent::Keyboard, QPoint(), QPoint());
+        QCoreApplication::sendEvent(view, &key);
+        menu = nullptr;
+        for (QMenu *m : graph.findChildren<QMenu *>())
+          if (m->isVisible())
+            menu = m;
+      };
+      auto entry = [&](const QString &text) -> QAction *
+      {
+        for (QAction *a : menu ? menu->actions() : QList<QAction *>())
+          if (a->text() == text)
+            return a;
+        return nullptr;
+      };
+      openMenu();
+      check(menu && entry("Cursor A here") && entry("Cursor B here") && entry("Reset &zoom")
+              && !entry("Reset &zoom")->isEnabled(),
+            "menu: the keyboard opens it, Cursor A/B here, Reset zoom greyed without a zoom");
+      if (QAction *b = entry("Cursor B here"))
+      {
+        const qint64 at = b->property("t").toLongLong();
+        b->trigger();
+        check(graph.timeCursor(1) == at && graph.timeCursor(0) == 5000, QString("menu: Cursor B here at %1 ms").arg(at));
+      }
+      if (menu)
+        menu->hide();
+      frame(xOf(6000), 4.5, xOf(14000), 1.5);
+      openMenu();
+      check(entry("Reset &zoom") && entry("Reset &zoom")->isEnabled(), "menu: Reset zoom once zoomed");
+      if (QAction *reset = entry("Reset &zoom"))
+        reset->trigger();
+      check(!graph.zoomed() && left->max() == 5, "menu: Reset zoom from the menu");
+      if (menu)
+        menu->hide();
+      graph.setTimeCursor(1, 18000);
+    }
     // a voltage: no integral, unless it is the integration curve's (in V s)
     graph.setUnit("V");
     check(!graph.timeCursorText().contains(QChar(0x222b)), "time cursors: a voltage has no integral, got "
