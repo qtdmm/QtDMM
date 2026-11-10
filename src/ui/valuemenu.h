@@ -10,6 +10,7 @@
 
 class QMenu;
 class FrontPanel;
+class GraphWidget;
 class InstanceWidget;
 
 /// The context menu of one value of an open meter (a value row of the
@@ -47,6 +48,11 @@ public:
     /// A new analog meter or Poincaré plot showing the value (none: no entry).
     std::function<void(const ValueRef &)> newMeter;
     std::function<void(const ValueRef &)> newPoincare;
+    /// The graphs by their windows' titles (none: the window's current
+    /// graph alone), showing one's window, and a new graph with the value.
+    std::function<QList<std::pair<QString, GraphWidget *>>()> graphs;
+    std::function<void(const GraphWidget *)> showGraph;
+    std::function<void(const ValueRef &)> newGraph;
   };
 
   /// Fills @p menu for @p value of an open meter.

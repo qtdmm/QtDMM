@@ -178,6 +178,8 @@ public:
   /// without a recording length). A window other than the last one ends
   /// "All"; the same one keeps it, and the window of "All" stays.
   void             setGraphSize(int size);
+  /// The window last set with setGraphSize(), in seconds (0: none yet).
+  int              windowSetting() const { return m_savedWindow; }
   /// The visible window in seconds: the settings' one, or that of "All".
   int              windowSeconds() const { return m_windowSeconds; }
   /// The recorder behind the graph.
@@ -526,6 +528,9 @@ public:
   static bool      migrateIntegralScale(Settings *cfg);
 
 Q_SIGNALS:
+  /// The user works in this graph (a click, a key, its menu): with several
+  /// graphs the one the window's actions are for.
+  void             used();
   /// values() changed (setValues(), setValueShown()).
   void             valuesChanged();
   /// Status bar text: sample time, window and remaining length.

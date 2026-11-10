@@ -83,48 +83,66 @@ void ValueMenu::fill(QMenu *menu, const Target &target, const ValueRef &value)
                      [add = target.newPoincare, ref] { add(ref); });
   // the graph: off, or on an axis. A unit the axis has already joins it,
   // another one takes its place there (GraphWidget::setValueAxis())
-  GraphWidget *graph = wid->graph();
-  QMenu *curves = menu->addMenu(tr("&Graph"));
-  auto *sides = new QActionGroup(curves);
-  const bool shown = graph->valueShown(ref);
-  const GraphWidget::ValueAxis side = graph->valueSide(ref);
-  const GraphWidget::ValueAxis chosen = graph->valueAxis(ref);
-  const std::pair<GraphWidget::ValueAxis, QString> choices[] = { { GraphWidget::AxisAuto, tr("&Off") },
-                                                                 { GraphWidget::AxisLeft, tr("&Left axis") },
-                                                                 { GraphWidget::AxisRight, tr("&Right axis") },
-                                                                 { GraphWidget::AxisThird, tr("&Third axis") } };
-  for (const auto &[axis, text] : choices)
+  QList<std::pair<QString, GraphWidget *>> graphs;
+  if (target.graphs)
+    graphs = target.graphs();
+  if (graphs.isEmpty())
+    graphs << std::make_pair(QString(), wid->graph());
+  // one graph: its axes at once; several: a submenu each, by their windows
+  QMenu *graphMenu = menu->addMenu(tr("&Graph"));
+  for (const auto &[title, graph] : std::as_const(graphs))
   {
-    const bool off = axis == GraphWidget::AxisAuto;
-    // another meter's value without room: the axis chosen for it
-    QAction *a = checkable(curves, text, off ? !shown : shown && (side != GraphWidget::AxisAuto ? side : chosen) == axis);
-    sides->addAction(a);
-    if (graph->isBase(ref) && id == 0 && axis != GraphWidget::AxisAuto && axis != GraphWidget::AxisLeft)
+    QMenu *curves = graphs.size() > 1 ? graphMenu->addMenu(QString(title).replace('&', "&&")) : graphMenu;
+    auto *sides = new QActionGroup(curves);
+    const bool shown = graph->valueShown(ref);
+    const GraphWidget::ValueAxis side = graph->valueSide(ref);
+    const GraphWidget::ValueAxis chosen = graph->valueAxis(ref);
+    const std::pair<GraphWidget::ValueAxis, QString> choices[] = { { GraphWidget::AxisAuto, tr("&Off") },
+                                                                   { GraphWidget::AxisLeft, tr("&Left axis") },
+                                                                   { GraphWidget::AxisRight, tr("&Right axis") },
+                                                                   { GraphWidget::AxisThird, tr("&Third axis") } };
+    for (const auto &[axis, text] : choices)
     {
-      a->setEnabled(false);
-      a->setToolTip(tr("The main value is on the left axis"));
+      const bool off = axis == GraphWidget::AxisAuto;
+      // another meter's value without room: the axis chosen for it
+      QAction *a = checkable(curves, text, off ? !shown : shown && (side != GraphWidget::AxisAuto ? side : chosen) == axis);
+      sides->addAction(a);
+      if (graph->isBase(ref) && id == 0 && axis != GraphWidget::AxisAuto && axis != GraphWidget::AxisLeft)
+      {
+        a->setEnabled(false);
+        a->setToolTip(tr("The main value is on the left axis"));
+      }
+      QObject::connect(a, &QAction::triggered, menu, [graph = graph, ref, axis = axis, off, show, showGraph = target.showGraph]
+      {
+        if (off)
+        {
+          graph->setValueShown(ref, false);
+          return;
+        }
+        // the graph's meter: the axis first (it makes room there); another
+        // meter's: on first, then its axis
+        if (graph->isBase(ref))
+        {
+          graph->setValueAxis(ref, axis);
+          graph->setValueShown(ref, true);
+        }
+        else
+        {
+          graph->setValueShown(ref, true);
+          graph->setValueAxis(ref, axis);
+        }
+        if (showGraph)
+          showGraph(graph);
+        else
+          show(View::Graph, ref.source);
+      });
     }
-    QObject::connect(a, &QAction::triggered, menu, [graph, ref, axis = axis, off, show]
-    {
-      if (off)
-      {
-        graph->setValueShown(ref, false);
-        return;
-      }
-      // the graph's meter: the axis first (it makes room there); another
-      // meter's: on first, then its axis
-      if (graph->isBase(ref))
-      {
-        graph->setValueAxis(ref, axis);
-        graph->setValueShown(ref, true);
-      }
-      else
-      {
-        graph->setValueShown(ref, true);
-        graph->setValueAxis(ref, axis);
-      }
-      show(View::Graph, ref.source);
-    });
+  }
+  if (target.newGraph)
+  {
+    graphMenu->addSeparator();
+    QObject::connect(graphMenu->addAction(tr("&New graph")), &QAction::triggered, menu,
+                     [add = target.newGraph, ref] { add(ref); });
   }
   // the readings table: all values at first; copying follows it, the
   // export keeps them all

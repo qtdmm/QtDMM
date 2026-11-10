@@ -41,7 +41,10 @@
 bool GraphWidget::eventFilter(QObject *watched, QEvent *event)
 {
   if (watched == m_chartView && event->type() == QEvent::KeyPress)
+  {
+    Q_EMIT used();
     return handleChartKey(static_cast<QKeyEvent *>(event)) || QWidget::eventFilter(watched, event);
+  }
 
   // the menu from the keyboard (Shift+F10, the menu key): where the mouse
   // is over the plot, else in its middle; the mouse opens it on its press
@@ -62,6 +65,7 @@ bool GraphWidget::eventFilter(QObject *watched, QEvent *event)
     switch (event->type())
     {
       case QEvent::MouseButtonPress:
+        Q_EMIT used();
         handleChartMousePress(static_cast<QMouseEvent *>(event));
         return true;
       case QEvent::MouseButtonDblClick:
@@ -139,6 +143,7 @@ void GraphWidget::handleChartMousePress(QMouseEvent *ev)
 
 void GraphWidget::showMenu(const QPoint &pos, const QPoint &globalPos)
 {
+  Q_EMIT used();
   m_popup->clear();
   const int mark = markAt(pos);
   if (mark >= 0)

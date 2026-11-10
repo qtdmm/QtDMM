@@ -42,6 +42,7 @@ class ValueFeed;
 class SettingsDialog;
 class Settings;
 class AnalogMeter;
+class GraphView;
 class PoincarePlot;
 class PoincareView;
 class ReadingsModel;
@@ -50,6 +51,10 @@ class DeviceLibrary;
 
 /// The recorder graph (shown in its own MDI window), plus the settings and
 /// the other dialogs.
+///
+/// It is the first graph; MainWindow adds more as windows of their own
+/// (addGraph()). All are alike, each with a GraphView that feeds it from the
+/// session; print, export and import work on the one used last (graph()).
 ///
 /// The window has no meter of its own: every meter connected is one of the
 /// DeviceSession (MeterController: connection, min/max memory, alarms, SCPI,
@@ -98,8 +103,19 @@ public:
   /// --debug: pass on to MeterConnection::setConsoleLogging() of every meter,
   /// or only of the My devices entries @p only (--debug-device).
   void        setConsoleLogging(bool on, const QStringList &only = {});
-  /// The recorder graph (for the zoom/pan shortcuts in MainWindow).
-  GraphWidget   *graph() const { return ui_graph; }
+  /// A graph to feed (created and docked by MainWindow), @p key its name in
+  /// the settings ("graph-2"), with the settings' look; removeGraph() before
+  /// its window goes. The first one ("graph") is this widget's own and stays.
+  GraphView  *addGraph(GraphWidget *graph, const QString &key);
+  void        removeGraph(GraphView *view);
+  const QList<GraphView *> &graphs() const { return m_graphs; }
+  /// The current graph: the one used last, the first one at the start. Print,
+  /// export, import, the zoom keys and the settings' window length work on it.
+  GraphWidget *graph() const;
+  void        setCurrentGraph(GraphWidget *graph);
+  /// The time window of @p graph (each has its own), as the settings page
+  /// shows it for the current one.
+  void        setGraphWindow(GraphWidget *graph, int seconds);
   Settings   *settings() const { return m_settings; }
   /// "My devices", shared by all instances.
   DeviceLibrary *devices() const { return m_devices; }
@@ -176,24 +192,14 @@ protected:
   SettingsDialog  *m_configDlg;
   qtdmm::PrintDlg *m_printDlg;
   QPrinter    m_printer;
-  /// The graph's store while no meter has it: empty, Live (time axis only).
-  RecordingStore *m_emptyStore = nullptr;
-  QPointer<MeterController> m_graphBase;   ///< the meter of the graph's store, nullptr: m_emptyStore
-  QMetaObject::Connection m_graphUnit;      ///< its unit to the graph
-  MeterController *m_closing = nullptr;   ///< the meter closing now (DeviceSession::closing())
-  QMetaObject::Connection m_graphAlarms;    ///< its alarms: the reference line's thresholds
-  /// The graph shows none of its store's meter's values: the meter of its first.
-  void        followGraphBase();
-  /// The graph's store: of @p ctl, or the empty one for nullptr.
-  void        setGraphBase(MeterController *ctl);
-  /// The alarms' thresholds of the graph's meter, for its reference line to snap to.
-  void        applyAlarmThresholds();
-  QMetaObject::Connection m_graphLimitLink;   ///< of the meter of the graph's left axis
+  QList<GraphView *> m_graphs;      ///< the first one is ui_graph's
+  GraphView  *m_current = nullptr;  ///< graph()'s
+  /// The Graph page's look to a graph: colours, lines, scale, integration.
+  void        applyGraphLook(const GraphView *view);
   QString     m_activeSource;   ///< setActiveSource()
   bool        m_consoleLogging = false;   ///< setConsoleLogging()
   QStringList m_consoleOnly;
   void        applyConsoleLogging(MeterController *ctl) const;
-  void        leaveFile();
   QList<MeterView *> m_meters;
   int         m_meterStyle = -1;   ///< the settings' style last applied, -1 before the first
   QList<PoincareView *> m_poincares;
@@ -211,8 +217,6 @@ protected:
   /// Export with a file dialog: the session's recording with every meter
   /// that recorded, else what the graph shows; false when cancelled or failed.
   bool        exportRecording();
-  /// The meter that recorded, when its recording is in the graph; else none.
-  QPointer<MeterController> recordingLead() const;
   DeviceLibrary *m_devices;
   QString     m_instanceId;
   QString     m_configPath;   ///< --config-dir, passed on to new instances

@@ -297,6 +297,33 @@ were; the integration curve carries on across a gap.
   for value 2.
 - **Print** (Ctrl+P) prints the graph with a title and comment.
 
+## More than one graph
+
+**New...** in the list at the arrow of the **Graph** button opens another
+graph window (with more than one value to choose from it asks for its values
+first); *New graph* in the menu of a value in the sidebar, or dropping a
+value on the free area, opens one with that value. A click on the button
+shows or hides all of them.
+
+All graphs are alike and show the same readings, the recording is one for
+the whole bench: Record, Stop, Live and Clear in any graph act on all. Each
+graph has its own curves and axes, time window and zoom, fixed ranges,
+time cursors, statistics, reference line, overview, buttons and colours.
+One graph can show the last minute while another shows the whole
+recording.
+
+- With several graphs the **Graph** entry of a value in the sidebar has a
+  submenu for each, by its window's title; a value dragged from the sidebar
+  goes into the graph it is dropped on.
+- Print, Export, *Into the project*, *Copy graph image* and the zoom and note
+  keys work on the graph used last (a click in it, its menu, its window
+  active); from a graph's own menu on that graph. A file imported goes into
+  the graph it was imported in.
+- *Settings → Graph → Time axis* shows and sets the time window of the graph
+  used last; a new graph starts with it.
+- **Close window** in an added graph's menu removes it; the first graph only
+  hides. The window layout and benches keep the graphs with what they show.
+
 ## Colours
 
 **Settings → Graph → Colours** sets the colours of the graph:
