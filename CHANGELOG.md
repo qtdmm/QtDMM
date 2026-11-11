@@ -4,6 +4,7 @@
 
 ### GUI
 
+- **Graph: a dense curve is a band** — zoomed far out, the curve of another value of the meter or of another device used to be a zigzag that filled up in its colour and lost its dashes. With more readings than pixel columns it is now a band from the lowest to the highest reading of each column: a faint fill, the outline in the curve's dashes or pattern, every peak still visible; zoomed in it is a line again.
 - **Graph: colours for colour weakness and high contrast, patterned lines** — two more graph colours: *Colour-blind safe* (white, the Okabe-Ito colours, apart with red-green or blue-yellow weakness) and *High contrast* (black, white and bright colours, thicker curves). *View → Patterned lines* in the graph's menu gives each curve of another device a dash pattern of its own, also in the legend; kept per graph with the window layout.
 - **Histogram** — show the distribution of one measured value in a live histogram. Add several histograms from the toolbar and assign each one its source in *Sources...*; source and visibility are kept with the workspace, while each plot summarizes the latest readings.
 - **XY diagram** — an XY diagram plots two values from open meters against each other. Add several diagrams from the toolbar; assign each X and Y source in its *Sources...* dialog. The diagrams follow the selected window design and identify their sources above the plot.

@@ -187,7 +187,12 @@ were; the integration curve carries on across a gap.
   recorded with the main value on the same time axis. Each value has a
   colour of its own; a legend at the top left names the curves (in a
   narrow graph with shorter names: first without the device's vendor, then
-  without the device, at last the units alone). A value in
+  without the device, at last the units alone). Zoomed far out, with more
+  readings than the plot has room for (one every two pixels), a curve of
+  another value or of another device becomes a band from its lowest to its
+  highest reading: a faint fill with the outline in the curve's own dashes,
+  so it is still told apart without its colour and every peak stays
+  visible. Zoomed in again it is a line. A value in
   the main value's unit shares its axis, the first other unit gets an axis
   on the right with a scale of its own, a third unit a third axis outside
   it. The titles of the right axes ([°C], [Hz]) are in the colour of their

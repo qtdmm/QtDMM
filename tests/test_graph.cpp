@@ -2778,6 +2778,68 @@ int main(int argc, char **argv)
     check(points && points->count() == line->count(), "record: the points go on with the line");
   }
 
+  // --- 7m1. a dense secondary value: more points than pixel columns are
+  //           a band (faint fill, the outline in the value's dashes), not
+  //           a zigzag line; few are the line again. The same for another
+  //           meter's curve ---
+  {
+    Settings cfg("dense-band", tmpDir.path());
+    GraphWidget graph(nullptr, &cfg);
+    graph.resize(800, 500);
+    graph.show();
+    QTest::qWait(50);
+    graph.setUnit("V");
+    graph.setGraphSize(10);
+    Feed feed(graph, 5);
+    graph.liveSLOT();
+    graph.setValueShown(1, true);
+    RecordingStore other;
+    Feed far(&other, 5);
+    other.setUnit("V");
+    other.live();
+    graph.setOtherStores([&](const QString &source) { return source == "device:b" ? &other : nullptr; },
+                         [](const QString &) { return QStringLiteral("Sim B"); });
+    graph.setOtherValues({ ValueRef(0, "device:b") });
+    auto feedBoth = [&](int n)
+    {
+      for (int i = 0; i < n; ++i)
+      {
+        // a slow wave with noise, and one spike that must stay seen
+        const double wave = 0.3 * std::sin(i * 0.006) + (i % 2) * 0.1;
+        feed.value(1.0);
+        feed.other(1, n > 100 && i == n / 2 ? 3.2 : 2.0 + wave, "V", Quantity::Voltage);
+        far.value(3.2 + wave);
+      }
+      QTest::qWait(100);
+    };
+    feedBoth(20);
+    check(graph.extraCurveShown(0) && !graph.extraCurveBanded(0) && graph.otherCurveCount() == 1
+            && graph.otherCurveShown(0) && !graph.otherCurveBanded(0),
+          "dense: 20 readings are lines");
+    feedBoth(2000);
+    check(graph.extraCurveBanded(0), "dense: the second value of 2000 readings in 10 s is a band");
+    check(graph.otherCurveBanded(0), "dense: so is the other meter's curve");
+    // the band of value 2 in its dashes, filled faintly, up to the spike
+    QChart *chart = graph.findChild<QChartView *>()->chart();
+    const double spikeY = chart->mapToPosition(QPointF(0, 3.2), chart->series().first()).y();
+    const QGraphicsPathItem *dashed = nullptr;
+    for (QGraphicsItem *item : chart->scene()->items())
+      if (auto *band = dynamic_cast<QGraphicsPathItem *>(item); band && band->isVisible()
+          && band->pen().style() == Qt::DashLine && band->brush().color().alpha() < 255)
+        dashed = band;
+    check(dashed && std::abs(dashed->path().boundingRect().top() - spikeY) < 2,
+          QString("dense: the band's outline dashed as value 2, its fill faint, its top the spike (%1, spike %2)")
+            .arg(dashed ? dashed->path().boundingRect().top() : -1).arg(spikeY));
+    graph.setValueShown(1, false);
+    check(!graph.extraCurveBanded(0), "dense: a hidden value has no band");
+    if (qEnvironmentVariableIsSet("QTDMM_SHOT"))
+    {
+      graph.setValueShown(1, true);
+      QTest::qWait(50);
+      graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/graph_dense_band.png");
+    }
+  }
+
   // --- 7m2. a long recording in a short window: a reading costs what the
   //           window has, not what the recording has (the chart got every
   //           point, ~8 ms a reading at 40000; R14-02) ---
