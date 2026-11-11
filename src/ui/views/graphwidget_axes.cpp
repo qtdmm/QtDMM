@@ -566,7 +566,25 @@ void GraphWidget::updateRightAxis()
     }
     a.axis->setTickCount(ticks);
     a.axis->setRange(from, from + (ticks - 1) * s);
-    a.title->setText(QString("[%1]").arg(SiPrefix::displayText(a.unit)));
+    // the prefix by the range shown, as the left axis (yPrefix()): 12 kHz
+    // read 12 [kHz]; the curves stay in the base unit
+    const double top = qMax(std::abs(from), std::abs(from + (ticks - 1) * s));
+    a.prefix.clear();
+    if (SiPrefix::takesPrefix(a.unit))
+      SiPrefix::scale(top, &a.prefix);
+    const double factor = SiPrefix::factor(a.prefix);
+    for (const QString &label : a.axis->categoriesLabels())
+      a.axis->remove(label);
+    a.axis->setStartValue(from);
+    for (int i = 0; i < ticks; ++i)
+    {
+      const double v = from + i * s;
+      // as the left axis: four digits, no "-0"
+      const QString label = QString::number(std::abs(v) < s * 1e-9 ? 0.0 : v / factor, 'g', 4);
+      if (!a.axis->categoriesLabels().contains(label))
+        a.axis->append(label, v);
+    }
+    a.title->setText(QString("[%1]").arg(SiPrefix::displayText(a.prefix + a.unit)));
     // in the colour of its first curve: which axis is whose, with three
     a.title->setBrush(sideColor(k + 1));
   }

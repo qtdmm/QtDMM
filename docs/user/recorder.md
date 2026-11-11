@@ -195,8 +195,12 @@ were; the integration curve carries on across a gap.
   visible. Zoomed in again it is a line. A value in
   the main value's unit shares its axis, the first other unit gets an axis
   on the right with a scale of its own, a third unit a third axis outside
-  it. The titles of the right axes ([°C], [Hz]) are in the colour of their
-  first curve, so it is clear which axis is whose. A right click on a right
+  it. The titles of the right axes ([°C], [kHz]) are in the colour of their
+  first curve, so it is clear which axis is whose. Like the left axis, a
+  right axis takes the prefix of the range it shows: 12 kHz reads 12 under
+  [kHz], 3.5 mV 3.5 under [mV]. The curve stays one curve when the meter
+  changes range (Hz to kHz, V to mV); a value in mV shares the axis of a
+  value in V. A right click on a right
   axis (or its entry in the graph's menu, **Right axis [Hz]**) chooses
   **Automatic** or **Fixed range...**: a minimum and a maximum, 49.5 to
   50.5 Hz say, while the left axis scales itself. The axis then shows at

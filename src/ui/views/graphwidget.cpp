@@ -129,9 +129,9 @@ GraphWidget::GraphWidget(QWidget *parent, Settings *settings) :
   m_yTitle->setBrush(m_xAxis->titleBrush());
   for (SideAxis &side : m_right)
   {
-    side.axis = new QValueAxis();
+    side.axis = new QCategoryAxis();
     m_chart->addAxis(side.axis, Qt::AlignRight);
-    side.axis->setLabelFormat("%.4g");
+    side.axis->setLabelsPosition(QCategoryAxis::AxisLabelsPositionOnValue);
     side.axis->setGridLineVisible(false);
     side.axis->setMinorGridLineVisible(false);
     side.axis->setVisible(false);
