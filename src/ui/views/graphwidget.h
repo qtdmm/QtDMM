@@ -34,6 +34,7 @@
 #include <QScatterSeries>
 #include <QValueAxis>
 #include <QCategoryAxis>
+#include <limits>
 #include <QGraphicsLineItem>
 
 #include "ui/views/gapline.h"
@@ -112,7 +113,8 @@ public:
     Integration,  ///< integration threshold
     Reference,    ///< the reference line
     TimeCursorA,  ///< the time cursor set with a click
-    TimeCursorB   ///< the one set with Shift+click
+    TimeCursorB,  ///< the one set with Shift+click
+    ExtraReference ///< an added reference line (m_dragExtra)
   };
 
   /// What the reference line stands at: 0 (the default), a value of its
@@ -176,7 +178,10 @@ public:
     IDStats,         ///< the statistics beside the plot on or off
     IDViewButtons,   ///< the buttons beside the time buttons on or off
     IDStates,        ///< the strip of the meter's states on or off
-    IDPatterns       ///< patterned lines for the other meters' curves on or off
+    IDPatterns,      ///< patterned lines for the other meters' curves on or off
+    IDAddReference,  ///< another reference line, property "value"
+    IDRemoveReference, ///< an added reference line, property "index"
+    IDCrossings      ///< the marks where the curve crosses a reference line
   };
 
   GraphWidget(QWidget *parent, Settings *settings);
@@ -244,6 +249,18 @@ public:
   /// Where the line is now, in base units; NaN when the mean, minimum or
   /// maximum has no reading in the window.
   double           referenceValue() const { return m_reference; }
+  /// Further reference lines at fixed values (base units of the left axis),
+  /// besides the one above: added in its menu, dragged, removed there; at
+  /// most kMaxExtraReferences. Kept per window (Windows/<graph>-reference-lines).
+  void             setExtraReferences(const QList<double> &values);
+  QList<double>    extraReferences() const { return m_extraRefs; }
+  static constexpr int kMaxExtraReferences = 4;
+  /// Marks where the curve of the left axis crosses a reference line in the
+  /// window shown, up or down; the line's label counts them (View, Crossings).
+  void             setCrossingsVisible(bool on);
+  bool             crossingsVisible() const { return m_crossingsOn; }
+  /// The crossings counted for line @p line: -1 the reference line, 0.. the added ones.
+  int              crossingCount(int line) const;
   /// Whether the line is drawn: in the scale, and its value (referenceId()) shown.
   bool             referenceShown() const;
   /// The reference as kept per window (Windows/graph-reference, the
@@ -980,6 +997,33 @@ protected:
   /// @{
   QGraphicsLineItem       *m_referenceLine = nullptr;
   QGraphicsSimpleTextItem *m_referenceLabel = nullptr;
+  struct ExtraRefItem
+  {
+    QGraphicsLineItem       *line = nullptr;   ///< the chart's children
+    QGraphicsSimpleTextItem *label = nullptr;
+  };
+  QList<double>             m_extraRefs;
+  std::vector<ExtraRefItem> m_extraRefItems;
+  int                       m_dragExtra = -1;   ///< the added line dragged
+  /// Where the context menu was opened, as a value of the left axis: an
+  /// added line starts there (NaN: in the middle)
+  double                    m_refMenuValue = std::numeric_limits<double>::quiet_NaN();
+  bool                      m_crossingsOn = true;
+  QGraphicsPathItem        *m_crossMarks = nullptr;
+  QList<int>                m_crossCounts;      ///< [0] the reference line, then the added ones
+  void             updateExtraReferences();
+  void             updateCrossings();
+  /// The crossings of @p value by the left axis' curve in the window: time
+  /// (s) and whether it rose; crossings closer than 3 pixels count once.
+  QList<std::pair<double, bool>> crossingsOf(double value) const;
+  /// The value of the left axis at scene height @p y, rounded to a step of
+  /// a hundredth of the axis.
+  double           roundedValueAt(double y) const;
+  QString          referenceText(double value) const;
+  /// @p label with @p text at the right end of the plot, above the line at
+  /// @p y unless that leaves the plot.
+  void             placeReferenceLabel(QGraphicsSimpleTextItem *label, double y, const QString &text);
+  QString          m_referenceText;   ///< the reference line's label without the crossings
   double           m_reference = 0;
   ReferenceKind    m_referenceKind = RefZero;
   QList<double>    m_alarmThresholds;

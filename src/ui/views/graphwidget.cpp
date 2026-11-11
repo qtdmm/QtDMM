@@ -168,6 +168,10 @@ GraphWidget::GraphWidget(QWidget *parent, Settings *settings) :
   m_referenceLabel->setZValue(5);
   m_referenceLabel->setData(0, QStringLiteral("reference"));
   m_referenceLabel->setVisible(false);
+  m_crossMarks = new QGraphicsPathItem(m_chart);
+  m_crossMarks->setZValue(990);   // over the curves, under flags and cursors
+  m_crossMarks->setData(0, QStringLiteral("crossings"));
+  m_crossMarks->setVisible(false);
   // the limit test's band: below the curve, as the min/max band
   m_limitBand = new QGraphicsRectItem(m_chart);
   m_limitBand->setZValue(4);
@@ -311,7 +315,11 @@ GraphWidget::GraphWidget(QWidget *parent, Settings *settings) :
   m_referenceButton = viewButton("ui_graphReferenceButton", QString(QChar(0x2015)), tr("Reference line"), true);   // ―
   {
     auto *menu = new QMenu(m_referenceButton);
-    connect(menu, &QMenu::aboutToShow, this, [this, menu] { fillReferenceMenu(menu); });
+    connect(menu, &QMenu::aboutToShow, this, [this, menu]
+    {
+      m_refMenuValue = qQNaN();   // from the button: a new line in the middle
+      fillReferenceMenu(menu);
+    });
     connect(menu, &QMenu::triggered, this, &GraphWidget::popupSLOT);
     // pressed while a line shows, whatever a click did to it
     connect(menu, &QMenu::aboutToHide, this, [this] { QTimer::singleShot(0, this, &GraphWidget::updateViewButtons); });

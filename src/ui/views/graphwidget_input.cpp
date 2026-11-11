@@ -198,6 +198,7 @@ void GraphWidget::showMenu(const QPoint &pos, const QPoint &globalPos)
   m_popup->addSeparator();
   // a note where the menu was opened, or at the newest reading
   const QPointF scenePos = m_chartView->mapToScene(pos);
+  m_refMenuValue = m_chart->plotArea().contains(scenePos) ? roundedValueAt(scenePos.y()) : qQNaN();
   if (m_chart->plotArea().contains(scenePos))
     item(tr("Note here..."), IDNoteHere)
       ->setProperty("t", qMax<qint64>(0, qRound64(m_chart->mapToValue(scenePos, m_dataSeries).x() * 1000)));
@@ -257,6 +258,7 @@ void GraphWidget::showMenu(const QPoint &pos, const QPoint &globalPos)
   toggle(tr("Min/max &band"), IDEnvelope, m_envelopeOn);
   toggle(tr("Meter st&ates"), IDStates, m_statesOn);
   toggle(tr("&Patterned lines"), IDPatterns, m_patternsOn);
+  toggle(tr("Cr&ossings"), IDCrossings, m_crossingsOn);
   fillReferenceMenu(view->addMenu(tr("&Reference line")));
   view->addSeparator();
   toggle(tr("Bu&ttons"), IDViewButtons, m_viewButtonsOn);
@@ -349,6 +351,14 @@ void GraphWidget::handleChartMouseMove(QMouseEvent *ev)
       case Reference:
         dragReference(scenePos.y());
         return;
+      case ExtraReference:
+        if (m_dragExtra >= 0 && m_dragExtra < m_extraRefs.size())
+        {
+          QList<double> refs = m_extraRefs;
+          refs[m_dragExtra] = roundedValueAt(scenePos.y());
+          setExtraReferences(refs);
+        }
+        return;
       case TimeCursorA:
       case TimeCursorB:
         setTimeCursor(m_cursorMode == TimeCursorB, qRound64(m_chart->mapToValue(scenePos, m_dataSeries).x() * 1000));
@@ -382,6 +392,13 @@ void GraphWidget::handleChartMouseMove(QMouseEvent *ev)
       m_cursorMode = Integration;
     else if (std::isfinite(refY) && fabs(scenePos.y() - refY) < tolerance)
       m_cursorMode = Reference;
+    else if (const auto hit = std::find_if(m_extraRefItems.cbegin(), m_extraRefItems.cend(),
+                                           [&](const ExtraRefItem &r) { return near(r.line); });
+             hit != m_extraRefItems.cend())
+    {
+      m_cursorMode = ExtraReference;
+      m_dragExtra = int(hit - m_extraRefItems.cbegin());
+    }
     else if (m_cursorLine[1]->isVisible() && fabs(scenePos.x() - m_cursorLine[1]->line().x1()) < tolerance)
       m_cursorMode = TimeCursorB;
     else if (m_cursorLine[0]->isVisible() && fabs(scenePos.x() - m_cursorLine[0]->line().x1()) < tolerance)
@@ -593,6 +610,20 @@ void GraphWidget::popupSLOT(QAction *action)
     case IDPatterns:
       setPatternedLines(action->isChecked());
       break;
+    case IDCrossings:
+      setCrossingsVisible(action->isChecked());
+      break;
+    case IDAddReference:
+      setExtraReferences(m_extraRefs + QList<double>{ action->property("value").toDouble() });
+      break;
+    case IDRemoveReference:
+    {
+      QList<double> refs = m_extraRefs;
+      if (const int i = action->property("index").toInt(); i >= 0 && i < refs.size())
+        refs.removeAt(i);
+      setExtraReferences(refs);
+      break;
+    }
     case IDAxisAuto:
       clearFixedRange(action->property("unit").toString());
       break;
@@ -642,6 +673,21 @@ void GraphWidget::fillReferenceMenu(QMenu *reference)
   }
   reference->addSeparator();
   refEntry(tr("&Off"), RefOff);
+  // further lines at fixed values: where the menu was opened, else in the
+  // middle
+  reference->addSeparator();
+  const double at = std::isfinite(m_refMenuValue) ? m_refMenuValue
+                                                  : roundedValueAt(m_chart->plotArea().center().y());
+  QAction *add = reference->addAction(tr("&Add a line at %1").arg(valueText(at)));
+  add->setProperty("ID", IDAddReference);
+  add->setProperty("value", at);
+  add->setEnabled(m_extraRefs.size() < kMaxExtraReferences && leftValue().id >= 0);
+  for (int i = 0; i < m_extraRefs.size(); ++i)
+  {
+    QAction *remove = reference->addAction(tr("Remove the line at %1").arg(valueText(m_extraRefs[i])));
+    remove->setProperty("ID", IDRemoveReference);
+    remove->setProperty("index", i);
+  }
 }
 
 void GraphWidget::addAxisEntries(QMenu *menu, int side)
