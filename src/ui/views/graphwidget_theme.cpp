@@ -35,7 +35,7 @@
 void GraphWidget::updateSeriesAppearance()
 {
   rebuildExtras();   // their colours and line width
-  m_dataLine->setPen(QPen(dataColor(), m_lineWidth, penStyle(m_lineMode), Qt::RoundCap, Qt::RoundJoin));
+  m_dataLine->setPen(QPen(dataColor(), lineWidth(), penStyle(m_lineMode), Qt::RoundCap, Qt::RoundJoin));
   m_dataLine->setVisible(m_lineMode != NoLine && m_mainShown);
   updateMinimapValue();
   // the band: the curve's colour, faint
@@ -110,6 +110,8 @@ QColor GraphWidget::extraColor(int id) const
     case PhosphorGreen: return QColor::fromHsv(135, 190, 220);
     case PhosphorAmber: return QColor::fromHsv(38, 230, 220);
     case ChartRecorder: return QColor(QList<const char *>{ "#2e7d32", "#7b3fa0", "#b8860b" }[slot]);
+    case ColourBlind:   return QColor(QList<const char *>{ "#d55e00", "#009e73", "#e69f00" }[slot]);
+    case HighContrast:  return QColor(QList<const char *>{ "#ffff00", "#ff00ff", "#00ff00" }[slot]);
     default: break;
   }
   const bool dark = m_xLabelColor.isValid() && m_xLabelColor.lightness() > 128;
@@ -158,6 +160,8 @@ QColor GraphWidget::dataColor() const
     case PhosphorGreen: return QColor::fromHsv(135, 190, 255);
     case PhosphorAmber: return QColor::fromHsv(38, 230, 255);
     case ChartRecorder: return QColor("#1f4e9c");
+    case ColourBlind:   return QColor("#0072b2");
+    case HighContrast:  return QColor(Qt::white);
     default:            return m_themeData.isValid() ? m_themeData : m_dataColor;
   }
 }
@@ -174,6 +178,8 @@ QColor GraphWidget::intColor() const
     case PhosphorGreen: return QColor::fromHsv(135, 190, 190);
     case PhosphorAmber: return QColor::fromHsv(38, 230, 190);
     case ChartRecorder: return QColor("#c0282d");
+    case ColourBlind:   return QColor("#555555");
+    case HighContrast:  return QColor("#00ffff");
     default:            return m_themeData.isValid() ? m_themeData.lighter(140) : m_intColor;
   }
 }
@@ -195,6 +201,8 @@ QString GraphWidget::variantTitle(ColorVariant variant)
     case PhosphorGreen: return tr("Phosphor green");
     case PhosphorAmber: return tr("Phosphor amber");
     case ChartRecorder: return tr("Chart recorder");
+    case ColourBlind:   return tr("Colour-blind safe");
+    case HighContrast:  return tr("High contrast");
     case Custom:        return tr("Custom");
     default:            return tr("Neutral");
   }
@@ -208,6 +216,8 @@ QString GraphWidget::variantName(ColorVariant variant)
     case PhosphorGreen: return "phosphor-green";
     case PhosphorAmber: return "phosphor-amber";
     case ChartRecorder: return "recorder";
+    case ColourBlind:   return "colour-blind";
+    case HighContrast:  return "high-contrast";
     case Custom:        return "custom";
     default:            return "neutral";
   }
@@ -215,10 +225,20 @@ QString GraphWidget::variantName(ColorVariant variant)
 
 GraphWidget::ColorVariant GraphWidget::variantFromName(const QString &name)
 {
-  for (ColorVariant v : { ScopeBlue, PhosphorGreen, PhosphorAmber, ChartRecorder, Custom })
+  for (ColorVariant v : colorVariants())
     if (name == variantName(v))
       return v;
   return Neutral;
+}
+
+QList<GraphWidget::ColorVariant> GraphWidget::colorVariants()
+{
+  return { Neutral, ScopeBlue, PhosphorGreen, PhosphorAmber, ChartRecorder, ColourBlind, HighContrast, Custom };
+}
+
+double GraphWidget::lineWidth() const
+{
+  return m_variant == HighContrast ? m_lineWidth * 1.5 : m_lineWidth;
 }
 
 // Background, grid and lettering. Neutral follows the window design (on
@@ -267,6 +287,19 @@ void GraphWidget::applyThemeColors()
       line = QPen(QColor(190, 120, 110));
       labels = QColor("#5a4636");
       minors = 4;   // millimetre-ish paper
+      break;
+    case ColourBlind:
+      background = QColor(Qt::white);
+      grid = QPen(QColor("#c8c8c8"), 1);
+      line = QPen(QColor("#1a1a1a"));
+      labels = QColor("#1a1a1a");
+      break;
+    case HighContrast:
+      // the grid solid and plain grey: dashes are the curves'
+      background = QColor(Qt::black);
+      grid = QPen(QColor("#9a9a9a"), 1);
+      line = QPen(QColor(Qt::white), 2);
+      labels = QColor(Qt::white);
       break;
     case Custom:
       background = m_bgColor;
@@ -366,6 +399,8 @@ void GraphWidget::applyThemeColors()
     case PhosphorGreen: start = QColor::fromHsv(135, 190, 160); break;
     case PhosphorAmber: start = QColor::fromHsv(38, 230, 160); break;
     case ChartRecorder: start = QColor("#2e7d32"); break;
+    case ColourBlind:   start = QColor("#cc79a7"); break;
+    case HighContrast:  start = QColor("#ff8000"); break;
     default: break;
   }
   const Qt::PenStyle lineStyle = phosphor() ? Qt::DashLine : Qt::SolidLine;

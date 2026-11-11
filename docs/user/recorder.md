@@ -370,9 +370,21 @@ recording.
   on the reference line, else along the bottom edge, and on the trigger
   of a pre-triggered recording, else along the left edge. They have no
   cross in the middle - it looked like a reference and said nothing.
+- **Colour-blind safe** draws on white with the Okabe-Ito colours (blue,
+  vermilion, bluish green, orange, reddish purple, sky blue), which stay
+  apart with red-green or blue-yellow colour weakness.
+- **High contrast** draws white and pure, bright colours on black, the
+  curves 1.5 times as thick.
 - **Custom** uses the colour buttons that show up beside it.
 
-A curve colour you chose yourself stays in every variant. The graph's
+A curve colour you chose yourself stays in every variant.
+
+**View → Patterned lines** in a graph's right-click menu dashes each curve
+of another device in a pattern of its own (long dashes, dash-dot-dot,
+sparse dots, long-short), so the curves are told apart without their
+colours; the meter's own values are dashed, dotted and dash-dotted anyway.
+The legend shows the patterns. It is off at first; whether it is on is kept
+with the window layout. The graph's
 right-click menu, **Graph colours**, can choose other colours for this graph
 only; *Default* goes back to the setting.
 

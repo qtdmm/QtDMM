@@ -304,10 +304,35 @@ void GraphWidget::onOtherReadings()
   updateLegend();
 }
 
+// With patterned lines each curve of another meter gets a dash pattern of
+// its own, apart from the solid main curve and the dashes, dots and
+// dash-dots of the graph meter's values (valueStyle()).
 QPen GraphWidget::otherPen(int i) const
 {
-  return QPen(otherColor(i), qMax(1.0, m_lineWidth * 0.75), valueStyle(m_otherCurves[size_t(i)].value.id), Qt::RoundCap,
-              Qt::RoundJoin);
+  QPen pen(otherColor(i), qMax(1.0, lineWidth() * 0.75), valueStyle(m_otherCurves[size_t(i)].value.id), Qt::RoundCap,
+           Qt::RoundJoin);
+  if (m_patternsOn)
+  {
+    static const QList<QList<qreal>> patterns = {
+      { 10, 4 },                 // long dashes
+      { 6, 3, 1, 3, 1, 3 },      // dash dot dot
+      { 1, 4 },                  // sparse dots
+      { 12, 3, 4, 3 },           // long short
+    };
+    pen.setDashPattern(patterns[i % patterns.size()]);
+  }
+  return pen;
+}
+
+void GraphWidget::setPatternedLines(bool on)
+{
+  if (m_patternsOn == on)
+    return;
+  m_patternsOn = on;
+  for (int i = 0; i < int(m_otherCurves.size()); ++i)
+    if (m_otherCurves[size_t(i)].line)
+      m_otherCurves[size_t(i)].line->setPen(otherPen(i));
+  updateLegend();
 }
 
 // Colours of their own, apart from the graph meter's values: another
@@ -320,6 +345,8 @@ QColor GraphWidget::otherColor(int i) const
     case PhosphorGreen:
     case PhosphorAmber: return extraColor(i + 1);
     case ChartRecorder: return QColor(QList<const char *>{ "#1565c0", "#ad1457", "#00838f", "#6d4c41" }[i % 4]);
+    case ColourBlind:   return QColor(QList<const char *>{ "#cc79a7", "#56b4e9", "#000000", "#e69f00" }[i % 4]);
+    case HighContrast:  return QColor(QList<const char *>{ "#ff8000", "#80b0ff", "#ff6060", "#c0c0c0" }[i % 4]);
     default: break;
   }
   const bool dark = m_xLabelColor.isValid() && m_xLabelColor.lightness() > 128;

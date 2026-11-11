@@ -3386,6 +3386,7 @@ void MainWindow::applyGraphState(const GraphView *view, const WorkspaceGet &get,
   graph->setStatsVisible(get(key + "-stats", false).toBool());
   graph->setViewButtonsVisible(get(key + "-buttons", true).toBool());
   graph->setStatesVisible(get(key + "-states", true).toBool());
+  graph->setPatternedLines(get(key + "-patterns", false).toBool());
   // its time window; without one the settings'
   if (const int seconds = get(key + "-window", 0).toInt(); seconds > 0)
     m_wid->setGraphWindow(graph, seconds);
@@ -3443,6 +3444,7 @@ void MainWindow::storeGraphState(const GraphView *view, const WorkspaceSet &set)
   set(key + "-stats", graph->statsVisible());
   set(key + "-buttons", graph->viewButtonsVisible());
   set(key + "-states", graph->statesVisible());
+  set(key + "-patterns", graph->patternedLines());
   set(key + "-window", graph->windowSetting());
   QStringList shown;
   for (const ValueRef &v : graph->values())

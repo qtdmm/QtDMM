@@ -104,8 +104,7 @@ GraphPrefs::GraphPrefs(QWidget *parent) : SettingsPage(parent)
   addSection(m_form, tr("Colours"));
   m_variant = new QComboBox(this);
   m_variant->setObjectName("ui_variant");
-  for (auto v : { GraphWidget::Neutral, GraphWidget::ScopeBlue, GraphWidget::PhosphorGreen, GraphWidget::PhosphorAmber,
-                  GraphWidget::ChartRecorder, GraphWidget::Custom })
+  for (auto v : GraphWidget::colorVariants())
     m_variant->addItem(v == GraphWidget::Custom ? tr("Custom")
                                              : v == GraphWidget::Neutral ? tr("Neutral: follows the design")
                                                                       : GraphWidget::variantTitle(v),
