@@ -259,6 +259,26 @@ void GraphWidget::showMenu(const QPoint &pos, const QPoint &globalPos)
   toggle(tr("Meter st&ates"), IDStates, m_statesOn);
   toggle(tr("&Patterned lines"), IDPatterns, m_patternsOn);
   toggle(tr("Cr&ossings"), IDCrossings, m_crossingsOn);
+  // readings not drawn: the recording keeps them
+  {
+    QMenu *outliers = view->addMenu(tr("O&utliers"));
+    const QString unit = SiPrefix::displayText(m_outlierUnit);
+    auto entry = [this, outliers](const QString &text, OutlierMode mode)
+    {
+      QAction *a = outliers->addAction(text);
+      a->setProperty("ID", IDOutliers);
+      a->setProperty("mode", int(mode));
+      a->setCheckable(true);
+      a->setChecked(m_outlierMode == mode);
+    };
+    entry(tr("&Show all"), OutliersShown);
+    entry(m_outlierMode == OutliersSigma ? tr("&More than %1 σ from their neighbours...").arg(m_outlierA)
+                                         : tr("&More than n σ from their neighbours..."), OutliersSigma);
+    entry(m_outlierMode == OutliersJump ? tr("&Spikes larger than %1 %2...").arg(m_outlierA).arg(unit)
+                                        : tr("&Spikes larger than..."), OutliersJump);
+    entry(m_outlierMode == OutliersLimits ? tr("Outside %1 .. %2 %3...").arg(m_outlierA).arg(m_outlierB).arg(unit)
+                                          : tr("Outside &limits..."), OutliersLimits);
+  }
   fillReferenceMenu(view->addMenu(tr("&Reference line")));
   view->addSeparator();
   toggle(tr("Bu&ttons"), IDViewButtons, m_viewButtonsOn);
@@ -613,6 +633,9 @@ void GraphWidget::popupSLOT(QAction *action)
     case IDCrossings:
       setCrossingsVisible(action->isChecked());
       break;
+    case IDOutliers:
+      askOutliers(OutlierMode(action->property("mode").toInt()));
+      break;
     case IDAddReference:
       setExtraReferences(m_extraRefs + QList<double>{ action->property("value").toDouble() });
       break;
@@ -718,8 +741,53 @@ void GraphWidget::askFixedRange(const QString &unit)
     for (const SideAxis &a : m_right)
       if (a.unit == unit)
         r = { a.axis->min(), a.axis->max() };
+  if (askMinMax(tr("Fixed range [%1]").arg(SiPrefix::displayText(unit)), unit, r))
+    setFixedRange(unit, r.first, r.second);
+}
+
+// How outliers are hidden; Jump and Limits ask in the left axis' unit
+void GraphWidget::askOutliers(OutlierMode mode)
+{
+  const QString unit = leftUnit();
+  bool ok = true;
+  switch (mode)
+  {
+    case OutliersShown:
+      setOutliers(OutliersShown);
+      return;
+    case OutliersSigma:
+    {
+      const double n = QInputDialog::getDouble(this, tr("Hide outliers"), tr("More than n σ from their neighbours, n:"),
+                                               m_outlierMode == OutliersSigma ? m_outlierA : 3.0, 1.0, 20.0, 1, &ok);
+      if (ok)
+        setOutliers(OutliersSigma, n);
+      break;
+    }
+    case OutliersJump:
+    {
+      const double fallback = (m_yAxis->max() - m_yAxis->min()) / 4;
+      const double x = QInputDialog::getDouble(this, tr("Hide outliers"),
+                                               tr("Spikes larger than (%1):").arg(SiPrefix::displayText(unit)),
+                                               m_outlierMode == OutliersJump ? m_outlierA : fallback, 0, 1e12, 6, &ok);
+      if (ok && x > 0)
+        setOutliers(OutliersJump, x, 0, unit);
+      break;
+    }
+    case OutliersLimits:
+    {
+      std::pair<double, double> r = m_outlierMode == OutliersLimits ? std::pair{ m_outlierA, m_outlierB }
+                                                                    : std::pair{ m_yAxis->min(), m_yAxis->max() };
+      if (askMinMax(tr("Hide outliers outside [%1]").arg(SiPrefix::displayText(unit)), unit, r))
+        setOutliers(OutliersLimits, r.first, r.second, unit);
+      break;
+    }
+  }
+}
+
+bool GraphWidget::askMinMax(const QString &title, const QString &unit, std::pair<double, double> &r)
+{
   QDialog dlg(this);
-  dlg.setWindowTitle(tr("Fixed range [%1]").arg(SiPrefix::displayText(unit)));
+  dlg.setWindowTitle(title);
   auto *form = new QFormLayout(&dlg);
   auto spin = [&](double v)
   {
@@ -744,8 +812,10 @@ void GraphWidget::askFixedRange(const QString &unit)
   connect(min, &QDoubleSpinBox::valueChanged, &dlg, check);
   connect(max, &QDoubleSpinBox::valueChanged, &dlg, check);
   check();
-  if (dlg.exec() == QDialog::Accepted)
-    setFixedRange(unit, min->value(), max->value());
+  if (dlg.exec() != QDialog::Accepted)
+    return false;
+  r = { min->value(), max->value() };
+  return true;
 }
 
 void GraphWidget::endZoomDrag()

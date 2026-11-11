@@ -873,7 +873,12 @@ void GraphWidget::updateStateLabel()
 {
   if (!m_stateLabel)
     return;
-  const QString text = stateText();
+  QString text = stateText();
+  if (m_outliersHidden > 0)
+  {
+    const QString hidden = tr("%n outlier(s) hidden", nullptr, m_outliersHidden);
+    text = text.isEmpty() ? hidden : text + QStringLiteral(" · ") + hidden;
+  }
   if (text.isEmpty())
   {
     m_stateLabel->hide();

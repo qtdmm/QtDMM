@@ -3476,57 +3476,66 @@ a potem wyloguj się i zaloguj ponownie.</translation>
         <source>Recording of %1 · %2</source>
         <translation>Rejestracja z %1 · %2</translation>
     </message>
+    <message numerus="yes">
+        <location filename="../../src/ui/views/graphwidget.cpp" line="879"/>
+        <source>%n outlier(s) hidden</source>
+        <translation>
+            <numerusform>%n wartość odstająca ukryta</numerusform>
+            <numerusform>%n wartości odstające ukryte</numerusform>
+            <numerusform>%n wartości odstających ukrytych</numerusform>
+        </translation>
+    </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget.cpp" line="946"/>
+        <location filename="../../src/ui/views/graphwidget.cpp" line="951"/>
         <source>%1 left</source>
         <translation>pozostało %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget.cpp" line="952"/>
+        <location filename="../../src/ui/views/graphwidget.cpp" line="957"/>
         <location filename="../../src/ui/views/graphwidget_input.cpp" line="195"/>
         <source>Live</source>
         <translation>Na żywo</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget.cpp" line="953"/>
+        <location filename="../../src/ui/views/graphwidget.cpp" line="958"/>
         <source>Live: the graph holds the readings of the last %1; older ones drop out. Record keeps them.</source>
         <translation>Na żywo: wykres przechowuje odczyty z ostatnich %1; starsze wypadają. Nagrywanie je zachowuje.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget.cpp" line="958"/>
+        <location filename="../../src/ui/views/graphwidget.cpp" line="963"/>
         <source>Recording: the time recorded / the recording length set</source>
         <translation>Nagrywanie: nagrany czas / ustawiona długość nagrania</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget.cpp" line="958"/>
+        <location filename="../../src/ui/views/graphwidget.cpp" line="963"/>
         <source>Recording: the time recorded</source>
         <translation>Nagrywanie: nagrany czas</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget.cpp" line="961"/>
+        <location filename="../../src/ui/views/graphwidget.cpp" line="966"/>
         <source>Stopped</source>
         <translation>Zatrzymany</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget.cpp" line="962"/>
+        <location filename="../../src/ui/views/graphwidget.cpp" line="967"/>
         <source>Stopped: the length of the recording shown</source>
         <translation>Zatrzymano: długość pokazanego nagrania</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget.cpp" line="957"/>
+        <location filename="../../src/ui/views/graphwidget.cpp" line="962"/>
         <source>Recording</source>
         <translation>Nagrywanie</translation>
     </message>
     <message>
         <location filename="../../src/ui/views/graphwidget_overlays.cpp" line="526"/>
-        <location filename="../../src/ui/views/graphwidget_overlays.cpp" line="1016"/>
+        <location filename="../../src/ui/views/graphwidget_overlays.cpp" line="1019"/>
         <source>mean</source>
         <translation>średnia</translation>
     </message>
     <message>
         <location filename="../../src/ui/views/graphwidget_axes.cpp" line="188"/>
         <location filename="../../src/ui/views/graphwidget_overlays.cpp" line="527"/>
-        <location filename="../../src/ui/views/graphwidget_overlays.cpp" line="1017"/>
+        <location filename="../../src/ui/views/graphwidget_overlays.cpp" line="1020"/>
         <source>min</source>
         <translation>min</translation>
     </message>
@@ -3547,7 +3556,7 @@ a potem wyloguj się i zaloguj ponownie.</translation>
     </message>
     <message>
         <location filename="../../src/ui/views/graphwidget_overlays.cpp" line="528"/>
-        <location filename="../../src/ui/views/graphwidget_overlays.cpp" line="1017"/>
+        <location filename="../../src/ui/views/graphwidget_overlays.cpp" line="1020"/>
         <source>max</source>
         <translation>maks</translation>
     </message>
@@ -3572,28 +3581,37 @@ a potem wyloguj się i zaloguj ponownie.</translation>
         <translation>Znacznik %1 o %2</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_overlays.cpp" line="1022"/>
+        <location filename="../../src/ui/views/graphwidget_overlays.cpp" line="1025"/>
         <source>Cursors</source>
         <translation>Kursory</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_overlays.cpp" line="1024"/>
+        <location filename="../../src/ui/views/graphwidget_overlays.cpp" line="1027"/>
         <source>Click: cursor A, Shift+click: B</source>
         <translation>Klik: kursor A, Shift+klik: B</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_overlays.cpp" line="1060"/>
-        <location filename="../../src/ui/views/graphwidget_overlays.cpp" line="1086"/>
+        <location filename="../../src/ui/views/graphwidget_overlays.cpp" line="1063"/>
+        <location filename="../../src/ui/views/graphwidget_overlays.cpp" line="1091"/>
         <source>readings</source>
         <translation>odczyty</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_overlays.cpp" line="1075"/>
+        <location filename="../../src/ui/views/graphwidget_overlays.cpp" line="1078"/>
         <source>Shown</source>
         <translation>Pokazane</translation>
     </message>
+    <message numerus="yes">
+        <location filename="../../src/ui/views/graphwidget_overlays.cpp" line="1079"/>
+        <source>without %n outlier(s)</source>
+        <translation>
+            <numerusform>bez %n wartości odstającej</numerusform>
+            <numerusform>bez %n wartości odstających</numerusform>
+            <numerusform>bez %n wartości odstających</numerusform>
+        </translation>
+    </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_overlays.cpp" line="1085"/>
+        <location filename="../../src/ui/views/graphwidget_overlays.cpp" line="1090"/>
         <source>peak-peak</source>
         <translation>międzyszczytowa</translation>
     </message>
@@ -3703,57 +3721,97 @@ a potem wyloguj się i zaloguj ponownie.</translation>
         <translation>Prze&amp;cięcia</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="262"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="264"/>
+        <source>O&amp;utliers</source>
+        <translation>&amp;Wartości odstające</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="274"/>
+        <source>&amp;Show all</source>
+        <translation>Pokaż &amp;wszystkie</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="275"/>
+        <source>&amp;More than %1 σ from their neighbours...</source>
+        <translation>Ponad %1 σ od &amp;sąsiadów...</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="276"/>
+        <source>&amp;More than n σ from their neighbours...</source>
+        <translation>Ponad n σ od &amp;sąsiadów...</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="277"/>
+        <source>&amp;Spikes larger than %1 %2...</source>
+        <translation>&amp;Piki większe niż %1 %2...</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="278"/>
+        <source>&amp;Spikes larger than...</source>
+        <translation>&amp;Piki większe niż...</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="279"/>
+        <source>Outside %1 .. %2 %3...</source>
+        <translation>Poza %1 .. %2 %3...</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="280"/>
+        <source>Outside &amp;limits...</source>
+        <translation>Poza &amp;granicami...</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="282"/>
         <source>&amp;Reference line</source>
         <translation>Linia &amp;odniesienia</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="264"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="284"/>
         <source>Bu&amp;ttons</source>
         <translation>P&amp;rzyciski</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="661"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="684"/>
         <source>At &amp;0</source>
         <translation>Na &amp;0</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="662"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="685"/>
         <source>&amp;Mean of the window</source>
         <translation>Ś&amp;rednia z okna</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="663"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="686"/>
         <source>M&amp;inimum of the window</source>
         <translation>M&amp;inimum z okna</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="664"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="687"/>
         <source>Ma&amp;ximum of the window</source>
         <translation>Ma&amp;ksimum z okna</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="668"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="691"/>
         <source>Alarm threshold %1</source>
         <translation>Próg alarmu %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="672"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="695"/>
         <source>At %1 (dragged)</source>
         <translation>Na %1 (przeciągnięta)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="675"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="698"/>
         <source>&amp;Off</source>
         <translation>&amp;Wyłączona</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="681"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="704"/>
         <source>&amp;Add a line at %1</source>
         <translation>&amp;Dodaj linię na %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="687"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="710"/>
         <source>Remove the line at %1</source>
         <translation>Usuń linię na %1</translation>
     </message>
@@ -3763,12 +3821,12 @@ a potem wyloguj się i zaloguj ponownie.</translation>
         <translation>S&amp;tatystyka</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="639"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="662"/>
         <source>Right axis [%1]</source>
         <translation>Prawa oś [%1]</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="639"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="662"/>
         <source>Third axis [%1]</source>
         <translation>Trzecia oś [%1]</translation>
     </message>
@@ -3783,17 +3841,17 @@ a potem wyloguj się i zaloguj ponownie.</translation>
         <translation>Pa&amp;smo min/maks</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="266"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="286"/>
         <source>Remove time cursors</source>
         <translation>Usuń kursory czasu</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="271"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="291"/>
         <source>Import data...</source>
         <translation>Importuj dane…</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="457"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="477"/>
         <location filename="../../src/ui/views/graphwidget_overlays.cpp" line="71"/>
         <source>no value</source>
         <translation>brak wartości</translation>
@@ -3804,32 +3862,53 @@ a potem wyloguj się i zaloguj ponownie.</translation>
         <translation>błąd</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="697"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="720"/>
         <source>&amp;Automatic</source>
         <translation>&amp;Automatycznie</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="702"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="725"/>
         <source>&amp;Fixed: %1 .. %2 %3...</source>
         <translation>&amp;Stały: %1 .. %2 %3…</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="706"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="729"/>
         <source>&amp;Fixed range...</source>
         <translation>&amp;Stały zakres…</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="722"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="744"/>
         <source>Fixed range [%1]</source>
         <translation>Stały zakres [%1]</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="737"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="760"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="769"/>
+        <source>Hide outliers</source>
+        <translation>Ukryj wartości odstające</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="760"/>
+        <source>More than n σ from their neighbours, n:</source>
+        <translation>Ponad n σ od sąsiadów, n:</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="770"/>
+        <source>Spikes larger than (%1):</source>
+        <translation>Piki większe niż (%1):</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="780"/>
+        <source>Hide outliers outside [%1]</source>
+        <translation>Ukryj wartości odstające poza [%1]</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="805"/>
         <source>M&amp;inimum:</source>
         <translation>M&amp;inimum:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_input.cpp" line="738"/>
+        <location filename="../../src/ui/views/graphwidget_input.cpp" line="806"/>
         <source>M&amp;aximum:</source>
         <translation>M&amp;aksimum:</translation>
     </message>
@@ -3972,22 +4051,22 @@ a potem wyloguj się i zaloguj ponownie.</translation>
         <translation>Wykres zapisany do %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_curves.cpp" line="925"/>
+        <location filename="../../src/ui/views/graphwidget_curves.cpp" line="941"/>
         <source>%1 off: the %2 axis shows %3 now</source>
         <translation>%1 wyłączone: oś %2 pokazuje teraz %3</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_curves.cpp" line="923"/>
+        <location filename="../../src/ui/views/graphwidget_curves.cpp" line="939"/>
         <source>right</source>
         <translation>prawa</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_curves.cpp" line="923"/>
+        <location filename="../../src/ui/views/graphwidget_curves.cpp" line="939"/>
         <source>left</source>
         <translation>lewa</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_curves.cpp" line="923"/>
+        <location filename="../../src/ui/views/graphwidget_curves.cpp" line="939"/>
         <source>third</source>
         <translation>trzecia</translation>
     </message>
@@ -5109,7 +5188,7 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
         <location filename="../../src/ui/mainwindow.cpp" line="1224"/>
         <location filename="../../src/ui/mainwindow.cpp" line="1230"/>
         <location filename="../../src/ui/mainwindow.cpp" line="2850"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="3789"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3791"/>
         <source>%1: %2</source>
         <translation>%1: %2</translation>
     </message>
@@ -5430,63 +5509,63 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
         <translation>%1 połączone</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3632"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3634"/>
         <source>Exported to %1</source>
         <translation>Wyeksportowano do %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3634"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3636"/>
         <source>Export failed: %1</source>
         <translation>Eksport nie powiódł się: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3650"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3652"/>
         <source>Live in LabPlot: start a recording first</source>
         <translation>Na żywo w LabPlot: najpierw rozpocznij nagranie</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3664"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3666"/>
         <source>live</source>
         <translation>na żywo</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3679"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3681"/>
         <source>Live in LabPlot: the recording ended, the file has all of it</source>
         <translation>Na żywo w LabPlot: nagranie zakończone, plik zawiera całość</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3685"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="3691"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3687"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3693"/>
         <source>Live in LabPlot: %1</source>
         <translation>Na żywo w LabPlot: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3859"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3861"/>
         <source>Bench loaded</source>
         <translation>Stanowisko pomiarowe wczytane</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3870"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3872"/>
         <source>project %1 closed: the bench is not in it</source>
         <translation>projekt %1 zamknięty: stanowisko pomiarowe nie należy do niego</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3871"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3873"/>
         <source>project %1 opened: the bench is in it</source>
         <translation>projekt %1 otwarty: stanowisko pomiarowe należy do niego</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3874"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3876"/>
         <source>back in My devices: %1</source>
         <translation>ponownie w Moich urządzeniach: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3876"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3878"/>
         <source>the programs of their alarms were left out, set them again in Alarms...</source>
         <translation>programy ich alarmów pominięto, ustaw je ponownie w Alarmy...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3878"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3880"/>
         <source>%1 without its key: enter it in the device settings</source>
         <translation>%1 bez klucza: wpisz go w ustawieniach urządzenia</translation>
     </message>
@@ -5845,65 +5924,65 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
         <translation>Bateria miernika jest słaba.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3598"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3600"/>
         <source>Project: cannot write %1</source>
         <translation>Projekt: nie można zapisać %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3600"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="3701"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3602"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3703"/>
         <source>Into the project: %1</source>
         <translation>Do projektu: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3699"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3701"/>
         <source>Project: cannot write %1: %2</source>
         <translation>Projekt: nie można zapisać %1: %2</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3732"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3734"/>
         <source>Save bench</source>
         <translation>Zapisz stanowisko pomiarowe</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3733"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="3777"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3735"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3779"/>
         <source>QtDMM bench (*.%1)</source>
         <translation>Stanowisko pomiarowe QtDMM (*.%1)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3757"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3759"/>
         <source>QtDMM: Save bench</source>
         <translation>QtDMM: Zapisz stanowisko pomiarowe</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3764"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3766"/>
         <source>Bench saved to %1</source>
         <translation>Stanowisko pomiarowe zapisane w %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3776"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3778"/>
         <source>Load bench</source>
         <translation>Wczytaj stanowisko pomiarowe</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3789"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="3806"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3791"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3808"/>
         <source>QtDMM: Load bench</source>
         <translation>QtDMM: Wczytaj stanowisko pomiarowe</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3807"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3809"/>
         <source>The bench closes %1, its recording is not saved.</source>
         <translation>Stanowisko pomiarowe zamyka %1, jego nagranie nie jest zapisane.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3757"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3759"/>
         <source>Could not write %1.</source>
         <translation>Nie można zapisać %1.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3990"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3992"/>
         <source>&amp;Clear list</source>
         <translation>&amp;Wyczyść listę</translation>
     </message>
@@ -7415,7 +7494,7 @@ Następnie wyloguj się i zaloguj ponownie, aby członkostwo w grupie zaczęło 
 <context>
     <name>RecordingStore</name>
     <message>
-        <location filename="../../src/recording/recordingstore.cpp" line="1030"/>
+        <location filename="../../src/recording/recordingstore.cpp" line="1031"/>
         <source>Trigger</source>
         <translation>Wyzwolenie</translation>
     </message>

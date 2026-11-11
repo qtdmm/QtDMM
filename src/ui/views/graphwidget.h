@@ -181,7 +181,8 @@ public:
     IDPatterns,      ///< patterned lines for the other meters' curves on or off
     IDAddReference,  ///< another reference line, property "value"
     IDRemoveReference, ///< an added reference line, property "index"
-    IDCrossings      ///< the marks where the curve crosses a reference line
+    IDCrossings,     ///< the marks where the curve crosses a reference line
+    IDOutliers       ///< how outliers are hidden, property "mode"
   };
 
   GraphWidget(QWidget *parent, Settings *settings);
@@ -261,6 +262,29 @@ public:
   bool             crossingsVisible() const { return m_crossingsOn; }
   /// The crossings counted for line @p line: -1 the reference line, 0.. the added ones.
   int              crossingCount(int line) const;
+
+  /// Readings the graph does not draw (View, Outliers): only the drawing
+  /// and the statistics leave them out, the recording keeps them.
+  enum OutlierMode
+  {
+    OutliersShown = 0,   ///< all drawn
+    OutliersSigma,       ///< more than n σ from the mean of its neighbours (kOutlierNeighbours each side)
+    OutliersJump,        ///< a spike: further than x from the readings before and after it, the same way
+    OutliersLimits       ///< outside min .. max
+  };
+  /// @p a: n for Sigma, x for Jump, the minimum for Limits; @p b the
+  /// maximum. Jump and Limits are in @p unit (the left axis' base unit)
+  /// and leave curves in other units alone.
+  void             setOutliers(OutlierMode mode, double a = 0, double b = 0, const QString &unit = QString());
+  OutlierMode      outlierMode() const { return m_outlierMode; }
+  /// "sigma 3", "jump 0.5 V", "limits 0 10 V", empty: shown (Windows/<graph>-outliers).
+  QString          outlierSetting() const;
+  void             setOutlierSetting(const QString &text);
+  /// Whether reading @p i of @p series is hidden.
+  bool             isOutlier(const RecordingSeries &series, int i) const;
+  /// Hidden readings of the curves drawn, in the window shown.
+  int              outliersHidden() const { return m_outliersHidden; }
+  static constexpr int kOutlierNeighbours = 25;
   /// Whether the line is drawn: in the scale, and its value (referenceId()) shown.
   bool             referenceShown() const;
   /// The reference as kept per window (Windows/graph-reference, the
@@ -1227,6 +1251,18 @@ protected:
   QString          axisMenuTitle(int side) const;
   /// Asks for the fixed range of the axis of @p unit.
   void             askFixedRange(const QString &unit);
+  /// A minimum and a maximum in @p unit, from @p r; false when cancelled.
+  bool             askMinMax(const QString &title, const QString &unit, std::pair<double, double> &r);
+  void             askOutliers(OutlierMode mode);
+  OutlierMode      m_outlierMode = OutliersShown;
+  double           m_outlierA = 3, m_outlierB = 0;
+  QString          m_outlierUnit;
+  int              m_outliersHidden = 0;
+  bool             m_outlierCountPending = false;   ///< countOutliers() comes, at most 4 times a second
+  void             countOutliers();
+  bool             laterOutlier(const RecordingSeries &series, int first) const;
+  /// statsOf()'s skip for @p series: its hidden outliers, nullptr while all are shown.
+  std::function<bool(int)> outlierSkip(const RecordingSeries &series) const;
   QMap<QString, std::pair<double, double>> m_fixedRanges;   ///< setFixedRange()
 
   void             resizeEvent(QResizeEvent *)Q_DECL_OVERRIDE;

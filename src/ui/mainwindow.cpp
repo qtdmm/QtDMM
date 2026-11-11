@@ -3387,6 +3387,7 @@ void MainWindow::applyGraphState(const GraphView *view, const WorkspaceGet &get,
     graph->setExtraReferences(lines);
   }
   graph->setCrossingsVisible(get(key + "-crossings", true).toBool());
+  graph->setOutlierSetting(get(key + "-outliers", QString()).toString());
   graph->setMinimapVisible(get(key + "-minimap", true).toBool());
   graph->setEnvelopeVisible(get(key + "-envelope", false).toBool());
   graph->setFixedRangesSetting(get(key + "-fixed-ranges", QString()).toString());
@@ -3452,6 +3453,7 @@ void MainWindow::storeGraphState(const GraphView *view, const WorkspaceSet &set)
     set(key + "-reference-lines", lines.join(' '));
   }
   set(key + "-crossings", graph->crossingsVisible());
+  set(key + "-outliers", graph->outlierSetting());
   set(key + "-minimap", graph->minimapVisible());
   set(key + "-envelope", graph->envelopeVisible());
   set(key + "-fixed-ranges", graph->fixedRangesSetting());
