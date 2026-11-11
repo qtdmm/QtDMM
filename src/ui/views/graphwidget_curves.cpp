@@ -621,7 +621,7 @@ Qt::PenStyle GraphWidget::valueStyle(int id)
 
 QPen GraphWidget::extraPen(int id) const
 {
-  return QPen(extraColor(id), qMax(1.0, m_lineWidth * 0.75), valueStyle(id), Qt::RoundCap, Qt::RoundJoin);
+  return QPen(extraColor(id), qMax(1.0, lineWidth() * 0.75), valueStyle(id), Qt::RoundCap, Qt::RoundJoin);
 }
 
 QString GraphWidget::legendText() const
@@ -672,7 +672,7 @@ void GraphWidget::updateLegend()
     return;
   }
   if (m_mainShown)
-    entries.prepend({ QPen(dataColor(), m_lineWidth, penStyle(m_lineMode)),
+    entries.prepend({ QPen(dataColor(), lineWidth(), penStyle(m_lineMode)),
                       nameForms(curveName(m_store->series(), m_store->unit()), m_store->unit()) });
   if (entries.isEmpty())
   {

@@ -87,7 +87,7 @@ The zoom shortcuts work anywhere in the main window; the plain keys
 | Double click on a flag | Edit its title and text |
 | Drag in the overview | Move the window; while live it pauses there, a click at the right end follows again |
 | Drag a bracket of the overview | Widen or narrow the window |
-| Right button, Shift+F10 or the menu key | Menu: connect, start/stop, Live, reset zoom, clear, note here or now, cursor A or B here, configure, copy image, colours, View (statistics, overview, min/max band, reference line, buttons), axes, time cursors, import/export; on a flag: edit note, remove mark. From the keyboard it opens where the mouse is over the graph, else in its middle |
+| Right button, Shift+F10 or the menu key | Menu: connect, start/stop, Live, reset zoom, clear, note here or now, cursor A or B here, configure, copy image, colours, View (statistics, overview, min/max band, meter states, patterned lines, reference line, buttons), axes, time cursors, import/export; on a flag: edit note, remove mark. From the keyboard it opens where the mouse is over the graph, else in its middle |
 
 ## Readings table
 

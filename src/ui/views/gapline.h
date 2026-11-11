@@ -40,6 +40,7 @@ public:
   QLineSeries *first() const { return m_segments.first(); }
 
   void setPen(const QPen &pen);
+  QPen pen() const { return m_pen; }
   void setVisible(bool on);
   /// The points also go to @p markers from the next replace() on; nullptr:
   /// none (the old ones are emptied).

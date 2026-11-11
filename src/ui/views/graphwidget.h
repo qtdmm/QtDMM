@@ -139,8 +139,12 @@ public:
     PhosphorGreen,   ///< green phosphor tube: one colour, 10 x 8 divisions
     PhosphorAmber,   ///< the same in amber
     ChartRecorder,   ///< paper and ink
+    ColourBlind,     ///< white paper, the Okabe-Ito hues: apart with red-green or blue-yellow weakness
+    HighContrast,    ///< black, white and pure hues, thicker lines
     Custom           ///< the colours from the settings page
   };
+  /// Every variant, in the order of the menu and the settings page.
+  static QList<ColorVariant> colorVariants();
 
   /// Entries of the context menu.
   enum PopupID
@@ -170,7 +174,8 @@ public:
     IDAxisFixed,     ///< property "unit": asks for its fixed range
     IDStats,         ///< the statistics beside the plot on or off
     IDViewButtons,   ///< the buttons beside the time buttons on or off
-    IDStates         ///< the strip of the meter's states on or off
+    IDStates,        ///< the strip of the meter's states on or off
+    IDPatterns       ///< patterned lines for the other meters' curves on or off
   };
 
   GraphWidget(QWidget *parent, Settings *settings);
@@ -291,6 +296,10 @@ public:
   /// first, kept with the graph.
   void             setStatesVisible(bool on);
   bool             statesVisible() const { return m_statesOn; }
+  /// Each curve of another meter dashed in a pattern of its own, so the
+  /// curves are told apart without their colours (View, Patterned lines).
+  void             setPatternedLines(bool on);
+  bool             patternedLines() const { return m_patternsOn; }
   /// The states in the window as text, "HOLD 5.0-10.0 | OL 12.0-13.0"
   /// (seconds; for the tests), empty without any or while off.
   QString          statesText() const;
@@ -453,6 +462,7 @@ public:
   int              otherCurveSide(int i) const { return m_otherCurves[size_t(i)].side; }
   /// The points of curve @p i as drawn, in this store's seconds.
   QList<QPointF>   otherCurvePoints(int i) const { return m_otherCurves[size_t(i)].points; }
+  QPen             otherCurvePen(int i) const { return m_otherCurves[size_t(i)].line->pen(); }
   /// @}
   bool             mainShown() const { return m_mainShown; }
 
@@ -750,6 +760,8 @@ protected:
   QColor           m_intColor;
   QColor           m_intThresholdColor;
   int              m_lineWidth;
+  /// The width of the main curve: m_lineWidth, thicker in HighContrast.
+  double           lineWidth() const;
   int              m_intLineWidth;
   bool             m_alertUnsaved;
   bool             m_crosshair;
@@ -863,6 +875,7 @@ protected:
   GraphLegend     *m_legend = nullptr;
   GraphStateStrip *m_stateStrip = nullptr;
   bool             m_statesOn = true;
+  bool             m_patternsOn = false;
   /// A state of the left axis' value from @p from to @p to (ms).
   struct StateSpan
   {

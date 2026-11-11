@@ -234,7 +234,7 @@ void GraphWidget::showMenu(const QPoint &pos, const QPoint &globalPos)
   };
   variant(tr("&Default: %1").arg(variantTitle(m_defaultVariant)), -1);
   colours->addSeparator();
-  for (ColorVariant v : { Neutral, ScopeBlue, PhosphorGreen, PhosphorAmber, ChartRecorder, Custom })
+  for (ColorVariant v : colorVariants())
     variant(variantTitle(v), v);
 
   // where the reference line stands (it can also be dragged)
@@ -256,6 +256,7 @@ void GraphWidget::showMenu(const QPoint &pos, const QPoint &globalPos)
   toggle(tr("Over&view"), IDMinimap, m_minimapOn);
   toggle(tr("Min/max &band"), IDEnvelope, m_envelopeOn);
   toggle(tr("Meter st&ates"), IDStates, m_statesOn);
+  toggle(tr("&Patterned lines"), IDPatterns, m_patternsOn);
   fillReferenceMenu(view->addMenu(tr("&Reference line")));
   view->addSeparator();
   toggle(tr("Bu&ttons"), IDViewButtons, m_viewButtonsOn);
@@ -588,6 +589,9 @@ void GraphWidget::popupSLOT(QAction *action)
       break;
     case IDStates:
       setStatesVisible(action->isChecked());
+      break;
+    case IDPatterns:
+      setPatternedLines(action->isChecked());
       break;
     case IDAxisAuto:
       clearFixedRange(action->property("unit").toString());

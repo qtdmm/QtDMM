@@ -1173,8 +1173,8 @@ int main(int argc, char **argv)
           QString("fixed 49.5..50.5 Hz: 49.4 in 0.2, got %1 in %2").arg(grid(49.5, 50.5).first).arg(grid(49.5, 50.5).second));
     check(grid(0, 80) == std::pair(0.0, 10.0) && grid(0, 1000) == std::pair(0.0, 150.0) && grid(-10, 10) == std::pair(-12.0, 3.0),
           QString("fixed 0..80: 10; 0..1000: 150; -10..10: -12 in 3, got %1 in %2").arg(grid(-10, 10).first).arg(grid(-10, 10).second));
-    for (auto v : { GraphWidget::Neutral, GraphWidget::ScopeBlue, GraphWidget::PhosphorGreen, GraphWidget::PhosphorAmber,
-                    GraphWidget::ChartRecorder, GraphWidget::Custom })
+    check(GraphWidget::colorVariants().size() == GraphWidget::Custom + 1, "every variant in the list");
+    for (auto v : GraphWidget::colorVariants())
       check(GraphWidget::variantFromName(GraphWidget::variantName(v)) == v, "variant name round-trip " + GraphWidget::variantName(v));
     check(GraphWidget::variantFromName("nonsense") == GraphWidget::Neutral, "unknown variant is neutral");
 
@@ -1193,6 +1193,23 @@ int main(int argc, char **argv)
     graph.setColorVariant(GraphWidget::Custom);   // the default, no override
     check(graph.colorVariant() == GraphWidget::Custom && graph.colorOverride() == -1, "default without override");
     check(yAxis->tickCount() == 5 && qFuzzyCompare(yAxis->max(), 11.7), "custom goes back to the plain scale");
+    // the accessible ones: the plain scale, their own background, thicker
+    // lines in high contrast
+    auto *chart = graph.findChild<QChartView *>()->chart();
+    auto *dataLine = qobject_cast<QLineSeries *>(chart->series().first());
+    // the settings' defaults: a blue curve gives way to the variant's
+    graph.setColors(Qt::white, Qt::gray, Qt::blue, Qt::black, Qt::magenta, Qt::darkBlue, Qt::darkBlue);
+    const qreal plainWidth = dataLine ? dataLine->pen().widthF() : 0;
+    graph.setColorVariant(GraphWidget::Neutral, GraphWidget::ColourBlind);
+    check(yAxis->tickCount() == 5 && chart->backgroundBrush().color() == QColor(Qt::white)
+            && graph.valueColor(0) == QColor("#0072b2"),
+          QString("colour-blind safe: plain scale, white, the curve Okabe-Ito blue; got %1 ticks, %2, %3")
+            .arg(yAxis->tickCount()).arg(chart->backgroundBrush().color().name(), graph.valueColor(0).name()));
+    graph.setColorVariant(GraphWidget::Neutral, GraphWidget::HighContrast);
+    check(yAxis->tickCount() == 5 && chart->backgroundBrush().color() == QColor(Qt::black)
+            && graph.valueColor(0) == QColor(Qt::white) && dataLine && dataLine->pen().widthF() > plainWidth,
+          QString("high contrast: black, a white curve, thicker (%1 > %2); got %3, %4").arg(dataLine ? dataLine->pen().widthF() : 0)
+            .arg(plainWidth).arg(chart->backgroundBrush().color().name(), graph.valueColor(0).name()));
   }
 
   // --- 7d. the time axis: whole time steps, labelled in s, min or h; the
@@ -1881,7 +1898,8 @@ int main(int argc, char **argv)
           for (QAction *a : view->menu()->actions())
             if (!a->isSeparator())
               inView << a->text();
-        check(inView == QStringList({ "&Statistics", "Over&view", "Min/max &band", "Meter st&ates", "&Reference line", "Bu&ttons" })
+        check(inView == QStringList({ "&Statistics", "Over&view", "Min/max &band", "Meter st&ates", "&Patterned lines",
+                                      "&Reference line", "Bu&ttons" })
                 && !entry("Over&view") && !entry("&Statistics"),
               "menu: View holds statistics, overview, band, reference line, buttons: " + inView.join(", "));
       }
@@ -2328,6 +2346,30 @@ int main(int argc, char **argv)
     check(!amps.isEmpty() && qAbs(amps.first().x() - 2.0) < 0.15,
           QString("its time: from 2 s on, %1").arg(amps.isEmpty() ? -1 : amps.first().x()));
     check(graph.legendText().contains("Sim B"), "its name in the legend: " + graph.legendText());
+    // patterned lines: each curve of the other meter a dash pattern of its
+    // own; off, the value's style again
+    {
+      const Qt::PenStyle before = graph.otherCurvePen(0).style();
+      graph.setPatternedLines(true);
+      const QPen p0 = graph.otherCurvePen(0), p1 = graph.otherCurvePen(1);
+      check(p0.style() == Qt::CustomDashLine && p1.style() == Qt::CustomDashLine
+              && p0.dashPattern() != p1.dashPattern(),
+            "patterned lines: two patterns of their own");
+      // pictures to look at: QTDMM_SHOT=<dir>
+      if (qEnvironmentVariableIsSet("QTDMM_SHOT"))
+      {
+        graph.setColors(Qt::white, Qt::gray, Qt::blue, Qt::black, Qt::magenta, Qt::darkBlue, Qt::darkBlue);
+        for (auto v : { GraphWidget::ColourBlind, GraphWidget::HighContrast })
+        {
+          graph.setColorVariant(v);
+          QTest::qWait(50);
+          graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/graph_patterns_" + GraphWidget::variantName(v) + ".png");
+        }
+        graph.setColorVariant(GraphWidget::Neutral);
+      }
+      graph.setPatternedLines(false);
+      check(graph.otherCurvePen(0).style() == before && before == Qt::SolidLine, "patterned lines off: solid again");
+    }
     // the statistics: the other meter's curves too, under their names, on their own time
     {
       graph.setTimeCursor(0, 3000);
