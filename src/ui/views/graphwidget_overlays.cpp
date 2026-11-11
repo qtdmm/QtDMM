@@ -367,7 +367,7 @@ RecordingStore::Stats GraphWidget::windowStats() const
   // the reference's series at the end of the window
   const qint64 from = qRound64(m_xAxis->min() * 1000), to = qRound64(m_xAxis->max() * 1000);
   const RefSeries r = refSeries(qMin(to, m_store->duration()));
-  return r.series ? r.store->statsOf(*r.series, from - r.shift, to - r.shift) : RecordingStore::Stats();
+  return r.series ? r.store->statsOf(*r.series, from - r.shift, to - r.shift, outlierSkip(*r.series)) : RecordingStore::Stats();
 }
 
 void GraphWidget::setReference(ReferenceKind kind, double value)
@@ -995,7 +995,10 @@ QString GraphWidget::statsHtml() const
   };
   // a curve's value at a time of this graph, its statistics between two
   auto at = [this](const StatCurve &c, qint64 t) { return valueAt(c.series, t - c.shift, c.store); };
-  auto between = [](const StatCurve &c, qint64 from, qint64 to) { return c.store->statsOf(*c.series, from - c.shift, to - c.shift); };
+  auto between = [this](const StatCurve &c, qint64 from, qint64 to)
+  {
+    return c.store->statsOf(*c.series, from - c.shift, to - c.shift, outlierSkip(*c.series));
+  };
   // a row: the number in full, its name cut to what the column leaves; the
   // widest row says how wide the column wants to be (layoutParts())
   const QFontMetrics fm = m_statsLabel ? m_statsLabel->fontMetrics() : fontMetrics();
@@ -1072,7 +1075,9 @@ QString GraphWidget::statsHtml() const
   // the window shown
   const qint64 from = windowStart();
   const qint64 to = from + qint64(m_windowSeconds) * 1000;
-  html += title(tr("Shown") + QStringLiteral("   ") + spanText(to - from));
+  html += title(tr("Shown") + QStringLiteral("   ") + spanText(to - from)
+                + (m_outliersHidden > 0 ? QStringLiteral("   ") + tr("without %n outlier(s)", nullptr, m_outliersHidden)
+                                        : QString()));
   rows.clear();
   for (const StatCurve &curve : statCurves(qMin(to, m_store->duration())))
   {
@@ -1088,4 +1093,130 @@ QString GraphWidget::statsHtml() const
   html += table(rows);
   m_statsWant = want;
   return html;
+}
+
+// --- outliers: hidden in the drawing and the statistics, kept recorded ---
+
+std::function<bool(int)> GraphWidget::outlierSkip(const RecordingSeries &series) const
+{
+  if (m_outlierMode == OutliersShown)
+    return nullptr;
+  return [this, &series](int i) { return isOutlier(series, i); };
+}
+
+bool GraphWidget::isOutlier(const RecordingSeries &s, int i) const
+{
+  if (m_outlierMode == OutliersShown || i < 0 || i >= s.count())
+    return false;
+  const double v = s.at(i).value;
+  if (!std::isfinite(v))
+    return false;
+  // a jump or limits are in a unit: other units' curves stay as they are
+  // (the main series learns its unit with a known quantity: else the store's)
+  const QString unit = !s.unit.isEmpty() || &s != &m_store->series() ? s.unit : m_store->unit();
+  if (m_outlierMode != OutliersSigma && unit != m_outlierUnit)
+    return false;
+  switch (m_outlierMode)
+  {
+    case OutliersLimits:
+      return v < m_outlierA || v > m_outlierB;
+    case OutliersJump:
+    {
+      // a spike: away from the reading before and the one after, the same
+      // way; a step to another level is away from one side only
+      int before = i - 1, after = i + 1;
+      while (before >= 0 && !std::isfinite(s.at(before).value))
+        before--;
+      while (after < s.count() && !std::isfinite(s.at(after).value))
+        after++;
+      if (before < 0 || after >= s.count())
+        return false;
+      const double up = v - s.at(before).value, down = v - s.at(after).value;
+      return std::abs(up) > m_outlierA && std::abs(down) > m_outlierA && (up > 0) == (down > 0);
+    }
+    case OutliersSigma:
+    {
+      // its neighbours, without it: the mean and the spread there. Not the
+      // window's - a drifting value would hide its ends, and Live would
+      // draw every curve anew at each reading
+      double sum = 0, sum2 = 0;
+      int n = 0;
+      const int from = qMax(0, i - kOutlierNeighbours), to = qMin(s.count() - 1, i + kOutlierNeighbours);
+      const double ref = v;   // differences, not large values squared
+      for (int j = from; j <= to; ++j)
+        if (const double w = s.at(j).value; j != i && std::isfinite(w))
+        {
+          sum += w - ref;
+          sum2 += (w - ref) * (w - ref);
+          n++;
+        }
+      if (n < 10)
+        return false;
+      const double mean = sum / n;
+      const double sigma = std::sqrt(qMax(0.0, sum2 / n - mean * mean));
+      // mean is the neighbours' mean less v: |v - their mean| = |mean|
+      return std::abs(mean) > m_outlierA * sigma && std::abs(mean) > 1e-12 * qMax(1.0, std::abs(v));
+    }
+    case OutliersShown:
+      break;
+  }
+  return false;
+}
+
+void GraphWidget::setOutliers(OutlierMode mode, double a, double b, const QString &unit)
+{
+  m_outlierMode = mode;
+  m_outlierA = mode == OutliersShown ? 3 : a;
+  m_outlierB = b;
+  m_outlierUnit = mode == OutliersJump || mode == OutliersLimits ? unit : QString();
+  rebuildSeries();   // every curve, the band, the crossings
+  countOutliers();
+  scheduleStats();
+}
+
+QString GraphWidget::outlierSetting() const
+{
+  const QString unit = m_outlierUnit.isEmpty() ? QString() : ' ' + m_outlierUnit;
+  switch (m_outlierMode)
+  {
+    case OutliersSigma:  return QString("sigma %1").arg(m_outlierA, 0, 'g', 12);
+    case OutliersJump:   return QString("jump %1").arg(m_outlierA, 0, 'g', 12) + unit;
+    case OutliersLimits: return QString("limits %1 %2").arg(m_outlierA, 0, 'g', 12).arg(m_outlierB, 0, 'g', 12) + unit;
+    case OutliersShown:  break;
+  }
+  return QString();
+}
+
+void GraphWidget::setOutlierSetting(const QString &text)
+{
+  const QStringList p = text.split(' ', Qt::SkipEmptyParts);
+  bool okA = false, okB = false;
+  const double a = p.value(1).toDouble(&okA), b = p.value(2).toDouble(&okB);
+  if (p.value(0) == QLatin1String("sigma") && okA && a > 0)
+    setOutliers(OutliersSigma, a);
+  else if (p.value(0) == QLatin1String("jump") && okA && a > 0)
+    setOutliers(OutliersJump, a, 0, p.value(2));
+  else if (p.value(0) == QLatin1String("limits") && okA && okB && b > a)
+    setOutliers(OutliersLimits, a, b, p.value(3));
+  else if (m_outlierMode != OutliersShown)
+    setOutliers(OutliersShown);
+}
+
+void GraphWidget::countOutliers()
+{
+  int n = 0;
+  if (m_outlierMode != OutliersShown)
+  {
+    const qint64 from = qRound64(m_xAxis->min() * 1000), to = qRound64(m_xAxis->max() * 1000);
+    for (const StatCurve &c : statCurves(qMin(to, m_store->duration())))
+      for (int i = qMax(0, c.series->lowerBound(from - c.shift)), end = c.series->lowerBound(to - c.shift + 1);
+           i < end && i < c.series->count(); ++i)
+        n += isOutlier(*c.series, i) ? 1 : 0;
+  }
+  if (n != m_outliersHidden)
+  {
+    m_outliersHidden = n;
+    updateStateLabel();
+    scheduleStats();
+  }
 }

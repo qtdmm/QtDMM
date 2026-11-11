@@ -63,7 +63,8 @@ qint64 RecordingStore::duration() const
   return m_series.isEmpty() ? 0 : m_series.last().t;
 }
 
-RecordingStore::Stats RecordingStore::statsOf(const RecordingSeries &series, qint64 from, qint64 to) const
+RecordingStore::Stats RecordingStore::statsOf(const RecordingSeries &series, qint64 from, qint64 to,
+                                              const std::function<bool(int)> &skip) const
 {
   Stats st;
   if (from > to)
@@ -104,7 +105,7 @@ RecordingStore::Stats RecordingStore::statsOf(const RecordingSeries &series, qin
       end = qMin(to, i + 1 < n ? series.at(i + 1).t : duration());
       counts = loaded && i == n - 1 && p.t >= from;
     }
-    if (p.gap() || (end <= begin && !counts))
+    if (p.gap() || (end <= begin && !counts) || (skip && skip(i)))
       continue;
     st.count++;
     st.min = st.count == 1 ? p.value : qMin(st.min, p.value);

@@ -54,6 +54,15 @@ void GraphWidget::updateEnvelope()
 {
   updateDenseBands();
   updateCrossings();   // new readings, another window
+  if (m_outlierMode != OutliersShown && !m_outlierCountPending)
+  {
+    m_outlierCountPending = true;
+    QTimer::singleShot(250, this, [this]
+    {
+      m_outlierCountPending = false;
+      countOutliers();
+    });
+  }
   const QPainterPath path = m_envelopeOn ? columnBand(referencePoints(), m_yAxis->min(), m_yAxis->max(),
                                                       kEnvelopeColumns)
                                          : QPainterPath();
@@ -265,10 +274,17 @@ int GraphWidget::pointsOf(const RecordingSeries &series, int first, int last, bo
     return integral ? m_integrationOffset + p.integral * m_integrationScale : p.value;
   };
   auto x = [&](int i) { return series.at(i).t / 1000.0; };
-  while (first <= last && std::isnan(value(first)))
-    first++;
+  // hidden outliers are passed over: the line runs from the reading before
+  // to the one after them, no gap
+  const bool hide = !integral && m_outlierMode != OutliersShown;
+  auto hidden = [&](int i) { return hide && isOutlier(series, i); };
+  bool gap = false;
+  while (first <= last && (std::isnan(value(first)) || hidden(first)))
+    gap = std::isnan(value(first++)) || gap;
   if (first > last)
   {
+    if (!gap)
+      return 0;   // only hidden readings
     out.append(QPointF(x(last), qQNaN()));
     return 1;
   }
@@ -277,7 +293,7 @@ int GraphWidget::pointsOf(const RecordingSeries &series, int first, int last, bo
   for (int i = first + 1; i <= last; i++)
   {
     const double v = value(i);
-    if (std::isnan(v))
+    if (std::isnan(v) || hidden(i))
       continue;
     if (v < loValue)
     {
@@ -357,6 +373,11 @@ void GraphWidget::appendToSeries()
   const int count = m_store->count();
   const int first = bucketStart(count - 1);
   const bool filling = first != count - 1;
+  if (laterOutlier(m_store->series(), first))
+  {
+    rebuildSeries();
+    return;
+  }
   if (filling)
   {
     m_dataLine->removeLast(m_tailData);
@@ -368,6 +389,16 @@ void GraphWidget::appendToSeries()
   m_curvePts.append(points);
   if (m_intValueId == 0 && m_showIntegration)   // else onExtraAppended()
     appendIntegral(m_store->series(), first, count - 1, filling);
+}
+
+// A spike is one only with the reading after it (and a reading's
+// neighbours grow): the reading before the newest, drawn already in a bucket
+// before @p first, is an outlier now - the curve is drawn anew. Rare: only
+// when one turns up.
+bool GraphWidget::laterOutlier(const RecordingSeries &series, int first) const
+{
+  const int before = series.count() - 2;
+  return m_outlierMode != OutliersShown && before >= 0 && before < first && isOutlier(series, before);
 }
 
 // The integral's points of readings first..last of @p series, in place of
@@ -632,6 +663,11 @@ void GraphWidget::onExtraAppended(int i)
     const double v = s.last().value;
     if (c.side > 0 && s.id == m_intValueId && std::isfinite(v) && growSide(c.side, v))
       updateRightAxis();
+    return;
+  }
+  if (laterOutlier(s, first))
+  {
+    rebuildExtras();
     return;
   }
   if (first != count - 1)

@@ -270,6 +270,26 @@ were; the integration curve carries on across a gap.
   count once. A line on the mean, minimum or maximum gets none - a noisy
   curve crosses its mean at every other reading. **View → Crossings**
   switches the marks off; kept with the window layout.
+- **Outliers:** **View → Outliers** leaves single wrong readings out of the
+  drawing - a contact that bounced, a spike from a motor starting. The
+  recording, its export and the readings table keep them; the line runs
+  from the reading before to the one after.
+  - **More than n σ from their neighbours...**: a reading further from the
+    mean of the 25 readings on each side of it than n times their
+    standard deviation (n = 3 at first). Neighbours rather than the whole
+    window: a drifting value keeps its ends, and Live need not draw
+    everything anew with each reading.
+  - **Spikes larger than...**: a reading further than the given amount
+    from both the reading before and the one after it, the same way. A
+    step to another level is away from one side only and stays; the
+    newest reading shows until the next one comes.
+  - **Outside limits...**: below a minimum or above a maximum.
+
+  Spikes and limits are in the unit of the left axis and leave curves in
+  other units alone; σ applies to every curve. The statistics leave the
+  hidden readings out too (`Shown 28 s without 2 outliers`), and the top
+  left of the plot says how many are hidden in the window. **Show all**
+  draws them again; the choice is kept with the window layout.
 - **Time cursors:** a click into the graph sets cursor **A**, Shift+click
   cursor **B** (or **Cursor A here** / **Cursor B here** in the right-click
   menu); drag them to move them, Esc or **Remove time cursors** in

@@ -243,7 +243,9 @@ public:
   Stats       stats(qint64 from, qint64 to) const { return statsOf(m_series, from, to); }
   /// stats() of @p series: the main one or one of extra(), on the same time
   /// axis.
-  Stats       statsOf(const RecordingSeries &series, qint64 from, qint64 to) const;
+  /// Readings @p skip names (by index) count as gaps: a graph's hidden outliers.
+  Stats       statsOf(const RecordingSeries &series, qint64 from, qint64 to,
+                      const std::function<bool(int)> &skip = nullptr) const;
   /// When the recording started (for an import: the file's first time stamp;
   /// in Live: when the live window started).
   QDateTime   startDateTime() const { return m_start; }

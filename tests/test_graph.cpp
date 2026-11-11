@@ -1900,7 +1900,7 @@ int main(int argc, char **argv)
             if (!a->isSeparator())
               inView << a->text();
         check(inView == QStringList({ "&Statistics", "Over&view", "Min/max &band", "Meter st&ates", "&Patterned lines",
-                                      "Cr&ossings", "&Reference line", "Bu&ttons" })
+                                      "Cr&ossings", "O&utliers", "&Reference line", "Bu&ttons" })
                 && !entry("Over&view") && !entry("&Statistics"),
               "menu: View holds statistics, overview, band, reference line, buttons: " + inView.join(", "));
       }
@@ -2847,6 +2847,89 @@ int main(int argc, char **argv)
           QString("lines: dragged to %1, crossed %2 times").arg(graph.extraReferences().value(1)).arg(graph.crossingCount(1)));
     if (qEnvironmentVariableIsSet("QTDMM_SHOT"))
       graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/graph_reference_lines.png");
+  }
+
+  // --- 7l10. outliers hidden in the drawing and the statistics, kept in
+  //            the recording: by σ from their neighbours, as spikes, outside
+  //            limits; a step to another level stays ---
+  {
+    Settings cfg("outliers", tmpDir.path());
+    GraphWidget graph(nullptr, &cfg);
+    graph.resize(800, 500);
+    graph.setUnit("V");
+    graph.show();
+    QTest::qWait(50);
+    graph.setGraphSize(30);
+    Feed feed(graph);
+    graph.liveSLOT();
+    for (int i = 0; i < 250; ++i)
+      feed.value(i == 50 ? 5.0 : i == 120 ? -3.0 : (i < 150 ? 1.0 : 2.0) + (i % 2) * 0.01);
+    QTest::qWait(100);
+    auto *line = qobject_cast<QXYSeries *>(graph.findChild<QChartView *>()->chart()->series().first());
+    auto range = [&]
+    {
+      double lo = qInf(), hi = -qInf();
+      for (const QPointF &p : line->points())
+        if (std::isfinite(p.y()))
+        {
+          lo = qMin(lo, p.y());
+          hi = qMax(hi, p.y());
+        }
+      return std::pair{ lo, hi };
+    };
+    check(range().first == -3.0 && range().second == 5.0, "outliers: all drawn at first");
+    const RecordingSeries &series = graph.store()->series();
+    for (auto [mode, a, b, what] : { std::tuple{ GraphWidget::OutliersSigma, 3.0, 0.0, "3 sigma" },
+                                     std::tuple{ GraphWidget::OutliersJump, 1.0, 0.0, "spikes over 1 V" },
+                                     std::tuple{ GraphWidget::OutliersLimits, 0.0, 3.0, "outside 0 .. 3 V" } })
+    {
+      graph.setOutliers(mode, a, b, "V");
+      const auto [lo, hi] = range();
+      check(lo >= 0.99 && lo < 1.01 && hi > 2.0 && hi < 2.02 && graph.outliersHidden() == 2,
+            QString("outliers %1: the spikes go, the step stays: %2 .. %3, %4 hidden").arg(what).arg(lo).arg(hi)
+              .arg(graph.outliersHidden()));
+      check(graph.isOutlier(series, 50) && graph.isOutlier(series, 120) && !graph.isOutlier(series, 150)
+              && !graph.isOutlier(series, 149), QString("outliers %1: readings 50 and 120").arg(what));
+      graph.setReference(GraphWidget::RefMax);
+      check(graph.referenceValue() < 2.1, QString("outliers %1: the window's maximum without them, %2").arg(what)
+            .arg(graph.referenceValue()));
+    }
+    check(graph.store()->series().count() == 250 && graph.store()->series().at(50).value == 5.0,
+          "outliers: the recording keeps them");
+    graph.setStatsVisible(true);
+    check(graph.statsText().contains("without 2 outlier"), "outliers: the statistics say so: " + graph.statsText().left(120));
+    graph.setStatsVisible(false);
+    // Jump and Limits leave other units alone
+    graph.setOutliers(GraphWidget::OutliersLimits, 0, 3, "A");
+    check(graph.outliersHidden() == 0 && range().second == 5.0, "outliers: limits in A leave a V curve alone");
+    // kept per window as text
+    graph.setOutliers(GraphWidget::OutliersJump, 1.0, 0, "V");
+    const QString kept = graph.outlierSetting();
+    graph.setOutliers(GraphWidget::OutliersShown);
+    check(range().second == 5.0 && graph.outliersHidden() == 0 && graph.outlierSetting().isEmpty(), "outliers: shown again");
+    graph.setOutlierSetting(kept);
+    check(kept == "jump 1 V" && graph.outlierMode() == GraphWidget::OutliersJump && graph.outliersHidden() == 2,
+          "outliers: the setting read back: " + kept);
+    graph.setOutlierSetting("limits 0 3 V");
+    check(graph.outlierMode() == GraphWidget::OutliersLimits && graph.outliersHidden() == 2, "outliers: limits from text");
+    // Live: a spike is one only with the reading after it; drawn already,
+    // it goes then
+    graph.setOutliers(GraphWidget::OutliersJump, 1.0, 0, "V");
+    feed.value(7.0);
+    QTest::qWait(50);
+    check(range().second == 7.0, "outliers live: the newest reading shows");
+    feed.value(2.0);
+    QTest::qWait(50);
+    check(range().second < 2.1, QString("outliers live: with the next one the spike goes, max %1").arg(range().second));
+    if (qEnvironmentVariableIsSet("QTDMM_SHOT"))
+    {
+      graph.setOutliers(GraphWidget::OutliersShown);
+      QTest::qWait(50);
+      graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/graph_outliers_shown.png");
+      graph.setOutliers(GraphWidget::OutliersSigma, 3);
+      QTest::qWait(300);
+      graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/graph_outliers_hidden.png");
+    }
   }
 
   // --- 7m0. a second value through the adapter, as a meter sends it: a
