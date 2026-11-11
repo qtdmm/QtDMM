@@ -118,7 +118,11 @@ int main(int argc, char **argv)
   check(states.size() == before, "no state changes after close()");
 
   // --- 5. nobody listening -> Error with the socket's reason ---
-  const quint16 deadPort = server.serverPort();
+  // port 1 (tcpmux): privileged and unused. Not the port of the server
+  // closed here: ctest runs in parallel, and another test's server may take
+  // it the moment it is free - the connect is accepted, no frame comes, and
+  // the link ends in Timeout instead of Error (seen on FreeBSD)
+  const quint16 deadPort = 1;
   server.close();
   MeterConnection refused(nullptr);
   refused.setDmmInfo(info);
