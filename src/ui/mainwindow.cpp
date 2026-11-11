@@ -3617,7 +3617,7 @@ void MainWindow::exportDialog(int view)
   switch (dlg.what())
   {
     case ExportDlg::Recording:
-      ok = m_wid->writeRecordingTo(path, dlg.everyReading());   // says why itself
+      ok = m_wid->writeRecordingTo(path, dlg.everyReading(), dlg.graphValuesOnly());   // says why itself
       break;
     case ExportDlg::Table:
       ok = m_readings->log()->writeAny(path, &error);

@@ -448,11 +448,13 @@ QString MeterController::saveRecording(const QString &name, bool raw)
 }
 
 void MeterController::recordingSources(QList<int> &extras, QList<RecordingStore::Foreign> &foreign,
-                                       QJsonArray &devices) const
+                                       QJsonArray &devices, const QList<ValueRef> &only) const
 {
+  auto wanted = [&only](const QString &source, int id) { return only.isEmpty() || only.contains(ValueRef(id, source)); };
   for (int i = 0; i < m_recorder->extraCount(); ++i)
-    extras << i;
-  // all values of the meters that recorded with it
+    if (wanted(source(), m_recorder->extra(i).id))
+      extras << i;
+  // all values of the meters that recorded with it (or the ones asked for)
   devices << recordingInfo();
   for (MeterController *other : m_recordedWith ? m_recordedWith() : QList<MeterController *>())
   {
@@ -461,18 +463,24 @@ void MeterController::recordingSources(QList<int> &extras, QList<RecordingStore:
     for (int i = 0; i < store->extraCount(); ++i)
       if (!ids.contains(store->extra(i).id))
         ids << store->extra(i).id;
+    bool any = false;
     for (int id : std::as_const(ids))
-      foreign << RecordingStore::Foreign{ store, id, other->deviceName() };
-    devices << other->recordingInfo();
+      if (wanted(other->source(), id))
+      {
+        foreign << RecordingStore::Foreign{ store, id, other->deviceName() };
+        any = true;
+      }
+    if (any)
+      devices << other->recordingInfo();
   }
 }
 
-bool MeterController::writeRecording(const QString &path, bool raw, QString *error)
+bool MeterController::writeRecording(const QString &path, bool raw, QString *error, const QList<ValueRef> &only)
 {
   QList<int> extras;
   QList<RecordingStore::Foreign> foreign;
   QJsonArray devices;
-  recordingSources(extras, foreign, devices);
+  recordingSources(extras, foreign, devices, only);
   return m_recorder->write(path, error, raw, extras, foreign, m_deviceName, QJsonObject{ { "devices", devices } });
 }
 

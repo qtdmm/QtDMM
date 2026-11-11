@@ -13,6 +13,7 @@
 #include <optional>
 
 #include "core/minmaxmemory.h"
+#include "core/valueref.h"
 #include "core/alarm.h"
 #include "core/limittest.h"
 #include "core/readingadapter.h"
@@ -73,7 +74,12 @@ public:
   QString     saveRecording(const QString &name, bool raw);
   /// Writes the recording with all values of this meter and of those that
   /// recorded with it to @p path (CSV, .xlsx, .ods); they count as saved then.
-  bool        writeRecording(const QString &path, bool raw, QString *error = nullptr);
+  /// The recording to @p path. @p only: the values to write (a graph's,
+  /// ValueRef by source and id), empty: all of this meter's and of the meters
+  /// that recorded with it. The main value is the file's time base and is
+  /// always written.
+  bool        writeRecording(const QString &path, bool raw, QString *error = nullptr,
+                             const QList<ValueRef> &only = {});
   /// The same recording as writeRecording() writes it, on the grid, without
   /// writing it (LabPlotLive follows it); not saved by that.
   Recording   recording() const;
@@ -260,7 +266,8 @@ Q_SIGNALS:
 private:
   /// The values writeRecording() takes: this meter's other values, those of
   /// the meters that recorded with it, and meta.json's "devices".
-  void        recordingSources(QList<int> &extras, QList<RecordingStore::Foreign> &foreign, QJsonArray &devices) const;
+  void        recordingSources(QList<int> &extras, QList<RecordingStore::Foreign> &foreign, QJsonArray &devices,
+                               const QList<ValueRef> &only = {}) const;
   /// valueMinMaxChanged() with the memory of value @p id as it is.
   void        emitValueMinMax(int id);
   void        responseSLOT(const DmmDecoder::DmmResponse &response);

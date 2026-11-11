@@ -484,12 +484,12 @@ void InstanceWidget::zoomedSLOT()
   m_current->graph()->setGraphSize(m_configDlg->graphPage()->windowSeconds());
 }
 
-bool InstanceWidget::writeRecordingTo(const QString &file, bool everyReading)
+bool InstanceWidget::writeRecordingTo(const QString &file, bool everyReading, bool graphOnly)
 {
   QString err;
   if (QPointer<MeterController> lead = m_current->recordingLead())
   {
-    if (lead->writeRecording(file, everyReading, &err))
+    if (lead->writeRecording(file, everyReading, &err, graphOnly ? graph()->values() : QList<ValueRef>()))
       return true;
   }
   else if (graph()->store()->count() <= 0)

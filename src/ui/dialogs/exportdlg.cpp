@@ -57,6 +57,15 @@ ExportDlg::ExportDlg(What what, const QString &basket, Settings *cfg, QWidget *p
   form->addRow(tr("&What:"), m_what);
   m_format = new QComboBox(this);
   form->addRow(tr("&Format:"), m_format);
+  // the recording: every device's values, or the graph's only
+  m_values = new QComboBox(this);
+  m_values->setObjectName("ui_exportValues");
+  m_values->addItem(tr("All devices"), QStringLiteral("all"));
+  m_values->addItem(tr("The values of this graph"), QStringLiteral("graph"));
+  m_values->setToolTip(tr("This graph: the one used last. The main value of the recording is its time base and is "
+                          "always written"));
+  m_values->setCurrentIndex(qMax(0, m_values->findData(m_cfg->getString("Export/values", "all"))));
+  form->addRow(tr("&Values:"), m_values);
 
   m_toBasket = new QRadioButton(tr("Into the &project"), this);
   m_toBasket->setEnabled(!basket.isEmpty());
@@ -106,9 +115,11 @@ ExportDlg::ExportDlg(What what, const QString &basket, Settings *cfg, QWidget *p
   m_labPlot->setChecked(what == Recording && m_cfg->getBool("Export/labplot", false)
                         && format() == QLatin1String(RecordingFile::kLabPlotProjectSuffix));
   m_labPlot->setEnabled(what == Recording);
+  m_values->setEnabled(what == Recording);
   connect(m_what, &QComboBox::currentIndexChanged, this, [this]
   {
     m_labPlot->setEnabled(this->what() == Recording);
+    m_values->setEnabled(this->what() == Recording);
     if (this->what() != Recording)
       m_labPlot->setChecked(false);
   });
@@ -190,9 +201,16 @@ void ExportDlg::accept()
   m_cfg->setString(QString("Export/format-%1").arg(int(what())), m_format->currentData().toString());
   m_cfg->setBool("Export/to-basket", toBasket());
   if (what() == Recording)
+    m_cfg->setString("Export/values", m_values->currentData().toString());
+  if (what() == Recording)
     m_cfg->setBool("Export/labplot", openInLabPlot());
   if (!toBasket())
     m_cfg->setString("Export/dir", QFileInfo(file()).absolutePath());
   m_cfg->save();   // set only stages it, get reads the file
   QDialog::accept();
+}
+
+bool ExportDlg::graphValuesOnly() const
+{
+  return what() == Recording && m_values->currentData().toString() == QLatin1String("graph");
 }

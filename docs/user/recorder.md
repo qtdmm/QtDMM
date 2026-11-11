@@ -434,8 +434,12 @@ only; *Default* goes back to the setting.
 readings table) asks in one dialog what to export - the recording, the
 readings table or a picture of the graph -, in which format, and where to:
 a file, or the open [project](project-basket.md) with a name made of
-date, time and device. It keeps the last choice. The formats of the
-recording:
+date, time and device. It keeps the last choice. For the recording,
+**Values** chooses **All devices** (the default: every value of every
+meter that recorded) or **The values of this graph** - the curves of the
+graph used last, with several graphs the one you clicked or zoomed last.
+The main value of the recording is its time base and is always written.
+The formats of the recording:
 
 - **QtDMM recording** (`.qtdmm-rec`) keeps what a CSV does not: the marks
   (alarms, trigger, your own) and, in its `meta.json`, start, end and

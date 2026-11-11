@@ -2714,8 +2714,8 @@ y cierre la sesión y vuelva a entrar.</translation>
     </message>
     <message>
         <location filename="../../src/ui/dialogs/exportdlg.cpp" line="50"/>
-        <location filename="../../src/ui/dialogs/exportdlg.cpp" line="173"/>
-        <location filename="../../src/ui/dialogs/exportdlg.cpp" line="186"/>
+        <location filename="../../src/ui/dialogs/exportdlg.cpp" line="184"/>
+        <location filename="../../src/ui/dialogs/exportdlg.cpp" line="197"/>
         <source>Export</source>
         <translation>Exportar</translation>
     </message>
@@ -2745,52 +2745,72 @@ y cierre la sesión y vuelva a entrar.</translation>
         <translation>&amp;Formato:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/exportdlg.cpp" line="61"/>
+        <location filename="../../src/ui/dialogs/exportdlg.cpp" line="63"/>
+        <source>All devices</source>
+        <translation>Todos los dispositivos</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/exportdlg.cpp" line="64"/>
+        <source>The values of this graph</source>
+        <translation>Los valores de este gráfico</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/exportdlg.cpp" line="65"/>
+        <source>This graph: the one used last. The main value of the recording is its time base and is always written</source>
+        <translation>Este gráfico: el último usado. El valor principal de la grabación es su base de tiempo y siempre se escribe</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/exportdlg.cpp" line="68"/>
+        <source>&amp;Values:</source>
+        <translation>&amp;Valores:</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/exportdlg.cpp" line="70"/>
         <source>Into the &amp;project</source>
         <translation>Al pro&amp;yecto</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/exportdlg.cpp" line="63"/>
+        <location filename="../../src/ui/dialogs/exportdlg.cpp" line="72"/>
         <source>No project is open</source>
         <translation>No hay ningún proyecto abierto</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/exportdlg.cpp" line="64"/>
+        <location filename="../../src/ui/dialogs/exportdlg.cpp" line="73"/>
         <source>To a f&amp;ile:</source>
         <translation>A un &amp;archivo:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/exportdlg.cpp" line="69"/>
+        <location filename="../../src/ui/dialogs/exportdlg.cpp" line="78"/>
         <source>Choose the file</source>
         <translation>Elegir el archivo</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/exportdlg.cpp" line="78"/>
+        <location filename="../../src/ui/dialogs/exportdlg.cpp" line="87"/>
         <source>Where to:</source>
         <translation>Adónde:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/exportdlg.cpp" line="79"/>
+        <location filename="../../src/ui/dialogs/exportdlg.cpp" line="88"/>
         <source>Then open in &amp;LabPlot</source>
         <translation>Después abrir en &amp;LabPlot</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/exportdlg.cpp" line="80"/>
+        <location filename="../../src/ui/dialogs/exportdlg.cpp" line="89"/>
         <source>LabPlot (labplot.org) opens the recording as a project with a graph, for analysis: fits, statistics, plots</source>
         <translation>LabPlot (labplot.org) abre la grabación como proyecto con un gráfico, para el análisis: ajustes, estadísticas, gráficos</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/exportdlg.cpp" line="85"/>
+        <location filename="../../src/ui/dialogs/exportdlg.cpp" line="94"/>
         <source>&amp;Export</source>
         <translation>&amp;Exportar</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/exportdlg.cpp" line="102"/>
+        <location filename="../../src/ui/dialogs/exportdlg.cpp" line="111"/>
         <source>export</source>
         <translation>exportación</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/exportdlg.cpp" line="186"/>
+        <location filename="../../src/ui/dialogs/exportdlg.cpp" line="197"/>
         <source>%1 exists already. Replace it?</source>
         <translation>%1 ya existe. ¿Reemplazarlo?</translation>
     </message>
@@ -4049,22 +4069,22 @@ y cierre la sesión y vuelva a entrar.</translation>
         <translation>Gráfica escrita en %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_curves.cpp" line="941"/>
+        <location filename="../../src/ui/views/graphwidget_curves.cpp" line="961"/>
         <source>%1 off: the %2 axis shows %3 now</source>
         <translation>%1 desactivado: el eje %2 muestra ahora %3</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_curves.cpp" line="939"/>
+        <location filename="../../src/ui/views/graphwidget_curves.cpp" line="959"/>
         <source>right</source>
         <translation>derecho</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_curves.cpp" line="939"/>
+        <location filename="../../src/ui/views/graphwidget_curves.cpp" line="959"/>
         <source>left</source>
         <translation>izquierdo</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_curves.cpp" line="939"/>
+        <location filename="../../src/ui/views/graphwidget_curves.cpp" line="959"/>
         <source>third</source>
         <translation>tercero</translation>
     </message>
@@ -6178,23 +6198,23 @@ DMM connected and switched on?</source>
         <translation>SCPI: grabación guardada como %1</translation>
     </message>
     <message>
-        <location filename="../../src/service/metercontroller.cpp" line="612"/>
+        <location filename="../../src/service/metercontroller.cpp" line="620"/>
         <source>%1: %2 (%3)</source>
         <translation>%1: %2 (%3)</translation>
     </message>
     <message>
-        <location filename="../../src/service/metercontroller.cpp" line="618"/>
+        <location filename="../../src/service/metercontroller.cpp" line="626"/>
         <source>%1: %2</source>
         <translation>%1: %2</translation>
     </message>
     <message>
-        <location filename="../../src/service/metercontroller.cpp" line="634"/>
-        <location filename="../../src/service/metercontroller.cpp" line="659"/>
+        <location filename="../../src/service/metercontroller.cpp" line="642"/>
+        <location filename="../../src/service/metercontroller.cpp" line="667"/>
         <source>%1: could not run %2</source>
         <translation>%1: no se pudo ejecutar %2</translation>
     </message>
     <message>
-        <location filename="../../src/service/metercontroller.cpp" line="637"/>
+        <location filename="../../src/service/metercontroller.cpp" line="645"/>
         <source>%1: %2 is still running</source>
         <translation>%1: %2 todavía se está ejecutando</translation>
     </message>

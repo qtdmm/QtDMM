@@ -179,7 +179,8 @@ public Q_SLOTS:
   bool        importFile(const QString &path);
   /// Writes what Export writes into @p file, without the dialog; the format
   /// by its suffix (csv, xlsx, ods), @p everyReading instead of the grid.
-  bool        writeRecordingTo(const QString &file, bool everyReading = false);
+  /// @p graphOnly: the values of the current graph, else all devices'.
+  bool        writeRecordingTo(const QString &file, bool everyReading = false, bool graphOnly = false);
   /// Settings dialog OK/Apply: re-reads the configuration (readConfig()).
   void        applySLOT();
 
