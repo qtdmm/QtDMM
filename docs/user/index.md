@@ -22,6 +22,10 @@ side, one window each, and can be combined into calculated values.
   its benches, recordings, pictures, PDFs, LabPlot projects.
 - [Poincaré plot](poincare-plot.md) — each reading against the next: how
   much the value scatters, noise against drift, SD1 and SD2.
+- [XY diagram](xy-diagram.md) — one value against another: a diode's current
+  against its voltage, a sensor against a reference.
+- [Histogram](histogram.md) — how the readings of one value are distributed:
+  one peak, two levels, outliers.
 - [Alarms](alarms.md) — a banner, sound, popup, program or the recorder when
   the reading leaves its range or stops coming.
 - [PASS/FAIL limit test](limit-test.md) — nominal ± tolerance or lower and
