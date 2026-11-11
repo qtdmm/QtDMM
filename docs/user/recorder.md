@@ -259,6 +259,17 @@ were; the integration curve carries on across a gap.
   **Reference line**, chooses the same, and **Off** hides the line. On the mean, minimum or maximum the
   line follows the readings and says what it is (`mean 1.83 A`). Where it
   stands is kept with the window layout and in a saved bench.
+  **Add a line at ...** in the same menu adds up to four more lines at
+  fixed values, dashed, where the menu was opened (from the ― button: in
+  the middle); drag them like the first one, **Remove the line at ...**
+  takes one away. The window layout keeps them.
+- **Crossings:** where the curve of the left axis crosses a reference line
+  in the window shown, a small hollow triangle marks the place, pointing up
+  where the curve rose through the line and down where it fell; the line's
+  label counts them (`1.2 V · 8×`). Crossings closer than three pixels
+  count once. A line on the mean, minimum or maximum gets none - a noisy
+  curve crosses its mean at every other reading. **View → Crossings**
+  switches the marks off; kept with the window layout.
 - **Time cursors:** a click into the graph sets cursor **A**, Shift+click
   cursor **B** (or **Cursor A here** / **Cursor B here** in the right-click
   menu); drag them to move them, Esc or **Remove time cursors** in

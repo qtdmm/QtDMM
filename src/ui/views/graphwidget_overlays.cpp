@@ -492,9 +492,7 @@ void GraphWidget::dragReference(double y)
       setReference(kind, v);
       return;
     }
-  const double step = niceStep((max - min) / 100);
-  const double v = min + (plot.bottom() - y) / plot.height() * (max - min);
-  setReference(RefValue, std::round(v / step) * step);
+  setReference(RefValue, roundedValueAt(y));
 }
 
 void GraphWidget::updateReferenceLine()
@@ -516,13 +514,12 @@ void GraphWidget::updateReferenceLine()
   m_referenceLabel->setVisible(shown);
   updateCentreTicks();
   if (!shown)
+  {
+    updateExtraReferences();
     return;
+  }
   const QRectF plot = m_chart->plotArea();
   m_referenceLine->setLine(plot.left(), y, plot.right(), y);
-  // as the y labels: 4 digits with the prefix that suits the value
-  QString prefix;
-  const QString base = leftUnit();
-  const double v = SiPrefix::scale(m_reference, base, &prefix);
   QString what;
   switch (m_referenceKind)
   {
@@ -532,13 +529,171 @@ void GraphWidget::updateReferenceLine()
     case RefAlarm: what = tr("alarm") + ' '; break;
     default: break;
   }
-  m_referenceLabel->setText(what + (base.isEmpty() ? QString::number(v, 'g', 4)
-                                                   : QString("%1 %2%3").arg(QString::number(v, 'g', 4), prefix, base)));
-  m_referenceLabel->setFont(m_yAxis->labelsFont());
-  const QRectF r = m_referenceLabel->boundingRect();
+  m_referenceText = what + referenceText(m_reference);
+  placeReferenceLabel(m_referenceLabel, y, m_referenceText);
+  updateExtraReferences();
+}
+
+// as the y labels: 4 digits with the prefix that suits the value
+QString GraphWidget::referenceText(double value) const
+{
+  QString prefix;
+  const QString base = leftUnit();
+  const double v = SiPrefix::scale(value, base, &prefix);
+  return base.isEmpty() ? QString::number(v, 'g', 4) : QString("%1 %2%3").arg(QString::number(v, 'g', 4), prefix, base);
+}
+
+void GraphWidget::placeReferenceLabel(QGraphicsSimpleTextItem *label, double y, const QString &text)
+{
+  const QRectF plot = m_chart->plotArea();
+  label->setText(text);
+  label->setFont(m_yAxis->labelsFont());
+  const QRectF r = label->boundingRect();
   // above the line, unless that leaves the plot
   const double top = y - r.height() - 1 >= plot.top() ? y - r.height() - 1 : y + 1;
-  m_referenceLabel->setPos(plot.right() - r.width() - 3, top);
+  label->setPos(plot.right() - r.width() - 3, top);
+}
+
+void GraphWidget::setExtraReferences(const QList<double> &values)
+{
+  QList<double> v;
+  for (double x : values)
+    if (std::isfinite(x) && v.size() < kMaxExtraReferences)
+      v << x;
+  if (v == m_extraRefs)
+    return;
+  m_extraRefs = v;
+  updateExtraReferences();
+  Q_EMIT referenceChanged();
+}
+
+// The added lines as the reference line, dashed apart from it; then the
+// crossings of all of them
+void GraphWidget::updateExtraReferences()
+{
+  while (m_extraRefItems.size() < size_t(m_extraRefs.size()))
+  {
+    ExtraRefItem item;
+    item.line = new QGraphicsLineItem(m_chart);
+    item.line->setZValue(5);
+    item.label = new QGraphicsSimpleTextItem(m_chart);
+    item.label->setZValue(5);
+    m_extraRefItems.push_back(item);
+  }
+  const QRectF plot = m_chart->plotArea();
+  const double min = m_yAxis->min(), max = m_yAxis->max();
+  QPen pen = m_referenceLine->pen();
+  pen.setStyle(Qt::DashLine);
+  for (size_t i = 0; i < m_extraRefItems.size(); ++i)
+  {
+    const ExtraRefItem &item = m_extraRefItems[i];
+    const bool shown = int(i) < m_extraRefs.size() && leftValue().id >= 0 && plot.height() > 0
+                       && m_extraRefs[int(i)] > min && m_extraRefs[int(i)] < max;
+    item.line->setVisible(shown);
+    item.label->setVisible(shown);
+    if (!shown)
+      continue;
+    const double y = plot.bottom() - (m_extraRefs[int(i)] - min) / (max - min) * plot.height();
+    item.line->setPen(pen);
+    item.line->setLine(plot.left(), y, plot.right(), y);
+    item.label->setBrush(m_referenceLabel->brush());
+    placeReferenceLabel(item.label, y, referenceText(m_extraRefs[int(i)]));
+  }
+  updateCrossings();
+}
+
+QList<std::pair<double, bool>> GraphWidget::crossingsOf(double value) const
+{
+  QList<std::pair<double, bool>> out;
+  const QList<QPointF> pts = referencePoints();
+  const double x0 = m_xAxis->min(), x1 = m_xAxis->max();
+  const double width = m_chart->plotArea().width();
+  if (pts.size() < 2 || !(x1 > x0) || width <= 0)
+    return out;
+  const double merge = 3 * (x1 - x0) / width;   // 3 pixels
+  auto it = std::lower_bound(pts.cbegin(), pts.cend(), x0, [](const QPointF &p, double x) { return p.x() < x; });
+  if (it != pts.cbegin())
+    --it;
+  for (auto next = it + 1; next != pts.cend() && it->x() <= x1; it = next++)
+  {
+    const double a = it->y(), b = next->y();
+    if (!std::isfinite(a) || !std::isfinite(b) || (a > value) == (b > value))
+      continue;
+    // where the line between them meets the value
+    const double t = it->x() + (next->x() - it->x()) * (value - a) / (b - a);
+    if (t < x0 || t > x1)
+      continue;
+    if (!out.isEmpty() && t - out.last().first < merge)
+      out.last() = { t, b > a };
+    else
+      out << std::pair{ t, b > a };
+  }
+  return out;
+}
+
+int GraphWidget::crossingCount(int line) const
+{
+  return line + 1 < m_crossCounts.size() ? m_crossCounts[line + 1] : 0;
+}
+
+// A small triangle at each crossing, pointing the way the curve went, and
+// the count in the line's label
+void GraphWidget::updateCrossings()
+{
+  if (!m_crossMarks)
+    return;
+  m_crossCounts.clear();
+  QPainterPath marks;
+  const QRectF plot = m_chart->plotArea();
+  const double x0 = m_xAxis->min(), x1 = m_xAxis->max();
+  auto lineOf = [&](bool shown, double value, QGraphicsSimpleTextItem *label, const QString &text)
+  {
+    QList<std::pair<double, bool>> found;
+    if (shown && m_crossingsOn)
+      found = crossingsOf(value);
+    m_crossCounts << int(found.size());
+    if (!shown)
+      return;
+    const double y = label == m_referenceLabel ? referenceY() : plot.bottom() - (value - m_yAxis->min())
+                                                                   / (m_yAxis->max() - m_yAxis->min()) * plot.height();
+    placeReferenceLabel(label, y, found.isEmpty() ? text : QString("%1 · %2×").arg(text).arg(found.size()));
+    for (const auto &[t, up] : found)
+    {
+      const double x = plot.left() + (t - x0) / (x1 - x0) * plot.width();
+      const double d = up ? 1 : -1;   // the tip up when it rose (scene y grows down)
+      QPolygonF tri({ QPointF(x - 5, y - d * 2), QPointF(x + 5, y - d * 2), QPointF(x, y - d * 11) });
+      marks.addPolygon(tri);
+      marks.closeSubpath();
+    }
+  };
+  // not on the window's mean, minimum or maximum: they follow the curve,
+  // a noisy one crosses its mean at every other reading
+  const bool follows = m_referenceKind == RefMean || m_referenceKind == RefMin || m_referenceKind == RefMax;
+  lineOf(m_referenceLabel->isVisible() && !follows, m_reference, m_referenceLabel, m_referenceText);
+  for (int i = 0; i < m_extraRefs.size() && i < int(m_extraRefItems.size()); ++i)
+    lineOf(m_extraRefItems[size_t(i)].label->isVisible(), m_extraRefs[i], m_extraRefItems[size_t(i)].label,
+           referenceText(m_extraRefs[i]));
+  // hollow, in the lettering's colour: seen on a curve of any colour
+  const QColor ink = m_referenceLabel->brush().color();
+  m_crossMarks->setBrush(ink.lightness() > 128 ? Qt::black : Qt::white);
+  m_crossMarks->setPen(QPen(ink, 1.5));
+  m_crossMarks->setPath(marks);
+  m_crossMarks->setVisible(!marks.isEmpty());
+}
+
+void GraphWidget::setCrossingsVisible(bool on)
+{
+  m_crossingsOn = on;
+  updateCrossings();
+}
+
+double GraphWidget::roundedValueAt(double y) const
+{
+  const QRectF plot = m_chart->plotArea();
+  const double min = m_yAxis->min(), max = m_yAxis->max();
+  const double step = niceStep((max - min) / 100);
+  const double v = min + (plot.bottom() - y) / plot.height() * (max - min);
+  return std::round(v / step) * step;
 }
 
 void GraphWidget::updateThresholdLinesVisibility()

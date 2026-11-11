@@ -3380,6 +3380,13 @@ void MainWindow::applyGraphState(const GraphView *view, const WorkspaceGet &get,
   GraphWidget *graph = view->graph();
   const QString key = "Windows/" + view->key();
   graph->setReferenceSetting(get(key + "-reference", QString()).toString());
+  {
+    QList<double> lines;
+    for (const QString &v : get(key + "-reference-lines", QString()).toString().split(' ', Qt::SkipEmptyParts))
+      lines << v.toDouble();
+    graph->setExtraReferences(lines);
+  }
+  graph->setCrossingsVisible(get(key + "-crossings", true).toBool());
   graph->setMinimapVisible(get(key + "-minimap", true).toBool());
   graph->setEnvelopeVisible(get(key + "-envelope", false).toBool());
   graph->setFixedRangesSetting(get(key + "-fixed-ranges", QString()).toString());
@@ -3438,6 +3445,13 @@ void MainWindow::storeGraphState(const GraphView *view, const WorkspaceSet &set)
   const GraphWidget *graph = view->graph();
   const QString key = "Windows/" + view->key();
   set(key + "-reference", graph->referenceSetting());
+  {
+    QStringList lines;
+    for (double v : graph->extraReferences())
+      lines << QString::number(v, 'g', 12);
+    set(key + "-reference-lines", lines.join(' '));
+  }
+  set(key + "-crossings", graph->crossingsVisible());
   set(key + "-minimap", graph->minimapVisible());
   set(key + "-envelope", graph->envelopeVisible());
   set(key + "-fixed-ranges", graph->fixedRangesSetting());

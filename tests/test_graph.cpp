@@ -1335,7 +1335,7 @@ int main(int argc, char **argv)
         else if (auto *t = dynamic_cast<QGraphicsSimpleTextItem *>(item))
           label = t;
       }
-      else if (auto *p = dynamic_cast<QGraphicsPathItem *>(item))
+      else if (auto *p = dynamic_cast<QGraphicsPathItem *>(item); p && item->data(0).toString().isEmpty())
         centre = p;
     }
     check(line && label && centre, "reference: line, label and centre axis found");
@@ -1900,7 +1900,7 @@ int main(int argc, char **argv)
             if (!a->isSeparator())
               inView << a->text();
         check(inView == QStringList({ "&Statistics", "Over&view", "Min/max &band", "Meter st&ates", "&Patterned lines",
-                                      "&Reference line", "Bu&ttons" })
+                                      "Cr&ossings", "&Reference line", "Bu&ttons" })
                 && !entry("Over&view") && !entry("&Statistics"),
               "menu: View holds statistics, overview, band, reference line, buttons: " + inView.join(", "));
       }
@@ -1984,7 +1984,7 @@ int main(int argc, char **argv)
     QChart *chart = graph.findChild<QChartView *>()->chart();
     QGraphicsPathItem *centre = nullptr;
     for (QGraphicsItem *item : chart->childItems())
-      if (auto *p = dynamic_cast<QGraphicsPathItem *>(item))
+      if (auto *p = dynamic_cast<QGraphicsPathItem *>(item); p && item->data(0).toString().isEmpty())
         centre = p;
     Feed feed(graph, 1000);
     graph.liveSLOT();
@@ -2778,6 +2778,75 @@ int main(int argc, char **argv)
       feed.value(1.0 + (i % 10) * 0.01);
     qInfo() << "record: 500 readings with points in" << timer.elapsed() << "ms";
     check(points && points->count() == line->count(), "record: the points go on with the line");
+  }
+
+  // --- 7l9. further reference lines: added at fixed values, at most four,
+  //           dragged with the mouse; marks where the curve crosses a
+  //           line, counted in its label; none on the window's mean ---
+  {
+    Settings cfg("reference-lines", tmpDir.path());
+    GraphWidget graph(nullptr, &cfg);
+    graph.resize(800, 500);
+    graph.setUnit("V");
+    graph.show();
+    QTest::qWait(50);
+    graph.setGraphSize(30);
+    graph.setScale(false, false, -1, 3);
+    Feed feed(graph);
+    graph.liveSLOT();
+    // four periods of 1 + sin: two crossings of 1.2 V in each
+    for (int i = 0; i < 200; ++i)
+      feed.value(1.0 + std::sin((i + 0.5) * 2 * M_PI / 50));
+    QTest::qWait(100);
+    graph.setReference(GraphWidget::RefOff);   // the minimum touches 0 V
+    graph.setExtraReferences({ 1.2, 2.5, 0.0, 0.5, 0.7, 0.9 });
+    check(graph.extraReferences() == QList<double>({ 1.2, 2.5, 0.0, 0.5 }), "lines: at most four");
+    graph.setExtraReferences({ 1.2, 2.5 });
+    check(graph.crossingCount(0) == 8 && graph.crossingCount(1) == 0,
+          QString("lines: 1.2 V crossed 8 times, 2.5 V never; got %1, %2").arg(graph.crossingCount(0)).arg(graph.crossingCount(1)));
+    QChart *chart = graph.findChild<QChartView *>()->chart();
+    QGraphicsPathItem *marks = nullptr;
+    QList<QGraphicsSimpleTextItem *> texts;
+    for (QGraphicsItem *item : chart->childItems())
+    {
+      if (item->data(0).toString() == "crossings")
+        marks = dynamic_cast<QGraphicsPathItem *>(item);
+      if (auto *t = dynamic_cast<QGraphicsSimpleTextItem *>(item); t && t->isVisible() && t->text().contains(QChar(0xd7)))
+        texts << t;
+    }
+    check(marks && marks->isVisible() && marks->path().toSubpathPolygons().size() == 8,
+          QString("lines: 8 marks, got %1").arg(marks ? marks->path().toSubpathPolygons().size() : -1));
+    check(texts.size() == 1 && texts.first()->text() == QString::fromUtf8("1.2 V · 8×"),
+          "lines: the count in the label: " + (texts.isEmpty() ? QString("none") : texts.first()->text()));
+    // the reference line on the mean counts nothing; at 1 V it does
+    graph.setReference(GraphWidget::RefMean);
+    check(graph.crossingCount(-1) == 0, "lines: no marks on the window's mean");
+    graph.setReference(GraphWidget::RefValue, 0.5);
+    check(graph.crossingCount(-1) == 8, QString("lines: the reference line at 0.5 V too, got %1").arg(graph.crossingCount(-1)));
+    graph.setCrossingsVisible(false);
+    check(graph.crossingCount(0) == 0 && marks && !marks->isVisible(), "lines: crossings off, no marks");
+    graph.setCrossingsVisible(true);
+    // dragging the added line at 2.5 V down to 1.5 V
+    QChartView *view = graph.findChild<QChartView *>();
+    QWidget *viewport = view->viewport();
+    const QRectF plot = chart->plotArea();
+    auto yOf = [&](double v) { return plot.bottom() - (v + 1) / 4 * plot.height(); };
+    auto mouse = [&](QEvent::Type type, double y, Qt::MouseButton button = Qt::NoButton)
+    {
+      const QPointF at = view->mapFromScene(QPointF(plot.center().x(), y));
+      QMouseEvent ev(type, at, viewport->mapToGlobal(at), button,
+                     type == QEvent::MouseButtonRelease ? Qt::NoButton : Qt::MouseButtons(button), Qt::NoModifier);
+      QCoreApplication::sendEvent(viewport, &ev);
+    };
+    mouse(QEvent::MouseMove, yOf(2.5));
+    mouse(QEvent::MouseButtonPress, yOf(2.5), Qt::LeftButton);
+    mouse(QEvent::MouseMove, yOf(1.5), Qt::LeftButton);
+    mouse(QEvent::MouseButtonRelease, yOf(1.5), Qt::LeftButton);
+    check(graph.extraReferences().size() == 2 && std::abs(graph.extraReferences().at(1) - 1.5) < 0.05
+            && graph.crossingCount(1) == 8,
+          QString("lines: dragged to %1, crossed %2 times").arg(graph.extraReferences().value(1)).arg(graph.crossingCount(1)));
+    if (qEnvironmentVariableIsSet("QTDMM_SHOT"))
+      graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/graph_reference_lines.png");
   }
 
   // --- 7m0. a second value through the adapter, as a meter sends it: a

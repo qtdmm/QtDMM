@@ -53,6 +53,7 @@ QPainterPath GraphWidget::envelopePath() const
 void GraphWidget::updateEnvelope()
 {
   updateDenseBands();
+  updateCrossings();   // new readings, another window
   const QPainterPath path = m_envelopeOn ? columnBand(referencePoints(), m_yAxis->min(), m_yAxis->max(),
                                                       kEnvelopeColumns)
                                          : QPainterPath();
