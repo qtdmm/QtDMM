@@ -365,6 +365,8 @@ public:
   /// The first segment of the curve of extra(@p i) (for the tests).
   QLineSeries     *extraCurve(int i) const { return m_extraCurves[size_t(i)].series; }
   bool             extraCurveShown(int i) const { return m_extraCurves[size_t(i)].shown; }
+  /// Drawn as a band, too dense for a line (updateDenseBands()).
+  bool             extraCurveBanded(int i) const { return m_extraCurves[size_t(i)].band->isVisible(); }
   bool             extraCurveOnRight(int i) const { return m_extraCurves[size_t(i)].side == 1; }
   /// The axis of curve @p i: 0 left, 1 right, 2 the third axis.
   int              extraCurveSide(int i) const { return m_extraCurves[size_t(i)].side; }
@@ -463,6 +465,7 @@ public:
   /// The points of curve @p i as drawn, in this store's seconds.
   QList<QPointF>   otherCurvePoints(int i) const { return m_otherCurves[size_t(i)].points; }
   QPen             otherCurvePen(int i) const { return m_otherCurves[size_t(i)].line->pen(); }
+  bool             otherCurveBanded(int i) const { return m_otherCurves[size_t(i)].band->isVisible(); }
   /// @}
   bool             mainShown() const { return m_mainShown; }
 
@@ -666,6 +669,26 @@ protected:
   /// The curve's points (pointsOf(), gaps as NaN) for the band
   QList<QPointF>   m_curvePts;
   void             updateEnvelope();
+  /// The band over the plot's pixel columns of @p pts, from the lowest to
+  /// the highest the curve reaches in each column and the @p k columns
+  /// either side, for the y range @p y0 .. @p y1; empty when there is
+  /// nothing to draw. The min/max band (k = kEnvelopeColumns) and the
+  /// dense curves (kDenseColumns) use it.
+  QPainterPath     columnBand(const QList<QPointF> &pts, double y0, double y1, int k) const;
+  /// A value of the meter or of another meter with more points in the
+  /// window than kDensePixels per pixel column allow is drawn as its band
+  /// (columnBand(), k = kDenseColumns): a faint fill and the outline in the curve's
+  /// pen, so every extreme stays and the dashes still tell it apart - the
+  /// line's zigzag would be a solid area in its colour.
+  void             updateDenseBands();
+  /// One curve's band: shown when @p points are dense, the line then hidden.
+  void             updateDenseBand(QGraphicsPathItem *band, GapLine *line, bool shown, const QList<QPointF> &points,
+                                   int side, const QPen &pen);
+  QGraphicsPathItem *newBand();
+  static constexpr double kDensePixels = 2.0;
+  /// A column of the dense band takes its neighbours' extremes too: no
+  /// notches where a column got only a maximum or only a minimum.
+  static constexpr int kDenseColumns = 1;
   bool             m_liveHold = false;   ///< Live, the window held at m_holdStart
   qint64           m_holdStart = 0;      ///< ms since the start of the recording
   /// The chart, and below it the overview or the scroll bar.
@@ -798,6 +821,7 @@ protected:
     int  side = 0;                   ///< its axis: 0 left, 1 right, 2 third
     bool shown = false;              ///< drawn: an axis has its unit, not hidden
     QList<QPointF> points;           ///< as drawn, for the band (m_curvePts)
+    QGraphicsPathItem *band = nullptr;   ///< too dense for a line (updateDenseBands()), the chart's child
   };
   std::vector<ExtraCurve> m_extraCurves;
   /// A value of another meter (setOtherValues()).
@@ -814,6 +838,7 @@ protected:
     QString      meter;   ///< the meter's name alone, empty without one
     QString      label;   ///< the value's name alone (curveName())
     QList<QPointF> points;
+    QGraphicsPathItem *band = nullptr;   ///< as ExtraCurve::band
   };
   std::vector<OtherCurve> m_otherCurves;
   QHash<ValueRef, ValueAxis> m_otherAxes;   ///< setOtherValueAxis(), missing: AxisAuto

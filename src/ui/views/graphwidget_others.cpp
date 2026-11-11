@@ -40,6 +40,7 @@ void GraphWidget::makeOtherCurves(const QList<ValueRef> &values)
     c.line.reset();
     m_chart->removeSeries(c.series);
     delete c.series;
+    delete c.band;
   }
   m_otherCurves.clear();
   for (const ValueRef &value : values)
@@ -51,6 +52,7 @@ void GraphWidget::makeOtherCurves(const QList<ValueRef> &values)
     c.series->attachAxis(m_xAxis);
     c.series->attachAxis(m_yAxis);
     c.line = std::make_unique<GapLine>(c.series);
+    c.band = newBand();
     m_otherCurves.push_back(std::move(c));
   }
   otherStoresChanged();
@@ -302,6 +304,7 @@ void GraphWidget::onOtherReadings()
   }
   updateRightAxis();
   updateLegend();
+  updateDenseBands();
 }
 
 // With patterned lines each curve of another meter gets a dash pattern of
@@ -332,6 +335,7 @@ void GraphWidget::setPatternedLines(bool on)
   for (int i = 0; i < int(m_otherCurves.size()); ++i)
     if (m_otherCurves[size_t(i)].line)
       m_otherCurves[size_t(i)].line->setPen(otherPen(i));
+  updateDenseBands();
   updateLegend();
 }
 

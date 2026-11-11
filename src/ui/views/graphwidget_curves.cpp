@@ -52,16 +52,20 @@ QPainterPath GraphWidget::envelopePath() const
 // kEnvelopeColumns of it on its side of a gap.
 void GraphWidget::updateEnvelope()
 {
+  updateDenseBands();
+  const QPainterPath path = m_envelopeOn ? columnBand(referencePoints(), m_yAxis->min(), m_yAxis->max(),
+                                                      kEnvelopeColumns)
+                                         : QPainterPath();
+  m_envelope->setPath(path);
+  m_envelope->setVisible(!path.isEmpty());
+}
+
+QPainterPath GraphWidget::columnBand(const QList<QPointF> &pts, double y0, double y1, int k) const
+{
   const QRectF plot = m_chart->plotArea();
   const double x0 = m_xAxis->min(), x1 = m_xAxis->max();
-  const double y0 = m_yAxis->min(), y1 = m_yAxis->max();
-  const QList<QPointF> pts = m_envelopeOn ? referencePoints() : QList<QPointF>();
   if (pts.isEmpty() || plot.width() < 2 || plot.height() <= 0 || !(x1 > x0) || !(y1 > y0))
-  {
-    m_envelope->setVisible(false);
-    return;
-  }
-  const int k = kEnvelopeColumns;
+    return QPainterPath();
   // the columns counted from time 0, not from the left edge: Live moving
   // on by a part of a pixel leaves each point in its column, the band only
   // moves along (else it flickers, its columns cut anew every frame)
@@ -157,10 +161,66 @@ void GraphWidget::updateEnvelope()
   flush();
   QPainterPath clip;
   clip.addRect(plot);
-  m_envelope->setPath(path.intersected(clip));
-  m_envelope->setVisible(true);
+  return path.intersected(clip);
 }
 
+
+QGraphicsPathItem *GraphWidget::newBand()
+{
+  auto *band = new QGraphicsPathItem(m_chart);
+  band->setZValue(4);   // as the min/max band: under the curves
+  band->setVisible(false);
+  return band;
+}
+
+void GraphWidget::updateDenseBands()
+{
+  for (int i = 0; i < int(m_extraCurves.size()); ++i)
+  {
+    ExtraCurve &c = m_extraCurves[size_t(i)];
+    // the pen of its value; a curve beyond the store's values is not shown
+    const int id = i < m_store->extraCount() ? m_store->extra(i).id : i + 1;
+    updateDenseBand(c.band, c.line.get(), c.shown, c.points, c.side, extraPen(id));
+  }
+  for (int i = 0; i < int(m_otherCurves.size()); ++i)
+  {
+    OtherCurve &c = m_otherCurves[size_t(i)];
+    updateDenseBand(c.band, c.line.get(), c.shown, c.points, c.side, otherPen(i));
+  }
+}
+
+void GraphWidget::updateDenseBand(QGraphicsPathItem *band, GapLine *line, bool shown, const QList<QPointF> &points,
+                                  int side, const QPen &pen)
+{
+  if (!band || !line)
+    return;
+  const double x0 = m_xAxis->min(), x1 = m_xAxis->max();
+  const double width = m_chart->plotArea().width();
+  bool dense = false;
+  if (shown && width > 0)
+  {
+    // the points in the window: they are in time order
+    auto from = std::lower_bound(points.cbegin(), points.cend(), x0, [](const QPointF &p, double x) { return p.x() < x; });
+    auto to = std::upper_bound(from, points.cend(), x1, [](double x, const QPointF &p) { return x < p.x(); });
+    dense = double(to - from) * kDensePixels > width;
+  }
+  QPainterPath path;
+  if (dense)
+  {
+    const QValueAxis *axis = yAxisOf(side);
+    path = columnBand(points, axis->min(), axis->max(), kDenseColumns);
+  }
+  if (!path.isEmpty())
+  {
+    QColor fill = pen.color();
+    fill.setAlpha(64);
+    band->setBrush(fill);
+    band->setPen(pen);
+    band->setPath(path);
+  }
+  band->setVisible(!path.isEmpty());
+  line->setVisible(shown && path.isEmpty());
+}
 // ms per pixel column, rounded up to a power of two. Counted over the window
 // or, while the recording does not fill it yet, over what is there: a short
 // recording in a long window is drawn as it is. Readings further apart than a
@@ -433,6 +493,7 @@ void GraphWidget::rebuildExtras()
     c.series->attachAxis(m_xAxis);
     c.series->attachAxis(m_yAxis);
     c.line = std::make_unique<GapLine>(c.series);
+    c.band = newBand();
     m_extraCurves.push_back(std::move(c));
   }
 
@@ -508,6 +569,7 @@ void GraphWidget::rebuildExtras()
   updateMinimapValue();
   if (m_intValueId != 0)
     rebuildOtherIntegral();
+  updateDenseBands();
 }
 
 // The integration curve of another value than the main one: its series in
@@ -600,6 +662,8 @@ void GraphWidget::onExtraAppended(int i)
       updateReferenceLine();
     updateEnvelope();
   }
+  else
+    updateDenseBand(c.band, c.line.get(), c.shown, c.points, c.side, extraPen(s.id));
   if (m_cursorT[0] >= 0 || m_cursorT[1] >= 0)
     updateTimeCursors();
 }
