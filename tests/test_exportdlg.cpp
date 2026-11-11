@@ -55,6 +55,26 @@ int main(int argc, char **argv)
   }
 
   {
+    // the recording's values: all devices at first, this graph's kept as the
+    // last choice; nothing for the table
+    {
+      ExportDlg dlg(ExportDlg::Recording, QString(), &cfg);
+      auto *values = dlg.findChild<QComboBox *>("ui_exportValues");
+      check(values && values->isEnabled() && !dlg.graphValuesOnly(), "values: all devices at first");
+      if (values)
+        values->setCurrentIndex(values->findData(QString("graph")));
+      dlg.findChild<QLineEdit *>()->setText(tmp.path() + "/rec");
+      dlg.accept();
+    }
+    ExportDlg again(ExportDlg::Recording, QString(), &cfg);
+    check(again.graphValuesOnly(), "values: this graph's kept");
+    ExportDlg table(ExportDlg::Table, QString(), &cfg);
+    check(!table.graphValuesOnly() && !table.findChild<QComboBox *>("ui_exportValues")->isEnabled(),
+          "values: not for the table");
+    cfg.setString("Export/values", "all");
+  }
+
+  {
     // LabPlot: the checkbox takes the format made for it, another format drops it
     ExportDlg dlg(ExportDlg::Recording, QString(), &cfg);
     auto *labPlot = dlg.findChild<QCheckBox *>();

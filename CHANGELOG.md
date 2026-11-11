@@ -4,6 +4,7 @@
 
 ### GUI
 
+- **Export: the values of one graph** — the export dialog asks for the recording's *Values*: *All devices* (as before, the default) or *The values of this graph*, the curves of the graph used last; the main value stays as the time base. Kept with the dialog's other choices.
 - **Graph: hide outliers** — *View → Outliers* leaves single wrong readings out of the drawing and the statistics: more than n σ from the mean of their 25 neighbours on each side, spikes larger than an amount (away from the readings before and after, the same way; a step stays), or outside limits. The recording, export and readings table keep them. The plot and the statistics say how many are hidden; kept per graph with the window layout.
 - **Graph: more reference lines, crossings marked** — *Reference line → Add a line at ...* adds up to four more lines at fixed values, dashed, dragged like the first one and removed in the same menu. Where the curve of the left axis crosses a line in the window, a hollow triangle points the way it went, and the line's label counts the crossings (`1.2 V · 8×`); not on the window's mean, minimum or maximum. *View → Crossings* switches the marks; both kept per graph with the window layout.
 - **Graph: right axes with a prefix** — the right and the third axis take the prefix of the range they show, as the left one: 12 kHz reads 12 under [kHz], no longer 1.2e+04 under [Hz]. Fixed ranges stay in the base unit.

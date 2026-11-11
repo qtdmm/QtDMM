@@ -15,7 +15,8 @@ class Settings;
 /// of the graph), in which format, and where to (a file or the open project
 /// basket), and whether LabPlot opens the recording then. It only asks;
 /// MainWindow::exportDialog() writes. The last choice is kept
-/// (Export/format-<what>, Export/to-basket, Export/dir, Export/labplot). Ctrl+E opens it.
+/// (Export/format-<what>, Export/to-basket, Export/dir, Export/labplot,
+/// Export/values). Ctrl+E opens it.
 class ExportDlg : public QDialog
 {
   Q_OBJECT
@@ -31,6 +32,8 @@ public:
   /// The file suffix of the format: csv, xlsx, ods, qtdmm-rec, lml, labplot.csv,
   /// png, svg, pdf, jpg.
   QString     format() const;
+  /// The recording with the values of the graph used last only, not all devices'.
+  bool        graphValuesOnly() const;
   /// CSV with every reading instead of the recording's grid.
   bool        everyReading() const;
   /// Into the project basket, the name made there; else file().
@@ -56,4 +59,5 @@ private:
   QRadioButton *m_toBasket;
   QLineEdit    *m_file;
   QCheckBox    *m_labPlot;
+  QComboBox    *m_values;
 };

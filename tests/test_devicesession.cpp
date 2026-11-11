@@ -391,6 +391,14 @@ int main(int argc, char **argv)
     check(head.contains(";Bench sim: value;Bench sim: unit;Bench sim: status") && head.contains(";Power: value;")
             && !b->recorder()->dirty() && !power->recorder()->dirty(),
           "with the meters that recorded with it, saved too: " + head);
+    // a graph's values only (Export, Values: this graph): the other meter's
+    // value in it, the calculated one not; the main value is the time base
+    QString err;
+    const QString part = dir.path() + "/rec/graph.csv";
+    check(window.writeRecording(part, false, &err, { ValueRef(0, b->source()) }), "a graph's values written: " + err);
+    QFile g(part);
+    const QString head2 = g.open(QIODevice::ReadOnly) ? QString::fromUtf8(g.readLine()).trimmed() : QString();
+    check(head2.contains(";Bench sim: value;") && !head2.contains("Power"), "only the graph's values: " + head2);
     session.close(calc);
   }
 
