@@ -25,6 +25,7 @@
 #include <QToolButton>
 #include "core/nicestep.h"
 #include "core/siprefix.h"
+#include "core/readingadapter.h"
 #include "ui/engnumbervalidator.h"
 #include "core/settings.h"
 #include "testutil.h"
@@ -2338,8 +2339,9 @@ int main(int argc, char **argv)
       }
     }
     QTest::qWait(400);
+    // 0.5 A on an axis up to 0.6 A: in mA, as the left axis would
     check(graph.otherCurveCount() == 2 && graph.otherCurveShown(0) && graph.otherCurveOnRight(0)
-            && graph.rightAxisTitle() == "[A]",
+            && graph.rightAxisTitle() == "[mA]",
           QString("another meter's A: on the right, %1").arg(graph.rightAxisTitle()));
     check(graph.otherCurveShown(1) && !graph.otherCurveOnRight(1), "its V: on the left with the main value");
     const QList<QPointF> amps = graph.otherCurvePoints(0);
@@ -2778,6 +2780,67 @@ int main(int argc, char **argv)
     check(points && points->count() == line->count(), "record: the points go on with the line");
   }
 
+  // --- 7m0. a second value through the adapter, as a meter sends it: a
+  //           range change Hz -> kHz goes on in one series (base units),
+  //           mV shares the left axis with V; the right axis takes the
+  //           prefix of its range: 12 [kHz], not 1.2e+04 [Hz] ---
+  {
+    Settings cfg("right-prefix", tmpDir.path());
+    GraphWidget graph(nullptr, &cfg);
+    graph.resize(800, 500);
+    graph.show();
+    QTest::qWait(50);
+    graph.setUnit("V");
+    Feed feed(graph);
+    graph.liveSLOT();
+    ReadingAdapter adapter;
+    auto send = [&](int id, double base, const QString &text, const QString &unit)
+    {
+      Reading r = ReadingAdapter::reading(adapter.adaptValue(base, text, unit, "", "AUTO", false, false, false, id, 0));
+      r.t = feed.now;
+      r.msecs = Feed::wall(feed.now).toMSecsSinceEpoch();
+      graph.store()->setReading(r);
+    };
+    for (int i = 0; i < 10; ++i)
+    {
+      feed.value(1.0);
+      send(1, 900 + i * 10, QString::number(900 + i * 10), "Hz");
+      send(2, 0.0035, "3.5", "mV");
+    }
+    for (int i = 0; i < 10; ++i)
+    {
+      feed.value(1.0);
+      send(1, 12000 + i * 10, QString::number(12.0 + i * 0.01), "kHz");
+      send(2, 0.0035, "3.5", "mV");
+    }
+    graph.setValueShown(1, true);
+    graph.setValueShown(2, true);
+    QTest::qWait(100);
+    RecordingStore *store = graph.store();
+    int hzSeries = 0, hzPoints = 0;
+    for (int i = 0; i < store->extraCount(); ++i)
+      if (store->extra(i).id == 1)
+      {
+        hzSeries++;
+        hzPoints = store->extra(i).count();
+      }
+    check(hzSeries == 1 && hzPoints == 20, QString("prefix: Hz -> kHz one series of 20, got %1 series, %2 points")
+          .arg(hzSeries).arg(hzPoints));
+    check(graph.valueSide(2) == GraphWidget::AxisLeft && graph.rightAxisTitle() == "[kHz]",
+          QString("prefix: mV with V on the left, the right axis [kHz], got side %1, %2")
+            .arg(int(graph.valueSide(2))).arg(graph.rightAxisTitle()));
+    // its labels: the tick values in kHz
+    auto *right = qobject_cast<QCategoryAxis *>(graph.rightAxis());
+    const QStringList labels = right ? right->categoriesLabels() : QStringList();
+    bool scaled = !labels.isEmpty();
+    for (const QString &label : labels)
+      scaled = scaled && std::abs(label.toDouble()) <= 1000;
+    check(scaled && right && right->max() >= 12000,
+          "prefix: the right axis' labels in kHz: " + labels.join(", "));
+    if (qEnvironmentVariableIsSet("QTDMM_SHOT"))
+      graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/graph_right_prefix.png");
+  }
+
   // --- 7m1. a dense secondary value: more points than pixel columns are
   //           a band (faint fill, the outline in the value's dashes), not
   //           a zigzag line; few are the line again. The same for another
@@ -3048,7 +3111,7 @@ int main(int argc, char **argv)
     feed.other(4, 0.5, "Hz", Quantity::Frequency);
     graph.setValueAxis(4, GraphWidget::AxisThird);
     graph.setValueShown(4, true);
-    check(graph.valueDrawn(4) && graph.thirdAxisTitle() == "[Hz]" && !graph.valueDrawn(1) && !graph.shownValues().contains(1),
+    check(graph.valueDrawn(4) && graph.thirdAxisTitle() == "[mHz]" && !graph.valueDrawn(1) && !graph.shownValues().contains(1),
           "axes: Hz on the third axis, the current off, got " + graph.thirdAxisTitle());
     check(notices.size() == 1 && notices.first().first().toString().contains("third"),
           "axes: a notice of what went off, got " + (notices.isEmpty() ? QString() : notices.first().first().toString()));

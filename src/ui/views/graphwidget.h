@@ -33,6 +33,7 @@
 #include <QLineSeries>
 #include <QScatterSeries>
 #include <QValueAxis>
+#include <QCategoryAxis>
 #include <QGraphicsLineItem>
 
 #include "ui/views/gapline.h"
@@ -875,8 +876,12 @@ protected:
   /// the main one; [1] the third, outside it, the next unit.
   struct SideAxis
   {
-    QValueAxis              *axis = nullptr;
-    QString                  unit;              ///< empty while it is hidden
+    /// A category axis: its labels are the tick values scaled to the
+    /// prefix of the range shown (12 [kHz], not 1.2e+04 [Hz]), set by
+    /// updateRightAxis() at the ticks of a value axis
+    QCategoryAxis           *axis = nullptr;
+    QString                  unit;              ///< empty while it is hidden, the base unit
+    QString                  prefix;            ///< of its labels and title, from the range shown
     QGraphicsSimpleTextItem *title = nullptr;   ///< above it, as m_yTitle
     double                   scaleMin = 1e40;
     double                   scaleMax = -1e40;
