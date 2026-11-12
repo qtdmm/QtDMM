@@ -39,9 +39,14 @@ void XYPlot::addPoint(double x, double y)
 {
   if (!std::isfinite(x) || !std::isfinite(y))
     return;
-  m_points.append(QPointF(x, y));
-  if (m_points.size() > 2000)
-    m_points.remove(0, m_points.size() - 2000);
+  const QPointF point(x, y);
+  if (m_points.size() < kMaxPoints)
+    m_points.append(point);
+  else
+  {
+    m_points[m_pointHead] = point;
+    m_pointHead = (m_pointHead + 1) % kMaxPoints;
+  }
   update();
 }
 
@@ -49,6 +54,7 @@ void XYPlot::clear()
 {
   m_points.clear();
   m_shown.clear();
+  m_pointHead = 0;
   update();
 }
 

@@ -169,12 +169,15 @@ int main(int argc, char **argv)
   check(zipFile.open(QIODevice::ReadOnly), "the archive is there");
   const QByteArray zip = zipFile.readAll();
   zipFile.close();
-  check(zipEntry(zip, "Bench/a.csv") == QByteArray("1") && zipEntry(zip, "Bench/a (2).csv") == QByteArray("1"),
+  check(zipEntry(zip, "Bench/a.csv", qint64(4) << 30) == QByteArray("1")
+          && zipEntry(zip, "Bench/a (2).csv", qint64(4) << 30) == QByteArray("1"),
         "the files under the basket's name");
-  check(zipEntry(zip, "Bench/pictures/graph.png") == QByteArray("not really a PNG"), "sub folders too, stored");
-  check(!zipEntry(zip, "Bench/.git/HEAD") && !zipEntry(zip, "Bench/.directory") && !zipEntry(zip, "Bench/Bench.zip"),
+  check(zipEntry(zip, "Bench/pictures/graph.png", qint64(4) << 30) == QByteArray("not really a PNG"),
+        "sub folders too, stored");
+  check(!zipEntry(zip, "Bench/.git/HEAD", qint64(4) << 30) && !zipEntry(zip, "Bench/.directory", qint64(4) << 30)
+          && !zipEntry(zip, "Bench/Bench.zip", qint64(4) << 30),
         "hidden files and the archive itself stay out");
-  const QJsonObject manifest = QJsonDocument::fromJson(zipEntry(zip, "Bench/project.json").value_or("")).object();
+  const QJsonObject manifest = QJsonDocument::fromJson(zipEntry(zip, "Bench/project.json", qint64(4) << 30).value_or("")).object();
   check(manifest.value("description").toString() == "Ripple of the 12 V supply", "project.json keeps its keys");
   const QJsonObject exported = manifest.value("export").toObject();
   const QJsonArray files = exported.value("files").toArray();
@@ -223,7 +226,7 @@ int main(int argc, char **argv)
           && folder == dir.filePath("base/Bench (2)"),
         "the name taken: Bench (2), got " + folder);
   // a file changed after the export: refused, nothing written
-  const QByteArray exportedProject = zipEntry(zip, "Bench/project.json").value_or("");
+  const QByteArray exportedProject = zipEntry(zip, "Bench/project.json", qint64(4) << 30).value_or("");
   const QString tampered = zipOf("changed.zip", { { "Bench/project.json", exportedProject }, { "Bench/a.csv", "2" },
                                                   { "Bench/a (2).csv", "1" },
                                                   { "Bench/pictures/graph.png", "not really a PNG" } });

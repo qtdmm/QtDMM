@@ -130,4 +130,5 @@ private:
   QByteArray m_info;
   bool m_serviceFound = false;
   bool m_ready = false;
+  bool m_failed = false;
 };

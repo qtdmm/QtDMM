@@ -1058,6 +1058,10 @@
         <source>The encryption key does not match %1.</source>
         <translation>La clé de chiffrement ne correspond pas à %1.</translation>
     </message>
+    <message>
+        <source>Bluetooth receive buffer limit exceeded.</source>
+        <translation>La limite du tampon de réception Bluetooth est dépassée.</translation>
+    </message>
 </context>
 <context>
     <name>BleGattDevice</name>
@@ -1110,6 +1114,10 @@
         <location filename="../../src/device/transports/blegatt.cpp" line="389"/>
         <source>%1 has no writable characteristic.</source>
         <translation>%1 n&apos;a pas de caractéristique inscriptible.</translation>
+    </message>
+    <message>
+        <source>Bluetooth receive buffer limit exceeded.</source>
+        <translation>La limite du tampon de réception Bluetooth est dépassée.</translation>
     </message>
 </context>
 <context>
@@ -4386,6 +4394,10 @@ Câble branché ? Pas d&apos;autorisation ? Le câble a besoin de la règle udev
         <source>Cannot open the cable.</source>
         <translation>Impossible d&apos;ouvrir le câble.</translation>
     </message>
+    <message>
+        <source>Receive buffer limit exceeded.</source>
+        <translation>La limite du tampon de réception est dépassée.</translation>
+    </message>
 </context>
 <context>
     <name>HelpDlg</name>
@@ -4418,6 +4430,10 @@ Pas de permission ? Le capteur a besoin d’une règle udev pour l’ID USB %1:%
         <location filename="../../src/device/transports/hidholtek.cpp" line="42"/>
         <source>Cannot initialise the sensor: %1</source>
         <translation>Impossible d’initialiser le capteur : %1</translation>
+    </message>
+    <message>
+        <source>Receive buffer limit exceeded.</source>
+        <translation>La limite du tampon de réception est dépassée.</translation>
     </message>
 </context>
 <context>
@@ -7021,6 +7037,10 @@ Puis déconnectez-vous et reconnectez-vous pour que l&apos;appartenance au group
         <source>socket error</source>
         <translation>erreur de socket</translation>
     </message>
+    <message>
+        <source>Network receive buffer limit exceeded.</source>
+        <translation>La limite du tampon de réception réseau est dépassée.</translation>
+    </message>
 </context>
 <context>
     <name>ReadingsModel</name>
@@ -7543,6 +7563,14 @@ Puis déconnectez-vous et reconnectez-vous pour que l&apos;appartenance au group
         <location filename="../../src/recording/recordingfile.cpp" line="805"/>
         <source>note</source>
         <translation>note</translation>
+    </message>
+    <message>
+        <source>The recording archive is too large to import.</source>
+        <translation>L’archive de mesures est trop volumineuse pour être importée.</translation>
+    </message>
+    <message>
+        <source>No usable recording data found (recording.csv is missing, invalid, or too large).</source>
+        <translation>Aucune donnée de mesure exploitable (recording.csv est absent, invalide ou trop volumineux).</translation>
     </message>
 </context>
 <context>
@@ -9047,6 +9075,22 @@ Puis déconnectez-vous et reconnectez-vous pour que l&apos;appartenance au group
         <location filename="../../src/core/workspacefile.cpp" line="341"/>
         <source>Cannot write the file.</source>
         <translation>Impossible d&apos;écrire le fichier.</translation>
+    </message>
+    <message>
+        <source>The workspace file is too large to import.</source>
+        <translation>Le fichier d’espace de travail est trop volumineux pour être importé.</translation>
+    </message>
+    <message>
+        <source>The workspace thumbnail is too large.</source>
+        <translation>La miniature de l’espace de travail est trop volumineuse.</translation>
+    </message>
+    <message>
+        <source>The workspace thumbnail dimensions are too large.</source>
+        <translation>Les dimensions de la miniature de l’espace de travail sont trop grandes.</translation>
+    </message>
+    <message>
+        <source>The workspace file is too large to write.</source>
+        <translation>Le fichier d’espace de travail est trop volumineux pour être écrit.</translation>
     </message>
 </context>
 <context>

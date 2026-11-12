@@ -40,7 +40,7 @@
 #include "core/settings.h"
 #include "ui/engnumbervalidator.h"
 
-GraphWidget::GraphWidget(QWidget *parent): GraphWidget(parent, nullptr)
+GraphWidget::GraphWidget(QWidget *parent) : GraphWidget(parent, nullptr)
 {
 }
 GraphWidget::GraphWidget(QWidget *parent, Settings *settings) :

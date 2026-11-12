@@ -140,8 +140,8 @@ InstanceWidget::InstanceWidget(QString instanceId, QString configPath, DeviceSes
   connect(m_session, &DeviceSession::opened, this, &InstanceWidget::applyConsoleLogging);
   // OK and Apply take the settings over; the meter stays as it is - the
   // dialog has no meter page, a meter is changed through takeOver()
-  connect(m_configDlg, &SettingsDialog::accepted, this, [this]() { applySLOT(); });
-  connect(m_configDlg, &SettingsDialog::applied, this, [this]() { applySLOT(); });
+  connect(m_configDlg, &SettingsDialog::accepted, this, &InstanceWidget::applySLOT);
+  connect(m_configDlg, &SettingsDialog::applied, this, &InstanceWidget::applySLOT);
   connect(m_configDlg, &SettingsDialog::zoomed, this, &InstanceWidget::zoomedSLOT);
   // the first graph is this widget's own; MainWindow adds the others
   addGraph(ui_graph, QStringLiteral("graph"));

@@ -59,8 +59,15 @@ bool readName(const QByteArray &d, int &pos, QString &name)
   return true;
 }
 
-quint16 u16(const QByteArray &d, int pos) { return quint16((quint8(d[pos]) << 8) | quint8(d[pos + 1])); }
-quint32 u32(const QByteArray &d, int pos) { return (quint32(u16(d, pos)) << 16) | u16(d, pos + 2); }
+quint16 u16(const QByteArray &d, int pos)
+{
+  return quint16((quint8(d[pos]) << 8) | quint8(d[pos + 1]));
+}
+
+quint32 u32(const QByteArray &d, int pos)
+{
+  return (quint32(u16(d, pos)) << 16) | u16(d, pos + 2);
+}
 }
 
 QList<MdnsMessage::Record> MdnsMessage::parse(const QByteArray &d)

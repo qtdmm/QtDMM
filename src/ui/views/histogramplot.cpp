@@ -42,9 +42,13 @@ void HistogramPlot::addReading(const Reading &reading)
   }
   if (reading.noNumber() || reading.overload || reading.hold || !std::isfinite(reading.value))
     return;
-  m_values.append(reading.value);
-  if (m_values.size() > 1000)
-    m_values.remove(0, m_values.size() - 1000);
+  if (m_values.size() < kMaxValues)
+    m_values.append(reading.value);
+  else
+  {
+    m_values[m_valueHead] = reading.value;
+    m_valueHead = (m_valueHead + 1) % kMaxValues;
+  }
   update();
 }
 
@@ -52,6 +56,7 @@ void HistogramPlot::clear()
 {
   m_values.clear();
   m_shown.clear();
+  m_valueHead = 0;
   update();
 }
 
@@ -139,7 +144,7 @@ void HistogramPlot::paintEvent(QPaintEvent *)
   p.setPen(labels);
   p.drawText(QRect(area.left() - 42, area.top() - fm.height() / 2, 38, fm.height()), Qt::AlignRight,
              QString::number(maxCount));
-  p.drawText(QRect(area.left() - 42, area.bottom() - fm.height() / 2, 38, fm.height()), Qt::AlignRight, "0");
+  p.drawText(QRect(area.left() - 42, area.bottom() - fm.height() / 2, 38, fm.height()), Qt::AlignRight, QStringLiteral("0"));
   p.drawText(QRect(area.left(), area.bottom() + 4, 90, fm.height()), Qt::AlignLeft,
              QString::number(lo / axis.factor, 'g', 4));
   p.drawText(QRect(area.right() - 90, area.bottom() + 4, 90, fm.height()), Qt::AlignRight,

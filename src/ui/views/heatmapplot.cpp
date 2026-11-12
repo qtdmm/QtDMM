@@ -11,6 +11,7 @@
 namespace
 {
 constexpr int kMaxSamples = 5000;
+constexpr int kMaxGridDimension = 256;
 }
 
 HeatmapPlot::HeatmapPlot(QWidget *parent) : QWidget(parent)
@@ -42,8 +43,8 @@ void HeatmapPlot::setLegend(const QString &legend)
 
 void HeatmapPlot::setCellCount(int nx, int ny)
 {
-  m_nx = qMax(2, nx);
-  m_ny = qMax(2, ny);
+  m_nx = qBound(2, nx, kMaxGridDimension);
+  m_ny = qBound(2, ny, kMaxGridDimension);
   update();
 }
 

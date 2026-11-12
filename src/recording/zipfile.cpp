@@ -4,6 +4,8 @@
 
 #include "3rdparty/miniz/miniz.h"
 
+#include <limits>
+
 bool ZipWriter::add(const QByteArray &name, const QByteArray &data, bool store, const QDateTime &time)
 {
   // the sizes and offsets are 32 bits, the number of entries 16
@@ -92,23 +94,37 @@ QByteArray ZipWriter::finish()
   return m_data;
 }
 
-std::optional<QByteArray> zipEntry(const QByteArray &zip, const QString &name)
+std::optional<QByteArray> zipEntry(const QByteArray &zip, const QString &name, qint64 maxBytes)
 {
+  if (maxBytes < 0)
+    return std::nullopt;
   mz_zip_archive archive{};
   if (!mz_zip_reader_init_mem(&archive, zip.constData(), size_t(zip.size()), 0))
     return std::nullopt;
-  size_t size = 0;
-  void *data = mz_zip_reader_extract_file_to_heap(&archive, name.toUtf8().constData(), &size, 0);
+  const QByteArray utf8Name = name.toUtf8();
+  const int index = mz_zip_reader_locate_file(&archive, utf8Name.constData(), nullptr, 0);
+  mz_zip_archive_file_stat stat{};
+  const bool allowed = index >= 0 && mz_zip_reader_file_stat(&archive, mz_uint(index), &stat)
+                       && stat.m_uncomp_size <= quint64(maxBytes)
+                       && stat.m_uncomp_size <= quint64(std::numeric_limits<qsizetype>::max());
+  QByteArray bytes;
+  bool extracted = false;
+  if (allowed)
+  {
+    bytes.resize(qsizetype(stat.m_uncomp_size));
+    extracted = stat.m_uncomp_size == 0 || mz_zip_reader_extract_to_mem(&archive, mz_uint(index), bytes.data(),
+                                                                          size_t(bytes.size()), 0);
+  }
   mz_zip_reader_end(&archive);
-  if (!data)
+  if (!extracted)
     return std::nullopt;
-  QByteArray bytes(static_cast<const char *>(data), qsizetype(size));
-  mz_free(data);
   return bytes;
 }
 
 std::optional<QList<ZipFileEntry>> zipFiles(const QByteArray &zip, qint64 maxTotal)
 {
+  if (maxTotal < 0)
+    return std::nullopt;
   mz_zip_archive archive{};
   if (!mz_zip_reader_init_mem(&archive, zip.constData(), size_t(zip.size()), 0))
     return std::nullopt;
@@ -122,8 +138,12 @@ std::optional<QList<ZipFileEntry>> zipFiles(const QByteArray &zip, qint64 maxTot
   {
     mz_zip_archive_file_stat stat;
     ok = mz_zip_reader_file_stat(&archive, i, &stat);
-    total += ok ? qint64(stat.m_uncomp_size) : 0;
-    ok = ok && total <= maxTotal;
+    if (ok)
+    {
+      ok = total <= maxTotal && stat.m_uncomp_size <= quint64(maxTotal - total);
+      if (ok)
+        total += qint64(stat.m_uncomp_size);
+    }
   }
   for (mz_uint i = 0; ok && i < count; ++i)
   {

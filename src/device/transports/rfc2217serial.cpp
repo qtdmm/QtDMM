@@ -109,8 +109,14 @@ qint64 RFC2217SerialDevice::writeData(const char *data, qint64 len)
 
 void RFC2217SerialDevice::onReadyRead()
 {
-  filterTelnet(m_socket->readAll());
-  if (!m_rx.isEmpty())
+  while (m_socket && m_socket->bytesAvailable() > 0 && m_socket->state() == QAbstractSocket::ConnectedState)
+  {
+    const QByteArray raw = m_socket->read(4096);
+    if (raw.isEmpty())
+      break;
+    filterTelnet(raw);
+  }
+  if (hasBufferedData())
     Q_EMIT readyRead();
 }
 
@@ -119,6 +125,8 @@ void RFC2217SerialDevice::onReadyRead()
 // A binary protocol's 0xff bytes arrive as IAC IAC.
 void RFC2217SerialDevice::filterTelnet(const QByteArray &raw)
 {
+  QByteArray payload;
+  payload.reserve(raw.size());
   const quint8 IAC = 0xFF, SB = 0xFA, WILL = 0xFB, DONT = 0xFE;
   for (char c : raw)
   {
@@ -127,10 +135,10 @@ void RFC2217SerialDevice::filterTelnet(const QByteArray &raw)
     {
       case TelnetState::Data:
         if (b == IAC) m_telnet = TelnetState::Iac;
-        else m_rx.append(c);
+        else payload.append(c);
         break;
       case TelnetState::Iac:
-        if (b == IAC) { m_rx.append(c); m_telnet = TelnetState::Data; }
+        if (b == IAC) { payload.append(c); m_telnet = TelnetState::Data; }
         else if (b == SB) m_telnet = TelnetState::Sub;
         else if (b >= WILL && b <= DONT) m_telnet = TelnetState::Option;   // one option byte follows
         else m_telnet = TelnetState::Data;                                 // NOP and friends
@@ -146,6 +154,14 @@ void RFC2217SerialDevice::filterTelnet(const QByteArray &raw)
         m_telnet = b == IAC ? TelnetState::Sub : TelnetState::Data;
         break;
     }
+  }
+  if (!appendToBuffer(payload))
+  {
+    setErrorString(tr("Network receive buffer limit exceeded."));
+    m_socket->disconnect(this);
+    m_socket->abort();
+    QIODevice::close();
+    Q_EMIT finished();
   }
 }
 

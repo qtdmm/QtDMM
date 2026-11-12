@@ -3,8 +3,10 @@
 #include "core/workspacefile.h"
 
 #include <QCoreApplication>
+#include <QBuffer>
 #include <QFile>
 #include <QFileInfo>
+#include <QImageReader>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -13,6 +15,13 @@
 
 namespace
 {
+// Workspaces are small settings documents; the thumbnail is additionally
+// bounded by encoded size and decoded dimensions before the UI displays it.
+constexpr qint64 kMaxWorkspaceBytes = qint64(32) << 20;
+constexpr qsizetype kMaxThumbnailBase64Bytes = qsizetype(12) << 20;
+constexpr int kMaxThumbnailDimension = 4096;
+constexpr qint64 kMaxThumbnailPixels = qint64(kMaxThumbnailDimension) * kMaxThumbnailDimension;
+
 QString tr(const char *text)
 {
   return QCoreApplication::translate("WorkspaceFile", text);
@@ -22,6 +31,30 @@ void setError(QString *error, const QString &text)
 {
   if (error)
     *error = text;
+}
+
+bool thumbnailFits(const QByteArray &thumbnail, QString *error)
+{
+  if (thumbnail.size() > kMaxThumbnailBase64Bytes * 3 / 4)
+  {
+    setError(error, tr("The workspace thumbnail is too large."));
+    return false;
+  }
+  if (thumbnail.isEmpty())
+    return true;
+
+  QBuffer buffer;
+  buffer.setData(thumbnail);
+  buffer.open(QIODevice::ReadOnly);
+  QImageReader reader(&buffer);
+  const QSize size = reader.size();
+  if (size.isValid() && (size.width() > kMaxThumbnailDimension || size.height() > kMaxThumbnailDimension
+                         || qint64(size.width()) * size.height() > kMaxThumbnailPixels))
+  {
+    setError(error, tr("The workspace thumbnail dimensions are too large."));
+    return false;
+  }
+  return true;
 }
 
 const QLatin1String kFormat("qtdmm-workspace");
@@ -173,7 +206,17 @@ std::optional<WorkspaceFile> WorkspaceFile::read(const QString &path, QString *e
     setError(error, tr("Cannot open the file."));
     return std::nullopt;
   }
-  const QByteArray data = file.readAll();
+  if (file.size() < 0 || file.size() > kMaxWorkspaceBytes)
+  {
+    setError(error, tr("The workspace file is too large to import."));
+    return std::nullopt;
+  }
+  const QByteArray data = file.read(kMaxWorkspaceBytes + 1);
+  if (data.size() > kMaxWorkspaceBytes || !file.atEnd())
+  {
+    setError(error, tr("The workspace file is too large to import."));
+    return std::nullopt;
+  }
   file.close();
   // version 1 is an ini file
   if (!data.trimmed().startsWith('{'))
@@ -202,7 +245,15 @@ std::optional<WorkspaceFile> WorkspaceFile::read(const QString &path, QString *e
   ws.width = window.value("width").toInt();
   ws.height = window.value("height").toInt();
   ws.windowDevice = window.value("device").toString();
-  ws.thumbnail = QByteArray::fromBase64(root.value("thumbnail").toString().toLatin1());
+  const QString thumbnail = root.value("thumbnail").toString();
+  if (thumbnail.size() > kMaxThumbnailBase64Bytes)
+  {
+    setError(error, tr("The workspace thumbnail is too large."));
+    return std::nullopt;
+  }
+  ws.thumbnail = QByteArray::fromBase64(thumbnail.toLatin1());
+  if (!thumbnailFits(ws.thumbnail, error))
+    return std::nullopt;
 
   // the keys first as they were kept (unknown ones), the known ones over them
   const QJsonObject other = root.value("other").toObject();
@@ -252,6 +303,9 @@ std::optional<WorkspaceFile> WorkspaceFile::read(const QString &path, QString *e
 
 bool WorkspaceFile::write(const QString &path, QString *error) const
 {
+  if (!thumbnailFits(thumbnail, error))
+    return false;
+
   QVariantMap rest = keys;
   QJsonObject layout;
   QJsonObject views;
@@ -334,9 +388,15 @@ bool WorkspaceFile::write(const QString &path, QString *error) const
     root.insert("other", QJsonObject::fromVariantMap(rest));
   if (!thumbnail.isEmpty())
     root.insert("thumbnail", QString::fromLatin1(thumbnail.toBase64()));
+  const QByteArray data = QJsonDocument(root).toJson(QJsonDocument::Indented);
+  if (data.size() > kMaxWorkspaceBytes)
+  {
+    setError(error, tr("The workspace file is too large to write."));
+    return false;
+  }
 
   QSaveFile file(path);
-  if (!file.open(QIODevice::WriteOnly) || file.write(QJsonDocument(root).toJson(QJsonDocument::Indented)) < 0 || !file.commit())
+  if (!file.open(QIODevice::WriteOnly) || file.write(data) < 0 || !file.commit())
   {
     setError(error, tr("Cannot write the file."));
     return false;

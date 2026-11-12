@@ -2,7 +2,11 @@
 #include "decoders.h"
 #include "core/siprefix.h"
 
-std::vector<DmmDecoder::DMMInfo> *DmmDecoder::m_configurations;
+std::vector<DmmDecoder::DMMInfo> &DmmDecoder::configurations()
+{
+  static std::vector<DMMInfo> configs;
+  return configs;
+}
 
 DmmDecoder::DmmDecoder(FrameFormat::DataFormat df)
   : m_type(df)
@@ -10,10 +14,8 @@ DmmDecoder::DmmDecoder(FrameFormat::DataFormat df)
 
 void DmmDecoder::addConfig(DMMInfo info)
 {
-    if(!DmmDecoder::m_configurations)
-        DmmDecoder::m_configurations = new std::vector<DMMInfo>();
   info.name = info.vendor + " " + info.model;
-  DmmDecoder::m_configurations->push_back(info);
+  configurations().push_back(info);
 }
 
 bool DmmDecoder::sameModel(const QString &a, const QString &b)
@@ -36,15 +38,13 @@ QString DmmDecoder::canonicalModel(const QString &name)
 
 std::vector<DmmDecoder::DMMInfo> DmmDecoder::getDeviceConfigurations()
 {
-  if(!DmmDecoder::m_configurations)
-    DmmDecoder::m_configurations = new std::vector<DMMInfo>();
-  return *m_configurations;
+  return configurations();
 }
 
 
 QString DmmDecoder::insertComma(const QString &val, int pos)
 {
-  return val.left(2 + pos) + "." + val.right(4 - pos);
+  return val.left(2 + pos) + QStringLiteral(".") + val.right(4 - pos);
 }
 
 
@@ -70,13 +70,18 @@ void DmmDecoder::appendSum16(QByteArray &frame)
 
 bool DmmDecoder::sum16Valid(const unsigned char *f, int n)
 {
+  if (!f || n < 2)
+    return false;
   unsigned sum = 0;
   for (int i = 0; i < n - 2; ++i)
     sum += f[i];
   return ((sum >> 8) & 0xFF) == f[n - 2] && (sum & 0xFF) == f[n - 1];
 }
 
-bool DmmDecoder::bit(const QByteArray &data, int byte, int bit) const {
+bool DmmDecoder::bit(const QByteArray &data, int byte, int bit) const
+{
+  if (byte < 0 || byte >= data.size() || bit < 0 || bit >= 8)
+    return false;
   return data[byte] & (1 << bit);
 }
 

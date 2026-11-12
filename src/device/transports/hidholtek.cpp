@@ -151,9 +151,13 @@ void HidHoltekDevice::onReport(const QByteArray &raw)
   if (m_haveCo2 && m_haveTemperature && m_haveHumidity)
   {
     // a complete set: one line per quantity, in the order of the decoder's ids
-    m_rx.append(formatLine(Co2, m_co2));
-    m_rx.append(formatLine(Temperature, m_temperature));
-    m_rx.append(formatLine(Humidity, m_humidity));
+    const QByteArray readings = formatLine(Co2, m_co2) + formatLine(Temperature, m_temperature)
+                                + formatLine(Humidity, m_humidity);
+    if (!appendToBuffer(readings))
+    {
+      onReadError(tr("Receive buffer limit exceeded."));
+      return;
+    }
     m_haveCo2 = m_haveTemperature = m_haveHumidity = false;
     Q_EMIT readyRead();
   }
@@ -163,6 +167,7 @@ void HidHoltekDevice::onReadError(const QString &what)
 {
   if (!m_isOpen)
     return;   // our own close() ends the loop without an error
+  setErrorString(what);
   qWarning() << "HID: read failed:" << what;
   m_isOpen = false;
   stopReader();
