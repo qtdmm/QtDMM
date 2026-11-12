@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "ui/views/xyplot.h"
 
+#include "ui/views/plotaxis.h"
+
 #include <QPainter>
 
 #include <cmath>
@@ -9,12 +11,6 @@
 XYPlot::XYPlot(QWidget *parent) : QWidget(parent)
 {
   setMinimumSize(220, 180);
-}
-
-void XYPlot::setCaption(const QString &caption)
-{
-  m_caption = caption;
-  update();
 }
 
 void XYPlot::setThemeColors(const QBrush &background, const QColor &grid, const QColor &labels, const QColor &data)
@@ -32,10 +28,10 @@ void XYPlot::setLegend(const QString &legend)
   update();
 }
 
-void XYPlot::setAxisCaptions(const QString &x, const QString &y)
+void XYPlot::setAxisUnits(const QString &x, const QString &y)
 {
-  m_xCaption = x;
-  m_yCaption = y;
+  m_xUnit = x;
+  m_yUnit = y;
   update();
 }
 
@@ -52,6 +48,19 @@ void XYPlot::addPoint(double x, double y)
 void XYPlot::clear()
 {
   m_points.clear();
+  m_shown.clear();
+  update();
+}
+
+void XYPlot::setHold(bool hold)
+{
+  if (m_hold == hold)
+    return;
+  m_hold = hold;
+  if (m_hold)
+    m_shown = m_points;
+  else
+    m_shown.clear();
   update();
 }
 
@@ -60,10 +69,53 @@ void XYPlot::paintEvent(QPaintEvent *)
   QPainter p(this);
   p.setRenderHint(QPainter::Antialiasing);
   p.fillRect(rect(), m_background.style() == Qt::NoBrush ? QBrush(palette().base()) : m_background);
-  const QRectF area = QRectF(rect()).adjusted(48, 48, -20, -42);
+
   const QColor grid = m_grid.isValid() ? m_grid : palette().mid().color();
   const QColor labels = m_labels.isValid() ? m_labels : palette().text().color();
   const QColor data = m_data.isValid() ? m_data : palette().highlight().color();
+  const QFontMetrics fm(font());
+  p.setPen(labels);
+  p.drawText(QRectF(6, 2, width() - 12, fm.height()), Qt::AlignCenter,
+             fm.elidedText(m_legend, Qt::ElideRight, width() - 12));
+
+  const QVector<QPointF> &shown = m_hold ? m_shown : m_points;
+  PlotAxis::Range xAxis = PlotAxis::range(0, 0, m_xUnit);
+  PlotAxis::Range yAxis = PlotAxis::range(0, 0, m_yUnit);
+  QString xMinimum, xMaximum, yMinimum, yMaximum;
+  int yLabelWidth = 0;
+  int xLabelWidth = 60;
+  if (!shown.isEmpty())
+  {
+    double xmin = shown.first().x(), xmax = xmin, ymin = shown.first().y(), ymax = ymin;
+    for (const QPointF &point : std::as_const(shown))
+    {
+      xmin = qMin(xmin, point.x());
+      xmax = qMax(xmax, point.x());
+      ymin = qMin(ymin, point.y());
+      ymax = qMax(ymax, point.y());
+    }
+    xAxis = PlotAxis::range(xmin, xmax, m_xUnit);
+    yAxis = PlotAxis::range(ymin, ymax, m_yUnit);
+    xMinimum = QString::number(xAxis.minimum / xAxis.factor, 'g', 4);
+    xMaximum = QString::number(xAxis.maximum / xAxis.factor, 'g', 4);
+    yMinimum = QString::number(yAxis.minimum / yAxis.factor, 'g', 4);
+    yMaximum = QString::number(yAxis.maximum / yAxis.factor, 'g', 4);
+    yLabelWidth = qMax(fm.horizontalAdvance(yMinimum), fm.horizontalAdvance(yMaximum));
+    xLabelWidth = qMax(fm.horizontalAdvance(xMinimum), fm.horizontalAdvance(xMaximum));
+  }
+
+  const qreal leftMargin = qMax(48, yLabelWidth + 20);
+  const QRectF area = QRectF(rect()).adjusted(leftMargin, 48, -20, -42);
+  auto drawHold = [&]
+  {
+    if (m_hold)
+    {
+      p.setPen(labels);
+      p.drawText(QRectF(area.right() - 58, area.top(), 54, fm.height()), Qt::AlignRight | Qt::AlignVCenter,
+                 tr("HOLD"));
+    }
+  };
+
   p.setPen(grid);
   for (int i = 0; i <= 5; ++i)
   {
@@ -73,42 +125,34 @@ void XYPlot::paintEvent(QPaintEvent *)
     p.drawLine(QPointF(area.left(), y), QPointF(area.right(), y));
   }
   p.setPen(labels);
-  const QString legend = m_legend.isEmpty() ? m_caption : m_legend;
-  const QFontMetrics fm(font());
-  p.drawText(QRectF(6, 2, width() - 12, fm.height()), Qt::AlignCenter,
-             fm.elidedText(legend, Qt::ElideRight, width() - 12));
-  p.drawText(QRectF(area.left(), area.bottom() + 8, area.width(), 24), Qt::AlignCenter, m_xCaption);
+  p.drawText(QRectF(area.left(), area.bottom() + 8, area.width(), 24), Qt::AlignCenter, xAxis.title);
   p.save();
   p.translate(12, area.center().y());
   p.rotate(-90);
-  p.drawText(QRectF(-area.height() / 2, -12, area.height(), 24), Qt::AlignCenter, m_yCaption);
+  p.drawText(QRectF(-area.height() / 2, -12, area.height(), 24), Qt::AlignCenter, yAxis.title);
   p.restore();
-  if (m_points.isEmpty())
+
+  if (shown.isEmpty())
   {
-    p.setPen(labels);
     p.drawText(area, Qt::AlignCenter, tr("No XY data yet"));
+    drawHold();
     return;
   }
-  double xmin = m_points.first().x(), xmax = xmin, ymin = m_points.first().y(), ymax = ymin;
-  for (const QPointF &pt : std::as_const(m_points))
-  {
-    xmin = qMin(xmin, pt.x()); xmax = qMax(xmax, pt.x());
-    ymin = qMin(ymin, pt.y()); ymax = qMax(ymax, pt.y());
-  }
-  if (xmin == xmax) { xmin -= 0.5; xmax += 0.5; }
-  if (ymin == ymax) { ymin -= 0.5; ymax += 0.5; }
-  p.setPen(labels);
-  p.drawText(QRectF(area.left() - 32, area.bottom() - 12, 30, 18), Qt::AlignRight | Qt::AlignVCenter,
-             QString::number(ymin, 'g', 4));
-  p.drawText(QRectF(area.left() - 32, area.top() - 6, 30, 18), Qt::AlignRight | Qt::AlignVCenter,
-             QString::number(ymax, 'g', 4));
-  p.drawText(QRectF(area.left(), area.bottom() + 25, 60, 16), Qt::AlignLeft,
-             QString::number(xmin, 'g', 4));
-  p.drawText(QRectF(area.right() - 60, area.bottom() + 25, 60, 16), Qt::AlignRight,
-             QString::number(xmax, 'g', 4));
+
+  p.drawText(QRectF(area.left() - yLabelWidth - 4, area.bottom() - 12, yLabelWidth, 18),
+             Qt::AlignRight | Qt::AlignVCenter, yMinimum);
+  p.drawText(QRectF(area.left() - yLabelWidth - 4, area.top() - 6, yLabelWidth, 18),
+             Qt::AlignRight | Qt::AlignVCenter, yMaximum);
+  p.drawText(QRectF(area.left(), area.bottom() + 25, xLabelWidth, 16), Qt::AlignLeft, xMinimum);
+  p.drawText(QRectF(area.right() - xLabelWidth, area.bottom() + 25, xLabelWidth, 16), Qt::AlignRight, xMaximum);
+
   p.setPen(Qt::NoPen);
   p.setBrush(data);
-  for (const QPointF &pt : std::as_const(m_points))
-    p.drawEllipse(QPointF(area.left() + (pt.x() - xmin) / (xmax - xmin) * area.width(),
-                         area.bottom() - (pt.y() - ymin) / (ymax - ymin) * area.height()), 2.5, 2.5);
+  for (const QPointF &point : std::as_const(shown))
+  {
+    p.drawEllipse(QPointF(area.left() + (point.x() - xAxis.minimum) / (xAxis.maximum - xAxis.minimum) * area.width(),
+                         area.bottom() - (point.y() - yAxis.minimum) / (yAxis.maximum - yAxis.minimum) * area.height()),
+                  2.5, 2.5);
+  }
+  drawHold();
 }

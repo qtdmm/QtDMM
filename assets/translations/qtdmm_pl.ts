@@ -4434,6 +4434,11 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
         <source>Value</source>
         <translation>Wartość</translation>
     </message>
+    <message>
+        <location filename="../../src/ui/views/histogramplot.cpp"/>
+        <source>HOLD</source>
+        <translation>HOLD</translation>
+    </message>
 </context>
 <context>
     <name>InstanceWidget</name>
@@ -6006,6 +6011,40 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
         <source>&amp;Clear list</source>
         <translation>&amp;Wyczyść listę</translation>
     </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp"/>
+        <source>&amp;Color scheme</source>
+        <translation>Schemat kolorów</translation>
+    </message>
+    <message>
+        <source>&amp;Hold picture</source>
+        <translation>&amp;Zatrzymaj obraz</translation>
+    </message>
+    <message>
+        <source>&amp;Reset</source>
+        <translation>&amp;Resetuj</translation>
+    </message>
+    <message>
+        <source>&amp;Save image...</source>
+        <translation>&amp;Zapisz obraz...</translation>
+    </message>
+    <message>
+        <source>Save image</source>
+        <translation>Zapisz obraz</translation>
+    </message>
+    <message>
+        <source>PNG image (*.png)</source>
+        <translation>Obraz PNG (*.png)</translation>
+    </message>
+    <message>
+        <source>Could not save the image.</source>
+        <translation>Nie można zapisać obrazu.</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp"/>
+        <source>He&amp;atmap</source>
+        <translation>M&amp;apa cieplna</translation>
+    </message>
 </context>
 <context>
     <name>MeterConnection</name>
@@ -6341,13 +6380,13 @@ Czy multimetr jest podłączony i włączony?</translation>
     </message>
     <message>
         <location filename="../../src/ui/views/poincareplot.cpp" line="178"/>
-        <source>H&amp;old picture</source>
+        <source>&amp;Hold picture</source>
         <translation>&amp;Zatrzymaj obraz</translation>
     </message>
     <message>
         <location filename="../../src/ui/views/poincareplot.cpp" line="182"/>
-        <source>&amp;Clear</source>
-        <translation>&amp;Wyczyść</translation>
+        <source>&amp;Reset</source>
+        <translation>&amp;Resetuj</translation>
     </message>
     <message>
         <location filename="../../src/ui/views/poincareplot.cpp" line="183"/>
@@ -9022,6 +9061,11 @@ Następnie wyloguj się i zaloguj ponownie, aby członkostwo w grupie zaczęło 
         <source>No XY data yet</source>
         <translation>Brak jeszcze danych XY</translation>
     </message>
+    <message>
+        <location filename="../../src/ui/views/xyplot.cpp"/>
+        <source>HOLD</source>
+        <translation>HOLD</translation>
+    </message>
 </context>
 <context>
     <name>XYView</name>
@@ -9044,6 +9088,72 @@ Następnie wyloguj się i zaloguj ponownie, aby członkostwo w grupie zaczęło 
         <location filename="../../src/ui/xyview.cpp" line="60"/>
         <source>Y</source>
         <translation>Y</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/xyview.cpp"/>
+        <source>Value %1</source>
+        <translation>Wartość %1</translation>
+    </message>
+</context>
+
+<context>
+    <name>HeatmapPlot</name>
+    <message>
+        <location filename="../../src/ui/views/heatmapplot.cpp"/>
+        <source>No data</source>
+        <translation>Brak danych</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/heatmapplot.cpp"/>
+        <source>No heatmap data yet</source>
+        <translation>Jeszcze brak danych mapy cieplnej</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/heatmapplot.cpp"/>
+        <source>HOLD</source>
+        <translation>HOLD</translation>
+    </message>
+</context>
+
+<context>
+    <name>ColorMap</name>
+    <message>
+        <location filename="../../src/ui/views/colormap.cpp"/>
+        <source>Rainbow</source>
+        <translation>Tęcza</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/colormap.cpp"/>
+        <source>Ironbow (thermal)</source>
+        <translation>Ironbow (termiczna)</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/colormap.cpp"/>
+        <source>Viridis</source>
+        <translation>Viridis</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/colormap.cpp"/>
+        <source>Grayscale</source>
+        <translation>Skala szarości</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/colormap.cpp"/>
+        <source>Blue (monochrome)</source>
+        <translation>Niebieski (monochromatyczny)</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/colormap.cpp"/>
+        <source>Blue-yellow</source>
+        <translation>Niebiesko-żółty</translation>
+    </message>
+</context>
+<context>
+    <name>HeatmapView</name>
+    <message>
+        <location filename="../../src/ui/heatmapview.cpp"/>
+        <source>Value %1</source>
+        <translation>Wartość %1</translation>
     </message>
 </context>
 </TS>

@@ -28,7 +28,7 @@ class ValueMenu
 {
   Q_DECLARE_TR_FUNCTIONS(ValueMenu)
 public:
-  enum class View { Lcd, Meter, Poincare, Histogram, Graph, Table };
+  enum class View { Lcd, Meter, Poincare, Histogram, Heatmap, Graph, Table };
 
   /// What the menu acts on.
   struct Target
@@ -49,6 +49,7 @@ public:
     std::function<void(const ValueRef &)> newMeter;
     std::function<void(const ValueRef &)> newPoincare;
     std::function<void(const ValueRef &)> newHistogram;
+    std::function<void(const ValueRef &)> newHeatmap;
     /// The graphs by their windows' titles (none: the window's current
     /// graph alone), showing one's window, and a new graph with the value.
     std::function<QList<std::pair<QString, GraphWidget *>>()> graphs;

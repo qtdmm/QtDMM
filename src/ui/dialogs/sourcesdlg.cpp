@@ -143,3 +143,26 @@ void SourcesDlg::ticked(QTreeWidgetItem *item)
   }
   m_filling = false;
 }
+
+
+SourcesDlg::SourcesDlg(const QString &view, const QList<Meter> &meters, const ValueRef &x, const ValueRef &y,
+                       const ValueRef &z, QWidget *parent) :
+  SourcesDlg(view, meters, x, y, parent)
+{
+  m_z = new QComboBox(this);
+  for (const Meter &meter : meters)
+    for (int id = 0; id < meter.values.size(); ++id)
+      m_z->addItem(QString("%1 — %2").arg(meter.name, meter.values[id]), ValueRef(id, meter.source).toString());
+  for (int i = 0; i < m_z->count(); ++i)
+    if (ValueRef::fromString(m_z->itemData(i).toString()) == z)
+      m_z->setCurrentIndex(i);
+  auto *layout = qobject_cast<QVBoxLayout *>(this->layout());
+  layout->addWidget(new QLabel(tr("Color (Z):"), this));
+  layout->addWidget(m_z);
+  resize(420, 220);
+}
+
+ValueRef SourcesDlg::zValue() const
+{
+  return m_z ? ValueRef::fromString(m_z->currentData().toString()) : ValueRef();
+}

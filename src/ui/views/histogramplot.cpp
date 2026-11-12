@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "ui/views/histogramplot.h"
 
-#include "core/siprefix.h"
+#include "ui/views/plotaxis.h"
 
 #include <QPainter>
 
@@ -35,18 +35,35 @@ void HistogramPlot::addReading(const Reading &reading)
 {
   if (reading.id != m_valueId)
     return;
+  if (reading.baseUnit != m_unit)
+  {
+    clear();
+    m_unit = reading.baseUnit;
+  }
   if (reading.noNumber() || reading.overload || reading.hold || !std::isfinite(reading.value))
     return;
   m_values.append(reading.value);
   if (m_values.size() > 1000)
     m_values.remove(0, m_values.size() - 1000);
-  m_unit = reading.baseUnit;
   update();
 }
 
 void HistogramPlot::clear()
 {
   m_values.clear();
+  m_shown.clear();
+  update();
+}
+
+void HistogramPlot::setHold(bool hold)
+{
+  if (m_hold == hold)
+    return;
+  m_hold = hold;
+  if (m_hold)
+    m_shown = m_values;
+  else
+    m_shown.clear();
   update();
 }
 
@@ -79,37 +96,42 @@ void HistogramPlot::paintEvent(QPaintEvent *)
   p.drawText(QRect(6, 2, width() - 12, fm.height()), Qt::AlignCenter,
              fm.elidedText(m_caption, Qt::ElideRight, width() - 12));
   const QRect area = rect().adjusted(48, fm.height() + 14, -16, -fm.height() * 2 - 14);
+  auto drawHold = [&]
+  {
+    if (m_hold)
+    {
+      p.setPen(labels);
+      p.drawText(QRect(area.right() - 58, area.top(), 54, fm.height()), Qt::AlignRight | Qt::AlignVCenter,
+                 tr("HOLD"));
+    }
+  };
   p.setPen(grid);
   for (int i = 0; i <= 4; ++i)
   {
     const int y = area.bottom() - area.height() * i / 4;
     p.drawLine(area.left(), y, area.right(), y);
   }
-  if (m_values.isEmpty())
+  const QVector<double> &shown = m_hold ? m_shown : m_values;
+  if (shown.isEmpty())
   {
     p.setPen(labels);
     p.drawText(area, Qt::AlignCenter, m_notice.isEmpty() ? tr("No readings yet") : m_notice);
+    drawHold();
     return;
   }
-  double lo = m_values.first(), hi = lo;
-  for (double value : std::as_const(m_values))
+  double lo = shown.first(), hi = lo;
+  for (double value : std::as_const(shown))
   {
     lo = qMin(lo, value);
     hi = qMax(hi, value);
   }
-  if (lo == hi)
-  {
-    const double pad = qMax(std::abs(lo) * 0.05, 0.5);
-    lo -= pad;
-    hi += pad;
-  }
-  QString prefix;
-  SiPrefix::scale(qMax(std::abs(lo), std::abs(hi)), m_unit, &prefix);
-  const double factor = SiPrefix::factor(prefix);
-  const int bins = qBound(5, int(std::ceil(std::sqrt(m_values.size()))), 40);
+  const PlotAxis::Range axis = PlotAxis::range(lo, hi, m_unit);
+  lo = axis.minimum;
+  hi = axis.maximum;
+  const int bins = qBound(5, int(std::ceil(std::sqrt(shown.size()))), 40);
   QVector<int> counts(bins, 0);
   int maxCount = 1;
-  for (double value : std::as_const(m_values))
+  for (double value : std::as_const(shown))
   {
     const int bin = qBound(0, int((value - lo) / (hi - lo) * bins), bins - 1);
     maxCount = qMax(maxCount, ++counts[bin]);
@@ -119,11 +141,11 @@ void HistogramPlot::paintEvent(QPaintEvent *)
              QString::number(maxCount));
   p.drawText(QRect(area.left() - 42, area.bottom() - fm.height() / 2, 38, fm.height()), Qt::AlignRight, "0");
   p.drawText(QRect(area.left(), area.bottom() + 4, 90, fm.height()), Qt::AlignLeft,
-             QString::number(lo / factor, 'g', 4));
+             QString::number(lo / axis.factor, 'g', 4));
   p.drawText(QRect(area.right() - 90, area.bottom() + 4, 90, fm.height()), Qt::AlignRight,
-             QString::number(hi / factor, 'g', 4));
+             QString::number(hi / axis.factor, 'g', 4));
   p.drawText(QRect(area.left(), area.bottom() + fm.height() + 4, area.width(), fm.height()), Qt::AlignCenter,
-             m_unit.isEmpty() ? tr("Value") : SiPrefix::displayText(prefix + m_unit));
+             m_unit.isEmpty() ? tr("Value") : axis.unit);
   const double slot = double(area.width()) / bins;
   p.setPen(Qt::NoPen);
   p.setBrush(data);
@@ -132,4 +154,5 @@ void HistogramPlot::paintEvent(QPaintEvent *)
     const double height = double(counts[i]) / maxCount * area.height();
     p.drawRect(QRectF(area.left() + i * slot + 1, area.bottom() - height, qMax(1.0, slot - 2), height));
   }
+  drawHold();
 }
