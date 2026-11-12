@@ -61,6 +61,8 @@ class XYPlot;
 class XYView;
 class HistogramPlot;
 class HistogramView;
+class HeatmapPlot;
+class HeatmapView;
 class AlarmBar;
 class ShortcutRegistry;
 class FrontPanel;
@@ -203,7 +205,7 @@ protected:
   /// the menu, each with its value (a meter also its style), and go when
   /// closed.
   /// @{
-  enum class Added { Meter, Poincare, XY, Histogram, Graph };
+  enum class Added { Meter, Poincare, XY, Histogram, Heatmap, Graph };
   QList<QMdiSubWindow *> m_added;
   QAction    *m_newMeterAction = nullptr;
   QAction    *m_newPoincareAction = nullptr;
@@ -213,6 +215,8 @@ protected:
   QMdiSubWindow *m_xyWin = nullptr;
   QHash<XYPlot *, XYView *> m_xyViews;
   QAction    *m_newHistogramAction = nullptr;
+  QAction    *m_newHeatmapAction = nullptr;
+  QAction    *m_heatmapAction = nullptr;
   QAction    *m_histogramAction = nullptr;
   QAction    *m_newGraphAction = nullptr;
   /// A window with another view of @p kind showing @p value, numbered
@@ -231,6 +235,9 @@ protected:
   bool        editXYSources(XYView *view);
   void        applyXYColors(XYPlot *plot);
   HistogramView *histogramViewOf(const QMdiSubWindow *win) const;
+  HeatmapView *heatmapViewOf(const QMdiSubWindow *win) const;
+  QList<QMdiSubWindow *> heatmapWindows() const;
+  void        applyHeatmapColors(HeatmapPlot *plot);
   /// @name Graphs
   /// The first one ("graph", InstanceWidget's own) is always there, more
   /// ("graph-2", ...) come from the menu and go when closed. All work alike
@@ -269,6 +276,8 @@ protected:
   PoincarePlot *m_poincare;
   HistogramPlot *m_histogram = nullptr;
   QHash<HistogramPlot *, HistogramView *> m_histogramViews;
+  HeatmapPlot *m_heatmap = nullptr;
+  QHash<HeatmapPlot *, HeatmapView *> m_heatmapViews;
   AlarmBar   *m_alarmBar;
   class AlarmService *m_alarmService;
   QMdiArea   *m_mdi;
@@ -279,6 +288,7 @@ protected:
   QMdiSubWindow *m_readingsWin;
   QMdiSubWindow *m_poincareWin;
   QMdiSubWindow *m_histogramWin = nullptr;
+  QMdiSubWindow *m_heatmapWin = nullptr;
   QMdiSubWindow *m_basketWin;
   QAction    *m_displayAction = nullptr;
   QAction    *m_meterAction = nullptr;
@@ -435,7 +445,7 @@ protected:
   /// "Sources..." of a view; for View::Meter the analog meter @p meter,
   /// nullptr for the first. False when cancelled.
   bool        editSources(ValueMenu::View view, MeterView *meter = nullptr, PoincareView *plot = nullptr,
-                          GraphWidget *graph = nullptr, HistogramView *histogram = nullptr);
+                          GraphWidget *graph = nullptr, HistogramView *histogram = nullptr, HeatmapView *heatmap = nullptr);
   /// Values... of a front panel: its device's values on the big and small line.
   void        editPanelValues(FrontPanel *panel);
   QAction    *m_graphSources = nullptr;   ///< in the graph's menu, with more than one meter

@@ -37,6 +37,9 @@ public:
   QList<ValueRef> chosen() const;
   ValueRef        xValue() const;
   ValueRef        yValue() const;
+  SourcesDlg(const QString &view, const QList<Meter> &meters, const ValueRef &x, const ValueRef &y,
+             const ValueRef &z, QWidget *parent = nullptr);
+  ValueRef        zValue() const;
   /// The tree, for the tests.
   QTreeWidget    *tree() const { return m_tree; }
 
@@ -49,4 +52,5 @@ private:
   bool         m_filling = false;
   QComboBox   *m_x = nullptr;
   QComboBox   *m_y = nullptr;
+  QComboBox   *m_z = nullptr;
 };

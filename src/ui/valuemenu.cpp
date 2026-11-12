@@ -84,6 +84,9 @@ void ValueMenu::fill(QMenu *menu, const Target &target, const ValueRef &value)
   if (target.newHistogram)
     QObject::connect(menu->addAction(tr("New &histogram")), &QAction::triggered, menu,
                      [add = target.newHistogram, ref] { add(ref); });
+  if (target.newHeatmap)
+    QObject::connect(menu->addAction(tr("New heatmap")), &QAction::triggered, menu,
+                     [add = target.newHeatmap, ref] { add(ref); });
   // the graph: off, or on an axis. A unit the axis has already joins it,
   // another one takes its place there (GraphWidget::setValueAxis())
   QList<std::pair<QString, GraphWidget *>> graphs;

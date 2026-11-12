@@ -35,6 +35,7 @@
 #include "ui/poincareview.h"
 #include "ui/xyview.h"
 #include "ui/histogramview.h"
+#include "ui/heatmapview.h"
 #include "ui/dialogs/helpdlg.h"
 #include "ui/dialogs/devicesettingsdlg.h"
 #include "ui/devicesettings.h"
@@ -58,6 +59,8 @@
 #include "ui/views/poincareplot.h"
 #include "ui/views/xyplot.h"
 #include "ui/views/histogramplot.h"
+#include "ui/views/heatmapplot.h"
+#include "ui/views/colormap.h"
 #include "ui/settings/settingsdialog.h"
 #include "ui/settings/alarmprefs.h"
 #include "ui/settings/generalprefs.h"
@@ -146,6 +149,32 @@ private:
 
 /// A theme symbol with a "+" in its lower right corner (Add device: the
 /// meter and "add"), looked up when painted, so it follows the symbol set.
+class HeatmapIconEngine : public PaintedIconEngine
+{
+public:
+  void paint(QPainter *painter, const QRect &rect, QIcon::Mode mode, QIcon::State) override
+  {
+    painter->save();
+    painter->setRenderHint(QPainter::Antialiasing, false);
+    const qreal gap = qMax<qreal>(1.0, rect.width() / 16.0);
+    const qreal cellW = (rect.width() - 3 * gap) / 4.0;
+    const qreal cellH = (rect.height() - 3 * gap) / 4.0;
+    for (int y = 0; y < 4; ++y)
+      for (int x = 0; x < 4; ++x)
+      {
+        QColor color = ColorMap::color(ColorMap::Rainbow, (y * 4 + x) / 15.0);
+        if (mode == QIcon::Disabled)
+          color = color.lighter(165);
+        QRectF cell(rect.left() + x * (cellW + gap), rect.top() + y * (cellH + gap), cellW, cellH);
+        painter->fillRect(cell, color);
+        painter->setPen(mode == QIcon::Disabled ? QColor(180, 180, 180) : QColor(45, 45, 45));
+        painter->drawRect(cell);
+      }
+    painter->restore();
+  }
+  QIconEngine *clone() const override { return new HeatmapIconEngine; }
+};
+
 class PlusIconEngine : public PaintedIconEngine
 {
 public:
@@ -391,6 +420,18 @@ void MainWindow::createViews()
     windowMenu(m_histogramWin, m_histogram->mapToGlobal(pos));
   });
 
+  m_heatmap = new HeatmapPlot(this);
+  m_heatmap->setWindowTitle(tr("Heatmap"));
+  auto *heatmap = new HeatmapView(m_session, m_heatmap, this);
+  m_heatmapViews.insert(m_heatmap, heatmap);
+  m_heatmapWin = addView(m_heatmap, m_heatmap->windowTitle(), MdiArranger::Table, "heatmap");
+  applyHeatmapColors(m_heatmap);
+  m_heatmap->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(m_heatmap, &QWidget::customContextMenuRequested, this, [this](const QPoint &pos)
+  {
+    windowMenu(m_heatmapWin, m_heatmap->mapToGlobal(pos));
+  });
+
   // the files of a project, a folder; it stays open until another is
   m_basket = new BasketWidget(this);
   m_basketWin = addView(m_basket, m_basket->windowTitle(), MdiArranger::Table, "basket");
@@ -521,6 +562,14 @@ void MainWindow::createViews()
     const MeterController *ctl = m_session->controllers().value(0);
     newView(Added::Histogram, ctl ? ValueRef(0, ctl->source()) : ValueRef(), true);
   });
+  m_newHeatmapAction = new QAction(QIcon(new HeatmapIconEngine), tr("Add &heatmap"), this);
+  m_newHeatmapAction->setObjectName("action_NewHeatmap");
+  connect(m_newHeatmapAction, &QAction::triggered, this, [this]
+  {
+    const MeterController *ctl = m_session->controllers().value(0);
+    const ValueRef first = ctl ? ValueRef(0, ctl->source()) : ValueRef();
+    newView(Added::Heatmap, first, true);
+  });
   m_newGraphAction = new QAction(action_Graph->icon(), tr("Add g&raph"), this);
   m_newGraphAction->setObjectName("action_NewGraph");
   m_newGraphAction->setWhatsThis(
@@ -555,6 +604,10 @@ void MainWindow::createViews()
        "drift stretches it along it. SD1 and SD2 put both in numbers.</p></body></html>"));
   m_histogramAction = windowAction(m_histogramWin, tr("H&istogram"), "", "qtdmm-histogram",
     tr("Show the distribution of recent readings for one measured value."));
+  m_heatmapAction = windowAction(m_heatmapWin, tr("&Heatmap"), "", "",
+    tr("Plot three measured values: two for position and one for color."));
+  m_heatmapAction->setIcon(QIcon(new HeatmapIconEngine));
+  m_heatmapAction->setObjectName("action_WindowHeatmap");
   // the graph keeps its action from the .ui (toolbar button with Ctrl+3)
   bindWindowAction(action_Graph, m_graphWin);
   // graph and table have menus of their own: they begin with the window's
@@ -641,6 +694,15 @@ void MainWindow::createViews()
     for (HistogramView *histogram : m_histogramViews)
       if (free(histogram->value()))
         histogram->setValue(ValueRef(0, ctl->source()));
+    for (HeatmapView *heatmap : m_heatmapViews)
+    {
+      ValueRef x = heatmap->value(0), y = heatmap->value(1), z = heatmap->value(2);
+      bool changed = false;
+      for (ValueRef *value : { &x, &y, &z })
+        if (free(*value)) { *value = ValueRef(0, ctl->source()); changed = true; }
+      if (changed)
+        heatmap->setValues(x, y, z);
+    }
   });
   // a meter opened or closed: in the table when it shows all, else only its readings to it
   auto tableFollows = [this]
@@ -733,7 +795,8 @@ QMdiSubWindow *MainWindow::addViewWindow(Added kind, const ValueRef &value, int 
   const QString prefix = kind == Added::Meter ? QStringLiteral("meter-")
                          : kind == Added::Graph ? QStringLiteral("graph-")
                          : kind == Added::XY ? QStringLiteral("xy-")
-                         : kind == Added::Histogram ? QStringLiteral("histogram-") : QStringLiteral("poincare-");
+                         : kind == Added::Histogram ? QStringLiteral("histogram-")
+                         : kind == Added::Heatmap ? QStringLiteral("heatmap-") : QStringLiteral("poincare-");
   if (number < 2)
   {
     QStringList taken;
@@ -797,6 +860,17 @@ QMdiSubWindow *MainWindow::addViewWindow(Added kind, const ValueRef &value, int 
     applyHistogramColors(plot);
     view = plot;
   }
+  else if (kind == Added::Heatmap)
+  {
+    auto *plot = new HeatmapPlot(this);
+    plot->setWindowTitle(tr("Heatmap %1").arg(number));
+    auto *source = new HeatmapView(m_session, plot, this);
+    m_heatmapViews.insert(plot, source);
+    source->setValues(value, value, value);
+    win = addView(plot, plot->windowTitle(), MdiArranger::Table, prefix + QString::number(number));
+    applyHeatmapColors(plot);
+    view = plot;
+  }
   else
   {
     auto *plot = new PoincarePlot(this);
@@ -837,12 +911,14 @@ void MainWindow::newView(Added kind, const ValueRef &value, bool ask)
       MeterView *meter = meterViewOf(win);
       PoincareView *plot = poincareViewOf(win);
       HistogramView *histogram = histogramViewOf(win);
+      HeatmapView *heatmap = heatmapViewOf(win);
       const GraphView *graph = graphViewOf(win);
       // a graph with one device and one value has nothing to choose from
       const bool choice = !graph || m_session->controllers().size() > 1 || m_session->controllers().first()->valueCount() > 1;
       if (choice && !editSources(graph ? ValueMenu::View::Graph : meter ? ValueMenu::View::Meter
+                                               : heatmap ? ValueMenu::View::Heatmap
                                                : histogram ? ValueMenu::View::Histogram : ValueMenu::View::Poincare,
-                                 meter, plot, graph ? graph->graph() : nullptr, histogram))
+                                 meter, plot, graph ? graph->graph() : nullptr, histogram, heatmap))
       {
         removeAddedWindow(win);
         return;
@@ -867,6 +943,11 @@ void MainWindow::removeAddedWindow(QMdiSubWindow *win)
   {
     m_histogramViews.remove(histogram->plot());
     delete histogram;
+  }
+  if (HeatmapView *heatmap = heatmapViewOf(win))
+  {
+    m_heatmapViews.remove(heatmap->plot());
+    delete heatmap;
   }
   if (XYView *view = xyViewOf(win))
   {
@@ -903,6 +984,23 @@ HistogramView *MainWindow::histogramViewOf(const QMdiSubWindow *win) const
     if (win && view->plot() == win->widget())
       return view;
   return nullptr;
+}
+
+HeatmapView *MainWindow::heatmapViewOf(const QMdiSubWindow *win) const
+{
+  for (HeatmapView *view : m_heatmapViews)
+    if (win && view->plot() == win->widget())
+      return view;
+  return nullptr;
+}
+
+QList<QMdiSubWindow *> MainWindow::heatmapWindows() const
+{
+  QList<QMdiSubWindow *> wins { m_heatmapWin };
+  for (QMdiSubWindow *win : m_added)
+    if (heatmapViewOf(win))
+      wins << win;
+  return wins;
 }
 
 XYView *MainWindow::xyViewOf(const QMdiSubWindow *win) const
@@ -1051,7 +1149,7 @@ QList<QMdiSubWindow *> MainWindow::xyWindows() const
 
 bool MainWindow::isColumn(const QMdiSubWindow *win) const
 {
-  return win == m_readingsWin || poincareViewOf(win) || xyViewOf(win) || histogramViewOf(win);
+  return win == m_readingsWin || poincareViewOf(win) || xyViewOf(win) || histogramViewOf(win) || heatmapViewOf(win);
 }
 
 bool MainWindow::isInstrument(const QMdiSubWindow *win) const
@@ -1329,6 +1427,7 @@ void MainWindow::fillViewToolbar()
   toolBarDMM->addAction(m_poincareAction);
   toolBarDMM->addAction(m_xyAction);
   toolBarDMM->addAction(m_histogramAction);
+  toolBarDMM->addAction(m_heatmapAction);
   toolBarDMM->addAction(action_Graph);
   toolBarDMM->addAction(m_readingsAction);
   connect(m_displayAction, &QAction::toggled, this, &MainWindow::storeDisplaySLOT);
@@ -1368,6 +1467,19 @@ void MainWindow::fillViewToolbar()
       addViewEntry(menu, win, viewName(win, histogramViewOf(win)->value()));
     menu->addSeparator();
     connect(menu->addAction(tr("&New...")), &QAction::triggered, m_newHistogramAction, &QAction::trigger);
+  });
+  addViewMenu(m_heatmapAction, [this](QMenu *menu)
+  {
+    for (QMdiSubWindow *win : heatmapWindows())
+      addViewEntry(menu, win, win->windowTitle());
+    if (!m_session->controllers().isEmpty())
+    {
+      menu->addSeparator();
+      connect(menu->addAction(tr("S&ources...")), &QAction::triggered, this,
+              [this] { editSources(ValueMenu::View::Heatmap, nullptr, nullptr, nullptr, nullptr, heatmapViewOf(m_heatmapWin)); });
+    }
+    menu->addSeparator();
+    connect(menu->addAction(tr("&New...")), &QAction::triggered, m_newHeatmapAction, &QAction::trigger);
   });
   addViewMenu(action_Graph, [this](QMenu *menu)
   {
@@ -1424,6 +1536,13 @@ void MainWindow::fillViewToolbar()
     return !none || m_session->controllers().isEmpty()
            || editSources(ValueMenu::View::Histogram, nullptr, nullptr, nullptr, histogramViewOf(m_histogramWin));
   });
+  kindClicked(m_heatmapAction, [this] { return heatmapWindows(); }, [this]
+  {
+    const HeatmapView *view = heatmapViewOf(m_heatmapWin);
+    const bool none = view->value(0).source.isEmpty() || view->value(1).source.isEmpty() || view->value(2).source.isEmpty();
+    return !none || m_session->controllers().isEmpty()
+           || editSources(ValueMenu::View::Heatmap, nullptr, nullptr, nullptr, nullptr, heatmapViewOf(m_heatmapWin));
+  });
 }
 
 void MainWindow::addViewMenu(QAction *action, const std::function<void(QMenu *)> &fill)
@@ -1449,7 +1568,7 @@ void MainWindow::addViewEntry(QMenu *menu, QMdiSubWindow *win, const QString &na
   connect(entry, &QAction::toggled, this, [this, win](bool on)
   {
     // the windows with an action of their own through it, it follows them
-    for (QAction *a : { m_meterAction, m_poincareAction, m_xyAction, m_histogramAction, action_Graph })
+    for (QAction *a : { m_meterAction, m_poincareAction, m_xyAction, m_histogramAction, m_heatmapAction, action_Graph })
       if (a->property("window").value<QObject *>() == win)
       {
         a->setChecked(on);
@@ -1659,10 +1778,10 @@ void MainWindow::placeWindow()
     move(winRect.x(), winRect.y());
   // the views shown at the start count as grown for; the table column gets
   // the width the window has for it
-  for (QMdiSubWindow *w : { m_meterWin, m_graphWin, m_readingsWin, m_poincareWin, m_histogramWin })
+  for (QMdiSubWindow *w : { m_meterWin, m_graphWin, m_readingsWin, m_poincareWin, m_histogramWin, m_heatmapWin })
     if (!w->isHidden())
       m_grown.insert(w);
-  if (m_grown.contains(m_readingsWin) || m_grown.contains(m_poincareWin) || m_grown.contains(m_histogramWin))
+  if (m_grown.contains(m_readingsWin) || m_grown.contains(m_poincareWin) || m_grown.contains(m_histogramWin) || m_grown.contains(m_heatmapWin))
     m_arranger->setTableWidth(growthFor(m_readingsWin).width());
   if (stored && m_wid->settingsDialog()->generalPage()->saveWindowSize())
   {
@@ -1674,7 +1793,7 @@ void MainWindow::placeWindow()
     // from the content: an instrument, plus what each shown view adds; the
     // front panels grow it when their meters connect
     QSize start(28 * em(), 22 * em());
-    for (QMdiSubWindow *w : { m_graphWin, m_readingsWin, m_poincareWin, m_histogramWin })
+    for (QMdiSubWindow *w : { m_graphWin, m_readingsWin, m_poincareWin, m_histogramWin, m_heatmapWin })
       if (m_grown.contains(w))
         start += growthFor(w);
     // at least 800×600 at the first start, the views fill it; they grow
@@ -1697,7 +1816,7 @@ void MainWindow::updateEmptyStart()
   const bool noDevices = m_wid->devices()->list().isEmpty();
   m_emptyConnect->setVisible(!noDevices);
   // nothing to see behind the start page; checked stays what comes back
-  for (QAction *a : { m_displayAction, m_meterAction, m_poincareAction, m_xyAction, m_histogramAction, action_Graph, m_readingsAction })
+  for (QAction *a : { m_displayAction, m_meterAction, m_poincareAction, m_xyAction, m_histogramAction, m_heatmapAction, action_Graph, m_readingsAction })
     a->setEnabled(!empty);
   // [E 09.11.] a project or a bench makes no sense without a device
   if (m_benchActions.constFirst()->isEnabled() == noDevices)
@@ -1961,7 +2080,7 @@ void MainWindow::createExtraActions()
   // Space (Record) toggles the recorder; Start and Stop have neither a
   // button nor a key of their own any more
   addActions({action_Configure, action_ConfigureDMM, action_Direct_help, action_Help, action_Quit,
-              m_displayAction, m_meterAction, m_readingsAction, m_poincareAction, m_histogramAction, m_basketAction, m_titleBars,
+              m_displayAction, m_meterAction, m_readingsAction, m_poincareAction, m_histogramAction, m_heatmapAction, m_basketAction, m_titleBars,
               m_fullScreen, m_toolbars, m_zoomIn, m_zoomOut, m_zoomFit, m_copyImage, m_noteAction,
               // no buttons of their own: the keys stay, the graph's menu has them
               action_Connect, action_Reset, action_Record, action_Live, action_Clear,
@@ -1984,6 +2103,7 @@ void MainWindow::createShortcuts(const QList<QAction *> &workspace)
     m_shortcuts->add(a, recording);
   for (QAction *a : { m_sidebarAction, m_displayAction, m_meterAction, m_newMeterAction, action_Graph,
                       m_readingsAction, m_poincareAction, m_newPoincareAction, m_histogramAction, m_newHistogramAction,
+                      m_heatmapAction, m_newHeatmapAction,
                       m_xyAction, m_newXYAction, m_newGraphAction, m_basketAction, m_titleBars, m_toolbars,
                       m_fullScreen })
     m_shortcuts->add(a, windows);
@@ -2153,6 +2273,7 @@ void MainWindow::on_action_Menu_triggered()
     m_menu->addAction(m_meterAction);
     m_menu->addAction(m_poincareAction);
     m_menu->addAction(m_histogramAction);
+    m_menu->addAction(m_heatmapAction);
     m_menu->addAction(action_Graph);
     m_menu->addAction(m_readingsAction);
     m_menu->addAction(m_basketAction);
@@ -2296,7 +2417,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
   // minimizing the main window hides its children spontaneously; they are
   // not closed, so only explicit show/hide counts (isHidden() stays false)
   if ((event->type() == QEvent::Show || event->type() == QEvent::Hide) && !event->spontaneous())
-    for (QAction *a : { m_displayAction, m_meterAction, m_readingsAction, m_poincareAction, m_histogramAction, action_Graph,
+    for (QAction *a : { m_displayAction, m_meterAction, m_readingsAction, m_poincareAction, m_histogramAction, m_heatmapAction, action_Graph,
                         m_basketAction })
       if (a && a->property("window").value<QObject *>() == watched)
       {
@@ -2321,6 +2442,7 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
   const bool added = m_added.contains(win);
   PoincareView *plot = poincareViewOf(win);
   HistogramView *histogram = histogramViewOf(win);
+  HeatmapView *heatmap = heatmapViewOf(win);
   QAction *hide = menu.addAction(added ? tr("&Close window") : tr("&Hide view"));
   FrontPanel *panel = panelOf(win);
   // a front panel goes with its device, also while the menu is open
@@ -2377,11 +2499,12 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
     addRulesMenu(&menu, panel->controller());
   }
   // the value it shows, of any open meter
-  if ((meter || plot || histogram) && !m_session->controllers().isEmpty())
-    connect(menu.addAction(tr("S&ources...")), &QAction::triggered, this, [this, meter, plot, histogram]
+  if ((meter || plot || histogram || heatmap) && !m_session->controllers().isEmpty())
+    connect(menu.addAction(tr("S&ources...")), &QAction::triggered, this, [this, meter, plot, histogram, heatmap]
     {
-      editSources(meter ? ValueMenu::View::Meter : histogram ? ValueMenu::View::Histogram : ValueMenu::View::Poincare,
-                  meter, plot, nullptr, histogram);
+      editSources(meter ? ValueMenu::View::Meter : heatmap ? ValueMenu::View::Heatmap
+                            : histogram ? ValueMenu::View::Histogram : ValueMenu::View::Poincare,
+                  meter, plot, nullptr, histogram, heatmap);
     });
   if (XYView *xy = xyViewOf(win))
   {
@@ -2420,6 +2543,11 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
     connect(menu.addAction(m_newHistogramAction->text()), &QAction::triggered, this, [this, histogram]
     {
       newView(Added::Histogram, histogram->value());
+    });
+  if (heatmap)
+    connect(menu.addAction(m_newHeatmapAction->text()), &QAction::triggered, this, [this, heatmap]
+    {
+      newView(Added::Heatmap, heatmap->value(0));
     });
   if (menu.exec(globalPos) != hide || !window)
     return;
@@ -2563,7 +2691,7 @@ static QString readingText(const Reading &r)
 }
 
 bool MainWindow::editSources(ValueMenu::View view, MeterView *meter, PoincareView *plot, GraphWidget *graph,
-                             HistogramView *histogram)
+                             HistogramView *histogram, HeatmapView *heatmap)
 {
   if (!meter)
     meter = meterViewOf(m_meterWin);
@@ -2571,6 +2699,8 @@ bool MainWindow::editSources(ValueMenu::View view, MeterView *meter, PoincareVie
     plot = poincareViewOf(m_poincareWin);
   if (!histogram)
     histogram = histogramViewOf(m_histogramWin);
+  if (!heatmap)
+    heatmap = heatmapViewOf(m_heatmapWin);
   // the open meters with their values
   QList<SourcesDlg::Meter> meters;
   QList<ValueRef> all;
@@ -2588,7 +2718,7 @@ bool MainWindow::editSources(ValueMenu::View view, MeterView *meter, PoincareVie
   }
   if (!graph)
     graph = m_wid->graph();
-  const bool several = view == ValueMenu::View::Graph || view == ValueMenu::View::Table;
+  const bool several = view == ValueMenu::View::Graph || view == ValueMenu::View::Table || view == ValueMenu::View::Heatmap;
   QList<ValueRef> chosen;
   QString name;
   switch (view)
@@ -2611,16 +2741,33 @@ bool MainWindow::editSources(ValueMenu::View view, MeterView *meter, PoincareVie
       name = histogram->plot()->windowTitle();
       chosen << histogram->value();
       break;
+    case ValueMenu::View::Heatmap:
+      name = heatmap->plot()->windowTitle();
+      chosen << heatmap->value(0) << heatmap->value(1) << heatmap->value(2);
+      break;
     default:
       name = plot->plot()->windowTitle();
       chosen << plot->value();
       break;
   }
-  SourcesDlg dlg(name, several, meters, this);
-  dlg.setChosen(chosen);
-  if (dlg.exec() != QDialog::Accepted)
-    return false;
-  const QList<ValueRef> picked = dlg.chosen();
+  QList<ValueRef> picked;
+  ValueRef pickedZ;
+  if (view == ValueMenu::View::Heatmap)
+  {
+    SourcesDlg dlg(name, meters, chosen.value(0), chosen.value(1), chosen.value(2), this);
+    if (dlg.exec() != QDialog::Accepted)
+      return false;
+    picked << dlg.xValue() << dlg.yValue();
+    pickedZ = dlg.zValue();
+  }
+  else
+  {
+    SourcesDlg dlg(name, several, meters, this);
+    dlg.setChosen(chosen);
+    if (dlg.exec() != QDialog::Accepted)
+      return false;
+    picked = dlg.chosen();
+  }
   if (!several && picked.isEmpty())
     return false;
   switch (view)
@@ -2658,6 +2805,11 @@ bool MainWindow::editSources(ValueMenu::View view, MeterView *meter, PoincareVie
       histogram->setValue(picked.first());
       if (histogram == histogramViewOf(m_histogramWin))
         m_histogramAction->setChecked(true);
+      break;
+    case ValueMenu::View::Heatmap:
+      heatmap->setValues(picked[0], picked[1], pickedZ);
+      if (heatmap == heatmapViewOf(m_heatmapWin))
+        m_heatmapAction->setChecked(true);
       break;
     default:
       plot->setValue(picked.first());
@@ -2704,6 +2856,8 @@ void MainWindow::dropValue(const ValueRef &value, const QPoint &pos)
     plot->setValue(value);
   else if (HistogramView *histogram = histogramViewOf(win))
     histogram->setValue(value);
+  else if (HeatmapView *heatmap = heatmapViewOf(win))
+    heatmap->setValues(value, heatmap->value(1), heatmap->value(2));
   else if (const GraphView *graph = graphViewOf(win))
     graph->graph()->setValueShown(value, true);
   else if (win == m_readingsWin)
@@ -2731,6 +2885,7 @@ void MainWindow::dropValue(const ValueRef &value, const QPoint &pos)
     QAction *meter = menu.addAction(m_newMeterAction->icon(), tr("New &needle meter"));
     QAction *plot = menu.addAction(m_newPoincareAction->icon(), tr("New &Poincaré plot"));
     QAction *histogram = menu.addAction(m_newHistogramAction->icon(), tr("New &histogram"));
+    QAction *heatmap = menu.addAction(m_newHeatmapAction->icon(), tr("New &heatmap"));
     QAction *graph = menu.addAction(action_Graph->icon(), tr("In the &graph"));
     QAction *newGraph = menu.addAction(action_Graph->icon(), tr("New g&raph"));
     QAction *chosen = menu.exec(m_mdi->viewport()->mapToGlobal(pos));
@@ -2740,6 +2895,8 @@ void MainWindow::dropValue(const ValueRef &value, const QPoint &pos)
       newView(Added::Poincare, value);
     else if (chosen == histogram)
       newView(Added::Histogram, value);
+    else if (chosen == heatmap)
+      newView(Added::Heatmap, value, true);
     else if (chosen == newGraph)
       newView(Added::Graph, value);
     else if (chosen == graph)
@@ -2899,6 +3056,10 @@ DeviceSidebar::Value MainWindow::otherValueRow(const MeterController *ctl, int i
       ++row.histograms;
       row.views << win->windowTitle();
     }
+  for (QMdiSubWindow *win : heatmapWindows())
+    if (const HeatmapView *heatmap = heatmapViewOf(win); heatmap && !win->isHidden()
+        && (heatmap->value(0) == value || heatmap->value(1) == value || heatmap->value(2) == value))
+      row.views << win->windowTitle();
   return row;
 }
 
@@ -2953,6 +3114,10 @@ void MainWindow::pointToViews(const ValueRef &value)
   for (QMdiSubWindow *win : histogramWindows())
     if (const HistogramView *histogram = histogramViewOf(win); histogram && !win->isHidden() && histogram->value() == value)
       wins << win;
+  for (QMdiSubWindow *win : heatmapWindows())
+    if (const HeatmapView *heatmap = heatmapViewOf(win); heatmap && !win->isHidden()
+        && (heatmap->value(0) == value || heatmap->value(1) == value || heatmap->value(2) == value))
+      wins << win;
   // a frame in the selection colour for a moment, above what the view draws
   for (QMdiSubWindow *win : std::as_const(wins))
   {
@@ -2991,6 +3156,7 @@ void MainWindow::fillValueMenu(QMenu *menu, const ValueRef &value)
   target.newMeter = [this](const ValueRef &v) { newMeter(v); };
   target.newPoincare = [this](const ValueRef &v) { newView(Added::Poincare, v); };
   target.newHistogram = [this](const ValueRef &v) { newView(Added::Histogram, v); };
+  target.newHeatmap = [this](const ValueRef &v) { newView(Added::Heatmap, v); };
   target.newGraph = [this](const ValueRef &v) { newView(Added::Graph, v); };
   target.graphs = [this]
   {
@@ -3012,7 +3178,8 @@ void MainWindow::fillValueMenu(QMenu *menu, const ValueRef &value)
     }
     QAction *action = view == ValueMenu::View::Lcd   ? m_displayAction
                     : view == ValueMenu::View::Table ? m_readingsAction
-                    : view == ValueMenu::View::Histogram ? m_histogramAction : action_Graph;
+                    : view == ValueMenu::View::Histogram ? m_histogramAction
+                    : view == ValueMenu::View::Heatmap ? m_heatmapAction : action_Graph;
     action->setChecked(true);
   };
   ValueMenu::fill(menu, target, value);
@@ -3300,6 +3467,15 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
   for (const QString &number : get("Windows/histograms", QString()).toString().split(' ', Qt::SkipEmptyParts))
     addViewWindow(Added::Histogram, valueOf(get("Windows/histogram-" + number + "-value", QString()).toString()),
                   number.toInt())->show();
+  for (const QString &number : get("Windows/heatmaps", QString()).toString().split(' ', Qt::SkipEmptyParts))
+  {
+    QMdiSubWindow *win = addViewWindow(Added::Heatmap, ValueRef(), number.toInt());
+    HeatmapView *view = heatmapViewOf(win);
+    view->setValues(valueOf(get("Windows/heatmap-" + number + "-0", QString()).toString()),
+                    valueOf(get("Windows/heatmap-" + number + "-1", QString()).toString()),
+                    valueOf(get("Windows/heatmap-" + number + "-2", QString()).toString()));
+    win->show();
+  }
   const QString layout = get("Windows/layout", QString()).toString();
   if (!m_arranger->setLayoutText(layout))
   {
@@ -3313,14 +3489,14 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
   if (free)
   {
     QMap<QString, QString> geometry;
-    for (QMdiSubWindow *w : meterWindows() + poincareWindows() + histogramWindows() + graphWindows() + QList<QMdiSubWindow *>{ m_readingsWin })
+    for (QMdiSubWindow *w : meterWindows() + poincareWindows() + histogramWindows() + heatmapWindows() + graphWindows() + QList<QMdiSubWindow *>{ m_readingsWin })
       geometry[w->objectName()] = get("Windows/geometry-" + w->objectName(), QString()).toString();
     // once the window is shown and the area has its size: the automatic
     // layout for a start, then the stored positions on top of it
     QTimer::singleShot(0, this, [this, geometry]
     {
       m_arranger->arrangeNow();
-      for (QMdiSubWindow *w : meterWindows() + poincareWindows() + histogramWindows() + graphWindows() + QList<QMdiSubWindow *>{ m_readingsWin })
+      for (QMdiSubWindow *w : meterWindows() + poincareWindows() + histogramWindows() + heatmapWindows() + graphWindows() + QList<QMdiSubWindow *>{ m_readingsWin })
       {
         const QStringList g = geometry.value(w->objectName()).split(' ');
         if (g.size() == 4)
@@ -3334,11 +3510,15 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
   m_readingsAction->setChecked(get("Windows/readings", false).toBool());
   m_poincareAction->setChecked(get("Windows/poincare", false).toBool());
   m_histogramAction->setChecked(get("Windows/histogram", false).toBool());
+  m_heatmapAction->setChecked(get("Windows/heatmap", false).toBool());
   m_basketAction->setChecked(get("Windows/basket", false).toBool());
   // "1@device:ab12cd34" (ValueRef)
   meterViewOf(m_meterWin)->setValue(valueOf(get("Windows/meter-value", 0).toString()));
   poincareViewOf(m_poincareWin)->setValue(valueOf(get("Windows/poincare-value", 0).toString()));
   histogramViewOf(m_histogramWin)->setValue(valueOf(get("Windows/histogram-value", QString()).toString()));
+  heatmapViewOf(m_heatmapWin)->setValues(valueOf(get("Windows/heatmap-x", QString()).toString()),
+                                         valueOf(get("Windows/heatmap-y", QString()).toString()),
+                                         valueOf(get("Windows/heatmap-z", QString()).toString()));
   for (QMdiSubWindow *win : graphWindows())
     applyGraphState(graphViewOf(win), get, valueOf);
   // the values the readings table leaves out, "1 2", another meter's
@@ -3364,7 +3544,7 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
     applyTableSources();
   }
   // an unchecked action did not toggle: hide its window explicitly
-  for (QAction *a : { m_meterAction, action_Graph, m_readingsAction, m_poincareAction, m_histogramAction, m_basketAction })
+  for (QAction *a : { m_meterAction, action_Graph, m_readingsAction, m_poincareAction, m_histogramAction, m_heatmapAction, m_basketAction })
     qobject_cast<QWidget *>(a->property("window").value<QObject *>())->setVisible(a->isChecked());
   if (!m_displayAction->isChecked())
     for (QMdiSubWindow *win : std::as_const(m_panelWins))
@@ -3491,7 +3671,7 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
   set("Windows/toolbar-hidden", m_toolbars->isChecked());
   set("Windows/design", Designs::name(Designs::current()));
   if (m_arranger->mode() == MdiArranger::Free)
-    for (QMdiSubWindow *w : meterWindows() + poincareWindows() + histogramWindows() + graphWindows() + QList<QMdiSubWindow *>{ m_readingsWin }
+    for (QMdiSubWindow *w : meterWindows() + poincareWindows() + histogramWindows() + heatmapWindows() + graphWindows() + QList<QMdiSubWindow *>{ m_readingsWin }
                             + panelWindows())
     {
       const QRect g = w->geometry();
@@ -3526,6 +3706,7 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
   set("Windows/readings", m_readingsAction->isChecked());
   set("Windows/poincare", m_poincareAction->isChecked());
   set("Windows/histogram", m_histogramAction->isChecked());
+  set("Windows/heatmap", m_heatmapAction->isChecked());
   set("Windows/basket", m_basketAction->isChecked());
   set("MainWindow/show-graph", action_Graph->isChecked());
   set("Windows/meter-value", meterViewOf(m_meterWin)->value().toString());
@@ -3542,6 +3723,9 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
   set("Windows/meters", meters.join(' '));
   set("Windows/poincare-value", poincareViewOf(m_poincareWin)->value().toString());
   set("Windows/histogram-value", histogramViewOf(m_histogramWin)->value().toString());
+  set("Windows/heatmap-x", heatmapViewOf(m_heatmapWin)->value(0).toString());
+  set("Windows/heatmap-y", heatmapViewOf(m_heatmapWin)->value(1).toString());
+  set("Windows/heatmap-z", heatmapViewOf(m_heatmapWin)->value(2).toString());
   QStringList plots;
   for (QMdiSubWindow *w : poincareWindows().mid(1))
   {
@@ -3558,6 +3742,16 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
     set("Windows/histogram-" + number + "-value", histogramViewOf(w)->value().toString());
   }
   set("Windows/histograms", histograms.join(' '));
+  QStringList heatmaps;
+  for (QMdiSubWindow *w : heatmapWindows().mid(1))
+  {
+    const QString number = w->objectName().section('-', 1);
+    heatmaps << number;
+    HeatmapView *view = heatmapViewOf(w);
+    for (int axis = 0; axis < 3; ++axis)
+      set("Windows/heatmap-" + number + "-" + QString::number(axis), view->value(axis).toString());
+  }
+  set("Windows/heatmaps", heatmaps.join(' '));
   QStringList graphs;
   for (QMdiSubWindow *w : graphWindows())
   {
@@ -4181,6 +4375,8 @@ void MainWindow::setDesign(int design)
     applyXYColors(static_cast<XYPlot *>(win->widget()));
   for (QMdiSubWindow *win : histogramWindows())
     applyHistogramColors(static_cast<HistogramPlot *>(win->widget()));
+  for (QMdiSubWindow *win : heatmapWindows())
+    applyHeatmapColors(static_cast<HeatmapPlot *>(win->widget()));
   for (QAction *a : m_designMenu->actions())
     a->setChecked(a->data().toInt() == design);
   // at once, so the settings dialog shows the design of the menu (and its
@@ -4223,6 +4419,17 @@ void MainWindow::applyHistogramColors(HistogramPlot *plot)
   if (frame.style() == Qt::TexturePattern)
     background = g.background;
   plot->setThemeColors(background, g.grid, g.labels, g.data);
+}
+
+void MainWindow::applyHeatmapColors(HeatmapPlot *plot)
+{
+  const Designs::Design d = Designs::current();
+  const QBrush frame = Designs::frameBrush(d);
+  const Designs::GraphColors g = Designs::graphColors(d);
+  QBrush background = frame.style() != Qt::NoBrush ? frame : QApplication::palette().base();
+  if (frame.style() == Qt::TexturePattern)
+    background = g.background;
+  plot->setThemeColors(background, g.grid, g.labels);
 }
 
 void MainWindow::applyFrame(QWidget *view, bool instrument)
