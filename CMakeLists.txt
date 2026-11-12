@@ -339,7 +339,7 @@ option(QTDMM_WERROR "Treat compiler warnings in QtDMM's own code as errors" OFF)
 
 if(QTDMM_WERROR)
 	# bundled third-party code keeps its warnings; they are not ours to fix
-	set(_third_party src/3rdparty/miniz/miniz.c src/3rdparty/tiny-aes/aes.c)
+	set(_third_party src/3rdparty/miniz/miniz.c src/3rdparty/tiny-aes/aes.c src/3rdparty/qcustomplot/qcustomplot.cpp )
 	if(MSVC)
 		set(QTDMM_WARNING_FLAGS /W4 /WX)
 		set_property(SOURCE ${_third_party} APPEND PROPERTY COMPILE_OPTIONS "/WX-")
