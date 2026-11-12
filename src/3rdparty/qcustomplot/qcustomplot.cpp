@@ -313,10 +313,6 @@ QCPPainter::QCPPainter(QPaintDevice *device) :
   mModes(pmDefault),
   mIsAntialiasing(false)
 {
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0) // before Qt5, default pens used to be cosmetic if NonCosmeticDefaultPen flag isn't set. So we set it to get consistency across Qt versions.
-  if (isActive())
-    setRenderHint(QPainter::NonCosmeticDefaultPen);
-#endif
 }
 
 /*!
@@ -421,10 +417,6 @@ void QCPPainter::setModes(QCPPainter::PainterModes modes)
 bool QCPPainter::begin(QPaintDevice *device)
 {
   bool result = QPainter::begin(device);
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0) // before Qt5, default pens used to be cosmetic if NonCosmeticDefaultPen flag isn't set. So we set it to get consistency across Qt versions.
-  if (result)
-    setRenderHint(QPainter::NonCosmeticDefaultPen);
-#endif
   return result;
 }
 
@@ -678,9 +670,7 @@ QCPPaintBufferPixmap::~QCPPaintBufferPixmap()
 QCPPainter *QCPPaintBufferPixmap::startPainting()
 {
   QCPPainter *result = new QCPPainter(&mBuffer);
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-  result->setRenderHint(QPainter::HighQualityAntialiasing);
-#endif
+
   return result;
 }
 
@@ -718,101 +708,6 @@ void QCPPaintBufferPixmap::reallocateBuffer()
     mBuffer = QPixmap(mSize);
   }
 }
-
-
-#ifdef QCP_OPENGL_PBUFFER
-////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////// QCPPaintBufferGlPbuffer
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/*! \class QCPPaintBufferGlPbuffer
-  \brief A paint buffer based on OpenGL pixel buffers, using hardware accelerated rendering
-
-  This paint buffer is one of the OpenGL paint buffers which facilitate hardware accelerated plot
-  rendering. It is based on OpenGL pixel buffers (pbuffer) and is used in Qt versions before 5.0.
-  (See \ref QCPPaintBufferGlFbo used in newer Qt versions.)
-
-  The OpenGL paint buffers are used if \ref QCustomPlot::setOpenGl is set to true, and if they are
-  supported by the system.
-*/
-
-/*!
-  Creates a \ref QCPPaintBufferGlPbuffer instance with the specified \a size and \a
-  devicePixelRatio, if applicable.
-
-  The parameter \a multisamples defines how many samples are used per pixel. Higher values thus
-  result in higher quality antialiasing. If the specified \a multisamples value exceeds the
-  capability of the graphics hardware, the highest supported multisampling is used.
-*/
-QCPPaintBufferGlPbuffer::QCPPaintBufferGlPbuffer(const QSize &size, double devicePixelRatio, int multisamples) :
-  QCPAbstractPaintBuffer(size, devicePixelRatio),
-  mGlPBuffer(0),
-  mMultisamples(qMax(0, multisamples))
-{
-  QCPPaintBufferGlPbuffer::reallocateBuffer();
-}
-
-QCPPaintBufferGlPbuffer::~QCPPaintBufferGlPbuffer()
-{
-  if (mGlPBuffer)
-    delete mGlPBuffer;
-}
-
-/* inherits documentation from base class */
-QCPPainter *QCPPaintBufferGlPbuffer::startPainting()
-{
-  if (!mGlPBuffer->isValid())
-  {
-    qDebug() << Q_FUNC_INFO << "OpenGL frame buffer object doesn't exist, reallocateBuffer was not called?";
-    return 0;
-  }
-  
-  QCPPainter *result = new QCPPainter(mGlPBuffer);
-  result->setRenderHint(QPainter::HighQualityAntialiasing);
-  return result;
-}
-
-/* inherits documentation from base class */
-void QCPPaintBufferGlPbuffer::draw(QCPPainter *painter) const
-{
-  if (!painter || !painter->isActive())
-  {
-    qDebug() << Q_FUNC_INFO << "invalid or inactive painter passed";
-    return;
-  }
-  if (!mGlPBuffer->isValid())
-  {
-    qDebug() << Q_FUNC_INFO << "OpenGL pbuffer isn't valid, reallocateBuffer was not called?";
-    return;
-  }
-  painter->drawImage(0, 0, mGlPBuffer->toImage());
-}
-
-/* inherits documentation from base class */
-void QCPPaintBufferGlPbuffer::clear(const QColor &color)
-{
-  if (mGlPBuffer->isValid())
-  {
-    mGlPBuffer->makeCurrent();
-    glClearColor(color.redF(), color.greenF(), color.blueF(), color.alphaF());
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    mGlPBuffer->doneCurrent();
-  } else
-    qDebug() << Q_FUNC_INFO << "OpenGL pbuffer invalid or context not current";
-}
-
-/* inherits documentation from base class */
-void QCPPaintBufferGlPbuffer::reallocateBuffer()
-{
-  if (mGlPBuffer)
-    delete mGlPBuffer;
-  
-  QGLFormat format;
-  format.setAlpha(true);
-  format.setSamples(mMultisamples);
-  mGlPBuffer = new QGLPixelBuffer(mSize, format);
-}
-#endif // QCP_OPENGL_PBUFFER
 
 
 #ifdef QCP_OPENGL_FBO
@@ -880,9 +775,7 @@ QCPPainter *QCPPaintBufferGlFbo::startPainting()
     context->makeCurrent(context->surface());
   mGlFrameBuffer->bind();
   QCPPainter *result = new QCPPainter(paintDevice.data());
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-  result->setRenderHint(QPainter::HighQualityAntialiasing);
-#endif
+
   return result;
 }
 
@@ -3698,9 +3591,7 @@ QList<QCPLayoutElement*> QCPLayout::elements(bool recursive) const
 {
   const int c = elementCount();
   QList<QCPLayoutElement*> result;
-#if QT_VERSION >= QT_VERSION_CHECK(4, 7, 0)
   result.reserve(c);
-#endif
   for (int i=0; i<c; ++i)
     result.append(elementAt(i));
   if (recursive)
@@ -4681,9 +4572,7 @@ QList<QCPLayoutElement*> QCPLayoutGrid::elements(bool recursive) const
 {
   QList<QCPLayoutElement*> result;
   const int elCount = elementCount();
-#if QT_VERSION >= QT_VERSION_CHECK(4, 7, 0)
   result.reserve(elCount);
-#endif
   for (int i=0; i<elCount; ++i)
     result.append(elementAt(i));
   if (recursive)
@@ -4920,11 +4809,7 @@ Qt::Alignment QCPLayoutInset::insetAlignment(int index) const
   else
   {
     qDebug() << Q_FUNC_INFO << "Invalid element index:" << index;
-#if QT_VERSION < QT_VERSION_CHECK(5, 2, 0)
-    return nullptr;
-#else
     return {};
-#endif
   }
 }
 
@@ -6592,7 +6477,6 @@ void QCPAxisTickerDateTime::setDateTimeSpec(Qt::TimeSpec spec)
   mDateTimeSpec = spec;
 }
 
-# if QT_VERSION >= QT_VERSION_CHECK(5, 2, 0)
 /*!
   Sets the time zone that is used for creating the tick labels from corresponding dates/times. The
   time spec (\ref setDateTimeSpec) is set to \c Qt::TimeZone.
@@ -6604,7 +6488,6 @@ void QCPAxisTickerDateTime::setTimeZone(const QTimeZone &zone)
   mTimeZone = zone;
   mDateTimeSpec = Qt::TimeZone;
 }
-#endif
 
 /*!
   Sets the tick origin (see \ref QCPAxisTicker::setTickOrigin) in seconds since Epoch (1. Jan 1970,
@@ -6719,14 +6602,14 @@ QString QCPAxisTickerDateTime::getTickLabel(double tick, const QLocale &locale, 
 {
   Q_UNUSED(precision)
   Q_UNUSED(formatChar)
-# if QT_VERSION >= QT_VERSION_CHECK(5, 2, 0)
+  const QDateTime dateTime = keyToDateTime(tick);
   if (mDateTimeSpec == Qt::TimeZone)
-    return locale.toString(keyToDateTime(tick).toTimeZone(mTimeZone), mDateTimeFormat);
-  else
-    return locale.toString(keyToDateTime(tick).toTimeSpec(mDateTimeSpec), mDateTimeFormat);
-# else
-  return locale.toString(keyToDateTime(tick).toTimeSpec(mDateTimeSpec), mDateTimeFormat);
-# endif
+    return locale.toString(dateTime.toTimeZone(mTimeZone), mDateTimeFormat);
+
+  const QTimeZone timeZone = mDateTimeSpec == Qt::UTC ? QTimeZone::utc()
+                              : mDateTimeSpec == Qt::OffsetFromUTC ? QTimeZone::fromSecondsAheadOfUtc(0)
+                                                                   : QTimeZone::systemTimeZone();
+  return locale.toString(dateTime.toTimeZone(timeZone), mDateTimeFormat);
 }
 
 /*! \internal
@@ -6783,11 +6666,7 @@ QVector<double> QCPAxisTickerDateTime::createTickVector(double tickStep, const Q
 */
 QDateTime QCPAxisTickerDateTime::keyToDateTime(double key)
 {
-# if QT_VERSION < QT_VERSION_CHECK(4, 7, 0)
-  return QDateTime::fromTime_t(key).addMSecs((key-(qint64)key)*1000);
-# else
   return QDateTime::fromMSecsSinceEpoch(qint64(key*1000.0));
-# endif
 }
 
 /*! \overload
@@ -6803,11 +6682,7 @@ QDateTime QCPAxisTickerDateTime::keyToDateTime(double key)
 */
 double QCPAxisTickerDateTime::dateTimeToKey(const QDateTime &dateTime)
 {
-# if QT_VERSION < QT_VERSION_CHECK(4, 7, 0)
-  return dateTime.toTime_t()+dateTime.time().msec()/1000.0;
-# else
   return dateTime.toMSecsSinceEpoch()/1000.0;
-# endif
 }
 
 /*! \overload
@@ -6823,13 +6698,10 @@ double QCPAxisTickerDateTime::dateTimeToKey(const QDateTime &dateTime)
 */
 double QCPAxisTickerDateTime::dateTimeToKey(const QDate &date, Qt::TimeSpec timeSpec)
 {
-# if QT_VERSION < QT_VERSION_CHECK(4, 7, 0)
-  return QDateTime(date, QTime(0, 0), timeSpec).toTime_t();
-# elif QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
-  return QDateTime(date, QTime(0, 0), timeSpec).toMSecsSinceEpoch()/1000.0;
-# else
-  return date.startOfDay(timeSpec).toMSecsSinceEpoch()/1000.0;
-# endif
+  const QTimeZone timeZone = timeSpec == Qt::UTC ? QTimeZone::utc()
+                              : timeSpec == Qt::OffsetFromUTC ? QTimeZone::fromSecondsAheadOfUtc(0)
+                                                             : QTimeZone::systemTimeZone();
+  return date.startOfDay(timeZone).toMSecsSinceEpoch()/1000.0;
 }
 /* end of 'src/axis/axistickerdatetime.cpp' */
 
@@ -7311,11 +7183,7 @@ void QCPAxisTickerText::addTick(double position, const QString &label)
 */
 void QCPAxisTickerText::addTicks(const QMap<double, QString> &ticks)
 {
-#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
-  mTicks.unite(ticks);
-#else
   mTicks.insert(ticks);
-#endif
 }
 
 /*! \overload
@@ -9631,17 +9499,8 @@ void QCPAxis::wheelEvent(QWheelEvent *event)
     return;
   }
   
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-  const double delta = event->delta();
-#else
   const double delta = event->angleDelta().y();
-#endif
-  
-#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
-  const QPointF pos = event->pos();
-#else
   const QPointF pos = event->position();
-#endif
   
   const double wheelSteps = delta/120.0; // a single step delta is +/-120 usually
   const double factor = qPow(mAxisRect->rangeZoomFactor(orientation()), wheelSteps);
@@ -10998,11 +10857,7 @@ void QCPScatterStyle::drawShape(QCPPainter *painter, double x, double y) const
     {
       const double widthHalf = mPixmap.width()*0.5;
       const double heightHalf = mPixmap.height()*0.5;
-#if QT_VERSION < QT_VERSION_CHECK(4, 8, 0)
-      const QRectF clipRect = painter->clipRegion().boundingRect().adjusted(-widthHalf, -heightHalf, widthHalf, heightHalf);
-#else
       const QRectF clipRect = painter->clipBoundingRect().adjusted(-widthHalf, -heightHalf, widthHalf, heightHalf);
-#endif
       if (clipRect.contains(x, y))
         painter->drawPixmap(qRound(x-widthHalf), qRound(y-heightHalf), mPixmap);
       break;
@@ -15133,13 +14988,8 @@ void QCustomPlot::replot(QCustomPlot::RefreshPriority refreshPriority)
   mReplotQueued = false;
   emit beforeReplot();
   
-# if QT_VERSION < QT_VERSION_CHECK(4, 8, 0)
-  QTime replotTimer;
-  replotTimer.start();
-# else
   QElapsedTimer replotTimer;
   replotTimer.start();
-# endif
   
   updateLayout();
   // draw all layered objects (grid, axes, plottables, items, legend,...) into their buffers:
@@ -15154,11 +15004,7 @@ void QCustomPlot::replot(QCustomPlot::RefreshPriority refreshPriority)
   else
     update();
   
-# if QT_VERSION < QT_VERSION_CHECK(4, 8, 0)
-  mReplotTime = replotTimer.elapsed();
-# else
   mReplotTime = replotTimer.nsecsElapsed()*1e-6;
-# endif
   if (!qFuzzyIsNull(mReplotTimeAverage))
     mReplotTimeAverage = mReplotTimeAverage*0.9 + mReplotTime*0.1; // exponential moving average with a time constant of 10 last replots
   else
@@ -15265,17 +15111,12 @@ bool QCustomPlot::savePdf(const QString &fileName, int width, int height, QCP::E
   printer.printEngine()->setProperty(QPrintEngine::PPK_DocumentName, pdfTitle);
   QRect oldViewport = viewport();
   setViewport(QRect(0, 0, newWidth, newHeight));
-#if QT_VERSION < QT_VERSION_CHECK(5, 3, 0)
-  printer.setFullPage(true);
-  printer.setPaperSize(viewport().size(), QPrinter::DevicePixel);
-#else
   QPageLayout pageLayout;
   pageLayout.setMode(QPageLayout::FullPageMode);
   pageLayout.setOrientation(QPageLayout::Portrait);
   pageLayout.setMargins(QMarginsF(0, 0, 0, 0));
   pageLayout.setPageSize(QPageSize(viewport().size(), QPageSize::Point, QString(), QPageSize::ExactMatch));
   printer.setPageLayout(pageLayout);
-#endif
   QCPPainter printpainter;
   if (printpainter.begin(&printer))
   {
@@ -15488,9 +15329,7 @@ void QCustomPlot::paintEvent(QPaintEvent *event)
   QCPPainter painter(this);
   if (painter.isActive())
   {
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-  painter.setRenderHint(QPainter::HighQualityAntialiasing); // to make Antialiasing look good if using the OpenGL graphicssystem
-#endif
+
     if (mBackgroundBrush.style() != Qt::NoBrush)
       painter.fillRect(mViewport, mBackgroundBrush);
     drawBackground(&painter);
@@ -15710,11 +15549,7 @@ void QCustomPlot::wheelEvent(QWheelEvent *event)
 {
   emit mouseWheel(event);
   
-#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
-  const QPointF pos = event->pos();
-#else
   const QPointF pos = event->position();
-#endif
   
   // forward event to layerable under cursor:
   foreach (QCPLayerable *candidate, layerableListAt(pos, false))
@@ -15888,8 +15723,6 @@ QCPAbstractPaintBuffer *QCustomPlot::createPaintBuffer()
   {
 #if defined(QCP_OPENGL_FBO)
     return new QCPPaintBufferGlFbo(viewport().size(), mBufferDevicePixelRatio, mGlContext, mGlPaintDevice);
-#elif defined(QCP_OPENGL_PBUFFER)
-    return new QCPPaintBufferGlPbuffer(viewport().size(), mBufferDevicePixelRatio, mOpenGlMultisamples);
 #else
     qDebug() << Q_FUNC_INFO << "OpenGL enabled even though no support for it compiled in, this shouldn't have happened. Falling back to pixmap paint buffer.";
     return new QCPPaintBufferPixmap(viewport().size(), mBufferDevicePixelRatio);
@@ -15972,8 +15805,6 @@ bool QCustomPlot::setupOpenGl()
   }
   mGlPaintDevice = QSharedPointer<QOpenGLPaintDevice>(new QOpenGLPaintDevice);
   return true;
-#elif defined(QCP_OPENGL_PBUFFER)
-  return QGLFormat::hasOpenGL();
 #else
   return false;
 #endif
@@ -18660,17 +18491,8 @@ void QCPAxisRect::mouseReleaseEvent(QMouseEvent *event, const QPointF &startPos)
 */
 void QCPAxisRect::wheelEvent(QWheelEvent *event)
 {
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-  const double delta = event->delta();
-#else
   const double delta = event->angleDelta().y();
-#endif
-  
-#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
-  const QPointF pos = event->pos();
-#else
   const QPointF pos = event->position();
-#endif
   
   // Mouse range zooming interaction:
   if (mParentPlot->interactions().testFlag(QCP::iRangeZoom))
@@ -20347,11 +20169,7 @@ void QCPColorScale::setRangeDrag(bool enabled)
     mAxisRect.data()->setRangeDrag(QCPAxis::orientation(mType));
   } else
   {
-#if QT_VERSION < QT_VERSION_CHECK(5, 2, 0)
-    mAxisRect.data()->setRangeDrag(nullptr);
-#else
     mAxisRect.data()->setRangeDrag({});
-#endif
   }
 }
 
@@ -20374,11 +20192,7 @@ void QCPColorScale::setRangeZoom(bool enabled)
     mAxisRect.data()->setRangeZoom(QCPAxis::orientation(mType));
   } else
   {
-#if QT_VERSION < QT_VERSION_CHECK(5, 2, 0)
-    mAxisRect.data()->setRangeDrag(nullptr);
-#else
     mAxisRect.data()->setRangeZoom({});
-#endif
   }
 }
 
@@ -34099,17 +33913,8 @@ void QCPPolarAxisAngular::wheelEvent(QWheelEvent *event)
   // Mouse range zooming interaction:
   if (mParentPlot->interactions().testFlag(QCP::iRangeZoom))
   {
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-    const double delta = event->delta();
-#else
     const double delta = event->angleDelta().y();
-#endif
-
-#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
-    const QPointF pos = event->pos();
-#else
     const QPointF pos = event->position();
-#endif
     const double wheelSteps = delta/120.0; // a single step delta is +/-120 usually
     if (mRangeZoom)
     {

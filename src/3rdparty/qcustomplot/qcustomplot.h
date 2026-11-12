@@ -30,22 +30,12 @@
 
 // some Qt version/configuration dependent macros to include or exclude certain code paths:
 #ifdef QCUSTOMPLOT_USE_OPENGL
-#  if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-#    define QCP_OPENGL_PBUFFER
-#  else
-#    define QCP_OPENGL_FBO
-#  endif
-#  if QT_VERSION >= QT_VERSION_CHECK(5, 3, 0)
-#    define QCP_OPENGL_OFFSCREENSURFACE
-#  endif
+#  define QCP_OPENGL_FBO
+#  define QCP_OPENGL_OFFSCREENSURFACE
 #endif
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-#  define QCP_DEVICEPIXELRATIO_SUPPORTED
-#  if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
-#    define QCP_DEVICEPIXELRATIO_FLOAT
-#  endif
-#endif
+#define QCP_DEVICEPIXELRATIO_SUPPORTED
+#define QCP_DEVICEPIXELRATIO_FLOAT
 
 #include <QtCore/QObject>
 #include <QtCore/QPointer>
@@ -69,39 +59,18 @@
 #include <qmath.h>
 #include <limits>
 #include <algorithm>
+#include <utility>
 #ifdef QCP_OPENGL_FBO
 #  include <QtGui/QOpenGLContext>
-#  if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-#    include <QtGui/QOpenGLFramebufferObject>
-#  else
-#    include <QOpenGLFramebufferObject>
-#    include <QOpenGLPaintDevice>
-#  endif
-#  ifdef QCP_OPENGL_OFFSCREENSURFACE
-#    include <QtGui/QOffscreenSurface>
-#  else
-#    include <QtGui/QWindow>
-#  endif
+#  include <QOpenGLFramebufferObject>
+#  include <QOpenGLPaintDevice>
+#  include <QtGui/QOffscreenSurface>
 #endif
-#ifdef QCP_OPENGL_PBUFFER
-#  include <QtOpenGL/QGLPixelBuffer>
-#endif
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-#  include <qnumeric.h>
-#  include <QtGui/QWidget>
-#  include <QtGui/QPrinter>
-#  include <QtGui/QPrintEngine>
-#else
-#  include <QtNumeric>
-#  include <QtWidgets/QWidget>
-#  include <QtPrintSupport/QtPrintSupport>
-#endif
-#if QT_VERSION >= QT_VERSION_CHECK(4, 8, 0)
-#  include <QtCore/QElapsedTimer>
-#endif
-# if QT_VERSION >= QT_VERSION_CHECK(5, 2, 0)
-#  include <QtCore/QTimeZone>
-#endif
+#include <QtNumeric>
+#include <QtWidgets/QWidget>
+#include <QtPrintSupport/QtPrintSupport>
+#include <QtCore/QElapsedTimer>
+#include <QtCore/QTimeZone>
 
 class QCPPainter;
 class QCustomPlot;
@@ -143,11 +112,6 @@ class QCPPolarGraph;
 #  define QCP_LIB_DECL Q_DECL_IMPORT
 #else
 #  define QCP_LIB_DECL
-#endif
-
-// define empty macro for Q_DECL_OVERRIDE if it doesn't exist (Qt < 5)
-#ifndef Q_DECL_OVERRIDE
-#  define Q_DECL_OVERRIDE
 #endif
 
 /*!
@@ -624,29 +588,6 @@ protected:
   // reimplemented virtual methods:
   virtual void reallocateBuffer() Q_DECL_OVERRIDE;
 };
-
-
-#ifdef QCP_OPENGL_PBUFFER
-class QCP_LIB_DECL QCPPaintBufferGlPbuffer : public QCPAbstractPaintBuffer
-{
-public:
-  explicit QCPPaintBufferGlPbuffer(const QSize &size, double devicePixelRatio, int multisamples);
-  virtual ~QCPPaintBufferGlPbuffer() Q_DECL_OVERRIDE;
-  
-  // reimplemented virtual methods:
-  virtual QCPPainter *startPainting() Q_DECL_OVERRIDE;
-  virtual void draw(QCPPainter *painter) const Q_DECL_OVERRIDE;
-  void clear(const QColor &color) Q_DECL_OVERRIDE;
-  
-protected:
-  // non-property members:
-  QGLPixelBuffer *mGlPBuffer;
-  int mMultisamples;
-  
-  // reimplemented virtual methods:
-  virtual void reallocateBuffer() Q_DECL_OVERRIDE;
-};
-#endif // QCP_OPENGL_PBUFFER
 
 
 #ifdef QCP_OPENGL_FBO
@@ -1802,16 +1743,12 @@ public:
   // getters:
   QString dateTimeFormat() const { return mDateTimeFormat; }
   Qt::TimeSpec dateTimeSpec() const { return mDateTimeSpec; }
-# if QT_VERSION >= QT_VERSION_CHECK(5, 2, 0)
   QTimeZone timeZone() const { return mTimeZone; }
-#endif
   
   // setters:
   void setDateTimeFormat(const QString &format);
   void setDateTimeSpec(Qt::TimeSpec spec);
-# if QT_VERSION >= QT_VERSION_CHECK(5, 2, 0)
   void setTimeZone(const QTimeZone &zone);
-# endif
   void setTickOrigin(double origin); // hides base class method but calls baseclass implementation ("using" throws off IDEs and doxygen)
   void setTickOrigin(const QDateTime &origin);
   
@@ -1824,9 +1761,7 @@ protected:
   // property members:
   QString mDateTimeFormat;
   Qt::TimeSpec mDateTimeSpec;
-# if QT_VERSION >= QT_VERSION_CHECK(5, 2, 0)
   QTimeZone mTimeZone;
-# endif
   // non-property members:
   enum DateStrategy {dsNone, dsUniformTimeInDay, dsUniformDayInMonth} mDateStrategy;
   
