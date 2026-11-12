@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 22 22">
+  <style id="current-color-scheme" type="text/css">.ColorScheme-Text { color:#232629; }</style>
+  <!-- the heatmap: a grid whose cells carry different intensities -->
+  <g class="ColorScheme-Text" fill="currentColor" stroke="currentColor" stroke-width="0.6">
+    <path d="M2.5 2.5h4v4h-4z" opacity="0.25"/>
+    <path d="M8.5 2.5h4v4h-4z" opacity="0.45"/>
+    <path d="M14.5 2.5h4v4h-4z" opacity="0.8"/>
+    <path d="M2.5 8.5h4v4h-4z" opacity="0.55"/>
+    <path d="M8.5 8.5h4v4h-4z" opacity="0.9"/>
+    <path d="M14.5 8.5h4v4h-4z" opacity="0.35"/>
+    <path d="M2.5 14.5h4v4h-4z" opacity="0.85"/>
+    <path d="M8.5 14.5h4v4h-4z" opacity="0.3"/>
+    <path d="M14.5 14.5h4v4h-4z" opacity="0.65"/>
+  </g>
+</svg>

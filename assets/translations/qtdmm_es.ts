@@ -4432,6 +4432,11 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
         <source>Value</source>
         <translation>Valor</translation>
     </message>
+    <message>
+        <location filename="../../src/ui/views/histogramplot.cpp"/>
+        <source>HOLD</source>
+        <translation>HOLD</translation>
+    </message>
 </context>
 <context>
     <name>InstanceWidget</name>
@@ -9051,6 +9056,11 @@ Después cierre la sesión y vuelva a iniciarla para que la pertenencia al grupo
         <source>No XY data yet</source>
         <translation>Aún no hay datos XY</translation>
     </message>
+    <message>
+        <location filename="../../src/ui/views/xyplot.cpp"/>
+        <source>HOLD</source>
+        <translation>HOLD</translation>
+    </message>
 </context>
 <context>
     <name>XYView</name>
@@ -9074,6 +9084,11 @@ Después cierre la sesión y vuelva a iniciarla para que la pertenencia al grupo
         <source>Y</source>
         <translation>Y</translation>
     </message>
+    <message>
+        <location filename="../../src/ui/xyview.cpp"/>
+        <source>Value %1</source>
+        <translation>Valor %1</translation>
+    </message>
 </context>
 
 <context>
@@ -9087,6 +9102,11 @@ Después cierre la sesión y vuelva a iniciarla para que la pertenencia al grupo
         <location filename="../../src/ui/views/heatmapplot.cpp"/>
         <source>No heatmap data yet</source>
         <translation>Aún no hay datos de mapa de calor</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/heatmapplot.cpp"/>
+        <source>HOLD</source>
+        <translation>HOLD</translation>
     </message>
 </context>
 
@@ -9121,6 +9141,14 @@ Después cierre la sesión y vuelva a iniciarla para que la pertenencia al grupo
         <location filename="../../src/ui/views/colormap.cpp"/>
         <source>Blue-yellow</source>
         <translation>Azul-amarillo</translation>
+    </message>
+</context>
+<context>
+    <name>HeatmapView</name>
+    <message>
+        <location filename="../../src/ui/heatmapview.cpp"/>
+        <source>Value %1</source>
+        <translation>Valor %1</translation>
     </message>
 </context>
 </TS>

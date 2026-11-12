@@ -4432,6 +4432,11 @@ Keine Berechtigung? Der Sensor braucht eine udev-Regel für die USB-ID %1:%2.</t
         <source>Value</source>
         <translation>Wert</translation>
     </message>
+    <message>
+        <location filename="../../src/ui/views/histogramplot.cpp"/>
+        <source>HOLD</source>
+        <translation>HOLD</translation>
+    </message>
 </context>
 <context>
     <name>InstanceWidget</name>
@@ -9051,6 +9056,11 @@ Melden Sie sich anschließend ab und wieder an, damit die neue Gruppenzugehörig
         <source>No XY data yet</source>
         <translation>Noch keine XY-Daten</translation>
     </message>
+    <message>
+        <location filename="../../src/ui/views/xyplot.cpp"/>
+        <source>HOLD</source>
+        <translation>HOLD</translation>
+    </message>
 </context>
 <context>
     <name>XYView</name>
@@ -9074,6 +9084,11 @@ Melden Sie sich anschließend ab und wieder an, damit die neue Gruppenzugehörig
         <source>Y</source>
         <translation>Y</translation>
     </message>
+    <message>
+        <location filename="../../src/ui/xyview.cpp"/>
+        <source>Value %1</source>
+        <translation>Wert %1</translation>
+    </message>
 </context>
 
 <context>
@@ -9087,6 +9102,11 @@ Melden Sie sich anschließend ab und wieder an, damit die neue Gruppenzugehörig
         <location filename="../../src/ui/views/heatmapplot.cpp"/>
         <source>No heatmap data yet</source>
         <translation>Noch keine Heatmap-Daten</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/heatmapplot.cpp"/>
+        <source>HOLD</source>
+        <translation>HOLD</translation>
     </message>
 </context>
 
@@ -9121,6 +9141,14 @@ Melden Sie sich anschließend ab und wieder an, damit die neue Gruppenzugehörig
         <location filename="../../src/ui/views/colormap.cpp"/>
         <source>Blue-yellow</source>
         <translation>Blau-Gelb</translation>
+    </message>
+</context>
+<context>
+    <name>HeatmapView</name>
+    <message>
+        <location filename="../../src/ui/heatmapview.cpp"/>
+        <source>Value %1</source>
+        <translation>Wert %1</translation>
     </message>
 </context>
 </TS>

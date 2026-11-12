@@ -70,8 +70,9 @@ void XYView::updateLegend()
   const auto label = [](const QString &axis, const QString &source, const QString &name, const ValueRef &value)
   {
     QString text = source;
-    if (!name.isEmpty())
-      text += text.isEmpty() ? name : QString(" · %1").arg(name);
+    const QString valueName = name.isEmpty() ? tr("Value %1").arg(value.id + 1) : name;
+    if (!valueName.isEmpty())
+      text += text.isEmpty() ? valueName : QString(" · %1").arg(valueName);
     if (text.isEmpty() && !value.source.isEmpty())
       text = value.source;
     return QString("%1: %2").arg(axis, text.isEmpty() ? QStringLiteral("—") : text);
@@ -84,7 +85,7 @@ void XYView::feedX(const Reading &reading)
 {
   if (reading.id != m_x.id)
     return;
-  if (!reading.baseUnit.isEmpty() && m_units[0] != reading.baseUnit)
+  if (m_units[0] != reading.baseUnit)
   {
     if (!m_units[0].isEmpty())
     {
@@ -115,7 +116,7 @@ void XYView::feedY(const Reading &reading)
 {
   if (reading.id != m_y.id)
     return;
-  if (!reading.baseUnit.isEmpty() && m_units[1] != reading.baseUnit)
+  if (m_units[1] != reading.baseUnit)
   {
     if (!m_units[1].isEmpty())
     {

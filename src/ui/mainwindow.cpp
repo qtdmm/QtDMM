@@ -147,34 +147,6 @@ private:
   bool m_stop;
 };
 
-/// A theme symbol with a "+" in its lower right corner (Add device: the
-/// meter and "add"), looked up when painted, so it follows the symbol set.
-class HeatmapIconEngine : public PaintedIconEngine
-{
-public:
-  void paint(QPainter *painter, const QRect &rect, QIcon::Mode mode, QIcon::State) override
-  {
-    painter->save();
-    painter->setRenderHint(QPainter::Antialiasing, false);
-    const qreal gap = qMax<qreal>(1.0, rect.width() / 16.0);
-    const qreal cellW = (rect.width() - 3 * gap) / 4.0;
-    const qreal cellH = (rect.height() - 3 * gap) / 4.0;
-    for (int y = 0; y < 4; ++y)
-      for (int x = 0; x < 4; ++x)
-      {
-        QColor color = ColorMap::color(ColorMap::Rainbow, (y * 4 + x) / 15.0);
-        if (mode == QIcon::Disabled)
-          color = color.lighter(165);
-        QRectF cell(rect.left() + x * (cellW + gap), rect.top() + y * (cellH + gap), cellW, cellH);
-        painter->fillRect(cell, color);
-        painter->setPen(mode == QIcon::Disabled ? QColor(180, 180, 180) : QColor(45, 45, 45));
-        painter->drawRect(cell);
-      }
-    painter->restore();
-  }
-  QIconEngine *clone() const override { return new HeatmapIconEngine; }
-};
-
 class PlusIconEngine : public PaintedIconEngine
 {
 public:
@@ -562,7 +534,7 @@ void MainWindow::createViews()
     const MeterController *ctl = m_session->controllers().value(0);
     newView(Added::Histogram, ctl ? ValueRef(0, ctl->source()) : ValueRef(), true);
   });
-  m_newHeatmapAction = new QAction(QIcon(new HeatmapIconEngine), tr("Add &heatmap"), this);
+  m_newHeatmapAction = new QAction(QIcon::fromTheme("qtdmm-heatmap"), tr("Add &heatmap"), this);
   m_newHeatmapAction->setObjectName("action_NewHeatmap");
   connect(m_newHeatmapAction, &QAction::triggered, this, [this]
   {
@@ -606,7 +578,7 @@ void MainWindow::createViews()
     tr("Show the distribution of recent readings for one measured value."));
   m_heatmapAction = windowAction(m_heatmapWin, tr("He&atmap"), "", "",
     tr("Plot three measured values: two for position and one for color."));
-  m_heatmapAction->setIcon(QIcon(new HeatmapIconEngine));
+  m_heatmapAction->setIcon(QIcon::fromTheme("qtdmm-heatmap"));
   m_heatmapAction->setObjectName("action_WindowHeatmap");
   // the graph keeps its action from the .ui (toolbar button with Ctrl+3)
   bindWindowAction(action_Graph, m_graphWin);

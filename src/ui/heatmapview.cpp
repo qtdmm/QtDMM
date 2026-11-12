@@ -58,8 +58,9 @@ void HeatmapView::updateLegend()
   for (int a = 0; a < 3; ++a)
   {
     QString text = m_source[a];
-    if (!m_name[a].isEmpty())
-      text += text.isEmpty() ? m_name[a] : QString(" · %1").arg(m_name[a]);
+    const QString valueName = m_name[a].isEmpty() ? tr("Value %1").arg(m_ref[a].id + 1) : m_name[a];
+    if (!valueName.isEmpty())
+      text += text.isEmpty() ? valueName : QString(" · %1").arg(valueName);
     if (text.isEmpty() && !m_ref[a].source.isEmpty())
       text = m_ref[a].source;
     parts << QString("%1: %2").arg(QLatin1String(axisName[a]), text.isEmpty() ? QStringLiteral("—") : text);
@@ -71,7 +72,7 @@ void HeatmapView::feed(int axis, const Reading &reading)
 {
   if (reading.id != m_ref[axis].id)
     return;
-  if (!reading.baseUnit.isEmpty() && m_units[axis] != reading.baseUnit)
+  if (m_units[axis] != reading.baseUnit)
   {
     if (!m_units[axis].isEmpty())
     {

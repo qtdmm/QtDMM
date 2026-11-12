@@ -220,6 +220,7 @@ if (BUILD_TESTING)
 
 	## the Poincaré plot's values: pairs, SD1/SD2, gaps, port changes
 	qtdmm_add_test(poincare_series test_poincare tests/test_poincare.cpp)
+	qtdmm_add_test(plot_axis test_plotaxis tests/test_plotaxis.cpp)
 
 	## the drawing clock of the views: wanted, off, slower when ticks cost too much
 	qtdmm_add_test(frame_clock test_frameclock tests/test_frameclock.cpp)

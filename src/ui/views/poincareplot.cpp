@@ -267,6 +267,11 @@ void PoincarePlot::render(QPainter &p, const QRect &area)
     p.drawText(area, Qt::AlignCenter, !m_notice.isEmpty() ? m_notice
                                       : m_series.valueCount() > 0 ? tr("Waiting for the next reading")
                                                                   : tr("No readings yet"));
+    if (m_hold)
+    {
+      p.setPen(labels);
+      p.drawText(QPoint(plot.left() + 6, plot.top() + fm.ascent() + 4), tr("HOLD"));
+    }
     return;
   }
 

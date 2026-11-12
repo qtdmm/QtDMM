@@ -8,15 +8,12 @@
 #include <QVector>
 #include <QWidget>
 
-class QMenu;
-
 /// A live scatter plot of one value against another.
 class XYPlot : public QWidget
 {
   Q_OBJECT
 public:
   explicit XYPlot(QWidget *parent = nullptr);
-  void        setCaption(const QString &caption);
   void        setThemeColors(const QBrush &background, const QColor &grid, const QColor &labels, const QColor &data);
   void        setAxisUnits(const QString &x, const QString &y);
   void        setLegend(const QString &legend);
@@ -32,7 +29,6 @@ private:
   QVector<QPointF> m_points;
   QVector<QPointF> m_shown;
   bool        m_hold = false;
-  QString     m_caption;
   QString     m_xUnit;
   QString     m_yUnit;
   QString     m_legend;

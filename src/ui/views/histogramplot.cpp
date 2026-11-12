@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "ui/views/histogramplot.h"
 
-#include "core/siprefix.h"
+#include "ui/views/plotaxis.h"
 
 #include <QPainter>
 
@@ -35,12 +35,16 @@ void HistogramPlot::addReading(const Reading &reading)
 {
   if (reading.id != m_valueId)
     return;
+  if (reading.baseUnit != m_unit)
+  {
+    clear();
+    m_unit = reading.baseUnit;
+  }
   if (reading.noNumber() || reading.overload || reading.hold || !std::isfinite(reading.value))
     return;
   m_values.append(reading.value);
   if (m_values.size() > 1000)
     m_values.remove(0, m_values.size() - 1000);
-  m_unit = reading.baseUnit;
   update();
 }
 
@@ -98,7 +102,7 @@ void HistogramPlot::paintEvent(QPaintEvent *)
     {
       p.setPen(labels);
       p.drawText(QRect(area.right() - 58, area.top(), 54, fm.height()), Qt::AlignRight | Qt::AlignVCenter,
-                 QStringLiteral("HOLD"));
+                 tr("HOLD"));
     }
   };
   p.setPen(grid);
@@ -121,15 +125,9 @@ void HistogramPlot::paintEvent(QPaintEvent *)
     lo = qMin(lo, value);
     hi = qMax(hi, value);
   }
-  if (lo == hi)
-  {
-    const double pad = qMax(std::abs(lo) * 0.05, 0.5);
-    lo -= pad;
-    hi += pad;
-  }
-  QString prefix;
-  SiPrefix::scale(qMax(std::abs(lo), std::abs(hi)), m_unit, &prefix);
-  const double factor = SiPrefix::factor(prefix);
+  const PlotAxis::Range axis = PlotAxis::range(lo, hi, m_unit);
+  lo = axis.minimum;
+  hi = axis.maximum;
   const int bins = qBound(5, int(std::ceil(std::sqrt(shown.size()))), 40);
   QVector<int> counts(bins, 0);
   int maxCount = 1;
@@ -143,11 +141,11 @@ void HistogramPlot::paintEvent(QPaintEvent *)
              QString::number(maxCount));
   p.drawText(QRect(area.left() - 42, area.bottom() - fm.height() / 2, 38, fm.height()), Qt::AlignRight, "0");
   p.drawText(QRect(area.left(), area.bottom() + 4, 90, fm.height()), Qt::AlignLeft,
-             QString::number(lo / factor, 'g', 4));
+             QString::number(lo / axis.factor, 'g', 4));
   p.drawText(QRect(area.right() - 90, area.bottom() + 4, 90, fm.height()), Qt::AlignRight,
-             QString::number(hi / factor, 'g', 4));
+             QString::number(hi / axis.factor, 'g', 4));
   p.drawText(QRect(area.left(), area.bottom() + fm.height() + 4, area.width(), fm.height()), Qt::AlignCenter,
-             m_unit.isEmpty() ? tr("Value") : SiPrefix::displayText(prefix + m_unit));
+             m_unit.isEmpty() ? tr("Value") : axis.unit);
   const double slot = double(area.width()) / bins;
   p.setPen(Qt::NoPen);
   p.setBrush(data);
