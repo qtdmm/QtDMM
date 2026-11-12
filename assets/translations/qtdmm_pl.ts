@@ -1058,6 +1058,10 @@
         <source>The encryption key does not match %1.</source>
         <translation>Klucz szyfrowania nie pasuje do %1.</translation>
     </message>
+    <message>
+        <source>Bluetooth receive buffer limit exceeded.</source>
+        <translation>Przekroczono limit bufora odbiorczego Bluetooth.</translation>
+    </message>
 </context>
 <context>
     <name>BleGattDevice</name>
@@ -1110,6 +1114,10 @@
         <location filename="../../src/device/transports/blegatt.cpp" line="389"/>
         <source>%1 has no writable characteristic.</source>
         <translation>%1 nie ma zapisywalnej charakterystyki.</translation>
+    </message>
+    <message>
+        <source>Bluetooth receive buffer limit exceeded.</source>
+        <translation>Przekroczono limit bufora odbiorczego Bluetooth.</translation>
     </message>
 </context>
 <context>
@@ -4388,6 +4396,10 @@ Kabel podłączony? Brak uprawnień? Kabel wymaga reguły udev QtDMM.</translati
         <source>Cannot open the cable.</source>
         <translation>Nie można otworzyć kabla.</translation>
     </message>
+    <message>
+        <source>Receive buffer limit exceeded.</source>
+        <translation>Przekroczono limit bufora odbiorczego.</translation>
+    </message>
 </context>
 <context>
     <name>HelpDlg</name>
@@ -4420,6 +4432,10 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
         <location filename="../../src/device/transports/hidholtek.cpp" line="42"/>
         <source>Cannot initialise the sensor: %1</source>
         <translation>Nie można zainicjować czujnika: %1</translation>
+    </message>
+    <message>
+        <source>Receive buffer limit exceeded.</source>
+        <translation>Przekroczono limit bufora odbiorczego.</translation>
     </message>
 </context>
 <context>
@@ -7025,6 +7041,10 @@ Następnie wyloguj się i zaloguj ponownie, aby członkostwo w grupie zaczęło 
         <source>socket error</source>
         <translation>błąd gniazda</translation>
     </message>
+    <message>
+        <source>Network receive buffer limit exceeded.</source>
+        <translation>Przekroczono limit sieciowego bufora odbiorczego.</translation>
+    </message>
 </context>
 <context>
     <name>ReadingsModel</name>
@@ -7548,6 +7568,14 @@ Następnie wyloguj się i zaloguj ponownie, aby członkostwo w grupie zaczęło 
         <location filename="../../src/recording/recordingfile.cpp" line="805"/>
         <source>note</source>
         <translation>notatka</translation>
+    </message>
+    <message>
+        <source>The recording archive is too large to import.</source>
+        <translation>Archiwum pomiarów jest zbyt duże, aby je zaimportować.</translation>
+    </message>
+    <message>
+        <source>No usable recording data found (recording.csv is missing, invalid, or too large).</source>
+        <translation>Nie znaleziono prawidłowych danych pomiarowych (brak recording.csv, plik jest nieprawidłowy lub zbyt duży).</translation>
     </message>
 </context>
 <context>
@@ -9052,6 +9080,22 @@ Następnie wyloguj się i zaloguj ponownie, aby członkostwo w grupie zaczęło 
         <location filename="../../src/core/workspacefile.cpp" line="341"/>
         <source>Cannot write the file.</source>
         <translation>Nie można zapisać pliku.</translation>
+    </message>
+    <message>
+        <source>The workspace file is too large to import.</source>
+        <translation>Plik stanowiska jest zbyt duży, aby go zaimportować.</translation>
+    </message>
+    <message>
+        <source>The workspace thumbnail is too large.</source>
+        <translation>Miniatura stanowiska jest zbyt duża.</translation>
+    </message>
+    <message>
+        <source>The workspace thumbnail dimensions are too large.</source>
+        <translation>Wymiary miniatury stanowiska są zbyt duże.</translation>
+    </message>
+    <message>
+        <source>The workspace file is too large to write.</source>
+        <translation>Plik stanowiska jest zbyt duży, aby go zapisać.</translation>
     </message>
 </context>
 <context>

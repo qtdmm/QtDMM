@@ -1058,6 +1058,10 @@
         <source>The encryption key does not match %1.</source>
         <translation>La clave de cifrado no coincide con %1.</translation>
     </message>
+    <message>
+        <source>Bluetooth receive buffer limit exceeded.</source>
+        <translation>Se superó el límite del búfer de recepción Bluetooth.</translation>
+    </message>
 </context>
 <context>
     <name>BleGattDevice</name>
@@ -1110,6 +1114,10 @@
         <location filename="../../src/device/transports/blegatt.cpp" line="389"/>
         <source>%1 has no writable characteristic.</source>
         <translation>%1 no tiene característica escribible.</translation>
+    </message>
+    <message>
+        <source>Bluetooth receive buffer limit exceeded.</source>
+        <translation>Se superó el límite del búfer de recepción Bluetooth.</translation>
     </message>
 </context>
 <context>
@@ -4386,6 +4394,10 @@ Cable plugged in? No permission? The cable needs the udev rule of QtDMM.</source
         <source>Cannot open the cable.</source>
         <translation>No se puede abrir el cable.</translation>
     </message>
+    <message>
+        <source>Receive buffer limit exceeded.</source>
+        <translation>Se superó el límite del búfer de recepción.</translation>
+    </message>
 </context>
 <context>
     <name>HelpDlg</name>
@@ -4418,6 +4430,10 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
         <location filename="../../src/device/transports/hidholtek.cpp" line="42"/>
         <source>Cannot initialise the sensor: %1</source>
         <translation>No se puede inicializar el sensor: %1</translation>
+    </message>
+    <message>
+        <source>Receive buffer limit exceeded.</source>
+        <translation>Se superó el límite del búfer de recepción.</translation>
     </message>
 </context>
 <context>
@@ -7021,6 +7037,10 @@ Después cierre la sesión y vuelva a iniciarla para que la pertenencia al grupo
         <source>socket error</source>
         <translation>error de socket</translation>
     </message>
+    <message>
+        <source>Network receive buffer limit exceeded.</source>
+        <translation>Se superó el límite del búfer de recepción de red.</translation>
+    </message>
 </context>
 <context>
     <name>ReadingsModel</name>
@@ -7543,6 +7563,14 @@ Después cierre la sesión y vuelva a iniciarla para que la pertenencia al grupo
         <location filename="../../src/recording/recordingfile.cpp" line="805"/>
         <source>note</source>
         <translation>nota</translation>
+    </message>
+    <message>
+        <source>The recording archive is too large to import.</source>
+        <translation>El archivo de mediciones es demasiado grande para importarlo.</translation>
+    </message>
+    <message>
+        <source>No usable recording data found (recording.csv is missing, invalid, or too large).</source>
+        <translation>No se encontraron datos de medición válidos (falta recording.csv, no es válido o es demasiado grande).</translation>
     </message>
 </context>
 <context>
@@ -9047,6 +9075,22 @@ Después cierre la sesión y vuelva a iniciarla para que la pertenencia al grupo
         <location filename="../../src/core/workspacefile.cpp" line="341"/>
         <source>Cannot write the file.</source>
         <translation>No se puede escribir el archivo.</translation>
+    </message>
+    <message>
+        <source>The workspace file is too large to import.</source>
+        <translation>El archivo del espacio de trabajo es demasiado grande para importarlo.</translation>
+    </message>
+    <message>
+        <source>The workspace thumbnail is too large.</source>
+        <translation>La miniatura del espacio de trabajo es demasiado grande.</translation>
+    </message>
+    <message>
+        <source>The workspace thumbnail dimensions are too large.</source>
+        <translation>Las dimensiones de la miniatura del espacio de trabajo son demasiado grandes.</translation>
+    </message>
+    <message>
+        <source>The workspace file is too large to write.</source>
+        <translation>El archivo del espacio de trabajo es demasiado grande para guardarlo.</translation>
     </message>
 </context>
 <context>

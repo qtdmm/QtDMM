@@ -1058,6 +1058,10 @@
         <source>The encryption key does not match %1.</source>
         <translation>Der Schlüssel passt nicht zu %1.</translation>
     </message>
+    <message>
+        <source>Bluetooth receive buffer limit exceeded.</source>
+        <translation>Bluetooth-Empfangspufferlimit überschritten.</translation>
+    </message>
 </context>
 <context>
     <name>BleGattDevice</name>
@@ -1110,6 +1114,10 @@
         <location filename="../../src/device/transports/blegatt.cpp" line="389"/>
         <source>%1 has no writable characteristic.</source>
         <translation>%1 hat keine beschreibbare Characteristic.</translation>
+    </message>
+    <message>
+        <source>Bluetooth receive buffer limit exceeded.</source>
+        <translation>Bluetooth-Empfangspufferlimit überschritten.</translation>
     </message>
 </context>
 <context>
@@ -4386,6 +4394,10 @@ Kabel angesteckt? Keine Berechtigung? Das Kabel braucht die udev-Regel von QtDMM
         <source>Cannot open the cable.</source>
         <translation>Das Kabel lässt sich nicht öffnen.</translation>
     </message>
+    <message>
+        <source>Receive buffer limit exceeded.</source>
+        <translation>Empfangspufferlimit überschritten.</translation>
+    </message>
 </context>
 <context>
     <name>HelpDlg</name>
@@ -4418,6 +4430,10 @@ Keine Berechtigung? Der Sensor braucht eine udev-Regel für die USB-ID %1:%2.</t
         <location filename="../../src/device/transports/hidholtek.cpp" line="42"/>
         <source>Cannot initialise the sensor: %1</source>
         <translation>Der Sensor lässt sich nicht initialisieren: %1</translation>
+    </message>
+    <message>
+        <source>Receive buffer limit exceeded.</source>
+        <translation>Empfangspufferlimit überschritten.</translation>
     </message>
 </context>
 <context>
@@ -7021,6 +7037,10 @@ Melden Sie sich anschließend ab und wieder an, damit die neue Gruppenzugehörig
         <source>socket error</source>
         <translation>Socket-Fehler</translation>
     </message>
+    <message>
+        <source>Network receive buffer limit exceeded.</source>
+        <translation>Netzwerk-Empfangspufferlimit überschritten.</translation>
+    </message>
 </context>
 <context>
     <name>ReadingsModel</name>
@@ -7543,6 +7563,14 @@ Melden Sie sich anschließend ab und wieder an, damit die neue Gruppenzugehörig
         <location filename="../../src/recording/recordingfile.cpp" line="805"/>
         <source>note</source>
         <translation>Notiz</translation>
+    </message>
+    <message>
+        <source>The recording archive is too large to import.</source>
+        <translation>Das Aufzeichnungsarchiv ist zu groß zum Importieren.</translation>
+    </message>
+    <message>
+        <source>No usable recording data found (recording.csv is missing, invalid, or too large).</source>
+        <translation>Keine verwendbaren Aufzeichnungsdaten gefunden (recording.csv fehlt, ist ungültig oder zu groß).</translation>
     </message>
 </context>
 <context>
@@ -9047,6 +9075,22 @@ Melden Sie sich anschließend ab und wieder an, damit die neue Gruppenzugehörig
         <location filename="../../src/core/workspacefile.cpp" line="341"/>
         <source>Cannot write the file.</source>
         <translation>Die Datei lässt sich nicht schreiben.</translation>
+    </message>
+    <message>
+        <source>The workspace file is too large to import.</source>
+        <translation>Die Arbeitsbereichsdatei ist zu groß zum Importieren.</translation>
+    </message>
+    <message>
+        <source>The workspace thumbnail is too large.</source>
+        <translation>Das Vorschaubild des Arbeitsbereichs ist zu groß.</translation>
+    </message>
+    <message>
+        <source>The workspace thumbnail dimensions are too large.</source>
+        <translation>Das Vorschaubild des Arbeitsbereichs hat zu große Abmessungen.</translation>
+    </message>
+    <message>
+        <source>The workspace file is too large to write.</source>
+        <translation>Die Arbeitsbereichsdatei ist zu groß zum Schreiben.</translation>
     </message>
 </context>
 <context>

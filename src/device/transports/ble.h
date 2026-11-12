@@ -51,6 +51,7 @@ private:
   QBluetoothDeviceDiscoveryAgent *m_agent = nullptr;
   int m_lastIv = -1;
   int m_keyMismatches = 0;
+  bool m_failed = false;
 };
 
 class QBluetoothDeviceDiscoveryAgent;

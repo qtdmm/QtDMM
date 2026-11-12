@@ -62,7 +62,7 @@ public:
 
   /// Number of frames one reading consists of; the id passed with
   /// readEvent() cycles through 0..num-1.
-  void        setFramesPerReading(int num) { m_framesPerReading = num; }
+  void        setFramesPerReading(int num) { m_framesPerReading = qMax(1, num); }
 
 Q_SIGNALS:
   /// A complete frame: exactly DmmDecoder::getPacketLength() bytes, or for a

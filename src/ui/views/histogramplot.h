@@ -30,8 +30,11 @@ protected:
   void        paintEvent(QPaintEvent *) override;
 
 private:
+  static constexpr int kMaxValues = 1000;
+
   QVector<double> m_values;
   QVector<double> m_shown;
+  int         m_valueHead = 0;
   bool        m_hold = false;
   int         m_valueId = 0;
   QString     m_caption;

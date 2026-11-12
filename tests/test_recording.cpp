@@ -282,6 +282,11 @@ int main(int argc, char **argv)
       bad.close();
       check(!RecordingFile::read(bad.fileName(), &err) && !err.isEmpty(), "a ZIP without recording.csv: an error");
 
+      ZipWriter largeEntry;
+      largeEntry.add("recording.csv", QByteArray(128, 'x'), false);
+      check(!zipEntry(largeEntry.finish(), QStringLiteral("recording.csv"), 127),
+            "ZIP entry above the caller's limit is refused");
+
       // for LabPlot: numbers only, units in the header, no number empty
       Recording lp;
       lp.start = rec->start;

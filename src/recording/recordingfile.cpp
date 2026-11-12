@@ -23,6 +23,12 @@
 
 namespace
 {
+// Recordings keep at most two million points; these allowances cover verbose
+// CSV rows and metadata while bounding archive input and decompression.
+constexpr qint64 kMaxRecordingArchiveBytes = qint64(256) << 20;
+constexpr qint64 kMaxRecordingCsvBytes = qint64(512) << 20;
+constexpr qint64 kMaxRecordingMetaBytes = qint64(16) << 20;
+
 QString tr(const char *text)
 {
   return QCoreApplication::translate("RecordingFile", text);
@@ -267,14 +273,24 @@ std::optional<Recording> RecordingFile::read(const QString &path, QString *error
   QIODevice *in = &file;
   if (file.peek(4) == QByteArray("PK\x03\x04", 4))
   {
-    const QByteArray zip = file.readAll();
-    const std::optional<QByteArray> csv = zipEntry(zip, QStringLiteral("recording.csv"));
-    if (!csv)
+    if (file.size() < 0 || file.size() > kMaxRecordingArchiveBytes)
     {
-      setError(error, tr("No recording in the file (recording.csv is missing)."));
+      setError(error, tr("The recording archive is too large to import."));
       return std::nullopt;
     }
-    if (const std::optional<QByteArray> json = zipEntry(zip, QStringLiteral("meta.json")))
+    const QByteArray zip = file.read(kMaxRecordingArchiveBytes + 1);
+    if (zip.size() > kMaxRecordingArchiveBytes || !file.atEnd())
+    {
+      setError(error, tr("The recording archive is too large to import."));
+      return std::nullopt;
+    }
+    const std::optional<QByteArray> csv = zipEntry(zip, QStringLiteral("recording.csv"), kMaxRecordingCsvBytes);
+    if (!csv)
+    {
+      setError(error, tr("No usable recording data found (recording.csv is missing, invalid, or too large)."));
+      return std::nullopt;
+    }
+    if (const std::optional<QByteArray> json = zipEntry(zip, QStringLiteral("meta.json"), kMaxRecordingMetaBytes))
       meta = QJsonDocument::fromJson(*json).object();
     unpacked.setData(*csv);
     unpacked.open(QIODevice::ReadOnly);

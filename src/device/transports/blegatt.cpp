@@ -182,6 +182,7 @@ bool BleGattDevice::open(OpenMode mode)
 
   m_serviceFound = false;
   m_ready = false;
+  m_failed = false;
 
   m_connectTimeout = new QTimer(this);
   m_connectTimeout->setSingleShot(true);
@@ -297,14 +298,15 @@ void BleGattDevice::close()
     m_controller->deleteLater();
     m_controller = nullptr;
   }
-  m_rx.clear();
+  clearBuffer();
   QIODevice::close();
 }
 
 void BleGattDevice::fail(const QString &reason)
 {
-  if (!isOpen())
+  if (!isOpen() || m_failed)
     return;
+  m_failed = true;
   qCDebug(lcBle) << m_address << reason;
   setErrorString(reason);
   m_ready = false;
@@ -338,7 +340,11 @@ void BleGattDevice::onDiscoveryFinished()
     if (c.uuid() != m_profile->notify)
       return;
     qCDebug(lcBle) << m_address << "rx" << value.toHex(' ');
-    m_rx += value;
+    if (!appendToBuffer(value))
+    {
+      fail(tr("Bluetooth receive buffer limit exceeded."));
+      return;
+    }
     m_pollSent.invalidate();
     // the answer is in: ask again, but not faster than kRepollMs
     if (!m_lastPoll.isEmpty() && m_repoll && !m_repoll->isActive())

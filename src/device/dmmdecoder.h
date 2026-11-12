@@ -245,7 +245,7 @@ protected:
   /// optional leading minus.
   QString makeValue(const QByteArray &data, int first, int last, bool neg=false);
 
-  static std::vector<DMMInfo> *m_configurations;
+  static std::vector<DMMInfo> &configurations();
   DmmResponse m_result;
   FrameFormat::DataFormat m_type;
   QString m_name;

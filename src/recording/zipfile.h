@@ -32,9 +32,9 @@ private:
   QList<Entry> m_entries;
 };
 
-/// The entry @p name of the ZIP archive @p zip, nothing when it has none or
-/// @p zip is no archive (miniz's reader).
-std::optional<QByteArray> zipEntry(const QByteArray &zip, const QString &name);
+/// The entry @p name of ZIP archive @p zip, nothing when it has none, exceeds
+/// @p maxBytes, or @p zip is no archive (miniz's reader).
+std::optional<QByteArray> zipEntry(const QByteArray &zip, const QString &name, qint64 maxBytes);
 
 /// A file of a ZIP archive, unpacked.
 struct ZipFileEntry

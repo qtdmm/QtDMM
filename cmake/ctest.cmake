@@ -50,6 +50,8 @@ if (BUILD_TESTING)
 	## the recorder's store on its own
 	qtdmm_add_test(recording_store test_recordingstore tests/test_recordingstore.cpp "${TEST_DATA}/graph")
 
+	qtdmm_add_test(buffered_device test_buffereddevice tests/test_buffereddevice.cpp)
+
 	## the recorder against readings with given times: the grid export, the
 	## integral and the triggers, as recorded with the 100 ms sample clock
 	qtdmm_add_test(recording_golden test_recording_golden tests/test_recording_golden.cpp "${TEST_DATA}/recording")

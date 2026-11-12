@@ -345,8 +345,12 @@ void HIDSerialDevice::onReport(const QByteArray &raw)
   }
   if (len > 0)
   {
+    if (!appendToBuffer(reinterpret_cast<const char *>(payload), len))
+    {
+      onReadError(tr("Receive buffer limit exceeded."));
+      return;
+    }
     m_dataSeen = true;
-    m_rx.append(reinterpret_cast<const char *>(payload), len);
     Q_EMIT readyRead();
   }
 }
@@ -355,6 +359,7 @@ void HIDSerialDevice::onReadError(const QString &what)
 {
   if (!m_isOpen)
     return;   // our own close() ends the loop without an error
+  setErrorString(what);
   qWarning() << "HID: read failed:" << what;
   m_isOpen = false;
   stopReader();

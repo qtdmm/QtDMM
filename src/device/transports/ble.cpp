@@ -104,6 +104,7 @@ bool BleAdvertisementDevice::open(OpenMode mode)
   }
   m_lastIv = -1;
   m_keyMismatches = 0;
+  m_failed = false;
   return QIODevice::open(mode | QIODevice::Unbuffered);
 }
 
@@ -116,12 +117,13 @@ void BleAdvertisementDevice::close()
     m_agent->deleteLater();
     m_agent = nullptr;
   }
+  clearBuffer();
   QIODevice::close();
 }
 
 void BleAdvertisementDevice::onDevice(const QBluetoothDeviceInfo &info)
 {
-  if (info.address().toString().toUpper() != m_address)
+  if (m_failed || info.address().toString().toUpper() != m_address)
     return;
   const QByteArray data = info.manufacturerData(VictronBle::CompanyId);
   const auto adv = VictronBle::parse(data);
@@ -144,7 +146,14 @@ void BleAdvertisementDevice::onDevice(const QBluetoothDeviceInfo &info)
   m_keyMismatches = 0;
   m_lastIv = adv->iv;
   qCDebug(lcBle) << VictronBle::modelName(adv->model) << "type" << adv->readoutType << "iv" << adv->iv << plain->toHex();
-  m_rx += VictronBle::frame(adv->readoutType, *plain, m_fields);
+  if (!appendToBuffer(VictronBle::frame(adv->readoutType, *plain, m_fields)))
+  {
+    m_failed = true;
+    const QString reason = tr("Bluetooth receive buffer limit exceeded.");
+    setErrorString(reason);
+    Q_EMIT finished(reason);
+    return;
+  }
   Q_EMIT readyRead();
 }
 

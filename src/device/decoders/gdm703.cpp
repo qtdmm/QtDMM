@@ -18,7 +18,7 @@ size_t DecoderGDM703::getPacketLength()
 bool DecoderGDM703::checkFormat(const char *data, size_t idx)
 {
   // frame ends with ETX; the STX 25 bytes earlier confirms the alignment
-  return data[idx] == 0x03 && ringByte(data, idx, 25) == 0x02;
+  return idx >= 25 && data[idx] == 0x03 && ringByte(data, idx, 25) == 0x02;
 }
 
 bool DecoderGDM703::parseValue(const QString &value, const QString &prefixUnit, QString &val, double &dval, QString &unit)

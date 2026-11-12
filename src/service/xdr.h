@@ -14,7 +14,7 @@ public:
 
   quint32 u32()
   {
-    if (m_pos + 4 > m_d.size())
+    if (m_pos > m_d.size() || m_d.size() - m_pos < 4)
     {
       m_ok = false;
       m_pos = m_d.size();
@@ -30,14 +30,20 @@ public:
   QByteArray opaque()
   {
     const quint32 n = u32();
-    const qsizetype padded = (qsizetype(n) + 3) & ~qsizetype(3);
-    if (!m_ok || m_pos + padded > m_d.size())
+    if (!m_ok || m_pos > m_d.size() || qsizetype(n) > m_d.size() - m_pos)
+    {
+      m_ok = false;
+      return {};
+    }
+    const qsizetype padding = (4 - (qsizetype(n) & 3)) & 3;
+    const qsizetype remaining = m_d.size() - m_pos;
+    if (padding > remaining - qsizetype(n))
     {
       m_ok = false;
       return {};
     }
     const QByteArray r = m_d.mid(m_pos, n);
-    m_pos += padded;
+    m_pos += qsizetype(n) + padding;
     return r;
   }
 

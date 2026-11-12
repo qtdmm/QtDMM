@@ -26,8 +26,11 @@ protected:
   void        paintEvent(QPaintEvent *) override;
 
 private:
+  static constexpr int kMaxPoints = 2000;
+
   QVector<QPointF> m_points;
   QVector<QPointF> m_shown;
+  int         m_pointHead = 0;
   bool        m_hold = false;
   QString     m_xUnit;
   QString     m_yUnit;

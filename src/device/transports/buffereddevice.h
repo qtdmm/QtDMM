@@ -7,20 +7,49 @@
 #include <cstring>
 
 /// A read-only stream whose bytes arrive by signal (a HID report, a Bluetooth
-/// notification, a timer, a socket) and wait in m_rx until FrameReader reads
-/// them. The subclass appends to m_rx in the device's own thread and emits
-/// readyRead().
+/// notification, a timer, a socket) and wait in the bounded receive buffer
+/// until FrameReader reads them. Subclasses append through appendToBuffer()
+/// and emit readyRead().
 class BufferedDevice : public QIODevice
 {
 public:
+  static constexpr qsizetype kMaxBufferedBytes = 1 << 20;
+
   using QIODevice::QIODevice;
 
   /// Must stay const: QIODevice's version is const and virtual, so a
   /// non-const one would hide instead of override it and FrameReader
   /// (holding a QIODevice*) would get the base version.
   qint64 bytesAvailable() const override { return m_rx.size() + QIODevice::bytesAvailable(); }
+  bool hasBufferedData() const { return !m_rx.isEmpty(); }
 
 protected:
+  void clearBuffer() { m_rx.clear(); }
+
+  bool replaceBuffer(const QByteArray &bytes)
+  {
+    if (bytes.size() > kMaxBufferedBytes)
+      return false;
+    m_rx = bytes;
+    return true;
+  }
+
+  bool appendToBuffer(const QByteArray &bytes)
+  {
+    if (bytes.size() > kMaxBufferedBytes - m_rx.size())
+      return false;
+    m_rx.append(bytes);
+    return true;
+  }
+
+  bool appendToBuffer(const char *data, qsizetype size)
+  {
+    if (size < 0 || size > kMaxBufferedBytes - m_rx.size())
+      return false;
+    m_rx.append(data, size);
+    return true;
+  }
+
   qint64 readData(char *data, qint64 maxSize) override
   {
     const qint64 len = qMin(maxSize, qint64(m_rx.size()));
@@ -31,5 +60,6 @@ protected:
     return len;
   }
 
+private:
   QByteArray m_rx;   ///< received, not read yet
 };

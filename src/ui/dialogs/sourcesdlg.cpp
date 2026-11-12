@@ -39,7 +39,7 @@ SourcesDlg::SourcesDlg(const QString &view, bool several, const QList<Meter> &me
     top->setFlags(Qt::ItemIsEnabled);
     for (int id = 0; id < meter.values.size(); ++id)
     {
-      auto *item = new QTreeWidgetItem(top, { QString("%1  %2").arg(id + 1).arg(meter.values[id]) });
+      auto *item = new QTreeWidgetItem(top, { QStringLiteral("%1  %2").arg(id + 1).arg(meter.values[id]) });
       item->setData(0, kSource, meter.source);
       item->setData(0, kValue, id);
       item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsUserCheckable);

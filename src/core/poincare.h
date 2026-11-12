@@ -65,6 +65,8 @@ public:
   int         valueCount() const { return int(m_values.size()); }
   QVector<Pair> pairs() const;
   Stats       stats() const;
+  /// Statistics for @p pairs, so a plot can share one calculated point list.
+  static Stats stats(const QVector<Pair> &pairs);
   /// The unit of the values ("V", "Ω"); empty before the first one.
   QString     unit() const { return m_unit; }
   /// One digit of the display in the unit of the values ("0.001" for

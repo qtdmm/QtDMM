@@ -146,7 +146,7 @@ void PoincarePlot::refresh()
   if (!m_hold)
   {
     m_shown = m_series.pairs();
-    m_stats = m_series.stats();
+    m_stats = PoincareSeries::stats(m_shown);
     m_unit = m_series.unit();
     m_resolution = m_series.resolution();
   }
@@ -318,7 +318,7 @@ void PoincarePlot::render(QPainter &p, const QRect &area)
       p.drawText(QPointF(px(v) - w / 2.0, plot.bottom() + fm.ascent() + 3), text);
     p.drawText(QPointF(plot.left() - w - 4, py(v) + fm.ascent() / 2.0 - 1), text);
   }
-  const QString unitText = unit.isEmpty() ? QString() : QString(" [%1]").arg(unit);
+  const QString unitText = unit.isEmpty() ? QString() : QStringLiteral(" [%1]").arg(unit);
   const QString xTitle = tr("x(n)") + unitText;
   const QString yTitle = tr("x(n+%1)").arg(m_series.lag()) + unitText;
   p.drawText(QPointF(plot.center().x() - fm.horizontalAdvance(xTitle) / 2.0, plot.bottom() + 2 * fm.height() + 4),

@@ -96,8 +96,12 @@ QVector<PoincareSeries::Pair> PoincareSeries::pairs() const
 
 PoincareSeries::Stats PoincareSeries::stats() const
 {
+  return stats(pairs());
+}
+
+PoincareSeries::Stats PoincareSeries::stats(const QVector<Pair> &p)
+{
   Stats s;
-  const QVector<Pair> p = pairs();
   s.count = int(p.size());
   if (s.count == 0)
   {

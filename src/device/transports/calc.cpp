@@ -90,7 +90,7 @@ bool CalcDevice::open(OpenMode mode)
   }
   if (!QIODevice::open(mode & ~WriteOnly))
     return false;
-  m_rx.clear();
+  clearBuffer();
   m_lastStatus.clear();
   m_statusSent = false;
   m_openedMs = QDateTime::currentMSecsSinceEpoch();
@@ -101,7 +101,7 @@ bool CalcDevice::open(OpenMode mode)
 void CalcDevice::close()
 {
   m_timer.stop();
-  m_rx.clear();
+  clearBuffer();
   if (QIODevice::isOpen())
     QIODevice::close();
 }
@@ -225,7 +225,8 @@ QString CalcDevice::formatValue(double value, int counts, QString *prefix)
 void CalcDevice::tick()
 {
   QString message;
-  m_rx = currentLine(QDateTime::currentMSecsSinceEpoch(), &message);
+  if (!replaceBuffer(currentLine(QDateTime::currentMSecsSinceEpoch(), &message)))
+    return;
   if (!m_statusSent || message != m_lastStatus)
   {
     m_statusSent = true;
