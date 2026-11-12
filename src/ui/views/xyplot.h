@@ -8,6 +8,11 @@
 #include <QVector>
 #include <QWidget>
 
+class QCPGraph;
+class QCPItemText;
+class QCPTextElement;
+class QCustomPlot;
+
 /// A live scatter plot of one value against another.
 class XYPlot : public QWidget
 {
@@ -23,11 +28,15 @@ public:
   bool        hold() const { return m_hold; }
 
 protected:
-  void        paintEvent(QPaintEvent *) override;
-
 private:
   static constexpr int kMaxPoints = 2000;
+  void refreshPlot();
 
+  QCustomPlot *m_plot = nullptr;
+  QCPGraph *m_graph = nullptr;
+  QCPTextElement *m_title = nullptr;
+  QCPItemText *m_noDataText = nullptr;
+  QCPItemText *m_holdText = nullptr;
   QVector<QPointF> m_points;
   QVector<QPointF> m_shown;
   int         m_pointHead = 0;

@@ -6025,6 +6025,21 @@ Keine Berechtigung? Der Sensor braucht eine udev-Regel für die USB-ID %1:%2.</t
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp"/>
+        <source>Renderer</source>
+        <translation>Darstellung</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp"/>
+        <source>Legacy (QPainter)</source>
+        <translation>Bisherig (QPainter)</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp"/>
+        <source>QCustomPlot</source>
+        <translation>QCustomPlot</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp"/>
         <source>&amp;Color scheme</source>
         <translation>Farbschema</translation>
     </message>

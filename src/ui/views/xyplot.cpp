@@ -2,37 +2,88 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "ui/views/xyplot.h"
 
+#include "3rdparty/qcustomplot/qcustomplot.h"
 #include "ui/views/plotaxis.h"
 
-#include <QPainter>
+#include <QCoreApplication>
+#include <QVBoxLayout>
 
 #include <cmath>
 
 XYPlot::XYPlot(QWidget *parent) : QWidget(parent)
 {
   setMinimumSize(220, 180);
+  auto *layout = new QVBoxLayout(this);
+  layout->setContentsMargins(0, 0, 0, 0);
+  m_plot = new QCustomPlot(this);
+  layout->addWidget(m_plot);
+  m_plot->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(m_plot, &QWidget::customContextMenuRequested, this, [this](const QPoint &pos)
+  {
+    emit customContextMenuRequested(mapFromGlobal(m_plot->mapToGlobal(pos)));
+  });
+
+  m_plot->plotLayout()->insertRow(0);
+  m_title = new QCPTextElement(m_plot, QString(), font());
+  m_plot->plotLayout()->addElement(0, 0, m_title);
+  for (QCPAxis *axis : { m_plot->xAxis, m_plot->yAxis })
+  {
+    axis->setNumberFormat(QStringLiteral("gb"));
+    axis->setNumberPrecision(4);
+  }
+  m_graph = m_plot->addGraph(m_plot->xAxis, m_plot->yAxis);
+  m_graph->setLineStyle(QCPGraph::lsNone);
+  m_graph->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, 5));
+  m_graph->setAdaptiveSampling(true);
+
+  m_noDataText = new QCPItemText(m_plot);
+  m_noDataText->position->setType(QCPItemPosition::ptAxisRectRatio);
+  m_noDataText->position->setCoords(0.5, 0.5);
+  m_noDataText->setPositionAlignment(Qt::AlignCenter);
+  m_noDataText->setText(QCoreApplication::translate("XYPlot", "No XY data yet"));
+
+  m_holdText = new QCPItemText(m_plot);
+  m_holdText->position->setType(QCPItemPosition::ptAxisRectRatio);
+  m_holdText->position->setCoords(0.98, 0.02);
+  m_holdText->setPositionAlignment(Qt::AlignRight | Qt::AlignTop);
+  m_holdText->setText(QCoreApplication::translate("XYPlot", "HOLD"));
+  m_holdText->setVisible(false);
+  refreshPlot();
 }
 
 void XYPlot::setThemeColors(const QBrush &background, const QColor &grid, const QColor &labels, const QColor &data)
 {
-  m_background = background;
-  m_grid = grid;
-  m_labels = labels;
-  m_data = data;
-  update();
+  const QBrush bg = background.style() == Qt::NoBrush ? QBrush(palette().base()) : background;
+  m_plot->setBackground(bg);
+  m_plot->axisRect()->setBackground(Qt::NoBrush);
+  for (QCPAxis *axis : { m_plot->xAxis, m_plot->yAxis })
+  {
+    axis->setBasePen(QPen(grid));
+    axis->setTickPen(QPen(grid));
+    axis->setSubTickPen(QPen(grid));
+    axis->setTickLabelColor(labels);
+    axis->setLabelColor(labels);
+    axis->grid()->setPen(QPen(grid, 1, Qt::DotLine));
+    axis->grid()->setSubGridPen(QPen(grid, 1, Qt::DotLine));
+  }
+  m_graph->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, QPen(data), QBrush(data), 5));
+  m_title->setTextColor(labels);
+  m_noDataText->setColor(labels);
+  m_holdText->setColor(labels);
+  m_plot->replot(QCustomPlot::rpQueuedReplot);
 }
 
 void XYPlot::setLegend(const QString &legend)
 {
-  m_legend = legend;
-  update();
+  m_title->setText(legend);
+  m_plot->replot(QCustomPlot::rpQueuedReplot);
 }
 
 void XYPlot::setAxisUnits(const QString &x, const QString &y)
 {
   m_xUnit = x;
   m_yUnit = y;
-  update();
+  refreshPlot();
 }
 
 void XYPlot::addPoint(double x, double y)
@@ -47,7 +98,8 @@ void XYPlot::addPoint(double x, double y)
     m_points[m_pointHead] = point;
     m_pointHead = (m_pointHead + 1) % kMaxPoints;
   }
-  update();
+  if (!m_hold)
+    refreshPlot();
 }
 
 void XYPlot::clear()
@@ -55,7 +107,7 @@ void XYPlot::clear()
   m_points.clear();
   m_shown.clear();
   m_pointHead = 0;
-  update();
+  refreshPlot();
 }
 
 void XYPlot::setHold(bool hold)
@@ -63,102 +115,56 @@ void XYPlot::setHold(bool hold)
   if (m_hold == hold)
     return;
   m_hold = hold;
-  if (m_hold)
+  if (hold)
     m_shown = m_points;
   else
     m_shown.clear();
-  update();
+  refreshPlot();
 }
 
-void XYPlot::paintEvent(QPaintEvent *)
+void XYPlot::refreshPlot()
 {
-  QPainter p(this);
-  p.setRenderHint(QPainter::Antialiasing);
-  p.fillRect(rect(), m_background.style() == Qt::NoBrush ? QBrush(palette().base()) : m_background);
-
-  const QColor grid = m_grid.isValid() ? m_grid : palette().mid().color();
-  const QColor labels = m_labels.isValid() ? m_labels : palette().text().color();
-  const QColor data = m_data.isValid() ? m_data : palette().highlight().color();
-  const QFontMetrics fm(font());
-  p.setPen(labels);
-  p.drawText(QRectF(6, 2, width() - 12, fm.height()), Qt::AlignCenter,
-             fm.elidedText(m_legend, Qt::ElideRight, width() - 12));
-
   const QVector<QPointF> &shown = m_hold ? m_shown : m_points;
-  PlotAxis::Range xAxis = PlotAxis::range(0, 0, m_xUnit);
-  PlotAxis::Range yAxis = PlotAxis::range(0, 0, m_yUnit);
-  QString xMinimum, xMaximum, yMinimum, yMaximum;
-  int yLabelWidth = 0;
-  int xLabelWidth = 60;
-  if (!shown.isEmpty())
-  {
-    double xmin = shown.first().x(), xmax = xmin, ymin = shown.first().y(), ymax = ymin;
-    for (const QPointF &point : std::as_const(shown))
-    {
-      xmin = qMin(xmin, point.x());
-      xmax = qMax(xmax, point.x());
-      ymin = qMin(ymin, point.y());
-      ymax = qMax(ymax, point.y());
-    }
-    xAxis = PlotAxis::range(xmin, xmax, m_xUnit);
-    yAxis = PlotAxis::range(ymin, ymax, m_yUnit);
-    xMinimum = QString::number(xAxis.minimum / xAxis.factor, 'g', 4);
-    xMaximum = QString::number(xAxis.maximum / xAxis.factor, 'g', 4);
-    yMinimum = QString::number(yAxis.minimum / yAxis.factor, 'g', 4);
-    yMaximum = QString::number(yAxis.maximum / yAxis.factor, 'g', 4);
-    yLabelWidth = qMax(fm.horizontalAdvance(yMinimum), fm.horizontalAdvance(yMaximum));
-    xLabelWidth = qMax(fm.horizontalAdvance(xMinimum), fm.horizontalAdvance(xMaximum));
-  }
-
-  const qreal leftMargin = qMax(48, yLabelWidth + 20);
-  const QRectF area = QRectF(rect()).adjusted(leftMargin, 48, -20, -42);
-  auto drawHold = [&]
-  {
-    if (m_hold)
-    {
-      p.setPen(labels);
-      p.drawText(QRectF(area.right() - 58, area.top(), 54, fm.height()), Qt::AlignRight | Qt::AlignVCenter,
-                 tr("HOLD"));
-    }
-  };
-
-  p.setPen(grid);
-  for (int i = 0; i <= 5; ++i)
-  {
-    const qreal x = area.left() + area.width() * i / 5;
-    const qreal y = area.top() + area.height() * i / 5;
-    p.drawLine(QPointF(x, area.top()), QPointF(x, area.bottom()));
-    p.drawLine(QPointF(area.left(), y), QPointF(area.right(), y));
-  }
-  p.setPen(labels);
-  p.drawText(QRectF(area.left(), area.bottom() + 8, area.width(), 24), Qt::AlignCenter, xAxis.title);
-  p.save();
-  p.translate(12, area.center().y());
-  p.rotate(-90);
-  p.drawText(QRectF(-area.height() / 2, -12, area.height(), 24), Qt::AlignCenter, yAxis.title);
-  p.restore();
-
+  m_noDataText->setVisible(shown.isEmpty());
+  m_holdText->setVisible(m_hold);
   if (shown.isEmpty())
   {
-    p.drawText(area, Qt::AlignCenter, tr("No XY data yet"));
-    drawHold();
+    m_graph->data()->clear();
+    const PlotAxis::Range xAxis = PlotAxis::range(0, 0, m_xUnit);
+    const PlotAxis::Range yAxis = PlotAxis::range(0, 0, m_yUnit);
+    m_plot->xAxis->setRange(xAxis.minimum / xAxis.factor, xAxis.maximum / xAxis.factor);
+    m_plot->yAxis->setRange(yAxis.minimum / yAxis.factor, yAxis.maximum / yAxis.factor);
+    m_plot->xAxis->setLabel(xAxis.title);
+    m_plot->yAxis->setLabel(yAxis.title);
+    m_plot->replot(QCustomPlot::rpQueuedReplot);
     return;
   }
 
-  p.drawText(QRectF(area.left() - yLabelWidth - 4, area.bottom() - 12, yLabelWidth, 18),
-             Qt::AlignRight | Qt::AlignVCenter, yMinimum);
-  p.drawText(QRectF(area.left() - yLabelWidth - 4, area.top() - 6, yLabelWidth, 18),
-             Qt::AlignRight | Qt::AlignVCenter, yMaximum);
-  p.drawText(QRectF(area.left(), area.bottom() + 25, xLabelWidth, 16), Qt::AlignLeft, xMinimum);
-  p.drawText(QRectF(area.right() - xLabelWidth, area.bottom() + 25, xLabelWidth, 16), Qt::AlignRight, xMaximum);
-
-  p.setPen(Qt::NoPen);
-  p.setBrush(data);
+  double xmin = shown.first().x(), xmax = xmin;
+  double ymin = shown.first().y(), ymax = ymin;
   for (const QPointF &point : std::as_const(shown))
   {
-    p.drawEllipse(QPointF(area.left() + (point.x() - xAxis.minimum) / (xAxis.maximum - xAxis.minimum) * area.width(),
-                         area.bottom() - (point.y() - yAxis.minimum) / (yAxis.maximum - yAxis.minimum) * area.height()),
-                  2.5, 2.5);
+    xmin = qMin(xmin, point.x());
+    xmax = qMax(xmax, point.x());
+    ymin = qMin(ymin, point.y());
+    ymax = qMax(ymax, point.y());
   }
-  drawHold();
+  const PlotAxis::Range xAxis = PlotAxis::range(xmin, xmax, m_xUnit);
+  const PlotAxis::Range yAxis = PlotAxis::range(ymin, ymax, m_yUnit);
+  m_plot->xAxis->setRange(xAxis.minimum / xAxis.factor, xAxis.maximum / xAxis.factor);
+  m_plot->yAxis->setRange(yAxis.minimum / yAxis.factor, yAxis.maximum / yAxis.factor);
+  m_plot->xAxis->setLabel(xAxis.title);
+  m_plot->yAxis->setLabel(yAxis.title);
+
+  QVector<double> xValues;
+  QVector<double> yValues;
+  xValues.reserve(shown.size());
+  yValues.reserve(shown.size());
+  for (const QPointF &point : shown)
+  {
+    xValues.append(point.x() / xAxis.factor);
+    yValues.append(point.y() / yAxis.factor);
+  }
+  m_graph->setData(xValues, yValues);
+  m_plot->replot(QCustomPlot::rpQueuedReplot);
 }

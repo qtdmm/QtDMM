@@ -2,15 +2,47 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "ui/views/histogramplot.h"
 
+#include "3rdparty/qcustomplot/qcustomplot.h"
 #include "ui/views/plotaxis.h"
 
-#include <QPainter>
+#include <QCoreApplication>
+#include <QVBoxLayout>
 
 #include <cmath>
 
 HistogramPlot::HistogramPlot(QWidget *parent) : QWidget(parent)
 {
   setMinimumSize(220, 180);
+  auto *layout = new QVBoxLayout(this);
+  layout->setContentsMargins(0, 0, 0, 0);
+  m_plot = new QCustomPlot(this);
+  layout->addWidget(m_plot);
+  m_plot->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(m_plot, &QWidget::customContextMenuRequested, this, [this](const QPoint &pos)
+  {
+    emit customContextMenuRequested(mapFromGlobal(m_plot->mapToGlobal(pos)));
+  });
+  m_plot->plotLayout()->insertRow(0);
+  m_title = new QCPTextElement(m_plot, QString(), font());
+  m_plot->plotLayout()->addElement(0, 0, m_title);
+  m_plot->xAxis->setNumberFormat(QStringLiteral("gb"));
+  m_plot->xAxis->setNumberPrecision(4);
+  m_plot->yAxis->setNumberFormat(QStringLiteral("gb"));
+  m_plot->yAxis->setNumberPrecision(3);
+  m_bars = new QCPBars(m_plot->xAxis, m_plot->yAxis);
+  m_bars->setAntialiased(false);
+
+  m_noDataText = new QCPItemText(m_plot);
+  m_noDataText->position->setType(QCPItemPosition::ptAxisRectRatio);
+  m_noDataText->position->setCoords(0.5, 0.5);
+  m_noDataText->setPositionAlignment(Qt::AlignCenter);
+  m_noDataText->setText(QCoreApplication::translate("HistogramPlot", "No readings yet"));
+  m_holdText = new QCPItemText(m_plot);
+  m_holdText->position->setType(QCPItemPosition::ptAxisRectRatio);
+  m_holdText->position->setCoords(0.98, 0.02);
+  m_holdText->setPositionAlignment(Qt::AlignRight | Qt::AlignTop);
+  m_holdText->setText(QCoreApplication::translate("HistogramPlot", "HOLD"));
+  refreshPlot();
 }
 
 void HistogramPlot::setThemeColors(const QBrush &background, const QColor &grid, const QColor &labels,
@@ -20,7 +52,25 @@ void HistogramPlot::setThemeColors(const QBrush &background, const QColor &grid,
   m_grid = grid;
   m_labels = labels;
   m_data = data;
-  update();
+  const QBrush bg = background.style() == Qt::NoBrush ? QBrush(palette().base()) : background;
+  m_plot->setBackground(bg);
+  m_plot->axisRect()->setBackground(Qt::NoBrush);
+  for (QCPAxis *axis : { m_plot->xAxis, m_plot->yAxis })
+  {
+    axis->setBasePen(QPen(grid));
+    axis->setTickPen(QPen(grid));
+    axis->setSubTickPen(QPen(grid));
+    axis->setTickLabelColor(labels);
+    axis->setLabelColor(labels);
+    axis->grid()->setPen(QPen(grid, 1, Qt::DotLine));
+    axis->grid()->setSubGridPen(QPen(grid, 1, Qt::DotLine));
+  }
+  m_bars->setPen(QPen(data.darker(115)));
+  m_bars->setBrush(data);
+  m_title->setTextColor(labels);
+  m_noDataText->setColor(labels);
+  m_holdText->setColor(labels);
+  m_plot->replot(QCustomPlot::rpQueuedReplot);
 }
 
 void HistogramPlot::setValueId(int id)
@@ -49,7 +99,8 @@ void HistogramPlot::addReading(const Reading &reading)
     m_values[m_valueHead] = reading.value;
     m_valueHead = (m_valueHead + 1) % kMaxValues;
   }
-  update();
+  if (!m_hold)
+    refreshPlot();
 }
 
 void HistogramPlot::clear()
@@ -57,7 +108,7 @@ void HistogramPlot::clear()
   m_values.clear();
   m_shown.clear();
   m_valueHead = 0;
-  update();
+  refreshPlot();
 }
 
 void HistogramPlot::setHold(bool hold)
@@ -65,11 +116,11 @@ void HistogramPlot::setHold(bool hold)
   if (m_hold == hold)
     return;
   m_hold = hold;
-  if (m_hold)
+  if (hold)
     m_shown = m_values;
   else
     m_shown.clear();
-  update();
+  refreshPlot();
 }
 
 void HistogramPlot::setCaption(const QString &caption)
@@ -77,7 +128,8 @@ void HistogramPlot::setCaption(const QString &caption)
   if (m_caption == caption)
     return;
   m_caption = caption;
-  update();
+  m_title->setText(caption);
+  m_plot->replot(QCustomPlot::rpQueuedReplot);
 }
 
 void HistogramPlot::setNotice(const QString &notice)
@@ -85,79 +137,48 @@ void HistogramPlot::setNotice(const QString &notice)
   if (m_notice == notice)
     return;
   m_notice = notice;
-  update();
+  m_noDataText->setText(notice.isEmpty() ? tr("No readings yet") : notice);
+  m_plot->replot(QCustomPlot::rpQueuedReplot);
 }
 
-void HistogramPlot::paintEvent(QPaintEvent *)
+void HistogramPlot::refreshPlot()
 {
-  QPainter p(this);
-  p.setRenderHint(QPainter::Antialiasing);
-  p.fillRect(rect(), m_background.style() == Qt::NoBrush ? QBrush(palette().base()) : m_background);
-  const QColor grid = m_grid.isValid() ? m_grid : palette().mid().color();
-  const QColor labels = m_labels.isValid() ? m_labels : palette().text().color();
-  const QColor data = m_data.isValid() ? m_data : palette().highlight().color();
-  const QFontMetrics fm(font());
-  p.setPen(labels);
-  p.drawText(QRect(6, 2, width() - 12, fm.height()), Qt::AlignCenter,
-             fm.elidedText(m_caption, Qt::ElideRight, width() - 12));
-  const QRect area = rect().adjusted(48, fm.height() + 14, -16, -fm.height() * 2 - 14);
-  auto drawHold = [&]
-  {
-    if (m_hold)
-    {
-      p.setPen(labels);
-      p.drawText(QRect(area.right() - 58, area.top(), 54, fm.height()), Qt::AlignRight | Qt::AlignVCenter,
-                 tr("HOLD"));
-    }
-  };
-  p.setPen(grid);
-  for (int i = 0; i <= 4; ++i)
-  {
-    const int y = area.bottom() - area.height() * i / 4;
-    p.drawLine(area.left(), y, area.right(), y);
-  }
   const QVector<double> &shown = m_hold ? m_shown : m_values;
+  m_noDataText->setVisible(shown.isEmpty());
+  m_holdText->setVisible(m_hold);
   if (shown.isEmpty())
   {
-    p.setPen(labels);
-    p.drawText(area, Qt::AlignCenter, m_notice.isEmpty() ? tr("No readings yet") : m_notice);
-    drawHold();
+    const PlotAxis::Range axis = PlotAxis::range(0, 0, m_unit);
+    m_bars->setData(QVector<double>(), QVector<double>());
+    m_plot->xAxis->setRange(axis.minimum / axis.factor, axis.maximum / axis.factor);
+    m_plot->yAxis->setRange(0, 1);
+    m_plot->xAxis->setLabel(axis.title);
+    m_plot->yAxis->setLabel(tr("Count"));
+    m_plot->replot(QCustomPlot::rpQueuedReplot);
     return;
   }
   double lo = shown.first(), hi = lo;
-  for (double value : std::as_const(shown))
+  for (double value : shown)
   {
     lo = qMin(lo, value);
     hi = qMax(hi, value);
   }
   const PlotAxis::Range axis = PlotAxis::range(lo, hi, m_unit);
-  lo = axis.minimum;
-  hi = axis.maximum;
   const int bins = qBound(5, int(std::ceil(std::sqrt(shown.size()))), 40);
-  QVector<int> counts(bins, 0);
-  int maxCount = 1;
-  for (double value : std::as_const(shown))
+  QVector<double> keys(bins), counts(bins, 0);
+  const double step = (axis.maximum - axis.minimum) / bins;
+  for (int bin = 0; bin < bins; ++bin)
+    keys[bin] = axis.minimum / axis.factor + (bin + 0.5) * step / axis.factor;
+  for (double value : shown)
   {
-    const int bin = qBound(0, int((value - lo) / (hi - lo) * bins), bins - 1);
-    maxCount = qMax(maxCount, ++counts[bin]);
+    const int bin = qBound(0, int((value - axis.minimum) / (axis.maximum - axis.minimum) * bins), bins - 1);
+    ++counts[bin];
   }
-  p.setPen(labels);
-  p.drawText(QRect(area.left() - 42, area.top() - fm.height() / 2, 38, fm.height()), Qt::AlignRight,
-             QString::number(maxCount));
-  p.drawText(QRect(area.left() - 42, area.bottom() - fm.height() / 2, 38, fm.height()), Qt::AlignRight, QStringLiteral("0"));
-  p.drawText(QRect(area.left(), area.bottom() + 4, 90, fm.height()), Qt::AlignLeft,
-             QString::number(lo / axis.factor, 'g', 4));
-  p.drawText(QRect(area.right() - 90, area.bottom() + 4, 90, fm.height()), Qt::AlignRight,
-             QString::number(hi / axis.factor, 'g', 4));
-  p.drawText(QRect(area.left(), area.bottom() + fm.height() + 4, area.width(), fm.height()), Qt::AlignCenter,
-             m_unit.isEmpty() ? tr("Value") : axis.unit);
-  const double slot = double(area.width()) / bins;
-  p.setPen(Qt::NoPen);
-  p.setBrush(data);
-  for (int i = 0; i < bins; ++i)
-  {
-    const double height = double(counts[i]) / maxCount * area.height();
-    p.drawRect(QRectF(area.left() + i * slot + 1, area.bottom() - height, qMax(1.0, slot - 2), height));
-  }
-  drawHold();
+  m_bars->setWidth(step / axis.factor * 0.94);
+  m_bars->setData(keys, counts);
+  m_plot->xAxis->setRange(axis.minimum / axis.factor, axis.maximum / axis.factor);
+  m_plot->yAxis->setRange(0, qMax(1.0, *std::max_element(counts.cbegin(), counts.cend()) * 1.12));
+  m_plot->xAxis->setLabel(axis.title);
+  m_plot->yAxis->setLabel(tr("Count"));
+  m_plot->replot(QCustomPlot::rpQueuedReplot);
 }

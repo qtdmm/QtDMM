@@ -2,34 +2,31 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
 
-#include "ui/views/colormap.h"
+#include "ui/views/heatmapplotbackend.h"
 
-#include <QBrush>
-#include <QColor>
 #include <QImage>
 #include <QVector>
-#include <QWidget>
 
 
 /// A live heatmap: X/Y position, color = third value.
-class HeatmapPlot : public QWidget
+class HeatmapPlot : public HeatmapPlotBackend
 {
   Q_OBJECT
 
 public:
   explicit HeatmapPlot(QWidget *parent = nullptr);
 
-  void setThemeColors(const QBrush &background, const QColor &grid, const QColor &labels);
-  void setAxisUnits(const QString &x, const QString &y, const QString &z);
-  void setLegend(const QString &legend);
-  void setColorScheme(ColorMap::Scheme scheme);
-  ColorMap::Scheme colorScheme() const { return m_scheme; }
-  void setCellCount(int nx, int ny);   // grid resolution, default 32 x 32
+  void setThemeColors(const QBrush &background, const QColor &grid, const QColor &labels) override;
+  void setAxisUnits(const QString &x, const QString &y, const QString &z) override;
+  void setLegend(const QString &legend) override;
+  void setColorScheme(ColorMap::Scheme scheme) override;
+  ColorMap::Scheme colorScheme() const override { return m_scheme; }
+  void setCellCount(int nx, int ny) override;   // grid resolution, default 32 x 32
 
-  void addPoint(double x, double y, double z);
-  void clear();
-  void setHold(bool hold);
-  bool hold() const { return m_hold; }
+  void addPoint(double x, double y, double z) override;
+  void clear() override;
+  void setHold(bool hold) override;
+  bool hold() const override { return m_hold; }
 
 protected:
   void paintEvent(QPaintEvent *) override;

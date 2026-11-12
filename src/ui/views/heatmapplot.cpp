@@ -14,7 +14,7 @@ constexpr int kMaxSamples = 5000;
 constexpr int kMaxGridDimension = 256;
 }
 
-HeatmapPlot::HeatmapPlot(QWidget *parent) : QWidget(parent)
+HeatmapPlot::HeatmapPlot(QWidget *parent) : HeatmapPlotBackend(parent)
 {
   setMinimumSize(260, 180);
 }

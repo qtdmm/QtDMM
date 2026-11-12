@@ -6025,6 +6025,21 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp"/>
+        <source>Renderer</source>
+        <translation>Representación</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp"/>
+        <source>Legacy (QPainter)</source>
+        <translation>Clásico (QPainter)</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp"/>
+        <source>QCustomPlot</source>
+        <translation>QCustomPlot</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp"/>
         <source>&amp;Color scheme</source>
         <translation>Esquema de colores</translation>
     </message>

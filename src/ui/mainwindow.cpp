@@ -59,7 +59,7 @@
 #include "ui/views/poincareplot.h"
 #include "ui/views/xyplot.h"
 #include "ui/views/histogramplot.h"
-#include "ui/views/heatmapplot.h"
+#include "ui/views/heatmapplothost.h"
 #include "ui/views/colormap.h"
 #include "ui/settings/settingsdialog.h"
 #include "ui/settings/alarmprefs.h"
@@ -392,7 +392,7 @@ void MainWindow::createViews()
     windowMenu(m_histogramWin, m_histogram->mapToGlobal(pos));
   });
 
-  m_heatmap = new HeatmapPlot(this);
+  m_heatmap = new HeatmapPlotHost(this);
   m_heatmap->setWindowTitle(tr("Heatmap"));
   auto *heatmap = new HeatmapView(m_session, m_heatmap, this);
   m_heatmapViews.insert(m_heatmap, heatmap);
@@ -834,7 +834,7 @@ QMdiSubWindow *MainWindow::addViewWindow(Added kind, const ValueRef &value, int 
   }
   else if (kind == Added::Heatmap)
   {
-    auto *plot = new HeatmapPlot(this);
+    auto *plot = new HeatmapPlotHost(this);
     plot->setWindowTitle(tr("Heatmap %1").arg(number));
     auto *source = new HeatmapView(m_session, plot, this);
     m_heatmapViews.insert(plot, source);
@@ -2546,6 +2546,25 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
   }
   if (heatmap)
   {
+    auto *host = qobject_cast<HeatmapPlotHost *>(heatmap->plot());
+    if (host)
+    {
+      QMenu *renderer = menu.addMenu(tr("Renderer"));
+      auto *backends = new QActionGroup(renderer);
+      backends->setExclusive(true);
+      const std::pair<HeatmapPlotHost::Backend, QString> choices[] = {
+        { HeatmapPlotHost::Legacy, tr("Legacy (QPainter)") },
+        { HeatmapPlotHost::QCustomPlot, tr("QCustomPlot") }
+      };
+      for (const auto &[backend, text] : choices)
+      {
+        QAction *action = renderer->addAction(text);
+        action->setCheckable(true);
+        action->setChecked(host->backend() == backend);
+        backends->addAction(action);
+        connect(action, &QAction::triggered, host, [host, backend] { host->setBackend(backend); });
+      }
+    }
     QMenu *colorScheme = menu.addMenu(tr("&Color scheme"));
     auto *group = new QActionGroup(colorScheme);
     group->setExclusive(true);
@@ -4423,7 +4442,8 @@ void MainWindow::setDesign(int design)
   for (QMdiSubWindow *win : histogramWindows())
     applyHistogramColors(static_cast<HistogramPlot *>(win->widget()));
   for (QMdiSubWindow *win : heatmapWindows())
-    applyHeatmapColors(static_cast<HeatmapPlot *>(win->widget()));
+    if (HeatmapView *view = heatmapViewOf(win))
+      applyHeatmapColors(view->plot());
   for (QAction *a : m_designMenu->actions())
     a->setChecked(a->data().toInt() == design);
   // at once, so the settings dialog shows the design of the menu (and its
@@ -4468,7 +4488,7 @@ void MainWindow::applyHistogramColors(HistogramPlot *plot)
   plot->setThemeColors(background, g.grid, g.labels, g.data);
 }
 
-void MainWindow::applyHeatmapColors(HeatmapPlot *plot)
+void MainWindow::applyHeatmapColors(HeatmapPlotBackend *plot)
 {
   const Designs::Design d = Designs::current();
   const QBrush frame = Designs::frameBrush(d);

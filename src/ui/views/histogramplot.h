@@ -9,6 +9,11 @@
 
 #include "core/reading.h"
 
+class QCPBars;
+class QCPItemText;
+class QCPTextElement;
+class QCustomPlot;
+
 /// A live histogram of the selected value's recent readings.
 class HistogramPlot : public QWidget
 {
@@ -26,11 +31,9 @@ public Q_SLOTS:
   void        setCaption(const QString &caption);
   void        setNotice(const QString &notice);
 
-protected:
-  void        paintEvent(QPaintEvent *) override;
-
 private:
   static constexpr int kMaxValues = 1000;
+  void refreshPlot();
 
   QVector<double> m_values;
   QVector<double> m_shown;
@@ -40,6 +43,11 @@ private:
   QString     m_caption;
   QString     m_notice;
   QString     m_unit;
+  QCustomPlot *m_plot = nullptr;
+  QCPBars    *m_bars = nullptr;
+  QCPTextElement *m_title = nullptr;
+  QCPItemText *m_noDataText = nullptr;
+  QCPItemText *m_holdText = nullptr;
   QBrush      m_background;
   QColor      m_grid;
   QColor      m_labels;

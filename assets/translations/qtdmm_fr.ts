@@ -6025,6 +6025,22 @@ Pas de permission ? Le capteur a besoin d’une règle udev pour l’ID USB %1:%
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp"/>
+        <source>Renderer</source>
+        <translation>Rendu</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp"/>
+        <source>Legacy (QPainter)</source>
+        <translation>Historique (QPainter)</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp"/>
+        <source>QCustomPlot</source>
+        <translation>QCustomPlot</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp"/>
+        <source>&amp;Color scheme</source>
         <source>&amp;Color scheme</source>
         <translation>Schéma de couleurs</translation>
     </message>

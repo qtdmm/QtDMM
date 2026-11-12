@@ -6029,6 +6029,22 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp"/>
+        <source>Renderer</source>
+        <translation>Renderowanie</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp"/>
+        <source>Legacy (QPainter)</source>
+        <translation>Klasyczny (QPainter)</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp"/>
+        <source>QCustomPlot</source>
+        <translation>QCustomPlot</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp"/>
+        <source>&amp;Color scheme</source>
         <source>&amp;Color scheme</source>
         <translation>Schemat kolorów</translation>
     </message>

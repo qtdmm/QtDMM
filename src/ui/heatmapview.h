@@ -9,16 +9,16 @@
 
 class DeviceSession;
 class ValueFeed;
-class HeatmapPlot;
+class HeatmapPlotBackend;
 
 /// What one heatmap window shows: X, Y and color value of any open meters.
 class HeatmapView : public QObject
 {
   Q_OBJECT
 public:
-  HeatmapView(DeviceSession *session, HeatmapPlot *plot, QObject *parent);
+  HeatmapView(DeviceSession *session, HeatmapPlotBackend *plot, QObject *parent);
 
-  HeatmapPlot *plot() const { return m_plot; }
+  HeatmapPlotBackend *plot() const { return m_plot; }
   void         setValues(const ValueRef &x, const ValueRef &y, const ValueRef &z);
   ValueRef     value(int axis) const { return m_ref[axis]; }
 
@@ -29,7 +29,7 @@ private:
   void updateAxisUnits();
   void tryEmit(int triggerAxis);
 
-  HeatmapPlot *m_plot;
+  HeatmapPlotBackend *m_plot;
   std::array<ValueFeed *, 3> m_feed{};
   std::array<ValueRef, 3>    m_ref;
   std::array<double, 3>      m_last{qQNaN(), qQNaN(), qQNaN()};
