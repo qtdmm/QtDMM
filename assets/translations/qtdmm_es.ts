@@ -6002,6 +6002,40 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
         <source>&amp;Clear list</source>
         <translation>&amp;Vaciar lista</translation>
     </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp"/>
+        <source>&amp;Color scheme</source>
+        <translation>Esquema de colores</translation>
+    </message>
+    <message>
+        <source>&amp;Hold picture</source>
+        <translation>&amp;Mantener imagen</translation>
+    </message>
+    <message>
+        <source>&amp;Reset</source>
+        <translation>&amp;Restablecer</translation>
+    </message>
+    <message>
+        <source>&amp;Save image...</source>
+        <translation>&amp;Guardar imagen...</translation>
+    </message>
+    <message>
+        <source>Save image</source>
+        <translation>Guardar imagen</translation>
+    </message>
+    <message>
+        <source>PNG image (*.png)</source>
+        <translation>Imagen PNG (*.png)</translation>
+    </message>
+    <message>
+        <source>Could not save the image.</source>
+        <translation>No se pudo guardar la imagen.</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp"/>
+        <source>He&amp;atmap</source>
+        <translation>Heatma&amp;p</translation>
+    </message>
 </context>
 <context>
     <name>MeterConnection</name>
@@ -6337,13 +6371,13 @@ DMM connected and switched on?</source>
     </message>
     <message>
         <location filename="../../src/ui/views/poincareplot.cpp" line="178"/>
-        <source>H&amp;old picture</source>
+        <source>&amp;Hold picture</source>
         <translation>&amp;Congelar imagen</translation>
     </message>
     <message>
         <location filename="../../src/ui/views/poincareplot.cpp" line="182"/>
-        <source>&amp;Clear</source>
-        <translation>&amp;Vaciar</translation>
+        <source>&amp;Reset</source>
+        <translation>&amp;Restablecer</translation>
     </message>
     <message>
         <location filename="../../src/ui/views/poincareplot.cpp" line="183"/>
@@ -9039,6 +9073,54 @@ Después cierre la sesión y vuelva a iniciarla para que la pertenencia al grupo
         <location filename="../../src/ui/xyview.cpp" line="60"/>
         <source>Y</source>
         <translation>Y</translation>
+    </message>
+</context>
+
+<context>
+    <name>HeatmapPlot</name>
+    <message>
+        <location filename="../../src/ui/views/heatmapplot.cpp"/>
+        <source>No data</source>
+        <translation>Sin datos</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/heatmapplot.cpp"/>
+        <source>No heatmap data yet</source>
+        <translation>Aún no hay datos de mapa de calor</translation>
+    </message>
+</context>
+
+<context>
+    <name>ColorMap</name>
+    <message>
+        <location filename="../../src/ui/views/colormap.cpp"/>
+        <source>Rainbow</source>
+        <translation>Arcoíris</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/colormap.cpp"/>
+        <source>Ironbow (thermal)</source>
+        <translation>Ironbow (térmica)</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/colormap.cpp"/>
+        <source>Viridis</source>
+        <translation>Viridis</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/colormap.cpp"/>
+        <source>Grayscale</source>
+        <translation>Escala de grises</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/colormap.cpp"/>
+        <source>Blue (monochrome)</source>
+        <translation>Azul (monocromo)</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/colormap.cpp"/>
+        <source>Blue-yellow</source>
+        <translation>Azul-amarillo</translation>
     </message>
 </context>
 </TS>

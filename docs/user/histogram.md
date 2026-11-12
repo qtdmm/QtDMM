@@ -28,4 +28,14 @@ by another one. Above the plot stand the device and the name of the value.
   at least 5 and at most 40.
 - The height axis counts readings, from 0 to the highest bar.
 
+## The context menu
+
+Right-click the histogram to:
+
+- **Hold picture** - freeze the current bars while new readings continue to
+  collect; the **HOLD** mark appears in the plot. Releasing Hold shows the
+  accumulated readings again.
+- **Reset** - remove all collected readings.
+- **Save image...** - save the visible histogram as a PNG image.
+
 The histogram takes the colours of the window design chosen in the settings.

@@ -175,11 +175,11 @@ void PoincarePlot::addMenuActions(QMenu *menu)
   ellipse->setCheckable(true);
   ellipse->setChecked(m_ellipse);
   connect(ellipse, &QAction::toggled, this, &PoincarePlot::setEllipse);
-  QAction *hold = menu->addAction(tr("H&old picture"));
+  QAction *hold = menu->addAction(tr("&Hold picture"));
   hold->setCheckable(true);
   hold->setChecked(m_hold);
   connect(hold, &QAction::toggled, this, &PoincarePlot::setHold);
-  connect(menu->addAction(tr("&Clear")), &QAction::triggered, this, &PoincarePlot::clear);
+  connect(menu->addAction(tr("&Reset")), &QAction::triggered, this, &PoincarePlot::clear);
   connect(menu->addAction(tr("&Save image...")), &QAction::triggered, this, &PoincarePlot::exportImageSLOT);
 }
 

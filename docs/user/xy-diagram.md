@@ -33,4 +33,14 @@ Above the plot stands what each axis shows, device and name of the value.
   and the largest value in them; the numbers at the corners are the limits
   in base units (V, A, Ω ...).
 
+## The context menu
+
+Right-click the plot to:
+
+- **Hold picture** - freeze the current picture while new points continue to
+  collect; the **HOLD** mark appears in the plot. Releasing Hold shows the
+  accumulated points again.
+- **Reset** - remove all points.
+- **Save image...** - save the visible diagram as a PNG image.
+
 The diagram takes the colours of the window design chosen in the settings.

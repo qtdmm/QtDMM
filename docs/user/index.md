@@ -26,6 +26,8 @@ side, one window each, and can be combined into calculated values.
   against its voltage, a sensor against a reference.
 - [Histogram](histogram.md) — how the readings of one value are distributed:
   one peak, two levels, outliers.
+- [Heatmap](heatmap.md) — a third measured value shown by colour across two
+  measurement axes.
 - [Alarms](alarms.md) — a banner, sound, popup, program or the recorder when
   the reading leaves its range or stops coming.
 - [PASS/FAIL limit test](limit-test.md) — nominal ± tolerance or lower and

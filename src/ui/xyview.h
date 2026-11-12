@@ -3,6 +3,7 @@
 #pragma once
 
 #include <QObject>
+#include <array>
 
 #include "core/reading.h"
 #include "core/valueref.h"
@@ -27,6 +28,7 @@ private:
   void        feedX(const Reading &reading);
   void        feedY(const Reading &reading);
   void        updateLegend();
+  void        updateAxisUnits();
 
   XYPlot     *m_plot;
   ValueFeed  *m_xFeed;
@@ -42,4 +44,5 @@ private:
   QString     m_ySource;
   QString     m_xName;
   QString     m_yName;
+  std::array<QString, 2> m_units;
 };

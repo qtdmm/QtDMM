@@ -10,9 +10,11 @@
 class ColorMap
 {
 public:
-  enum Scheme { Rainbow, Ironbow, SchemeCount };
+  enum Scheme { Rainbow, Ironbow, Viridis, Grayscale, Blue, BlueYellow, SchemeCount };
 
   static QColor color(Scheme scheme, double t);   // t is clamped to 0..1
+  /// The neutral fill for cells without samples; distinct from the value scale.
+  static QColor noDataColor(Scheme scheme);
   static QString name(Scheme scheme);             // translated display name
   static QList<Scheme> all();
 };

@@ -14,7 +14,15 @@ HeatmapView::HeatmapView(DeviceSession *session, HeatmapPlot *plot, QObject *par
   {
     m_feed[a] = new ValueFeed(session, this);
     connect(m_feed[a], &ValueFeed::reading, this, [this, a](const Reading &r) { feed(a, r); });
-    connect(m_feed[a], &ValueFeed::controllerChanged, plot, &HeatmapPlot::clear);
+    connect(m_feed[a], &ValueFeed::controllerChanged, this, [this, a]
+    {
+      m_units[a].clear();
+      m_last.fill(qQNaN());
+      m_lastT.fill(-1);
+      m_plottedT = -1;
+      m_plot->clear();
+      updateAxisUnits();
+    });
     connect(m_feed[a], &ValueFeed::captionChanged, this, [this, a](const QString &c)
     {
       m_source[a] = c;
@@ -30,11 +38,17 @@ void HeatmapView::setValues(const ValueRef &x, const ValueRef &y, const ValueRef
   m_lastT = {-1, -1, -1};
   m_plottedT = -1;
   for (auto &n : m_name) n.clear();
+  m_units.fill(QString());
   m_plot->clear();
-  m_plot->setAxisCaptions(tr("X axis"), tr("Y axis"), tr("Color"));
+  updateAxisUnits();
   for (int a = 0; a < 3; ++a)
     m_feed[a]->setValue(m_ref[a]);
   updateLegend();
+}
+
+void HeatmapView::updateAxisUnits()
+{
+  m_plot->setAxisUnits(m_units[X], m_units[Y], m_units[Z]);
 }
 
 void HeatmapView::updateLegend()
@@ -57,6 +71,18 @@ void HeatmapView::feed(int axis, const Reading &reading)
 {
   if (reading.id != m_ref[axis].id)
     return;
+  if (!reading.baseUnit.isEmpty() && m_units[axis] != reading.baseUnit)
+  {
+    if (!m_units[axis].isEmpty())
+    {
+      m_last.fill(qQNaN());
+      m_lastT.fill(-1);
+      m_plottedT = -1;
+      m_plot->clear();
+    }
+    m_units[axis] = reading.baseUnit;
+    updateAxisUnits();
+  }
   if (reading.noNumber() || reading.overload || !std::isfinite(reading.value))
   {
     m_last[axis] = qQNaN();

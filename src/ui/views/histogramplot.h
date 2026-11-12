@@ -21,6 +21,8 @@ public:
 public Q_SLOTS:
   void        addReading(const Reading &reading);
   void        clear();
+  void        setHold(bool hold);
+  bool        hold() const { return m_hold; }
   void        setCaption(const QString &caption);
   void        setNotice(const QString &notice);
 
@@ -29,6 +31,8 @@ protected:
 
 private:
   QVector<double> m_values;
+  QVector<double> m_shown;
+  bool        m_hold = false;
   int         m_valueId = 0;
   QString     m_caption;
   QString     m_notice;

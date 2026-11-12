@@ -211,14 +211,14 @@ or **Hide controls** in its right-click menu, folds the row away.
 
 ## Window layout
 
-The main window holds seven windows: the digital display, the needle meter,
+The main window has eight window types: the digital display, the needle meter,
 the graph, the [readings table](readings-table.md), the
-[Poincaré plot](poincare-plot.md), the [XY diagram](xy-diagram.md) and the
-[histogram](histogram.md). The toolbar buttons (or Ctrl+1 … Ctrl+5 for the
-first five) show and hide them, all of a kind at once; the arrow beside one
+[Poincaré plot](poincare-plot.md), the [XY diagram](xy-diagram.md), the
+[histogram](histogram.md) and the [heatmap](heatmap.md). The toolbar buttons
+(or Ctrl+1 … Ctrl+5 for the first five) show and hide them, all of a kind at once; the arrow beside one
 lists the windows of that kind to tick, the front panels by device, and
-*New...* opens another needle meter, Poincaré plot, XY diagram, histogram or
-graph. Recording, Live, Clear, Export, Import
+*New...* opens another needle meter, Poincaré plot, XY diagram, histogram,
+heatmap or graph. Recording, Live, Clear, Export, Import
 and Print are in the graph's right-click menu, with their keys; Record also
 in the menu, as it records the whole bench. A fresh QtDMM starts as a
 compact instrument with display and meter only; starting a recording shows

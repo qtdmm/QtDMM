@@ -26,6 +26,7 @@ private:
   enum Axis { X = 0, Y = 1, Z = 2 };
   void feed(int axis, const Reading &reading);
   void updateLegend();
+  void updateAxisUnits();
   void tryEmit(int triggerAxis);
 
   HeatmapPlot *m_plot;
@@ -35,5 +36,6 @@ private:
   std::array<qint64, 3>      m_lastT{-1, -1, -1};
   std::array<QString, 3>     m_source;
   std::array<QString, 3>     m_name;
+  std::array<QString, 3>     m_units;
   qint64 m_plottedT = -1;
 };

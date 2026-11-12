@@ -47,6 +47,19 @@ void HistogramPlot::addReading(const Reading &reading)
 void HistogramPlot::clear()
 {
   m_values.clear();
+  m_shown.clear();
+  update();
+}
+
+void HistogramPlot::setHold(bool hold)
+{
+  if (m_hold == hold)
+    return;
+  m_hold = hold;
+  if (m_hold)
+    m_shown = m_values;
+  else
+    m_shown.clear();
   update();
 }
 
@@ -79,20 +92,31 @@ void HistogramPlot::paintEvent(QPaintEvent *)
   p.drawText(QRect(6, 2, width() - 12, fm.height()), Qt::AlignCenter,
              fm.elidedText(m_caption, Qt::ElideRight, width() - 12));
   const QRect area = rect().adjusted(48, fm.height() + 14, -16, -fm.height() * 2 - 14);
+  auto drawHold = [&]
+  {
+    if (m_hold)
+    {
+      p.setPen(labels);
+      p.drawText(QRect(area.right() - 58, area.top(), 54, fm.height()), Qt::AlignRight | Qt::AlignVCenter,
+                 QStringLiteral("HOLD"));
+    }
+  };
   p.setPen(grid);
   for (int i = 0; i <= 4; ++i)
   {
     const int y = area.bottom() - area.height() * i / 4;
     p.drawLine(area.left(), y, area.right(), y);
   }
-  if (m_values.isEmpty())
+  const QVector<double> &shown = m_hold ? m_shown : m_values;
+  if (shown.isEmpty())
   {
     p.setPen(labels);
     p.drawText(area, Qt::AlignCenter, m_notice.isEmpty() ? tr("No readings yet") : m_notice);
+    drawHold();
     return;
   }
-  double lo = m_values.first(), hi = lo;
-  for (double value : std::as_const(m_values))
+  double lo = shown.first(), hi = lo;
+  for (double value : std::as_const(shown))
   {
     lo = qMin(lo, value);
     hi = qMax(hi, value);
@@ -106,10 +130,10 @@ void HistogramPlot::paintEvent(QPaintEvent *)
   QString prefix;
   SiPrefix::scale(qMax(std::abs(lo), std::abs(hi)), m_unit, &prefix);
   const double factor = SiPrefix::factor(prefix);
-  const int bins = qBound(5, int(std::ceil(std::sqrt(m_values.size()))), 40);
+  const int bins = qBound(5, int(std::ceil(std::sqrt(shown.size()))), 40);
   QVector<int> counts(bins, 0);
   int maxCount = 1;
-  for (double value : std::as_const(m_values))
+  for (double value : std::as_const(shown))
   {
     const int bin = qBound(0, int((value - lo) / (hi - lo) * bins), bins - 1);
     maxCount = qMax(maxCount, ++counts[bin]);
@@ -132,4 +156,5 @@ void HistogramPlot::paintEvent(QPaintEvent *)
     const double height = double(counts[i]) / maxCount * area.height();
     p.drawRect(QRectF(area.left() + i * slot + 1, area.bottom() - height, qMax(1.0, slot - 2), height));
   }
+  drawHold();
 }

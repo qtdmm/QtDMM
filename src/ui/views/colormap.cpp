@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "ui/views/colormap.h"
 
-#include <QObject>
+#include <QCoreApplication>
 #include <algorithm>
 #include <array>
 
@@ -47,15 +47,65 @@ constexpr std::array<Stop, 7> kIronbow = {{
   {0.88, 255, 220,  60},
   {1.00, 255, 255, 230},
 }};
+
+// Perceptually uniform blue -> green -> yellow scale.
+constexpr std::array<Stop, 6> kViridis = {{
+  {0.00,  68,   1,  84},
+  {0.20,  64,  67, 135},
+  {0.40,  42, 120, 142},
+  {0.60,  34, 167, 132},
+  {0.80, 122, 209,  81},
+  {1.00, 253, 231,  37},
+}};
+
+// A neutral brightness scale.
+constexpr std::array<Stop, 2> kGrayscale = {{
+  {0.00,  18,  18,  18},
+  {1.00, 248, 248, 248},
+}};
+
+// Shades of blue, from navy through blue to pale blue.
+constexpr std::array<Stop, 3> kBlue = {{
+  {0.00,   5,  22,  64},
+  {0.50,  29,  78, 216},
+  {1.00, 219, 234, 254},
+}};
+
+// Blue/teal values grow into yellow; missing cells use a separate cobalt blue.
+constexpr std::array<Stop, 5> kBlueYellow = {{
+  {0.00,  26,  44,  71},
+  {0.25,   0,  97, 137},
+  {0.50,  43, 160, 158},
+  {0.75, 202, 190,  76},
+  {1.00, 255, 243, 128},
+}};
 }
 
 QColor ColorMap::color(Scheme scheme, double t)
 {
   switch (scheme)
   {
-  case Ironbow: return interpolate(kIronbow, t);
+  case Ironbow:    return interpolate(kIronbow, t);
+  case Viridis:    return interpolate(kViridis, t);
+  case Grayscale:  return interpolate(kGrayscale, t);
+  case Blue:       return interpolate(kBlue, t);
+  case BlueYellow: return interpolate(kBlueYellow, t);
   case Rainbow:
-  default:      return interpolate(kRainbow, t);
+  default:         return interpolate(kRainbow, t);
+  }
+}
+
+QColor ColorMap::noDataColor(Scheme scheme)
+{
+  switch (scheme)
+  {
+  case Ironbow:    return QColor(0x73, 0x77, 0x7b);
+  case Viridis:    return QColor(0x65, 0x6c, 0x74);
+  case Grayscale:  return QColor(0x0a, 0x61, 0x82);
+  case Blue:       return QColor(0xb4, 0x58, 0x12);
+  case BlueYellow: return QColor(0x1d, 0x4e, 0xd8);
+  case Rainbow:
+  default:         return QColor(0x5e, 0x6a, 0x75);
   }
 }
 
@@ -63,13 +113,17 @@ QString ColorMap::name(Scheme scheme)
 {
   switch (scheme)
   {
-  case Ironbow: return QObject::tr("Ironbow (thermal)");
+  case Ironbow:    return QCoreApplication::translate("ColorMap", "Ironbow (thermal)");
+  case Viridis:    return QCoreApplication::translate("ColorMap", "Viridis");
+  case Grayscale:  return QCoreApplication::translate("ColorMap", "Grayscale");
+  case Blue:       return QCoreApplication::translate("ColorMap", "Blue (monochrome)");
+  case BlueYellow: return QCoreApplication::translate("ColorMap", "Blue-yellow");
   case Rainbow:
-  default:      return QObject::tr("Rainbow");
+  default:         return QCoreApplication::translate("ColorMap", "Rainbow");
   }
 }
 
 QList<ColorMap::Scheme> ColorMap::all()
 {
-  return { Rainbow, Ironbow };
+  return { Rainbow, Ironbow, Viridis, Grayscale, Blue, BlueYellow };
 }

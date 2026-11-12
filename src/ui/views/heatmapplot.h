@@ -6,11 +6,10 @@
 
 #include <QBrush>
 #include <QColor>
+#include <QImage>
 #include <QVector>
 #include <QWidget>
 
-
-class QContextMenuEvent;
 
 /// A live heatmap: X/Y position, color = third value.
 class HeatmapPlot : public QWidget
@@ -21,7 +20,7 @@ public:
   explicit HeatmapPlot(QWidget *parent = nullptr);
 
   void setThemeColors(const QBrush &background, const QColor &grid, const QColor &labels);
-  void setAxisCaptions(const QString &x, const QString &y, const QString &z);
+  void setAxisUnits(const QString &x, const QString &y, const QString &z);
   void setLegend(const QString &legend);
   void setColorScheme(ColorMap::Scheme scheme);
   ColorMap::Scheme colorScheme() const { return m_scheme; }
@@ -29,26 +28,26 @@ public:
 
   void addPoint(double x, double y, double z);
   void clear();
-
-signals:
-  void colorSchemeChanged(ColorMap::Scheme scheme);
+  void setHold(bool hold);
+  bool hold() const { return m_hold; }
 
 protected:
   void paintEvent(QPaintEvent *) override;
-  void contextMenuEvent(QContextMenuEvent *e) override;
 
 private:
   struct Sample { double x, y, z; };
   struct Cell   { double sum = 0; int n = 0; };
 
-  void rebuildGrid(double xmin, double xmax, double ymin, double ymax,
-                   QVector<Cell> &cells) const;
-
   QVector<Sample>  m_samples;
+  QVector<Sample>  m_shown;
+  bool              m_hold = false;
+  int              m_sampleHead = 0;
+  QImage           m_colorBar;
+  ColorMap::Scheme m_colorBarScheme = ColorMap::SchemeCount;
   ColorMap::Scheme m_scheme = ColorMap::Rainbow;
-  int       m_nx = 32;
-  int       m_ny = 32;
-  QString   m_xCaption, m_yCaption, m_zCaption, m_legend;
+  int              m_nx = 32;
+  int              m_ny = 32;
+  QString   m_xUnit, m_yUnit, m_zUnit, m_legend;
   QBrush    m_background;
   QColor    m_grid, m_labels;
 };

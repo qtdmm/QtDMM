@@ -16,8 +16,22 @@ XYView::XYView(DeviceSession *session, XYPlot *plot, QObject *parent) :
 {
   connect(m_xFeed, &ValueFeed::reading, this, &XYView::feedX);
   connect(m_yFeed, &ValueFeed::reading, this, &XYView::feedY);
-  connect(m_xFeed, &ValueFeed::controllerChanged, plot, &XYPlot::clear);
-  connect(m_yFeed, &ValueFeed::controllerChanged, plot, &XYPlot::clear);
+  connect(m_xFeed, &ValueFeed::controllerChanged, this, [this]
+  {
+    m_units[0].clear();
+    m_lastX = m_lastY = qQNaN();
+    m_lastXT = m_lastYT = m_plottedT = -1;
+    m_plot->clear();
+    updateAxisUnits();
+  });
+  connect(m_yFeed, &ValueFeed::controllerChanged, this, [this]
+  {
+    m_units[1].clear();
+    m_lastX = m_lastY = qQNaN();
+    m_lastXT = m_lastYT = m_plottedT = -1;
+    m_plot->clear();
+    updateAxisUnits();
+  });
   connect(m_xFeed, &ValueFeed::captionChanged, this, [this](const QString &caption)
   {
     m_xSource = caption;
@@ -38,11 +52,17 @@ void XYView::setValues(const ValueRef &x, const ValueRef &y)
   m_lastXT = m_lastYT = m_plottedT = -1;
   m_xName.clear();
   m_yName.clear();
+  m_units.fill(QString());
   m_plot->clear();
-  m_plot->setAxisCaptions(tr("X axis"), tr("Y axis"));
+  updateAxisUnits();
   m_xFeed->setValue(x);
   m_yFeed->setValue(y);
   updateLegend();
+}
+
+void XYView::updateAxisUnits()
+{
+  m_plot->setAxisUnits(m_units[0], m_units[1]);
 }
 
 void XYView::updateLegend()
@@ -64,6 +84,17 @@ void XYView::feedX(const Reading &reading)
 {
   if (reading.id != m_x.id)
     return;
+  if (!reading.baseUnit.isEmpty() && m_units[0] != reading.baseUnit)
+  {
+    if (!m_units[0].isEmpty())
+    {
+      m_lastX = m_lastY = qQNaN();
+      m_lastXT = m_lastYT = m_plottedT = -1;
+      m_plot->clear();
+    }
+    m_units[0] = reading.baseUnit;
+    updateAxisUnits();
+  }
   if (reading.noNumber() || reading.overload || !std::isfinite(reading.value))
   {
     m_lastX = qQNaN();
@@ -84,6 +115,17 @@ void XYView::feedY(const Reading &reading)
 {
   if (reading.id != m_y.id)
     return;
+  if (!reading.baseUnit.isEmpty() && m_units[1] != reading.baseUnit)
+  {
+    if (!m_units[1].isEmpty())
+    {
+      m_lastX = m_lastY = qQNaN();
+      m_lastXT = m_lastYT = m_plottedT = -1;
+      m_plot->clear();
+    }
+    m_units[1] = reading.baseUnit;
+    updateAxisUnits();
+  }
   if (reading.noNumber() || reading.overload || !std::isfinite(reading.value))
   {
     m_lastY = qQNaN();
