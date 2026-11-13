@@ -2562,7 +2562,7 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
         action->setCheckable(true);
         action->setChecked(host->backend() == backend);
         backends->addAction(action);
-        connect(action, &QAction::triggered, host, [host, backend] { host->setBackend(backend); });
+        connect(action, &QAction::triggered, host, [host, b = backend] { host->setBackend(b); });
       }
     }
     QMenu *colorScheme = menu.addMenu(tr("&Color scheme"));
@@ -2579,9 +2579,7 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
         heatmap->plot()->setColorScheme(scheme);
       });
     }
-  }
-  if (heatmap)
-  {
+
     connect(menu.addAction(m_newHeatmapAction->text()), &QAction::triggered, this, [this, heatmap]
     {
       newView(Added::Heatmap, heatmap->value(0));
