@@ -25,6 +25,21 @@
 
 #include "qcustomplot.h"
 
+// Keep image mirroring source-compatible with Qt versions before QImage::flipped.
+static QImage qcpFlipped(const QImage &image, bool horz, bool vert)
+{
+#if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
+  Qt::Orientations orientations;
+  if (horz)
+    orientations |= Qt::Horizontal;
+  if (vert)
+    orientations |= Qt::Vertical;
+  return image.flipped(orientations);
+#else
+  return image.mirrored(horz, vert);
+#endif
+}
+
 
 /* including file 'src/vector2d.cpp'       */
 /* modified 2022-11-06T12:45:56, size 7973 */
@@ -20433,7 +20448,7 @@ void QCPColorScaleAxisRectPrivate::draw(QCPPainter *painter)
     mirrorVert = mParentColorScale->mColorAxis.data()->rangeReversed() && (mParentColorScale->type() == QCPAxis::atLeft || mParentColorScale->type() == QCPAxis::atRight);
   }
   
-  painter->drawImage(rect().adjusted(0, -1, 0, -1), mGradientImage.mirrored(mirrorHorz, mirrorVert));
+  painter->drawImage(rect().adjusted(0, -1, 0, -1), qcpFlipped(mGradientImage, mirrorHorz, mirrorVert));
   QCPAxisRect::draw(painter);
 }
 
@@ -26471,7 +26486,7 @@ void QCPColorMap::updateLegendIcon(Qt::TransformationMode transformMode, const Q
   {
     bool mirrorX = (keyAxis()->orientation() == Qt::Horizontal ? keyAxis() : valueAxis())->rangeReversed();
     bool mirrorY = (valueAxis()->orientation() == Qt::Vertical ? valueAxis() : keyAxis())->rangeReversed();
-    mLegendIcon = QPixmap::fromImage(mMapImage.mirrored(mirrorX, mirrorY)).scaled(thumbSize, Qt::KeepAspectRatio, transformMode);
+    mLegendIcon = QPixmap::fromImage(qcpFlipped(mMapImage, mirrorX, mirrorY)).scaled(thumbSize, Qt::KeepAspectRatio, transformMode);
   }
 }
 
@@ -26699,7 +26714,7 @@ void QCPColorMap::draw(QCPPainter *painter)
                                   coordsToPixels(mMapData->keyRange().upper, mMapData->valueRange().upper)).normalized();
     localPainter->setClipRect(tightClipRect, Qt::IntersectClip);
   }
-  localPainter->drawImage(imageRect, mMapImage.mirrored(mirrorX, mirrorY));
+  localPainter->drawImage(imageRect, qcpFlipped(mMapImage, mirrorX, mirrorY));
   if (mTightBoundary)
     localPainter->setClipRegion(clipBackup);
   localPainter->setRenderHint(QPainter::SmoothPixmapTransform, smoothBackup);
@@ -30124,7 +30139,7 @@ void QCPItemPixmap::updateScaledPixmap(QRect finalRect, bool flipHorz, bool flip
     {
       mScaledPixmap = mPixmap.scaled(finalRect.size()*devicePixelRatio, mAspectRatioMode, mTransformationMode);
       if (flipHorz || flipVert)
-        mScaledPixmap = QPixmap::fromImage(mScaledPixmap.toImage().mirrored(flipHorz, flipVert));
+        mScaledPixmap = QPixmap::fromImage(qcpFlipped(mScaledPixmap.toImage(), flipHorz, flipVert));
 #ifdef QCP_DEVICEPIXELRATIO_SUPPORTED
       mScaledPixmap.setDevicePixelRatio(devicePixelRatio);
 #endif
@@ -31925,18 +31940,12 @@ QCPPolarAxisRadial::SelectablePart QCPPolarAxisRadial::getPartAt(const QPointF &
 {
   Q_UNUSED(pos) // TODO remove later
   if (!mVisible)
+  {
     return spNone;
-  
-  /*
-    TODO:
-  if (mAxisPainter->axisSelectionBox().contains(pos.toPoint()))
-    return spAxis;
-  else if (mAxisPainter->tickLabelsSelectionBox().contains(pos.toPoint()))
-    return spTickLabels;
-  else if (mAxisPainter->labelSelectionBox().contains(pos.toPoint()))
-    return spAxisLabel;
-  else */
-    return spNone;
+  }
+
+  // TODO: Return the selected axis sub-part once polar-axis hit testing is implemented.
+  return spNone;
 }
 
 /* inherits documentation from base class */
@@ -32743,20 +32752,14 @@ QPointF QCPPolarAxisAngular::coordToPixel(double angleCoord, double radiusCoord)
 QCPPolarAxisAngular::SelectablePart QCPPolarAxisAngular::getPartAt(const QPointF &pos) const
 {
   Q_UNUSED(pos) // TODO remove later
-  
+
   if (!mVisible)
+  {
     return spNone;
-  
-  /*
-    TODO:
-  if (mAxisPainter->axisSelectionBox().contains(pos.toPoint()))
-    return spAxis;
-  else if (mAxisPainter->tickLabelsSelectionBox().contains(pos.toPoint()))
-    return spTickLabels;
-  else if (mAxisPainter->labelSelectionBox().contains(pos.toPoint()))
-    return spAxisLabel;
-  else */
-    return spNone;
+  }
+
+  // TODO: Return the selected axis sub-part once polar-axis hit testing is implemented.
+  return spNone;
 }
 
 /* inherits documentation from base class */
