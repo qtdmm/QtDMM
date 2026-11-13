@@ -224,8 +224,8 @@ if (BUILD_TESTING)
 	qtdmm_add_test(poincare_series test_poincare tests/test_poincare.cpp)
 	qtdmm_add_test(plot_axis test_plotaxis tests/test_plotaxis.cpp)
 
-	## both heatmap renderers stay in sync, including hold and backend switches
-	qtdmm_add_test(qcp_heatmap test_qcpheatmap tests/test_qcpheatmap.cpp)
+	## the heatmap: cells averaged, no-data colour, hold, colour scale, clear
+	qtdmm_add_test(heatmap test_heatmap tests/test_heatmap.cpp)
 	qtdmm_add_test(qcp_xy test_qcpxy tests/test_qcpxy.cpp)
 
 	## the drawing clock of the views: wanted, off, slower when ticks cost too much

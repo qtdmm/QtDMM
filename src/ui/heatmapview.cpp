@@ -3,11 +3,11 @@
 
 #include "service/metercontroller.h"
 #include "service/valuefeed.h"
-#include "ui/views/heatmapplotbackend.h"
+#include "ui/views/heatmapplot.h"
 
 #include <cmath>
 
-HeatmapView::HeatmapView(DeviceSession *session, HeatmapPlotBackend *plot, QObject *parent) :
+HeatmapView::HeatmapView(DeviceSession *session, HeatmapPlot *plot, QObject *parent) :
   QObject(parent), m_plot(plot)
 {
   for (int a = 0; a < 3; ++a)

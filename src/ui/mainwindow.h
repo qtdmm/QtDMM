@@ -61,8 +61,7 @@ class XYPlot;
 class XYView;
 class HistogramPlot;
 class HistogramView;
-class HeatmapPlotBackend;
-class HeatmapPlotHost;
+class HeatmapPlot;
 class HeatmapView;
 class AlarmBar;
 class ShortcutRegistry;
@@ -270,15 +269,15 @@ protected:
   /// The design's colours for @p plot.
   void        applyPoincareColors(PoincarePlot *plot);
   void        applyHistogramColors(HistogramPlot *plot);
-  void        applyHeatmapColors(HeatmapPlotBackend *plot);
+  void        applyHeatmapColors(HeatmapPlot *plot);
   /// @}
   ReadingsWidget *m_readings;
   BasketWidget *m_basket = nullptr;
   PoincarePlot *m_poincare;
   HistogramPlot *m_histogram = nullptr;
   QHash<HistogramPlot *, HistogramView *> m_histogramViews;
-  HeatmapPlotHost *m_heatmap = nullptr;
-  QHash<HeatmapPlotBackend *, HeatmapView *> m_heatmapViews;
+  HeatmapPlot *m_heatmap = nullptr;
+  QHash<HeatmapPlot *, HeatmapView *> m_heatmapViews;
   AlarmBar   *m_alarmBar;
   class AlarmService *m_alarmService;
   QMdiArea   *m_mdi;
