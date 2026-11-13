@@ -1611,7 +1611,7 @@ void QCPLayerable::deselectEvent(bool *selectionStateChanged)
   selectTest.
 
   The current pixel position of the cursor on the QCustomPlot widget is accessible via \c
-  event->pos(). The parameter \a details contains layerable-specific details about the hit, which
+  event->position().toPoint(). The parameter \a details contains layerable-specific details about the hit, which
   were generated in the previous call to \ref selectTest. For example, One-dimensional plottables
   like \ref QCPGraph or \ref QCPBars convey the clicked data point in the \a details parameter, as
   \ref QCPDataSelection packed as QVariant. Multi-part objects convey the specific \c
@@ -1641,7 +1641,7 @@ void QCPLayerable::mousePressEvent(QMouseEvent *event, const QVariant &details)
   layerable has become the mouse grabber by accepting the preceding \ref mousePressEvent.
 
   The current pixel position of the cursor on the QCustomPlot widget is accessible via \c
-  event->pos(). The parameter \a startPos indicates the position where the initial \ref
+  event->position().toPoint(). The parameter \a startPos indicates the position where the initial \ref
   mousePressEvent occurred, that started the mouse interaction.
 
   The default implementation does nothing.
@@ -1659,7 +1659,7 @@ void QCPLayerable::mouseMoveEvent(QMouseEvent *event, const QPointF &startPos)
   the mouse grabber by accepting the preceding \ref mousePressEvent.
 
   The current pixel position of the cursor on the QCustomPlot widget is accessible via \c
-  event->pos(). The parameter \a startPos indicates the position where the initial \ref
+  event->position().toPoint(). The parameter \a startPos indicates the position where the initial \ref
   mousePressEvent occurred, that started the mouse interaction.
 
   The default implementation does nothing.
@@ -1682,7 +1682,7 @@ void QCPLayerable::mouseReleaseEvent(QMouseEvent *event, const QPointF &startPos
   <i>pressEvent &ndash; releaseEvent &ndash; doubleClickEvent &ndash; releaseEvent</i>.
 
   The current pixel position of the cursor on the QCustomPlot widget is accessible via \c
-  event->pos(). The parameter \a details contains layerable-specific details about the hit, which
+  event->position().toPoint(). The parameter \a details contains layerable-specific details about the hit, which
   were generated in the previous call to \ref selectTest. For example, One-dimensional plottables
   like \ref QCPGraph or \ref QCPBars convey the clicked data point in the \a details parameter, as
   \ref QCPDataSelection packed as QVariant. Multi-part objects convey the specific \c
@@ -1710,7 +1710,7 @@ void QCPLayerable::mouseDoubleClickEvent(QMouseEvent *event, const QVariant &det
   selectTest.
 
   The current pixel position of the cursor on the QCustomPlot widget is accessible via \c
-  event->pos().
+  event->position().toPoint().
 
   The \c event->angleDelta() indicates how far the mouse wheel was turned, which is usually +/- 120
   for single rotation steps. However, if the mouse wheel is turned rapidly, multiple steps may
@@ -2811,7 +2811,7 @@ void QCPSelectionRect::cancel()
 void QCPSelectionRect::startSelection(QMouseEvent *event)
 {
   mActive = true;
-  mRect = QRect(event->pos(), event->pos());
+  mRect = QRect(event->position().toPoint(), event->position().toPoint());
   emit started(event);
 }
 
@@ -2823,7 +2823,7 @@ void QCPSelectionRect::startSelection(QMouseEvent *event)
 */
 void QCPSelectionRect::moveSelection(QMouseEvent *event)
 {
-  mRect.setBottomRight(event->pos());
+  mRect.setBottomRight(event->position().toPoint());
   emit changed(mRect, event);
   layer()->replot();
 }
@@ -2836,7 +2836,7 @@ void QCPSelectionRect::moveSelection(QMouseEvent *event)
 */
 void QCPSelectionRect::endSelection(QMouseEvent *event)
 {
-  mRect.setBottomRight(event->pos());
+  mRect.setBottomRight(event->position().toPoint());
   mActive = false;
   emit accepted(mRect, event);
 }
@@ -6375,7 +6375,7 @@ double QCPAxisTicker::cleanMantissa(double input) const
   
   This QCPAxisTicker subclass generates ticks that correspond to real calendar dates and times. The
   plot axis coordinate is interpreted as Unix Time, so seconds since Epoch (January 1, 1970, 00:00
-  UTC). This is also used for example by QDateTime in the <tt>toTime_t()/setTime_t()</tt> methods
+  UTC). This is also used for example by QDateTime in the <tt>toSecsSinceEpoch()/setSecsSinceEpoch()</tt> methods
   with a precision of one second. Since Qt 4.7, millisecond accuracy can be obtained from QDateTime
   by using <tt>QDateTime::fromMSecsSinceEpoch()/1000.0</tt>. The static methods \ref dateTimeToKey
   and \ref keyToDateTime conveniently perform this conversion achieving a precision of one
@@ -9432,7 +9432,7 @@ void QCPAxis::mouseMoveEvent(QMouseEvent *event, const QPointF &startPos)
   if (mDragging)
   {
     const double startPixel = orientation() == Qt::Horizontal ? startPos.x() : startPos.y();
-    const double currentPixel = orientation() == Qt::Horizontal ? event->pos().x() : event->pos().y();
+    const double currentPixel = orientation() == Qt::Horizontal ? event->position().toPoint().x() : event->position().toPoint().y();
     if (mScaleType == QCPAxis::stLinear)
     {
       const double diff = pixelToCoord(startPixel) - pixelToCoord(currentPixel);
@@ -15364,7 +15364,7 @@ void QCustomPlot::mouseDoubleClickEvent(QMouseEvent *event)
 {
   emit mouseDoubleClick(event);
   mMouseHasMoved = false;
-  mMousePressPos = event->pos();
+  mMousePressPos = event->position().toPoint();
   
   // determine layerable under the cursor (this event is called instead of the second press event in a double-click):
   QList<QVariant> details;
@@ -15417,7 +15417,7 @@ void QCustomPlot::mousePressEvent(QMouseEvent *event)
   emit mousePress(event);
   // save some state to tell in releaseEvent whether it was a click:
   mMouseHasMoved = false;
-  mMousePressPos = event->pos();
+  mMousePressPos = event->position().toPoint();
   
   if (mSelectionRect && mSelectionRectMode != QCP::srmNone)
   {
@@ -15466,7 +15466,7 @@ void QCustomPlot::mouseMoveEvent(QMouseEvent *event)
 {
   emit mouseMove(event);
   
-  if (!mMouseHasMoved && (mMousePressPos-event->pos()).manhattanLength() > 3)
+  if (!mMouseHasMoved && (mMousePressPos-event->position().toPoint()).manhattanLength() > 3)
     mMouseHasMoved = true; // moved too far from mouse press position, don't handle as click on mouse release
   
   if (mSelectionRect && mSelectionRect->isActive())
@@ -15997,7 +15997,7 @@ void QCustomPlot::processRectZoom(QRect rect, QMouseEvent *event)
 void QCustomPlot::processPointSelection(QMouseEvent *event)
 {
   QVariant details;
-  QCPLayerable *clickedLayerable = layerableAt(event->pos(), true, &details);
+  QCPLayerable *clickedLayerable = layerableAt(event->position().toPoint(), true, &details);
   bool selectionStateChanged = false;
   bool additive = mInteractions.testFlag(QCP::iMultiSelect) && event->modifiers().testFlag(mMultiSelectModifier);
   // deselect all other layerables if not additive selection:
@@ -18421,11 +18421,11 @@ void QCPAxisRect::mouseMoveEvent(QMouseEvent *event, const QPointF &startPos)
           break;
         if (ax->mScaleType == QCPAxis::stLinear)
         {
-          double diff = ax->pixelToCoord(startPos.x()) - ax->pixelToCoord(event->pos().x());
+          double diff = ax->pixelToCoord(startPos.x()) - ax->pixelToCoord(event->position().toPoint().x());
           ax->setRange(mDragStartHorzRange.at(i).lower+diff, mDragStartHorzRange.at(i).upper+diff);
         } else if (ax->mScaleType == QCPAxis::stLogarithmic)
         {
-          double diff = ax->pixelToCoord(startPos.x()) / ax->pixelToCoord(event->pos().x());
+          double diff = ax->pixelToCoord(startPos.x()) / ax->pixelToCoord(event->position().toPoint().x());
           ax->setRange(mDragStartHorzRange.at(i).lower*diff, mDragStartHorzRange.at(i).upper*diff);
         }
       }
@@ -18442,11 +18442,11 @@ void QCPAxisRect::mouseMoveEvent(QMouseEvent *event, const QPointF &startPos)
           break;
         if (ax->mScaleType == QCPAxis::stLinear)
         {
-          double diff = ax->pixelToCoord(startPos.y()) - ax->pixelToCoord(event->pos().y());
+          double diff = ax->pixelToCoord(startPos.y()) - ax->pixelToCoord(event->position().toPoint().y());
           ax->setRange(mDragStartVertRange.at(i).lower+diff, mDragStartVertRange.at(i).upper+diff);
         } else if (ax->mScaleType == QCPAxis::stLogarithmic)
         {
-          double diff = ax->pixelToCoord(startPos.y()) / ax->pixelToCoord(event->pos().y());
+          double diff = ax->pixelToCoord(startPos.y()) / ax->pixelToCoord(event->position().toPoint().y());
           ax->setRange(mDragStartVertRange.at(i).lower*diff, mDragStartVertRange.at(i).upper*diff);
         }
       }
@@ -19819,7 +19819,7 @@ void QCPTextElement::mousePressEvent(QMouseEvent *event, const QVariant &details
 */
 void QCPTextElement::mouseReleaseEvent(QMouseEvent *event, const QPointF &startPos)
 {
-  if ((QPointF(event->pos())-startPos).manhattanLength() <= 3)
+  if ((QPointF(event->position().toPoint())-startPos).manhattanLength() <= 3)
     emit clicked(event);
 }
 
@@ -32034,7 +32034,7 @@ void QCPPolarAxisRadial::mouseMoveEvent(QMouseEvent *event, const QPointF &start
   {
     /* TODO
     const double startPixel = orientation() == Qt::Horizontal ? startPos.x() : startPos.y();
-    const double currentPixel = orientation() == Qt::Horizontal ? event->pos().x() : event->pos().y();
+    const double currentPixel = orientation() == Qt::Horizontal ? event->position().toPoint().x() : event->position().toPoint().y();
     if (mScaleType == QCPPolarAxisRadial::stLinear)
     {
       const double diff = pixelToCoord(startPixel) - pixelToCoord(currentPixel);
@@ -32101,9 +32101,9 @@ void QCPPolarAxisRadial::wheelEvent(QWheelEvent *event)
   }
   
   // TODO:
-  //const double wheelSteps = event->delta()/120.0; // a single step delta is +/-120 usually
+  //const double wheelSteps = event->angleDelta().y()/120.0; // a single step delta is +/-120 usually
   //const double factor = qPow(mRangeZoomFactor, wheelSteps);
-  //scaleRange(factor, pixelToCoord(orientation() == Qt::Horizontal ? event->pos().x() : event->pos().y()));
+  //scaleRange(factor, pixelToCoord(orientation() == Qt::Horizontal ? event->position().toPoint().x() : event->position().toPoint().y()));
   mParentPlot->replot();
 }
 
@@ -33842,7 +33842,7 @@ void QCPPolarAxisAngular::mouseMoveEvent(QMouseEvent *event, const QPointF &star
       double angleCoordStart, radiusCoordStart;
       double angleCoord, radiusCoord;
       pixelToCoord(startPos, angleCoordStart, radiusCoordStart);
-      pixelToCoord(event->pos(), angleCoord, radiusCoord);
+      pixelToCoord(event->position().toPoint(), angleCoord, radiusCoord);
       double diff = angleCoordStart - angleCoord;
       setRange(mDragAngularStart.lower+diff, mDragAngularStart.upper+diff);
     }
@@ -33856,7 +33856,7 @@ void QCPPolarAxisAngular::mouseMoveEvent(QMouseEvent *event, const QPointF &star
       double angleCoordStart, radiusCoordStart;
       double angleCoord, radiusCoord;
       ax->pixelToCoord(startPos, angleCoordStart, radiusCoordStart);
-      ax->pixelToCoord(event->pos(), angleCoord, radiusCoord);
+      ax->pixelToCoord(event->position().toPoint(), angleCoord, radiusCoord);
       if (ax->scaleType() == QCPPolarAxisRadial::stLinear)
       {
         double diff = radiusCoordStart - radiusCoord;
@@ -33901,8 +33901,8 @@ void QCPPolarAxisAngular::mouseReleaseEvent(QMouseEvent *event, const QPointF &s
   dependent on the mouse wheel delta (which direction the wheel was rotated) to provide a natural
   zooming feel. The Strength of the zoom can be controlled via \ref setRangeZoomFactor.
   
-  Note, that event->delta() is usually +/-120 for single rotation steps. However, if the mouse
-  wheel is turned rapidly, many steps may bunch up to one event, so the event->delta() may then be
+  Note, that event->angleDelta().y() is usually +/-120 for single rotation steps. However, if the mouse
+  wheel is turned rapidly, many steps may bunch up to one event, so the event->angleDelta().y() may then be
   multiples of 120. This is taken into account here, by calculating \a wheelSteps and using it as
   exponent of the range zoom factor. This takes care of the wheel direction automatically, by
   inverting the factor, when the wheel step is negative (f^-1 = 1/f).
