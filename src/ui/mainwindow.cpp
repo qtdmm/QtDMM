@@ -2560,9 +2560,7 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
         heatmap->plot()->setColorScheme(scheme);
       });
     }
-  }
-  if (heatmap)
-  {
+
     connect(menu.addAction(m_newHeatmapAction->text()), &QAction::triggered, this, [this, heatmap]
     {
       newView(Added::Heatmap, heatmap->value(0));
@@ -4423,7 +4421,8 @@ void MainWindow::setDesign(int design)
   for (QMdiSubWindow *win : histogramWindows())
     applyHistogramColors(static_cast<HistogramPlot *>(win->widget()));
   for (QMdiSubWindow *win : heatmapWindows())
-    applyHeatmapColors(static_cast<HeatmapPlot *>(win->widget()));
+    if (HeatmapView *view = heatmapViewOf(win))
+      applyHeatmapColors(view->plot());
   for (QAction *a : m_designMenu->actions())
     a->setChecked(a->data().toInt() == design);
   // at once, so the settings dialog shows the design of the menu (and its

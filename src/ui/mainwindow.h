@@ -236,8 +236,6 @@ protected:
   void        applyXYColors(XYPlot *plot);
   HistogramView *histogramViewOf(const QMdiSubWindow *win) const;
   HeatmapView *heatmapViewOf(const QMdiSubWindow *win) const;
-  QList<QMdiSubWindow *> heatmapWindows() const;
-  void        applyHeatmapColors(HeatmapPlot *plot);
   /// @name Graphs
   /// The first one ("graph", InstanceWidget's own) is always there, more
   /// ("graph-2", ...) come from the menu and go when closed. All work alike
@@ -261,6 +259,7 @@ protected:
   QList<QMdiSubWindow *> meterWindows() const;
   QList<QMdiSubWindow *> poincareWindows() const;
   QList<QMdiSubWindow *> histogramWindows() const;
+  QList<QMdiSubWindow *> heatmapWindows() const;
   /// The readings table or a Poincaré plot: a window of the column on the right.
   bool        isColumn(const QMdiSubWindow *win) const;
   /// @p value dragged out of the sidebar and dropped at @p pos of the area:
@@ -270,6 +269,7 @@ protected:
   /// The design's colours for @p plot.
   void        applyPoincareColors(PoincarePlot *plot);
   void        applyHistogramColors(HistogramPlot *plot);
+  void        applyHeatmapColors(HeatmapPlot *plot);
   /// @}
   ReadingsWidget *m_readings;
   BasketWidget *m_basket = nullptr;
