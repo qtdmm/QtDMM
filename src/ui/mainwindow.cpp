@@ -4523,7 +4523,7 @@ void MainWindow::setupIcons()
   QIcon iconConnectOff = QIcon::fromTheme("network-disconnect");
 
   this->action_Connect->setIcon(iconConnectOff);
-  connect(this->action_Connect, &QAction::toggled, this, [ = ](bool checked)
+  connect(this->action_Connect, &QAction::toggled, this, [=, this](bool checked)
   {
     this->action_Connect->setIcon(checked ? iconConnectOn : iconConnectOff);
   });

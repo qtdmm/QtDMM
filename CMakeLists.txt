@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.19)
 project(qtdmm VERSION "0.0.0" HOMEPAGE_URL "https://qtdmm.de" LANGUAGES C CXX)
 
 ## main settings
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 set(PROJECT_LICENSE "GPL-3.0-or-later AND LGPL-3.0-or-later")
