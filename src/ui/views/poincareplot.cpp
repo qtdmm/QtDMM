@@ -188,18 +188,19 @@ void PoincarePlot::addMenuActions(QMenu *menu)
   ellipse->setCheckable(true);
   ellipse->setChecked(m_ellipse);
   connect(ellipse, &QAction::toggled, this, &PoincarePlot::setEllipse);
-  QAction *hold = menu->addAction(tr("&Hold picture"));
-  hold->setCheckable(true);
-  hold->setChecked(hold());
-  connect(hold, &QAction::toggled, this, &PoincarePlot::setHold);
+  QAction *holdAction = menu->addAction(tr("&Hold picture"));
+  holdAction->setCheckable(true);
+  holdAction->setChecked(hold());
+  connect(holdAction, &QAction::toggled, this, &PoincarePlot::setHold);
   connect(menu->addAction(tr("&Reset")), &QAction::triggered, this, &PoincarePlot::clear);
   connect(menu->addAction(tr("&Save image...")), &QAction::triggered, this, &PoincarePlot::exportImageSLOT);
 }
 
 bool PoincarePlot::exportImageSLOT()
 {
-  const QString dir = ProjectFolder::lastFolder(ProjectFolder::Images);
-  const QString file = QFileDialog::getSaveFileName(this, tr("Save Poincaré plot"), dir,
+//  const QString dir = ProjectFolder::lastFolder(ProjectFolder::Images);
+  const ProjectFolder::Proposal where("poincare.png", ProjectFolder::Images);
+  const QString file = QFileDialog::getSaveFileName(this, tr("Save Poincaré plot"), where.path(),
                                                      tr("Images (*.png *.jpg *.jpeg *.svg)"));
   if (file.isEmpty())
     return false;
