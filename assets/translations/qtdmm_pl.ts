@@ -4440,7 +4440,7 @@ Kabel podłączony? Brak uprawnień? Kabel wymaga reguły udev QtDMM.</translati
 <context>
     <name>HeatmapPlot</name>
     <message>
-        <location filename="../../src/ui/views/heatmapplot.cpp" line="57"/>
+        <location filename="../../src/ui/views/heatmapplot.cpp" line="59"/>
         <source>No heatmap data yet</source>
         <translation>Jeszcze brak danych mapy cieplnej</translation>
     </message>
@@ -4494,21 +4494,16 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
 <context>
     <name>HistogramPlot</name>
     <message>
-        <location filename="../../src/ui/views/histogramplot.cpp" line="39"/>
-        <location filename="../../src/ui/views/histogramplot.cpp" line="140"/>
+        <location filename="../../src/ui/views/histogramplot.cpp" line="14"/>
+        <location filename="../../src/ui/views/histogramplot.cpp" line="107"/>
         <source>No readings yet</source>
         <translation>Brak jeszcze odczytów</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/histogramplot.cpp" line="156"/>
-        <location filename="../../src/ui/views/histogramplot.cpp" line="182"/>
+        <location filename="../../src/ui/views/histogramplot.cpp" line="128"/>
+        <location filename="../../src/ui/views/histogramplot.cpp" line="153"/>
         <source>Count</source>
-        <translation type="unfinished">Zliczenia</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/views/histogramplot.cpp" line="44"/>
-        <source>HOLD</source>
-        <translation>HOLD</translation>
+        <translation>Liczba</translation>
     </message>
 </context>
 <context>
@@ -5740,7 +5735,7 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="396"/>
         <source>Heatmap</source>
-        <translation type="unfinished"></translation>
+        <translation>Mapa cieplna</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="481"/>
@@ -5775,7 +5770,7 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="537"/>
         <source>Add &amp;heatmap</source>
-        <translation type="unfinished"></translation>
+        <translation>Dodaj &amp;mapę cieplną</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="545"/>
@@ -5830,7 +5825,7 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="580"/>
         <source>Plot three measured values: two for position and one for color.</source>
-        <translation type="unfinished"></translation>
+        <translation>Wykreśl trzy zmierzone wartości: dwie dla położenia i jedną dla koloru.</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="603"/>
@@ -5871,7 +5866,7 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="838"/>
         <source>Heatmap %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Mapa cieplna %1</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="1621"/>
@@ -5991,7 +5986,7 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="2909"/>
         <source>New &amp;heatmap</source>
-        <translation type="unfinished"></translation>
+        <translation>Nowa &amp;mapa cieplna</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="2911"/>
@@ -6469,93 +6464,88 @@ Czy multimetr jest podłączony i włączony?</translation>
 <context>
     <name>PoincarePlot</name>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="158"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="171"/>
         <source>&amp;Distance k</source>
         <translation>&amp;Odstęp k</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="166"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="179"/>
         <source>&amp;Points</source>
         <translation>&amp;Punkty</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="174"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="187"/>
         <source>&amp;Ellipse SD1/SD2</source>
         <translation>&amp;Elipsa SD1/SD2</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="178"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="191"/>
         <source>&amp;Hold picture</source>
         <translation>&amp;Zatrzymaj obraz</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="182"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="195"/>
         <source>&amp;Reset</source>
         <translation>&amp;Resetuj</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="183"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="196"/>
         <source>&amp;Save image...</source>
         <translation>Zapi&amp;sz obraz...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="188"/>
-        <source>PNG image (*.png)</source>
-        <translation>Obraz PNG (*.png)</translation>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="203"/>
+        <source>Save Poincaré plot</source>
+        <translation>Zapisz wykres Poincarégo</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="188"/>
-        <source>SVG image (*.svg)</source>
-        <translation>Obraz SVG (*.svg)</translation>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="204"/>
+        <source>Images (*.png *.jpg *.jpeg *.svg)</source>
+        <translation>Obrazy (*.png *.jpg *.jpeg *.svg)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="191"/>
-        <source>Save image</source>
-        <translation>Zapisz obraz</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="210"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="214"/>
         <source>QtDMM Poincaré plot</source>
         <translation>QtDMM wykres Poincarégo</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="268"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="271"/>
         <source>Waiting for the next reading</source>
         <translation>Oczekiwanie na następny odczyt</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="269"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="272"/>
         <source>No readings yet</source>
         <translation>Brak odczytów</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="322"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="325"/>
         <source>x(n)</source>
         <translation>x(n)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="323"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="326"/>
         <source>x(n+%1)</source>
         <translation>x(n+%1)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="379"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="382"/>
         <source>SD1 %1</source>
         <translation>SD1 %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="379"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="382"/>
         <source>SD2 %1</source>
         <translation>SD2 %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="380"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="383"/>
         <source>n = %1, k = %2</source>
         <translation>n = %1, k = %2</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="273"/>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="382"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="276"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="385"/>
         <source>HOLD</source>
         <translation>HOLD</translation>
     </message>
@@ -6856,64 +6846,72 @@ Then log out and back in so the new group membership becomes active.</source>
 Następnie wyloguj się i zaloguj ponownie, aby członkostwo w grupie zaczęło działać.</translation>
     </message>
     <message>
-        <location filename="../../src/main.cpp" line="141"/>
+        <location filename="../../src/main.cpp" line="119"/>
         <source>protocol debugging information</source>
         <translation>informacje diagnostyczne protokołu</translation>
     </message>
     <message>
-        <location filename="../../src/main.cpp" line="142"/>
+        <location filename="../../src/main.cpp" line="120"/>
         <source>only the frames of &lt;id&gt; of My devices (repeatable)</source>
         <translation>tylko ramki &lt;id&gt; z Moich urządzeń (można powtarzać)</translation>
     </message>
     <message>
-        <location filename="../../src/main.cpp" line="143"/>
+        <location filename="../../src/main.cpp" line="121"/>
         <source>sets directory where config files are located</source>
         <translation>ustawia katalog plików konfiguracyjnych</translation>
     </message>
     <message>
-        <location filename="../../src/main.cpp" line="144"/>
+        <location filename="../../src/main.cpp" line="122"/>
         <source>sets &lt;config-id&gt;</source>
         <translation>ustawia &lt;config-id&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/main.cpp" line="145"/>
+        <location filename="../../src/main.cpp" line="123"/>
         <source>connects &lt;id&gt; of My devices at the start (repeatable)</source>
         <translation>łączy &lt;id&gt; z Moich urządzeń przy starcie (można powtarzać)</translation>
     </message>
     <message>
-        <location filename="../../src/main.cpp" line="146"/>
+        <location filename="../../src/main.cpp" line="124"/>
         <source>the same as --connect (its name before 26.4)</source>
         <translation>to samo co --connect (nazwa sprzed 26.4)</translation>
     </message>
     <message>
-        <location filename="../../src/main.cpp" line="147"/>
+        <location filename="../../src/main.cpp" line="125"/>
         <source>VXI-11 portmapper for this run: auto, system (rpcbind) or own (port 111)</source>
         <translation>Portmapper VXI-11 dla tego uruchomienia: auto, system (rpcbind) lub own (port 111)</translation>
     </message>
     <message>
-        <location filename="../../src/main.cpp" line="150"/>
+        <location filename="../../src/main.cpp" line="126"/>
         <source>for tests and development: VXI-11 with an own portmapper on this port instead of 111 (0: any free one) for this run; VISA and lxi-tools ask port 111</source>
         <translation>do testów i rozwoju: VXI-11 z własnym portmapperem na tym porcie zamiast 111 (0: dowolny wolny) dla tego uruchomienia; VISA i lxi-tools pytają port 111</translation>
     </message>
     <message>
-        <location filename="../../src/main.cpp" line="167"/>
+        <location filename="../../src/main.cpp" line="140"/>
         <source>--vxi11-rpc: auto, system or own, not &quot;%1&quot;</source>
         <translation>--vxi11-rpc: auto, system lub own, nie „%1”</translation>
     </message>
     <message>
-        <location filename="../../src/main.cpp" line="182"/>
+        <location filename="../../src/main.cpp" line="154"/>
         <source>--vxi11-portmapper-port needs the own portmapper, not --vxi11-rpc system</source>
         <translation>--vxi11-portmapper-port wymaga własnego portmappera, nie --vxi11-rpc system</translation>
     </message>
     <message>
-        <location filename="../../src/main.cpp" line="183"/>
+        <location filename="../../src/main.cpp" line="155"/>
         <source>--vxi11-portmapper-port: a port from 0 to 65535, not &quot;%1&quot;</source>
         <translation>--vxi11-portmapper-port: port od 0 do 65535, nie „%1”</translation>
     </message>
     <message>
-        <location filename="../../src/main.cpp" line="216"/>
+        <location filename="../../src/main.cpp" line="181"/>
         <source>QtDMM is running already with these settings (process %1).</source>
         <translation>QtDMM już działa z tymi ustawieniami (proces %1).</translation>
+    </message>
+</context>
+<context>
+    <name>QcpGraphCommon</name>
+    <message>
+        <location filename="../../src/ui/views/qcpgraphcommon.cpp" line="25"/>
+        <source>No data yet</source>
+        <translation>Brak jeszcze danych</translation>
     </message>
 </context>
 <context>
@@ -7066,7 +7064,7 @@ Następnie wyloguj się i zaloguj ponownie, aby członkostwo w grupie zaczęło 
     <message>
         <location filename="../../src/core/sampletypes.h" line="170"/>
         <source>Count</source>
-        <translation>Zliczenia</translation>
+        <translation>Liczba</translation>
     </message>
     <message>
         <location filename="../../src/core/sampletypes.h" line="171"/>
@@ -7928,7 +7926,7 @@ Następnie wyloguj się i zaloguj ponownie, aby członkostwo w grupie zaczęło 
     <message>
         <location filename="../../src/ui/dialogs/sourcesdlg.cpp" line="160"/>
         <source>Color (Z):</source>
-        <translation type="unfinished"></translation>
+        <translation>Kolor (Z):</translation>
     </message>
 </context>
 <context>
@@ -8931,7 +8929,7 @@ Następnie wyloguj się i zaloguj ponownie, aby członkostwo w grupie zaczęło 
     <message>
         <location filename="../../src/ui/valuemenu.cpp" line="88"/>
         <source>New heatmap</source>
-        <translation type="unfinished"></translation>
+        <translation>Nowa mapa cieplna</translation>
     </message>
     <message>
         <location filename="../../src/ui/valuemenu.cpp" line="98"/>
@@ -9200,12 +9198,12 @@ Następnie wyloguj się i zaloguj ponownie, aby członkostwo w grupie zaczęło 
 <context>
     <name>XYPlot</name>
     <message>
-        <location filename="../../src/ui/views/xyplot.cpp" line="43"/>
+        <location filename="../../src/ui/views/xyplot.cpp" line="45"/>
         <source>No XY data yet</source>
         <translation>Brak jeszcze danych XY</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/xyplot.cpp" line="49"/>
+        <location filename="../../src/ui/views/xyplot.cpp" line="51"/>
         <source>HOLD</source>
         <translation>HOLD</translation>
     </message>

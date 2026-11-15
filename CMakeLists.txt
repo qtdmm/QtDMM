@@ -323,6 +323,11 @@ if (QTDMM_WITH_MULTIMEDIA)
 endif()
 
 target_compile_definitions(qtdmm_core PRIVATE QCUSTOMPLOT_USE_OPENGL )
+# QCustomPlot's OpenGL buffer calls glClear()/glClearColor() itself; Qt6::OpenGL
+# does not hand the system's GL library on with MSVC
+if (WIN32)
+	target_link_libraries(qtdmm_core PUBLIC opengl32)
+endif()
 
 add_executable(${PROJECT_NAME}
 	MACOSX_BUNDLE

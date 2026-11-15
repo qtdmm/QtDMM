@@ -5,6 +5,7 @@
 #include "3rdparty/qcustomplot/qcustomplot.h"
 
 #include <QApplication>
+#include <QElapsedTimer>
 
 #include <cmath>
 
@@ -12,6 +13,14 @@ int main(int argc, char **argv)
 {
   qputenv("QT_QPA_PLATFORM", "offscreen");
   QApplication app(argc, argv);
+  // new points are drawn at the plot's pace (a refresh after ~33 ms): wait for it
+  auto settle = []
+  {
+    QElapsedTimer t;
+    t.start();
+    while (t.elapsed() < 100)
+      QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+  };
 
   XYPlot xy;
   xy.setAxisUnits(QStringLiteral("V"), QStringLiteral("A"));
@@ -20,6 +29,7 @@ int main(int argc, char **argv)
   xy.addPoint(0.002, 0.004);
   xy.addPoint(0.004, 0.008);
   xy.addPoint(qQNaN(), 1.0);
+  settle();
 
   auto *plot = xy.findChild<QCustomPlot *>();
   if (!plot || plot->graphCount() != 1)
@@ -45,6 +55,7 @@ int main(int argc, char **argv)
 
   for (int i = 0; i < 2005; ++i)
     xy.addPoint(i, i * 2.0);
+  settle();
   if (graph->data()->size() != 2000)
     return 8;
   return 0;

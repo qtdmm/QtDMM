@@ -7,6 +7,7 @@
 #include "3rdparty/qcustomplot/qcustomplot.h"
 
 #include <QApplication>
+#include <QElapsedTimer>
 
 #include <cmath>
 
@@ -14,6 +15,14 @@ int main(int argc, char **argv)
 {
   qputenv("QT_QPA_PLATFORM", "offscreen");
   QApplication app(argc, argv);
+  // new points are drawn at the plot's pace (a refresh after ~33 ms): wait for it
+  auto settle = []
+  {
+    QElapsedTimer t;
+    t.start();
+    while (t.elapsed() < 100)
+      QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+  };
 
   HeatmapPlot heatmap;
   heatmap.setCellCount(2, 2);
@@ -21,6 +30,7 @@ int main(int argc, char **argv)
   heatmap.addPoint(0.1, 0.1, 1.0);
   heatmap.addPoint(0.2, 0.2, 3.0);
   heatmap.addPoint(0.9, 0.9, 2.0);
+  settle();
 
   auto *plot = heatmap.findChild<QCustomPlot *>();
   auto *map = plot ? qobject_cast<QCPColorMap *>(plot->plottable(0)) : nullptr;
