@@ -28,7 +28,9 @@ public:
   /// @p noData: the note while there is nothing to draw.
   explicit QcpGraphCommon(QWidget *parent, const QString &noData);
 
-  /// Whether new plots draw with OpenGL (Graph/openGl, read at start).
+  /// Whether new plots draw with OpenGL (Graph/openGl, read at start, off by
+  /// default: QCustomPlot's OpenGL shows artefacts and costs more with several
+  /// plots open; NeoQCP is to do it better).
   static void setOpenGlEnabledDefault(bool enabled);
 
   void setNoDataText(const QString &text);

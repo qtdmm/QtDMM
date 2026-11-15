@@ -146,8 +146,9 @@ XLSX/ODS export - the ZIP container itself is written by
 `SpreadsheetWriter`, since LibreOffice rejects miniz's data descriptors on
 the ODS mimetype entry) and QCustomPlot 2.1.1 in Wireshark's fork
 (GPL-2.0-or-later, trimmed of old Qt code paths; the XY diagram, histogram
-and heatmap draw with it, on top of `QcpGraphCommon`, with OpenGL on unless
-`Graph/openGl` is false). It is meant as a step towards NeoQCP.
+and heatmap draw with it, on top of `QcpGraphCommon`, OpenGL only with
+`Graph/openGl`, off by default: classic QCustomPlot's OpenGL leaves artefacts
+and costs more with several plots). It is meant as a step towards NeoQCP.
 
 The symbols come in three icon themes under `assets/icons/sets/`, compiled
 into the resources (`:/icons`); the code asks for symbols by name with

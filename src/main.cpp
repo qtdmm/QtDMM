@@ -186,7 +186,7 @@ int main(int argc, char **argv)
   }
 
   Settings graphSettings(parser.value("config-id"), parser.value("config-dir"));
-  QcpGraphCommon::setOpenGlEnabledDefault(graphSettings.getBool("Graph/openGl", true));
+  QcpGraphCommon::setOpenGlEnabledDefault(graphSettings.getBool("Graph/openGl", false));
 
   MainWindow mainWin(parser);
   mainWin.show();

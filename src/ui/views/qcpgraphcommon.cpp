@@ -6,7 +6,7 @@
 
 #include <QVBoxLayout>
 
-bool QcpGraphCommon::s_openGlDefault = true;
+bool QcpGraphCommon::s_openGlDefault = false;
 
 QcpGraphCommon::QcpGraphCommon(QWidget *parent, const QString &noData) : GraphCommon(parent)
 {

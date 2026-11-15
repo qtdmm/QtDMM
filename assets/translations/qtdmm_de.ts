@@ -3128,11 +3128,6 @@ und melden Sie sich danach ab und wieder an.</translation>
         <translation>XY-Diagramm, Histogramm und Heatmap mit Open&amp;GL zeichnen (ab dem nächsten Start)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="106"/>
-        <source>Faster with many points. Switch it off if these plots stay blank or flicker with this graphics driver; QtDMM takes it at its next start.</source>
-        <translation>Schneller bei vielen Punkten. Ausschalten, wenn diese Diagramme mit diesem Grafiktreiber leer bleiben oder flackern; QtDMM übernimmt es beim nächsten Start.</translation>
-    </message>
-    <message>
         <location filename="../../src/ui/settings/graphprefs.cpp" line="112"/>
         <source>Colours</source>
         <translation>Farben</translation>
@@ -3312,6 +3307,11 @@ und melden Sie sich danach ab und wieder an.</translation>
         <location filename="../../src/ui/settings/graphprefs.cpp" line="170"/>
         <source>The axis runs from the minimum to the maximum below.</source>
         <translation>Die Achse reicht vom Minimum bis zum Maximum darunter.</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="106"/>
+        <source>Experimental, off by default: with several plots open it can show artefacts and raise the load. QtDMM takes it at its next start.</source>
+        <translation>Experimentell, standardmäßig aus: Mit mehreren offenen Diagrammen kann es Artefakte zeigen und die Last erhöhen. QtDMM übernimmt es beim nächsten Start.</translation>
     </message>
     <message>
         <location filename="../../src/ui/settings/graphprefs.cpp" line="123"/>
