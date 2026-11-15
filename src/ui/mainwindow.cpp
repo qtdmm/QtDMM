@@ -372,7 +372,7 @@ void MainWindow::createViews()
   m_xyPlot->setWindowTitle(tr("XY diagram"));
   auto *xy = new XYView(m_session, m_xyPlot, this);
   m_xyViews.insert(m_xyPlot, xy);
-  applyXYColors(m_xyPlot);
+  applyPlotColors(m_xyPlot);
   m_xyPlot->setContextMenuPolicy(Qt::CustomContextMenu);
   m_xyWin = addView(m_xyPlot, m_xyPlot->windowTitle(), MdiArranger::Table, "xy");
   connect(m_xyPlot, &QWidget::customContextMenuRequested, this, [this](const QPoint &pos)
@@ -385,7 +385,7 @@ void MainWindow::createViews()
   auto *histogram = new HistogramView(m_session, m_histogram, this);
   m_histogramViews.insert(m_histogram, histogram);
   m_histogramWin = addView(m_histogram, m_histogram->windowTitle(), MdiArranger::Table, "histogram");
-  applyHistogramColors(m_histogram);
+  applyPlotColors(m_histogram);
   m_histogram->setContextMenuPolicy(Qt::CustomContextMenu);
   connect(m_histogram, &QWidget::customContextMenuRequested, this, [this](const QPoint &pos)
   {
@@ -397,7 +397,7 @@ void MainWindow::createViews()
   auto *heatmap = new HeatmapView(m_session, m_heatmap, this);
   m_heatmapViews.insert(m_heatmap, heatmap);
   m_heatmapWin = addView(m_heatmap, m_heatmap->windowTitle(), MdiArranger::Table, "heatmap");
-  applyHeatmapColors(m_heatmap);
+  applyPlotColors(m_heatmap);
   m_heatmap->setContextMenuPolicy(Qt::CustomContextMenu);
   connect(m_heatmap, &QWidget::customContextMenuRequested, this, [this](const QPoint &pos)
   {
@@ -799,7 +799,7 @@ QMdiSubWindow *MainWindow::addViewWindow(Added kind, const ValueRef &value, int 
     plot->setWindowTitle(tr("XY diagram %1").arg(number));
     auto *view = new XYView(m_session, plot, this);
     m_xyViews.insert(plot, view);
-    applyXYColors(plot);
+    applyPlotColors(plot);
     if (!value.source.isEmpty())
       view->setValues(value, value);
     win = addView(plot, plot->windowTitle(), MdiArranger::Table, prefix + QString::number(number));
@@ -829,7 +829,7 @@ QMdiSubWindow *MainWindow::addViewWindow(Added kind, const ValueRef &value, int 
     m_histogramViews.insert(plot, source);
     source->setValue(value);
     win = addView(plot, plot->windowTitle(), MdiArranger::Table, prefix + QString::number(number));
-    applyHistogramColors(plot);
+    applyPlotColors(plot);
     view = plot;
   }
   else if (kind == Added::Heatmap)
@@ -840,7 +840,7 @@ QMdiSubWindow *MainWindow::addViewWindow(Added kind, const ValueRef &value, int 
     m_heatmapViews.insert(plot, source);
     source->setValues(value, value, value);
     win = addView(plot, plot->windowTitle(), MdiArranger::Table, prefix + QString::number(number));
-    applyHeatmapColors(plot);
+    applyPlotColors(plot);
     view = plot;
   }
   else
@@ -4417,12 +4417,12 @@ void MainWindow::setDesign(int design)
   for (QMdiSubWindow *win : poincareWindows())
     applyPoincareColors(static_cast<PoincarePlot *>(win->widget()));
   for (QMdiSubWindow *win : xyWindows())
-    applyXYColors(static_cast<XYPlot *>(win->widget()));
+    applyPlotColors(static_cast<GraphCommon *>(win->widget()));
   for (QMdiSubWindow *win : histogramWindows())
-    applyHistogramColors(static_cast<HistogramPlot *>(win->widget()));
+    applyPlotColors(static_cast<GraphCommon *>(win->widget()));
   for (QMdiSubWindow *win : heatmapWindows())
     if (HeatmapView *view = heatmapViewOf(win))
-      applyHeatmapColors(view->plot());
+      applyPlotColors(view->plot());
   for (QAction *a : m_designMenu->actions())
     a->setChecked(a->data().toInt() == design);
   // at once, so the settings dialog shows the design of the menu (and its
@@ -4445,7 +4445,10 @@ void MainWindow::applyPoincareColors(PoincarePlot *plot)
   plot->setThemeColors(background, g.grid, g.labels, g.data);
 }
 
-void MainWindow::applyXYColors(XYPlot *plot)
+// The side plots on QCustomPlot (XY diagram, histogram, heatmap) on the
+// design's frame, the graph's background where that is a texture: the points
+// would get lost in it
+void MainWindow::applyPlotColors(GraphCommon *plot)
 {
   const Designs::Design d = Designs::current();
   const QBrush frame = Designs::frameBrush(d);
@@ -4454,28 +4457,6 @@ void MainWindow::applyXYColors(XYPlot *plot)
   if (frame.style() == Qt::TexturePattern)
     background = g.background;
   plot->setThemeColors(background, g.grid, g.labels, g.data);
-}
-
-void MainWindow::applyHistogramColors(HistogramPlot *plot)
-{
-  const Designs::Design d = Designs::current();
-  const QBrush frame = Designs::frameBrush(d);
-  const Designs::GraphColors g = Designs::graphColors(d);
-  QBrush background = frame.style() != Qt::NoBrush ? frame : QApplication::palette().base();
-  if (frame.style() == Qt::TexturePattern)
-    background = g.background;
-  plot->setThemeColors(background, g.grid, g.labels, g.data);
-}
-
-void MainWindow::applyHeatmapColors(HeatmapPlot *plot)
-{
-  const Designs::Design d = Designs::current();
-  const QBrush frame = Designs::frameBrush(d);
-  const Designs::GraphColors g = Designs::graphColors(d);
-  QBrush background = frame.style() != Qt::NoBrush ? frame : QApplication::palette().base();
-  if (frame.style() == Qt::TexturePattern)
-    background = g.background;
-  plot->setThemeColors(background, g.grid, g.labels);
 }
 
 void MainWindow::applyFrame(QWidget *view, bool instrument)

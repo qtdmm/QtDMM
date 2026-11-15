@@ -43,4 +43,6 @@ Right-click the plot to:
 - **Reset** - remove all points.
 - **Save image...** - save the visible diagram as a PNG image.
 
+Hovering over the plot shows dotted crosshair lines and, at the top left, the values under the mouse with their units (X and Y).
+
 The diagram takes the colours of the window design chosen in the settings.

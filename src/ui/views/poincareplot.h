@@ -32,7 +32,6 @@ public:
   void        setSettings(Settings *cfg);
   /// Colours of the window design (Designs::graphColors()); an invalid
   /// @p data takes the highlight colour.
-  void        setThemeColors(const QBrush &background, const QColor &grid, const QColor &labels, const QColor &data);
   void        setTheme(const PlotTheme &theme) override;
   void        setTitle(const QString &title) override;
   /// The plot's own entries for the window's context menu.

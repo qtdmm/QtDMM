@@ -2,53 +2,36 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
 
+#include "ui/views/qcpgraphcommon.h"
+#include "ui/views/ringbuffer.h"
+
 #include <QPointF>
-#include <QBrush>
-#include <QColor>
 #include <QVector>
-#include <QTimer>
-#include <QWidget>
 
 class QCPGraph;
-class QCPItemText;
-class QCPTextElement;
-class QCustomPlot;
 
-/// A live scatter plot of one value against another.
-class XYPlot : public QWidget
+/// A live scatter plot of one value against another (XYView feeds it): the
+/// newest kMaxPoints pairs, both axes in the prefix of their range.
+class XYPlot : public QcpGraphCommon
 {
   Q_OBJECT
 public:
   explicit XYPlot(QWidget *parent = nullptr);
-  void        setThemeColors(const QBrush &background, const QColor &grid, const QColor &labels, const QColor &data);
-  void        setAxisUnits(const QString &x, const QString &y);
-  void        setLegend(const QString &legend);
-  void        addPoint(double x, double y);
-  void        clear();
-  void        setHold(bool hold);
-  bool        hold() const { return m_hold; }
 
-protected:
+  void        setTheme(const PlotTheme &theme) override;
+  /// The base units of the two values.
+  void        setAxisUnits(const QString &x, const QString &y);
+  void        addPoint(double x, double y);
+
 private:
   static constexpr int kMaxPoints = 2000;
-  void scheduleRefresh();
-  void refreshPlot();
+  void refreshPlot() override;
+  void holdChanged(bool hold) override;
+  void clearSamples() override;
 
-  QCustomPlot *m_plot = nullptr;
-  QCPGraph *m_graph = nullptr;
-  QCPTextElement *m_title = nullptr;
-  QCPItemText *m_noDataText = nullptr;
-  QCPItemText *m_holdText = nullptr;
-  QTimer m_refreshTimer;
-  QVector<QPointF> m_points;
-  QVector<QPointF> m_shown;
-  int         m_pointHead = 0;
-  bool        m_hold = false;
-  QString     m_xUnit;
-  QString     m_yUnit;
-  QString     m_legend;
-  QBrush      m_background;
-  QColor      m_grid;
-  QColor      m_labels;
-  QColor      m_data;
+  QCPGraph            *m_graph = nullptr;
+  RingBuffer<QPointF>  m_points{ kMaxPoints };
+  QVector<QPointF>     m_held;   ///< the points when hold froze the picture
+  QString              m_xUnit;
+  QString              m_yUnit;
 };

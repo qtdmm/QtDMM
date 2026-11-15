@@ -31,3 +31,5 @@ that have not received a point.
 
 Right-click **Sources...** also lets you assign different source values. Each
 heatmap window keeps its own source selection.
+
+Hovering over the plot shows dotted crosshair lines and, at the top left, the values under the mouse with their units: X, Y and the colour's value of the cell there.

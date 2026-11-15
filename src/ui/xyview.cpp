@@ -77,7 +77,7 @@ void XYView::updateLegend()
       text = value.source;
     return QString("%1: %2").arg(axis, text.isEmpty() ? QStringLiteral("—") : text);
   };
-  m_plot->setLegend(QString("%1     %2").arg(label(tr("X"), m_xSource, m_xName, m_x),
+  m_plot->setTitle(QString("%1     %2").arg(label(tr("X"), m_xSource, m_xName, m_x),
                                            label(tr("Y"), m_ySource, m_yName, m_y)));
 }
 

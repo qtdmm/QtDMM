@@ -43,5 +43,5 @@ void HistogramView::updateCaption()
   QString caption = m_sourceCaption;
   if (!m_valueName.isEmpty())
     caption += caption.isEmpty() ? m_valueName : QString(" · %1").arg(m_valueName);
-  m_plot->setCaption(caption);
+  m_plot->setTitle(caption);
 }

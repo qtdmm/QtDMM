@@ -2,44 +2,43 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
 
-#include <QBrush>
-#include <QColor>
-#include <QTimer>
-#include <QVector>
-
 #include "core/reading.h"
 #include "ui/views/qcpgraphcommon.h"
+#include "ui/views/ringbuffer.h"
+
+#include <QVector>
 
 class QCPBars;
 
-/// A live histogram of the selected value's recent readings.
+/// A live histogram of one value's newest kMaxValues readings (HistogramView
+/// feeds it): 5 to 40 bars, the square root of the count.
 class HistogramPlot : public QcpGraphCommon
 {
   Q_OBJECT
 public:
   explicit HistogramPlot(QWidget *parent = nullptr);
-  void        setThemeColors(const QBrush &background, const QColor &grid, const QColor &labels, const QColor &data);
+
+  void        setTheme(const PlotTheme &theme) override;
+  /// The value counted; another one starts afresh.
   void        setValueId(int id);
-  void        setHold(bool hold) override;
-  void        clear() override;
 
 public Q_SLOTS:
+  /// A reading of the value counted; another unit starts afresh, overload,
+  /// HOLD and readings without a number do not count.
   void        addReading(const Reading &reading);
-  void        setCaption(const QString &caption);
+  /// Why there is nothing to draw (no device, not connected); empty: no readings yet.
   void        setNotice(const QString &notice);
 
 private:
   static constexpr int kMaxValues = 1000;
-  void scheduleRefresh();
-  void refreshPlot();
+  void refreshPlot() override;
+  void holdChanged(bool hold) override;
+  void clearSamples() override;
+  QString crosshairText(double x, double y) const override;
 
-  QTimer          m_refreshTimer;
-  QVector<double> m_values;
-  QVector<double> m_shown;
-  int             m_valueHead = 0;
-  int             m_valueId = 0;
-  QString         m_caption;
-  QString         m_notice;
-  QString         m_unit;
-  QCPBars        *m_bars = nullptr;
+  QCPBars           *m_bars = nullptr;
+  RingBuffer<double> m_values{ kMaxValues };
+  QVector<double>    m_held;   ///< the values when hold froze the picture
+  int                m_valueId = 0;
+  QString            m_unit;
 };

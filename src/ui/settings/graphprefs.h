@@ -104,6 +104,7 @@ private:
   QSpinBox     *ui_lineWidth;
   QRadioButton *autoScaleBut, *manualScaleBut;
   QCheckBox    *ui_includeZero, *ui_crosshair;
+  QCheckBox    *ui_openGl;   ///< Graph/openGl, read at start (QcpGraphCommon)
   QLineEdit    *ui_scaleMin, *ui_scaleMax;
   QSpinBox     *ui_winSize;
   QComboBox    *sizeUnit;

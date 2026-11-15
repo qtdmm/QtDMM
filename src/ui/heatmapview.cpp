@@ -65,7 +65,7 @@ void HeatmapView::updateLegend()
       text = m_ref[a].source;
     parts << QString("%1: %2").arg(QLatin1String(axisName[a]), text.isEmpty() ? QStringLiteral("—") : text);
   }
-  m_plot->setLegend(parts.join(QStringLiteral("     ")));
+  m_plot->setTitle(parts.join(QStringLiteral("     ")));
 }
 
 void HeatmapView::feed(int axis, const Reading &reading)

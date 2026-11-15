@@ -3124,287 +3124,297 @@ a potem wyloguj się i zaloguj ponownie.</translation>
     </message>
     <message>
         <location filename="../../src/ui/settings/graphprefs.cpp" line="104"/>
+        <source>Draw the XY diagram, histogram and heatmap with Open&amp;GL (from the next start)</source>
+        <translation>Rysuj wykres XY, histogram i mapę cieplną za pomocą Open&amp;GL (od następnego uruchomienia)</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="106"/>
+        <source>Faster with many points. Switch it off if these plots stay blank or flicker with this graphics driver; QtDMM takes it at its next start.</source>
+        <translation>Szybciej przy wielu punktach. Wyłącz, jeśli te wykresy pozostają puste lub migoczą z tym sterownikiem grafiki; QtDMM zastosuje to przy następnym uruchomieniu.</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="112"/>
         <source>Colours</source>
         <translation>Kolory</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="108"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="116"/>
         <source>Custom</source>
         <translation>Własne</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="112"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="120"/>
         <source>The colours of the graph: background, grid, lettering and curves. Custom sets them one by one. A graph&apos;s context menu can choose other colours for that graph only.</source>
         <translation>Kolory wykresu: tło, siatka, opisy i krzywe. „Własne” ustawia je pojedynczo. Menu kontekstowe wykresu może wybrać inne kolory tylko dla tego wykresu.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="116"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="124"/>
         <source>The colour of the curve.</source>
         <translation>Kolor krzywej.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="117"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="125"/>
         <source>The background of the graph.</source>
         <translation>Tło wykresu.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="118"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="126"/>
         <source>The grid and its lettering.</source>
         <translation>Siatka i jej opisy.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="131"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="139"/>
         <source>&amp;Data</source>
         <translation>&amp;Dane</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="133"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="141"/>
         <source>&amp;Background</source>
         <translation>&amp;Tło</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="135"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="143"/>
         <source>&amp;Grid</source>
         <translation>&amp;Siatka</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="139"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="147"/>
         <source>The line where the readings come in.</source>
         <translation>Linia, w której pojawiają się odczyty.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="140"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="148"/>
         <source>The line of the start threshold.</source>
         <translation>Linia progu startu.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="141"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="149"/>
         <source>Cu&amp;rsor:</source>
         <translation>Ku&amp;rsor:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="142"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="150"/>
         <source>&amp;Start threshold:</source>
         <translation>&amp;Próg startu:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="144"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="152"/>
         <source>Line and points</source>
         <translation>Linia i punkty</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="147"/>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="203"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="155"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="211"/>
         <source>The width of the line.</source>
         <translation>Grubość linii.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="148"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="156"/>
         <source>&amp;Line:</source>
         <translation>&amp;Linia:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="150"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="158"/>
         <source>&amp;Points:</source>
         <translation>P&amp;unkty:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="152"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="160"/>
         <source>Y axis</source>
         <translation>Oś Y</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="153"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="161"/>
         <source>Au&amp;tomatic</source>
         <translation>&amp;Automatycznie</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="155"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="163"/>
         <source>The axis follows the readings.</source>
         <translation>Oś podąża za odczytami.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="156"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="164"/>
         <source>Include &amp;zero line</source>
         <translation>Uwzględnij linię &amp;zera</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="158"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="166"/>
         <source>The automatic axis always shows zero.</source>
         <translation>Automatyczna oś zawsze pokazuje zero.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="160"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="168"/>
         <source>Fi&amp;xed</source>
         <translation>Sta&amp;ła</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="171"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="179"/>
         <source>&amp;Maximum:</source>
         <translation>Maks&amp;imum:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="184"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="192"/>
         <source>Right of the graph</source>
         <translation>Na prawo od wykresu</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="184"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="192"/>
         <source>Left of the graph</source>
         <translation>Na lewo od wykresu</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="185"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="193"/>
         <source>Where the statistics stand beside the graph (the cursors, from A to B, the window shown); the Σ button hides them.</source>
         <translation>Gdzie stoi statystyka obok wykresu (kursory, od A do B, pokazane okno); przycisk Σ ją ukrywa.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="187"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="195"/>
         <source>Statistics:</source>
         <translation>Statystyka:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="194"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="202"/>
         <source>Value 1 (main display)</source>
         <translation>Wartość 1 (główny wyświetlacz)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="194"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="202"/>
         <source>Value 2 (second display, if the meter has one)</source>
         <translation>Wartość 2 (drugi wyświetlacz, jeśli miernik go ma)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="195"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="203"/>
         <source>The value the curve integrates. Without a second display there is no curve for value 2.</source>
         <translation>Wartość całkowana przez krzywą. Bez drugiego wyświetlacza nie ma krzywej dla wartości 2.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="200"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="208"/>
         <source>Colo&amp;ur:</source>
         <translation>K&amp;olor:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="205"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="213"/>
         <source>Lin&amp;e:</source>
         <translation>Li&amp;nia:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="207"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="215"/>
         <source>P&amp;oints:</source>
         <translation>Punkty:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="213"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="221"/>
         <source>Reset belo&amp;w:</source>
         <translation>Zeruj poniżej:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="162"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="170"/>
         <source>The axis runs from the minimum to the maximum below.</source>
         <translation>Oś biegnie od minimum do maksimum poniżej.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="115"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="123"/>
         <source>S&amp;cheme:</source>
         <translation>Zestaw &amp;kolorów:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="164"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="172"/>
         <source>The bottom of the axis.</source>
         <translation>Dolny koniec osi.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="165"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="173"/>
         <source>The top of the axis.</source>
         <translation>Górny koniec osi.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="170"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="178"/>
         <source>M&amp;inimum:</source>
         <translation>&amp;Minimum:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="173"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="181"/>
         <source>Time axis</source>
         <translation>Oś czasu</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="175"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="183"/>
         <source>How much of the recording the graph shows at once; also how much Live keeps when the recording has no length. The time buttons under the graph set it too.</source>
         <translation>Ile nagrania wykres pokazuje naraz; także ile zachowuje tryb Na żywo, gdy rejestracja nie ma długości. Ustawiają go też przyciski czasu przy wykresie.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="178"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="186"/>
         <source>&amp;Visible:</source>
         <translation>&amp;Widoczne:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="179"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="187"/>
         <source>Cross&amp;hair cursor</source>
         <translation>Kursor krz&amp;yżowy</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="181"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="189"/>
         <source>Lines through the mouse pointer, with the time and the value.</source>
         <translation>Linie przez wskaźnik myszy, z czasem i wartością.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="190"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="198"/>
         <source>I&amp;ntegration curve</source>
         <translation>Krzywa &amp;całkowania</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="192"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="200"/>
         <source>A second curve: the running integral of the reading, scaled and offset.</source>
         <translation>Druga krzywa: bieżąca całka odczytu, przeskalowana i przesunięta.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="196"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="204"/>
         <source>Appl&amp;y to:</source>
         <translation>Zastos&amp;uj do:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="197"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="205"/>
         <source>The colour of the integration curve.</source>
         <translation>Kolor krzywej całkowania.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="198"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="206"/>
         <source>The colour of the integration threshold.</source>
         <translation>Kolor progu całkowania.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="199"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="207"/>
         <source>Threshold</source>
         <translation>Próg</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="208"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="216"/>
         <source>Scaling factor for the integration curve.</source>
         <translation>Współczynnik skali krzywej całkowania.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="209"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="217"/>
         <source>Offset of the integration curve.</source>
         <translation>Przesunięcie krzywej całkowania.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="210"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="218"/>
         <source>Below this value the integral starts again at zero.</source>
         <translation>Poniżej tej wartości całka zaczyna się znowu od zera.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="211"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="219"/>
         <source>Sc&amp;ale:</source>
         <translation>Skala:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="212"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="220"/>
         <source>O&amp;ffset:</source>
         <translation>Przesunięcie:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="109"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="117"/>
         <source>Neutral: follows the design</source>
         <translation>Neutralne: zgodne z wyglądem</translation>
     </message>
@@ -4440,7 +4450,7 @@ Kabel podłączony? Brak uprawnień? Kabel wymaga reguły udev QtDMM.</translati
 <context>
     <name>HeatmapPlot</name>
     <message>
-        <location filename="../../src/ui/views/heatmapplot.cpp" line="59"/>
+        <location filename="../../src/ui/views/heatmapplot.cpp" line="9"/>
         <source>No heatmap data yet</source>
         <translation>Jeszcze brak danych mapy cieplnej</translation>
     </message>
@@ -4494,16 +4504,20 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
 <context>
     <name>HistogramPlot</name>
     <message>
-        <location filename="../../src/ui/views/histogramplot.cpp" line="14"/>
-        <location filename="../../src/ui/views/histogramplot.cpp" line="107"/>
+        <location filename="../../src/ui/views/histogramplot.cpp" line="10"/>
+        <location filename="../../src/ui/views/histogramplot.cpp" line="53"/>
         <source>No readings yet</source>
         <translation>Brak jeszcze odczytów</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/histogramplot.cpp" line="128"/>
-        <location filename="../../src/ui/views/histogramplot.cpp" line="153"/>
+        <location filename="../../src/ui/views/histogramplot.cpp" line="71"/>
         <source>Count</source>
         <translation>Liczba</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/histogramplot.cpp" line="98"/>
+        <source>%1 readings</source>
+        <translation>%1 odczytów</translation>
     </message>
 </context>
 <context>
@@ -6464,88 +6478,88 @@ Czy multimetr jest podłączony i włączony?</translation>
 <context>
     <name>PoincarePlot</name>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="171"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="160"/>
         <source>&amp;Distance k</source>
         <translation>&amp;Odstęp k</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="179"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="168"/>
         <source>&amp;Points</source>
         <translation>&amp;Punkty</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="187"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="176"/>
         <source>&amp;Ellipse SD1/SD2</source>
         <translation>&amp;Elipsa SD1/SD2</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="191"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="180"/>
         <source>&amp;Hold picture</source>
         <translation>&amp;Zatrzymaj obraz</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="195"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="184"/>
         <source>&amp;Reset</source>
         <translation>&amp;Resetuj</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="196"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="185"/>
         <source>&amp;Save image...</source>
         <translation>Zapi&amp;sz obraz...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="203"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="192"/>
         <source>Save Poincaré plot</source>
         <translation>Zapisz wykres Poincarégo</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="204"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="193"/>
         <source>Images (*.png *.jpg *.jpeg *.svg)</source>
         <translation>Obrazy (*.png *.jpg *.jpeg *.svg)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="214"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="203"/>
         <source>QtDMM Poincaré plot</source>
         <translation>QtDMM wykres Poincarégo</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="271"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="260"/>
         <source>Waiting for the next reading</source>
         <translation>Oczekiwanie na następny odczyt</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="272"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="261"/>
         <source>No readings yet</source>
         <translation>Brak odczytów</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="325"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="314"/>
         <source>x(n)</source>
         <translation>x(n)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="326"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="315"/>
         <source>x(n+%1)</source>
         <translation>x(n+%1)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="382"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="371"/>
         <source>SD1 %1</source>
         <translation>SD1 %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="382"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="371"/>
         <source>SD2 %1</source>
         <translation>SD2 %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="383"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="372"/>
         <source>n = %1, k = %2</source>
         <translation>n = %1, k = %2</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="276"/>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="385"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="265"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="374"/>
         <source>HOLD</source>
         <translation>HOLD</translation>
     </message>
@@ -6904,14 +6918,6 @@ Następnie wyloguj się i zaloguj ponownie, aby członkostwo w grupie zaczęło 
         <location filename="../../src/main.cpp" line="181"/>
         <source>QtDMM is running already with these settings (process %1).</source>
         <translation>QtDMM już działa z tymi ustawieniami (proces %1).</translation>
-    </message>
-</context>
-<context>
-    <name>QcpGraphCommon</name>
-    <message>
-        <location filename="../../src/ui/views/qcpgraphcommon.cpp" line="25"/>
-        <source>No data yet</source>
-        <translation>Brak jeszcze danych</translation>
     </message>
 </context>
 <context>
@@ -9198,14 +9204,9 @@ Następnie wyloguj się i zaloguj ponownie, aby członkostwo w grupie zaczęło 
 <context>
     <name>XYPlot</name>
     <message>
-        <location filename="../../src/ui/views/xyplot.cpp" line="45"/>
+        <location filename="../../src/ui/views/xyplot.cpp" line="9"/>
         <source>No XY data yet</source>
         <translation>Brak jeszcze danych XY</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/views/xyplot.cpp" line="51"/>
-        <source>HOLD</source>
-        <translation>HOLD</translation>
     </message>
 </context>
 <context>

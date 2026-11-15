@@ -46,17 +46,6 @@ void PoincarePlot::setSettings(Settings *cfg)
   m_cfg = cfg;
 }
 
-void PoincarePlot::setThemeColors(const QBrush &background, const QColor &grid, const QColor &labels,
-                                  const QColor &data)
-{
-  PlotTheme theme;
-  theme.background = background;
-  theme.grid = grid;
-  theme.labels = labels;
-  theme.data = data;
-  setTheme(theme);
-}
-
 void PoincarePlot::setTheme(const PlotTheme &theme)
 {
   GraphCommon::setTheme(theme);
@@ -245,10 +234,10 @@ void PoincarePlot::paintEvent(QPaintEvent *)
 void PoincarePlot::render(QPainter &p, const QRect &area)
 {
   const QPalette pal = palette();
-  const QBrush background = m_theme.background.style() != Qt::NoBrush ? m_theme.background : pal.base();
-  const QColor grid = m_theme.grid.isValid() ? m_theme.grid : pal.color(QPalette::Mid);
-  const QColor labels = m_theme.labels.isValid() ? m_theme.labels : pal.color(QPalette::Text);
-  const QColor data = m_theme.data.isValid() ? m_theme.data : pal.color(QPalette::Highlight);
+  const QBrush background = theme().background.style() != Qt::NoBrush ? theme().background : pal.base();
+  const QColor grid = theme().grid.isValid() ? theme().grid : pal.color(QPalette::Mid);
+  const QColor labels = theme().labels.isValid() ? theme().labels : pal.color(QPalette::Text);
+  const QColor data = theme().data.isValid() ? theme().data : pal.color(QPalette::Highlight);
   p.setRenderHint(QPainter::Antialiasing);
   p.fillRect(area, background);
   p.setFont(font());
