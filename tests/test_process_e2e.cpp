@@ -15,11 +15,13 @@
 #include <QDir>
 #include <QFile>
 #include <QProcess>
+#include <QRegularExpression>
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QTemporaryDir>
 #include <QTimer>
 
+#include <cstdio>
 #include <cstdlib>
 
 #include "core/settings.h"
@@ -180,8 +182,19 @@ vxi11=false
   for (const char *name : { "XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_CACHE_HOME", "XDG_DOCUMENTS_DIR" })
     env.remove(name);
   env.insert("QT_QPA_PLATFORM", "offscreen");
+  // the SCPI server says on which port it listens: the one asked for may be
+  // taken by another test meanwhile (ctest runs in parallel), and it takes
+  // the next one then
+  env.insert("QT_LOGGING_RULES", "qtdmm.scpi.debug=true");
   qtdmm.setProcessEnvironment(env);
-  qtdmm.setProcessChannelMode(QProcess::ForwardedChannels);
+  qtdmm.setProcessChannelMode(QProcess::ForwardedOutputChannel);
+  QByteArray messages;
+  QObject::connect(&qtdmm, &QProcess::readyReadStandardError, [&qtdmm, &messages]
+  {
+    const QByteArray more = qtdmm.readAllStandardError();
+    messages += more;
+    std::fwrite(more.constData(), 1, size_t(more.size()), stderr);   // as forwarded before
+  });
   qtdmm.start(QString::fromLocal8Bit(argv[1]), { "--config-dir", cfg, "--config-id", "e2e", "--also", "b", "--also", "p" });
   check(qtdmm.waitForStarted(5000), "qtdmm starts: " + qtdmm.errorString());
   // never left running: ended before ctest's timeout (60 s) ends the test
@@ -193,10 +206,18 @@ vxi11=false
     std::exit(1);
   });
 
+  // a slow builder (FreeBSD VM, tests in parallel) may take more than 15 s
+  static const QRegularExpression listening(QStringLiteral("listening on \\S+ (\\d+)"));
+  QRegularExpressionMatch m;
+  if (waitFor([&] { m = listening.match(QString::fromUtf8(messages)); return m.hasMatch(); }, 30000))
+    port = quint16(m.captured(1).toUInt());
   Client scpi;
-  if (!scpi.connectTo(port, 15000))
+  if (!m.hasMatch() || !scpi.connectTo(port, 10000))
   {
-    check(false, QString("SCPI on port %1").arg(port));
+    check(false, QString("SCPI on port %1 (%2, qtdmm %3)")
+                   .arg(port)
+                   .arg(m.hasMatch() ? "listening" : "no listening message")
+                   .arg(qtdmm.state() == QProcess::Running ? "running" : "ended"));
     qtdmm.kill();
     return 1;
   }

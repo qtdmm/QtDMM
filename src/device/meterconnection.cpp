@@ -274,7 +274,17 @@ bool MeterConnection::openPort()
   // the port devices tell when they are gone: socket closed or refused,
   // USB cable unplugged, sigrok-cli exited, serial device vanished
   if (auto *rfc = dynamic_cast<RFC2217SerialDevice *>(port))
+  {
     connect(rfc, &RFC2217SerialDevice::finished, this, [this, rfc] { portLost(rfc, rfc->errorString()); });
+    // refused at once (loopback on FreeBSD): finished() came before this
+    // connect, and the link would end in Timeout instead of Error
+    if (rfc->hasFinished())
+      QTimer::singleShot(0, this, [this, rfc = QPointer<RFC2217SerialDevice>(rfc)]
+      {
+        if (rfc)
+          portLost(rfc, rfc->errorString());
+      });
+  }
   else if (auto *hid = dynamic_cast<HIDSerialDevice *>(port))
     connect(hid, &HIDSerialDevice::finished, this, [this, hid] { portLost(hid, QString()); });
   else if (auto *htk = dynamic_cast<HidHoltekDevice *>(port))

@@ -49,6 +49,7 @@ void RFC2217SerialDevice::onDisconnected()
   // Has to go through the base class: Transport::isOpen() asks QIODevice, so
   // without this a dropped connection still looked open to the rest of the app.
   QIODevice::close();
+  m_finished = true;
   Q_EMIT finished();
 }
 
@@ -60,6 +61,7 @@ void RFC2217SerialDevice::onError(QAbstractSocket::SocketError err)
   setErrorString(m_socket ? m_socket->errorString() : tr("socket error"));
   qWarning() << "RFC2217:" << errorString();
   QIODevice::close();
+  m_finished = true;
   Q_EMIT finished();
 }
 
