@@ -344,19 +344,27 @@ QString BasketWidget::projectName(const QString &dir)
   return name.isEmpty() ? QFileInfo(dir).fileName() : name;
 }
 
-QJsonObject BasketWidget::readProject(const QString &dir)
+QJsonObject BasketWidget::readProject(const QString &dir, bool *ok)
 {
+  if (ok)
+    *ok = true;
   QFile file(QDir(dir).filePath("project.json"));
   if (!file.open(QIODevice::ReadOnly))
     return {};
-  return QJsonDocument::fromJson(file.readAll()).object();
+  const QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+  if (ok)
+    *ok = doc.isObject();
+  return doc.object();
 }
 
 bool BasketWidget::setProjectDescription(const QString &dir, const QString &text)
 {
   if (!writeProjectFile(dir))
     return false;
-  QJsonObject project = readProject(dir);
+  bool ok = false;
+  QJsonObject project = readProject(dir, &ok);
+  if (!ok)
+    return false;   // broken by hand: kept, not overwritten with the description alone
   project["description"] = text;
   QSaveFile file(QDir(dir).filePath("project.json"));
   return file.open(QIODevice::WriteOnly) && file.write(QJsonDocument(project).toJson()) > 0 && file.commit();
@@ -478,13 +486,16 @@ bool BasketWidget::importProject(const QString &zipFile, const QString &baseDir,
   if (files->isEmpty())
     return fail(tr("%1 is empty").arg(QDir::toNativeSeparators(zipFile)));
 
-  // no path out of the folder: none absolute, none with "..", no drive
+  // no path out of the folder: none absolute, none with "..", no drive, no
+  // empty part ("Bench//home/x" is absolute once the top folder is cut off)
   static const QRegularExpression drive(QStringLiteral("^[A-Za-z]:"));
   for (const ZipFileEntry &f : std::as_const(*files))
   {
     const QStringList parts = f.name.split('/');
-    if (f.name.startsWith('/') || f.name.contains('\\') || f.name.contains(drive) || parts.contains("..")
-        || parts.contains("."))
+    const bool bad = f.name.contains('\\') || std::any_of(parts.cbegin(), parts.cend(), [](const QString &part) {
+      return part.isEmpty() || part == QLatin1String("..") || part == QLatin1String(".") || part.contains(drive);
+    });
+    if (bad)
       return fail(tr("%1 has a file outside its folder: %2").arg(QDir::toNativeSeparators(zipFile), f.name));
   }
   // one folder at the top (as exportProject() packs it): the basket's name
@@ -531,7 +542,13 @@ bool BasketWidget::importProject(const QString &zipFile, const QString &baseDir,
   for (qsizetype i = 0; i < files->size(); ++i)
   {
     const ZipFileEntry &f = files->at(i);
-    QFile out(dir.filePath(f.name));
+    QFile out(QDir::cleanPath(dir.absoluteFilePath(f.name)));
+    // checked above already; the last word before writing
+    if (!out.fileName().startsWith(dir.absolutePath() + '/'))
+    {
+      QDir(target).removeRecursively();
+      return fail(tr("%1 has a file outside its folder: %2").arg(QDir::toNativeSeparators(zipFile), f.name));
+    }
     if (!QDir().mkpath(QFileInfo(out).absolutePath()) || !out.open(QIODevice::WriteOnly)
         || out.write(i == projectIndex ? QJsonDocument(project).toJson() : f.data) < 0 || !out.flush())
     {

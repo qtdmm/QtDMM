@@ -10,7 +10,6 @@
 #include <QJsonDocument>
 #include <QRegularExpression>
 #include <QSaveFile>
-#include <QTemporaryDir>
 #include <QTextStream>
 
 #include <cmath>
@@ -633,21 +632,10 @@ QString limitCell(const Recording &rec, int column, int row)
 }
 }
 
-static bool writeCsv(const Recording &recording, const QString &path, QString *error, bool withMarks)
+// the CSV into @p device; false when it could not all be written (disk full)
+static bool writeCsv(const Recording &recording, QIODevice &device, bool withMarks)
 {
-  if (recording.values.isEmpty())
-  {
-    setError(error, tr("Nothing to export."));
-    return false;
-  }
-  QFile file(path);
-  if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
-  {
-    setError(error, tr("Cannot open file."));
-    return false;
-  }
-
-  QTextStream ts(&file);
+  QTextStream ts(&device);
   const QList<int> limits = limitColumns(recording);
   const QList<int> flags = flagColumns(recording);
   ts << "timestamp;time (s);" << columnNames(recording, { "value", "unit", "status" }).join(';');
@@ -683,26 +671,44 @@ static bool writeCsv(const Recording &recording, const QString &path, QString *e
       ts << ';' << csvField(marks[i].first) << ';' << csvField(marks[i].second);
     ts << '\n';
   }
-  return true;
+  ts.flush();
+  return ts.status() == QTextStream::Ok;
 }
 
 bool RecordingFile::write(const Recording &recording, const QString &path, QString *error)
 {
-  return writeCsv(recording, path, error, true);
+  if (recording.values.isEmpty())
+  {
+    setError(error, tr("Nothing to export."));
+    return false;
+  }
+  QSaveFile file(path);
+  if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+  {
+    setError(error, tr("Cannot open file."));
+    return false;
+  }
+  if (!writeCsv(recording, file, true) || !file.commit())
+  {
+    setError(error, tr("Cannot write the file."));
+    return false;
+  }
+  return true;
 }
 
 static bool writeQtdmm(const Recording &recording, const QString &path, QString *error)
 {
-  // the CSV as it is, beside it what it does not keep
-  QTemporaryDir tmp;
-  const QString csvPath = tmp.filePath("recording.csv");
-  // the marks are in meta.json, to the ms and with their kind
-  if (!tmp.isValid() || !writeCsv(recording, csvPath, error, false))
-    return false;
-  QFile csv(csvPath);
-  if (!csv.open(QIODevice::ReadOnly))
+  if (recording.values.isEmpty())
   {
-    setError(error, tr("Cannot open file."));
+    setError(error, tr("Nothing to export."));
+    return false;
+  }
+  // the CSV as it is, beside it what it does not keep; the marks are in
+  // meta.json, to the ms and with their kind
+  QBuffer csv;
+  if (!csv.open(QIODevice::WriteOnly) || !writeCsv(recording, csv, false))
+  {
+    setError(error, tr("Cannot write the file."));
     return false;
   }
   QJsonObject meta = recording.meta;
@@ -716,7 +722,7 @@ static bool writeQtdmm(const Recording &recording, const QString &path, QString 
   meta["sample-time"] = recording.sampleTimeTenths / 10.0;
   ZipWriter zip;
   QSaveFile out(path);
-  if (!zip.add("meta.json", QJsonDocument(meta).toJson(), false) || !zip.add("recording.csv", csv.readAll(), false)
+  if (!zip.add("meta.json", QJsonDocument(meta).toJson(), false) || !zip.add("recording.csv", csv.data(), false)
       || !out.open(QIODevice::WriteOnly) || out.write(zip.finish()) < 0 || !out.commit())
   {
     setError(error, tr("Cannot write the file."));

@@ -814,7 +814,7 @@
     </message>
     <message>
         <location filename="../../src/ui/views/basketwidget.cpp" line="172"/>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="734"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="751"/>
         <source>&amp;Add...</source>
         <translation>&amp;Añadir...</translation>
     </message>
@@ -849,12 +849,12 @@
         <translation>Crear</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="368"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="376"/>
         <source>Project description</source>
         <translation>Descripción del proyecto</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="369"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="377"/>
         <source>What the project is about:</source>
         <translation>De qué trata el proyecto:</translation>
     </message>
@@ -895,148 +895,149 @@
     </message>
     <message>
         <location filename="../../src/ui/views/basketwidget.cpp" line="321"/>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="613"/>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="642"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="630"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="659"/>
         <source>Project: cannot make the folder %1</source>
         <translation>Proyecto: no se puede crear la carpeta %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="374"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="382"/>
         <source>Project: cannot write %1</source>
         <translation>Proyecto: no se puede escribir %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="389"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="397"/>
         <source>there is no folder %1</source>
         <translation>no existe la carpeta %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="415"/>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="470"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="423"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="478"/>
         <source>cannot read %1</source>
         <translation>no se puede leer %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="419"/>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="433"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="427"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="441"/>
         <source>the project is too large for a ZIP file (4 GB)</source>
         <translation>el proyecto es demasiado grande para un archivo ZIP (4 GB)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="437"/>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="539"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="445"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="556"/>
         <source>cannot write %1</source>
         <translation>no se puede escribir %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="447"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="455"/>
         <source>Export project</source>
         <translation>Exportar proyecto</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="449"/>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="551"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="457"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="568"/>
         <source>ZIP archives (*.zip)</source>
         <translation>Archivos ZIP (*.zip)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="457"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="465"/>
         <source>Export project: %1</source>
         <translation>Exportar proyecto: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="476"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="484"/>
         <source>%1 is no ZIP file, is damaged or unpacks to more than 4 GB</source>
         <translation>%1 no es un archivo ZIP, está dañado o descomprimido ocupa más de 4 GB</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="479"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="487"/>
         <source>%1 is empty</source>
         <translation>%1 está vacío</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="488"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="499"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="550"/>
         <source>%1 has a file outside its folder: %2</source>
         <translation>%1 contiene un archivo fuera de su carpeta: %2</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="521"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="532"/>
         <source>missing or changed since the export: %1</source>
         <translation>falta o ha cambiado desde la exportación: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="529"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="540"/>
         <source>cannot make the folder %1</source>
         <translation>no se puede crear la carpeta %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="550"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="567"/>
         <source>Import project</source>
         <translation>Importar proyecto</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="561"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="578"/>
         <source>Import project: %1</source>
         <translation>Importar proyecto: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="570"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="587"/>
         <source>Open project</source>
         <translation>Abrir proyecto</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="626"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="643"/>
         <source>Project: cannot copy %1</source>
         <translation>Proyecto: no se puede copiar %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="639"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="656"/>
         <source>New folder</source>
         <translation>Nueva carpeta</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="663"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="680"/>
         <source>Project: cannot move %1</source>
         <translation>Proyecto: no se puede mover %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="670"/>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="735"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="687"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="752"/>
         <source>Add to the project</source>
         <translation>Añadir al proyecto</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="710"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="727"/>
         <source>Project: cannot move %1 to the trash</source>
         <translation>Proyecto: no se puede mover %1 a la papelera</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="717"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="734"/>
         <source>New &amp;folder</source>
         <translation>Nueva &amp;carpeta</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="676"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="693"/>
         <source>No program opens %1</source>
         <translation>Ningún programa abre %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="691"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="708"/>
         <source>&amp;Open</source>
         <translation>A&amp;brir</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="698"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="715"/>
         <source>Open &amp;with the system</source>
         <translation>Abrir con el &amp;sistema</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="700"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="717"/>
         <source>&amp;Rename</source>
         <translation>Cambiar el &amp;nombre</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="702"/>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="719"/>
         <source>Move to &amp;trash</source>
         <translation>Mover a la &amp;papelera</translation>
     </message>
@@ -4770,7 +4771,7 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
     </message>
     <message>
         <location filename="../../src/recording/labplotlive.cpp" line="61"/>
-        <location filename="../../src/recording/labplotlive.cpp" line="71"/>
+        <location filename="../../src/recording/labplotlive.cpp" line="74"/>
         <source>Cannot write %1</source>
         <translation>No se puede escribir %1</translation>
     </message>
@@ -5292,7 +5293,7 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
         <location filename="../../src/ui/mainwindow.cpp" line="1294"/>
         <location filename="../../src/ui/mainwindow.cpp" line="1300"/>
         <location filename="../../src/ui/mainwindow.cpp" line="3028"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="4030"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4033"/>
         <source>%1: %2</source>
         <translation>%1: %2</translation>
     </message>
@@ -5634,43 +5635,43 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
         <translation>en vivo</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3920"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3923"/>
         <source>Live in LabPlot: the recording ended, the file has all of it</source>
         <translation>En vivo en LabPlot: la grabación terminó, el archivo la contiene completa</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3926"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="3932"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3929"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3935"/>
         <source>Live in LabPlot: %1</source>
         <translation>En vivo en LabPlot: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4100"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4103"/>
         <source>Bench loaded</source>
         <translation>Puesto de medida cargado</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4111"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4114"/>
         <source>project %1 closed: the bench is not in it</source>
         <translation>proyecto %1 cerrado: el puesto de medida no está en él</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4112"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4115"/>
         <source>project %1 opened: the bench is in it</source>
         <translation>proyecto %1 abierto: el puesto de medida está en él</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4115"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4118"/>
         <source>back in My devices: %1</source>
         <translation>de nuevo en Mis aparatos: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4117"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4120"/>
         <source>the programs of their alarms were left out, set them again in Alarms...</source>
         <translation>los programas de sus alarmas se han omitido, vuelva a definirlos en Alarmas...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4119"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4122"/>
         <source>%1 without its key: enter it in the device settings</source>
         <translation>%1 sin su clave: introdúzcala en los ajustes del aparato</translation>
     </message>
@@ -6058,59 +6059,64 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="3841"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="3942"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3945"/>
         <source>Into the project: %1</source>
         <translation>Al proyecto: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3940"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3921"/>
+        <source>Live in LabPlot: cannot write %1, stopped</source>
+        <translation>En vivo en LabPlot: no se puede escribir %1, detenido</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="3943"/>
         <source>Project: cannot write %1: %2</source>
         <translation>Proyecto: no se puede escribir %1: %2</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3973"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3976"/>
         <source>Save bench</source>
         <translation>Guardar puesto de medida</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3974"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="4018"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3977"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4021"/>
         <source>QtDMM bench (*.%1)</source>
         <translation>Puesto de medida de QtDMM (*.%1)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3998"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4001"/>
         <source>QtDMM: Save bench</source>
         <translation>QtDMM: Guardar puesto de medida</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4005"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4008"/>
         <source>Bench saved to %1</source>
         <translation>Puesto de medida guardado en %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4017"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4020"/>
         <source>Load bench</source>
         <translation>Cargar puesto de medida</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4030"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="4047"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4033"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4050"/>
         <source>QtDMM: Load bench</source>
         <translation>QtDMM: Cargar puesto de medida</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4048"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4051"/>
         <source>The bench closes %1, its recording is not saved.</source>
         <translation>El puesto de medida cierra %1, su grabación no está guardada.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3998"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4001"/>
         <source>Could not write %1.</source>
         <translation>No se pudo escribir %1.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4231"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4234"/>
         <source>&amp;Clear list</source>
         <translation>&amp;Vaciar lista</translation>
     </message>
@@ -7584,84 +7590,91 @@ Después cierre la sesión y vuelva a iniciarla para que la pertenencia al grupo
 <context>
     <name>RecordingFile</name>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="267"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="266"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="688"/>
         <source>Cannot open file.</source>
         <translation>No se puede abrir el archivo.</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="304"/>
-        <location filename="../../src/recording/recordingfile.cpp" line="439"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="303"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="438"/>
         <source>Oops! Seems not to be a valid file</source>
         <translation>¡Vaya! No parece un archivo válido</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="332"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="331"/>
         <source>File contains only header</source>
         <translation>El archivo solo contiene la cabecera</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="808"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="682"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="814"/>
         <source>Nothing to export.</source>
         <translation>Nada que exportar.</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="811"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="693"/>
+        <source>Cannot write the file.</source>
+        <translation>No se puede escribir el archivo.</translation>
+    </message>
+    <message>
+        <location filename="../../src/recording/recordingfile.cpp" line="817"/>
         <source>Recording</source>
         <translation>Grabación</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="813"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="819"/>
         <source>timestamp</source>
         <translation>marca de tiempo</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="813"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="819"/>
         <source>time (s)</source>
         <translation>tiempo (s)</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="813"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="819"/>
         <source>value</source>
         <translation>valor</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="813"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="819"/>
         <source>unit</source>
         <translation>unidad</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="813"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="819"/>
         <source>status</source>
         <translation>estado</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="815"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="821"/>
         <source>limit</source>
         <translation>límite</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="818"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="824"/>
         <source>flags</source>
         <translation>indicadores</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="821"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="827"/>
         <source>mark</source>
         <translation>marca</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="821"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="827"/>
         <source>note</source>
         <translation>nota</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="278"/>
-        <location filename="../../src/recording/recordingfile.cpp" line="284"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="277"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="283"/>
         <source>The recording archive is too large to import.</source>
         <translation>El archivo de mediciones es demasiado grande para importarlo.</translation>
     </message>
     <message>
-        <location filename="../../src/recording/recordingfile.cpp" line="290"/>
+        <location filename="../../src/recording/recordingfile.cpp" line="289"/>
         <source>No usable recording data found (recording.csv is missing, invalid, or too large).</source>
         <translation>No se encontraron datos de medición válidos (falta recording.csv, no es válido o es demasiado grande).</translation>
     </message>

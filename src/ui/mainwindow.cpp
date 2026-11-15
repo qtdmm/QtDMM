@@ -3915,9 +3915,12 @@ void MainWindow::labPlotLive()
     m_live->deleteLater();
   m_live = new LabPlotLive([lead] { return lead ? lead->recording() : Recording(); },
                            [lead] { return lead && lead->recorder()->state() == RecordingStore::Record; }, this);
-  connect(m_live, &LabPlotLive::stopped, this, [this]
+  connect(m_live, &LabPlotLive::stopped, this, [this, csv = QDir(dir).filePath(base + ".csv")]
   {
-    Q_EMIT m_wid->error(tr("Live in LabPlot: the recording ended, the file has all of it"));
+    if (m_live->writeFailed())
+      Q_EMIT m_wid->error(tr("Live in LabPlot: cannot write %1, stopped").arg(QDir::toNativeSeparators(csv)));
+    else
+      Q_EMIT m_wid->error(tr("Live in LabPlot: the recording ended, the file has all of it"));
     updateRecorderActions();
   });
   const QString csv = QDir(dir).filePath(base + ".csv"), project = QDir(dir).filePath(base + ".lml");

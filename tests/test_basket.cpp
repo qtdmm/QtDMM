@@ -124,6 +124,18 @@ int main(int argc, char **argv)
   check(BasketWidget::setProjectDescription(dir.filePath("Other"), "x")
           && BasketWidget::readProject(dir.filePath("Other")).value("format").toInt() == 1, "made first when missing");
   check(BasketWidget::readProject(dir.filePath("none")).isEmpty(), "no project.json: empty");
+  // broken by hand: neither the description nor anything else overwrites it (R19-07)
+  QDir().mkpath(dir.filePath("Broken"));
+  const QByteArray broken = "{\"name\": \"mine\", \"created\": \"2026\",}";
+  write(dir.filePath("Broken/project.json"), broken);
+  bool parsed = true;
+  BasketWidget::readProject(dir.filePath("Broken"), &parsed);
+  check(!parsed && !BasketWidget::setProjectDescription(dir.filePath("Broken"), "x"),
+        "broken project.json: description refused");
+  {
+    QFile f(dir.filePath("Broken/project.json"));
+    check(f.open(QIODevice::ReadOnly) && f.readAll() == broken, "and the file left as it was");
+  }
   check(BasketWidget::projectName(dir.filePath("Bench")) == "mine", "shown by the name in project.json");
   check(BasketWidget::projectName(dir.filePath("none")) == "none", "without one by its folder");
 
@@ -240,6 +252,15 @@ int main(int argc, char **argv)
         "a path with ..: refused: " + why);
   check(!BasketWidget::importProject(zipOf("abs.zip", { { "/evil.txt", "x" } }), dir.filePath("base"), &folder, &why),
         "an absolute path: refused");
+  // absolute only after the top folder is cut off (R19-03)
+  const QString hidden = dir.filePath("hidden/evil.txt");
+  check(!BasketWidget::importProject(zipOf("abs2.zip", { { "Bench/ok.csv", "1" }, { "Bench/" + hidden.toUtf8(), "x" } }),
+                                     dir.filePath("base"), &folder, &why)
+          && !QFileInfo::exists(hidden),
+        "Bench//<absolute path>: refused: " + why);
+  check(!BasketWidget::importProject(zipOf("drive.zip", { { "Bench/ok.csv", "1" }, { "Bench/C:/evil.txt", "x" } }),
+                                     dir.filePath("base"), &folder, &why),
+        "Bench/C:/...: refused");
   // any ZIP without one top folder: named like the file, a basket then
   check(BasketWidget::importProject(zipOf("Loose files.zip", { { "x.csv", "1" }, { "sub/y.txt", "2" } }),
                                     dir.filePath("base"), &folder, &why)
@@ -292,6 +313,13 @@ int main(int argc, char **argv)
             && BasketWidget::readProject(proj).value("name").toString() == "Kinds",
           "project.json: its names, the other keys stay");
     check(ProjectFolder::dirFor(proj, ProjectFolder::Root) == proj, "Root: the project");
+    {
+      const QString brokenDir = QDir(dir.filePath("Broken")).absolutePath();
+      ProjectFolder::dirFor(brokenDir, ProjectFolder::Images);
+      QFile f(brokenDir + "/project.json");
+      check(QFileInfo(brokenDir + "/images").isDir() && f.open(QIODevice::ReadOnly) && f.readAll() == broken,
+            "a folder of a kind in a broken project: project.json left as it was");
+    }
     ProjectFolder::setByType(false);
     check(ProjectFolder::dirFor(proj, ProjectFolder::Images) == proj && !QFileInfo::exists(proj + "/images"),
           "by kind off: the project");

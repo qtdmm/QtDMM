@@ -222,6 +222,22 @@ int main(int argc, char **argv)
     check(!RecordingFile::read(writeCsv("empty.csv", ""), &err) && err.contains("header"), "header only: " + err);
     check(!RecordingFile::read(writeCsv("bad.csv", "this is not a recording\n"), &err) && !err.isEmpty(), "garbage rejected");
     check(!RecordingFile::write(Recording(), tmp.path() + "/none.csv", &err) && !err.isEmpty(), "empty recording is not written");
+    // nowhere to write: an error, not "written" (R19-05)
+    Recording one;
+    one.start = QDateTime::currentDateTime();
+    one.sampleTimeTenths = 10;
+    one.unit = "V";
+    one.values << 1.0;
+    one.states << CellState::Ok;
+    err.clear();
+    check(!RecordingFile::write(one, tmp.path() + "/no/such/dir/x.csv", &err) && !err.isEmpty(), "CSV: no folder, an error");
+    err.clear();
+    check(!RecordingFile::writeAny(one, tmp.path() + "/no/such/dir/x.qtdmm-rec", &err) && !err.isEmpty(),
+          ".qtdmm-rec: no folder, an error");
+#ifdef Q_OS_LINUX
+    err.clear();
+    check(!RecordingFile::write(one, "/dev/full", &err) && !err.isEmpty(), "CSV to /dev/full: an error");
+#endif
   }
 
   // --- 6. writeAny: a spreadsheet by suffix, the CSV otherwise ---

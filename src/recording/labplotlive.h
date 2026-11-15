@@ -20,8 +20,9 @@
 /// while it records: on the grid it may still change). The columns are those
 /// at the start: a value that begins later is not in the file, one that ends
 /// is `nan` from then on. When the recording ends (@p running false) the
-/// last rows go in and stopped() comes; so it does when the recording has
-/// fewer rows than written (cleared, a new one).
+/// last rows go in and stopped() comes; so it does when the row written last
+/// is no longer in the recording (cleared, a new one). A recording that drops
+/// its oldest rows (beyond RecordingStore::kMaxPoints) is followed on.
 ///
 /// The recording comes from @p source, each time anew (MeterController::
 /// recording(): every meter that records with it).
@@ -43,13 +44,15 @@ public:
   bool isRunning() const { return m_file.isOpen(); }
   QString projectPath() const { return m_project; }
   int rowsWritten() const { return m_written; }
+  /// True when it stopped because the CSV could not be written (disk full).
+  bool writeFailed() const { return m_failed; }
   void setInterval(int ms) { m_timer.setInterval(ms); }
 
 Q_SIGNALS:
   void stopped();
 
 private:
-  void append(const Recording &rec, int end);
+  void append(const Recording &rec, int from, int end);
 
   std::function<Recording()> m_source;
   std::function<bool()>      m_running;
@@ -57,5 +60,8 @@ private:
   QString     m_project;
   QStringList m_names;     ///< the columns at the start, without the time
   int         m_written = 0;
+  qint64      m_startMs = 0;   ///< the start of the recording, ms since the epoch: the time column's zero
+  qint64      m_lastMs = -1;
+  bool        m_failed = false;   ///< the row written last, ms since the epoch; -1 none
   QTimer      m_timer;
 };

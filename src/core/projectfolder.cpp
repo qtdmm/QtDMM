@@ -9,6 +9,8 @@
 #include <QJsonObject>
 #include <QSaveFile>
 
+#include <optional>
+
 namespace
 {
 QString &folder()
@@ -40,18 +42,26 @@ const KindNames kNames[] = {
   { ProjectFolder::Documents, "documents", "Dokumente", "Documents", "Documentos", "Dokumenty" },
 };
 
-QJsonObject readJson(const QString &project)
+// project.json, empty when there is none; none when it is no JSON object
+// (edited by hand and broken: not overwritten with what could be read)
+std::optional<QJsonObject> readJson(const QString &project)
 {
   QFile file(QDir(project).filePath("project.json"));
   if (!file.open(QIODevice::ReadOnly))
-    return {};
-  return QJsonDocument::fromJson(file.readAll()).object();
+    return QJsonObject();
+  const QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+  if (!doc.isObject())
+    return std::nullopt;
+  return doc.object();
 }
 
 // enters the folder's names in project.json (made when missing)
 void enterFolder(const QString &project, const KindNames &k)
 {
-  QJsonObject json = readJson(project);
+  const std::optional<QJsonObject> read = readJson(project);
+  if (!read)
+    return;
+  QJsonObject json = *read;
   QJsonObject folders = json.value("folders").toObject();
   if (folders.contains(k.name))
     return;

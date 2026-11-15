@@ -57,8 +57,9 @@ public:
   /// file for what is not a file of its own (name, description, when it was
   /// made; later what an export of the project needs). False when it fails.
   static bool writeProjectFile(const QString &dir);
-  /// project.json of the basket in @p dir; empty when it has none or it is no JSON.
-  static QJsonObject readProject(const QString &dir);
+  /// project.json of the basket in @p dir; empty when it has none or it is no
+  /// JSON. @p ok, when given, is false when the file is there but no JSON object.
+  static QJsonObject readProject(const QString &dir, bool *ok = nullptr);
   /// The name the project in @p dir is shown by: its name in project.json,
   /// else the folder's.
   static QString projectName(const QString &dir);
