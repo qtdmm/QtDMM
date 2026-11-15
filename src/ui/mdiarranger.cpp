@@ -737,8 +737,11 @@ void MdiArranger::leaveTree(int leaf)
   {
     m_saved = m_root;
     m_savedNames.clear();
-    for (const QMdiSubWindow *w : std::as_const(m_order))
-      m_savedNames << w->objectName();
+    // only the leaves of the saved tree: a window away already (hidden
+    // before a new one came) has no place in it and comes back as new
+    const QList<int> inSaved = leaves(m_root);
+    for (int i = 0; i < m_order.size(); ++i)
+      m_savedNames << (inSaved.contains(i) ? m_order[i]->objectName() : QString());
     m_savedValid = true;
   }
   if (m_root.isLeaf())
@@ -931,13 +934,17 @@ void MdiArranger::doArrange()
       QList<int> known, coming;
       for (int i : visible)
         if (!inTree.contains(i))
-          (m_savedValid && m_savedNames.contains(m_order[i]->objectName()) ? known : coming) << i;
+        {
+          const QString name = m_order[i]->objectName();
+          (m_savedValid && !name.isEmpty() && m_savedNames.contains(name) ? known : coming) << i;
+        }
       if (!known.isEmpty())
         restoreSaved(inTree + known);
       if (!m_hasTree && !coming.isEmpty())
       {
         m_root = leafNode(coming.takeFirst());
         m_hasTree = true;
+        m_savedValid = false;   // the tree is another one now, as in addNew()
       }
       for (int i : std::as_const(coming))
         addNew(i);

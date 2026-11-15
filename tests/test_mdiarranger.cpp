@@ -582,6 +582,55 @@ static void testArranged()
   delete table;
   arranger.arrange();
   QTest::qWait(50);
+  // hidden, a new one, another hidden, both back: each gets a place (R19-04)
+  {
+    auto overlapFree = [&wins](QMdiSubWindow *extra)
+    {
+      QList<QMdiSubWindow *> shown{ wins[0], wins[1], wins[2], extra };
+      for (int a = 0; a < shown.size(); ++a)
+        for (int b = a + 1; b < shown.size(); ++b)
+          if (shown[a]->geometry().intersects(shown[b]->geometry()))
+            return false;
+      return true;
+    };
+    wins[1]->hide();
+    QTest::qWait(50);
+    QMdiSubWindow *later = area.addSubWindow(new QLabel("later"));
+    later->setObjectName("later");
+    later->show();
+    arranger.addWindow(later, R::Graph);
+    QTest::qWait(50);
+    wins[2]->hide();
+    QTest::qWait(50);
+    wins[1]->show();
+    QTest::qWait(50);
+    check(!wins[1]->geometry().intersects(later->geometry()) && !wins[1]->geometry().intersects(wins[0]->geometry()),
+          "Fixed: hidden before a new window came, shown again: a place of its own");
+    wins[2]->show();
+    QTest::qWait(50);
+    check(overlapFree(later), "Fixed: and the other one back too: no window over another");
+    // all away, a new one alone, one back: the new one keeps its place
+    for (QMdiSubWindow *w : { wins[0], wins[1], wins[2], later })
+    {
+      w->hide();
+      QTest::qWait(50);
+    }
+    QMdiSubWindow *alone = area.addSubWindow(new QLabel("alone"));
+    alone->setObjectName("alone");
+    alone->show();
+    arranger.addWindow(alone, R::Graph);
+    QTest::qWait(50);
+    wins[0]->show();
+    QTest::qWait(50);
+    check(!wins[0]->geometry().intersects(alone->geometry()),
+          "Fixed: all away, a new one alone, one back: side by side, got " + arranger.layoutText());
+    delete alone;
+    delete later;
+    wins[1]->show();
+    wins[2]->show();
+    arranger.arrange();
+    QTest::qWait(50);
+  }
   // held: the windows stay where they are, let go they are arranged again
   {
     const QRect before = wins[2]->geometry();
