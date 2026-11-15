@@ -1255,9 +1255,10 @@ int main(int argc, char **argv)
     check(x->tickInterval() == 10 && qFuzzyCompare(x->max() - x->min(), 60.0),
           QString("scope 1 min: 6 x 10 s over 60 s, got %1 s wide, a tick every %2 s").arg(x->max() - x->min()).arg(x->tickInterval()));
     // Live runs on smoothly: one reading later the axis is one second on,
-    // not a whole step (it jumped every 10 s)
+    // not a whole step (it jumped every 10 s). The feed lives as long as the
+    // graph: the store's clock points into it (R19-11)
+    Feed feed(graph, 1000);
     {
-      Feed feed(graph, 1000);
       graph.liveSLOT();
       for (QAbstractButton *b : graph.findChildren<QAbstractButton *>())
         if (b->text() == "1 min")
@@ -2589,6 +2590,18 @@ int main(int argc, char **argv)
       check(third->min() <= 49.5 + 1e-9 && third->max() >= 50.5 - 1e-9 && third->max() - third->min() <= 4.0
               && round(mantissa),
             QString("fixed Hz: %1..%2 holds 49.5..50.5 on a round step %3").arg(third->min()).arg(third->max()).arg(step));
+      // a narrow range: a label for every tick, each its own (R19-06)
+      graph.setFixedRange("Hz", 50.0, 50.12);
+      if (auto *cat = qobject_cast<QCategoryAxis *>(third))
+      {
+        const QStringList labels = cat->categoriesLabels();
+        check(labels.size() == third->tickCount() && QSet<QString>(labels.cbegin(), labels.cend()).size() == labels.size()
+                && labels.contains("50.04"),
+              "narrow fixed range: every tick labelled: " + labels.join(", "));
+      }
+      else
+        check(false, "the third axis is a category axis");
+      graph.setFixedRange("Hz", 49.5, 50.5);
       const QString kept = graph.fixedRangesSetting();
       check(kept == "{\"Hz\":[49.5,50.5]}", "fixed ranges kept as " + kept);
       // the reading of 50 Hz stays inside, readings far away do not move it

@@ -3,6 +3,7 @@
 // The XY diagram on QCustomPlot: points in the axes' prefix, hold, clear,
 // the newest kMaxPoints, the title, and the value crosshair under the mouse.
 #include "ui/views/xyplot.h"
+#include "ui/views/plottheme.h"
 
 #include "3rdparty/qcustomplot/qcustomplot.h"
 #include "testutil.h"
@@ -39,6 +40,12 @@ int main(int argc, char **argv)
   check(plot->xAxis->label() == "[mV]" && plot->yAxis->label() == "[mA]",
         "axes in mV and mA: " + plot->xAxis->label() + " " + plot->yAxis->label());
   check(xy.title() == "X: voltage     Y: current", "the title");
+  PlotTheme theme;
+  theme.grid = Qt::darkGray;
+  theme.labels = Qt::white;
+  theme.data = Qt::cyan;
+  theme.applyTo(plot, { plot->xAxis, plot->yAxis });
+  check(plot->xAxis->grid()->zeroLinePen() == plot->xAxis->grid()->pen(), "no line of its own at 0: the grid's pen");
 
   // the crosshair: both values with their units, gone when the mouse leaves
   app.processEvents();

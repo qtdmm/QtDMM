@@ -22,5 +22,7 @@ void PlotTheme::applyTo(QCustomPlot *plot, const QList<QCPAxis *> &axes) const
     axis->setLabelColor(labels);
     axis->grid()->setPen(QPen(grid, 1, Qt::DotLine));
     axis->grid()->setSubGridPen(QPen(grid, 1, Qt::DotLine));
+    // QCP's own is a light solid line: a white stroke at 0 on a dark design
+    axis->grid()->setZeroLinePen(QPen(grid, 1, Qt::DotLine));
   }
 }

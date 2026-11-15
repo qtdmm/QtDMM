@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "ui/views/colormap.h"
 
+#include <iterator>
+
 #include <QCoreApplication>
 #include <algorithm>
 #include <array>
@@ -121,6 +123,26 @@ QString ColorMap::name(Scheme scheme)
   case Rainbow:
   default:         return QCoreApplication::translate("ColorMap", "Rainbow");
   }
+}
+
+namespace
+{
+// in the order of ColorMap::Scheme
+const char *const kKeys[] = { "rainbow", "ironbow", "viridis", "grayscale", "blue", "blue-yellow" };
+static_assert(std::size(kKeys) == ColorMap::SchemeCount);
+}
+
+QString ColorMap::key(Scheme scheme)
+{
+  return QLatin1String(kKeys[scheme >= 0 && scheme < SchemeCount ? scheme : Rainbow]);
+}
+
+ColorMap::Scheme ColorMap::fromKey(const QString &key)
+{
+  for (int i = 0; i < SchemeCount; ++i)
+    if (key == QLatin1String(kKeys[i]))
+      return Scheme(i);
+  return Rainbow;
 }
 
 QList<ColorMap::Scheme> ColorMap::all()

@@ -72,6 +72,11 @@ void HeatmapView::feed(int axis, const Reading &reading)
 {
   if (reading.id != m_ref[axis].id)
     return;
+  if (reading.noNumber() || reading.overload || !std::isfinite(reading.value))
+  {
+    m_last[axis] = qQNaN();
+    return;
+  }
   if (m_units[axis] != reading.baseUnit)
   {
     if (!m_units[axis].isEmpty())
@@ -83,11 +88,6 @@ void HeatmapView::feed(int axis, const Reading &reading)
     }
     m_units[axis] = reading.baseUnit;
     updateAxisUnits();
-  }
-  if (reading.noNumber() || reading.overload || !std::isfinite(reading.value))
-  {
-    m_last[axis] = qQNaN();
-    return;
   }
   m_last[axis] = reading.value;
   m_name[axis] = reading.name;
