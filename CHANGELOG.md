@@ -63,6 +63,10 @@
 - **The statistics line of the readings table follows four times a second** — not at each reading: it goes over all rows, about half the time of a reading in a full table.
 - **Overview strip: the last digit around 0 stays small** — an open input between 0.000 and 0.001 no longer fills the strip as a square wave.
 
+### Fixes
+
+- **Project files** — a project ZIP can no longer write outside the new project folder (an entry like `Bench//home/…` passed the path check); a `project.json` broken by hand is left as it is instead of being overwritten with the description alone; CSV and QtDMM recording exports report a full disk instead of "written"; *Live in LabPlot* follows a recording beyond 2 million readings and says when its file cannot be written (review R19-03, -05, -07, -10)
+
 ### Meters
 
 - **UT61+: modes 0x16 and 0x17 as UNI-T's own software reads them** — frequency (Hz to MHz) and duty in %, not a clamp's AC A and DC A; the UT61D+ may send them for LoZ's Hz and duty. No meter has sent either yet.

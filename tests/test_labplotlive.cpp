@@ -83,6 +83,16 @@ int main(int argc, char **argv)
   // a new recording (fewer rows than written): stops without writing
   running = true;
   check(live.start(tmp.filePath("b.csv"), tmp.filePath("b.lml"), &err), "started again: " + err);
+  // the store drops its oldest rows beyond its most points: followed on,
+  // the time from the first start (R19-10)
+  rec.values.remove(0, 2);
+  rec.states.remove(0, 2);
+  rec.start = rec.start.addMSecs(1000);
+  rec.values << 7.0;
+  rec.states << CellState::Ok;
+  live.update();
+  check(live.isRunning() && stopped == 1 && live.rowsWritten() == 6 && text(tmp.filePath("b.csv")).endsWith("2;5\n2.5;6\n"),
+        "oldest rows dropped: on after the last one written " + text(tmp.filePath("b.csv")));
   rec.values.resize(1);
   rec.states.resize(1);
   live.update();

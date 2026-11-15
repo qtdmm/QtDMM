@@ -63,7 +63,10 @@ bool LabPlotLive::start(const QString &csvPath, const QString &projectPath, QStr
   }
   m_names = names.mid(1);
   m_written = 0;
-  append(rec, m_running() ? int(rec.values.size()) - 1 : int(rec.values.size()));
+  m_failed = false;
+  m_startMs = rec.start.toMSecsSinceEpoch();
+  m_lastMs = -1;
+  append(rec, 0, m_running() ? int(rec.values.size()) - 1 : int(rec.values.size()));
   QSaveFile out(projectPath);
   if (!out.open(QIODevice::WriteOnly) || out.write(project) != project.size() || !out.commit())
   {
@@ -85,12 +88,23 @@ void LabPlotLive::update()
     return;
   const Recording rec = m_source();
   const bool running = m_running();
-  if (rec.values.size() < m_written)   // cleared, another recording
+  // on after the row written last, wherever it is now: the store drops the
+  // oldest rows beyond its most points; gone, it is cleared or another one
+  int from = 0;
+  if (m_lastMs >= 0)
   {
-    stop();
-    return;
+    const qint64 start = rec.start.toMSecsSinceEpoch();
+    int i = int(rec.values.size()) - 1;
+    while (i >= 0 && start + rec.timeAt(i) > m_lastMs)
+      --i;
+    if (i < 0 || start + rec.timeAt(i) != m_lastMs)
+    {
+      stop();
+      return;
+    }
+    from = i + 1;
   }
-  append(rec, running ? int(rec.values.size()) - 1 : int(rec.values.size()));
+  append(rec, from, running ? int(rec.values.size()) - 1 : int(rec.values.size()));
   if (!running)
     stop();
 }
@@ -104,10 +118,10 @@ void LabPlotLive::stop()
   Q_EMIT stopped();
 }
 
-// rows m_written to @p end - 1, in the columns of the start
-void LabPlotLive::append(const Recording &rec, int end)
+// rows @p from to @p end - 1, in the columns of the start
+void LabPlotLive::append(const Recording &rec, int from, int end)
 {
-  if (end <= m_written)
+  if (end <= from)
     return;
   QVector<double> seconds;
   const QList<RecordingFile::NumberColumn> columns = RecordingFile::numberColumns(rec, &seconds);
@@ -115,15 +129,23 @@ void LabPlotLive::append(const Recording &rec, int end)
   QList<int> at;   // of each column of the start: its index now, -1 gone
   for (const QString &name : m_names)
     at << int(names.indexOf(name));
+  // the time from the first start on, also after the oldest rows went
+  const double shift = double(rec.start.toMSecsSinceEpoch() - m_startMs) / 1000.0;
   QByteArray rows;
-  for (int i = m_written; i < end; ++i)
+  for (int i = from; i < end; ++i)
   {
-    QString row = number(seconds[i]);
+    QString row = number(seconds[i] + shift);
     for (int c : at)
       row += ';' + number(c < 0 ? qQNaN() : columns[c].values.value(i, qQNaN()));
     rows += row.toUtf8() + '\n';
   }
-  m_file.write(rows);
-  m_file.flush();
-  m_written = end;
+  if (m_file.write(rows) != rows.size() || !m_file.flush())
+  {
+    // disk full: what LabPlot shows ends here, said so
+    m_failed = true;
+    stop();
+    return;
+  }
+  m_written += end - from;
+  m_lastMs = rec.start.toMSecsSinceEpoch() + rec.timeAt(end - 1);
 }
