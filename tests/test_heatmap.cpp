@@ -4,6 +4,7 @@
 // colour, hold, the colour scale beside the plot, the cell's value in the
 // crosshair, clear.
 #include "ui/views/heatmapplot.h"
+#include "ui/views/colormap.h"
 
 #include "3rdparty/qcustomplot/qcustomplot.h"
 #include "testutil.h"
@@ -66,6 +67,32 @@ int main(int argc, char **argv)
   check(qFuzzyCompare(map->data()->cell(1, 0), 9.0), "released: the sample shows");
   heatmap.clear();
   check(std::isnan(map->data()->cell(0, 0)), "clear");
+
+  // counted in the cell it is drawn in and the crosshair reads (R19-01)
+  heatmap.setCellCount(3, 3);
+  heatmap.setAxisUnits(QStringLiteral("%"), QStringLiteral("%"), QStringLiteral("°C"));   // no prefix: axis = sample
+  heatmap.addPoint(0, 0, 1.0);
+  heatmap.addPoint(1, 1, 1.0);
+  heatmap.addPoint(0.3, 0.3, 5.0);
+  auto cellAt = [map](double x, double y)
+  {
+    int cx = 0, cy = 0;
+    map->data()->coordToCell(x, y, &cx, &cy);
+    return map->data()->cell(qBound(0, cx, map->data()->keySize() - 1), qBound(0, cy, map->data()->valueSize() - 1));
+  };
+  check(waitFor([&] { return std::isfinite(cellAt(1, 1)); }, 1000) && std::isfinite(cellAt(0.3, 0.3))
+          && std::isfinite(cellAt(0, 0)) && std::isnan(cellAt(0.5, 0.5)),
+        "each sample in the cell drawn where it is");
+  const double cellWidth = map->data()->keyRange().size() / 2;
+  check(qAbs(map->data()->keyRange().lower - cellWidth / 2 - plot->xAxis->range().lower) < 1e-9
+          && qAbs(map->data()->keyRange().upper + cellWidth / 2 - plot->xAxis->range().upper) < 1e-9,
+        "the cells fill the axis");
+
+  // the scheme by a key that is not translated, for the workspace (R19-08)
+  bool keys = ColorMap::fromKey(QStringLiteral("nonsense")) == ColorMap::Rainbow;
+  for (ColorMap::Scheme scheme : ColorMap::all())
+    keys = keys && ColorMap::fromKey(ColorMap::key(scheme)) == scheme;
+  check(keys && ColorMap::key(ColorMap::Ironbow) == "ironbow", "colour scheme keys: there and back");
 
   if (failed == 0)
     qInfo() << "All heatmap tests passed.";

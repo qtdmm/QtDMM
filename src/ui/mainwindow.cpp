@@ -3503,6 +3503,7 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
     view->setValues(valueOf(get("Windows/heatmap-" + number + "-0", QString()).toString()),
                     valueOf(get("Windows/heatmap-" + number + "-1", QString()).toString()),
                     valueOf(get("Windows/heatmap-" + number + "-2", QString()).toString()));
+    view->plot()->setColorScheme(ColorMap::fromKey(get("Windows/heatmap-" + number + "-scheme", QString()).toString()));
     win->show();
   }
   const QString layout = get("Windows/layout", QString()).toString();
@@ -3551,6 +3552,7 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
   heatmapViewOf(m_heatmapWin)->setValues(valueOf(get("Windows/heatmap-x", QString()).toString()),
                                          valueOf(get("Windows/heatmap-y", QString()).toString()),
                                          valueOf(get("Windows/heatmap-z", QString()).toString()));
+  heatmapViewOf(m_heatmapWin)->plot()->setColorScheme(ColorMap::fromKey(get("Windows/heatmap-scheme", QString()).toString()));
   for (QMdiSubWindow *win : graphWindows())
     applyGraphState(graphViewOf(win), get, valueOf);
   // the values the readings table leaves out, "1 2", another meter's
@@ -3761,6 +3763,7 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
   set("Windows/heatmap-x", heatmapViewOf(m_heatmapWin)->value(0).toString());
   set("Windows/heatmap-y", heatmapViewOf(m_heatmapWin)->value(1).toString());
   set("Windows/heatmap-z", heatmapViewOf(m_heatmapWin)->value(2).toString());
+  set("Windows/heatmap-scheme", ColorMap::key(heatmapViewOf(m_heatmapWin)->plot()->colorScheme()));
   QStringList plots;
   for (QMdiSubWindow *w : poincareWindows().mid(1))
   {
@@ -3795,6 +3798,7 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
     HeatmapView *view = heatmapViewOf(w);
     for (int axis = 0; axis < 3; ++axis)
       set("Windows/heatmap-" + number + "-" + QString::number(axis), view->value(axis).toString());
+    set("Windows/heatmap-" + number + "-scheme", ColorMap::key(view->plot()->colorScheme()));
   }
   set("Windows/heatmaps", heatmaps.join(' '));
   QStringList graphs;

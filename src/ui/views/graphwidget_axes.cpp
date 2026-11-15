@@ -576,11 +576,17 @@ void GraphWidget::updateRightAxis()
     for (const QString &label : a.axis->categoriesLabels())
       a.axis->remove(label);
     a.axis->setStartValue(from);
+    // as many decimals as the step needs: four digits made 230.00 and 230.04
+    // the same label, and QCategoryAxis drops the second (R19-06)
+    const double shown = s / factor;
+    int decimals = 0;
+    for (double scaled = shown; decimals < 9 && std::abs(scaled - std::round(scaled)) > 1e-6 * scaled; scaled *= 10)
+      ++decimals;
     for (int i = 0; i < ticks; ++i)
     {
       const double v = from + i * s;
-      // as the left axis: four digits, no "-0"
-      const QString label = QString::number(std::abs(v) < s * 1e-9 ? 0.0 : v / factor, 'g', 4);
+      // no "-0"
+      const QString label = QString::number(std::abs(v) < s * 1e-9 ? 0.0 : v / factor, 'f', decimals);
       if (!a.axis->categoriesLabels().contains(label))
         a.axis->append(label, v);
     }

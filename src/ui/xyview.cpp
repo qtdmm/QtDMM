@@ -85,6 +85,11 @@ void XYView::feedX(const Reading &reading)
 {
   if (reading.id != m_x.id)
     return;
+  if (reading.noNumber() || reading.overload || !std::isfinite(reading.value))
+  {
+    m_lastX = qQNaN();
+    return;
+  }
   if (m_units[0] != reading.baseUnit)
   {
     if (!m_units[0].isEmpty())
@@ -95,11 +100,6 @@ void XYView::feedX(const Reading &reading)
     }
     m_units[0] = reading.baseUnit;
     updateAxisUnits();
-  }
-  if (reading.noNumber() || reading.overload || !std::isfinite(reading.value))
-  {
-    m_lastX = qQNaN();
-    return;
   }
   m_lastX = reading.value;
   m_xName = reading.name;
@@ -116,6 +116,11 @@ void XYView::feedY(const Reading &reading)
 {
   if (reading.id != m_y.id)
     return;
+  if (reading.noNumber() || reading.overload || !std::isfinite(reading.value))
+  {
+    m_lastY = qQNaN();
+    return;
+  }
   if (m_units[1] != reading.baseUnit)
   {
     if (!m_units[1].isEmpty())
@@ -126,11 +131,6 @@ void XYView::feedY(const Reading &reading)
     }
     m_units[1] = reading.baseUnit;
     updateAxisUnits();
-  }
-  if (reading.noNumber() || reading.overload || !std::isfinite(reading.value))
-  {
-    m_lastY = qQNaN();
-    return;
   }
   m_lastY = reading.value;
   m_yName = reading.name;

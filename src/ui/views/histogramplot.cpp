@@ -37,13 +37,14 @@ void HistogramPlot::addReading(const Reading &reading)
 {
   if (reading.id != m_valueId)
     return;
+  // a reading without a number (often without a unit too) is no change of unit
+  if (reading.noNumber() || reading.overload || reading.hold || !std::isfinite(reading.value))
+    return;
   if (reading.baseUnit != m_unit)
   {
     clear();
     m_unit = reading.baseUnit;
   }
-  if (reading.noNumber() || reading.overload || reading.hold || !std::isfinite(reading.value))
-    return;
   m_values.append(reading.value);
   scheduleRefresh();
 }
@@ -93,7 +94,13 @@ void HistogramPlot::refreshPlot()
   m_plot->replot(QCustomPlot::rpQueuedReplot);
 }
 
-QString HistogramPlot::crosshairText(double x, double y) const
+// X, and the height of the bar under the mouse (not where the mouse is)
+QString HistogramPlot::crosshairText(double x, double) const
 {
-  return QString("%1   %2").arg(axisValueText(m_plot->xAxis, x), tr("%1 readings").arg(qRound(y)));
+  const QString at = axisValueText(m_plot->xAxis, x);
+  const double half = m_bars->width() / 2;
+  for (const QCPBarsData &bar : *m_bars->data())
+    if (x >= bar.key - half && x <= bar.key + half)
+      return QString("%1   %2").arg(at, tr("%1 readings").arg(qRound(bar.value)));
+  return at;
 }

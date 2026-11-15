@@ -16,6 +16,10 @@ public:
   /// The neutral fill for cells without samples; distinct from the value scale.
   static QColor noDataColor(Scheme scheme);
   static QString name(Scheme scheme);             // translated display name
+  /// The scheme's name in settings and workspaces ("ironbow"), not translated.
+  static QString key(Scheme scheme);
+  /// The scheme of a key(); Rainbow for an unknown one.
+  static Scheme fromKey(const QString &key);
   static QList<Scheme> all();
 };
 

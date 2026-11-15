@@ -129,19 +129,28 @@ void HeatmapPlot::refreshPlot()
   setAxisRange(m_plot->yAxis, yAxis);
   setAxisRange(m_scale->axis(), zAxis);
   m_scale->setLabel(zAxis.title);
+  // the cells fill the axes: QCP's range is from the centre of the first
+  // cell to that of the last
+  auto centres = [](const QCPRange &r, int n)
+  {
+    const double half = r.size() / n / 2;
+    return QCPRange(r.lower + half, r.upper - half);
+  };
   m_map->data()->setSize(m_nx, m_ny);
-  m_map->data()->setRange(m_plot->xAxis->range(), m_plot->yAxis->range());
+  m_map->data()->setRange(centres(m_plot->xAxis->range(), m_nx), centres(m_plot->yAxis->range(), m_ny));
   m_map->setDataRange(m_scale->axis()->range());
 
   // each cell the mean of its samples, NaN (the no-data colour) without any
   const int cells = m_nx * m_ny;
   QVector<double> sums(cells, 0.0);
   QVector<int> counts(cells, 0);
-  const double dx = xmax - xmin, dy = ymax - ymin;
   for (const Sample &sample : shown)
   {
-    const int ix = dx == 0 ? m_nx / 2 : qBound(0, int((sample.x - xmin) / dx * m_nx), m_nx - 1);
-    const int iy = dy == 0 ? m_ny / 2 : qBound(0, int((sample.y - ymin) / dy * m_ny), m_ny - 1);
+    // the cell it is drawn in and the crosshair reads
+    int ix = 0, iy = 0;
+    m_map->data()->coordToCell(sample.x / xAxis.factor, sample.y / yAxis.factor, &ix, &iy);   // the axes' prefix
+    ix = qBound(0, ix, m_nx - 1);
+    iy = qBound(0, iy, m_ny - 1);
     sums[iy * m_nx + ix] += sample.z / zAxis.factor;
     ++counts[iy * m_nx + ix];
   }
@@ -158,8 +167,8 @@ void HeatmapPlot::refreshPlot()
 QString HeatmapPlot::crosshairText(double x, double y) const
 {
   int cx = 0, cy = 0;
-  m_map->data()->coordToCell(x, y, &cx, &cy);
-  const double z = m_map->data()->cell(cx, cy);
+  m_map->data()->coordToCell(x, y, &cx, &cy);   // the outer half of an edge cell: one past it
+  const double z = m_map->data()->cell(qBound(0, cx, m_nx - 1), qBound(0, cy, m_ny - 1));
   const QString text = QcpGraphCommon::crosshairText(x, y);
   return std::isfinite(z) ? text + QStringLiteral("   ") + axisValueText(m_scale->axis(), z) : text;
 }

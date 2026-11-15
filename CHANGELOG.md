@@ -65,6 +65,7 @@
 
 ### Fixes
 
+- **Side plots and graph axes** — the heatmap counts each sample in the cell it is drawn in (it could be half a cell off) and its cells fill the axes; XY, histogram and heatmap keep their points when a reading without a number and unit comes; the histogram's crosshair gives the height of the bar under the mouse; the heatmap's colour scheme is saved in the workspace; a right axis on a narrow fixed range labels every tick (230.04 was left out); no light line at 0 in the XY diagram and histogram on dark designs (review R19-01, -02, -06, -08, -09, -11)
 - **Project files** — a project ZIP can no longer write outside the new project folder (an entry like `Bench//home/…` passed the path check); a `project.json` broken by hand is left as it is instead of being overwritten with the description alone; CSV and QtDMM recording exports report a full disk instead of "written"; *Live in LabPlot* follows a recording beyond 2 million readings and says when its file cannot be written (review R19-03, -05, -07, -10)
 - **Fixed layout: a window shown again gets a place** — a window hidden before a new one was added, or shown again after all windows had gone and a new one came, could end up without a cell, over another window, until the mode was changed (review R19-04)
 
