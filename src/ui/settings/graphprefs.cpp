@@ -99,6 +99,14 @@ GraphPrefs::GraphPrefs(QWidget *parent) : SettingsPage(parent)
 
   m_form = createForm();
 
+  // first: a graphics driver that draws the plots blank or flickering is
+  // the first thing to rule out
+  ui_openGl = new QCheckBox(tr("Draw the XY diagram, histogram and heatmap with Open&GL (from the next start)"), this);
+  ui_openGl->setObjectName("ui_openGl");
+  ui_openGl->setToolTip(tr("Experimental, off by default: with several plots open it can show artefacts and "
+                           "raise the load. QtDMM takes it at its next start."));
+  m_form->addRow(QString(), ui_openGl);
+
   // the graphs' colours; the colour buttons below are the variant Custom
   // (cursor and thresholds always)
   addSection(m_form, tr("Colours"));
@@ -264,6 +272,7 @@ void GraphPrefs::defaultsSLOT()
   ui_lineMode->setCurrentIndex(m_cfg->getInt("Graph/line-mode", 1));
   ui_pointMode->setCurrentIndex(m_cfg->getInt("Graph/point-mode"));
   ui_crosshair->setChecked(m_cfg->getBool("Graph/crosshair-cursor", true));
+  ui_openGl->setChecked(m_cfg->getBool("Graph/openGl", false));
   ui_statsSide->setCurrentIndex(m_cfg->getString("Graph/stats-side", "left") == "left" ? 1 : 0);
   ui_lineWidth->setValue(m_cfg->getInt("Graph/line-width", 2));
 
@@ -300,6 +309,7 @@ void GraphPrefs::factoryDefaultsSLOT()
   ui_pointMode->setCurrentIndex(0);
   ui_lineWidth->setValue(2);
   ui_crosshair->setChecked(true);
+  ui_openGl->setChecked(false);
   ui_statsSide->setCurrentIndex(0);
 
   autoScaleBut->setChecked(true);
@@ -334,6 +344,7 @@ void GraphPrefs::applySLOT()
   m_cfg->setInt("Graph/line-mode", ui_lineMode->currentIndex());
   m_cfg->setInt("Graph/point-mode", ui_pointMode->currentIndex());
   m_cfg->setBool("Graph/crosshair-cursor", ui_crosshair->isChecked());
+  m_cfg->setBool("Graph/openGl", ui_openGl->isChecked());
   m_cfg->setString("Graph/stats-side", statsLeft() ? "left" : "right");
 
   m_cfg->setBool("Scale/automatic", automaticScale());

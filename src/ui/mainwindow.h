@@ -61,6 +61,7 @@ class XYPlot;
 class XYView;
 class HistogramPlot;
 class HistogramView;
+class GraphCommon;
 class HeatmapPlot;
 class HeatmapView;
 class AlarmBar;
@@ -233,7 +234,8 @@ protected:
   XYView      *xyViewOf(const QMdiSubWindow *win) const;
   QList<QMdiSubWindow *> xyWindows() const;
   bool        editXYSources(XYView *view);
-  void        applyXYColors(XYPlot *plot);
+  /// The design's colours on a side plot (XY diagram, histogram, heatmap).
+  void        applyPlotColors(GraphCommon *plot);
   HistogramView *histogramViewOf(const QMdiSubWindow *win) const;
   HeatmapView *heatmapViewOf(const QMdiSubWindow *win) const;
   /// @name Graphs
@@ -268,8 +270,6 @@ protected:
   void        dropValue(const ValueRef &value, const QPoint &pos);
   /// The design's colours for @p plot.
   void        applyPoincareColors(PoincarePlot *plot);
-  void        applyHistogramColors(HistogramPlot *plot);
-  void        applyHeatmapColors(HeatmapPlot *plot);
   /// @}
   ReadingsWidget *m_readings;
   BasketWidget *m_basket = nullptr;

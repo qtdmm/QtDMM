@@ -3,14 +3,14 @@ cmake_minimum_required(VERSION 3.19)
 project(qtdmm VERSION "0.0.0" HOMEPAGE_URL "https://qtdmm.de" LANGUAGES C CXX)
 
 ## main settings
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 set(PROJECT_LICENSE "GPL-3.0-or-later AND LGPL-3.0-or-later")
 set(RESOURCES "${CMAKE_BINARY_DIR}/resources.qrc")
 set(APP_NAME "QtDMM")
 set(APP_ORGANIZATION "QtDMM")
-set(QT_COMPONENTS Widgets SerialPort PrintSupport Test LinguistTools Network Charts Svg)
+set(QT_COMPONENTS Widgets SerialPort PrintSupport Test LinguistTools Network Charts Svg OpenGL)
 
 include( cmake/git_version.cmake )
 
@@ -309,6 +309,7 @@ target_link_libraries(qtdmm_core PUBLIC
 	Qt6::Network
 	Qt6::Charts
 	Qt6::Svg
+	Qt6::OpenGL
 	${HIDAPI_TARGET}
 	$<$<BOOL:${QTDMM_WITH_BLE}>:Qt6::Bluetooth>
 	$<$<BOOL:${QTDMM_WITH_MULTIMEDIA}>:Qt6::Multimedia>
@@ -319,6 +320,13 @@ if (QTDMM_WITH_BLE)
 endif()
 if (QTDMM_WITH_MULTIMEDIA)
 	target_compile_definitions(qtdmm_core PUBLIC QTDMM_WITH_MULTIMEDIA)
+endif()
+
+target_compile_definitions(qtdmm_core PRIVATE QCUSTOMPLOT_USE_OPENGL )
+# QCustomPlot's OpenGL buffer calls glClear()/glClearColor() itself; Qt6::OpenGL
+# does not hand the system's GL library on with MSVC
+if (WIN32)
+	target_link_libraries(qtdmm_core PUBLIC opengl32)
 endif()
 
 add_executable(${PROJECT_NAME}

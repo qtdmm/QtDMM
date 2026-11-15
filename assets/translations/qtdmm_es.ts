@@ -3124,287 +3124,297 @@ y cierre la sesión y vuelva a entrar.</translation>
     </message>
     <message>
         <location filename="../../src/ui/settings/graphprefs.cpp" line="104"/>
+        <source>Draw the XY diagram, histogram and heatmap with Open&amp;GL (from the next start)</source>
+        <translation>Dibujar el diagrama XY, el histograma y el mapa de calor con Open&amp;GL (desde el próximo inicio)</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="112"/>
         <source>Colours</source>
         <translation>Colores</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="108"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="116"/>
         <source>Custom</source>
         <translation>Personalizado</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="112"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="120"/>
         <source>The colours of the graph: background, grid, lettering and curves. Custom sets them one by one. A graph&apos;s context menu can choose other colours for that graph only.</source>
         <translation>Los colores del gráfico: fondo, cuadrícula, rótulos y curvas. «Personalizado» los fija uno a uno. El menú contextual de un gráfico puede elegir otros colores solo para ese gráfico.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="116"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="124"/>
         <source>The colour of the curve.</source>
         <translation>El color de la curva.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="117"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="125"/>
         <source>The background of the graph.</source>
         <translation>El fondo del gráfico.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="118"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="126"/>
         <source>The grid and its lettering.</source>
         <translation>La cuadrícula y sus rótulos.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="131"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="139"/>
         <source>&amp;Data</source>
         <translation>&amp;Datos</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="133"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="141"/>
         <source>&amp;Background</source>
         <translation>&amp;Fondo</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="135"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="143"/>
         <source>&amp;Grid</source>
         <translation>C&amp;uadrícula</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="139"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="147"/>
         <source>The line where the readings come in.</source>
         <translation>La línea donde llegan las lecturas.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="140"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="148"/>
         <source>The line of the start threshold.</source>
         <translation>La línea del umbral de inicio.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="141"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="149"/>
         <source>Cu&amp;rsor:</source>
         <translation>Cu&amp;rsor:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="142"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="150"/>
         <source>&amp;Start threshold:</source>
         <translation>Umbral de &amp;inicio:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="144"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="152"/>
         <source>Line and points</source>
         <translation>Línea y puntos</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="147"/>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="203"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="155"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="211"/>
         <source>The width of the line.</source>
         <translation>El grosor de la línea.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="148"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="156"/>
         <source>&amp;Line:</source>
         <translation>&amp;Línea:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="150"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="158"/>
         <source>&amp;Points:</source>
         <translation>&amp;Puntos:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="152"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="160"/>
         <source>Y axis</source>
         <translation>Eje Y</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="153"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="161"/>
         <source>Au&amp;tomatic</source>
         <translation>&amp;Automática</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="155"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="163"/>
         <source>The axis follows the readings.</source>
         <translation>El eje sigue a las lecturas.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="156"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="164"/>
         <source>Include &amp;zero line</source>
         <translation>Incluir la lín&amp;ea del cero</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="158"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="166"/>
         <source>The automatic axis always shows zero.</source>
         <translation>El eje automático siempre muestra el cero.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="160"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="168"/>
         <source>Fi&amp;xed</source>
         <translation>Fi&amp;ja</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="171"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="179"/>
         <source>&amp;Maximum:</source>
         <translation>Má&amp;ximo:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="184"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="192"/>
         <source>Right of the graph</source>
         <translation>A la derecha de la gráfica</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="184"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="192"/>
         <source>Left of the graph</source>
         <translation>A la izquierda de la gráfica</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="185"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="193"/>
         <source>Where the statistics stand beside the graph (the cursors, from A to B, the window shown); the Σ button hides them.</source>
         <translation>Dónde está la estadística junto a la gráfica (los cursores, de A a B, la ventana mostrada); el botón Σ la oculta.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="187"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="195"/>
         <source>Statistics:</source>
         <translation>Estadística:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="194"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="202"/>
         <source>Value 1 (main display)</source>
         <translation>Valor 1 (pantalla principal)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="194"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="202"/>
         <source>Value 2 (second display, if the meter has one)</source>
         <translation>Valor 2 (segunda pantalla, si el medidor la tiene)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="195"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="203"/>
         <source>The value the curve integrates. Without a second display there is no curve for value 2.</source>
         <translation>El valor que integra la curva. Sin segunda pantalla no hay curva para el valor 2.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="200"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="208"/>
         <source>Colo&amp;ur:</source>
         <translation>C&amp;olor:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="205"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="213"/>
         <source>Lin&amp;e:</source>
         <translation>&amp;Trazo:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="207"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="215"/>
         <source>P&amp;oints:</source>
         <translation>Punto&amp;s:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="213"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="221"/>
         <source>Reset belo&amp;w:</source>
         <translation>Reiniciar &amp;bajo:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="162"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="170"/>
         <source>The axis runs from the minimum to the maximum below.</source>
         <translation>El eje va del mínimo al máximo de abajo.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="115"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="106"/>
+        <source>Experimental, off by default: with several plots open it can show artefacts and raise the load. QtDMM takes it at its next start.</source>
+        <translation>Experimental, desactivado por defecto: con varios gráficos abiertos puede mostrar artefactos y aumentar la carga. QtDMM lo aplica en el próximo inicio.</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="123"/>
         <source>S&amp;cheme:</source>
         <translation>Es&amp;quema:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="164"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="172"/>
         <source>The bottom of the axis.</source>
         <translation>El extremo inferior del eje.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="165"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="173"/>
         <source>The top of the axis.</source>
         <translation>El extremo superior del eje.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="170"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="178"/>
         <source>M&amp;inimum:</source>
         <translation>&amp;Mínimo:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="173"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="181"/>
         <source>Time axis</source>
         <translation>Eje de tiempo</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="175"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="183"/>
         <source>How much of the recording the graph shows at once; also how much Live keeps when the recording has no length. The time buttons under the graph set it too.</source>
         <translation>Cuánto de la grabación muestra el gráfico a la vez; también cuánto guarda En vivo cuando la grabación no tiene duración. Los botones de tiempo del gráfico también lo ajustan.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="178"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="186"/>
         <source>&amp;Visible:</source>
         <translation>&amp;Visible:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="179"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="187"/>
         <source>Cross&amp;hair cursor</source>
         <translation>Cursor en cru&amp;z</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="181"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="189"/>
         <source>Lines through the mouse pointer, with the time and the value.</source>
         <translation>Líneas por el puntero del ratón, con el tiempo y el valor.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="190"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="198"/>
         <source>I&amp;ntegration curve</source>
         <translation>Curva de i&amp;ntegración</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="192"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="200"/>
         <source>A second curve: the running integral of the reading, scaled and offset.</source>
         <translation>Una segunda curva: la integral acumulada de la lectura, escalada y desplazada.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="196"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="204"/>
         <source>Appl&amp;y to:</source>
         <translation>Apl&amp;icar a:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="197"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="205"/>
         <source>The colour of the integration curve.</source>
         <translation>El color de la curva de integración.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="198"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="206"/>
         <source>The colour of the integration threshold.</source>
         <translation>El color del umbral de integración.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="199"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="207"/>
         <source>Threshold</source>
         <translation>Umbral</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="208"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="216"/>
         <source>Scaling factor for the integration curve.</source>
         <translation>Factor de escala de la curva de integración.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="209"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="217"/>
         <source>Offset of the integration curve.</source>
         <translation>Desplazamiento de la curva de integración.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="210"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="218"/>
         <source>Below this value the integral starts again at zero.</source>
         <translation>Por debajo de este valor la integral vuelve a empezar en cero.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="211"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="219"/>
         <source>Sc&amp;ale:</source>
         <translation>Escala:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="212"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="220"/>
         <source>O&amp;ffset:</source>
         <translation>Desplazamiento:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/settings/graphprefs.cpp" line="109"/>
+        <location filename="../../src/ui/settings/graphprefs.cpp" line="117"/>
         <source>Neutral: follows the design</source>
         <translation>Neutro: sigue el diseño</translation>
     </message>
@@ -4438,7 +4448,7 @@ Cable plugged in? No permission? The cable needs the udev rule of QtDMM.</source
 <context>
     <name>HeatmapPlot</name>
     <message>
-        <location filename="../../src/ui/views/heatmapplot.cpp" line="57"/>
+        <location filename="../../src/ui/views/heatmapplot.cpp" line="9"/>
         <source>No heatmap data yet</source>
         <translation>Aún no hay datos de mapa de calor</translation>
     </message>
@@ -4492,21 +4502,20 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
 <context>
     <name>HistogramPlot</name>
     <message>
-        <location filename="../../src/ui/views/histogramplot.cpp" line="39"/>
-        <location filename="../../src/ui/views/histogramplot.cpp" line="140"/>
+        <location filename="../../src/ui/views/histogramplot.cpp" line="10"/>
+        <location filename="../../src/ui/views/histogramplot.cpp" line="53"/>
         <source>No readings yet</source>
         <translation>Aún no hay lecturas</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/histogramplot.cpp" line="156"/>
-        <location filename="../../src/ui/views/histogramplot.cpp" line="182"/>
+        <location filename="../../src/ui/views/histogramplot.cpp" line="71"/>
         <source>Count</source>
-        <translation type="unfinished">Cuenta</translation>
+        <translation>Cantidad</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/histogramplot.cpp" line="44"/>
-        <source>HOLD</source>
-        <translation>HOLD</translation>
+        <location filename="../../src/ui/views/histogramplot.cpp" line="98"/>
+        <source>%1 readings</source>
+        <translation>%1 lecturas</translation>
     </message>
 </context>
 <context>
@@ -5738,7 +5747,7 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="396"/>
         <source>Heatmap</source>
-        <translation type="unfinished"></translation>
+        <translation>Mapa de calor</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="481"/>
@@ -5773,7 +5782,7 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="537"/>
         <source>Add &amp;heatmap</source>
-        <translation type="unfinished"></translation>
+        <translation>Añadir &amp;mapa de calor</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="545"/>
@@ -5828,7 +5837,7 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="580"/>
         <source>Plot three measured values: two for position and one for color.</source>
-        <translation type="unfinished"></translation>
+        <translation>Representar tres valores medidos: dos para la posición y uno para el color.</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="603"/>
@@ -5869,7 +5878,7 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="838"/>
         <source>Heatmap %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Mapa de calor %1</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="1621"/>
@@ -5989,7 +5998,7 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="2909"/>
         <source>New &amp;heatmap</source>
-        <translation type="unfinished"></translation>
+        <translation>Nuevo &amp;mapa de calor</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="2911"/>
@@ -6465,93 +6474,88 @@ DMM connected and switched on?</source>
 <context>
     <name>PoincarePlot</name>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="158"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="160"/>
         <source>&amp;Distance k</source>
         <translation>&amp;Distancia k</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="166"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="168"/>
         <source>&amp;Points</source>
         <translation>&amp;Puntos</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="174"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="176"/>
         <source>&amp;Ellipse SD1/SD2</source>
         <translation>&amp;Elipse SD1/SD2</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="178"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="180"/>
         <source>&amp;Hold picture</source>
         <translation>&amp;Congelar imagen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="182"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="184"/>
         <source>&amp;Reset</source>
         <translation>&amp;Restablecer</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="183"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="185"/>
         <source>&amp;Save image...</source>
         <translation>&amp;Guardar imagen...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="188"/>
-        <source>PNG image (*.png)</source>
-        <translation>Imagen PNG (*.png)</translation>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="192"/>
+        <source>Save Poincaré plot</source>
+        <translation>Guardar diagrama de Poincaré</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="188"/>
-        <source>SVG image (*.svg)</source>
-        <translation>Imagen SVG (*.svg)</translation>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="193"/>
+        <source>Images (*.png *.jpg *.jpeg *.svg)</source>
+        <translation>Imágenes (*.png *.jpg *.jpeg *.svg)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="191"/>
-        <source>Save image</source>
-        <translation>Guardar imagen</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="210"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="203"/>
         <source>QtDMM Poincaré plot</source>
         <translation>QtDMM diagrama de Poincaré</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="268"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="260"/>
         <source>Waiting for the next reading</source>
         <translation>Esperando la próxima lectura</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="269"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="261"/>
         <source>No readings yet</source>
         <translation>Aún no hay lecturas</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="322"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="314"/>
         <source>x(n)</source>
         <translation>x(n)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="323"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="315"/>
         <source>x(n+%1)</source>
         <translation>x(n+%1)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="379"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="371"/>
         <source>SD1 %1</source>
         <translation>SD1 %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="379"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="371"/>
         <source>SD2 %1</source>
         <translation>SD2 %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="380"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="372"/>
         <source>n = %1, k = %2</source>
         <translation>n = %1, k = %2</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="273"/>
-        <location filename="../../src/ui/views/poincareplot.cpp" line="382"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="265"/>
+        <location filename="../../src/ui/views/poincareplot.cpp" line="374"/>
         <source>HOLD</source>
         <translation>HOLD</translation>
     </message>
@@ -6852,62 +6856,62 @@ Then log out and back in so the new group membership becomes active.</source>
 Después cierre la sesión y vuelva a iniciarla para que la pertenencia al grupo tenga efecto.</translation>
     </message>
     <message>
-        <location filename="../../src/main.cpp" line="141"/>
+        <location filename="../../src/main.cpp" line="119"/>
         <source>protocol debugging information</source>
         <translation>información de depuración del protocolo</translation>
     </message>
     <message>
-        <location filename="../../src/main.cpp" line="142"/>
+        <location filename="../../src/main.cpp" line="120"/>
         <source>only the frames of &lt;id&gt; of My devices (repeatable)</source>
         <translation>solo las tramas de &lt;id&gt; de Mis dispositivos (repetible)</translation>
     </message>
     <message>
-        <location filename="../../src/main.cpp" line="143"/>
+        <location filename="../../src/main.cpp" line="121"/>
         <source>sets directory where config files are located</source>
         <translation>establece el directorio de los archivos de configuración</translation>
     </message>
     <message>
-        <location filename="../../src/main.cpp" line="144"/>
+        <location filename="../../src/main.cpp" line="122"/>
         <source>sets &lt;config-id&gt;</source>
         <translation>establece &lt;config-id&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/main.cpp" line="145"/>
+        <location filename="../../src/main.cpp" line="123"/>
         <source>connects &lt;id&gt; of My devices at the start (repeatable)</source>
         <translation>conecta &lt;id&gt; de Mis dispositivos al iniciar (repetible)</translation>
     </message>
     <message>
-        <location filename="../../src/main.cpp" line="146"/>
+        <location filename="../../src/main.cpp" line="124"/>
         <source>the same as --connect (its name before 26.4)</source>
         <translation>igual que --connect (su nombre antes de 26.4)</translation>
     </message>
     <message>
-        <location filename="../../src/main.cpp" line="147"/>
+        <location filename="../../src/main.cpp" line="125"/>
         <source>VXI-11 portmapper for this run: auto, system (rpcbind) or own (port 111)</source>
         <translation>Portmapper de VXI-11 para esta ejecución: auto, system (rpcbind) u own (puerto 111)</translation>
     </message>
     <message>
-        <location filename="../../src/main.cpp" line="150"/>
+        <location filename="../../src/main.cpp" line="126"/>
         <source>for tests and development: VXI-11 with an own portmapper on this port instead of 111 (0: any free one) for this run; VISA and lxi-tools ask port 111</source>
         <translation>para pruebas y desarrollo: VXI-11 con un portmapper propio en este puerto en lugar del 111 (0: uno libre) para esta ejecución; VISA y lxi-tools consultan el puerto 111</translation>
     </message>
     <message>
-        <location filename="../../src/main.cpp" line="167"/>
+        <location filename="../../src/main.cpp" line="140"/>
         <source>--vxi11-rpc: auto, system or own, not &quot;%1&quot;</source>
         <translation>--vxi11-rpc: auto, system u own, no «%1»</translation>
     </message>
     <message>
-        <location filename="../../src/main.cpp" line="182"/>
+        <location filename="../../src/main.cpp" line="154"/>
         <source>--vxi11-portmapper-port needs the own portmapper, not --vxi11-rpc system</source>
         <translation>--vxi11-portmapper-port necesita el portmapper propio, no --vxi11-rpc system</translation>
     </message>
     <message>
-        <location filename="../../src/main.cpp" line="183"/>
+        <location filename="../../src/main.cpp" line="155"/>
         <source>--vxi11-portmapper-port: a port from 0 to 65535, not &quot;%1&quot;</source>
         <translation>--vxi11-portmapper-port: un puerto de 0 a 65535, no «%1»</translation>
     </message>
     <message>
-        <location filename="../../src/main.cpp" line="216"/>
+        <location filename="../../src/main.cpp" line="181"/>
         <source>QtDMM is running already with these settings (process %1).</source>
         <translation>QtDMM ya se está ejecutando con estos ajustes (proceso %1).</translation>
     </message>
@@ -7062,7 +7066,7 @@ Después cierre la sesión y vuelva a iniciarla para que la pertenencia al grupo
     <message>
         <location filename="../../src/core/sampletypes.h" line="170"/>
         <source>Count</source>
-        <translation>Cuenta</translation>
+        <translation>Cantidad</translation>
     </message>
     <message>
         <location filename="../../src/core/sampletypes.h" line="171"/>
@@ -7923,7 +7927,7 @@ Después cierre la sesión y vuelva a iniciarla para que la pertenencia al grupo
     <message>
         <location filename="../../src/ui/dialogs/sourcesdlg.cpp" line="160"/>
         <source>Color (Z):</source>
-        <translation type="unfinished">Color (Z):</translation>
+        <translation>Color (Z):</translation>
     </message>
 </context>
 <context>
@@ -9195,14 +9199,9 @@ Después cierre la sesión y vuelva a iniciarla para que la pertenencia al grupo
 <context>
     <name>XYPlot</name>
     <message>
-        <location filename="../../src/ui/views/xyplot.cpp" line="43"/>
+        <location filename="../../src/ui/views/xyplot.cpp" line="9"/>
         <source>No XY data yet</source>
         <translation>Aún no hay datos XY</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/views/xyplot.cpp" line="49"/>
-        <source>HOLD</source>
-        <translation>HOLD</translation>
     </message>
 </context>
 <context>

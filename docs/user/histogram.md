@@ -38,4 +38,6 @@ Right-click the histogram to:
 - **Reset** - remove all collected readings.
 - **Save image...** - save the visible histogram as a PNG image.
 
+Hovering over the plot shows dotted crosshair lines and, at the top left, the values under the mouse with their units (the value and the number of readings).
+
 The histogram takes the colours of the window design chosen in the settings.

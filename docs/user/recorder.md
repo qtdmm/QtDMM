@@ -396,6 +396,11 @@ recording.
 
 ## Colours
 
+At the top of **Settings → Graph**, **Draw the XY diagram, histogram and
+heatmap with OpenGL** lets the graphics card draw those three plots. It is
+off at first and still experimental: with several plots open it can leave
+artefacts and raise the load. QtDMM takes it at its next start.
+
 **Settings → Graph → Colours** sets the colours of the graph:
 
 - **Neutral** follows the window's design.
