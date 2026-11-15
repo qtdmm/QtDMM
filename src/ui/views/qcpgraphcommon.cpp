@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "ui/views/qcpgraphcommon.h"
 
-#include "3rdparty/qcustomplot/qcustomplot.h"
+#include "ui/views/qcp.h"
 
 #include <QVBoxLayout>
 
@@ -43,7 +43,9 @@ QcpGraphCommon::QcpGraphCommon(QWidget *parent, const QString &noData) : GraphCo
   m_holdItem->setVisible(false);
 
   // the crosshair on a layer of its own: a mouse move replots only that
-  m_plot->addLayer(QStringLiteral("crosshair"), m_plot->layer(QStringLiteral("overlay")), QCustomPlot::limBelow);
+  // (NeoQCP wants the result looked at; the layer is fetched right below)
+  [[maybe_unused]] const bool added = m_plot->addLayer(QStringLiteral("crosshair"), m_plot->layer(QStringLiteral("overlay")),
+                                                       QCustomPlot::limBelow);
   m_crossLayer = m_plot->layer(QStringLiteral("crosshair"));
   m_crossLayer->setMode(QCPLayer::lmBuffered);
   m_crossX = new QCPItemStraightLine(m_plot);

@@ -20,3 +20,6 @@ __pycache__/
 
 # nix build
 /result
+
+# NeoQCP, fetched by "./compile.sh neoqcp"
+/.neoqcp/

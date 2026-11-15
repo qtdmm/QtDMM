@@ -6,7 +6,7 @@
 #include "ui/views/heatmapplot.h"
 #include "ui/views/colormap.h"
 
-#include "3rdparty/qcustomplot/qcustomplot.h"
+#include "ui/views/qcp.h"
 #include "testutil.h"
 
 #include <QApplication>
