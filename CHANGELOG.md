@@ -67,6 +67,7 @@
 
 - **Project files** — a project ZIP can no longer write outside the new project folder (an entry like `Bench//home/…` passed the path check); a `project.json` broken by hand is left as it is instead of being overwritten with the description alone; CSV and QtDMM recording exports report a full disk instead of "written"; *Live in LabPlot* follows a recording beyond 2 million readings and says when its file cannot be written (review R19-03, -05, -07, -10)
 - **Fixed layout: a window shown again gets a place** — a window hidden before a new one was added, or shown again after all windows had gone and a new one came, could end up without a cell, over another window, until the mode was changed (review R19-04)
+- **Workspace: front panel size kept** — loading a workspace in the *Free* layout while its meters were connected put the front panels back to the automatic layout; their saved size and position are used now
 
 ### Meters
 
