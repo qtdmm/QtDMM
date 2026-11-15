@@ -3517,15 +3517,24 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
   m_toolbars->setChecked(get("Windows/toolbar-hidden", false).toBool());
   if (free)
   {
+    // the front panels too: arrangeNow() below moves those already open
+    // (a workspace loaded with its meters connected)
+    auto windows = [this]
+    {
+      return meterWindows() + poincareWindows() + xyWindows() + histogramWindows() + heatmapWindows() + graphWindows()
+             + QList<QMdiSubWindow *>{ m_readingsWin } + panelWindows();
+    };
     QMap<QString, QString> geometry;
-    for (QMdiSubWindow *w : meterWindows() + poincareWindows() + xyWindows() + histogramWindows() + heatmapWindows() + graphWindows() + QList<QMdiSubWindow *>{ m_readingsWin })
+    for (QMdiSubWindow *w : windows())
       geometry[w->objectName()] = get("Windows/geometry-" + w->objectName(), QString()).toString();
+    for (const QString &id : std::as_const(m_pendingOpen))
+      geometry["panel-" + id] = get("Windows/geometry-panel-" + id, QString()).toString();
     // once the window is shown and the area has its size: the automatic
     // layout for a start, then the stored positions on top of it
-    QTimer::singleShot(0, this, [this, geometry]
+    QTimer::singleShot(0, this, [this, geometry, windows]
     {
       m_arranger->arrangeNow();
-      for (QMdiSubWindow *w : meterWindows() + poincareWindows() + xyWindows() + histogramWindows() + heatmapWindows() + graphWindows() + QList<QMdiSubWindow *>{ m_readingsWin })
+      for (QMdiSubWindow *w : windows())
       {
         const QStringList g = geometry.value(w->objectName()).split(' ');
         if (g.size() == 4)
