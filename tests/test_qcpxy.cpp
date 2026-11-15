@@ -4,7 +4,7 @@
 // the newest kMaxPoints, the title, and the value crosshair under the mouse.
 #include "ui/views/xyplot.h"
 
-#include "3rdparty/qcustomplot/qcustomplot.h"
+#include "ui/views/qcp.h"
 #include "testutil.h"
 
 #include <QApplication>

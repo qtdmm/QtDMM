@@ -175,6 +175,18 @@ if (NOT QTDMM_WITH_BLE)
 endif()
 
 ## AES-128-CTR for the encrypted Victron advertisements (public domain tiny-AES-c)
+## NeoQCP in place of the QCustomPlot in src/3rdparty: a trial, for the XY
+## diagram, the histogram and the heatmap (src/ui/views/qcp.h). NeoQCP draws
+## through Qt's QRhi, always on the GPU: it needs the Qt Shader Tools and Qt's
+## private Gui headers, and without a GPU it costs several times the CPU.
+## "./compile.sh neoqcp" fetches the sources and sets both.
+option(QTDMM_WITH_NEOQCP "Draw the QCustomPlot views with NeoQCP (a trial; needs the Qt Shader Tools)" OFF)
+set(QTDMM_NEOQCP_DIR "${CMAKE_SOURCE_DIR}/.neoqcp" CACHE PATH "The NeoQCP sources, for QTDMM_WITH_NEOQCP")
+if (QTDMM_WITH_NEOQCP)
+	include(cmake/neoqcp.cmake)
+	list(FILTER SRC_FILES EXCLUDE REGEX "3rdparty/qcustomplot/")
+endif()
+
 list(APPEND SRC_FILES src/3rdparty/tiny-aes/aes.c)
 
 ## ZIP writer for the XLSX/ODS export (MIT, miniz). Only deflate and CRC are
@@ -322,11 +334,18 @@ if (QTDMM_WITH_MULTIMEDIA)
 	target_compile_definitions(qtdmm_core PUBLIC QTDMM_WITH_MULTIMEDIA)
 endif()
 
-target_compile_definitions(qtdmm_core PRIVATE QCUSTOMPLOT_USE_OPENGL )
-# QCustomPlot's OpenGL buffer calls glClear()/glClearColor() itself; Qt6::OpenGL
-# does not hand the system's GL library on with MSVC
-if (WIN32)
-	target_link_libraries(qtdmm_core PUBLIC opengl32)
+if (QTDMM_WITH_NEOQCP)
+	# its headers as a system's: their warnings are not QtDMM's (QTDMM_WERROR)
+	target_link_libraries(qtdmm_core PUBLIC NeoQCP::NeoQCP)
+	target_include_directories(qtdmm_core SYSTEM PUBLIC $<TARGET_PROPERTY:NeoQCP,INTERFACE_INCLUDE_DIRECTORIES>)
+	target_compile_definitions(qtdmm_core PUBLIC QTDMM_NEOQCP)
+else()
+	target_compile_definitions(qtdmm_core PRIVATE QCUSTOMPLOT_USE_OPENGL )
+	# QCustomPlot's OpenGL buffer calls glClear()/glClearColor() itself; Qt6::OpenGL
+	# does not hand the system's GL library on with MSVC
+	if (WIN32)
+		target_link_libraries(qtdmm_core PUBLIC opengl32)
+	endif()
 endif()
 
 add_executable(${PROJECT_NAME}
@@ -347,7 +366,10 @@ option(QTDMM_WERROR "Treat compiler warnings in QtDMM's own code as errors" OFF)
 
 if(QTDMM_WERROR)
 	# bundled third-party code keeps its warnings; they are not ours to fix
-	set(_third_party src/3rdparty/miniz/miniz.c src/3rdparty/tiny-aes/aes.c src/3rdparty/qcustomplot/qcustomplot.cpp )
+	set(_third_party src/3rdparty/miniz/miniz.c src/3rdparty/tiny-aes/aes.c)
+	if (NOT QTDMM_WITH_NEOQCP)
+		list(APPEND _third_party src/3rdparty/qcustomplot/qcustomplot.cpp)
+	endif()
 	if(MSVC)
 		set(QTDMM_WARNING_FLAGS /W4 /WX)
 		set_property(SOURCE ${_third_party} APPEND PROPERTY COMPILE_OPTIONS "/WX-")

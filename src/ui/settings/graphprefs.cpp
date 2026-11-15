@@ -106,6 +106,10 @@ GraphPrefs::GraphPrefs(QWidget *parent) : SettingsPage(parent)
   ui_openGl->setToolTip(tr("Experimental, off by default: with several plots open it can show artefacts and "
                            "raise the load. QtDMM takes it at its next start."));
   m_form->addRow(QString(), ui_openGl);
+#ifdef QTDMM_NEOQCP
+  // NeoQCP always draws on the GPU: nothing to choose
+  m_form->setRowVisible(ui_openGl, false);
+#endif
 
   // the graphs' colours; the colour buttons below are the variant Custom
   // (cursor and thresholds always)

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "ui/views/xyplot.h"
 
-#include "3rdparty/qcustomplot/qcustomplot.h"
+#include "ui/views/qcp.h"
 
 #include <cmath>
 
