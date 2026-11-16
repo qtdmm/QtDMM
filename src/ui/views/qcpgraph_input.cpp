@@ -9,6 +9,7 @@
 
 #include <QKeyEvent>
 #include <QRubberBand>
+#include <QToolTip>
 
 void QcpGraph::setupInput()
 {
@@ -17,6 +18,7 @@ void QcpGraph::setupInput()
   connect(m_plot, &QCustomPlot::mousePress, this, &QcpGraph::mousePressed);
   connect(m_plot, &QCustomPlot::mouseMove, this, &QcpGraph::mouseMoved);
   connect(m_plot, &QCustomPlot::mouseRelease, this, &QcpGraph::mouseReleased);
+  connect(m_plot, &QCustomPlot::mouseDoubleClick, this, &QcpGraph::mouseDoubleClicked);
   connect(m_plot, &QCustomPlot::mouseWheel, this, &QcpGraph::wheelTurned);
 }
 
@@ -24,13 +26,29 @@ void QcpGraph::setupInput()
 // left button it draws a frame to zoom on (as the graph on QtCharts). A
 // click - no more than a slip of the mouse - sets the time cursor A, with
 // Shift B; a press on a cursor's line drags that cursor, one on a reference
-// line that line (a cursor goes before a line where they meet).
+// line that line (a cursor goes before a line where they meet). A click on
+// a mark's flag tells its note; a note is dragged by its flag or its line.
 void QcpGraph::mousePressed(QMouseEvent *event)
 {
-  if (!m_store || !m_plot->axisRect()->rect().contains(event->pos()))
+  if (!m_store)
     return;
   const bool shift = event->modifiers() & Qt::ShiftModifier;
-  if (const int cursor = cursorAt(event->pos()); event->button() == Qt::LeftButton && !shift && cursor >= 0)
+  const bool inPlot = m_plot->axisRect()->rect().contains(event->pos());
+  const int cursor = inPlot ? cursorAt(event->pos()) : -1;
+  // the flags lie below the plot
+  if (const int mark = markAt(event->pos()); event->button() == Qt::LeftButton && !shift && cursor < 0 && mark >= 0)
+  {
+    m_drag = Drag::Mark;
+    m_dragStore = m_marks.at(mark).store;
+    m_dragIndex = m_marks.at(mark).index;
+    m_dragFrom = m_marks.at(mark).t - m_marks.at(mark).shift;
+    m_moved = false;
+    m_pressPos = event->pos();
+    return;
+  }
+  if (!inPlot)
+    return;
+  if (event->button() == Qt::LeftButton && !shift && cursor >= 0)
   {
     m_drag = Drag::Cursor;
     m_dragCursor = cursor;
@@ -55,8 +73,22 @@ void QcpGraph::mouseMoved(QMouseEvent *event)
 {
   if (m_drag == Drag::None)
   {
-    // a cursor's line and a reference line can be dragged
-    m_plot->setCursor(cursorAt(event->pos()) >= 0 ? Qt::SplitHCursor : levelAt(event->pos()) > -2 ? Qt::SplitVCursor : Qt::ArrowCursor);
+    // a cursor's line, a note and a reference line can be dragged; a flag tells its note
+    const int mark = markAt(event->pos());
+    const int flag = mark >= 0 && markFlagRect(mark).contains(event->pos()) ? mark : -1;
+    m_plot->setCursor(flag >= 0 ? Qt::PointingHandCursor : cursorAt(event->pos()) >= 0 || mark >= 0 ? Qt::SplitHCursor
+                      : levelAt(event->pos()) > -2 ? Qt::SplitVCursor : Qt::ArrowCursor);
+    // outside the plot the crosshair's clock time is no longer true: a flag's note, or nothing
+    if (!m_plot->axisRect()->rect().contains(event->pos()))
+      m_plot->setToolTip(flag >= 0 ? markTip(flag) : QString());
+    if (flag != m_tipMark)
+    {
+      m_tipMark = flag;
+      if (flag >= 0)
+        QToolTip::showText(event->globalPosition().toPoint(), markTip(flag), m_plot);
+      else
+        QToolTip::hideText();
+    }
     return;
   }
   if ((event->pos() - m_pressPos).manhattanLength() >= 3)
@@ -78,6 +110,17 @@ void QcpGraph::mouseMoved(QMouseEvent *event)
     m_zoomBand->setGeometry(QRect(m_pressPos, event->pos()).normalized().intersected(m_plot->axisRect()->rect()));
     m_zoomBand->show();
   }
+  else if (m_drag == Drag::Mark)
+  {
+    // alarm and trigger marks tell when something happened: they stay
+    const int mark = markOf(m_dragStore, m_dragIndex);
+    if (!markIsNote(mark))
+      return;
+    QToolTip::hideText();
+    const int moved = moveMark(mark, qRound64(m_plot->xAxis->pixelToCoord(event->pos().x()) * 1000));
+    if (moved >= 0)
+      m_dragIndex = m_marks.at(moved).index;
+  }
   else if (m_drag == Drag::Level)
     dragLevel(m_dragLevel, event->pos().y());
   else if (m_drag == Drag::Cursor)
@@ -87,6 +130,14 @@ void QcpGraph::mouseMoved(QMouseEvent *event)
 void QcpGraph::mouseReleased(QMouseEvent *event)
 {
   const Drag drag = m_drag;
+  if (drag == Drag::Mark)
+  {
+    // a click: its note (a tooltip goes with the press)
+    if (const int mark = markOf(m_dragStore, m_dragIndex); !m_moved && mark >= 0)
+      QToolTip::showText(event->globalPosition().toPoint(), markTip(mark), m_plot);
+    endMarkDrag(false);
+    return;
+  }
   m_drag = Drag::None;
   if (m_zoomBand)
     m_zoomBand->hide();
@@ -102,6 +153,13 @@ void QcpGraph::mouseReleased(QMouseEvent *event)
   }
   else if (drag == Drag::Pan && !m_moved && event->button() == Qt::LeftButton)
     setTimeCursor(0, pressed);
+}
+
+// A mark's flag: its title and text
+void QcpGraph::mouseDoubleClicked(QMouseEvent *event)
+{
+  if (const int mark = markAt(event->pos()); event->button() == Qt::LeftButton && mark >= 0)
+    editMark(mark);
 }
 
 void QcpGraph::wheelTurned(QWheelEvent *event)
@@ -149,7 +207,15 @@ void QcpGraph::keyPressEvent(QKeyEvent *event)
     case Qt::Key_End:
       followEnd();
       return;
+    case Qt::Key_N:
+      askNote();
+      return;
     case Qt::Key_Escape:
+      if (m_drag == Drag::Mark)
+      {
+        endMarkDrag(true);
+        return;
+      }
       if (m_drag == Drag::Frame)
       {
         m_drag = Drag::None;

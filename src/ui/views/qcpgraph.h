@@ -4,6 +4,7 @@
 
 #include "ui/views/qcpplotbase.h"
 
+#include <QDateTime>
 #include <QElapsedTimer>
 #include <QHash>
 #include <QList>
@@ -23,7 +24,6 @@ class QCPAbstractItem;
 class QCPAxis;
 class QCPGraph;
 class QCPItemStraightLine;
-class QCPItemText;
 class QMouseEvent;
 class QRubberBand;
 class QScrollBar;
@@ -72,12 +72,18 @@ class RecordingStore;
 /// stands, the line's label counts them. The limit test's band and the
 /// start threshold of the recording are drawn on the axis of their value.
 ///
+/// The marks of the recordings shown - alarms, the trigger of a
+/// pre-triggered recording, the user's notes - are dashed lines at their
+/// time, each with a flag in the row of the time labels (GraphFlags), the
+/// time cursors' letters among them. A note is set with N, edited with a
+/// double click on its flag and dragged along the time.
+///
 /// So far: lines with gaps, the time axis, the value axes fitted to what is
 /// shown or fixed by unit, the legend, the time buttons and the state above
 /// the plot, the scrollbar below, zoom, hold and the crosshair.
 ///
 /// The code that names QCustomPlot's types is in qcpgraph_<part>.cpp
-/// (curves, axes, input, theme, overlays); nothing outside knows them, for the move to NeoQCP.
+/// (curves, axes, input, theme, overlays, marks); nothing outside knows them, for the move to NeoQCP.
 class QcpGraph : public QcpPlotBase
 {
   Q_OBJECT
@@ -199,6 +205,34 @@ public:
   QString     levelText(double value) const;
   /// @}
 
+  /// @name Marks and notes
+  /// @{
+  /// The marks of all recordings shown, in the order of their time; a
+  /// mark is named by its place in it.
+  int         markCount() const { return int(m_marks.size()); }
+  /// The mark whose flag is at @p pos (plot widget pixels), or the note whose line is there; -1: none.
+  int         markAt(const QPoint &pos) const;
+  int         markAtGlobal(const QPoint &globalPos) const;
+  bool        markIsNote(int mark) const;
+  /// Asks for a note (NoteDlg) at @p t (ms on the graph's time; -1: now,
+  /// or the newest reading of a recording stopped) and sets it in the
+  /// recording of the left axis' value. Its place in the marks, -1 when
+  /// the dialog was left or there is no recording. Says noteAdded().
+  int         askNote(qint64 t = -1);
+  /// Sets a note without asking; as askNote(), without noteAdded().
+  int         addNote(qint64 t, const QString &title, const QString &note);
+  /// Asks for another title and text of @p mark.
+  bool        editMark(int mark);
+  void        removeMark(int mark);
+  /// Moves the note @p mark to @p t (ms on the graph's time, within its
+  /// recording); its new place in the marks.
+  int         moveMark(int mark, qint64 t);
+  /// Title, time and text of @p mark as the tooltip shows them (HTML).
+  QString     markTip(int mark) const;
+  /// The time at @p globalPos, ms on the graph's time; -1 outside the plot.
+  qint64      timeAt(const QPoint &globalPos) const;
+  /// @}
+
   void        setHold(bool hold) override;
   /// Draws the store anew; the readings are the store's and stay.
   void        clear() override;
@@ -254,6 +288,18 @@ public:
   bool        limitBand(double *low, double *high) const;
   /// The start threshold's line (base unit); NaN: none.
   double      triggerLevel() const { return m_triggerLevel; }
+  /// Mark @p mark: its time on the graph's time (ms), its title, its
+  /// colour, the x of its line in the plot widget (-1 while it is not
+  /// shown), its flag below the plot (empty while it has none) and what
+  /// the flag says.
+  qint64      markTime(int mark) const;
+  QString     markName(int mark) const;
+  QColor      markColor(int mark) const;
+  int         markPixel(int mark) const;
+  QRect       markFlagRect(int mark) const;
+  QString     markFlagText(int mark) const;
+  /// The flag of cursor @p which below the plot; empty while it has none.
+  QRect       cursorFlagRect(int which) const;
   QScrollBar *scrollBar() const { return m_scrollBar; }
   GraphTimeBar *timeBar() const { return m_timeBar; }
   /// The rectangle of the axes in the plot widget, for zoomToRect().
@@ -272,6 +318,10 @@ Q_SIGNALS:
   void        referenceChanged();
   /// Another value is on the left axis.
   void        leftValueChanged();
+  /// A note was set at @p when (askNote()): the readings table marks its reading.
+  void        noteAdded(const QDateTime &when, const QString &title);
+  /// A note was dragged from @p from to @p to: the readings table moves its mark.
+  void        noteMoved(const QDateTime &from, const QDateTime &to, const QString &title);
 
 protected:
   void        refreshPlot() override;
@@ -384,8 +434,20 @@ private:
   void        dragLevel(int line, double y);
   /// The cursor whose line is at @p pos (plot widget pixels): 0, 1, or -1.
   int         cursorAt(const QPoint &pos) const;
+  // qcpgraph_marks.cpp
+  void        setupMarks();
+  /// The marks anew from the stores, and the flags of marks and cursors.
+  void        updateMarks();
+  /// The recording a note goes to - the left value's, else the one of the
+  /// time - and its time 0 on the graph's time (ms); nullptr: none.
+  RecordingStore *noteStore(qint64 *shift = nullptr) const;
+  /// The place of mark @p index of @p store in the marks; -1: not there.
+  int         markOf(const RecordingStore *store, int index) const;
+  /// Ends the drag of a note: it stays (noteMoved()) or goes back (@p cancel).
+  void        endMarkDrag(bool cancel);
   // qcpgraph_input.cpp
   void        setupInput();
+  void        mouseDoubleClicked(QMouseEvent *event);
   void        mousePressed(QMouseEvent *event);
   void        mouseMoved(QMouseEvent *event);
   void        mouseReleased(QMouseEvent *event);
@@ -420,7 +482,25 @@ private:
   qint64      m_cursorT[2] = { -1, -1 };   ///< ms since the start of the recording, -1: none
   QCPItemStraightLine *m_cursorLine[2] = {};
   QCPItemStraightLine *m_cursorLevel[2] = {};
-  QCPItemText *m_cursorFlag[2] = {};
+  /// A mark of a store shown.
+  struct Mark
+  {
+    QPointer<RecordingStore> store;
+    int         index = 0;       ///< in the store's marks
+    qint64      shift = 0;       ///< the store's time 0 on the graph's time, ms
+    qint64      t = 0;           ///< on the graph's time, ms
+    quint32     color = 0;
+    QString     name;
+    QString     note;
+    QString     meter;           ///< its meter's name while several are shown
+    bool        isNote = false;
+  };
+  QList<Mark> m_marks;                   ///< by time
+  QCPAbstractItem *m_markItem = nullptr; ///< their lines and the flags
+  QPointer<RecordingStore> m_dragStore;  ///< Drag::Mark: the note dragged, its store,
+  int         m_dragIndex = -1;          ///< its place in the store's marks
+  qint64      m_dragFrom = 0;            ///< and its time before, the store's
+  int         m_tipMark = -1;            ///< the mark whose tooltip is up
   GraphReference::Line m_reference;
   QList<double> m_referenceLines;
   bool        m_crossingsOn = true;
@@ -449,7 +529,7 @@ private:
   bool        m_zoomed = false;
   struct { qint64 start = 0; int seconds = 0; bool all = false; bool atEnd = true; } m_zoomBefore;
   /// The mouse: a drag moves the time, with Shift it draws the zoom frame.
-  enum class Drag { None, Pan, Frame, Cursor, Level };
+  enum class Drag { None, Pan, Frame, Cursor, Level, Mark };
   Drag        m_drag = Drag::None;
   QPoint      m_pressPos;
   qint64      m_pressStart = 0;

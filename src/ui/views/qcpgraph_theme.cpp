@@ -131,7 +131,6 @@ void QcpGraph::applyLook()
   {
     m_cursorLine[i]->setPen(QPen(m_look.cursor, 1, Qt::DashLine));
     m_cursorLevel[i]->setPen(QPen(m_look.cursor, 1, Qt::DashLine));
-    m_cursorFlag[i]->setColor(m_look.cursor);
   }
   m_statsPanel->setColors(background, theme.labels);
   layoutStats();   // its side

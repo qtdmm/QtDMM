@@ -45,6 +45,7 @@ class InstanceWidget;
 class DeviceSession;
 class WorkspaceFile;
 class MeterController;
+class RecordingStore;
 class LcdWidget;
 class HelpDlg;
 class CaptureDlg;
@@ -268,6 +269,9 @@ protected:
   QList<QMdiSubWindow *> graphWindows() const;
   /// The graphs showing a value of @p ctl, one of those sharing a store.
   QList<GraphWidget *> graphsShowing(const MeterController *ctl) const;
+  /// The recording of @p ctl when a graph (QCP) shows a value of it and no
+  /// graph of graphsShowing() put the mark there already; else nullptr.
+  RecordingStore *qgraphStoreFor(const MeterController *ctl) const;
   /// Shows a graph's window: the first one by its action.
   void        showGraphWindow(QMdiSubWindow *win);
   /// The window's entry of a view's own menu: Hide view, Close window for one added.

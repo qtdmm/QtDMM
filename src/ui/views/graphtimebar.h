@@ -12,7 +12,8 @@ class QToolButton;
 
 /// The row above a graph: what it shows on the left ("Live", "Recording ·
 /// 0:01:20"), the legend of its curves next to it, and the time buttons on
-/// the right - "All" and the last 1, 5 or 30 minutes. It knows no graph: the
+/// the right - "All" and the last 1, 5 or 30 minutes -, then the buttons
+/// for a note and for the statistics. It knows no graph: the
 /// window is set and asked for.
 class GraphTimeBar : public QWidget
 {
@@ -37,6 +38,8 @@ public:
 Q_SIGNALS:
   /// A time button was clicked: @p seconds, 0 for "All".
   void        windowChosen(int seconds);
+  /// The note button (the pencil) was clicked.
+  void        noteClicked();
   /// The statistics button (Σ, at the right end) was clicked.
   void        statsToggled(bool on);
 
@@ -52,6 +55,7 @@ private:
   QList<GraphLegend::Entry> m_entries;
   QColor      m_ink;
   QList<QToolButton *> m_buttons;
+  QToolButton *m_note;
   QToolButton *m_stats;
   int         m_seconds = 0;
   bool        m_all = false;
