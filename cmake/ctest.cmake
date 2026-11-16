@@ -229,6 +229,9 @@ if (BUILD_TESTING)
 	qtdmm_add_test(qcp_xy test_qcpxy tests/test_qcpxy.cpp)
 	qtdmm_add_test(histogram test_histogram tests/test_histogram.cpp)
 
+	## the thinning of a series for drawing: buckets, minimum/maximum, gaps
+	qtdmm_add_test(series_decimator test_seriesdecimator tests/test_seriesdecimator.cpp)
+
 	## the drawing clock of the views: wanted, off, slower when ticks cost too much
 	qtdmm_add_test(frame_clock test_frameclock tests/test_frameclock.cpp)
 
