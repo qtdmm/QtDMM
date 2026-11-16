@@ -52,6 +52,13 @@ public:
   QString     fixedRangesSetting() const;
   void        setFixedRangesSetting(const QString &text);
 
+  /// The colour variant of this graph by its name ("scope"); empty: the settings'.
+  QString     variant() const { return m_variant; }
+  void        setVariant(const QString &name);
+  /// Each curve after the first with a dash pattern of its own.
+  bool        patternedLines() const { return m_patterns; }
+  void        setPatternedLines(bool on);
+
   /// The time the graph shows, seconds; at least 1.
   int         windowSeconds() const { return m_windowSeconds; }
   void        setWindowSeconds(int seconds);
@@ -68,6 +75,7 @@ Q_SIGNALS:
   void        valuesChanged();
   void        valueAxesChanged();
   void        fixedRangesChanged();
+  void        lookChanged();
   void        windowChanged(int seconds);
   void        followAllChanged(bool on);
 
@@ -75,6 +83,8 @@ private:
   QList<ValueRef> m_values;
   QHash<ValueRef, int> m_valueAxes;      ///< those not on Auto
   QMap<QString, Range> m_fixedRanges;
+  QString     m_variant;
+  bool        m_patterns = false;
   int         m_windowSeconds = kDefaultWindowSeconds;
   bool        m_followAll = false;
 };

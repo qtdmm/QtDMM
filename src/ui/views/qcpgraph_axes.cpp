@@ -302,7 +302,8 @@ void QcpGraph::updateAxes(double &from, double &to)
   to = from + m_windowSeconds;
   m_plot->xAxis->setRange(from, to);
   // a label is about 70 pixels wide: fewer ticks on a narrow plot
-  m_plot->xAxis->ticker()->setTickCount(qBound(2, m_plot->axisRect()->width() / 110, 6));
+  // with divisions up to 10 of them
+  m_plot->xAxis->ticker()->setTickCount(qBound(2, m_plot->axisRect()->width() / 110, m_look.divisions ? 10 : 6));
 
   bool anyValue = false;
   for (int i = 0; i < m_axes.size(); ++i)
@@ -329,7 +330,25 @@ void QcpGraph::updateAxes(double &from, double &to)
       lo -= room;
       hi += room;
     }
-    const PlotAxis::Range range = PlotAxis::range(lo, hi, a.unit);
+    PlotAxis::Range range = PlotAxis::range(lo, hi, a.unit);
+    // a scope's or a recorder's graticule: 8 divisions of a whole step on
+    // every axis, so one grid is right for all; not for a range that is given
+    const bool given = m_zoomed || (!a.unit.isEmpty() && m_fixedRanges.contains(a.unit));
+    const bool divided = m_look.divisions && !given && (any || !a.unit.isEmpty());
+    if (divided)
+    {
+      double low = range.minimum / range.factor, high = range.maximum / range.factor, step = 1;
+      divide(low, high, step);
+      range.minimum = low * range.factor;
+      range.maximum = high * range.factor;
+      QSharedPointer<QCPAxisTickerFixed> ticker(new QCPAxisTickerFixed);
+      ticker->setTickStep(step);
+      ticker->setScaleStrategy(QCPAxisTickerFixed::ssNone);
+      a.axis->setTicker(ticker);
+    }
+    else if (a.divided)
+      a.axis->setTicker(QSharedPointer<QCPAxisTicker>(new QCPAxisTicker));
+    a.divided = divided;
     setAxisRange(a.axis, range);
     a.factor = range.factor;
   }

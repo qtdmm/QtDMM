@@ -27,6 +27,8 @@ public:
   QcpGraph   *graph() const { return m_graph; }
   GraphModel *model() const { return m_model; }
   QString     key() const { return m_key; }
+  /// The settings' colour variant by its name; the model's own goes before it.
+  void        setDefaultVariant(const QString &name);
 
   /// Shows the recording in @p path instead of the meter's; false and
   /// @p error when it cannot be read.
@@ -40,11 +42,13 @@ private:
   void        followBase();
   /// A meter that records or goes live ends the look at a file.
   void        watch(const MeterController *ctl);
+  void        applyLook();
 
   DeviceSession *m_session;
   QcpGraph   *m_graph;
   GraphModel *m_model;
   QString     m_key;
+  QString     m_defaultVariant;
   MeterController *m_closing = nullptr;  ///< the meter closing now (DeviceSession::closing())
   RecordingStore *m_fileStore = nullptr; ///< the file loaded, made with the first one
   bool        m_showsFile = false;

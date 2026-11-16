@@ -161,3 +161,19 @@ void GraphModel::setFixedRangesSetting(const QString &text)
   m_fixedRanges = ranges;
   Q_EMIT fixedRangesChanged();
 }
+
+void GraphModel::setVariant(const QString &name)
+{
+  if (name == m_variant)
+    return;
+  m_variant = name;
+  Q_EMIT lookChanged();
+}
+
+void GraphModel::setPatternedLines(bool on)
+{
+  if (on == m_patterns)
+    return;
+  m_patterns = on;
+  Q_EMIT lookChanged();
+}

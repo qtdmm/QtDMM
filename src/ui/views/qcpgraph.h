@@ -12,8 +12,10 @@
 #include <functional>
 
 #include "core/valueref.h"
+#include "ui/views/graphlook.h"
 
 class GraphTimeBar;
+class QCPAbstractItem;
 class QCPAxis;
 class QCPGraph;
 class QMouseEvent;
@@ -47,12 +49,16 @@ class RecordingStore;
 /// how many there are; nothing else knows the number. A unit that finds no
 /// axis is not drawn (notice()).
 ///
+/// Its look is a colour variant (GraphLook) on the window design, with the
+/// settings' line, points and width: setTheme() gives the design,
+/// setVariant() and setLookSettings() the rest.
+///
 /// So far: lines with gaps, the time axis, the value axes fitted to what is
 /// shown or fixed by unit, the legend, the time buttons and the state above
 /// the plot, the scrollbar below, zoom, hold and the crosshair.
 ///
 /// The code that names QCustomPlot's types is in qcpgraph_<part>.cpp
-/// (curves, axes, input); nothing outside knows them, for the move to NeoQCP.
+/// (curves, axes, input, theme); nothing outside knows them, for the move to NeoQCP.
 class QcpGraph : public QcpPlotBase
 {
   Q_OBJECT
@@ -119,7 +125,20 @@ public:
   bool        zoomed() const { return m_zoomed; }
   /// @}
 
+  /// @name The look
+  /// @{
+  /// The window design's colours: what the Neutral variant shows.
   void        setTheme(const PlotTheme &theme) override;
+  void        setVariant(GraphLook::Variant variant);
+  GraphLook::Variant variant() const { return m_variant; }
+  /// The settings page's colours, line, points and width.
+  void        setLookSettings(const GraphLook::Settings &settings);
+  /// Each curve after the first with a dash pattern of its own.
+  void        setPatternedLines(bool on);
+  bool        patternedLines() const { return m_patterns; }
+  const GraphLook::Look &look() const { return m_look; }
+  /// @}
+
   void        setHold(bool hold) override;
   /// Draws the store anew; the readings are the store's and stay.
   void        clear() override;
@@ -135,6 +154,13 @@ public:
   /// The place of curve @p i's axis in the list, -1 while it is not drawn.
   int         curveAxis(int i) const;
   QColor      curveColor(int i) const;
+  /// The pen curve @p i is drawn with, and whether its readings have markers now.
+  QPen        curvePen(int i) const;
+  bool        curveMarkers(int i) const;
+  /// The colour of axis @p i's numbers: its curve's when it has one alone.
+  QColor      axisColor(int i) const;
+  /// The grid lines of axis @p i now (10 x 8 divisions: 9 across the plot).
+  int         axisTickCount(int i) const;
   /// The axes in use, the left one included also without a unit.
   int         axisCount() const;
   /// Axis @p i: its title ("[mV]") and its limits in that unit.
@@ -181,6 +207,7 @@ private:
     double      shift = 0;       ///< its store's time 0 on the graph's time, s
     const RecordingSeries *newest = nullptr;   ///< the series a reading goes to
     QCPGraph   *graph = nullptr;
+    QPen        pen;             ///< its line; Qt::NoPen: none (styleCurves())
     QList<QPointF> points;       ///< thinned, all the store keeps, on the graph's time
     int         tail = 0;        ///< how many of them are the newest bucket's
   };
@@ -192,6 +219,7 @@ private:
     double      factor = 1;      ///< base unit per unit of the axis
     double      zoomMin = 0;     ///< while m_zoomed, base unit
     double      zoomMax = 0;
+    bool        divided = false; ///< its ticker is the one of the 8 divisions
   };
 
   // qcpgraph_curves.cpp
@@ -212,8 +240,25 @@ private:
   /// What a store did other than a reading at the end.
   void        storeChanged();
   void        drawCurves(double from, double to);
-  QColor      colorOf(int curve) const;
   void        updateLegend();
+  /// A store is gone: its curves go, without asking the sources.
+  void        storeGone(QObject *store);
+  // qcpgraph_theme.cpp
+  void        setupTheme();
+  /// The look from variant, design and settings, onto the plot and the curves.
+  void        applyLook();
+  /// Which curve @p curve is for its colour and dashes: its place among the values, its meter.
+  GraphLook::CurveKey keyOf(int curve) const;
+  QColor      colorOf(int curve) const;
+  /// Pens of the curves and the colours of the axes' numbers.
+  void        styleCurves();
+  /// Curve @p curve with @p shown points on the plot's width: markers
+  /// while they are few; dense, neither smoothing nor dashes - a band of
+  /// strokes shows neither, and both cost (a dashed or smoothed wide line
+  /// of thousands of strokes takes seconds).
+  void        styleDensity(const Curve &curve, int shown);
+  /// The 8 divisions of an axis showing @p lo .. @p hi (its unit): the range widened to whole 1-2-5 steps.
+  static void divide(double &lo, double &hi, double &step);
   // qcpgraph_axes.cpp
   void        setupAxes();
   /// Each curve on the axis chosen for it or of its unit, else the next free one.
@@ -252,6 +297,12 @@ private:
   QString     m_notice;
   QList<Curve> m_curves;
   QList<Axis> m_axes;                    ///< kMaxAxes of them, the left one first
+  PlotTheme   m_design;                  ///< setTheme(): the window design
+  GraphLook::Variant m_variant = GraphLook::Neutral;
+  GraphLook::Settings m_lookSettings;
+  GraphLook::Look m_look;
+  bool        m_patterns = false;
+  QCPAbstractItem *m_centreTicks = nullptr;   ///< the phosphor tubes' fine ticks
   GraphTimeBar *m_timeBar = nullptr;
   QScrollBar *m_scrollBar = nullptr;
   QRubberBand *m_zoomBand = nullptr;

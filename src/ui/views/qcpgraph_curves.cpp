@@ -19,6 +19,7 @@ QcpGraph::QcpGraph(QWidget *parent) : QcpPlotBase(parent)
   setMinimumSize(220, 180);
   setupAxes();
   setupInput();
+  setupTheme();
   refreshPlot();
 }
 
@@ -123,11 +124,34 @@ void QcpGraph::makeCurves()
     connect(store, &RecordingStore::cleared, this, &QcpGraph::storeChanged);
     connect(store, &RecordingStore::loaded, this, &QcpGraph::storeChanged);
     connect(store, &RecordingStore::stateChanged, this, &QcpGraph::storeChanged);
-    connect(store, &QObject::destroyed, this, &QcpGraph::makeCurves);
+    connect(store, &QObject::destroyed, this, &QcpGraph::storeGone);
   }
   // the time goes on without readings: the window follows
   if (m_store)
     connect(m_store, &RecordingStore::progressChanged, this, &QcpGraph::scheduleRefresh);
+  storeChanged();
+}
+
+// Only what the graph holds itself: whoever gives the stores may be in the
+// middle of taking this one away.
+void QcpGraph::storeGone(QObject *store)
+{
+  for (int i = int(m_curves.size()) - 1; i >= 0; --i)
+    if (!m_curves.at(i).store || m_curves.at(i).store.data() == store)
+    {
+      m_plot->removeGraph(m_curves.at(i).graph);
+      m_curves.removeAt(i);
+    }
+  m_watched.removeIf([store](const QPointer<RecordingStore> &s) { return !s || s.data() == store; });
+  RecordingStore *base = m_curves.isEmpty() ? nullptr : m_curves.first().store.data();
+  if (base != m_store)
+  {
+    m_store = base;
+    m_followEnd = true;
+    m_zoomed = false;
+    if (base)
+      connect(base, &RecordingStore::progressChanged, this, &QcpGraph::scheduleRefresh, Qt::UniqueConnection);
+  }
   storeChanged();
 }
 
@@ -143,39 +167,6 @@ QList<const RecordingSeries *> QcpGraph::seriesOf(const Curve &curve) const
       if (curve.store->extra(i).id == curve.value.id)
         parts << &curve.store->extra(i);
   return parts;
-}
-
-void QcpGraph::setTheme(const PlotTheme &theme)
-{
-  // the rows above and below the plot on its background
-  QPalette p = palette();
-  p.setBrush(QPalette::Window, theme.background.style() == Qt::NoBrush ? p.base() : theme.background);
-  setPalette(p);
-  setAutoFillBackground(true);
-  m_timeBar->setTextColor(theme.labels);
-  QcpPlotBase::setTheme(theme);
-  // the base knows the time and the left axis: the others too
-  QList<QCPAxis *> axes{ m_plot->xAxis };
-  for (const Axis &a : std::as_const(m_axes))
-    axes << a.axis;
-  theme.applyTo(m_plot, axes);
-  for (int i = 0; i < m_curves.size(); ++i)
-    m_curves[i].graph->setPen(QPen(colorOf(i), 1));
-  updateLegend();
-}
-
-// The first curve in the design's data colour; the next ones in the hues of
-// the graph on QtCharts, stepped for a dark background. By the value's place
-// among the values, so a curve keeps its colour while another meter is closed.
-QColor QcpGraph::colorOf(int curve) const
-{
-  const int slot = m_ownStore ? 0 : qMax(0, int(m_values.indexOf(m_curves.value(curve).value)));
-  if (slot == 0)
-    return theme().data.isValid() ? theme().data : theme().labels;
-  const bool dark = theme().labels.isValid() && theme().labels.lightness() > 128;
-  static const char *light[] = { "#eb6834", "#1baf7a", "#6250d6" };
-  static const char *darkSteps[] = { "#d95926", "#199e70", "#9085e9" };
-  return QColor((dark ? darkSteps : light)[(slot - 1) % 3]);
 }
 
 void QcpGraph::setHold(bool hold)
@@ -224,13 +215,12 @@ void QcpGraph::rebuildPoints()
   for (Curve &c : m_curves)
     rebuildCurve(c);
   assignAxes();
-  for (int i = 0; i < m_curves.size(); ++i)
+  for (const Curve &c : std::as_const(m_curves))
   {
-    const Curve &c = m_curves.at(i);
     c.graph->setVisible(c.axis >= 0);
     c.graph->setValueAxis(m_axes.at(qMax(0, c.axis)).axis);
-    c.graph->setPen(QPen(colorOf(i), 1));
   }
+  styleCurves();
   updateLegend();
 }
 
@@ -377,6 +367,7 @@ void QcpGraph::drawCurves(double from, double to)
         y.append(it->y() / factor);
       }
     }
+    styleDensity(c, int(x.size()));
     c.graph->setData(x, y, true);
   }
 }
@@ -398,9 +389,9 @@ void QcpGraph::updateLegend()
       const QString unit = SiPrefix::displayText(c.unit);
       const QString label = c.label.isEmpty() ? c.meter : c.label;
       const QString full = sources.size() > 1 && !c.meter.isEmpty() && !c.label.isEmpty() ? c.meter + " · " + c.label : label;
-      entries.append({ QPen(colorOf(i), 1), { full, label, label, unit.isEmpty() ? label : unit } });
+      entries.append({ curvePen(i), { full, label, label, unit.isEmpty() ? label : unit } });
     }
-  m_timeBar->setLegend(entries, theme().labels);
+  m_timeBar->setLegend(entries, m_look.theme.labels);
 }
 
 QList<QPointF> QcpGraph::curvePoints(int i) const
@@ -424,10 +415,6 @@ int QcpGraph::curveAxis(int i) const
   return i >= 0 && i < m_curves.size() ? m_curves.at(i).axis : -1;
 }
 
-QColor QcpGraph::curveColor(int i) const
-{
-  return i >= 0 && i < m_curves.size() ? colorOf(i) : QColor();
-}
 
 QString QcpGraph::legendText() const
 {
