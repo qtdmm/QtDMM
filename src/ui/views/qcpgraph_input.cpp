@@ -23,7 +23,8 @@ void QcpGraph::setupInput()
 // A drag with the left or middle button moves the time, with Shift and the
 // left button it draws a frame to zoom on (as the graph on QtCharts). A
 // click - no more than a slip of the mouse - sets the time cursor A, with
-// Shift B; a press on a cursor's line drags that cursor.
+// Shift B; a press on a cursor's line drags that cursor, one on a reference
+// line that line (a cursor goes before a line where they meet).
 void QcpGraph::mousePressed(QMouseEvent *event)
 {
   if (!m_store || !m_plot->axisRect()->rect().contains(event->pos()))
@@ -33,6 +34,11 @@ void QcpGraph::mousePressed(QMouseEvent *event)
   {
     m_drag = Drag::Cursor;
     m_dragCursor = cursor;
+  }
+  else if (const int level = levelAt(event->pos()); event->button() == Qt::LeftButton && !shift && level > -2)
+  {
+    m_drag = Drag::Level;
+    m_dragLevel = level;
   }
   else if (event->button() == Qt::LeftButton && shift)
     m_drag = Drag::Frame;
@@ -49,8 +55,8 @@ void QcpGraph::mouseMoved(QMouseEvent *event)
 {
   if (m_drag == Drag::None)
   {
-    // a cursor's line can be dragged
-    m_plot->setCursor(cursorAt(event->pos()) >= 0 ? Qt::SplitHCursor : Qt::ArrowCursor);
+    // a cursor's line and a reference line can be dragged
+    m_plot->setCursor(cursorAt(event->pos()) >= 0 ? Qt::SplitHCursor : levelAt(event->pos()) > -2 ? Qt::SplitVCursor : Qt::ArrowCursor);
     return;
   }
   if ((event->pos() - m_pressPos).manhattanLength() >= 3)
@@ -72,6 +78,8 @@ void QcpGraph::mouseMoved(QMouseEvent *event)
     m_zoomBand->setGeometry(QRect(m_pressPos, event->pos()).normalized().intersected(m_plot->axisRect()->rect()));
     m_zoomBand->show();
   }
+  else if (m_drag == Drag::Level)
+    dragLevel(m_dragLevel, event->pos().y());
   else if (m_drag == Drag::Cursor)
     setTimeCursor(m_dragCursor, qRound64(m_plot->xAxis->pixelToCoord(event->pos().x()) * 1000));
 }

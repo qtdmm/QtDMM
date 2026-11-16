@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 // QcpGraph: what lies over the curves to read them - the crosshair on a
-// reading, the time cursors A and B - and the statistics column.
+// reading, the time cursors A and B, the reference lines with their
+// crossings, the limit band, the start threshold - and the statistics column.
 #include "ui/views/qcpgraph.h"
 
 #include "core/siprefix.h"
@@ -11,12 +12,115 @@
 #include "ui/views/graphtimebar.h"
 #include "ui/views/qcp.h"
 
+#include <QCoreApplication>
 #include <QElapsedTimer>
 #include <QLayout>
 #include <cmath>
 
+namespace
+{
+// A word the graph on QtCharts has translated already ("mean", "alarm"):
+// not through tr(), so it is not extracted a second time.
+QString word(const char *text)
+{
+  return QCoreApplication::translate("GraphWidget", text);
+}
+
+/// Horizontal lines at values of an axis with a label at the right, a band
+/// between two values and the triangles of crossings: one item draws what
+/// QcpGraph::updateLevels() gave it, at the place the axes have now.
+class LevelLines : public QCPAbstractItem
+{
+public:
+  struct Line
+  {
+    QCPAxis *axis = nullptr;
+    double   value = 0;     ///< the axis' unit
+    QPen     pen;
+    QString  label;         ///< empty: none
+  };
+  struct Mark
+  {
+    double t = 0;           ///< time axis
+    double value = 0;       ///< left axis
+    bool   up = false;
+  };
+
+  explicit LevelLines(QCustomPlot *plot) : QCPAbstractItem(plot) {}
+  double selectTest(const QPointF &, bool, QVariant *) const override { return -1; }
+  void clear()
+  {
+    lines.clear();
+    marks.clear();
+    band = false;
+  }
+
+  QList<Line> lines;
+  QList<Mark> marks;
+  bool   band = false;
+  double bandLow = 0;       ///< left axis' unit; infinite: to the edge
+  double bandHigh = 0;
+  QBrush bandBrush;
+  QColor ink;               ///< labels and the triangles' outline
+  QFont  font;
+
+protected:
+  void draw(QCPPainter *painter) override
+  {
+    const QRectF r = parentPlot()->axisRect()->rect();
+    const QCPAxis *left = parentPlot()->yAxis;
+    if (band)
+    {
+      const double top = std::isfinite(bandHigh) ? left->coordToPixel(bandHigh) : r.top();
+      const double bottom = std::isfinite(bandLow) ? left->coordToPixel(bandLow) : r.bottom();
+      if (bottom > top)
+        painter->fillRect(QRectF(QPointF(r.left(), qMax(top, r.top())), QPointF(r.right(), qMin(bottom, r.bottom()))), bandBrush);
+    }
+    painter->setFont(font);
+    const QFontMetricsF metrics(font);
+    for (const Line &line : std::as_const(lines))
+    {
+      const double y = line.axis->coordToPixel(line.value);
+      if (line.pen.style() != Qt::NoPen)
+      {
+        painter->setPen(line.pen);
+        painter->drawLine(QLineF(r.left(), y, r.right(), y));
+      }
+      if (line.label.isEmpty())
+        continue;
+      // above the line, unless that leaves the plot
+      const QSizeF size = metrics.size(Qt::TextSingleLine, line.label);
+      const double top = y - size.height() - 1 >= r.top() ? y - size.height() - 1 : y + 1;
+      painter->setPen(ink);
+      painter->drawText(QRectF(r.right() - size.width() - 3, top, size.width(), size.height()), Qt::AlignCenter, line.label);
+    }
+    if (marks.isEmpty())
+      return;
+    // hollow, in the lettering's colour: seen on a curve of any colour
+    painter->setAntialiasing(true);
+    painter->setPen(QPen(ink, 1.5));
+    painter->setBrush(ink.lightness() > 128 ? Qt::black : Qt::white);
+    for (const Mark &mark : std::as_const(marks))
+    {
+      const double x = parentPlot()->xAxis->coordToPixel(mark.t), y = left->coordToPixel(mark.value);
+      const double d = mark.up ? 1 : -1;   // the tip up when it rose (pixels grow down)
+      painter->drawPolygon(QPolygonF({ QPointF(x - 5, y - d * 2), QPointF(x + 5, y - d * 2), QPointF(x, y - d * 11) }));
+    }
+  }
+};
+}
+
 void QcpGraph::setupOverlays()
 {
+  // band and lines over the grid and under the curves; labels and crossings over them
+  auto *levels = new LevelLines(m_plot);
+  levels->setLayer(QStringLiteral("grid"));
+  levels->setSelectable(false);
+  m_levels = levels;
+  auto *marks = new LevelLines(m_plot);
+  marks->setLayer(QStringLiteral("axes"));
+  marks->setSelectable(false);
+  m_levelMarks = marks;
   for (int i = 0; i < 2; ++i)
   {
     m_cursorLine[i] = new QCPItemStraightLine(m_plot);
@@ -248,4 +352,275 @@ void QcpGraph::layoutStats()
 QString QcpGraph::statsText() const
 {
   return GraphStats::text(statsInput());
+}
+
+ValueRef QcpGraph::leftValue() const
+{
+  const int curve = leftCurve();
+  return curve < 0 || m_ownStore ? ValueRef(-1) : m_curves.at(curve).value;
+}
+
+void QcpGraph::setReference(const GraphReference::Line &line)
+{
+  if (line == m_reference)
+    return;
+  m_reference = line;
+  m_followedAge.invalidate();
+  redraw();
+  Q_EMIT referenceChanged();
+}
+
+void QcpGraph::setReferenceLines(const QList<double> &values)
+{
+  const QList<double> lines = GraphReference::lines(values);
+  if (lines == m_referenceLines)
+    return;
+  m_referenceLines = lines;
+  redraw();
+  Q_EMIT referenceChanged();
+}
+
+void QcpGraph::setCrossingsVisible(bool on)
+{
+  if (on == m_crossingsOn)
+    return;
+  m_crossingsOn = on;
+  redraw();
+  Q_EMIT referenceChanged();
+}
+
+void QcpGraph::setAlarmThresholds(const QList<double> &values)
+{
+  m_alarmThresholds = values;
+  if (m_reference.kind == GraphReference::Alarm && !values.contains(m_reference.value))
+    setReference(GraphReference::line(GraphReference::Value, m_reference.value));
+}
+
+void QcpGraph::setLimits(const ValueRef &value, double low, double high)
+{
+  m_limitValue = value;
+  m_limitLow = low;
+  m_limitHigh = high;
+  redraw();
+}
+
+// As the axis' numbers: four digits with the prefix that suits the value
+QString QcpGraph::levelText(double value) const
+{
+  const int curve = leftCurve();
+  const QString base = curve < 0 ? QString() : m_curves.at(curve).unit;
+  QString prefix;
+  const double v = SiPrefix::scale(value, base, &prefix);
+  return base.isEmpty() ? QString::number(v, 'g', 4) : QString("%1 %2").arg(QString::number(v, 'g', 4), SiPrefix::displayText(prefix + base));
+}
+
+// Over millions of readings the statistics of the window take a while:
+// then not with every picture, a tenth of the time at most
+double QcpGraph::followedValue()
+{
+  if (m_followedAge.isValid() && m_followedAge.elapsed() < m_followedCost * 10)
+    return m_followed;
+  QElapsedTimer cost;
+  cost.start();
+  m_followed = qQNaN();
+  const GraphStats::Curve curve = statsCurve(leftCurve());
+  const qint64 from = windowStart(), to = from + qint64(m_windowSeconds) * 1000;
+  // the series at the end of the time shown
+  if (const RecordingSeries *series = curve.seriesAt(qMin(to, m_store ? m_store->duration() : to)); series && curve.store)
+  {
+    const RecordingStore::Stats st = curve.store->statsOf(*series, from - curve.shift, to - curve.shift);
+    if (st.count > 0)
+      m_followed = m_reference.kind == GraphReference::Mean ? st.mean : m_reference.kind == GraphReference::Min ? st.min : st.max;
+  }
+  m_followedCost = cost.elapsed();
+  m_followedAge.start();
+  return m_followed;
+}
+
+void QcpGraph::updateLevels()
+{
+  // another value on the left: its alarms and its limit band
+  if (const ValueRef left = leftValue(); left != m_lastLeft)
+  {
+    m_lastLeft = left;
+    Q_EMIT leftValueChanged();
+  }
+  auto *levels = static_cast<LevelLines *>(m_levels);
+  auto *marks = static_cast<LevelLines *>(m_levelMarks);
+  levels->clear();
+  marks->clear();
+  // labels and crossings in the lettering's colour, as the axes' numbers
+  marks->ink = m_look.theme.labels.isValid() ? m_look.theme.labels : palette().color(QPalette::Text);
+  marks->font = m_plot->yAxis->tickLabelFont();
+  m_levelsDrawn.clear();
+  m_bandDrawn = false;
+  m_triggerLevel = qQNaN();
+  const int curve = leftCurve();
+  const Axis &axis = m_axes.first();
+  const double lo = axis.axis->range().lower * axis.factor, hi = axis.axis->range().upper * axis.factor;
+  const double from = m_plot->xAxis->range().lower, to = m_plot->xAxis->range().upper;
+  const double width = m_plot->axisRect()->width();
+  if (curve >= 0 && hi > lo)
+  {
+    // the reference line, then the added ones, dashed apart from it
+    const QColor labels = marks->ink;
+    const QPen pen(QColor(labels.red(), labels.green(), labels.blue(), 150), 1);
+    QPen dashed = pen;
+    dashed.setStyle(Qt::DashLine);
+    auto add = [&](int line, double value, const QString &what, bool counted)
+    {
+      if (!(value > lo && value < hi))
+        return;
+      Level level{ line, value, what + levelText(value), 0 };
+      if (counted && m_crossingsOn && width > 0)
+      {
+        const QList<GraphReference::Crossing> found
+          = GraphReference::crossings(m_curves.at(curve).points, from, to, 3 * (to - from) / width, value);
+        for (const GraphReference::Crossing &c : found)
+          marks->marks << LevelLines::Mark{ c.t, value / axis.factor, c.up };
+        level.crossings = int(found.size());
+        if (level.crossings > 0)
+          level.label += QString(" · %1×").arg(level.crossings);
+      }
+      levels->lines << LevelLines::Line{ axis.axis, value / axis.factor, line < 0 ? pen : dashed, QString() };
+      marks->lines << LevelLines::Line{ axis.axis, value / axis.factor, QPen(Qt::NoPen), level.label };
+      m_levelsDrawn << level;
+    };
+    using namespace GraphReference;
+    if (m_reference.kind != Off)
+    {
+      const double value = m_reference.follows() ? followedValue() : m_reference.value;
+      const QString what = m_reference.kind == Mean ? word("mean") : m_reference.kind == Min ? word("min")
+                           : m_reference.kind == Max ? word("max") : m_reference.kind == Alarm ? word("alarm") : QString();
+      // not counted on the window's mean, minimum or maximum: they follow
+      // the curve, a noisy one crosses its mean at every other reading
+      add(-1, value, what.isEmpty() ? what : what + ' ', !m_reference.follows());
+    }
+    for (int i = 0; i < m_referenceLines.size(); ++i)
+      add(i, m_referenceLines.at(i), QString(), true);
+    // the limit test's band
+    if (m_limitValue.id >= 0 && m_limitValue == leftValue())
+    {
+      const QPen green(QColor(0x3c, 0xb0, 0x4a), 1, Qt::DashLine);
+      for (double bound : { m_limitLow, m_limitHigh })
+        if (std::isfinite(bound) && bound > lo && bound < hi)
+          levels->lines << LevelLines::Line{ axis.axis, bound / axis.factor, green, QString() };
+      const double low = std::isfinite(m_limitLow) ? m_limitLow : -qInf(), high = std::isfinite(m_limitHigh) ? m_limitHigh : qInf();
+      // nothing of the band in the scale: none
+      if (qMin(high, hi) > qMax(low, lo))
+      {
+        levels->band = m_bandDrawn = true;
+        levels->bandLow = low / axis.factor;
+        levels->bandHigh = high / axis.factor;
+        levels->bandBrush = QColor(0x3c, 0xb0, 0x4a, 28);
+      }
+    }
+  }
+  // the start threshold of a recording waiting for it, on the axis of the value it compares
+  for (const Curve &c : std::as_const(m_curves))
+  {
+    if (m_ownStore || c.axis < 0 || !c.store)
+      continue;
+    const RecordingStore::StartMode mode = c.store->startMode();
+    const ValueRef trigger = c.store->triggerValue();
+    if ((mode != RecordingStore::Raising && mode != RecordingStore::Falling) || trigger.id != c.value.id
+        || !(trigger.source.isEmpty() || trigger.source == c.value.source))
+      continue;
+    m_triggerLevel = mode == RecordingStore::Raising ? c.store->raisingThreshold() : c.store->fallingThreshold();
+    const Axis &on = m_axes.at(c.axis);
+    levels->lines << LevelLines::Line{ on.axis, m_triggerLevel / on.factor, QPen(m_look.trigger, 1, m_look.oneHue ? Qt::DashLine : Qt::SolidLine), QString() };
+    break;
+  }
+}
+
+double QcpGraph::referenceValue(int line) const
+{
+  for (const Level &level : m_levelsDrawn)
+    if (level.line == line)
+      return level.value;
+  return qQNaN();
+}
+
+QString QcpGraph::referenceLabel(int line) const
+{
+  for (const Level &level : m_levelsDrawn)
+    if (level.line == line)
+      return level.label;
+  return QString();
+}
+
+int QcpGraph::crossingCount(int line) const
+{
+  for (const Level &level : m_levelsDrawn)
+    if (level.line == line)
+      return level.crossings;
+  return 0;
+}
+
+int QcpGraph::referencePixel(int line) const
+{
+  const double value = referenceValue(line);
+  return std::isfinite(value) ? qRound(m_plot->yAxis->coordToPixel(value / m_axes.first().factor)) : -1;
+}
+
+bool QcpGraph::limitBand(double *low, double *high) const
+{
+  if (m_bandDrawn && low)
+    *low = std::isfinite(m_limitLow) ? m_limitLow : -qInf();
+  if (m_bandDrawn && high)
+    *high = std::isfinite(m_limitHigh) ? m_limitHigh : qInf();
+  return m_bandDrawn;
+}
+
+int QcpGraph::levelAt(const QPoint &pos) const
+{
+  if (!m_plot->axisRect()->rect().contains(pos))
+    return -2;
+  for (const Level &level : m_levelsDrawn)
+    if (std::abs(referencePixel(level.line) - pos.y()) <= 4)
+      return level.line;
+  return -2;
+}
+
+double QcpGraph::roundedValueAt(const QPoint &globalPos) const
+{
+  const Axis &axis = m_axes.first();
+  const QRect rect = m_plot->axisRect()->rect();
+  const QPoint pos = m_plot->mapFromGlobal(globalPos);
+  const double y = rect.contains(pos) ? pos.y() : rect.center().y();
+  return GraphReference::rounded(axis.axis->pixelToCoord(y) * axis.factor, axis.axis->range().size() * axis.factor);
+}
+
+// The reference line snaps to 0, to the mean, minimum and maximum of the
+// time shown, to the alarm thresholds and to the limits drawn
+void QcpGraph::dragLevel(int line, double y)
+{
+  const Axis &axis = m_axes.first();
+  const double span = axis.axis->range().size() * axis.factor, height = m_plot->axisRect()->height();
+  if (!(span > 0) || height <= 0)
+    return;
+  const double value = axis.axis->pixelToCoord(y) * axis.factor;
+  if (line >= 0)
+  {
+    QList<double> lines = m_referenceLines;
+    if (line < lines.size())
+      lines[line] = GraphReference::rounded(value, span);
+    setReferenceLines(lines);
+    return;
+  }
+  using namespace GraphReference;
+  QList<Snap> snaps{ Snap{ Zero, 0 } };
+  const GraphStats::Curve curve = statsCurve(leftCurve());
+  const qint64 from = windowStart(), to = from + qint64(m_windowSeconds) * 1000;
+  if (const RecordingSeries *series = curve.seriesAt(qMin(to, m_store ? m_store->duration() : to)); series && curve.store)
+    if (const RecordingStore::Stats st = curve.store->statsOf(*series, from - curve.shift, to - curve.shift); st.count > 0)
+      snaps << Snap{ Mean, st.mean } << Snap{ Min, st.min } << Snap{ Max, st.max };
+  if (leftValue().id >= 0)
+    for (double a : std::as_const(m_alarmThresholds))
+      snaps << Snap{ Alarm, a };
+  if (m_bandDrawn)
+    for (double bound : { m_limitLow, m_limitHigh })
+      if (std::isfinite(bound))
+        snaps << Snap{ Value, bound };
+  setReference(dragged(value, span, span / height, snaps));
 }

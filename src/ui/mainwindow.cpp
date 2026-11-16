@@ -1236,6 +1236,7 @@ void MainWindow::applyQGraphLook(QcpGraphView *view)
   settings.pointMode = prefs->pointMode();
   settings.lineWidth = prefs->lineWidth();
   settings.cursor = prefs->cursorColor();
+  settings.trigger = prefs->startColor();
   settings.crosshair = prefs->crosshair();
   settings.statsLeft = prefs->statsLeft();
   view->graph()->setLookSettings(settings);
@@ -1265,6 +1266,59 @@ bool MainWindow::editQGraphSources(QcpGraphView *view)
 
 // "Axis" in the menu of a graph on QCustomPlot: for each value Automatic or
 // one of the axes the graph has.
+// The entries of the graph on QtCharts, with its translations (context
+// "GraphWidget", not through tr(): they are not extracted a second time)
+void MainWindow::fillQGraphReferenceMenu(QMenu *menu, QcpGraphView *view, const QPoint &globalPos)
+{
+  using namespace GraphReference;
+  auto word = [](const char *text) { return QCoreApplication::translate("GraphWidget", text); };
+  GraphModel *model = view->model();
+  const QcpGraph *graph = view->graph();
+  const Line now = model->reference();
+  auto entry = [&](const QString &text, const Line &line)
+  {
+    QAction *a = menu->addAction(text);
+    a->setCheckable(true);
+    a->setChecked(now == line);
+    connect(a, &QAction::triggered, model, [model, line] { model->setReference(line); });
+    return a;
+  };
+  entry(word("At &0"), line(Zero));
+  entry(word("&Mean of the window"), line(Mean));
+  entry(word("M&inimum of the window"), line(Min));
+  entry(word("Ma&ximum of the window"), line(Max));
+  if (!graph->alarmThresholds().isEmpty())
+    menu->addSeparator();
+  for (double a : graph->alarmThresholds())
+    entry(word("Alarm threshold %1").arg(graph->levelText(a)), line(GraphReference::Alarm, a));
+  if (now.kind == Value)
+  {
+    menu->addSeparator();
+    entry(word("At %1 (dragged)").arg(graph->levelText(now.value)), now)->setEnabled(false);
+  }
+  menu->addSeparator();
+  entry(word("&Off"), line(Off));
+  // further lines at fixed values: where the menu was opened, else in the middle
+  menu->addSeparator();
+  const QList<double> lines = model->referenceLines();
+  const double at = graph->roundedValueAt(globalPos);
+  QAction *add = menu->addAction(word("&Add a line at %1").arg(graph->levelText(at)));
+  add->setEnabled(lines.size() < kMaxLines && graph->leftValue().id >= 0);
+  connect(add, &QAction::triggered, model, [model, lines, at] { model->setReferenceLines(lines + QList<double>{ at }); });
+  for (int i = 0; i < lines.size(); ++i)
+    connect(menu->addAction(word("Remove the line at %1").arg(graph->levelText(lines.at(i)))), &QAction::triggered, model, [model, lines, i]
+    {
+      QList<double> rest = lines;
+      rest.removeAt(i);
+      model->setReferenceLines(rest);
+    });
+  menu->addSeparator();
+  QAction *crossings = menu->addAction(tr("&Crossings"));
+  crossings->setCheckable(true);
+  crossings->setChecked(model->crossingsVisible());
+  connect(crossings, &QAction::toggled, model, &GraphModel::setCrossingsVisible);
+}
+
 void MainWindow::fillQGraphAxisMenu(QMenu *menu, QcpGraphView *view)
 {
   const QList<ValueRef> values = view->model()->values();
@@ -2745,6 +2799,8 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
       patterns->setChecked(qgraph->model()->patternedLines());
       connect(patterns, &QAction::toggled, qgraph, [qgraph](bool on) { qgraph->model()->setPatternedLines(on); });
     }
+    if (!qgraph->showsFile())
+      fillQGraphReferenceMenu(menu.addMenu(tr("Re&ference line")), qgraph, QCursor::pos());
     {
       QAction *stats = menu.addAction(tr("Stat&istics"));
       stats->setCheckable(true);
@@ -3759,6 +3815,9 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
     model->setVariant(get(key + "-variant", QString()).toString());
     model->setPatternedLines(get(key + "-patterns", false).toBool());
     model->setStatsVisible(get(key + "-stats", false).toBool());
+    model->setReferenceSetting(get(key + "-reference", QString()).toString());
+    model->setReferenceLinesSetting(get(key + "-reference-lines", QString()).toString());
+    model->setCrossingsVisible(get(key + "-crossings", true).toBool());
     if (const int seconds = get(key + "-window", 0).toInt(); seconds > 0)
       model->setWindowSeconds(seconds);
     model->setFollowAll(get(key + "-all", false).toBool());
@@ -4116,6 +4175,9 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
     set("Windows/" + w->objectName() + "-variant", model->variant());
     set("Windows/" + w->objectName() + "-patterns", model->patternedLines());
     set("Windows/" + w->objectName() + "-stats", model->statsVisible());
+    set("Windows/" + w->objectName() + "-reference", model->referenceSetting());
+    set("Windows/" + w->objectName() + "-reference-lines", model->referenceLinesSetting());
+    set("Windows/" + w->objectName() + "-crossings", model->crossingsVisible());
     set("Windows/" + w->objectName() + "-window", model->windowSeconds());
     set("Windows/" + w->objectName() + "-all", model->followAll());
     set("Windows/" + w->objectName() + "-shown", !w->isHidden());

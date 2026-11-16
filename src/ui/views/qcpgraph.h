@@ -4,6 +4,7 @@
 
 #include "ui/views/qcpplotbase.h"
 
+#include <QElapsedTimer>
 #include <QHash>
 #include <QList>
 #include <QMap>
@@ -13,6 +14,7 @@
 
 #include "core/valueref.h"
 #include "ui/views/graphlook.h"
+#include "ui/views/graphreference.h"
 #include "ui/views/graphstats.h"
 
 class GraphStatsPanel;
@@ -62,6 +64,13 @@ class RecordingStore;
 /// Shift and a click B (lines one can drag, each with the level of that
 /// value); the statistics column (GraphStats) has the values at the
 /// cursors, what the curves did from A to B and over the time shown.
+///
+/// A reference line (GraphReference) lies on the left axis' value: at 0,
+/// at a value it was dragged to, at an alarm threshold, or following the
+/// mean, minimum or maximum of the time shown; up to four lines more at
+/// fixed values. Where the curve crosses a fixed line a small triangle
+/// stands, the line's label counts them. The limit test's band and the
+/// start threshold of the recording are drawn on the axis of their value.
 ///
 /// So far: lines with gaps, the time axis, the value axes fitted to what is
 /// shown or fixed by unit, the legend, the time buttons and the state above
@@ -161,6 +170,35 @@ public:
   bool        statsVisible() const { return m_statsOn; }
   /// @}
 
+  /// @name Lines on the left axis' value
+  /// @{
+  /// The value on the left axis, which reference line, crossings, limit
+  /// band and cursor levels go by; an id of -1: none (a file's is none too).
+  ValueRef    leftValue() const;
+  void        setReference(const GraphReference::Line &line);
+  GraphReference::Line reference() const { return m_reference; }
+  /// Further lines at fixed values (base unit), GraphReference::kMaxLines at most.
+  void        setReferenceLines(const QList<double> &values);
+  QList<double> referenceLines() const { return m_referenceLines; }
+  /// The triangles where the curve crosses a fixed line, and their count in its label.
+  void        setCrossingsVisible(bool on);
+  bool        crossingsVisible() const { return m_crossingsOn; }
+  /// The alarm thresholds on the left value (base unit): the dragged line snaps to them.
+  /// A line on a threshold that went stays where it is.
+  void        setAlarmThresholds(const QList<double> &values);
+  QList<double> alarmThresholds() const { return m_alarmThresholds; }
+  /// The limit test's band of @p value: two dashed green lines at @p low
+  /// and @p high, faintly green between, while that value is the left
+  /// one. An open side (NaN or infinite) has no line, the band reaches the
+  /// edge. An id of -1 takes it away.
+  void        setLimits(const ValueRef &value, double low = 0, double high = 0);
+  /// The left axis' value at @p globalPos on a round step, for a line added
+  /// there; outside the plot the middle of the axis.
+  double      roundedValueAt(const QPoint &globalPos) const;
+  /// "1.234 mV": a value of the left axis as its numbers.
+  QString     levelText(double value) const;
+  /// @}
+
   void        setHold(bool hold) override;
   /// Draws the store anew; the readings are the store's and stay.
   void        clear() override;
@@ -205,6 +243,17 @@ public:
   double      cursorLevel(int which) const;
   /// The x of cursor @p which in the plot widget, -1 while it is not shown.
   int         cursorPixel(int which) const;
+  /// Line @p line (-1 the reference line, 0.. the added ones): its value now
+  /// (base unit; NaN while it is not drawn), its label, its crossings, its
+  /// y in the plot widget (-1 while it is not drawn).
+  double      referenceValue(int line = -1) const;
+  QString     referenceLabel(int line = -1) const;
+  int         crossingCount(int line = -1) const;
+  int         referencePixel(int line = -1) const;
+  /// The limit band drawn: its edges (base unit, infinite for an open side); false: none.
+  bool        limitBand(double *low, double *high) const;
+  /// The start threshold's line (base unit); NaN: none.
+  double      triggerLevel() const { return m_triggerLevel; }
   QScrollBar *scrollBar() const { return m_scrollBar; }
   GraphTimeBar *timeBar() const { return m_timeBar; }
   /// The rectangle of the axes in the plot widget, for zoomToRect().
@@ -219,6 +268,10 @@ Q_SIGNALS:
   void        followAllChanged(bool on);
   void        statsVisibleChanged(bool on);
   void        cursorsChanged();
+  /// The reference line, the added lines or the crossings' switch changed, by a drag too.
+  void        referenceChanged();
+  /// Another value is on the left axis.
+  void        leftValueChanged();
 
 protected:
   void        refreshPlot() override;
@@ -321,6 +374,14 @@ private:
   void        updateStats();
   /// The column at its side, as wide as it wants; the rest for the plot.
   void        layoutStats();
+  /// Reference line, added lines, crossings, limit band and start threshold where the axes are now.
+  void        updateLevels();
+  /// The value the reference line follows (mean, minimum, maximum of the time shown); NaN: none.
+  double      followedValue();
+  /// The line at @p pos one can drag: -1 the reference line, 0.. an added one; -2: none.
+  int         levelAt(const QPoint &pos) const;
+  /// The line dragged to @p y (plot widget pixels): the reference line snaps, an added one takes a round value.
+  void        dragLevel(int line, double y);
   /// The cursor whose line is at @p pos (plot widget pixels): 0, 1, or -1.
   int         cursorAt(const QPoint &pos) const;
   // qcpgraph_input.cpp
@@ -360,6 +421,24 @@ private:
   QCPItemStraightLine *m_cursorLine[2] = {};
   QCPItemStraightLine *m_cursorLevel[2] = {};
   QCPItemText *m_cursorFlag[2] = {};
+  GraphReference::Line m_reference;
+  QList<double> m_referenceLines;
+  bool        m_crossingsOn = true;
+  QList<double> m_alarmThresholds;
+  ValueRef    m_limitValue{ -1 };
+  double      m_limitLow = 0;
+  double      m_limitHigh = 0;
+  ValueRef    m_lastLeft{ -1 };          ///< leftValueChanged() was said for it
+  QCPAbstractItem *m_levels = nullptr;      ///< band and lines, under the curves
+  QCPAbstractItem *m_levelMarks = nullptr;  ///< labels and crossings, over them
+  /// A line drawn: which (-1 the reference line, 0.. added), its value, its label, its crossings.
+  struct Level { int line = -1; double value = 0; QString label; int crossings = 0; };
+  QList<Level> m_levelsDrawn;
+  bool        m_bandDrawn = false;
+  double      m_triggerLevel = qQNaN();
+  double      m_followed = qQNaN();      ///< followedValue(), kept while it costs
+  QElapsedTimer m_followedAge;
+  qint64      m_followedCost = 0;        ///< ms the last one took
   qint64      m_bucket = 1;      ///< the bucket the points were thinned with, ms
   bool        m_dirty = true;    ///< the points are to be built anew
   int         m_windowSeconds = 600;
@@ -370,10 +449,11 @@ private:
   bool        m_zoomed = false;
   struct { qint64 start = 0; int seconds = 0; bool all = false; bool atEnd = true; } m_zoomBefore;
   /// The mouse: a drag moves the time, with Shift it draws the zoom frame.
-  enum class Drag { None, Pan, Frame, Cursor };
+  enum class Drag { None, Pan, Frame, Cursor, Level };
   Drag        m_drag = Drag::None;
   QPoint      m_pressPos;
   qint64      m_pressStart = 0;
   bool        m_moved = false;      ///< the mouse went more than a slip since the press: no click
   int         m_dragCursor = 0;     ///< Drag::Cursor: which one
+  int         m_dragLevel = -1;     ///< Drag::Level: which line (levelAt())
 };

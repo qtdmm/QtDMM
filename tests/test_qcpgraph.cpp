@@ -1155,6 +1155,193 @@ static void shot()
   }
 }
 
+// GraphReference: the texts of the settings, crossings, where a drag puts the line
+static void testReferenceRules()
+{
+  using namespace GraphReference;
+  for (const QString &text : { QString(), QString("mean"), QString("min"), QString("max"), QString("off"), QString("alarm 2.5"), QString("-0.75") })
+    check(setting(fromSetting(text)) == text, "the reference as read: '" + text + "' -> '" + setting(fromSetting(text)) + "'");
+  check(fromSetting("nonsense").kind == Zero && fromSetting("0").kind == Zero, "nothing readable and 0: at 0");
+  check(fromSetting("alarm 2.5").kind == Alarm && fromSetting("alarm 2.5").value == 2.5, "an alarm threshold keeps its value");
+  check(line(Mean, 3) == line(Mean, 7) && !(line(Value, 3) == line(Value, 7)), "only Value and Alarm differ by their value");
+  check(linesFromSetting("1.2 x 2.5 0 0.5 0.7") == QList<double>({ 1.2, 2.5, 0, 0.5 }), "added lines: the numbers, four at most");
+  check(linesSetting({ 1.2, -2 }) == "1.2 -2", "added lines as text");
+
+  // four periods of 1 + sin over 20 s: two crossings of 1.2 in each
+  QList<QPointF> points;
+  for (int i = 0; i < 200; ++i)
+    points << QPointF(i * 0.1, 1.0 + std::sin((i + 0.5) * 2 * M_PI / 50));
+  QList<Crossing> found = crossings(points, 0, 30, 0.1, 1.2);
+  check(found.size() == 8 && found.first().up && !found.at(1).up, QString("1.2 crossed 8 times, up first: %1").arg(found.size()));
+  check(crossings(points, 0, 30, 0.1, 2.5).isEmpty(), "2.5 never");
+  check(crossings(points, 5, 10, 0.1, 1.2).size() == 2, "only those of the time shown");
+  // a gap is no crossing; a noisy edge is one
+  points = { QPointF(0, 0), QPointF(1, qQNaN()), QPointF(2, 2), QPointF(3, 0.9), QPointF(3.01, 1.1), QPointF(3.02, 0.9), QPointF(3.03, 1.1) };
+  found = crossings(points, 0, 10, 0.5, 1);
+  check(found.size() == 1 && found.first().up, QString("no crossing over a gap, a noisy edge once: %1").arg(found.size()));
+
+  // a drag: snaps within 6 pixels, else a round value of its own
+  const QList<Snap> snaps{ Snap{ Zero, 0 }, Snap{ Mean, 1.234 }, Snap{ Alarm, 2 } };
+  check(dragged(0.05, 4, 0.01, snaps).kind == Zero, "snaps to 0");
+  check(dragged(1.2, 4, 0.01, snaps).kind == Mean, "snaps to the mean");
+  const Line alarm = dragged(1.95, 4, 0.01, snaps);
+  check(alarm.kind == Alarm && alarm.value == 2, "snaps to an alarm threshold");
+  const Line own = dragged(1.5678, 4, 0.01, snaps);
+  check(own.kind == Value && std::abs(own.value - 1.55) < 1e-9, QString("else a value on a round step: %1").arg(own.value));
+
+  GraphModel model;
+  int changed = 0;
+  QObject::connect(&model, &GraphModel::referenceChanged, [&] { changed++; });
+  check(model.referenceSetting().isEmpty() && model.crossingsVisible() && model.referenceLines().isEmpty(), "a new model: the line at 0, crossings on");
+  model.setReferenceSetting("mean");
+  model.setReferenceSetting("mean");
+  model.setReferenceLinesSetting("1.5 -2");
+  model.setCrossingsVisible(false);
+  check(changed == 3 && model.reference().kind == Mean && model.referenceLinesSetting() == "1.5 -2", "the model keeps them and says a change once");
+}
+
+static void testLevels()
+{
+  Bench bench;
+  QcpGraph &graph = bench.graph;
+  bench.a.live();
+  bench.b.live();
+  graph.setValues({ ValueRef(0, "device:a"), ValueRef(0, "device:b") });
+  graph.setValueAxes({ { ValueRef(0, "device:b"), 1 } });
+  Feed &feed = bench.feedA;
+  feed.step = 100;
+  bench.feedB.step = 100;
+  // four periods of 1 + sin over 20 s, as the test of the graph on QtCharts
+  for (int i = 0; i < 200; ++i)
+  {
+    feed.value(1.0 + std::sin((i + 0.5) * 2 * M_PI / 50));
+    bench.feedB.value(5);
+  }
+  graph.setFixedRanges({ { "V", { -1.0, 3.0 } } });
+  graph.refreshNow();
+  check(graph.leftValue() == ValueRef(0, "device:a"), "the left value is the first one's");
+  check(graph.reference().kind == GraphReference::Zero && graph.referenceValue() == 0 && graph.referenceLabel().startsWith("0 V"),
+        "the reference line at 0 by default: " + graph.referenceLabel());
+
+  int changed = 0;
+  QObject::connect(&graph, &QcpGraph::referenceChanged, [&] { changed++; });
+  graph.setReference(GraphReference::line(GraphReference::Off));   // the minimum touches 0 V
+  check(std::isnan(graph.referenceValue()) && changed == 1, "off: no line");
+  graph.setReferenceLines({ 1.2, 2.5, 0.0, 0.5, 0.7, 0.9 });
+  check(graph.referenceLines() == QList<double>({ 1.2, 2.5, 0.0, 0.5 }), "added lines: four at most");
+  check(graph.crossingCount(0) == 8 && graph.crossingCount(1) == 0,
+        QString("1.2 V crossed 8 times, 2.5 V never: %1, %2").arg(graph.crossingCount(0)).arg(graph.crossingCount(1)));
+  check(graph.referenceLabel(0) == QString::fromUtf8("1.2 V · 8×") && graph.referenceLabel(1) == "2.5 V",
+        "the label counts them: " + graph.referenceLabel(0) + " / " + graph.referenceLabel(1));
+  graph.setCrossingsVisible(false);
+  check(graph.crossingCount(0) == 0 && graph.referenceLabel(0) == "1.2 V", "crossings off: none counted");
+  graph.setCrossingsVisible(true);
+
+  // the lines that follow the readings; none counted on them
+  graph.setReference(GraphReference::line(GraphReference::Mean));
+  const RecordingStore::Stats st = bench.a.stats(0, 60000);
+  check(std::abs(graph.referenceValue() - st.mean) < 1e-9 && graph.crossingCount(-1) == 0 && graph.referenceLabel().startsWith("mean "),
+        "the mean of the time shown, not counted: " + graph.referenceLabel());
+  graph.setReference(GraphReference::line(GraphReference::Max));
+  check(std::abs(graph.referenceValue() - st.max) < 1e-9, "the maximum");
+  feed.value(2.4);
+  bench.feedB.value(5);
+  graph.refreshNow();
+  check(std::abs(graph.referenceValue() - 2.4) < 1e-9, QString("it follows the readings: %1").arg(graph.referenceValue()));
+  graph.setReference(GraphReference::line(GraphReference::Value, 0.5));
+  check(graph.crossingCount(-1) == 8, QString("the reference line at 0.5 V is counted too: %1").arg(graph.crossingCount(-1)));
+  graph.setReference(GraphReference::line(GraphReference::Value, 7));
+  check(std::isnan(graph.referenceValue()), "a line outside the scale is not drawn");
+
+  // alarm thresholds: a line on one that went stays where it is
+  graph.setAlarmThresholds({ 2.0, -0.5 });
+  graph.setReference(GraphReference::line(GraphReference::Alarm, 2.0));
+  check(graph.referenceLabel().startsWith("alarm 2 V"), "on an alarm threshold: " + graph.referenceLabel());
+  graph.setAlarmThresholds({ -0.5 });
+  check(graph.reference().kind == GraphReference::Value && graph.reference().value == 2.0, "the threshold went: a value of its own");
+
+  // the limit band: of the left value only, an open side to the edge
+  double low = 0, high = 0;
+  check(!graph.limitBand(&low, &high), "no limit band by default");
+  graph.setLimits(ValueRef(0, "device:a"), 0.5, 1.5);
+  check(graph.limitBand(&low, &high) && low == 0.5 && high == 1.5, "the limit band of the left value");
+  graph.setLimits(ValueRef(0, "device:a"), qQNaN(), 1.5);
+  check(graph.limitBand(&low, &high) && std::isinf(low) && high == 1.5, "an open side reaches the edge");
+  graph.setLimits(ValueRef(0, "device:a"), 5, 6);
+  check(!graph.limitBand(&low, &high), "a band outside the scale: none");
+  graph.setLimits(ValueRef(0, "device:b"), 0.5, 1.5);
+  check(!graph.limitBand(&low, &high), "the band of another value: none");
+  graph.setLimits(ValueRef(-1));
+
+  // the start threshold of a recording waiting for it
+  check(std::isnan(graph.triggerLevel()), "no start threshold while the start is manual");
+  bench.a.setThresholds(0.25, 1.75);
+  bench.a.setStartMode(RecordingStore::Raising);
+  graph.refreshNow();
+  check(graph.triggerLevel() == 1.75, QString("the raising threshold: %1").arg(graph.triggerLevel()));
+  bench.a.setStartMode(RecordingStore::Falling);
+  graph.refreshNow();
+  check(graph.triggerLevel() == 0.25, "the falling one");
+  bench.a.setStartMode(RecordingStore::Manual);
+  graph.refreshNow();
+
+  // the mouse: the reference line snaps, an added line takes a round value, no cursor is set
+  const QRect plot = graph.plotRect();
+  QTest::qWait(30);
+  QWidget *plotWidget = graph.childAt(plot.center() + QPoint(0, graph.timeBar()->height()));
+  check(plotWidget != nullptr, "the plot under the mouse");
+  if (plotWidget)
+  {
+    auto drag = [&](int line, int toY)
+    {
+      const QPoint from(plot.left() + 40, graph.referencePixel(line)), to(plot.left() + 40, toY);
+      QTest::mousePress(plotWidget, Qt::LeftButton, Qt::NoModifier, from);
+      QTest::mouseMove(plotWidget, from + QPoint(0, toY > from.y() ? 10 : -10));
+      QTest::mouseMove(plotWidget, to);
+      QTest::mouseRelease(plotWidget, Qt::LeftButton, Qt::NoModifier, to);
+    };
+    // the axis is -1 .. 3 V over the plot's height
+    auto pixelOf = [&](double v) { return plot.bottom() - qRound((v + 1) / 4 * plot.height()); };
+    graph.setReference(GraphReference::line(GraphReference::Value, 2.0));
+    drag(-1, pixelOf(0) + 3);
+    check(graph.reference().kind == GraphReference::Zero, "dragged near 0: at 0");
+    drag(-1, pixelOf(-0.5) - 2);
+    check(graph.reference().kind == GraphReference::Alarm && graph.reference().value == -0.5, "dragged near an alarm threshold: on it");
+    drag(-1, pixelOf(2.6));
+    check(graph.reference().kind == GraphReference::Value && std::abs(graph.reference().value - 2.6) < 0.06,
+          QString("dragged elsewhere: a value of its own (%1)").arg(graph.reference().value));
+    drag(1, pixelOf(1.2));
+    check(std::abs(graph.referenceLines().value(1) - 1.2) < 0.06 && graph.crossingCount(1) == 9,
+          QString("an added line dragged to %1, crossed %2 times (8 of the sine, one of the 2.4 V after it)").arg(graph.referenceLines().value(1)).arg(graph.crossingCount(1)));
+    check(graph.timeCursor(0) < 0 && graph.timeAxisStart() == 0, "dragging a line sets no cursor and moves no time");
+    check(graph.roundedValueAt(plotWidget->mapToGlobal(QPoint(plot.left() + 40, pixelOf(1.0)))) == 1.0, "a line added under the mouse: a round value there");
+  }
+
+  if (qEnvironmentVariableIsSet("QTDMM_SHOT"))
+  {
+    graph.setThemeColors(QColor(20, 24, 28), QColor(90, 100, 110), QColor(200, 205, 210), QColor(90, 200, 120));
+    graph.setReference(GraphReference::line(GraphReference::Value, 0.5));
+    graph.setReferenceLines({ 1.2, 2.5 });
+    graph.setLimits(ValueRef(0, "device:a"), 0.2, 1.8);
+    bench.a.setStartMode(RecordingStore::Raising);
+    graph.refreshNow();
+    QTest::qWait(50);
+    graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/qcpgraph_levels.png");
+    bench.a.setStartMode(RecordingStore::Manual);
+  }
+
+  // a file has no left value of a meter: no alarms, no band
+  RecordingStore file;
+  Feed fileFeed(&file, 1000);
+  file.start();
+  for (int i = 0; i < 5; ++i)
+    fileFeed.value(i);
+  file.stop();
+  graph.setStore(&file);
+  graph.refreshNow();
+  check(graph.leftValue().id < 0, "a file: no value of a meter on the left");
+}
+
 int main(int argc, char **argv)
 {
   if (qEnvironmentVariableIsEmpty("QT_QPA_PLATFORM"))
@@ -1185,6 +1372,8 @@ int main(int argc, char **argv)
   testStoreDeleted();
   testStatsText();
   testCrosshairAndCursors();
+  testReferenceRules();
+  testLevels();
   shot();
   return failed ? 1 : 0;
 }

@@ -329,6 +329,7 @@ void QcpGraph::refreshPlot()
   double from = 0, to = 0;
   updateAxes(from, to);
   drawCurves(from, to);
+  updateLevels();
   updateCursors();
   scheduleStats();
   updateScrollBar();

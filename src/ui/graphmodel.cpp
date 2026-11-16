@@ -185,3 +185,28 @@ void GraphModel::setStatsVisible(bool on)
   m_stats = on;
   Q_EMIT statsVisibleChanged(on);
 }
+
+void GraphModel::setReference(const GraphReference::Line &line)
+{
+  if (line == m_reference)
+    return;
+  m_reference = line;
+  Q_EMIT referenceChanged();
+}
+
+void GraphModel::setReferenceLines(const QList<double> &values)
+{
+  const QList<double> lines = GraphReference::lines(values);
+  if (lines == m_referenceLines)
+    return;
+  m_referenceLines = lines;
+  Q_EMIT referenceChanged();
+}
+
+void GraphModel::setCrossingsVisible(bool on)
+{
+  if (on == m_crossings)
+    return;
+  m_crossings = on;
+  Q_EMIT referenceChanged();
+}

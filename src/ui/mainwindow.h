@@ -237,6 +237,8 @@ protected:
   /// The dialog of the values a graph on QCustomPlot shows; false when cancelled.
   bool        editQGraphSources(QcpGraphView *view);
   void        fillQGraphAxisMenu(QMenu *menu, QcpGraphView *view);
+  /// Where the reference line of a graph on QCustomPlot stands, its added lines, the crossings.
+  void        fillQGraphReferenceMenu(QMenu *menu, QcpGraphView *view, const QPoint &globalPos);
   void        applyQGraphLook(QcpGraphView *view);
   /// Asks for a recording and shows it in the graph of @p view.
   void        loadIntoQGraph(QcpGraphView *view);
