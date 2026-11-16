@@ -45,6 +45,9 @@ struct Settings
   int    lineMode = 1;      ///< 0 none, 1 solid, 2 dotted
   int    pointMode = 0;     ///< 0 none, 1 circle, 2 square, 3 diamond, 4 x, 5..8 the same large
   int    lineWidth = 2;
+  QColor cursor = Qt::black;   ///< crosshair and time cursors; the default black: the variant's lettering
+  bool   crosshair = true;     ///< the crosshair under the mouse
+  bool   statsLeft = true;     ///< the statistics column at the left, else at the right
 };
 
 /// What a graph draws with.
@@ -57,6 +60,7 @@ struct Look
   QPen      minorGrid;        ///< Qt::NoPen: none (the recorder's paper has one)
   QPen      axisLine;
   QPen      centreTicks;      ///< Qt::NoPen: none (the phosphor tubes' fine ticks on the centre lines)
+  QColor    cursor;           ///< crosshair and time cursors
   bool      divisions = false;   ///< 10 x 8 divisions, the axes on whole 1-2-5 steps
   bool      oneHue = false;      ///< phosphor: the curves differ by their dashes, not their colour
   QList<QColor> valueHues;    ///< of the other values of the first curve's meter, by their id

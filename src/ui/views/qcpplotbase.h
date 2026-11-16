@@ -39,6 +39,20 @@ protected:
   /// The crosshair's text for the axis coordinates @p x, @p y (base: both
   /// values with the axes' units).
   virtual QString crosshairText(double x, double y) const;
+  /// Where the crosshair goes for the mouse at the axis coordinates @p x,
+  /// @p y, and what it says. The base: at the mouse, crosshairText(). A plot
+  /// may put it onto a reading instead, or leave out the horizontal line
+  /// where there is no value.
+  struct CrosshairAt
+  {
+    double  x = 0;
+    double  y = 0;
+    bool    horizontal = true;
+    QString text;
+  };
+  virtual CrosshairAt crosshairAt(double x, double y);
+  /// The crosshair's lines in @p pen instead of the lettering's dotted one.
+  void setCrosshairPen(const QPen &pen);
 
   /// refreshPlot() soon, at most every kRefreshMs; not while hold is on.
   void scheduleRefresh();

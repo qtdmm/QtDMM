@@ -22,6 +22,8 @@ public:
 
   /// The button of the window shown is down: @p all, else the one of @p seconds if there is one.
   void        setWindow(int seconds, bool all);
+  /// The statistics button is down.
+  void        setStatsChecked(bool on);
   void        setStateText(const QString &text);
   QString     stateText() const;
   /// The curves' names in @p ink, in the longest form that fits between state and buttons; none: no legend.
@@ -35,6 +37,8 @@ public:
 Q_SIGNALS:
   /// A time button was clicked: @p seconds, 0 for "All".
   void        windowChosen(int seconds);
+  /// The statistics button (Σ, at the right end) was clicked.
+  void        statsToggled(bool on);
 
 protected:
   void        resizeEvent(QResizeEvent *event) override;
@@ -48,6 +52,7 @@ private:
   QList<GraphLegend::Entry> m_entries;
   QColor      m_ink;
   QList<QToolButton *> m_buttons;
+  QToolButton *m_stats;
   int         m_seconds = 0;
   bool        m_all = false;
 };

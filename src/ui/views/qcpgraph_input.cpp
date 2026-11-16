@@ -21,27 +21,46 @@ void QcpGraph::setupInput()
 }
 
 // A drag with the left or middle button moves the time, with Shift and the
-// left button it draws a frame to zoom on (as the graph on QtCharts).
+// left button it draws a frame to zoom on (as the graph on QtCharts). A
+// click - no more than a slip of the mouse - sets the time cursor A, with
+// Shift B; a press on a cursor's line drags that cursor.
 void QcpGraph::mousePressed(QMouseEvent *event)
 {
   if (!m_store || !m_plot->axisRect()->rect().contains(event->pos()))
     return;
-  if (event->button() == Qt::LeftButton && (event->modifiers() & Qt::ShiftModifier))
+  const bool shift = event->modifiers() & Qt::ShiftModifier;
+  if (const int cursor = cursorAt(event->pos()); event->button() == Qt::LeftButton && !shift && cursor >= 0)
+  {
+    m_drag = Drag::Cursor;
+    m_dragCursor = cursor;
+  }
+  else if (event->button() == Qt::LeftButton && shift)
     m_drag = Drag::Frame;
   else if (event->button() == Qt::LeftButton || event->button() == Qt::MiddleButton)
     m_drag = Drag::Pan;
   else
     return;
+  m_moved = false;
   m_pressPos = event->pos();
   m_pressStart = windowStart();
 }
 
 void QcpGraph::mouseMoved(QMouseEvent *event)
 {
+  if (m_drag == Drag::None)
+  {
+    // a cursor's line can be dragged
+    m_plot->setCursor(cursorAt(event->pos()) >= 0 ? Qt::SplitHCursor : Qt::ArrowCursor);
+    return;
+  }
+  if ((event->pos() - m_pressPos).manhattanLength() >= 3)
+    m_moved = true;
+  if (!m_moved)
+    return;
   if (m_drag == Drag::Pan)
   {
     const double width = m_plot->axisRect()->width();
-    if (width <= 0 || (event->pos() - m_pressPos).manhattanLength() < 3)
+    if (width <= 0)
       return;
     const double secondsPerPixel = m_windowSeconds / width;
     showFrom(m_pressStart + qRound64((m_pressPos.x() - event->pos().x()) * secondsPerPixel * 1000));
@@ -53,20 +72,28 @@ void QcpGraph::mouseMoved(QMouseEvent *event)
     m_zoomBand->setGeometry(QRect(m_pressPos, event->pos()).normalized().intersected(m_plot->axisRect()->rect()));
     m_zoomBand->show();
   }
+  else if (m_drag == Drag::Cursor)
+    setTimeCursor(m_dragCursor, qRound64(m_plot->xAxis->pixelToCoord(event->pos().x()) * 1000));
 }
 
 void QcpGraph::mouseReleased(QMouseEvent *event)
 {
   const Drag drag = m_drag;
   m_drag = Drag::None;
-  if (drag != Drag::Frame)
-    return;
   if (m_zoomBand)
     m_zoomBand->hide();
-  const QRect frame = QRect(m_pressPos, event->pos()).normalized();
-  // a frame of a few pixels is a slip, no zoom
-  if (frame.width() >= 5 && frame.height() >= 5)
-    zoomToRect(frame);
+  const qint64 pressed = qRound64(m_plot->xAxis->pixelToCoord(m_pressPos.x()) * 1000);
+  if (drag == Drag::Frame)
+  {
+    const QRect frame = QRect(m_pressPos, event->pos()).normalized();
+    // a frame of a few pixels is a slip, no zoom; none at all is a click: B, without A the first cursor is A
+    if (frame.width() >= 5 && frame.height() >= 5)
+      zoomToRect(frame);
+    else if (!m_moved)
+      setTimeCursor(m_cursorT[0] >= 0 ? 1 : 0, pressed);
+  }
+  else if (drag == Drag::Pan && !m_moved && event->button() == Qt::LeftButton)
+    setTimeCursor(0, pressed);
 }
 
 void QcpGraph::wheelTurned(QWheelEvent *event)
@@ -125,6 +152,11 @@ void QcpGraph::keyPressEvent(QKeyEvent *event)
       if (m_zoomed)
       {
         endZoom(true);
+        return;
+      }
+      if (m_cursorT[0] >= 0 || m_cursorT[1] >= 0)
+      {
+        clearTimeCursors();
         return;
       }
       break;

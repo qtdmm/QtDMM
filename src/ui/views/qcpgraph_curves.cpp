@@ -19,6 +19,7 @@ QcpGraph::QcpGraph(QWidget *parent) : QcpPlotBase(parent)
   setMinimumSize(220, 180);
   setupAxes();
   setupInput();
+  setupOverlays();
   setupTheme();
   refreshPlot();
 }
@@ -196,6 +197,7 @@ void QcpGraph::refreshNow()
 void QcpGraph::resizeEvent(QResizeEvent *event)
 {
   QcpPlotBase::resizeEvent(event);
+  layoutStats();
   scheduleRefresh();   // another width: other buckets
 }
 
@@ -327,6 +329,8 @@ void QcpGraph::refreshPlot()
   double from = 0, to = 0;
   updateAxes(from, to);
   drawCurves(from, to);
+  updateCursors();
+  scheduleStats();
   updateScrollBar();
   updateTimeBar();
   m_plot->replot(QCustomPlot::rpQueuedReplot);

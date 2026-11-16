@@ -1235,6 +1235,9 @@ void MainWindow::applyQGraphLook(QcpGraphView *view)
   settings.lineMode = prefs->lineMode();
   settings.pointMode = prefs->pointMode();
   settings.lineWidth = prefs->lineWidth();
+  settings.cursor = prefs->cursorColor();
+  settings.crosshair = prefs->crosshair();
+  settings.statsLeft = prefs->statsLeft();
   view->graph()->setLookSettings(settings);
   view->setDefaultVariant(prefs->variant());
 }
@@ -2742,6 +2745,14 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
       patterns->setChecked(qgraph->model()->patternedLines());
       connect(patterns, &QAction::toggled, qgraph, [qgraph](bool on) { qgraph->model()->setPatternedLines(on); });
     }
+    {
+      QAction *stats = menu.addAction(tr("Stat&istics"));
+      stats->setCheckable(true);
+      stats->setChecked(qgraph->model()->statsVisible());
+      connect(stats, &QAction::toggled, qgraph, [qgraph](bool on) { qgraph->model()->setStatsVisible(on); });
+      if (qgraph->graph()->timeCursor(0) >= 0 || qgraph->graph()->timeCursor(1) >= 0)
+        connect(menu.addAction(tr("Remove &time cursors")), &QAction::triggered, qgraph->graph(), &QcpGraph::clearTimeCursors);
+    }
     if (qgraph->graph()->zoomed())
       connect(menu.addAction(tr("&Undo zoom")), &QAction::triggered, qgraph->graph(), [graph = qgraph->graph()] { graph->endZoom(true); });
     connect(menu.addAction(tr("&Load recording...")), &QAction::triggered, this, [this, qgraph] { loadIntoQGraph(qgraph); });
@@ -3747,6 +3758,7 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
     model->setFixedRangesSetting(get(key + "-fixed-ranges", QString()).toString());
     model->setVariant(get(key + "-variant", QString()).toString());
     model->setPatternedLines(get(key + "-patterns", false).toBool());
+    model->setStatsVisible(get(key + "-stats", false).toBool());
     if (const int seconds = get(key + "-window", 0).toInt(); seconds > 0)
       model->setWindowSeconds(seconds);
     model->setFollowAll(get(key + "-all", false).toBool());
@@ -4103,6 +4115,7 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
     set("Windows/" + w->objectName() + "-fixed-ranges", model->fixedRangesSetting());
     set("Windows/" + w->objectName() + "-variant", model->variant());
     set("Windows/" + w->objectName() + "-patterns", model->patternedLines());
+    set("Windows/" + w->objectName() + "-stats", model->statsVisible());
     set("Windows/" + w->objectName() + "-window", model->windowSeconds());
     set("Windows/" + w->objectName() + "-all", model->followAll());
     set("Windows/" + w->objectName() + "-shown", !w->isHidden());

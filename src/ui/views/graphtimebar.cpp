@@ -38,6 +38,20 @@ GraphTimeBar::GraphTimeBar(QWidget *parent) : QWidget(parent)
     bar->addWidget(b);
     m_buttons.append(b);
   }
+  bar->addSpacing(6);
+  m_stats = new QToolButton(this);
+  m_stats->setText(QString(QChar(0x03a3)));
+  m_stats->setCheckable(true);
+  m_stats->setAutoRaise(true);
+  m_stats->setFocusPolicy(Qt::NoFocus);
+  m_stats->setToolTip(tr("Statistics: the values at the cursors, from A to B and over the time shown"));
+  connect(m_stats, &QToolButton::clicked, this, &GraphTimeBar::statsToggled);
+  bar->addWidget(m_stats);
+}
+
+void GraphTimeBar::setStatsChecked(bool on)
+{
+  m_stats->setChecked(on);
 }
 
 void GraphTimeBar::setWindow(int seconds, bool all)
@@ -75,6 +89,7 @@ void GraphTimeBar::fitLegend()
   int room = width() - m_state->sizeHint().width() - 12 - 12 - 2 * 6;
   for (const QToolButton *b : std::as_const(m_buttons))
     room -= b->sizeHint().width() + 2;
+  room -= m_stats->sizeHint().width() + 8;
   m_legend->setEntries(m_entries, m_ink, qMax(1, room));
   m_legend->setFixedSize(m_legend->sizeHint());
 }
