@@ -75,7 +75,7 @@ class RecordingStore;
 /// The marks of the recordings shown - alarms, the trigger of a
 /// pre-triggered recording, the user's notes - are dashed lines at their
 /// time, each with a flag in the row of the time labels (GraphFlags), the
-/// time cursors' letters among them. A note is set with N, edited with a
+/// time cursors' letters among them. A note is set with N (not in a file only looked at), edited with a
 /// double click on its flag and dragged along the time.
 ///
 /// So far: lines with gaps, the time axis, the value axes fitted to what is
@@ -210,6 +210,10 @@ public:
   /// The marks of all recordings shown, in the order of their time; a
   /// mark is named by its place in it.
   int         markCount() const { return int(m_marks.size()); }
+  /// Whether notes can be set and marks changed: not in a recording that
+  /// is only looked at and not kept (a file loaded into the view).
+  void        setMarksEditable(bool on);
+  bool        marksEditable() const { return m_marksEditable; }
   /// The mark whose flag is at @p pos (plot widget pixels), or the note whose line is there; -1: none.
   int         markAt(const QPoint &pos) const;
   int         markAtGlobal(const QPoint &globalPos) const;
@@ -443,6 +447,9 @@ private:
   RecordingStore *noteStore(qint64 *shift = nullptr) const;
   /// The place of mark @p index of @p store in the marks; -1: not there.
   int         markOf(const RecordingStore *store, int index) const;
+  /// The mark pressed on, in its store's marks now - other marks may have
+  /// come meanwhile; -1: it is gone.
+  int         draggedIndex() const;
   /// Ends the drag of a note: it stays (noteMoved()) or goes back (@p cancel).
   void        endMarkDrag(bool cancel);
   // qcpgraph_input.cpp
@@ -500,6 +507,9 @@ private:
   QPointer<RecordingStore> m_dragStore;  ///< Drag::Mark: the note dragged, its store,
   int         m_dragIndex = -1;          ///< its place in the store's marks
   qint64      m_dragFrom = 0;            ///< and its time before, the store's
+  qint64      m_dragT = 0;               ///< where it is now, and its title: it is known by them
+  QString     m_dragName;
+  bool        m_marksEditable = true;
   int         m_tipMark = -1;            ///< the mark whose tooltip is up
   GraphReference::Line m_reference;
   QList<double> m_referenceLines;

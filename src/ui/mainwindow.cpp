@@ -850,7 +850,7 @@ QMdiSubWindow *MainWindow::addViewWindow(Added kind, const ValueRef &value, int 
     {
       const QPoint globalPos = graph->mapToGlobal(pos);
       // on a mark's flag or a note's line: that mark (the texts are the old graph's)
-      if (const int mark = graph->markAtGlobal(globalPos); mark >= 0)
+      if (const int mark = graph->markAtGlobal(globalPos); mark >= 0 && graph->marksEditable())
       {
         const qint64 t = graph->markTime(mark);
         const QString name = graph->markName(mark);
@@ -2853,7 +2853,7 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
     }
     if (!qgraph->showsFile())
       fillQGraphReferenceMenu(menu.addMenu(tr("Re&ference line")), qgraph, QCursor::pos());
-    if (qgraph->graph()->store())
+    if (qgraph->graph()->store() && qgraph->graph()->marksEditable())
     {
       // a note where the menu was opened, or at the newest reading (the texts are the old graph's)
       QcpGraph *graph = qgraph->graph();
