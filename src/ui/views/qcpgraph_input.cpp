@@ -41,7 +41,8 @@ void QcpGraph::mousePressed(QMouseEvent *event)
     m_drag = Drag::Mark;
     m_dragStore = m_marks.at(mark).store;
     m_dragIndex = m_marks.at(mark).index;
-    m_dragFrom = m_marks.at(mark).t - m_marks.at(mark).shift;
+    m_dragFrom = m_dragT = m_marks.at(mark).t - m_marks.at(mark).shift;
+    m_dragName = m_marks.at(mark).name;
     m_moved = false;
     m_pressPos = event->pos();
     return;
@@ -113,13 +114,16 @@ void QcpGraph::mouseMoved(QMouseEvent *event)
   else if (m_drag == Drag::Mark)
   {
     // alarm and trigger marks tell when something happened: they stay
-    const int mark = markOf(m_dragStore, m_dragIndex);
-    if (!markIsNote(mark))
+    const int mark = markOf(m_dragStore, draggedIndex());
+    if (!markIsNote(mark) || !m_marksEditable)
       return;
     QToolTip::hideText();
     const int moved = moveMark(mark, qRound64(m_plot->xAxis->pixelToCoord(event->pos().x()) * 1000));
     if (moved >= 0)
+    {
       m_dragIndex = m_marks.at(moved).index;
+      m_dragT = m_marks.at(moved).t - m_marks.at(moved).shift;
+    }
   }
   else if (m_drag == Drag::Level)
     dragLevel(m_dragLevel, event->pos().y());
@@ -133,7 +137,7 @@ void QcpGraph::mouseReleased(QMouseEvent *event)
   if (drag == Drag::Mark)
   {
     // a click: its note (a tooltip goes with the press)
-    if (const int mark = markOf(m_dragStore, m_dragIndex); !m_moved && mark >= 0)
+    if (const int mark = markOf(m_dragStore, draggedIndex()); !m_moved && mark >= 0)
       QToolTip::showText(event->globalPosition().toPoint(), markTip(mark), m_plot);
     endMarkDrag(false);
     return;
@@ -208,6 +212,9 @@ void QcpGraph::keyPressEvent(QKeyEvent *event)
       followEnd();
       return;
     case Qt::Key_N:
+      // the plain key: with Alt it is a menu's letter
+      if (event->modifiers() != Qt::NoModifier)
+        break;
       askNote();
       return;
     case Qt::Key_Escape:

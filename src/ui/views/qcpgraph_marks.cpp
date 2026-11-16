@@ -176,8 +176,30 @@ void QcpGraph::updateMarks()
                    [](const FlagLines::Entry &a, const FlagLines::Entry &b) { return a.x < b.x; });
 }
 
+void QcpGraph::setMarksEditable(bool on)
+{
+  m_marksEditable = on;
+  m_timeBar->setNoteEnabled(on);
+}
+
+int QcpGraph::draggedIndex() const
+{
+  if (!m_dragStore)
+    return -1;
+  const QList<RecordingStore::Mark> marks = m_dragStore->marks();
+  const auto same = [&](int i) { return i >= 0 && i < marks.size() && marks.at(i).t == m_dragT && marks.at(i).name == m_dragName; };
+  if (same(m_dragIndex))
+    return m_dragIndex;
+  for (int i = 0; i < marks.size(); ++i)
+    if (same(i))
+      return i;
+  return -1;
+}
+
 RecordingStore *QcpGraph::noteStore(qint64 *shift) const
 {
+  if (!m_marksEditable)
+    return nullptr;
   const int curve = leftCurve();
   if (shift)
     *shift = curve < 0 ? 0 : qRound64(m_curves.at(curve).shift * 1000);
@@ -244,7 +266,7 @@ int QcpGraph::askNote(qint64 t)
 
 bool QcpGraph::editMark(int mark)
 {
-  if (mark < 0 || mark >= m_marks.size() || !m_marks.at(mark).store)
+  if (!m_marksEditable || mark < 0 || mark >= m_marks.size() || !m_marks.at(mark).store)
     return false;
   const Mark m = m_marks.at(mark);
   NoteDlg dlg(word("Mark %1 at %2").arg(mark + 1).arg(markWhen(m.store, m.t - m.shift)), this);
@@ -260,13 +282,13 @@ bool QcpGraph::editMark(int mark)
 
 void QcpGraph::removeMark(int mark)
 {
-  if (mark >= 0 && mark < m_marks.size() && m_marks.at(mark).store)
+  if (m_marksEditable && mark >= 0 && mark < m_marks.size() && m_marks.at(mark).store)
     m_marks.at(mark).store->removeMark(m_marks.at(mark).index);
 }
 
 int QcpGraph::moveMark(int mark, qint64 t)
 {
-  if (!markIsNote(mark) || !m_marks.at(mark).store)
+  if (!m_marksEditable || !markIsNote(mark) || !m_marks.at(mark).store)
     return mark;
   const Mark m = m_marks.at(mark);
   const qint64 at = qBound(m.store->origin(), t - m.shift, qMax(m.store->origin(), m.store->duration()));
@@ -278,14 +300,15 @@ void QcpGraph::endMarkDrag(bool cancel)
   if (m_drag != Drag::Mark)
     return;
   m_drag = Drag::None;
-  if (!m_moved || !m_dragStore || m_dragIndex < 0 || m_dragIndex >= m_dragStore->marks().size())
+  const int index = draggedIndex();
+  if (!m_moved || index < 0)
     return;
   if (cancel)
   {
-    m_dragStore->setMarkTime(m_dragIndex, m_dragFrom);
+    m_dragStore->setMarkTime(index, m_dragFrom);
     return;
   }
-  const RecordingStore::Mark m = m_dragStore->marks().at(m_dragIndex);
+  const RecordingStore::Mark m = m_dragStore->marks().at(index);
   if (m.t != m_dragFrom)
     Q_EMIT noteMoved(m_dragStore->startDateTime().addMSecs(m_dragFrom), m_dragStore->startDateTime().addMSecs(m.t), m.name);
 }
