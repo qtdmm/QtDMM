@@ -64,6 +64,15 @@ public:
   bool        statsVisible() const { return m_stats; }
   void        setStatsVisible(bool on);
 
+  /// The overview strip below the plot, the strip of the meter's states in
+  /// it, and the min/max band behind the left axis' curve.
+  bool        minimapVisible() const { return m_minimap; }
+  void        setMinimapVisible(bool on);
+  bool        statesVisible() const { return m_states; }
+  void        setStatesVisible(bool on);
+  bool        envelopeVisible() const { return m_envelope; }
+  void        setEnvelopeVisible(bool on);
+
   /// The reference line (GraphReference::setting(): "", "mean", "off", ...),
   /// the lines added to it ("1.5 -2", base unit of the left axis) and
   /// whether the crossings of the curve with them are marked and counted.
@@ -96,6 +105,7 @@ Q_SIGNALS:
   void        fixedRangesChanged();
   void        lookChanged();
   void        statsVisibleChanged(bool on);
+  void        overviewChanged();
   void        referenceChanged();
   void        windowChanged(int seconds);
   void        followAllChanged(bool on);
@@ -107,6 +117,9 @@ private:
   QString     m_variant;
   bool        m_patterns = false;
   bool        m_stats = false;
+  bool        m_minimap = true;
+  bool        m_states = true;
+  bool        m_envelope = false;
   GraphReference::Line m_reference;
   QList<double> m_referenceLines;
   bool        m_crossings = true;

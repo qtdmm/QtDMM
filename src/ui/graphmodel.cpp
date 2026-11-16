@@ -186,6 +186,30 @@ void GraphModel::setStatsVisible(bool on)
   Q_EMIT statsVisibleChanged(on);
 }
 
+void GraphModel::setMinimapVisible(bool on)
+{
+  if (on == m_minimap)
+    return;
+  m_minimap = on;
+  Q_EMIT overviewChanged();
+}
+
+void GraphModel::setStatesVisible(bool on)
+{
+  if (on == m_states)
+    return;
+  m_states = on;
+  Q_EMIT overviewChanged();
+}
+
+void GraphModel::setEnvelopeVisible(bool on)
+{
+  if (on == m_envelope)
+    return;
+  m_envelope = on;
+  Q_EMIT overviewChanged();
+}
+
 void GraphModel::setReference(const GraphReference::Line &line)
 {
   if (line == m_reference)

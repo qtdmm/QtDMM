@@ -2864,6 +2864,19 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
       connect(now, &QAction::triggered, graph, [graph] { graph->askNote(); });
     }
     {
+      // own texts: the old graph's letters are taken in this menu
+      auto toggle = [&](const QString &text, bool on, void (GraphModel::*set)(bool))
+      {
+        QAction *a = menu.addAction(text);
+        a->setCheckable(true);
+        a->setChecked(on);
+        connect(a, &QAction::toggled, qgraph->model(), set);
+      };
+      toggle(tr("Overvie&w"), qgraph->model()->minimapVisible(), &GraphModel::setMinimapVisible);
+      toggle(tr("Min/max &band"), qgraph->model()->envelopeVisible(), &GraphModel::setEnvelopeVisible);
+      toggle(tr("&Meter states"), qgraph->model()->statesVisible(), &GraphModel::setStatesVisible);
+    }
+    {
       QAction *stats = menu.addAction(tr("Stat&istics"));
       stats->setCheckable(true);
       stats->setChecked(qgraph->model()->statsVisible());
@@ -3877,6 +3890,9 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
     model->setVariant(get(key + "-variant", QString()).toString());
     model->setPatternedLines(get(key + "-patterns", false).toBool());
     model->setStatsVisible(get(key + "-stats", false).toBool());
+    model->setMinimapVisible(get(key + "-minimap", true).toBool());
+    model->setStatesVisible(get(key + "-states", true).toBool());
+    model->setEnvelopeVisible(get(key + "-envelope", false).toBool());
     model->setReferenceSetting(get(key + "-reference", QString()).toString());
     model->setReferenceLinesSetting(get(key + "-reference-lines", QString()).toString());
     model->setCrossingsVisible(get(key + "-crossings", true).toBool());
@@ -4237,6 +4253,9 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
     set("Windows/" + w->objectName() + "-variant", model->variant());
     set("Windows/" + w->objectName() + "-patterns", model->patternedLines());
     set("Windows/" + w->objectName() + "-stats", model->statsVisible());
+    set("Windows/" + w->objectName() + "-minimap", model->minimapVisible());
+    set("Windows/" + w->objectName() + "-states", model->statesVisible());
+    set("Windows/" + w->objectName() + "-envelope", model->envelopeVisible());
     set("Windows/" + w->objectName() + "-reference", model->referenceSetting());
     set("Windows/" + w->objectName() + "-reference-lines", model->referenceLinesSetting());
     set("Windows/" + w->objectName() + "-crossings", model->crossingsVisible());
