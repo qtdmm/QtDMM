@@ -13,6 +13,10 @@ GraphTimeBar::GraphTimeBar(QWidget *parent) : QWidget(parent)
   bar->setSpacing(2);
   m_state = new QLabel(this);
   bar->addWidget(m_state);
+  bar->addSpacing(12);
+  m_legend = new GraphLegend(this);
+  m_legend->hide();
+  bar->addWidget(m_legend);
   bar->addStretch(1);
   const QList<QPair<QString, int>> steps = { { tr("All"), 0 }, { tr("1 min"), 60 }, { tr("5 min"), 300 },
                                              { tr("30 min"), 1800 } };
@@ -49,8 +53,41 @@ void GraphTimeBar::setWindow(int seconds, bool all)
 
 void GraphTimeBar::setStateText(const QString &text)
 {
-  if (text != m_state->text())
-    m_state->setText(text);
+  if (text == m_state->text())
+    return;
+  m_state->setText(text);
+  fitLegend();
+}
+
+void GraphTimeBar::setLegend(const QList<GraphLegend::Entry> &entries, const QColor &ink)
+{
+  m_entries = entries;
+  m_ink = ink;
+  fitLegend();
+}
+
+void GraphTimeBar::fitLegend()
+{
+  m_legend->setVisible(!m_entries.isEmpty());
+  if (m_entries.isEmpty())
+    return;
+  // what the state and the buttons leave
+  int room = width() - m_state->sizeHint().width() - 12 - 12 - 2 * 6;
+  for (const QToolButton *b : std::as_const(m_buttons))
+    room -= b->sizeHint().width() + 2;
+  m_legend->setEntries(m_entries, m_ink, qMax(1, room));
+  m_legend->setFixedSize(m_legend->sizeHint());
+}
+
+QString GraphTimeBar::legendText() const
+{
+  return m_entries.isEmpty() ? QString() : m_legend->text();
+}
+
+void GraphTimeBar::resizeEvent(QResizeEvent *event)
+{
+  QWidget::resizeEvent(event);
+  fitLegend();
 }
 
 QString GraphTimeBar::stateText() const

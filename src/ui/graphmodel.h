@@ -2,8 +2,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
 
+#include <QHash>
 #include <QList>
+#include <QMap>
 #include <QObject>
+#include <QPair>
 
 #include "core/valueref.h"
 
@@ -26,6 +29,29 @@ public:
   QString     valuesSetting() const;
   void        setValuesSetting(const QString &text);
 
+  /// The axis chosen for a value: kAxisAuto, or the place of the axis - 0
+  /// the left one, 1 the first on the right, 2 the next one out, and so on
+  /// (how many a graph draws is the graph's). Auto: the first unit on the
+  /// left, each further unit on the next axis, a unit that has an axis on it.
+  static constexpr int kAxisAuto = -1;
+  int         valueAxis(const ValueRef &value) const { return m_valueAxes.value(value, kAxisAuto); }
+  QHash<ValueRef, int> valueAxes() const { return m_valueAxes; }
+  void        setValueAxis(const ValueRef &value, int axis);
+  /// "1@device:a:right 0@device:b:left", as the graph on QtCharts keeps
+  /// them: left, right, third, then "axis4", "axis5"; Auto is left out.
+  QString     valueAxesSetting() const;
+  void        setValueAxesSetting(const QString &text);
+
+  /// Fixed ranges of the axes by base unit ("Hz" 49.5 .. 50.5): the axis of
+  /// that unit shows them; a unit without one fits its values.
+  using Range = QPair<double, double>;
+  QMap<QString, Range> fixedRanges() const { return m_fixedRanges; }
+  void        setFixedRange(const QString &unit, double min, double max);
+  void        clearFixedRange(const QString &unit);
+  /// {"Hz":[49.5,50.5]}, empty without any.
+  QString     fixedRangesSetting() const;
+  void        setFixedRangesSetting(const QString &text);
+
   /// The time the graph shows, seconds; at least 1.
   int         windowSeconds() const { return m_windowSeconds; }
   void        setWindowSeconds(int seconds);
@@ -40,11 +66,15 @@ public:
 
 Q_SIGNALS:
   void        valuesChanged();
+  void        valueAxesChanged();
+  void        fixedRangesChanged();
   void        windowChanged(int seconds);
   void        followAllChanged(bool on);
 
 private:
   QList<ValueRef> m_values;
+  QHash<ValueRef, int> m_valueAxes;      ///< those not on Auto
+  QMap<QString, Range> m_fixedRanges;
   int         m_windowSeconds = kDefaultWindowSeconds;
   bool        m_followAll = false;
 };

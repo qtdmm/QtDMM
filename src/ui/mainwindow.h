@@ -234,6 +234,9 @@ protected:
   void        newView(Added kind, const ValueRef &value, bool ask = false);
   /// Another graph on QCustomPlot showing @p value, without one the first meter's main value.
   void        newQGraph(const ValueRef &value = ValueRef());
+  /// The dialog of the values a graph on QCustomPlot shows; false when cancelled.
+  bool        editQGraphSources(QcpGraphView *view);
+  void        fillQGraphAxisMenu(QMenu *menu, QcpGraphView *view);
   /// Asks for a recording and shows it in the graph of @p view.
   void        loadIntoQGraph(QcpGraphView *view);
   void        newMeter(const ValueRef &value) { newView(Added::Meter, value); }

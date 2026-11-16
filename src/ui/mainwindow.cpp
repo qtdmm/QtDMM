@@ -921,7 +921,17 @@ void MainWindow::newView(Added kind, const ValueRef &value, bool ask)
   // from the menu its value is asked first (the active device's first one
   // ticked); cancelled, there is no new view. With no device open there is
   // nothing to pick from.
-  if (ask && kind != Added::QGraph && !m_session->controllers().isEmpty())
+  if (ask && kind == Added::QGraph)
+  {
+    // one device with one value has nothing to choose from
+    const QList<MeterController *> meters = m_session->controllers();
+    if ((meters.size() > 1 || (meters.size() == 1 && meters.first()->valueCount() > 1)) && !editQGraphSources(qgraphViewOf(win)))
+    {
+      removeAddedWindow(win);
+      return;
+    }
+  }
+  else if (ask && !m_session->controllers().isEmpty())
   {
     if (kind == Added::XY)
     {
@@ -1201,7 +1211,60 @@ void MainWindow::loadIntoQGraph(QcpGraphView *view)
 void MainWindow::newQGraph(const ValueRef &value)
 {
   const MeterController *ctl = m_session->controllers().value(0);
-  newView(Added::QGraph, !value.source.isEmpty() ? value : ctl ? ValueRef(0, ctl->source()) : ValueRef());
+  // from the button its values are asked; next to another graph it shows that one's first value
+  newView(Added::QGraph, !value.source.isEmpty() ? value : ctl ? ValueRef(0, ctl->source()) : ValueRef(),
+          value.source.isEmpty());
+}
+
+bool MainWindow::editQGraphSources(QcpGraphView *view)
+{
+  // the open meters with their values
+  QList<SourcesDlg::Meter> meters;
+  for (const MeterController *ctl : m_session->controllers())
+  {
+    SourcesDlg::Meter meter;
+    meter.source = ctl->source();
+    meter.name = ctl->deviceName();
+    for (int id = 0; id < ctl->valueCount(); ++id)
+      meter.values << otherValueRow(ctl, id).name;
+    meters << meter;
+  }
+  SourcesDlg dlg(view->graph()->windowTitle(), true, meters, this);
+  dlg.setChosen(view->model()->values());
+  if (dlg.exec() != QDialog::Accepted)
+    return false;
+  view->model()->setValues(dlg.chosen());
+  return true;
+}
+
+// "Axis" in the menu of a graph on QCustomPlot: for each value Automatic or
+// one of the axes the graph has.
+void MainWindow::fillQGraphAxisMenu(QMenu *menu, QcpGraphView *view)
+{
+  const QList<ValueRef> values = view->model()->values();
+  const QString places[] = { tr("&Left axis"), tr("&Right axis"), tr("&Third axis") };
+  for (const ValueRef &value : values)
+  {
+    const MeterController *ctl = m_session->controller(value);
+    if (!ctl)
+      continue;
+    QString name = otherValueRow(ctl, value.id).name;
+    if (m_session->controllers().size() > 1)
+      name = ctl->deviceName() + " · " + name;
+    QMenu *sub = values.size() > 1 ? menu->addMenu(name.replace('&', "&&")) : menu;
+    auto *group = new QActionGroup(sub);
+    auto entry = [&](const QString &text, int axis)
+    {
+      QAction *a = sub->addAction(text);
+      a->setCheckable(true);
+      a->setChecked(view->model()->valueAxis(value) == axis);
+      group->addAction(a);
+      connect(a, &QAction::triggered, view, [view, value, axis] { view->model()->setValueAxis(value, axis); });
+    };
+    entry(tr("&Automatic"), GraphModel::kAxisAuto);
+    for (int axis = 0; axis < QcpGraph::kMaxAxes; ++axis)
+      entry(axis < 3 ? places[axis] : tr("Axis %1").arg(axis + 1), axis);
+  }
 }
 
 QList<QMdiSubWindow *> MainWindow::xyWindows() const
@@ -2629,6 +2692,12 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
     {
       newQGraph(values.value(0));
     });
+    if (!qgraph->showsFile() && !m_session->controllers().isEmpty())
+    {
+      connect(menu.addAction(tr("S&ources...")), &QAction::triggered, this, [this, qgraph] { editQGraphSources(qgraph); });
+      if (!qgraph->model()->values().isEmpty())
+        fillQGraphAxisMenu(menu.addMenu(tr("A&xis")), qgraph);
+    }
     if (qgraph->graph()->zoomed())
       connect(menu.addAction(tr("&Undo zoom")), &QAction::triggered, qgraph->graph(), [graph = qgraph->graph()] { graph->endZoom(true); });
     connect(menu.addAction(tr("&Load recording...")), &QAction::triggered, this, [this, qgraph] { loadIntoQGraph(qgraph); });
@@ -3630,6 +3699,8 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
     QMdiSubWindow *win = addViewWindow(Added::QGraph, ValueRef(), number.toInt());
     GraphModel *model = qgraphViewOf(win)->model();
     model->setValuesSetting(get(key + "-values", QString()).toString());
+    model->setValueAxesSetting(get(key + "-value-axes", QString()).toString());
+    model->setFixedRangesSetting(get(key + "-fixed-ranges", QString()).toString());
     if (const int seconds = get(key + "-window", 0).toInt(); seconds > 0)
       model->setWindowSeconds(seconds);
     model->setFollowAll(get(key + "-all", false).toBool());
@@ -3982,6 +4053,8 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
     const GraphModel *model = qgraphViewOf(w)->model();
     qgraphs << w->objectName().section('-', 1);
     set("Windows/" + w->objectName() + "-values", model->valuesSetting());
+    set("Windows/" + w->objectName() + "-value-axes", model->valueAxesSetting());
+    set("Windows/" + w->objectName() + "-fixed-ranges", model->fixedRangesSetting());
     set("Windows/" + w->objectName() + "-window", model->windowSeconds());
     set("Windows/" + w->objectName() + "-all", model->followAll());
     set("Windows/" + w->objectName() + "-shown", !w->isHidden());

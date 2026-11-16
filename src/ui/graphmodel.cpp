@@ -2,7 +2,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "ui/graphmodel.h"
 
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <cmath>
+
+// the words of the first three axes, as the graph on QtCharts writes them
+static const char *const kAxisWords[] = { "left", "right", "third" };
 
 GraphModel::GraphModel(QObject *parent) : QObject(parent)
 {
@@ -59,4 +65,99 @@ int GraphModel::allTarget(double recordedSeconds, bool grow, int limitSeconds)
   if (limitSeconds > 0)
     target = qMin(target, limitSeconds);
   return target;
+}
+
+void GraphModel::setValueAxis(const ValueRef &value, int axis)
+{
+  if (axis == valueAxis(value))
+    return;
+  if (axis < 0)
+    m_valueAxes.remove(value);
+  else
+    m_valueAxes.insert(value, axis);
+  Q_EMIT valueAxesChanged();
+}
+
+QString GraphModel::valueAxesSetting() const
+{
+  // in the order of the values, then those of values not shown now
+  QList<ValueRef> order = m_values;
+  QList<ValueRef> others = m_valueAxes.keys();
+  std::sort(others.begin(), others.end(), [](const ValueRef &a, const ValueRef &b)
+  { return a.source != b.source ? a.source < b.source : a.id < b.id; });
+  for (const ValueRef &v : std::as_const(others))
+    if (!order.contains(v))
+      order << v;
+  QStringList parts;
+  for (const ValueRef &v : std::as_const(order))
+  {
+    const int axis = valueAxis(v);
+    if (axis < 0)
+      continue;
+    parts << v.toString() + ':' + (axis < 3 ? QString::fromLatin1(kAxisWords[axis]) : QString("axis%1").arg(axis + 1));
+  }
+  return parts.join(' ');
+}
+
+void GraphModel::setValueAxesSetting(const QString &text)
+{
+  QHash<ValueRef, int> axes;
+  for (const QString &part : text.split(' ', Qt::SkipEmptyParts))
+  {
+    // the source has colons of its own: the axis is after the last one
+    const qsizetype at = part.lastIndexOf(':');
+    if (at <= 0)
+      continue;
+    const QString word = part.mid(at + 1);
+    int axis = -1;
+    for (int i = 0; i < 3; ++i)
+      if (word == QLatin1String(kAxisWords[i]))
+        axis = i;
+    if (axis < 0 && word.startsWith(QLatin1String("axis")))
+      axis = word.mid(4).toInt() - 1;
+    if (axis >= 0)
+      axes.insert(ValueRef::fromString(part.left(at)), axis);
+  }
+  if (axes == m_valueAxes)
+    return;
+  m_valueAxes = axes;
+  Q_EMIT valueAxesChanged();
+}
+
+void GraphModel::setFixedRange(const QString &unit, double min, double max)
+{
+  if (unit.isEmpty() || !(max > min) || m_fixedRanges.value(unit, Range(0, 0)) == Range(min, max))
+    return;
+  m_fixedRanges.insert(unit, { min, max });
+  Q_EMIT fixedRangesChanged();
+}
+
+void GraphModel::clearFixedRange(const QString &unit)
+{
+  if (m_fixedRanges.remove(unit))
+    Q_EMIT fixedRangesChanged();
+}
+
+QString GraphModel::fixedRangesSetting() const
+{
+  QJsonObject o;
+  for (auto it = m_fixedRanges.cbegin(); it != m_fixedRanges.cend(); ++it)
+    o.insert(it.key(), QJsonArray{ it->first, it->second });
+  return o.isEmpty() ? QString() : QString::fromUtf8(QJsonDocument(o).toJson(QJsonDocument::Compact));
+}
+
+void GraphModel::setFixedRangesSetting(const QString &text)
+{
+  QMap<QString, Range> ranges;
+  const QJsonObject o = QJsonDocument::fromJson(text.toUtf8()).object();
+  for (auto it = o.begin(); it != o.end(); ++it)
+  {
+    const QJsonArray r = it.value().toArray();
+    if (r.size() == 2 && r[1].toDouble() > r[0].toDouble())
+      ranges.insert(it.key(), { r[0].toDouble(), r[1].toDouble() });
+  }
+  if (ranges == m_fixedRanges)
+    return;
+  m_fixedRanges = ranges;
+  Q_EMIT fixedRangesChanged();
 }
