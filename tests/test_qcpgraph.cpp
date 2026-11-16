@@ -1392,7 +1392,8 @@ static void testMarks()
         "its tooltip: number, title, clock time, text: " + graph.markTip(1));
   check(graph.markAt(QPoint(graph.markPixel(1), plot.center().y())) == 1, "a note's line takes the click");
   const int movedTo = graph.moveMark(1, 2000);
-  check(movedTo == 0 && graph.markTime(0) == 2000 && graph.markFlagText(1).startsWith("2 · P"),
+  // the flag's text is cut to the room between the lines, which depends on the font: only its number
+  check(movedTo == 0 && graph.markTime(0) == 2000 && graph.markIsNote(0) && !graph.markIsNote(1) && graph.markFlagText(1).startsWith("2"),
         QString("the note moved before the alarm: the marks are numbered by time (%1, %2 ms, \"%3\")").arg(movedTo).arg(graph.markTime(0)).arg(graph.markFlagText(1)));
   check(graph.moveMark(1, 8000) == 1 && graph.markTime(1) == 5000, "an alarm's mark stays where it is");
   check(graph.moveMark(0, 99000) == 1 && graph.markTime(1) == store.duration() && store.duration() >= 19000, "a note goes no further than the recording");
