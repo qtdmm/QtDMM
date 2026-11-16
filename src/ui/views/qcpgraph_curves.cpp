@@ -20,6 +20,7 @@ QcpGraph::QcpGraph(QWidget *parent) : QcpPlotBase(parent)
   setupAxes();
   setupInput();
   setupOverlays();
+  setupMarks();
   setupTheme();
   refreshPlot();
 }
@@ -125,6 +126,12 @@ void QcpGraph::makeCurves()
     connect(store, &RecordingStore::cleared, this, &QcpGraph::storeChanged);
     connect(store, &RecordingStore::loaded, this, &QcpGraph::storeChanged);
     connect(store, &RecordingStore::stateChanged, this, &QcpGraph::storeChanged);
+    // also while the picture is held: a mark is named by its place among them
+    connect(store, &RecordingStore::marksChanged, this, [this]
+    {
+      updateMarks();
+      m_plot->replot(QCustomPlot::rpQueuedReplot);
+    });
     connect(store, &QObject::destroyed, this, &QcpGraph::storeGone);
   }
   // the time goes on without readings: the window follows

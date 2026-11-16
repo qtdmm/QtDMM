@@ -125,14 +125,7 @@ void QcpGraph::setupOverlays()
   {
     m_cursorLine[i] = new QCPItemStraightLine(m_plot);
     m_cursorLevel[i] = new QCPItemStraightLine(m_plot);
-    m_cursorFlag[i] = new QCPItemText(m_plot);
-    m_cursorFlag[i]->setText(i ? QStringLiteral("B") : QStringLiteral("A"));
-    // at its time, at the top of the plot
-    m_cursorFlag[i]->position->setTypeX(QCPItemPosition::ptPlotCoords);
-    m_cursorFlag[i]->position->setTypeY(QCPItemPosition::ptAxisRectRatio);
-    m_cursorFlag[i]->setPositionAlignment(Qt::AlignLeft | Qt::AlignTop);
-    m_cursorFlag[i]->setPadding(QMargins(3, 0, 3, 0));
-    for (QCPAbstractItem *item : std::initializer_list<QCPAbstractItem *>{ m_cursorLine[i], m_cursorLevel[i], m_cursorFlag[i] })
+    for (QCPAbstractItem *item : std::initializer_list<QCPAbstractItem *>{ m_cursorLine[i], m_cursorLevel[i] })
     {
       item->setSelectable(false);
       item->setVisible(false);
@@ -250,8 +243,8 @@ void QcpGraph::clearTimeCursors()
   Q_EMIT cursorsChanged();
 }
 
-// Each cursor a line at its time with its letter, and the level of the left
-// axis' value there - none in a gap.
+// Each cursor a line at its time, and the level of the left axis' value
+// there - none in a gap. Its letter is a flag among those of the marks.
 void QcpGraph::updateCursors()
 {
   const GraphStats::Curve curve = statsCurve(leftCurve());
@@ -260,14 +253,12 @@ void QcpGraph::updateCursors()
     const bool shown = m_cursorT[i] >= 0;
     const double x = m_cursorT[i] / 1000.0;
     m_cursorLine[i]->setVisible(shown);
-    m_cursorFlag[i]->setVisible(shown);
     const double v = shown ? curve.valueAt(m_cursorT[i]) : qQNaN();
     m_cursorLevel[i]->setVisible(std::isfinite(v));
     if (!shown)
       continue;
     m_cursorLine[i]->point1->setCoords(x, 0);
     m_cursorLine[i]->point2->setCoords(x, 1);
-    m_cursorFlag[i]->position->setCoords(x, 0);
     if (std::isfinite(v))
     {
       const double y = v / m_axes.first().factor;
@@ -275,6 +266,7 @@ void QcpGraph::updateCursors()
       m_cursorLevel[i]->point2->setCoords(1, y);
     }
   }
+  updateMarks();   // the flags share a row
 }
 
 int QcpGraph::cursorAt(const QPoint &pos) const

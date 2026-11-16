@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "ui/views/graphtimebar.h"
 
+#include <QCoreApplication>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QToolButton>
@@ -39,6 +40,15 @@ GraphTimeBar::GraphTimeBar(QWidget *parent) : QWidget(parent)
     m_buttons.append(b);
   }
   bar->addSpacing(6);
+  m_note = new QToolButton(this);
+  m_note->setObjectName("ui_graphNoteButton");
+  m_note->setText(QString(QChar(0x270e)));   // the pencil
+  m_note->setAutoRaise(true);
+  m_note->setFocusPolicy(Qt::NoFocus);
+  // translated for the graph on QtCharts already
+  m_note->setToolTip(QCoreApplication::translate("GraphWidget", "Note now... (N)"));
+  connect(m_note, &QToolButton::clicked, this, &GraphTimeBar::noteClicked);
+  bar->addWidget(m_note);
   m_stats = new QToolButton(this);
   m_stats->setText(QString(QChar(0x03a3)));
   m_stats->setCheckable(true);
@@ -89,7 +99,7 @@ void GraphTimeBar::fitLegend()
   int room = width() - m_state->sizeHint().width() - 12 - 12 - 2 * 6;
   for (const QToolButton *b : std::as_const(m_buttons))
     room -= b->sizeHint().width() + 2;
-  room -= m_stats->sizeHint().width() + 8;
+  room -= m_note->sizeHint().width() + m_stats->sizeHint().width() + 10;
   m_legend->setEntries(m_entries, m_ink, qMax(1, room));
   m_legend->setFixedSize(m_legend->sizeHint());
 }

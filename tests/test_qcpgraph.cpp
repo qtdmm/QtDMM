@@ -6,13 +6,17 @@
 // hold; scrolling, Live held, "All", zoom, a file loaded; several values of
 // several meters on the list of axes; the colour variants (GraphLook), pens,
 // markers and divisions; the crosshair on a reading, the time cursors and
-// the statistics (GraphStats); GraphModel's settings texts.
+// the statistics (GraphStats); the reference lines; marks, notes and their
+// flags; GraphModel's settings texts.
 #include <QApplication>
 #include <QDateTime>
+#include <QDialog>
+#include <QLineEdit>
 #include <QScrollBar>
 #include <QTemporaryDir>
 #include <QToolButton>
 #include <QTest>
+#include <QTimer>
 #include <cmath>
 
 #include "core/reading.h"
@@ -1342,6 +1346,186 @@ static void testLevels()
   check(graph.leftValue().id < 0, "a file: no value of a meter on the left");
 }
 
+static void testMarks()
+{
+  RecordingStore store;
+  Feed feed(&store, 1000);
+  store.start();
+  QcpGraph graph;
+  graph.resize(900, 400);
+  graph.show();
+  graph.setWindowSeconds(60);
+  graph.setStore(&store);
+  for (int i = 0; i < 20; ++i)
+  {
+    feed.value(i);
+    if (i == 4)
+      store.addMark(0xffff0000, "Alarm Peak");
+  }
+  store.stop();
+  graph.refreshNow();
+  const QRect plot = graph.plotRect();
+  QWidget *plotWidget = graph.childAt(plot.center() + QPoint(0, graph.timeBar()->height()));
+
+  // an alarm's mark: a line at its time, its flag below the plot
+  check(graph.markCount() == 1 && graph.markTime(0) == 5000 && graph.markColor(0) == QColor(Qt::red) && !graph.markIsNote(0),
+        QString("the store's mark at its time (%1 marks, %2 ms)").arg(graph.markCount()).arg(graph.markTime(0)));
+  graph.setTimeCursor(0, 5000);
+  const int at5 = graph.cursorPixel(0);
+  check(graph.markPixel(0) == at5 && at5 > plot.left(), "its line where the time axis has 5 s");
+  graph.setTimeCursor(0, 9000);
+  QRect flag = graph.markFlagRect(0);
+  check(graph.markFlagText(0) == QString("1 · Peak"), "the flag: its number and its name without \"Alarm\": " + graph.markFlagText(0));
+  check(flag.top() >= plot.bottom() && flag.left() <= at5 && flag.right() >= at5, "the flag below the plot, under its line");
+  // the cursor's letter in the same row, not on the mark's flag
+  const QRect letter = graph.cursorFlagRect(0);
+  check(!letter.isEmpty() && letter.top() == flag.top() && !letter.intersects(flag) && graph.cursorFlagRect(1).isEmpty(),
+        "the cursor's letter is a flag in the row of the marks'");
+  check(graph.markAt(flag.center()) == 0 && graph.markAt(QPoint(at5, plot.center().y())) == -1,
+        "an alarm's flag takes the click, its line does not");
+
+  // a note: set, told, moved
+  const int note = graph.addNote(12000, "Probe", "moved the probe\nto pin 3");
+  check(note == 1 && graph.markCount() == 2 && graph.markIsNote(1) && graph.markTime(1) == 12000
+        && store.marks().at(1).kind == RecordingStore::MarkKind::Note, "a note at 12 s is the second mark");
+  check(graph.markTip(1).contains("2 · Probe") && graph.markTip(1).contains("to pin 3") && graph.markTip(1).contains("12:00:12"),
+        "its tooltip: number, title, clock time, text: " + graph.markTip(1));
+  check(graph.markAt(QPoint(graph.markPixel(1), plot.center().y())) == 1, "a note's line takes the click");
+  const int movedTo = graph.moveMark(1, 2000);
+  check(movedTo == 0 && graph.markTime(0) == 2000 && graph.markFlagText(1).startsWith("2 · P"),
+        QString("the note moved before the alarm: the marks are numbered by time (%1, %2 ms, \"%3\")").arg(movedTo).arg(graph.markTime(0)).arg(graph.markFlagText(1)));
+  check(graph.moveMark(1, 8000) == 1 && graph.markTime(1) == 5000, "an alarm's mark stays where it is");
+  check(graph.moveMark(0, 99000) == 1 && graph.markTime(1) == store.duration() && store.duration() >= 19000, "a note goes no further than the recording");
+  graph.moveMark(1, 12000);
+
+  // dragged with the mouse: by its line, Escape puts it back
+  if (plotWidget)
+  {
+    int moved = 0;
+    QDateTime from, to;
+    QObject::connect(&graph, &QcpGraph::noteMoved, &graph, [&](const QDateTime &a, const QDateTime &b, const QString &)
+    {
+      ++moved;
+      from = a;
+      to = b;
+    });
+    const QPoint on(graph.markPixel(1), plot.center().y());
+    QTest::mousePress(plotWidget, Qt::LeftButton, Qt::NoModifier, on);
+    QTest::mouseMove(plotWidget, on + QPoint(40, 0));
+    check(graph.markTime(1) > 12000, QString("the note follows the mouse (%1 ms)").arg(graph.markTime(1)));
+    QTest::keyClick(&graph, Qt::Key_Escape);
+    QTest::mouseRelease(plotWidget, Qt::LeftButton, Qt::NoModifier, on + QPoint(40, 0));
+    check(graph.markTime(1) == 12000 && moved == 0 && graph.timeCursor(0) == 9000, "Escape: the note is back, nothing else happened");
+    // by its flag, to where the mouse is let go
+    const QPoint onFlag = graph.markFlagRect(1).center();
+    QTest::mousePress(plotWidget, Qt::LeftButton, Qt::NoModifier, onFlag);
+    QTest::mouseMove(plotWidget, onFlag + QPoint(20, 0));
+    QTest::mouseMove(plotWidget, onFlag + QPoint(40, 0));
+    QTest::mouseRelease(plotWidget, Qt::LeftButton, Qt::NoModifier, onFlag + QPoint(40, 0));
+    check(graph.markTime(1) > 12000 && moved == 1 && from == Feed::wall(12000) && to == Feed::wall(graph.markTime(1)),
+          QString("dragged by its flag: noteMoved() from 12 s to %1 ms").arg(graph.markTime(1)));
+    // an alarm's flag does not move
+    const QPoint onAlarm = graph.markFlagRect(0).center();
+    QTest::mousePress(plotWidget, Qt::LeftButton, Qt::NoModifier, onAlarm);
+    QTest::mouseMove(plotWidget, onAlarm + QPoint(40, 0));
+    QTest::mouseRelease(plotWidget, Qt::LeftButton, Qt::NoModifier, onAlarm + QPoint(40, 0));
+    check(graph.markTime(0) == 5000 && moved == 1, "an alarm's flag cannot be dragged");
+  }
+  else
+    check(false, "the plot under the mouse");
+
+  // asked for: the dialog's title becomes the note, the table hears of it
+  {
+    QString added;
+    QDateTime when;
+    QObject::connect(&graph, &QcpGraph::noteAdded, &graph, [&](const QDateTime &t, const QString &title)
+    {
+      when = t;
+      added = title;
+    });
+    QTimer::singleShot(0, &graph, []
+    {
+      auto *dialog = qobject_cast<QDialog *>(QApplication::activeModalWidget());
+      if (!dialog)
+        return;
+      dialog->findChild<QLineEdit *>()->setText("Asked");
+      dialog->accept();
+    });
+    const int asked = graph.askNote(3000);
+    check(asked == 0 && graph.markName(0) == "Asked" && added == "Asked" && when == Feed::wall(3000) && graph.markCount() == 3,
+          QString("askNote(): a note at 3 s, noteAdded() (mark %1, \"%2\")").arg(asked).arg(added));
+    // another title through the same dialog
+    QTimer::singleShot(0, &graph, []
+    {
+      auto *dialog = qobject_cast<QDialog *>(QApplication::activeModalWidget());
+      if (!dialog)
+        return;
+      dialog->findChild<QLineEdit *>()->setText("Renamed");
+      dialog->accept();
+    });
+    check(graph.editMark(0) && store.marks().at(0).name == "Renamed", "editMark(): another title");
+    graph.removeMark(0);
+    check(graph.markCount() == 2 && graph.markName(0) == "Alarm Peak", "removeMark(): the note is gone");
+  }
+  check(graph.timeBar()->findChild<QToolButton *>("ui_graphNoteButton") != nullptr, "the time bar has the note button");
+
+  // close marks: the flags do not cover each other, the later one loses its name first
+  graph.addNote(5300, "Second", QString());
+  graph.addNote(5600, "Third", QString());
+  graph.refreshNow();
+  bool apart = true;
+  int shown = 0;
+  for (int i = 0; i < graph.markCount(); ++i)
+    for (int k = i + 1; k < graph.markCount(); ++k)
+      apart = apart && !graph.markFlagRect(i).intersects(graph.markFlagRect(k));
+  for (int i = 0; i < graph.markCount(); ++i)
+    shown += !graph.markFlagRect(i).isEmpty();
+  check(apart && shown >= 2 && graph.markCount() == 4, QString("flags of close marks stand apart (%1 of 4 shown)").arg(shown));
+  if (qEnvironmentVariableIsSet("QTDMM_SHOT"))
+  {
+    graph.setTimeCursor(1, 15000);
+    graph.refreshNow();
+    QCoreApplication::processEvents();
+    graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/qcpgraph_marks.png");
+  }
+  // out of the time shown: neither line nor flag
+  graph.setWindowSeconds(5);
+  graph.followEnd();
+  graph.refreshNow();
+  check(graph.markPixel(0) == -1 && graph.markFlagRect(0).isEmpty(), "a mark outside the time shown has no line and no flag");
+
+  // two meters, the second 10 s later: its mark on the first one's time, its meter in the tooltip
+  Bench bench;
+  bench.a.live();
+  bench.feedB.now = 10000;
+  bench.b.live();
+  bench.graph.setValues({ ValueRef(0, "device:a"), ValueRef(0, "device:b") });
+  for (int i = 0; i < 15; ++i)
+    bench.feedA.value(i);
+  bench.a.addMark(0xffff0000, "Alarm A");
+  for (int i = 0; i < 5; ++i)
+    bench.feedB.value(100 + i);
+  bench.b.addMark(0xff0000ff, "Alarm B");
+  bench.graph.refreshNow();
+  check(bench.graph.markCount() == 2 && bench.graph.markTime(0) == 15000 && bench.graph.markTime(1) == bench.b.marks().at(0).t + 10000,
+        QString("the marks of both meters on the graph's time (%1, %2 ms)").arg(bench.graph.markTime(0)).arg(bench.graph.markTime(1)));
+  check(bench.graph.markTip(0).contains("Meter A") && bench.graph.markTip(1).contains("Meter B"), "the tooltip says whose mark it is");
+  // a note goes to the left value's recording
+  check(bench.graph.addNote(4000, "Left", QString()) == 0 && bench.a.marks().size() == 2 && bench.b.marks().size() == 1,
+        "a note goes to the recording of the left axis' value");
+  // Live goes on: the mark moves left with the readings
+  const int before = bench.graph.markPixel(2);
+  for (int i = 0; i < 60; ++i)
+    bench.feedA.value(i);
+  bench.graph.refreshNow();
+  check(before > 0 && bench.graph.markPixel(2) > 0 && bench.graph.markPixel(2) < before,
+        QString("in Live the mark moves with its reading (%1 -> %2 px)").arg(before).arg(bench.graph.markPixel(2)));
+  // held: a mark that comes is there all the same, by its place among them
+  bench.graph.setHold(true);
+  bench.a.addMark(0xffff0000, "Alarm held");
+  check(bench.graph.markCount() == 4, "a mark coming while the picture is held is counted");
+}
+
 int main(int argc, char **argv)
 {
   if (qEnvironmentVariableIsEmpty("QT_QPA_PLATFORM"))
@@ -1374,6 +1558,7 @@ int main(int argc, char **argv)
   testCrosshairAndCursors();
   testReferenceRules();
   testLevels();
+  testMarks();
   shot();
   return failed ? 1 : 0;
 }

@@ -848,7 +848,35 @@ QMdiSubWindow *MainWindow::addViewWindow(Added kind, const ValueRef &value, int 
     graph->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(graph, &QWidget::customContextMenuRequested, this, [this, graph, win](const QPoint &pos)
     {
-      windowMenu(win, graph->mapToGlobal(pos));
+      const QPoint globalPos = graph->mapToGlobal(pos);
+      // on a mark's flag or a note's line: that mark (the texts are the old graph's)
+      if (const int mark = graph->markAtGlobal(globalPos); mark >= 0)
+      {
+        const qint64 t = graph->markTime(mark);
+        const QString name = graph->markName(mark);
+        QMenu menu(this);
+        const QAction *edit = menu.addAction(QCoreApplication::translate("GraphWidget", "&Edit note..."));
+        const QAction *remove = menu.addAction(QCoreApplication::translate("GraphWidget", "&Remove mark"));
+        const QAction *chosen = menu.exec(globalPos);
+        // an alarm may have come meanwhile: only the mark the menu was opened on
+        if (!chosen || graph->markTime(mark) != t || graph->markName(mark) != name)
+          return;
+        if (chosen == edit)
+          graph->editMark(mark);
+        else if (chosen == remove)
+          graph->removeMark(mark);
+        return;
+      }
+      windowMenu(win, globalPos);
+    });
+    // a note set in the graph marks its reading in the table
+    connect(graph, &QcpGraph::noteAdded, this, [this](const QDateTime &when, const QString &title)
+    {
+      m_readings->log()->markAt(when, QColor::fromRgba(RecordingStore::kNoteColor), title);
+    });
+    connect(graph, &QcpGraph::noteMoved, this, [this](const QDateTime &from, const QDateTime &to, const QString &title)
+    {
+      m_readings->log()->moveMark(from, to, QColor::fromRgba(RecordingStore::kNoteColor), title);
     });
     m_added << win;
     return win;
@@ -1081,6 +1109,22 @@ QList<QMdiSubWindow *> MainWindow::graphWindows() const
     if (graphViewOf(w))
       wins << w;
   return wins;
+}
+
+// The graph on QCustomPlot draws the marks of its meters' own recordings:
+// an alarm or a SCPI note goes there when no old graph keeps that recording
+RecordingStore *MainWindow::qgraphStoreFor(const MeterController *ctl) const
+{
+  for (const GraphWidget *g : graphsShowing(ctl))
+    if (g->store() == ctl->recorder())
+      return nullptr;
+  for (const QcpGraphView *view : m_qgraphViews)
+  {
+    const QList<ValueRef> shown = view->model()->values();
+    if (std::any_of(shown.cbegin(), shown.cend(), [ctl](const ValueRef &v) { return v.source == ctl->source(); }))
+      return ctl->recorder();
+  }
+  return nullptr;
 }
 
 QList<GraphWidget *> MainWindow::graphsShowing(const MeterController *ctl) const
@@ -1526,15 +1570,23 @@ void MainWindow::createSidebar()
   {
     connect(ctl, &MeterController::markRequested, this, [this, ctl](const QColor &color, const QString &name, bool graph, bool)
     {
-      if (graph)
-        for (GraphWidget *g : graphsShowing(ctl))
-          g->addMark(color, tr("%1: %2").arg(ctl->deviceName(), name));
+      if (!graph)
+        return;
+      // before the old graphs put it there: asked once
+      RecordingStore *own = qgraphStoreFor(ctl);
+      for (GraphWidget *g : graphsShowing(ctl))
+        g->addMark(color, tr("%1: %2").arg(ctl->deviceName(), name));
+      if (own)
+        own->addMark(color.rgba(), tr("%1: %2").arg(ctl->deviceName(), name));
     });
     // a SCPI client's note in the graph (the table: markRequested())
     connect(ctl, &MeterController::noteRequested, this, [this, ctl](const QString &title, const QString &note)
     {
+      RecordingStore *own = qgraphStoreFor(ctl);
       for (GraphWidget *g : graphsShowing(ctl))
         g->addNote(-1, tr("%1: %2").arg(ctl->deviceName(), title), note);
+      if (own)
+        own->addNote(-1, tr("%1: %2").arg(ctl->deviceName(), title), note);
     });
   });
   connect(m_session, &DeviceSession::opened, this, &MainWindow::updateOpenDevices);
@@ -2801,6 +2853,16 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
     }
     if (!qgraph->showsFile())
       fillQGraphReferenceMenu(menu.addMenu(tr("Re&ference line")), qgraph, QCursor::pos());
+    if (qgraph->graph()->store())
+    {
+      // a note where the menu was opened, or at the newest reading (the texts are the old graph's)
+      QcpGraph *graph = qgraph->graph();
+      if (const qint64 t = graph->timeAt(globalPos); t >= 0)
+        connect(menu.addAction(QCoreApplication::translate("GraphWidget", "Note here...")), &QAction::triggered, graph, [graph, t] { graph->askNote(t); });
+      QAction *now = menu.addAction(QCoreApplication::translate("GraphWidget", "Note now..."));
+      now->setShortcut(QKeySequence(Qt::Key_N));
+      connect(now, &QAction::triggered, graph, [graph] { graph->askNote(); });
+    }
     {
       QAction *stats = menu.addAction(tr("Stat&istics"));
       stats->setCheckable(true);
