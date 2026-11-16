@@ -4,6 +4,7 @@
 
 ### GUI
 
+- **Graph (QCP), the new graph in the making** — a second graph window drawn with QCustomPlot, with its own toolbar button next to *Graph*. It reads the same recording and is to replace the graph step by step; so far it draws the main value of one device live over the time window, with gaps, an automatic left axis, hold and a crosshair. Its windows are kept with the bench.
 - **XY diagram, histogram, heatmap on QCustomPlot** — the three side plots draw with QCustomPlot (Wireshark's fork, bundled), made for live data; a common base gives them the same title, empty and HOLD notes, colours and hold. OpenGL drawing can be switched on in Settings, Graph (experimental, off by default). QtDMM now builds as C++20.
 - **Export: the values of one graph** — the export dialog asks for the recording's *Values*: *All devices* (as before, the default) or *The values of this graph*, the curves of the graph used last; the main value stays as the time base. Kept with the dialog's other choices.
 - **Graph: hide outliers** — *View → Outliers* leaves single wrong readings out of the drawing and the statistics: more than n σ from the mean of their 25 neighbours on each side, spikes larger than an amount (away from the readings before and after, the same way; a step stays), or outside limits. The recording, export and readings table keep them. The plot and the statistics say how many are hidden; kept per graph with the window layout.

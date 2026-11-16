@@ -34,6 +34,10 @@
 #include "ui/graphview.h"
 #include "ui/poincareview.h"
 #include "ui/xyview.h"
+#include "ui/graphmodel.h"
+#include "ui/qcpgraphview.h"
+#include "ui/settings/graphprefs.h"
+#include "ui/views/qcpgraph.h"
 #include "ui/histogramview.h"
 #include "ui/heatmapview.h"
 #include "ui/dialogs/helpdlg.h"
@@ -553,6 +557,31 @@ void MainWindow::createViews()
     const MeterController *ctl = m_session->controllers().value(0);
     newView(Added::Graph, ctl ? ValueRef(0, ctl->source()) : ValueRef(), true);
   });
+  // the graph on QCustomPlot, growing next to the one on QtCharts: shows
+  // its windows, the first click makes one
+  m_qgraphAction = new QAction(action_Graph->icon(), tr("Graph (QCP)"), this);
+  m_qgraphAction->setObjectName("action_NewQGraph");
+  m_qgraphAction->setToolTip(tr("Graph (QCP): the new graph, still growing"));
+  m_qgraphAction->setWhatsThis(
+    tr("<html><head/><body><p><span style=\" font-weight:600;\">Graph (QCP)</span></p>"
+       "<p>The new graph, drawn with QCustomPlot. It grows next to the graph and shows the same "
+       "readings; so far one curve over the time window.</p></body></html>"));
+  connect(m_qgraphAction, &QAction::triggered, this, [this]
+  {
+    const QList<QMdiSubWindow *> windows = qgraphWindows();
+    if (windows.isEmpty())
+    {
+      newQGraph();
+      return;
+    }
+    for (QMdiSubWindow *win : windows)
+    {
+      win->show();
+      growFor(win);
+    }
+    m_mdi->setActiveSubWindow(windows.first());
+    m_arranger->arrange();
+  });
   m_newXYAction = new QAction(QIcon::fromTheme("qtdmm-xy"), tr("Add &XY diagram"), this);
   m_newXYAction->setObjectName("action_NewXY");
   m_newXYAction->setToolTip(tr("Add an XY diagram"));
@@ -649,6 +678,9 @@ void MainWindow::createViews()
     for (const GraphView *view : m_wid->graphs())
       if (view->graph()->values().isEmpty())
         view->graph()->setValues({ ValueRef(0, ctl->source()) });
+    for (QcpGraphView *view : std::as_const(m_qgraphViews))
+      if (view->model()->values().isEmpty())
+        view->model()->setValues({ ValueRef(0, ctl->source()) });
     for (MeterView *meter : m_wid->meters())
       if (free(meter->value()))
         meter->setValue(ValueRef(0, ctl->source()));
@@ -766,6 +798,7 @@ QMdiSubWindow *MainWindow::addViewWindow(Added kind, const ValueRef &value, int 
 {
   const QString prefix = kind == Added::Meter ? QStringLiteral("meter-")
                          : kind == Added::Graph ? QStringLiteral("graph-")
+                         : kind == Added::QGraph ? QStringLiteral("qgraph-")
                          : kind == Added::XY ? QStringLiteral("xy-")
                          : kind == Added::Histogram ? QStringLiteral("histogram-")
                          : kind == Added::Heatmap ? QStringLiteral("heatmap-") : QStringLiteral("poincare-");
@@ -791,6 +824,26 @@ QMdiSubWindow *MainWindow::addViewWindow(Added kind, const ValueRef &value, int 
     graph->setThemeColors(g.background, g.grid, g.labels, g.data);
     if (!value.source.isEmpty())
       graph->setValues({ value });
+    return win;
+  }
+  if (kind == Added::QGraph)
+  {
+    auto *graph = new QcpGraph(this);
+    graph->setWindowTitle(tr("Graph (QCP) %1").arg(number));
+    auto *view = new QcpGraphView(m_session, graph, prefix + QString::number(number), this);
+    m_qgraphViews.insert(graph, view);
+    view->model()->setWindowSeconds(m_wid->settingsDialog()->graphPage()->windowSeconds());
+    const Designs::GraphColors g = Designs::graphColors(Designs::current());
+    graph->setThemeColors(g.background, g.grid, g.labels, g.data);
+    if (!value.source.isEmpty())
+      view->model()->setValues({ value });
+    win = addView(graph, graph->windowTitle(), MdiArranger::Graph, prefix + QString::number(number));
+    graph->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(graph, &QWidget::customContextMenuRequested, this, [this, graph, win](const QPoint &pos)
+    {
+      windowMenu(win, graph->mapToGlobal(pos));
+    });
+    m_added << win;
     return win;
   }
   if (kind == Added::XY)
@@ -868,7 +921,7 @@ void MainWindow::newView(Added kind, const ValueRef &value, bool ask)
   // from the menu its value is asked first (the active device's first one
   // ticked); cancelled, there is no new view. With no device open there is
   // nothing to pick from.
-  if (ask && !m_session->controllers().isEmpty())
+  if (ask && kind != Added::QGraph && !m_session->controllers().isEmpty())
   {
     if (kind == Added::XY)
     {
@@ -928,6 +981,11 @@ void MainWindow::removeAddedWindow(QMdiSubWindow *win)
   }
   if (GraphView *graph = graphViewOf(win))
     m_wid->removeGraph(graph);
+  if (QcpGraphView *graph = qgraphViewOf(win))
+  {
+    m_qgraphViews.remove(graph->graph());
+    delete graph;
+  }
   m_grown.remove(win->widget());
   m_grown.remove(win);
   delete win;
@@ -1108,6 +1166,29 @@ QList<QMdiSubWindow *> MainWindow::histogramWindows() const
     if (histogramViewOf(w))
       wins << w;
   return wins;
+}
+
+QcpGraphView *MainWindow::qgraphViewOf(const QMdiSubWindow *win) const
+{
+  for (QcpGraphView *view : m_qgraphViews)
+    if (win && view->graph() == win->widget())
+      return view;
+  return nullptr;
+}
+
+QList<QMdiSubWindow *> MainWindow::qgraphWindows() const
+{
+  QList<QMdiSubWindow *> wins;
+  for (QMdiSubWindow *win : m_added)
+    if (qgraphViewOf(win))
+      wins << win;
+  return wins;
+}
+
+void MainWindow::newQGraph(const ValueRef &value)
+{
+  const MeterController *ctl = m_session->controllers().value(0);
+  newView(Added::QGraph, !value.source.isEmpty() ? value : ctl ? ValueRef(0, ctl->source()) : ValueRef());
 }
 
 QList<QMdiSubWindow *> MainWindow::xyWindows() const
@@ -1401,6 +1482,7 @@ void MainWindow::fillViewToolbar()
   toolBarDMM->addAction(m_histogramAction);
   toolBarDMM->addAction(m_heatmapAction);
   toolBarDMM->addAction(action_Graph);
+  toolBarDMM->addAction(m_qgraphAction);
   toolBarDMM->addAction(m_readingsAction);
   connect(m_displayAction, &QAction::toggled, this, &MainWindow::storeDisplaySLOT);
 
@@ -1461,6 +1543,13 @@ void MainWindow::fillViewToolbar()
       menu->addAction(m_graphSources);
     menu->addSeparator();
     connect(menu->addAction(tr("&New...")), &QAction::triggered, m_newGraphAction, &QAction::trigger);
+  });
+  addViewMenu(m_qgraphAction, [this](QMenu *menu)
+  {
+    for (QMdiSubWindow *win : qgraphWindows())
+      addViewEntry(menu, win, win->windowTitle());
+    menu->addSeparator();
+    connect(menu->addAction(tr("&New...")), &QAction::triggered, this, [this] { newQGraph(); });
   });
   // no value yet: the click is the way to choose one; the others of the
   // kind follow the button
@@ -1788,7 +1877,7 @@ void MainWindow::updateEmptyStart()
   const bool noDevices = m_wid->devices()->list().isEmpty();
   m_emptyConnect->setVisible(!noDevices);
   // nothing to see behind the start page; checked stays what comes back
-  for (QAction *a : { m_displayAction, m_meterAction, m_poincareAction, m_xyAction, m_histogramAction, m_heatmapAction, action_Graph, m_readingsAction })
+  for (QAction *a : { m_displayAction, m_meterAction, m_poincareAction, m_xyAction, m_histogramAction, m_heatmapAction, action_Graph, m_qgraphAction, m_readingsAction })
     a->setEnabled(!empty);
   // [E 09.11.] a project or a bench makes no sense without a device
   if (m_benchActions.constFirst()->isEnabled() == noDevices)
@@ -2076,7 +2165,7 @@ void MainWindow::createShortcuts(const QList<QAction *> &workspace)
   for (QAction *a : { m_sidebarAction, m_displayAction, m_meterAction, m_newMeterAction, action_Graph,
                       m_readingsAction, m_poincareAction, m_newPoincareAction, m_histogramAction, m_newHistogramAction,
                       m_heatmapAction, m_newHeatmapAction,
-                      m_xyAction, m_newXYAction, m_newGraphAction, m_basketAction, m_titleBars, m_toolbars,
+                      m_xyAction, m_newXYAction, m_newGraphAction, m_qgraphAction, m_basketAction, m_titleBars, m_toolbars,
                       m_fullScreen })
     m_shortcuts->add(a, windows);
   for (QAction *a : workspace)
@@ -2247,6 +2336,7 @@ void MainWindow::on_action_Menu_triggered()
     m_menu->addAction(m_histogramAction);
     m_menu->addAction(m_heatmapAction);
     m_menu->addAction(action_Graph);
+    m_menu->addAction(m_qgraphAction);
     m_menu->addAction(m_readingsAction);
     m_menu->addAction(m_basketAction);
     // Arrange has its button next to the menu's; here only while the toolbar is hidden
@@ -2497,6 +2587,18 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
         QMessageBox::warning(this, tr("Save image"), tr("Could not save the image."));
     });
   };
+  if (QcpGraphView *qgraph = qgraphViewOf(win))
+  {
+    // another one, first with the same value
+    const QList<ValueRef> values = qgraph->model()->values();
+    connect(menu.addAction(tr("&New graph (QCP)")), &QAction::triggered, this, [this, values]
+    {
+      newQGraph(values.value(0));
+    });
+    menu.addSeparator();
+    addBasicPlotActions(qgraph->graph(), qgraph->graph()->hold(), [graph = qgraph->graph()](bool on) { graph->setHold(on); },
+                        [graph = qgraph->graph()] { graph->clear(); }, QStringLiteral("graph.png"));
+  }
   if (XYView *xy = xyViewOf(win))
   {
     if (!m_session->controllers().isEmpty())
@@ -3482,6 +3584,17 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
   }
   for (const QString &number : get("Windows/graphs", QString()).toString().split(' ', Qt::SkipEmptyParts))
     addViewWindow(Added::Graph, ValueRef(), number.toInt())->setVisible(get("Windows/graph-" + number + "-shown", true).toBool());
+  m_qgraphsKey = !get("Windows/qgraphs", QString()).toString().isEmpty();
+  for (const QString &number : get("Windows/qgraphs", QString()).toString().split(' ', Qt::SkipEmptyParts))
+  {
+    const QString key = "Windows/qgraph-" + number;
+    QMdiSubWindow *win = addViewWindow(Added::QGraph, ValueRef(), number.toInt());
+    GraphModel *model = qgraphViewOf(win)->model();
+    model->setValuesSetting(get(key + "-values", QString()).toString());
+    if (const int seconds = get(key + "-window", 0).toInt(); seconds > 0)
+      model->setWindowSeconds(seconds);
+    win->setVisible(get(key + "-shown", true).toBool());
+  }
   for (const QString &number : get("Windows/poincares", QString()).toString().split(' ', Qt::SkipEmptyParts))
     addViewWindow(Added::Poincare, valueOf(get("Windows/poincare-" + number + "-value", QString()).toString()),
                   number.toInt())->show();
@@ -3522,7 +3635,7 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
     // (a workspace loaded with its meters connected)
     auto windows = [this]
     {
-      return meterWindows() + poincareWindows() + xyWindows() + histogramWindows() + heatmapWindows() + graphWindows()
+      return meterWindows() + poincareWindows() + xyWindows() + histogramWindows() + heatmapWindows() + graphWindows() + qgraphWindows()
              + QList<QMdiSubWindow *>{ m_readingsWin } + panelWindows();
     };
     QMap<QString, QString> geometry;
@@ -3714,7 +3827,7 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
   set("Windows/toolbar-hidden", m_toolbars->isChecked());
   set("Windows/design", Designs::name(Designs::current()));
   if (m_arranger->mode() == MdiArranger::Free)
-    for (QMdiSubWindow *w : meterWindows() + poincareWindows() + xyWindows() + histogramWindows() + heatmapWindows() + graphWindows() + QList<QMdiSubWindow *>{ m_readingsWin }
+    for (QMdiSubWindow *w : meterWindows() + poincareWindows() + xyWindows() + histogramWindows() + heatmapWindows() + graphWindows() + qgraphWindows() + QList<QMdiSubWindow *>{ m_readingsWin }
                             + panelWindows())
     {
       const QRect g = w->geometry();
@@ -3821,6 +3934,20 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
     }
   }
   set("Windows/graphs", graphs.join(' '));
+  // the graphs on QCustomPlot under keys of their own; with none the key
+  // stays out, a bench saved before them reads as it did
+  QStringList qgraphs;
+  for (QMdiSubWindow *w : qgraphWindows())
+  {
+    const GraphModel *model = qgraphViewOf(w)->model();
+    qgraphs << w->objectName().section('-', 1);
+    set("Windows/" + w->objectName() + "-values", model->valuesSetting());
+    set("Windows/" + w->objectName() + "-window", model->windowSeconds());
+    set("Windows/" + w->objectName() + "-shown", !w->isHidden());
+  }
+  if (!qgraphs.isEmpty() || m_qgraphsKey)
+    set("Windows/qgraphs", qgraphs.join(' '));
+  m_qgraphsKey = !qgraphs.isEmpty();
   QStringList tableHidden;
   for (const ValueRef &v : m_readings->log()->hiddenValues())
     tableHidden << v.toString();
@@ -4429,6 +4556,8 @@ void MainWindow::setDesign(int design)
     applyFrame(win->widget());
   const Designs::GraphColors g = Designs::graphColors(d);
   for (const GraphView *view : m_wid->graphs())
+    view->graph()->setThemeColors(g.background, g.grid, g.labels, g.data);
+  for (const QcpGraphView *view : std::as_const(m_qgraphViews))
     view->graph()->setThemeColors(g.background, g.grid, g.labels, g.data);
   for (QMdiSubWindow *win : poincareWindows())
     applyPoincareColors(static_cast<PoincarePlot *>(win->widget()));

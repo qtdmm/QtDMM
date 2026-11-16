@@ -59,6 +59,8 @@ class ReadingsWidget;
 class PoincarePlot;
 class XYPlot;
 class XYView;
+class QcpGraph;
+class QcpGraphView;
 class HistogramPlot;
 class HistogramView;
 class GraphCommon;
@@ -206,7 +208,7 @@ protected:
   /// the menu, each with its value (a meter also its style), and go when
   /// closed.
   /// @{
-  enum class Added { Meter, Poincare, XY, Histogram, Heatmap, Graph };
+  enum class Added { Meter, Poincare, XY, Histogram, Heatmap, Graph, QGraph };
   QList<QMdiSubWindow *> m_added;
   QAction    *m_newMeterAction = nullptr;
   QAction    *m_newPoincareAction = nullptr;
@@ -215,6 +217,10 @@ protected:
   XYPlot     *m_xyPlot = nullptr;
   QMdiSubWindow *m_xyWin = nullptr;
   QHash<XYPlot *, XYView *> m_xyViews;
+  /// The graphs on QCustomPlot ("Graph (QCP)"), next to the ones on QtCharts until they can replace them.
+  QHash<QcpGraph *, QcpGraphView *> m_qgraphViews;
+  QAction    *m_qgraphAction = nullptr;
+  bool        m_qgraphsKey = false;   ///< Windows/qgraphs named graphs when read or written last: an empty list is written too
   QAction    *m_newHistogramAction = nullptr;
   QAction    *m_newHeatmapAction = nullptr;
   QAction    *m_heatmapAction = nullptr;
@@ -226,6 +232,8 @@ protected:
   /// Another view of @p kind for @p value, shown and placed; with @p ask
   /// its Sources dialog first, cancelled no view.
   void        newView(Added kind, const ValueRef &value, bool ask = false);
+  /// Another graph on QCustomPlot showing @p value, without one the first meter's main value.
+  void        newQGraph(const ValueRef &value = ValueRef());
   void        newMeter(const ValueRef &value) { newView(Added::Meter, value); }
   void        removeAddedWindow(QMdiSubWindow *win);
   /// The analog meter or Poincaré plot in @p win, nullptr for another window.
@@ -233,6 +241,8 @@ protected:
   PoincareView *poincareViewOf(const QMdiSubWindow *win) const;
   XYView      *xyViewOf(const QMdiSubWindow *win) const;
   QList<QMdiSubWindow *> xyWindows() const;
+  QcpGraphView *qgraphViewOf(const QMdiSubWindow *win) const;
+  QList<QMdiSubWindow *> qgraphWindows() const;
   bool        editXYSources(XYView *view);
   /// The design's colours on a side plot (XY diagram, histogram, heatmap).
   void        applyPlotColors(GraphCommon *plot);
