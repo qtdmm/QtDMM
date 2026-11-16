@@ -104,6 +104,17 @@ QString QcpPlotBase::crosshairText(double x, double y) const
   return QString("%1   %2").arg(axisValueText(m_plot->xAxis, x), axisValueText(m_plot->yAxis, y));
 }
 
+QcpPlotBase::CrosshairAt QcpPlotBase::crosshairAt(double x, double y)
+{
+  return { x, y, true, crosshairText(x, y) };
+}
+
+void QcpPlotBase::setCrosshairPen(const QPen &pen)
+{
+  m_crossX->setPen(pen);
+  m_crossY->setPen(pen);
+}
+
 void QcpPlotBase::moveCrosshair(QMouseEvent *event)
 {
   const QPointF pos = event->position();
@@ -112,15 +123,15 @@ void QcpPlotBase::moveCrosshair(QMouseEvent *event)
     hideCrosshair();
     return;
   }
-  const double x = m_plot->xAxis->pixelToCoord(pos.x());
-  const double y = m_plot->yAxis->pixelToCoord(pos.y());
-  m_crossX->point1->setCoords(x, 0);
-  m_crossX->point2->setCoords(x, 1);
-  m_crossY->point1->setCoords(0, y);
-  m_crossY->point2->setCoords(1, y);
-  m_crossText->setText(crosshairText(x, y));
-  for (QCPAbstractItem *item : std::initializer_list<QCPAbstractItem *>{ m_crossX, m_crossY, m_crossText })
-    item->setVisible(true);
+  const CrosshairAt at = crosshairAt(m_plot->xAxis->pixelToCoord(pos.x()), m_plot->yAxis->pixelToCoord(pos.y()));
+  m_crossX->point1->setCoords(at.x, 0);
+  m_crossX->point2->setCoords(at.x, 1);
+  m_crossY->point1->setCoords(0, at.y);
+  m_crossY->point2->setCoords(1, at.y);
+  m_crossText->setText(at.text);
+  m_crossX->setVisible(true);
+  m_crossText->setVisible(true);
+  m_crossY->setVisible(at.horizontal);
   m_crossLayer->replot();
 }
 

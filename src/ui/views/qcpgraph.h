@@ -13,11 +13,15 @@
 
 #include "core/valueref.h"
 #include "ui/views/graphlook.h"
+#include "ui/views/graphstats.h"
 
+class GraphStatsPanel;
 class GraphTimeBar;
 class QCPAbstractItem;
 class QCPAxis;
 class QCPGraph;
+class QCPItemStraightLine;
+class QCPItemText;
 class QMouseEvent;
 class QRubberBand;
 class QScrollBar;
@@ -53,12 +57,18 @@ class RecordingStore;
 /// settings' line, points and width: setTheme() gives the design,
 /// setVariant() and setLookSettings() the rest.
 ///
+/// To read it: the crosshair under the mouse sits on the reading of the
+/// left axis' value that holds there; a click sets the time cursor A,
+/// Shift and a click B (lines one can drag, each with the level of that
+/// value); the statistics column (GraphStats) has the values at the
+/// cursors, what the curves did from A to B and over the time shown.
+///
 /// So far: lines with gaps, the time axis, the value axes fitted to what is
 /// shown or fixed by unit, the legend, the time buttons and the state above
 /// the plot, the scrollbar below, zoom, hold and the crosshair.
 ///
 /// The code that names QCustomPlot's types is in qcpgraph_<part>.cpp
-/// (curves, axes, input, theme); nothing outside knows them, for the move to NeoQCP.
+/// (curves, axes, input, theme, overlays); nothing outside knows them, for the move to NeoQCP.
 class QcpGraph : public QcpPlotBase
 {
   Q_OBJECT
@@ -139,6 +149,18 @@ public:
   const GraphLook::Look &look() const { return m_look; }
   /// @}
 
+  /// @name Reading it
+  /// @{
+  /// The time cursor @p which (0: A, 1: B) at @p t, ms since the start of
+  /// the recording, within what the store keeps; negative: none.
+  void        setTimeCursor(int which, qint64 t);
+  qint64      timeCursor(int which) const { return m_cursorT[which & 1]; }
+  void        clearTimeCursors();
+  /// The statistics column next to the plot.
+  void        setStatsVisible(bool on);
+  bool        statsVisible() const { return m_statsOn; }
+  /// @}
+
   void        setHold(bool hold) override;
   /// Draws the store anew; the readings are the store's and stay.
   void        clear() override;
@@ -175,6 +197,14 @@ public:
   double      leftAxisMin() const { return axisMin(0); }
   double      leftAxisMax() const { return axisMax(0); }
   QString     stateText() const;
+  /// The statistics as plain text, as they are now (not waiting for the column's pace).
+  QString     statsText() const;
+  /// What the crosshair says for the mouse at @p pos (plot widget pixels), and where its lines are.
+  QString     crosshairTextAt(const QPoint &pos);
+  /// The level line of cursor @p which: its value on the left axis (that axis' unit); NaN while it has none.
+  double      cursorLevel(int which) const;
+  /// The x of cursor @p which in the plot widget, -1 while it is not shown.
+  int         cursorPixel(int which) const;
   QScrollBar *scrollBar() const { return m_scrollBar; }
   GraphTimeBar *timeBar() const { return m_timeBar; }
   /// The rectangle of the axes in the plot widget, for zoomToRect().
@@ -187,10 +217,12 @@ Q_SIGNALS:
   /// The window or "All" changed, by the graph itself too (zoom, "All" growing).
   void        windowChanged(int seconds);
   void        followAllChanged(bool on);
+  void        statsVisibleChanged(bool on);
+  void        cursorsChanged();
 
 protected:
   void        refreshPlot() override;
-  QString     crosshairText(double x, double y) const override;
+  CrosshairAt crosshairAt(double x, double y) override;
   void        resizeEvent(QResizeEvent *event) override;
   void        keyPressEvent(QKeyEvent *event) override;
 
@@ -276,6 +308,21 @@ private:
   void        updateTimeBar();
   /// After the window moved: the picture now, unless it is held.
   void        redraw();
+  // qcpgraph_overlays.cpp
+  void        setupOverlays();
+  /// The curve the crosshair, the cursors' levels and later the reference line go by: the first on the left axis; -1: none.
+  int         leftCurve() const;
+  GraphStats::Curve statsCurve(int curve) const;
+  GraphStats::Input statsInput() const;
+  /// The cursors' lines, flags and levels where the axes are now.
+  void        updateCursors();
+  /// The statistics soon, not with every reading.
+  void        scheduleStats();
+  void        updateStats();
+  /// The column at its side, as wide as it wants; the rest for the plot.
+  void        layoutStats();
+  /// The cursor whose line is at @p pos (plot widget pixels): 0, 1, or -1.
+  int         cursorAt(const QPoint &pos) const;
   // qcpgraph_input.cpp
   void        setupInput();
   void        mousePressed(QMouseEvent *event);
@@ -306,6 +353,13 @@ private:
   GraphTimeBar *m_timeBar = nullptr;
   QScrollBar *m_scrollBar = nullptr;
   QRubberBand *m_zoomBand = nullptr;
+  GraphStatsPanel *m_statsPanel = nullptr;
+  QTimer      m_statsTimer;
+  bool        m_statsOn = false;
+  qint64      m_cursorT[2] = { -1, -1 };   ///< ms since the start of the recording, -1: none
+  QCPItemStraightLine *m_cursorLine[2] = {};
+  QCPItemStraightLine *m_cursorLevel[2] = {};
+  QCPItemText *m_cursorFlag[2] = {};
   qint64      m_bucket = 1;      ///< the bucket the points were thinned with, ms
   bool        m_dirty = true;    ///< the points are to be built anew
   int         m_windowSeconds = 600;
@@ -316,8 +370,10 @@ private:
   bool        m_zoomed = false;
   struct { qint64 start = 0; int seconds = 0; bool all = false; bool atEnd = true; } m_zoomBefore;
   /// The mouse: a drag moves the time, with Shift it draws the zoom frame.
-  enum class Drag { None, Pan, Frame };
+  enum class Drag { None, Pan, Frame, Cursor };
   Drag        m_drag = Drag::None;
   QPoint      m_pressPos;
   qint64      m_pressStart = 0;
+  bool        m_moved = false;      ///< the mouse went more than a slip since the press: no click
+  int         m_dragCursor = 0;     ///< Drag::Cursor: which one
 };

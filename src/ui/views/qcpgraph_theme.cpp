@@ -6,6 +6,7 @@
 #include "ui/views/qcpgraph.h"
 
 #include "recording/recordingstore.h"
+#include "ui/views/graphstatspanel.h"
 #include "ui/views/graphtimebar.h"
 #include "ui/views/qcp.h"
 
@@ -124,6 +125,16 @@ void QcpGraph::applyLook()
     axis->grid()->setSubGridPen(minor ? m_look.minorGrid : m_look.grid);
   }
   static_cast<CentreTicks *>(m_centreTicks)->setPen(m_look.centreTicks);
+  // crosshair and time cursors in the cursor colour
+  setCrosshairPen(QPen(m_look.cursor));
+  for (int i = 0; i < 2; ++i)
+  {
+    m_cursorLine[i]->setPen(QPen(m_look.cursor, 1, Qt::DashLine));
+    m_cursorLevel[i]->setPen(QPen(m_look.cursor, 1, Qt::DashLine));
+    m_cursorFlag[i]->setColor(m_look.cursor);
+  }
+  m_statsPanel->setColors(background, theme.labels);
+  layoutStats();   // its side
   styleCurves();
   updateLegend();
   // other divisions, another width: the axes anew

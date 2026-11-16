@@ -5,7 +5,8 @@
 // readings, a reading at the end, gaps, clear, the time and the left axis,
 // hold; scrolling, Live held, "All", zoom, a file loaded; several values of
 // several meters on the list of axes; the colour variants (GraphLook), pens,
-// markers and divisions; GraphModel's settings texts.
+// markers and divisions; the crosshair on a reading, the time cursors and
+// the statistics (GraphStats); GraphModel's settings texts.
 #include <QApplication>
 #include <QDateTime>
 #include <QScrollBar>
@@ -21,6 +22,7 @@
 #include "service/devicesession.h"
 #include "ui/graphmodel.h"
 #include "ui/qcpgraphview.h"
+#include "ui/views/graphstats.h"
 #include "ui/views/graphtimebar.h"
 #include "ui/views/qcpgraph.h"
 #include "testutil.h"
@@ -917,6 +919,176 @@ static void testStoreDeleted()
   check(graph.curvePoints(0).size() == 6, "and goes on");
 }
 
+static void testStatsText()
+{
+  using namespace GraphStats;
+  check(withUnit(0.001234, "V") == "1.234 mV" && withUnit(qQNaN(), "V") == "--", "a value with its prefix, none as --");
+  check(spanText(250) == "250 ms" && spanText(5000) == "5.000 s" && spanText(12500) == "12.50 s" && spanText(3909000) == "1:05:09",
+        "spans: " + spanText(250) + ", " + spanText(5000) + ", " + spanText(12500) + ", " + spanText(3909000));
+  check(timeText(80250) == "0:01:20.250", "a time of the recording: " + timeText(80250));
+  const ColumnScale c = columnScale({ 0.0123, 0.0101 }, { 0.00002 }, "V");
+  check(c.unit == "mV" && c.text(0.0123) == "12.300 mV" && c.text(0.00002) == "0.020 mV", "one scale for a column: " + c.text(0.0123) + ", " + c.text(0.00002));
+  check(columnScale({ 0, 0 }, {}, "V").text(0) == "0 V", "nothing but zeros");
+  check(columnScale({ 25.5 }, {}, "C").text(25.5) == QString::fromUtf8("25.50 °C") && withUnit(25.5, "C") == QString::fromUtf8("25.5 °C"),
+        "a temperature in degrees: " + columnScale({ 25.5 }, {}, "C").text(25.5));
+
+  // a curve of a store: the value that holds, the nearer reading, a gap
+  RecordingStore store;
+  Feed feed(&store, 1000);
+  store.start();
+  for (int i = 0; i < 10; ++i)
+    feed.value(i == 5 ? qQNaN() : i);
+  store.stop();
+  Curve curve;
+  curve.name = "Voltage";
+  curve.unit = "V";
+  curve.store = &store;
+  curve.parts = { &store.series() };
+  check(curve.valueAt(3400) == 3 && curve.valueAt(3999) == 3 && curve.valueAt(4000) == 4, "the value holds until the next reading");
+  check(std::isnan(curve.valueAt(5500)) && std::isnan(curve.valueAt(-5)) && std::isnan(curve.valueAt(store.duration() + 1000)),
+        "none in a gap, before the first reading, after the recording");
+  qint64 at = -1;
+  check(curve.readingNear(3400, &at) && at == 3000 && curve.readingNear(3600, &at) && at == 4000, "the nearer reading of the two");
+  check(curve.readingNear(4600, &at) && at == 4000 && curve.readingNear(5200, &at)->gap(), "next to a gap: the one that holds; in it: the gap");
+  // on another time: the store's 2 s later on the graph's
+  curve.shift = 2000;
+  check(curve.valueAt(5400) == 3 && curve.readingNear(5400, &at) && at == 5000, "a store that started later, on the graph's time");
+  curve.shift = 0;
+
+  Input input;
+  input.curves << curve;
+  input.from = 0;
+  input.to = 60000;
+  input.end = store.duration();
+  QString text = GraphStats::text(input);
+  check(text.contains("Click: cursor A") && text.contains("Shown") && text.contains("peak-peak") && !text.contains("A – B"),
+        "no cursors: the hint and the time shown");
+  input.cursor[0] = 2000;
+  input.cursor[1] = 8000;
+  text = GraphStats::text(input);
+  const RecordingStore::Stats st = store.stats(2000, 8000);
+  const ColumnScale scale = columnScale({ 6.0, st.mean, st.min, st.max }, { st.sigma }, "V");
+  check(text.contains("A 0:00:02.000") && text.contains("B 0:00:08.000") && text.contains("A – B") && text.contains("6.000 s"),
+        "the cursors' times and their distance");
+  check(text.contains(scale.text(st.mean)) && text.contains(scale.text(st.sigma)) && text.contains(scale.text(6.0))
+        && text.contains(QString::number(st.count)), "from A to B: the store's statistics (mean " + scale.text(st.mean) + ")");
+  check(!text.contains(QChar(0x222b)), "no integral for volts");
+  input.curves[0].unit = "A";
+  text = GraphStats::text(input);
+  check(text.contains(QChar(0x222b)) && text.contains(withUnit(st.integral / 3600, "Ah")), "a current: its integral in Ah: " + withUnit(st.integral / 3600, "Ah"));
+}
+
+static void testCrosshairAndCursors()
+{
+  RecordingStore store;
+  Feed feed(&store, 1000);
+  store.start();
+  QcpGraph graph;
+  graph.resize(900, 400);
+  graph.show();
+  graph.setWindowSeconds(60);
+  graph.setStore(&store);
+  for (int i = 0; i < 20; ++i)
+  {
+    if (i == 12)
+    {
+      Reading r;
+      r.value = 12;
+      r.text = "12";
+      r.unit = r.baseUnit = "V";
+      r.port.quantity = Quantity::Voltage;
+      r.hold = true;
+      r.flags = quint32(SampleFlag::Hold);
+      r.t = feed.now;
+      r.msecs = Feed::wall(feed.now).toMSecsSinceEpoch();
+      store.setReading(r);
+      feed.now += 1000;
+    }
+    else
+      feed.value(i == 8 ? qQNaN() : i);
+  }
+  store.stop();
+  graph.refreshNow();
+  QTest::qWait(30);
+  const QRect plot = graph.plotRect();
+  // a pixel of a time: the time axis is 0 .. 60 s over the plot's width
+  auto pixel = [&](double seconds) { return QPoint(plot.left() + qRound(seconds / 60.0 * plot.width()), plot.center().y()); };
+
+  // the crosshair: on the reading that holds, on the next one when nearer
+  QString text = graph.crosshairTextAt(pixel(3.3));
+  check(text.startsWith("0:00:03.000") && text.contains("3 V"), "the reading that holds at 3.3 s: " + text);
+  text = graph.crosshairTextAt(pixel(3.8));
+  check(text.startsWith("0:00:04.000") && text.contains("4 V"), "the nearer one at 3.8 s: " + text);
+  text = graph.crosshairTextAt(pixel(8.4));
+  check(text.contains("OL") && !text.contains(" V"), "an overload says so: " + text);
+  text = graph.crosshairTextAt(pixel(12.1));
+  check(text.contains("12 V") && text.contains("HOLD"), "a held reading says so: " + text);
+  text = graph.crosshairTextAt(pixel(40));
+  check(!text.contains("V"), "after the recording: the time alone: " + text);
+
+  // the cursors: set, bound to the recording, their levels
+  int changed = 0;
+  QObject::connect(&graph, &QcpGraph::cursorsChanged, [&] { changed++; });
+  graph.setTimeCursor(0, 3400);
+  check(graph.timeCursor(0) == 3400 && graph.cursorLevel(0) == 3 && changed == 1, "A at 3.4 s, its level on the value that holds");
+  graph.setTimeCursor(1, 999999);
+  check(graph.timeCursor(1) == store.duration(), "B past the end: at the end");
+  graph.setTimeCursor(1, 8500);
+  check(std::isnan(graph.cursorLevel(1)), "B in the overload: no level");
+  graph.clearTimeCursors();
+  check(graph.timeCursor(0) < 0 && graph.timeCursor(1) < 0 && std::isnan(graph.cursorLevel(0)), "removed");
+
+  // the mouse: a click is A, Shift and a click B, a cursor's line is dragged, a drag still moves the time
+  QWidget *plotWidget = graph.childAt(plot.center() + QPoint(0, graph.timeBar()->height()));
+  check(plotWidget != nullptr, "the plot under the mouse");
+  if (plotWidget)
+  {
+    QTest::mouseClick(plotWidget, Qt::LeftButton, Qt::ShiftModifier, pixel(6));
+    check(std::abs(graph.timeCursor(0) - 6000) < 100 && graph.timeCursor(1) < 0, QString("Shift+click without A: A (%1)").arg(graph.timeCursor(0)));
+    QTest::mouseClick(plotWidget, Qt::LeftButton, Qt::NoModifier, pixel(4));
+    check(std::abs(graph.timeCursor(0) - 4000) < 100, QString("a click: A at 4 s (%1)").arg(graph.timeCursor(0)));
+    QTest::mouseClick(plotWidget, Qt::LeftButton, Qt::ShiftModifier, pixel(10));
+    check(std::abs(graph.timeCursor(1) - 10000) < 100 && std::abs(graph.timeCursor(0) - 4000) < 100,
+          QString("Shift+click: B at 10 s (%1)").arg(graph.timeCursor(1)));
+    // dragging A's line
+    const QPoint onA(graph.cursorPixel(0), plot.center().y());
+    QTest::mousePress(plotWidget, Qt::LeftButton, Qt::NoModifier, onA);
+    QTest::mouseMove(plotWidget, onA + QPoint(20, 0));
+    QTest::mouseMove(plotWidget, pixel(15));
+    QTest::mouseRelease(plotWidget, Qt::LeftButton, Qt::NoModifier, pixel(15));
+    check(std::abs(graph.timeCursor(0) - 15000) < 100 && graph.timeAxisStart() == 0,
+          QString("A dragged to 15 s, the time did not move (%1)").arg(graph.timeCursor(0)));
+    // Escape: first the frame zoomed on, then the cursors
+    graph.zoomToRect(QRect(plot.left(), plot.top(), plot.width() / 2, plot.height() / 2));
+    graph.setFocus();
+    QTest::keyClick(&graph, Qt::Key_Escape);
+    check(!graph.zoomed() && graph.timeCursor(0) >= 0, "Escape takes the zoom back first");
+    QTest::keyClick(&graph, Qt::Key_Escape);
+    check(graph.timeCursor(0) < 0 && graph.timeCursor(1) < 0, "then the cursors");
+  }
+
+  // the statistics column: its switch, its text, the room it takes
+  check(!graph.statsVisible(), "no statistics by default");
+  const int width = graph.plotRect().width();
+  int toggled = 0;
+  QObject::connect(&graph, &QcpGraph::statsVisibleChanged, [&] { toggled++; });
+  graph.setStatsVisible(true);
+  QTest::qWait(30);
+  check(graph.statsVisible() && toggled == 1 && graph.plotRect().width() < width - 100,
+        QString("the column takes room from the plot (%1 of %2)").arg(graph.plotRect().width()).arg(width));
+  graph.setTimeCursor(0, 2000);
+  graph.setTimeCursor(1, 6000);
+  const RecordingStore::Stats st = store.stats(2000, 6000);
+  const QString stats = graph.statsText();
+  check(stats.contains("A 0:00:02.000") && stats.contains("4.000 s") && stats.contains(QString::number(st.count))
+        && stats.contains(GraphStats::columnScale({ 4.0, st.mean, st.min, st.max }, { st.sigma }, "V").text(st.mean)),
+        "the graph's statistics from A to B are the store's");
+  check(stats.contains("Shown") && stats.contains("1:00") && stats.contains("peak-peak"), "and over the time shown: " + stats.section("Shown", 1).left(40));
+  graph.setStatsVisible(false);
+  QTest::qWait(30);
+  check(graph.plotRect().width() == width, "switched off: the plot has its width again");
+}
+
 static void shot()
 {
   // a picture to look at: QTDMM_SHOT=<dir>
@@ -961,6 +1133,17 @@ static void shot()
   bench.graph.refreshNow();
   QTest::qWait(50);
   bench.graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/qcpgraph_axes.png");
+  // cursors and the statistics column
+  bench.graph.resize(1100, 520);
+  bench.graph.setStatsVisible(true);
+  bench.graph.setTimeCursor(0, 12000);
+  bench.graph.setTimeCursor(1, 31000);
+  bench.graph.refreshNow();
+  QTest::qWait(300);
+  bench.graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/qcpgraph_stats.png");
+  bench.graph.setStatsVisible(false);
+  bench.graph.clearTimeCursors();
+  bench.graph.resize(900, 400);
   // the same in every colour variant
   bench.graph.setTheme(PlotTheme{ QColor("#202428"), QColor("#606870"), QColor("#d0d4d8"), QColor("#40a0ff") });
   for (GraphLook::Variant v : GraphLook::variants())
@@ -1000,6 +1183,8 @@ int main(int argc, char **argv)
   testParts();
   testGraphLook();
   testStoreDeleted();
+  testStatsText();
+  testCrosshairAndCursors();
   shot();
   return failed ? 1 : 0;
 }

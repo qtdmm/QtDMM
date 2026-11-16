@@ -59,6 +59,10 @@ public:
   bool        patternedLines() const { return m_patterns; }
   void        setPatternedLines(bool on);
 
+  /// The statistics column next to the plot.
+  bool        statsVisible() const { return m_stats; }
+  void        setStatsVisible(bool on);
+
   /// The time the graph shows, seconds; at least 1.
   int         windowSeconds() const { return m_windowSeconds; }
   void        setWindowSeconds(int seconds);
@@ -76,6 +80,7 @@ Q_SIGNALS:
   void        valueAxesChanged();
   void        fixedRangesChanged();
   void        lookChanged();
+  void        statsVisibleChanged(bool on);
   void        windowChanged(int seconds);
   void        followAllChanged(bool on);
 
@@ -85,6 +90,7 @@ private:
   QMap<QString, Range> m_fixedRanges;
   QString     m_variant;
   bool        m_patterns = false;
+  bool        m_stats = false;
   int         m_windowSeconds = kDefaultWindowSeconds;
   bool        m_followAll = false;
 };

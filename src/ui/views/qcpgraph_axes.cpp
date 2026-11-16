@@ -352,7 +352,7 @@ void QcpGraph::updateAxes(double &from, double &to)
     setAxisRange(a.axis, range);
     a.factor = range.factor;
   }
-  setCrosshairEnabled(anyValue);
+  setCrosshairEnabled(anyValue && m_lookSettings.crosshair);
 }
 
 void QcpGraph::updateScrollBar()
@@ -384,11 +384,6 @@ void QcpGraph::updateTimeBar()
   if (!m_notice.isEmpty())
     state = state.isEmpty() ? m_notice : state + "   " + m_notice;
   m_timeBar->setStateText(state);
-}
-
-QString QcpGraph::crosshairText(double x, double y) const
-{
-  return QString("%1   %2").arg(timeText(qint64(x * 1000)), axisValueText(m_plot->yAxis, y));
 }
 
 double QcpGraph::timeAxisStart() const

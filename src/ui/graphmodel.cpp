@@ -177,3 +177,11 @@ void GraphModel::setPatternedLines(bool on)
   m_patterns = on;
   Q_EMIT lookChanged();
 }
+
+void GraphModel::setStatsVisible(bool on)
+{
+  if (on == m_stats)
+    return;
+  m_stats = on;
+  Q_EMIT statsVisibleChanged(on);
+}

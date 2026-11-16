@@ -24,6 +24,9 @@ QcpGraphView::QcpGraphView(DeviceSession *session, QcpGraph *graph, const QStrin
   connect(m_model, &GraphModel::followAllChanged, m_graph, &QcpGraph::setFollowAll);
   connect(m_graph, &QcpGraph::windowChanged, m_model, &GraphModel::setWindowSeconds);
   connect(m_graph, &QcpGraph::followAllChanged, m_model, &GraphModel::setFollowAll);
+  m_graph->setStatsVisible(m_model->statsVisible());
+  connect(m_model, &GraphModel::statsVisibleChanged, m_graph, &QcpGraph::setStatsVisible);
+  connect(m_graph, &QcpGraph::statsVisibleChanged, m_model, &GraphModel::setStatsVisible);
   for (const MeterController *ctl : m_session->controllers())
     watch(ctl);
   connect(m_session, &DeviceSession::opened, this, &QcpGraphView::watch);

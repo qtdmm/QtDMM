@@ -167,6 +167,7 @@ GraphLook::Look GraphLook::look(Variant variant, const PlotTheme &design, const 
   if (variant == Custom || settings.data != QColor(Qt::blue))
     data = settings.data;
   l.theme = PlotTheme{ background, l.grid.color(), labels, data };
+  l.cursor = settings.cursor != QColor(Qt::black) ? settings.cursor : labels;
   return l;
 }
 
