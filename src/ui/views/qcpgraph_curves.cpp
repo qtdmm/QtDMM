@@ -6,6 +6,7 @@
 
 #include "recording/recordingstore.h"
 #include "recording/seriesdecimator.h"
+#include "ui/views/graphtimebar.h"
 #include "ui/views/qcp.h"
 
 #include <QResizeEvent>
@@ -15,6 +16,7 @@ QcpGraph::QcpGraph(QWidget *parent) : QcpPlotBase(parent)
   setMinimumSize(220, 180);
   setupAxes();
   setupCurve();
+  setupInput();
   refreshPlot();
 }
 
@@ -42,21 +44,27 @@ void QcpGraph::setStore(RecordingStore *store)
     connect(store, &RecordingStore::progressChanged, this, &QcpGraph::scheduleRefresh);
     connect(store, &QObject::destroyed, this, &QcpGraph::storeChanged);
   }
+  // another recording: at its end, no frame of the one before
+  m_followEnd = true;
+  m_zoomed = false;
   storeChanged();
 }
 
-void QcpGraph::setWindowSeconds(int seconds)
+void QcpGraph::setSourceName(const QString &name)
 {
-  seconds = qMax(1, seconds);
-  if (seconds == m_windowSeconds)
-    return;
-  m_windowSeconds = seconds;
-  scheduleRefresh();
+  m_sourceName = name;
+  updateTimeBar();
 }
 
 void QcpGraph::setTheme(const PlotTheme &theme)
 {
   m_curve->setPen(QPen(theme.data.isValid() ? theme.data : theme.labels, 1));
+  // the rows above and below the plot on its background
+  QPalette p = palette();
+  p.setBrush(QPalette::Window, theme.background.style() == Qt::NoBrush ? p.base() : theme.background);
+  setPalette(p);
+  setAutoFillBackground(true);
+  m_timeBar->setTextColor(theme.labels);
   QcpPlotBase::setTheme(theme);
 }
 
@@ -139,12 +147,24 @@ void QcpGraph::storeChanged()
 
 void QcpGraph::refreshPlot()
 {
+  if (m_followAll)
+    fitAll(true);   // before the buckets: they follow the window
   if (m_dirty || bucketNow() != m_bucket)
     rebuildPoints();
   double from = 0, to = 0, factor = 1;
   updateAxes(from, to, factor);
   drawCurve(from, to, factor);
+  updateScrollBar();
+  updateTimeBar();
   m_plot->replot(QCustomPlot::rpQueuedReplot);
+}
+
+void QcpGraph::redraw()
+{
+  if (hold())
+    return;
+  cancelRefresh();
+  refreshPlot();
 }
 
 // The points of the time shown and one on either side, so the line runs to

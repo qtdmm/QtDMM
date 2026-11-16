@@ -1185,6 +1185,19 @@ QList<QMdiSubWindow *> MainWindow::qgraphWindows() const
   return wins;
 }
 
+void MainWindow::loadIntoQGraph(QcpGraphView *view)
+{
+  Settings *cfg = m_wid->settings();
+  const QString path = QFileDialog::getOpenFileName(this, tr("Load recording"), cfg->getString("QtDMM/LastUsesPath"),
+                                                    tr("Recordings (*.%1 *.csv *.txt);;All files (*)").arg(RecordingFile::kSuffix));
+  if (path.isEmpty())
+    return;
+  cfg->setString("QtDMM/LastUsesPath", QDir().absoluteFilePath(path));
+  QString error;
+  if (!view->loadFile(path, &error))
+    QMessageBox::warning(this, tr("Load recording"), error);
+}
+
 void MainWindow::newQGraph(const ValueRef &value)
 {
   const MeterController *ctl = m_session->controllers().value(0);
@@ -2112,15 +2125,36 @@ void MainWindow::createExtraActions()
   m_zoomIn = new QAction(tr("Zoom &in"), this);
   m_zoomIn->setObjectName("action_ZoomIn");
   m_zoomIn->setShortcuts({QKeySequence::ZoomIn, QKeySequence("Ctrl+=")});
-  connect(m_zoomIn, &QAction::triggered, this, [this] { m_wid->graph()->zoomInSLOT(); });
+  connect(m_zoomIn, &QAction::triggered, this, [this]
+  {
+    // the graph on QCustomPlot whose window is active, else the graph used last
+    if (const QcpGraphView *view = qgraphViewOf(m_mdi->activeSubWindow()))
+      view->graph()->zoomBy(1.25);
+    else
+      m_wid->graph()->zoomInSLOT();
+  });
   m_zoomOut = new QAction(tr("Zoom &out"), this);
   m_zoomOut->setObjectName("action_ZoomOut");
   m_zoomOut->setShortcut(QKeySequence::ZoomOut);
-  connect(m_zoomOut, &QAction::triggered, this, [this] { m_wid->graph()->zoomOutSLOT(); });
+  connect(m_zoomOut, &QAction::triggered, this, [this]
+  {
+    // the graph on QCustomPlot whose window is active, else the graph used last
+    if (const QcpGraphView *view = qgraphViewOf(m_mdi->activeSubWindow()))
+      view->graph()->zoomBy(1 / 1.25);
+    else
+      m_wid->graph()->zoomOutSLOT();
+  });
   m_zoomFit = new QAction(tr("Show &whole recording"), this);
   m_zoomFit->setObjectName("action_ZoomFit");
   m_zoomFit->setShortcut(QKeySequence("Ctrl+0"));
-  connect(m_zoomFit, &QAction::triggered, this, [this] { m_wid->graph()->zoomFitSLOT(); });
+  connect(m_zoomFit, &QAction::triggered, this, [this]
+  {
+    // the graph on QCustomPlot whose window is active, else the graph used last
+    if (const QcpGraphView *view = qgraphViewOf(m_mdi->activeSubWindow()))
+      view->graph()->zoomFit();
+    else
+      m_wid->graph()->zoomFitSLOT();
+  });
   // a note in the graph at the newest reading, also while the graph has no focus
   m_noteAction = new QAction(tr("&Note in the graph..."), this);
   m_noteAction->setObjectName("action_Note");
@@ -2595,6 +2629,11 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
     {
       newQGraph(values.value(0));
     });
+    if (qgraph->graph()->zoomed())
+      connect(menu.addAction(tr("&Undo zoom")), &QAction::triggered, qgraph->graph(), [graph = qgraph->graph()] { graph->endZoom(true); });
+    connect(menu.addAction(tr("&Load recording...")), &QAction::triggered, this, [this, qgraph] { loadIntoQGraph(qgraph); });
+    if (qgraph->showsFile())
+      connect(menu.addAction(tr("Back to the &device")), &QAction::triggered, qgraph, &QcpGraphView::closeFile);
     menu.addSeparator();
     addBasicPlotActions(qgraph->graph(), qgraph->graph()->hold(), [graph = qgraph->graph()](bool on) { graph->setHold(on); },
                         [graph = qgraph->graph()] { graph->clear(); }, QStringLiteral("graph.png"));
@@ -3593,6 +3632,7 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
     model->setValuesSetting(get(key + "-values", QString()).toString());
     if (const int seconds = get(key + "-window", 0).toInt(); seconds > 0)
       model->setWindowSeconds(seconds);
+    model->setFollowAll(get(key + "-all", false).toBool());
     win->setVisible(get(key + "-shown", true).toBool());
   }
   for (const QString &number : get("Windows/poincares", QString()).toString().split(' ', Qt::SkipEmptyParts))
@@ -3943,6 +3983,7 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
     qgraphs << w->objectName().section('-', 1);
     set("Windows/" + w->objectName() + "-values", model->valuesSetting());
     set("Windows/" + w->objectName() + "-window", model->windowSeconds());
+    set("Windows/" + w->objectName() + "-all", model->followAll());
     set("Windows/" + w->objectName() + "-shown", !w->isHidden());
   }
   if (!qgraphs.isEmpty() || m_qgraphsKey)

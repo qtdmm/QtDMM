@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "ui/graphmodel.h"
 
+#include <cmath>
+
 GraphModel::GraphModel(QObject *parent) : QObject(parent)
 {
 }
@@ -37,4 +39,24 @@ void GraphModel::setWindowSeconds(int seconds)
     return;
   m_windowSeconds = seconds;
   Q_EMIT windowChanged(seconds);
+}
+
+void GraphModel::setFollowAll(bool on)
+{
+  if (on == m_followAll)
+    return;
+  m_followAll = on;
+  Q_EMIT followAllChanged(on);
+}
+
+int GraphModel::allTarget(double recordedSeconds, bool grow, int limitSeconds)
+{
+  int target = int(std::ceil(grow ? recordedSeconds * 1.25 : recordedSeconds));
+  target = qMax(target, 10);
+  // whole minutes from one minute on: no odd window with every reading
+  if (target > 60)
+    target = (target + 59) / 60 * 60;
+  if (limitSeconds > 0)
+    target = qMin(target, limitSeconds);
+  return target;
 }
