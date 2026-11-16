@@ -1373,9 +1373,12 @@ static void testMarks()
   graph.setTimeCursor(0, 5000);
   const int at5 = graph.cursorPixel(0);
   check(graph.markPixel(0) == at5 && at5 > plot.left(), "its line where the time axis has 5 s");
+  // the cursor far away: the name gets the room to the nearest line, and how much it needs is the font's
+  graph.setTimeCursor(0, 40000);
+  check(graph.markFlagText(0) == QString("1 · Peak"), "the flag: its number and its name without \"Alarm\": " + graph.markFlagText(0));
   graph.setTimeCursor(0, 9000);
   QRect flag = graph.markFlagRect(0);
-  check(graph.markFlagText(0) == QString("1 · Peak"), "the flag: its number and its name without \"Alarm\": " + graph.markFlagText(0));
+  check(graph.markFlagText(0).startsWith("1"), "the flag: its number and its name without \"Alarm\": " + graph.markFlagText(0));
   check(flag.top() >= plot.bottom() && flag.left() <= at5 && flag.right() >= at5, "the flag below the plot, under its line");
   // the cursor's letter in the same row, not on the mark's flag
   const QRect letter = graph.cursorFlagRect(0);
