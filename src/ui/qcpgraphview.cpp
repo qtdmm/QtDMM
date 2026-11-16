@@ -27,6 +27,22 @@ QcpGraphView::QcpGraphView(DeviceSession *session, QcpGraph *graph, const QStrin
   m_graph->setStatsVisible(m_model->statsVisible());
   connect(m_model, &GraphModel::statsVisibleChanged, m_graph, &QcpGraph::setStatsVisible);
   connect(m_graph, &QcpGraph::statsVisibleChanged, m_model, &GraphModel::setStatsVisible);
+  // reference lines both ways: the graph changes them by a drag
+  auto referenceToGraph = [this]
+  {
+    m_graph->setReference(m_model->reference());
+    m_graph->setReferenceLines(m_model->referenceLines());
+    m_graph->setCrossingsVisible(m_model->crossingsVisible());
+  };
+  referenceToGraph();
+  connect(m_model, &GraphModel::referenceChanged, m_graph, referenceToGraph);
+  connect(m_graph, &QcpGraph::referenceChanged, m_model, [this]
+  {
+    m_model->setReference(m_graph->reference());
+    m_model->setReferenceLines(m_graph->referenceLines());
+    m_model->setCrossingsVisible(m_graph->crossingsVisible());
+  });
+  connect(m_graph, &QcpGraph::leftValueChanged, this, &QcpGraphView::followLeftValue);
   for (const MeterController *ctl : m_session->controllers())
     watch(ctl);
   connect(m_session, &DeviceSession::opened, this, &QcpGraphView::watch);
@@ -55,6 +71,48 @@ QcpGraphView::QcpGraphView(DeviceSession *session, QcpGraph *graph, const QStrin
     const QScopedValueRollback<MeterController *> going(m_closing, ctl);
     followBase();
   });
+}
+
+// The alarm thresholds on the left axis' value, which the reference line
+// snaps to, and the band of the limit test on it
+void QcpGraphView::followLeftValue()
+{
+  disconnect(m_alarms);
+  disconnect(m_limits);
+  const ValueRef left = m_graph->leftValue();
+  const MeterController *ctl = left.id < 0 ? nullptr : m_session->controller(left.source);
+  if (ctl == m_closing)
+    ctl = nullptr;
+  if (ctl)
+  {
+    m_alarms = connect(ctl, &MeterController::alarmsChanged, this, &QcpGraphView::applyLeftValue);
+    m_limits = connect(ctl, &MeterController::limitTestChanged, this, &QcpGraphView::applyLeftValue);
+  }
+  applyLeftValue();
+}
+
+void QcpGraphView::applyLeftValue()
+{
+  const ValueRef left = m_graph->leftValue();
+  const MeterController *ctl = left.id < 0 ? nullptr : m_session->controller(left.source);
+  if (ctl == m_closing)
+    ctl = nullptr;
+  QList<double> thresholds;
+  if (ctl)
+    for (const Alarm &a : ctl->alarms()->alarms())
+    {
+      const bool own = a.value.source.isEmpty() || a.value.source == ctl->source();
+      if (!a.enabled || a.value.id != left.id || !own || a.condition == Alarm::Overload || a.condition == Alarm::NoReadings)
+        continue;
+      thresholds << a.a;
+      if (a.condition == Alarm::Outside || a.condition == Alarm::Inside)
+        thresholds << a.b;
+    }
+  m_graph->setAlarmThresholds(thresholds);
+  if (ctl && ctl->limitTest().enabled && (ctl->limitTest().value.source.isEmpty() || ctl->limitTest().value.source == ctl->source()))
+    m_graph->setLimits(ValueRef(ctl->limitTest().value.id, left.source), ctl->limitTest().low(), ctl->limitTest().high());
+  else
+    m_graph->setLimits(ValueRef(-1));
 }
 
 void QcpGraphView::watch(const MeterController *ctl)

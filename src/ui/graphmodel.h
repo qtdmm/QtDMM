@@ -9,6 +9,7 @@
 #include <QPair>
 
 #include "core/valueref.h"
+#include "ui/views/graphreference.h"
 
 /// What a graph window shows, without anything that draws: its values and
 /// its time window, with the texts they have in the settings and benches
@@ -63,6 +64,20 @@ public:
   bool        statsVisible() const { return m_stats; }
   void        setStatsVisible(bool on);
 
+  /// The reference line (GraphReference::setting(): "", "mean", "off", ...),
+  /// the lines added to it ("1.5 -2", base unit of the left axis) and
+  /// whether the crossings of the curve with them are marked and counted.
+  GraphReference::Line reference() const { return m_reference; }
+  void        setReference(const GraphReference::Line &line);
+  QString     referenceSetting() const { return GraphReference::setting(m_reference); }
+  void        setReferenceSetting(const QString &text) { setReference(GraphReference::fromSetting(text)); }
+  QList<double> referenceLines() const { return m_referenceLines; }
+  void        setReferenceLines(const QList<double> &values);
+  QString     referenceLinesSetting() const { return GraphReference::linesSetting(m_referenceLines); }
+  void        setReferenceLinesSetting(const QString &text) { setReferenceLines(GraphReference::linesFromSetting(text)); }
+  bool        crossingsVisible() const { return m_crossings; }
+  void        setCrossingsVisible(bool on);
+
   /// The time the graph shows, seconds; at least 1.
   int         windowSeconds() const { return m_windowSeconds; }
   void        setWindowSeconds(int seconds);
@@ -81,6 +96,7 @@ Q_SIGNALS:
   void        fixedRangesChanged();
   void        lookChanged();
   void        statsVisibleChanged(bool on);
+  void        referenceChanged();
   void        windowChanged(int seconds);
   void        followAllChanged(bool on);
 
@@ -91,6 +107,9 @@ private:
   QString     m_variant;
   bool        m_patterns = false;
   bool        m_stats = false;
+  GraphReference::Line m_reference;
+  QList<double> m_referenceLines;
+  bool        m_crossings = true;
   int         m_windowSeconds = kDefaultWindowSeconds;
   bool        m_followAll = false;
 };

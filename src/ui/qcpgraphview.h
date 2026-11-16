@@ -43,6 +43,9 @@ private:
   /// A meter that records or goes live ends the look at a file.
   void        watch(const MeterController *ctl);
   void        applyLook();
+  /// Another value is on the left axis: its meter's alarms and limit test are followed.
+  void        followLeftValue();
+  void        applyLeftValue();
 
   DeviceSession *m_session;
   QcpGraph   *m_graph;
@@ -52,4 +55,6 @@ private:
   MeterController *m_closing = nullptr;  ///< the meter closing now (DeviceSession::closing())
   RecordingStore *m_fileStore = nullptr; ///< the file loaded, made with the first one
   bool        m_showsFile = false;
+  QMetaObject::Connection m_alarms;
+  QMetaObject::Connection m_limits;
 };

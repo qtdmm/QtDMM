@@ -168,6 +168,19 @@ GraphLook::Look GraphLook::look(Variant variant, const PlotTheme &design, const 
     data = settings.data;
   l.theme = PlotTheme{ background, l.grid.color(), labels, data };
   l.cursor = settings.cursor != QColor(Qt::black) ? settings.cursor : labels;
+  // the start threshold: as the graph on QtCharts has it per variant
+  QColor trigger = Qt::magenta;
+  switch (variant)
+  {
+    case ScopeBlue:     trigger = QColor("#ff5fd2"); break;
+    case PhosphorGreen: trigger = QColor::fromHsv(135, 190, 160); break;
+    case PhosphorAmber: trigger = QColor::fromHsv(38, 230, 160); break;
+    case ChartRecorder: trigger = QColor("#2e7d32"); break;
+    case ColourBlind:   trigger = QColor("#cc79a7"); break;
+    case HighContrast:  trigger = QColor("#ff8000"); break;
+    default: break;
+  }
+  l.trigger = settings.trigger != QColor(Qt::magenta) ? settings.trigger : trigger;
   return l;
 }
 
