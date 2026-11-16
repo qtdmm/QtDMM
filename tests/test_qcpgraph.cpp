@@ -681,8 +681,14 @@ static void testValues()
   check(graph.axisMin(0) < 1 && graph.axisMax(0) > 3.9, "the left axis covers both meters' volts");
   check(graph.axisMin(1) > 49 && graph.axisMax(1) < 51, "the right axis the frequency");
   check(graph.curveColor(0) != graph.curveColor(1) && graph.curveColor(1) != graph.curveColor(2), "each curve its colour");
+  // with room for the long form, whatever the font: in less the meters' names go first
+  graph.resize(2400, 400);
+  QCoreApplication::processEvents();
   check(graph.legendText().contains("Meter A") && graph.legendText().contains("Meter B") && graph.legendText().contains("Hz"),
         "the legend names meters and values: " + graph.legendText());
+  graph.resize(900, 400);
+  QCoreApplication::processEvents();
+  check(graph.legendText().contains("Hz"), "in a narrow window the legend still names the values: " + graph.legendText());
   check(graph.notice().isEmpty(), "all drawn: no notice");
 
   // readings one by one give what a rebuild gives, for each curve
