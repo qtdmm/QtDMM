@@ -6,6 +6,7 @@
 
 #include "recording/recordingstore.h"
 #include "recording/seriesdecimator.h"
+#include "ui/views/graphband.h"
 #include "ui/views/graphlegend.h"
 #include "ui/views/graphtimebar.h"
 #include "ui/views/graphwidget_p.h"   // curveName()
@@ -19,6 +20,7 @@ QcpGraph::QcpGraph(QWidget *parent) : QcpPlotBase(parent)
   setMinimumSize(220, 180);
   setupAxes();
   setupInput();
+  setupOverview();   // the bands under the curves
   setupOverlays();
   setupMarks();
   setupTheme();
@@ -336,6 +338,7 @@ void QcpGraph::refreshPlot()
   double from = 0, to = 0;
   updateAxes(from, to);
   drawCurves(from, to);
+  updateOverview();
   updateLevels();
   updateCursors();
   scheduleStats();
@@ -358,11 +361,20 @@ void QcpGraph::drawCurves(double from, double to)
 {
   const auto byTime = [](const QPointF &p, double t) { return p.x() < t; };
   QVector<double> x, y;
-  for (const Curve &c : std::as_const(m_curves))
+  const double width = m_plot->axisRect()->width();
+  for (Curve &c : m_curves)
   {
     x.clear();
     y.clear();
+    c.banded = false;
     if (c.axis >= 0)
+    {
+      auto begin = std::lower_bound(c.points.cbegin(), c.points.cend(), from, byTime);
+      auto end = std::lower_bound(begin, c.points.cend(), to, byTime);
+      // more points than columns: a band says the same and costs less than the zigzag (updateOverview())
+      c.banded = width > 0 && double(end - begin) > width * GraphBand::kDensePoints;
+    }
+    if (c.axis >= 0 && !c.banded)
     {
       auto begin = std::lower_bound(c.points.cbegin(), c.points.cend(), from, byTime);
       auto end = std::lower_bound(begin, c.points.cend(), to, byTime);

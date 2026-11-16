@@ -7,6 +7,7 @@
 
 #include "recording/recordingstore.h"
 #include "ui/views/graphstatspanel.h"
+#include "ui/views/graphminimap.h"
 #include "ui/views/graphtimebar.h"
 #include "ui/views/qcp.h"
 
@@ -105,6 +106,7 @@ void QcpGraph::applyLook()
   m_scrollBar->setPalette(bar);
   m_scrollBar->setAutoFillBackground(true);
   m_timeBar->setTextColor(theme.labels);
+  m_minimap->setColors(background, theme.labels);
 
   // the base knows the time and the left axis: the others too
   QcpPlotBase::setTheme(theme);

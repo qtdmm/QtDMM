@@ -40,6 +40,23 @@ GraphTimeBar::GraphTimeBar(QWidget *parent) : QWidget(parent)
     m_buttons.append(b);
   }
   bar->addSpacing(6);
+  // signs and words of the graph on QtCharts, translated there already
+  auto toggle = [&](const char *name, ushort sign, const char *tip)
+  {
+    auto *b = new QToolButton(this);
+    b->setObjectName(name);
+    b->setText(QString(QChar(sign)));
+    b->setCheckable(true);
+    b->setAutoRaise(true);
+    b->setFocusPolicy(Qt::NoFocus);
+    b->setToolTip(QCoreApplication::translate("GraphWidget", tip));
+    bar->addWidget(b);
+    return b;
+  };
+  m_overview = toggle("ui_graphOverviewButton", 0x229f, "Overview below the graph");
+  connect(m_overview, &QToolButton::clicked, this, &GraphTimeBar::overviewToggled);
+  m_envelope = toggle("ui_graphEnvelopeButton", 0x224b, "Min/max band");
+  connect(m_envelope, &QToolButton::clicked, this, &GraphTimeBar::envelopeToggled);
   m_note = new QToolButton(this);
   m_note->setObjectName("ui_graphNoteButton");
   m_note->setText(QString(QChar(0x270e)));   // the pencil
@@ -57,6 +74,16 @@ GraphTimeBar::GraphTimeBar(QWidget *parent) : QWidget(parent)
   m_stats->setToolTip(tr("Statistics: the values at the cursors, from A to B and over the time shown"));
   connect(m_stats, &QToolButton::clicked, this, &GraphTimeBar::statsToggled);
   bar->addWidget(m_stats);
+}
+
+void GraphTimeBar::setOverviewChecked(bool on)
+{
+  m_overview->setChecked(on);
+}
+
+void GraphTimeBar::setEnvelopeChecked(bool on)
+{
+  m_envelope->setChecked(on);
 }
 
 void GraphTimeBar::setStatsChecked(bool on)
@@ -104,7 +131,7 @@ void GraphTimeBar::fitLegend()
   int room = width() - m_state->sizeHint().width() - 12 - 12 - 2 * 6;
   for (const QToolButton *b : std::as_const(m_buttons))
     room -= b->sizeHint().width() + 2;
-  room -= m_note->sizeHint().width() + m_stats->sizeHint().width() + 10;
+  room -= m_overview->sizeHint().width() + m_envelope->sizeHint().width() + m_note->sizeHint().width() + m_stats->sizeHint().width() + 14;
   m_legend->setEntries(m_entries, m_ink, qMax(1, room));
   m_legend->setFixedSize(m_legend->sizeHint());
 }

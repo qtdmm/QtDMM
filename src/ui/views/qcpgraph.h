@@ -18,6 +18,8 @@
 #include "ui/views/graphreference.h"
 #include "ui/views/graphstats.h"
 
+class GraphMinimap;
+class GraphStateStrip;
 class GraphStatsPanel;
 class GraphTimeBar;
 class QCPAbstractItem;
@@ -78,12 +80,19 @@ class RecordingStore;
 /// time cursors' letters among them. A note is set with N (not in a file only looked at), edited with a
 /// double click on its flag and dragged along the time.
 ///
+/// Below the plot the overview (GraphMinimap) of the left axis' value over
+/// the whole recording takes the scrollbar's place; at the bottom of the
+/// plot the states its meter reported lie as a strip (GraphStateStrip). A
+/// curve with more points than pixel columns is drawn as a band from its
+/// lowest to its highest value per column (GraphBand); the min/max band
+/// behind the left axis' curve is the same over a few columns more.
+///
 /// So far: lines with gaps, the time axis, the value axes fitted to what is
 /// shown or fixed by unit, the legend, the time buttons and the state above
 /// the plot, the scrollbar below, zoom, hold and the crosshair.
 ///
 /// The code that names QCustomPlot's types is in qcpgraph_<part>.cpp
-/// (curves, axes, input, theme, overlays, marks); nothing outside knows them, for the move to NeoQCP.
+/// (curves, axes, input, theme, overlays, marks, overview); nothing outside knows them, for the move to NeoQCP.
 class QcpGraph : public QcpPlotBase
 {
   Q_OBJECT
@@ -237,6 +246,19 @@ public:
   qint64      timeAt(const QPoint &globalPos) const;
   /// @}
 
+  /// @name Overview, states, bands
+  /// @{
+  /// The overview strip below the plot instead of the scrollbar.
+  void        setMinimapVisible(bool on);
+  bool        minimapVisible() const { return m_minimapOn; }
+  /// The strip of the meter's states at the bottom of the plot.
+  void        setStatesVisible(bool on);
+  bool        statesVisible() const { return m_statesOn; }
+  /// The min/max band behind the curve of the left axis' value.
+  void        setEnvelopeVisible(bool on);
+  bool        envelopeVisible() const { return m_envelopeOn; }
+  /// @}
+
   void        setHold(bool hold) override;
   /// Draws the store anew; the readings are the store's and stay.
   void        clear() override;
@@ -304,6 +326,14 @@ public:
   QString     markFlagText(int mark) const;
   /// The flag of cursor @p which below the plot; empty while it has none.
   QRect       cursorFlagRect(int which) const;
+  GraphMinimap *minimap() const { return m_minimap; }
+  /// The states in the time shown ("HOLD 3.0-5.0 | OL 8.0-9.0"), whether the strip is shown or not.
+  QString     statesText() const;
+  /// Whether curve @p i is drawn as a band now.
+  bool        curveBanded(int i) const;
+  /// The band of curve @p i (-1: the min/max band) at @p t (ms on the
+  /// graph's time): its lowest and highest value, base unit; false where it has none.
+  bool        bandAt(int i, qint64 t, double *lo, double *hi) const;
   QScrollBar *scrollBar() const { return m_scrollBar; }
   GraphTimeBar *timeBar() const { return m_timeBar; }
   /// The rectangle of the axes in the plot widget, for zoomToRect().
@@ -322,6 +352,8 @@ Q_SIGNALS:
   void        referenceChanged();
   /// Another value is on the left axis.
   void        leftValueChanged();
+  /// Overview, states or the min/max band were switched.
+  void        overviewChanged();
   /// A note was set at @p when (askNote()): the readings table marks its reading.
   void        noteAdded(const QDateTime &when, const QString &title);
   /// A note was dragged from @p from to @p to: the readings table moves its mark.
@@ -349,6 +381,7 @@ private:
     QPen        pen;             ///< its line; Qt::NoPen: none (styleCurves())
     QList<QPointF> points;       ///< thinned, all the store keeps, on the graph's time
     int         tail = 0;        ///< how many of them are the newest bucket's
+    bool        banded = false;  ///< too dense for a line: drawn as a band (drawCurves())
   };
   /// One value axis: the unit it has now, and the frame zoomed on.
   struct Axis
@@ -438,6 +471,12 @@ private:
   void        dragLevel(int line, double y);
   /// The cursor whose line is at @p pos (plot widget pixels): 0, 1, or -1.
   int         cursorAt(const QPoint &pos) const;
+  // qcpgraph_overview.cpp
+  void        setupOverview();
+  /// The overview's store, value and window, the strip, the bands: as the curves are now.
+  void        updateOverview();
+  /// The strip at the bottom of the axes' rectangle.
+  void        placeStates();
   // qcpgraph_marks.cpp
   void        setupMarks();
   /// The marks anew from the stores, and the flags of marks and cursors.
@@ -502,6 +541,13 @@ private:
     QString     meter;           ///< its meter's name while several are shown
     bool        isNote = false;
   };
+  GraphMinimap *m_minimap = nullptr;
+  qint64      m_minimapShift = 0;        ///< its store's time 0 on the graph's time, ms
+  GraphStateStrip *m_stateStrip = nullptr;
+  QCPAbstractItem *m_bands = nullptr;    ///< dense curves and the min/max band
+  bool        m_minimapOn = true;
+  bool        m_statesOn = true;
+  bool        m_envelopeOn = false;
   QList<Mark> m_marks;                   ///< by time
   QCPAbstractItem *m_markItem = nullptr; ///< their lines and the flags
   QPointer<RecordingStore> m_dragStore;  ///< Drag::Mark: the note dragged, its store,

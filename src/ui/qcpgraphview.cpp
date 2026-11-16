@@ -27,6 +27,21 @@ QcpGraphView::QcpGraphView(DeviceSession *session, QcpGraph *graph, const QStrin
   m_graph->setStatsVisible(m_model->statsVisible());
   connect(m_model, &GraphModel::statsVisibleChanged, m_graph, &QcpGraph::setStatsVisible);
   connect(m_graph, &QcpGraph::statsVisibleChanged, m_model, &GraphModel::setStatsVisible);
+  // overview, states and band both ways: the graph's buttons switch them
+  auto overviewToGraph = [this]
+  {
+    m_graph->setMinimapVisible(m_model->minimapVisible());
+    m_graph->setStatesVisible(m_model->statesVisible());
+    m_graph->setEnvelopeVisible(m_model->envelopeVisible());
+  };
+  overviewToGraph();
+  connect(m_model, &GraphModel::overviewChanged, m_graph, overviewToGraph);
+  connect(m_graph, &QcpGraph::overviewChanged, m_model, [this]
+  {
+    m_model->setMinimapVisible(m_graph->minimapVisible());
+    m_model->setStatesVisible(m_graph->statesVisible());
+    m_model->setEnvelopeVisible(m_graph->envelopeVisible());
+  });
   // reference lines both ways: the graph changes them by a drag
   auto referenceToGraph = [this]
   {

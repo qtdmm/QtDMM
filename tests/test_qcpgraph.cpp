@@ -7,7 +7,7 @@
 // several meters on the list of axes; the colour variants (GraphLook), pens,
 // markers and divisions; the crosshair on a reading, the time cursors and
 // the statistics (GraphStats); the reference lines; marks, notes and their
-// flags; GraphModel's settings texts.
+// flags; the overview, the states' strip and the bands; GraphModel's settings texts.
 #include <QApplication>
 #include <QDateTime>
 #include <QDialog>
@@ -26,6 +26,8 @@
 #include "service/devicesession.h"
 #include "ui/graphmodel.h"
 #include "ui/qcpgraphview.h"
+#include "ui/views/graphband.h"
+#include "ui/views/graphminimap.h"
 #include "ui/views/graphstats.h"
 #include "ui/views/graphtimebar.h"
 #include "ui/views/qcpgraph.h"
@@ -679,8 +681,14 @@ static void testValues()
   check(graph.axisMin(0) < 1 && graph.axisMax(0) > 3.9, "the left axis covers both meters' volts");
   check(graph.axisMin(1) > 49 && graph.axisMax(1) < 51, "the right axis the frequency");
   check(graph.curveColor(0) != graph.curveColor(1) && graph.curveColor(1) != graph.curveColor(2), "each curve its colour");
+  // with room for the long form, whatever the font: in less the meters' names go first
+  graph.resize(2400, 400);
+  QCoreApplication::processEvents();
   check(graph.legendText().contains("Meter A") && graph.legendText().contains("Meter B") && graph.legendText().contains("Hz"),
         "the legend names meters and values: " + graph.legendText());
+  graph.resize(900, 400);
+  QCoreApplication::processEvents();
+  check(graph.legendText().contains("Hz"), "in a narrow window the legend still names the values: " + graph.legendText());
   check(graph.notice().isEmpty(), "all drawn: no notice");
 
   // readings one by one give what a rebuild gives, for each curve
@@ -1373,9 +1381,12 @@ static void testMarks()
   graph.setTimeCursor(0, 5000);
   const int at5 = graph.cursorPixel(0);
   check(graph.markPixel(0) == at5 && at5 > plot.left(), "its line where the time axis has 5 s");
+  // the cursor far away: the name gets the room to the nearest line, and how much it needs is the font's
+  graph.setTimeCursor(0, 40000);
+  check(graph.markFlagText(0) == QString("1 · Peak"), "the flag: its number and its name without \"Alarm\": " + graph.markFlagText(0));
   graph.setTimeCursor(0, 9000);
   QRect flag = graph.markFlagRect(0);
-  check(graph.markFlagText(0) == QString("1 · Peak"), "the flag: its number and its name without \"Alarm\": " + graph.markFlagText(0));
+  check(graph.markFlagText(0).startsWith("1"), "the flag: its number and its name without \"Alarm\": " + graph.markFlagText(0));
   check(flag.top() >= plot.bottom() && flag.left() <= at5 && flag.right() >= at5, "the flag below the plot, under its line");
   // the cursor's letter in the same row, not on the mark's flag
   const QRect letter = graph.cursorFlagRect(0);
@@ -1555,6 +1566,156 @@ static void testMarks()
   check(bench.graph.markCount() == 4, "a mark coming while the picture is held is counted");
 }
 
+static void testBandRules()
+{
+  // a zigzag of 4 points per column over a plot 100 pixels wide showing 0 .. 100 s
+  QList<QPointF> points;
+  for (int i = 0; i < 400; ++i)
+    points << QPointF(i * 0.25, i % 2 ? 10 + i / 100 : -10);
+  const QRectF plot(50, 20, 100, 200);
+  double lo = 0, hi = 0;
+  check(GraphBand::columnAt(points, 0, 100, plot, 0, 42.5, &lo, &hi) && lo == -10 && hi == 11,
+        QString("a column's band from its lowest to its highest point (%1 .. %2)").arg(lo).arg(hi));
+  check(GraphBand::columnAt(points, 0, 100, plot, 4, 99.5, &lo, &hi) && lo == -10 && hi == 13,
+        QString("widened by 4 columns it has their extremes (%1 .. %2)").arg(lo).arg(hi));
+  QList<QPolygonF> band = GraphBand::columnBand(points, 0, 100, -20, 20, plot, 0);
+  check(band.size() == 1 && band.first().boundingRect().top() >= plot.top() + 30 && band.first().boundingRect().bottom() <= plot.top() + 151,
+        "one outline, between -10 and 13 on the plot");
+  // a gap parts it, and no column takes extremes from across it
+  points[200] = QPointF(50, qQNaN());
+  points[199] = QPointF(49.75, 100);
+  band = GraphBand::columnBand(points, 0, 100, -20, 20, plot, 4);
+  check(band.size() == 2, QString("a gap parts the band (%1 outlines)").arg(band.size()));
+  check(GraphBand::columnAt(points, 0, 100, plot, 4, 51.5, &lo, &hi) && hi < 100 && GraphBand::columnAt(points, 0, 100, plot, 4, 48.5, &lo, &hi)
+        && hi == 100, "the spike before the gap widens only the columns on its side");
+  check(GraphBand::columnBand({}, 0, 100, -20, 20, plot, 0).isEmpty() && GraphBand::columnBand(points, 0, 100, 5, 5, plot, 0).isEmpty(),
+        "no points or no scale: no band");
+}
+
+static void testOverview()
+{
+  RecordingStore store;
+  Feed feed(&store, 1000);
+  store.start();
+  QcpGraph graph;
+  graph.resize(900, 400);
+  graph.show();
+  graph.setWindowSeconds(60);
+  graph.setStore(&store);
+  // 0 .. 99 V, HOLD from 30 to 35 s, an overload at 40 s
+  for (int i = 0; i < 100; ++i)
+  {
+    if (i >= 30 && i < 35)
+    {
+      Reading r;
+      r.value = i;
+      r.text = QString::number(i);
+      r.unit = r.baseUnit = "V";
+      r.port.quantity = Quantity::Voltage;
+      r.hold = true;
+      r.flags = quint32(SampleFlag::Hold);
+      r.t = feed.now;
+      r.msecs = Feed::wall(feed.now).toMSecsSinceEpoch();
+      store.setReading(r);
+      feed.now += 1000;
+    }
+    else
+      feed.value(i == 40 ? qQNaN() : i);
+  }
+  store.stop();
+  graph.showFrom(20000);
+  graph.refreshNow();
+
+  // the overview: on by default instead of the scrollbar, the window between its brackets
+  GraphMinimap *minimap = graph.minimap();
+  check(graph.minimapVisible() && minimap->isVisible() && !graph.scrollBar()->isVisible(), "the overview is shown instead of the scrollbar");
+  check(minimap->viewStart() == 20000 && minimap->viewWidth() == 60000, QString("it has the window shown (%1 + %2 ms)").arg(minimap->viewStart()).arg(minimap->viewWidth()));
+  Q_EMIT minimap->moveRequested(5000);
+  graph.refreshNow();
+  check(graph.windowStart() == 5000 && minimap->viewStart() == 5000, "a drag in it moves the window");
+  Q_EMIT minimap->widthRequested(10000, 30000, false);
+  graph.refreshNow();
+  check(graph.windowSeconds() == 30 && graph.windowStart() == 10000 && !graph.following(), "a bracket dragged: another width");
+  Q_EMIT minimap->endRequested();
+  graph.refreshNow();
+  check(graph.following(), "brought to the end it follows the newest reading");
+  graph.setMinimapVisible(false);
+  check(!minimap->isVisible() && graph.scrollBar()->isVisible() && !graph.timeBar()->findChild<QToolButton *>("ui_graphOverviewButton")->isChecked(),
+        "switched off: the scrollbar again, the button up");
+  graph.timeBar()->findChild<QToolButton *>("ui_graphOverviewButton")->click();
+  check(graph.minimapVisible() && minimap->isVisible(), "the button brings it back");
+
+  // the states of the left value in the time shown
+  graph.setWindowSeconds(60);
+  graph.showFrom(20000);
+  graph.refreshNow();
+  check(graph.statesText() == "HOLD 30.0-35.0 | OL 40.0-41.0", "the states in the window: " + graph.statesText());
+  auto *strip = graph.findChild<QWidget *>("ui_graphStates");
+  // the layout after the overview came back, then the picture that places the strip
+  QCoreApplication::processEvents();
+  graph.refreshNow();
+  QCoreApplication::processEvents();
+  const QRect plot = graph.plotRect();
+  check(strip && strip->isVisible() && strip->geometry().bottom() == plot.bottom() && strip->geometry().left() == plot.left()
+        && strip->width() == plot.width(),
+        QString("the strip lies at the bottom of the plot, as wide as it (%1 %2 %3 %4, plot %5 %6 %7)").arg(strip ? strip->isVisible() : -1)
+          .arg(strip->geometry().left()).arg(strip->geometry().bottom()).arg(strip->width()).arg(plot.left()).arg(plot.bottom()).arg(plot.width()));
+  graph.setWindowSeconds(30);
+  graph.showFrom(50000);
+  graph.refreshNow();
+  check(graph.statesText().isEmpty(), "none in another window: " + graph.statesText());
+  graph.setStatesVisible(false);
+  check(strip && !strip->isVisible() && !graph.statesVisible(), "the strip switched off");
+  graph.setStatesVisible(true);
+
+  // the min/max band behind the curve: off by default, the extremes of 4 columns either side
+  graph.showFrom(0);
+  graph.refreshNow();
+  double lo = 0, hi = 0;
+  check(!graph.envelopeVisible() && !graph.bandAt(-1, 10000, &lo, &hi), "no min/max band by default");
+  graph.setEnvelopeVisible(true);
+  graph.refreshNow();
+  const double perColumn = double(graph.windowSeconds()) / plot.width();
+  check(graph.bandAt(-1, 10500, &lo, &hi) && lo <= 10.5 - 3.9 * perColumn && lo >= 10.5 - 6 * perColumn && hi >= 10.5 + 3.9 * perColumn
+        && hi <= 10.5 + 6 * perColumn, QString("the min/max band at 10.5 s spans the curve 4 columns either side (%1 .. %2)").arg(lo).arg(hi));
+  check(graph.timeBar()->findChild<QToolButton *>("ui_graphEnvelopeButton")->isChecked(), "its button is down");
+  graph.setEnvelopeVisible(false);
+
+  // dense: more points than columns is a band, a narrower window a line again
+  RecordingStore fast;
+  Feed fastFeed(&fast, 10);
+  fast.start();
+  for (int i = 0; i < 12000; ++i)
+    fastFeed.value(i % 2 ? 5 + std::sin(i / 300.0) : -5);
+  fast.stop();
+  graph.setStore(&fast);
+  graph.setWindowSeconds(120);
+  graph.showFrom(0);
+  graph.refreshNow();
+  check(graph.curveBanded(0) && graph.drawnPoints(0).isEmpty(), QString("12000 readings on %1 columns are a band, no line").arg(plot.width()));
+  check(graph.bandAt(0, 60000, &lo, &hi) && lo >= -5 && hi <= 6 && hi - lo > 5, QString("the band spans what the curve covers in its column (%1 .. %2)").arg(lo).arg(hi));
+  if (qEnvironmentVariableIsSet("QTDMM_SHOT"))
+  {
+    QCoreApplication::processEvents();
+    graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/qcpgraph_band.png");
+  }
+  graph.setWindowSeconds(2);
+  graph.showFrom(60000);
+  graph.refreshNow();
+  check(!graph.curveBanded(0) && !graph.drawnPoints(0).isEmpty() && !graph.bandAt(0, 61000, &lo, &hi), "200 readings in the window: a line again");
+
+  if (qEnvironmentVariableIsSet("QTDMM_SHOT"))
+  {
+    graph.setStore(&store);
+    graph.setWindowSeconds(60);
+    graph.showFrom(20000);
+    graph.setEnvelopeVisible(true);
+    graph.refreshNow();
+    QCoreApplication::processEvents();
+    graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/qcpgraph_overview.png");
+  }
+}
+
 int main(int argc, char **argv)
 {
   if (qEnvironmentVariableIsEmpty("QT_QPA_PLATFORM"))
@@ -1588,6 +1749,8 @@ int main(int argc, char **argv)
   testReferenceRules();
   testLevels();
   testMarks();
+  testBandRules();
+  testOverview();
   shot();
   return failed ? 1 : 0;
 }
