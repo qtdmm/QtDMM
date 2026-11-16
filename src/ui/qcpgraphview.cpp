@@ -27,13 +27,27 @@ QcpGraphView::QcpGraphView(DeviceSession *session, QcpGraph *graph, const QStrin
   for (const MeterController *ctl : m_session->controllers())
     watch(ctl);
   connect(m_session, &DeviceSession::opened, this, &QcpGraphView::watch);
-  connect(m_model, &GraphModel::valuesChanged, this, &QcpGraphView::followBase);
+  // the values' stores are the meters', their names the legend's
+  m_graph->setSources([this](const QString &source) -> RecordingStore *
+  {
+    MeterController *ctl = m_session->controller(source);
+    return ctl && ctl != m_closing ? ctl->recorder() : nullptr;
+  },
+  [this](const QString &source)
+  {
+    const MeterController *ctl = m_session->controller(source);
+    return ctl ? ctl->deviceName() : QString();
+  });
+  m_graph->setValues(m_model->values());
+  m_graph->setValueAxes(m_model->valueAxes());
+  m_graph->setFixedRanges(m_model->fixedRanges());
+  connect(m_model, &GraphModel::valuesChanged, this, [this] { m_graph->setValues(m_model->values()); });
+  connect(m_model, &GraphModel::valueAxesChanged, this, [this] { m_graph->setValueAxes(m_model->valueAxes()); });
+  connect(m_model, &GraphModel::fixedRangesChanged, this, [this] { m_graph->setFixedRanges(m_model->fixedRanges()); });
   connect(m_session, &DeviceSession::opened, this, &QcpGraphView::followBase);
-  // the store goes with its meter: let go of it before
+  // a store goes with its meter: let go of it before
   connect(m_session, &DeviceSession::closing, this, [this](MeterController *ctl)
   {
-    if (ctl != m_base)
-      return;
     const QScopedValueRollback<MeterController *> going(m_closing, ctl);
     followBase();
   });
@@ -58,7 +72,6 @@ bool QcpGraphView::loadFile(const QString &path, QString *error)
   // the columns of the file's own meter; those of others come with several values
   m_fileStore->load(RecordingFile::devicePart(*rec, rec->device));
   m_showsFile = true;
-  m_base = nullptr;
   m_graph->setStore(m_fileStore);
   m_graph->setSourceName(QFileInfo(path).fileName());
   return true;
@@ -70,17 +83,10 @@ void QcpGraphView::closeFile()
     return;
   m_showsFile = false;
   m_graph->setSourceName(QString());
-  followBase();
+  m_graph->setStore(nullptr);
 }
 
 void QcpGraphView::followBase()
 {
-  if (m_showsFile)
-    return;
-  const QList<ValueRef> values = m_model->values();
-  MeterController *base = values.isEmpty() ? nullptr : m_session->controller(values.first());
-  if (base == m_closing)
-    base = nullptr;
-  m_base = base;
-  m_graph->setStore(base ? base->recorder() : nullptr);
+  m_graph->sourcesChanged();
 }

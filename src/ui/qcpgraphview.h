@@ -12,7 +12,7 @@ class QcpGraph;
 class RecordingStore;
 
 /// What one window of the graph on QCustomPlot shows of the session: the
-/// store of the meter of its first value, none while that meter is not
+/// stores of the meters of its values, on the time of the first one that is
 /// open. What it shows is in its GraphModel; the recording is the session's.
 /// A file loaded (loadFile()) lies in a store of the view's own and stays
 /// until a meter records or goes live, or closeFile().
@@ -36,7 +36,7 @@ public:
   void        closeFile();
 
 private:
-  /// The store of the meter of the first value, when it is open.
+  /// The meters open now: the graph asks for their stores again.
   void        followBase();
   /// A meter that records or goes live ends the look at a file.
   void        watch(const MeterController *ctl);
@@ -45,7 +45,6 @@ private:
   QcpGraph   *m_graph;
   GraphModel *m_model;
   QString     m_key;
-  QPointer<MeterController> m_base;      ///< the meter whose store the graph draws
   MeterController *m_closing = nullptr;  ///< the meter closing now (DeviceSession::closing())
   RecordingStore *m_fileStore = nullptr; ///< the file loaded, made with the first one
   bool        m_showsFile = false;

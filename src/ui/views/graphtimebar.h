@@ -5,12 +5,15 @@
 #include <QList>
 #include <QWidget>
 
+#include "ui/views/graphlegend.h"
+
 class QLabel;
 class QToolButton;
 
 /// The row above a graph: what it shows on the left ("Live", "Recording ·
-/// 0:01:20") and the time buttons on the right - "All" and the last 1, 5 or
-/// 30 minutes. It knows no graph: the window is set and asked for.
+/// 0:01:20"), the legend of its curves next to it, and the time buttons on
+/// the right - "All" and the last 1, 5 or 30 minutes. It knows no graph: the
+/// window is set and asked for.
 class GraphTimeBar : public QWidget
 {
   Q_OBJECT
@@ -21,6 +24,9 @@ public:
   void        setWindow(int seconds, bool all);
   void        setStateText(const QString &text);
   QString     stateText() const;
+  /// The curves' names in @p ink, in the longest form that fits between state and buttons; none: no legend.
+  void        setLegend(const QList<GraphLegend::Entry> &entries, const QColor &ink);
+  QString     legendText() const;
   /// Text and buttons in @p text on the graph's background.
   void        setTextColor(const QColor &text);
   /// For tests: the button of @p seconds (0: "All"); nullptr without one.
@@ -30,8 +36,17 @@ Q_SIGNALS:
   /// A time button was clicked: @p seconds, 0 for "All".
   void        windowChosen(int seconds);
 
+protected:
+  void        resizeEvent(QResizeEvent *event) override;
+
 private:
+  /// The legend in the room there is now.
+  void        fitLegend();
+
   QLabel     *m_state;
+  GraphLegend *m_legend;
+  QList<GraphLegend::Entry> m_entries;
+  QColor      m_ink;
   QList<QToolButton *> m_buttons;
   int         m_seconds = 0;
   bool        m_all = false;

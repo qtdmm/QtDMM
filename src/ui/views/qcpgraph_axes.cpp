@@ -8,6 +8,7 @@
 #include "recording/recordingstore.h"
 #include "ui/graphmodel.h"
 #include "ui/views/graphtimebar.h"
+#include "core/siprefix.h"
 #include "ui/views/qcp.h"
 
 #include <QScrollBar>
@@ -28,6 +29,19 @@ void QcpGraph::setupAxes()
   QSharedPointer<QCPAxisTickerTime> time(new QCPAxisTickerTime);
   time->setTimeFormat(QStringLiteral("%h:%m:%s"));
   m_plot->xAxis->setTicker(time);
+  // the value axes: the left one, the others on the right, outwards
+  for (int i = 0; i < kMaxAxes; ++i)
+  {
+    Axis a;
+    a.axis = i == 0 ? m_plot->yAxis : i == 1 ? m_plot->yAxis2 : m_plot->axisRect()->addAxis(QCPAxis::atRight);
+    if (i > 0)
+    {
+      a.axis->setVisible(false);
+      a.axis->setTickLabels(true);
+      a.axis->grid()->setVisible(false);   // one grid, the left axis'
+    }
+    m_axes.append(a);
+  }
 
   // above the plot the state and the time buttons, below it the scrollbar
   auto *box = qobject_cast<QVBoxLayout *>(layout());
@@ -174,9 +188,12 @@ void QcpGraph::zoomToRect(const QRect &rect)
     return;
   if (!m_zoomed)
     m_zoomBefore = { windowStart(), m_windowSeconds, m_followAll, m_followEnd };
-  // the left axis: the frame's height in its scale, kept in the base unit
-  m_yZoomMin = m_plot->yAxis->pixelToCoord(frame.bottom()) * m_factor;
-  m_yZoomMax = m_plot->yAxis->pixelToCoord(frame.top()) * m_factor;
+  // each value axis: the frame's height in its scale, kept in the base unit
+  for (Axis &a : m_axes)
+  {
+    a.zoomMin = a.axis->pixelToCoord(frame.bottom()) * a.factor;
+    a.zoomMax = a.axis->pixelToCoord(frame.top()) * a.factor;
+  }
   m_zoomed = true;
   const double t0 = m_plot->xAxis->pixelToCoord(frame.left());
   const double t1 = m_plot->xAxis->pixelToCoord(frame.right());
@@ -205,25 +222,81 @@ void QcpGraph::endZoom(bool restoreWindow)
   redraw();
 }
 
-bool QcpGraph::valueSpan(double from, double to, double &lo, double &hi) const
+// The axis chosen for a value if its unit fits there. On Auto the axis its
+// unit got by Auto, else the first free one, else an axis chosen for that
+// unit: a value put on an axis of its own stays alone there while there is
+// room. A value whose unit finds no axis is not drawn. The values with a
+// choice come first, so Auto fills what is left.
+void QcpGraph::assignAxes()
+{
+  for (Axis &a : m_axes)
+    a.unit.clear();
+  QList<bool> chosenAxis(m_axes.size(), false);
+  m_notice.clear();
+  auto fits = [this](int axis, const QString &unit)
+  { return axis >= 0 && axis < m_axes.size() && (m_axes.at(axis).unit.isEmpty() || m_axes.at(axis).unit == unit); };
+  QStringList left;
+  for (int pass = 0; pass < 2; ++pass)
+    for (Curve &c : m_curves)
+    {
+      const int chosen = m_ownStore ? kAxisAuto : m_valueAxes.value(c.value, kAxisAuto);
+      if ((chosen == kAxisAuto) != (pass == 1))
+        continue;
+      c.axis = -1;
+      if (c.unit.isEmpty())
+        continue;   // no reading yet
+      if (chosen != kAxisAuto)
+      {
+        c.axis = fits(chosen, c.unit) ? chosen : -1;
+        if (c.axis >= 0)
+          chosenAxis[c.axis] = true;
+      }
+      else
+      {
+        for (int i = 0; i < m_axes.size() && c.axis < 0; ++i)
+          if (m_axes.at(i).unit == c.unit && !chosenAxis.at(i))
+            c.axis = i;
+        for (int i = 0; i < m_axes.size() && c.axis < 0; ++i)
+          if (m_axes.at(i).unit.isEmpty())
+            c.axis = i;
+        for (int i = 0; i < m_axes.size() && c.axis < 0; ++i)
+          if (m_axes.at(i).unit == c.unit)
+            c.axis = i;
+      }
+      if (c.axis >= 0)
+        m_axes[c.axis].unit = c.unit;
+      else if (const QString unit = SiPrefix::displayText(c.unit); !left.contains(unit))
+        left << unit;
+    }
+  if (!left.isEmpty())
+    m_notice = tr("%1: no free axis").arg(left.join(", "));
+}
+
+bool QcpGraph::valueSpan(int axis, double from, double to, double &lo, double &hi) const
 {
   bool any = false;
   const auto byTime = [](const QPointF &p, double t) { return p.x() < t; };
-  for (auto it = std::lower_bound(m_points.cbegin(), m_points.cend(), from, byTime);
-       it != m_points.cend() && it->x() <= to; ++it)
+  for (const Curve &c : m_curves)
   {
-    if (std::isnan(it->y()))
+    if (c.axis != axis)
       continue;
-    lo = any ? qMin(lo, it->y()) : it->y();
-    hi = any ? qMax(hi, it->y()) : it->y();
-    any = true;
+    for (auto it = std::lower_bound(c.points.cbegin(), c.points.cend(), from, byTime);
+         it != c.points.cend() && it->x() <= to; ++it)
+    {
+      if (std::isnan(it->y()))
+        continue;
+      lo = any ? qMin(lo, it->y()) : it->y();
+      hi = any ? qMax(hi, it->y()) : it->y();
+      any = true;
+    }
   }
   return any;
 }
 
-// The time axis over the window, the left axis over the values shown (or
-// the frame zoomed on), in the unit with the SI prefix that suits them.
-void QcpGraph::updateAxes(double &from, double &to, double &factor)
+// The time axis over the window; each value axis over the frame zoomed on,
+// the fixed range of its unit or the values shown, in the unit with the SI
+// prefix that suits them. An axis without a unit is not shown, but the left one.
+void QcpGraph::updateAxes(double &from, double &to)
 {
   from = windowStart() / 1000.0;
   to = from + m_windowSeconds;
@@ -231,28 +304,36 @@ void QcpGraph::updateAxes(double &from, double &to, double &factor)
   // a label is about 70 pixels wide: fewer ticks on a narrow plot
   m_plot->xAxis->ticker()->setTickCount(qBound(2, m_plot->axisRect()->width() / 110, 6));
 
-  double lo = 0, hi = 0;
-  const bool any = valueSpan(from, to, lo, hi);
-  if (m_zoomed)
+  bool anyValue = false;
+  for (int i = 0; i < m_axes.size(); ++i)
   {
-    lo = m_yZoomMin;
-    hi = m_yZoomMax;
+    Axis &a = m_axes[i];
+    a.axis->setVisible(i == 0 || !a.unit.isEmpty());
+    double lo = 0, hi = 0;
+    const bool any = valueSpan(i, from, to, lo, hi);
+    anyValue = anyValue || any;
+    if (m_zoomed)
+    {
+      lo = a.zoomMin;
+      hi = a.zoomMax;
+    }
+    else if (const auto fixed = m_fixedRanges.constFind(a.unit); !a.unit.isEmpty() && fixed != m_fixedRanges.cend())
+    {
+      lo = fixed->first;
+      hi = fixed->second;
+    }
+    else
+    {
+      // a little room above and below, the curve does not touch the frame
+      const double room = (hi - lo) * 0.05;
+      lo -= room;
+      hi += room;
+    }
+    const PlotAxis::Range range = PlotAxis::range(lo, hi, a.unit);
+    setAxisRange(a.axis, range);
+    a.factor = range.factor;
   }
-  else
-  {
-    // a little room above and below, the curve does not touch the frame
-    const double room = (hi - lo) * 0.05;
-    lo -= room;
-    hi += room;
-  }
-  // the series' unit; a loaded file has only the store's
-  QString unit;
-  if (m_store && (any || m_zoomed))
-    unit = m_store->series().unit.isEmpty() ? m_store->unit() : m_store->series().unit;
-  const PlotAxis::Range range = PlotAxis::range(lo, hi, unit);
-  setAxisRange(m_plot->yAxis, range);
-  factor = m_factor = range.factor;
-  setCrosshairEnabled(any);
+  setCrosshairEnabled(anyValue);
 }
 
 void QcpGraph::updateScrollBar()
@@ -281,6 +362,8 @@ void QcpGraph::updateTimeBar()
     else if (m_store->count() > 0)
       state = tr("Stopped · %1").arg(length);
   }
+  if (!m_notice.isEmpty())
+    state = state.isEmpty() ? m_notice : state + "   " + m_notice;
   m_timeBar->setStateText(state);
 }
 
@@ -299,19 +382,27 @@ double QcpGraph::timeAxisEnd() const
   return m_plot->xAxis->range().upper;
 }
 
-QString QcpGraph::leftAxisTitle() const
+int QcpGraph::axisCount() const
 {
-  return m_plot->yAxis->label();
+  int n = 1;
+  for (int i = 1; i < m_axes.size(); ++i)
+    n += !m_axes.at(i).unit.isEmpty();
+  return n;
 }
 
-double QcpGraph::leftAxisMin() const
+QString QcpGraph::axisTitle(int i) const
 {
-  return m_plot->yAxis->range().lower;
+  return i >= 0 && i < m_axes.size() ? m_axes.at(i).axis->label() : QString();
 }
 
-double QcpGraph::leftAxisMax() const
+double QcpGraph::axisMin(int i) const
 {
-  return m_plot->yAxis->range().upper;
+  return i >= 0 && i < m_axes.size() ? m_axes.at(i).axis->range().lower : 0;
+}
+
+double QcpGraph::axisMax(int i) const
+{
+  return i >= 0 && i < m_axes.size() ? m_axes.at(i).axis->range().upper : 0;
 }
 
 QString QcpGraph::stateText() const

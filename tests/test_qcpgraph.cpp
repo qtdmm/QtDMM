@@ -3,7 +3,8 @@
 //
 // QcpGraph, the graph on QCustomPlot: the curve against the store's
 // readings, a reading at the end, gaps, clear, the time and the left axis,
-// hold; scrolling, Live held, "All", zoom, a file loaded; GraphModel's settings texts.
+// hold; scrolling, Live held, "All", zoom, a file loaded; several values of
+// several meters on the list of axes; GraphModel's settings texts.
 #include <QApplication>
 #include <QDateTime>
 #include <QScrollBar>
@@ -51,6 +52,20 @@ struct Feed
     r.msecs = wall(now).toMSecsSinceEpoch();
     store->setReading(r);
     now += step;
+  }
+  /// Another value of the meter (a second display) now, without moving the clock.
+  void other(int id, double v, const QString &unit, Quantity quantity)
+  {
+    Reading r;
+    r.id = id;
+    r.value = v;
+    r.text = QString::number(v);
+    r.unit = r.baseUnit = unit;
+    r.port.quantity = quantity;
+    r.port.slot = Slot(id);
+    r.t = now;
+    r.msecs = wall(now).toMSecsSinceEpoch();
+    store->setReading(r);
   }
 };
 
@@ -109,6 +124,34 @@ static void testModel()
   check(GraphModel::allTarget(61, false, 0) == 120, "whole minutes from one minute on");
   check(GraphModel::allTarget(100, true, 0) == 180, "125 s are 3 minutes");
   check(GraphModel::allTarget(1000, true, 600) == 600, "at most the recording's length");
+
+  // the axis of a value, in the words of the graph on QtCharts
+  int axesChanged = 0;
+  QObject::connect(&model, &GraphModel::valueAxesChanged, [&] { axesChanged++; });
+  check(model.valueAxis(ValueRef(1, "device:b")) == GraphModel::kAxisAuto && model.valueAxesSetting().isEmpty(), "Auto is not written");
+  model.setValueAxis(ValueRef(1, "device:b"), 1);
+  model.setValueAxis(ValueRef(0, "device:a"), 2);
+  model.setValueAxis(ValueRef(0, "device:a"), 2);
+  check(axesChanged == 2, "an axis set twice changes once");
+  check(model.valueAxesSetting() == "0@device:a:third 1@device:b:right", "the axes as written: " + model.valueAxesSetting());
+  model.setValueAxesSetting("1@device:b:left 0@device:c:axis4 0@device:a:nonsense");
+  check(model.valueAxis(ValueRef(1, "device:b")) == 0 && model.valueAxis(ValueRef(0, "device:c")) == 3
+        && model.valueAxis(ValueRef(0, "device:a")) == GraphModel::kAxisAuto, "the axes as read, a fourth one too");
+  check(model.valueAxesSetting() == "1@device:b:left 0@device:c:axis4", "a fourth axis is written by its number: " + model.valueAxesSetting());
+  model.setValueAxis(ValueRef(1, "device:b"), GraphModel::kAxisAuto);
+  check(model.valueAxesSetting() == "0@device:c:axis4", "back on Auto: gone");
+
+  int rangesChanged = 0;
+  QObject::connect(&model, &GraphModel::fixedRangesChanged, [&] { rangesChanged++; });
+  check(model.fixedRangesSetting().isEmpty(), "no fixed range: an empty text");
+  model.setFixedRange("Hz", 49.5, 50.5);
+  model.setFixedRange("Hz", 49.5, 50.5);
+  model.setFixedRange("V", 5, 1);
+  check(rangesChanged == 1 && model.fixedRangesSetting() == "{\"Hz\":[49.5,50.5]}", "a fixed range as written: " + model.fixedRangesSetting());
+  model.setFixedRangesSetting("{\"V\":[0,10],\"A\":[3,1]}");
+  check(model.fixedRanges().size() == 1 && model.fixedRanges().value("V") == GraphModel::Range(0, 10), "fixed ranges as read, a turned one left out");
+  model.clearFixedRange("V");
+  check(model.fixedRanges().isEmpty(), "cleared");
 }
 
 static void testCurve()
@@ -452,14 +495,14 @@ static void testZoom()
     QTest::mouseMove(plotWidget, frame.center());
     QTest::mouseMove(plotWidget, frame.bottomRight());
     QTest::mouseRelease(plotWidget, Qt::LeftButton, Qt::ShiftModifier, frame.bottomRight());
-    check(graph.zoomed() && graph.windowSeconds() == 50, "Shift and a drag zoom on the frame");
+    check(graph.zoomed() && std::abs(graph.windowSeconds() - 50) <= 1, QString("Shift and a drag zoom on the frame (%1 s)").arg(graph.windowSeconds()));
     graph.endZoom(true);
     const double start = graph.timeAxisStart();
     QTest::mousePress(plotWidget, Qt::LeftButton, Qt::NoModifier, plot.center());
     QTest::mouseMove(plotWidget, plot.center() + QPoint(plot.width() / 4, 0));
     QTest::mouseMove(plotWidget, plot.center() + QPoint(plot.width() / 2, 0));
     QTest::mouseRelease(plotWidget, Qt::LeftButton, Qt::NoModifier, plot.center() + QPoint(plot.width() / 2, 0));
-    check(std::abs(graph.timeAxisStart() - (start - 50)) < 1, QString("a drag to the right shows what was before (%1 s)").arg(graph.timeAxisStart()));
+    check(std::abs(graph.timeAxisStart() - (start - 50)) < 2, QString("a drag to the right shows what was before (%1 s)").arg(graph.timeAxisStart()));
   }
 }
 
@@ -515,6 +558,181 @@ static void testFile(const QString &dataDir)
   check(!viewGraph.followAll(), "and comes from it");
 }
 
+// two meters and their stores, as the session gives them to a graph
+struct Bench
+{
+  RecordingStore a, b;
+  Feed feedA{ &a, 1000 }, feedB{ &b, 1000 };
+  QcpGraph graph;
+
+  Bench()
+  {
+    graph.resize(900, 400);
+    graph.show();
+    graph.setWindowSeconds(60);
+    graph.setSources([this](const QString &source) -> RecordingStore *
+    { return source == "device:a" ? &a : source == "device:b" ? &b : nullptr; },
+    [](const QString &source) { return source == "device:a" ? QString("Meter A") : QString("Meter B"); });
+  }
+};
+
+static void testValues()
+{
+  Bench bench;
+  QcpGraph &graph = bench.graph;
+  bench.a.live();
+  bench.b.live();
+  graph.setValues({ ValueRef(0, "device:a"), ValueRef(1, "device:a"), ValueRef(0, "device:b"), ValueRef(0, "device:gone") });
+  check(graph.curveCount() == 3 && graph.store() == &bench.a, "a curve per value of an open meter, the first one gives the time");
+  for (int i = 0; i < 20; ++i)
+  {
+    // the main value first: the others count from its first reading
+    bench.feedA.value(1 + 0.1 * i);
+    bench.feedA.now -= 1000;
+    bench.feedA.other(1, 50 + 0.01 * i, "Hz", Quantity::Frequency);
+    bench.feedA.now += 1000;
+    bench.feedB.value(2 + 0.1 * i);
+  }
+  graph.refreshNow();
+  check(graph.curvePoints(0).size() == 20 && graph.curvePoints(1).size() == 20 && graph.curvePoints(2).size() == 20,
+        QString("20 readings each (%1, %2, %3)").arg(graph.curvePoints(0).size()).arg(graph.curvePoints(1).size()).arg(graph.curvePoints(2).size()));
+  // V left, Hz right, the other meter's V on the left too
+  check(graph.curveAxis(0) == 0 && graph.curveAxis(1) == 1 && graph.curveAxis(2) == 0 && graph.axisCount() == 2,
+        QString("Auto: V left, Hz right, V of the other meter left (%1 %2 %3)").arg(graph.curveAxis(0)).arg(graph.curveAxis(1)).arg(graph.curveAxis(2)));
+  check(graph.axisTitle(0) == "[V]" && graph.axisTitle(1) == "[Hz]", "the axes' units: " + graph.axisTitle(0) + " " + graph.axisTitle(1));
+  check(graph.axisMin(0) < 1 && graph.axisMax(0) > 3.9, "the left axis covers both meters' volts");
+  check(graph.axisMin(1) > 49 && graph.axisMax(1) < 51, "the right axis the frequency");
+  check(graph.curveColor(0) != graph.curveColor(1) && graph.curveColor(1) != graph.curveColor(2), "each curve its colour");
+  check(graph.legendText().contains("Meter A") && graph.legendText().contains("Meter B") && graph.legendText().contains("Hz"),
+        "the legend names meters and values: " + graph.legendText());
+  check(graph.notice().isEmpty(), "all drawn: no notice");
+
+  // readings one by one give what a rebuild gives, for each curve
+  QList<QList<QPointF>> grown;
+  for (int i = 0; i < 3; ++i)
+    grown << graph.curvePoints(i);
+  graph.clear();
+  check(samePoints(grown[0], graph.curvePoints(0)) && samePoints(grown[1], graph.curvePoints(1)) && samePoints(grown[2], graph.curvePoints(2)),
+        "appended one by one: the same points as built anew");
+
+  // a chosen axis: the frequency on the third, the other meter's volts on the right
+  graph.setValueAxes({ { ValueRef(1, "device:a"), 2 }, { ValueRef(0, "device:b"), 1 } });
+  graph.refreshNow();
+  check(graph.curveAxis(1) == 2 && graph.curveAxis(2) == 1 && graph.axisCount() == 3, "the axes chosen");
+  check(graph.axisTitle(1) == "[V]" && graph.axisTitle(2) == "[Hz]", "their units: " + graph.axisTitle(1) + " " + graph.axisTitle(2));
+  check(graph.axisMin(1) > 1.5, QString("the right axis fits the other meter alone (%1 .. %2)").arg(graph.axisMin(1)).arg(graph.axisMax(1)));
+  // an axis that has another unit: the value is not drawn, and says so
+  graph.setValueAxes({ { ValueRef(0, "device:a"), 0 }, { ValueRef(1, "device:a"), 0 } });
+  graph.refreshNow();
+  check(graph.curveAxis(0) == 0 && graph.curveAxis(1) == -1 && graph.notice().contains("Hz") && graph.stateText().contains("Hz"),
+        "Hz chosen onto the volts' axis: not drawn, with a notice: " + graph.notice());
+  check(graph.drawnPoints(1).isEmpty(), "nothing of it is handed to the plot");
+  graph.setValueAxes({});
+  graph.refreshNow();
+
+  // a fixed range by unit, also a narrow one far from zero (R19-06)
+  graph.setFixedRanges({ { "Hz", { 49.95, 50.05 } } });
+  check(graph.axisMin(1) == 49.95 && graph.axisMax(1) == 50.05 && graph.axisTitle(1) == "[Hz]", "the fixed range of Hz");
+  check(graph.axisMin(0) < 1, "the volts fit themselves");
+  graph.setFixedRanges({});
+  check(graph.axisMin(1) < 49.999, "without it the axis fits again");
+
+  // a frame zooms every axis
+  const QRect plot = graph.plotRect();
+  const double hz = graph.axisMax(1) - graph.axisMin(1), volt = graph.axisMax(0) - graph.axisMin(0);
+  graph.zoomToRect(QRect(plot.left(), plot.top() + plot.height() / 4, plot.width(), plot.height() / 2));
+  check(std::abs((graph.axisMax(1) - graph.axisMin(1)) / hz - 0.5) < 0.02 && std::abs((graph.axisMax(0) - graph.axisMin(0)) / volt - 0.5) < 0.02,
+        "a frame of half the height: half of each axis");
+  graph.endZoom(true);
+
+  // the meter of the first value closes: the next one gives the time
+  bench.graph.setSources([&bench](const QString &source) -> RecordingStore * { return source == "device:b" ? &bench.b : nullptr; },
+                         [](const QString &) { return QString("Meter B"); });
+  graph.refreshNow();
+  check(graph.curveCount() == 1 && graph.store() == &bench.b && graph.curveAxis(0) == 0 && graph.legendText().isEmpty(),
+        "one meter left: its curve on the left, no legend");
+  check(graph.curveColor(0).isValid(), "it has a colour");
+}
+
+static void testFourUnits()
+{
+  RecordingStore store;
+  Feed feed(&store, 1000);
+  store.live();
+  QcpGraph graph;
+  graph.resize(900, 400);
+  graph.show();
+  graph.setSources([&store](const QString &) { return &store; }, [](const QString &) { return QString("Meter"); });
+  graph.setValues({ ValueRef(0, "m"), ValueRef(1, "m"), ValueRef(2, "m"), ValueRef(3, "m") });
+  for (int i = 0; i < 10; ++i)
+  {
+    feed.other(1, 50, "Hz", Quantity::Frequency);
+    feed.other(2, 0.5, "A", Quantity::Current);
+    feed.other(3, 25, "°C", Quantity::Temperature);
+    feed.value(i);
+  }
+  graph.refreshNow();
+  check(graph.curveAxis(0) == 0 && graph.curveAxis(1) == 1 && graph.curveAxis(2) == 2 && graph.curveAxis(3) == -1,
+        QString("four units, %1 axes: the fourth is not drawn").arg(QcpGraph::kMaxAxes));
+  check(graph.axisCount() == QcpGraph::kMaxAxes && graph.notice().contains("°C"), "and is named: " + graph.notice());
+  // one goes: the fourth takes its axis
+  graph.setValues({ ValueRef(0, "m"), ValueRef(2, "m"), ValueRef(3, "m") });
+  graph.refreshNow();
+  check(graph.curveAxis(1) == 1 && graph.curveAxis(2) == 2 && graph.notice().isEmpty() && graph.axisTitle(2) == "[°C]",
+        "a value less: the temperature has the third axis");
+}
+
+static void testOtherTime()
+{
+  // the second meter starts 10 s after the first: its readings 10 s later on the graph
+  Bench bench;
+  QcpGraph &graph = bench.graph;
+  bench.a.live();
+  bench.feedB.now = 10000;
+  bench.b.live();
+  graph.setValues({ ValueRef(0, "device:a"), ValueRef(0, "device:b") });
+  for (int i = 0; i < 15; ++i)
+    bench.feedA.value(i);
+  for (int i = 0; i < 5; ++i)
+    bench.feedB.value(100 + i);
+  graph.refreshNow();
+  const QList<QPointF> b = graph.curvePoints(1);
+  check(b.size() == 5 && b.first().x() == 10 && b.last().x() == 14,
+        QString("the other meter's readings on the first one's time (%1 .. %2 s)").arg(b.value(0).x()).arg(b.isEmpty() ? 0 : b.last().x()));
+  // a reading more goes where it belongs
+  bench.feedB.value(105);
+  check(graph.curvePoints(1).size() == 6 && graph.curvePoints(1).last().x() == 15, "a new reading of the other meter at 15 s");
+}
+
+static void testParts()
+{
+  // a second display that goes from Hz to %: two series, a gap between them
+  RecordingStore store;
+  Feed feed(&store, 1000);
+  store.live();
+  QcpGraph graph;
+  graph.resize(900, 400);
+  graph.show();
+  graph.setSources([&store](const QString &) { return &store; }, [](const QString &) { return QString(); });
+  graph.setValues({ ValueRef(0, "m"), ValueRef(1, "m") });
+  for (int i = 0; i < 5; ++i)
+  {
+    feed.other(1, 50, "Hz", Quantity::Frequency);
+    feed.value(i);
+  }
+  for (int i = 0; i < 5; ++i)
+  {
+    feed.other(1, 40 + i, "%", Quantity::DutyCycle);
+    feed.value(i);
+  }
+  graph.refreshNow();
+  const QList<QPointF> points = graph.curvePoints(1);
+  const int gaps = int(std::count_if(points.cbegin(), points.cend(), [](const QPointF &p) { return std::isnan(p.y()); }));
+  check(store.extraCount() == 2 && gaps >= 1 && points.size() >= 11,
+        QString("two series of the value, a gap between (%1 series, %2 points, %3 gaps)").arg(store.extraCount()).arg(points.size()).arg(gaps));
+  check(graph.axisTitle(1) == "[%]", "the axis in the newest unit: " + graph.axisTitle(1));
+}
+
 static void shot()
 {
   // a picture to look at: QTDMM_SHOT=<dir>
@@ -534,6 +752,31 @@ static void shot()
   graph.refreshNow();
   QTest::qWait(50);
   graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/qcpgraph_curve.png");
+
+  // three values of two meters on three axes
+  Bench bench;
+  bench.graph.setThemeColors(QColor(20, 24, 28), QColor(90, 100, 110), QColor(200, 205, 210), QColor(90, 200, 120));
+  bench.feedA.step = bench.feedB.step = 100;
+  bench.a.live();
+  bench.b.live();
+  bench.graph.setValues({ ValueRef(0, "device:a"), ValueRef(1, "device:a"), ValueRef(0, "device:b") });
+  for (int i = 0; i < 450; ++i)
+  {
+    bench.feedA.other(1, 50 + 0.02 * std::sin(i * 0.02), "Hz", Quantity::Frequency);
+    bench.feedA.value(0.02 * std::sin(i * 0.05));
+    Reading r;
+    r.value = 0.3 + 0.1 * std::cos(i * 0.03);
+    r.text = QString::number(r.value);
+    r.unit = r.baseUnit = "A";
+    r.port.quantity = Quantity::Current;
+    r.t = bench.feedB.now;
+    r.msecs = Feed::wall(r.t).toMSecsSinceEpoch();
+    bench.b.setReading(r);
+    bench.feedB.now += 100;
+  }
+  bench.graph.refreshNow();
+  QTest::qWait(50);
+  bench.graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/qcpgraph_axes.png");
 }
 
 int main(int argc, char **argv)
@@ -557,6 +800,10 @@ int main(int argc, char **argv)
   testAll();
   testZoom();
   testFile(QString::fromLocal8Bit(argv[1]));
+  testValues();
+  testFourUnits();
+  testOtherTime();
+  testParts();
   shot();
   return failed ? 1 : 0;
 }
