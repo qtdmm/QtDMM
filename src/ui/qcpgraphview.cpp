@@ -44,6 +44,7 @@ QcpGraphView::QcpGraphView(DeviceSession *session, QcpGraph *graph, const QStrin
   connect(m_model, &GraphModel::valuesChanged, this, [this] { m_graph->setValues(m_model->values()); });
   connect(m_model, &GraphModel::valueAxesChanged, this, [this] { m_graph->setValueAxes(m_model->valueAxes()); });
   connect(m_model, &GraphModel::fixedRangesChanged, this, [this] { m_graph->setFixedRanges(m_model->fixedRanges()); });
+  connect(m_model, &GraphModel::lookChanged, this, &QcpGraphView::applyLook);
   connect(m_session, &DeviceSession::opened, this, &QcpGraphView::followBase);
   // a store goes with its meter: let go of it before
   connect(m_session, &DeviceSession::closing, this, [this](MeterController *ctl)
@@ -89,4 +90,16 @@ void QcpGraphView::closeFile()
 void QcpGraphView::followBase()
 {
   m_graph->sourcesChanged();
+}
+
+void QcpGraphView::setDefaultVariant(const QString &name)
+{
+  m_defaultVariant = name;
+  applyLook();
+}
+
+void QcpGraphView::applyLook()
+{
+  m_graph->setVariant(GraphLook::fromName(m_model->variant().isEmpty() ? m_defaultVariant : m_model->variant()));
+  m_graph->setPatternedLines(m_model->patternedLines());
 }

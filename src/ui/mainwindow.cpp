@@ -272,6 +272,12 @@ MainWindow::MainWindow(QCommandLineParser &parser, QWidget *parent)
       applyLcdLook(panelOf(win));
   });
   connect(m_wid, &InstanceWidget::configChanged, this, &MainWindow::updateRecentWorkspaces);
+  // the Graph page: the graphs on QCustomPlot take its look too
+  connect(m_wid, &InstanceWidget::configChanged, this, [this]
+  {
+    for (QcpGraphView *view : std::as_const(m_qgraphViews))
+      applyQGraphLook(view);
+  });
   // the sidebar as left, with two devices or more
   const bool sidebarSet = !m_wid->settings()->getString("Windows/sidebar").isEmpty();
   showSidebar(DeviceSidebar::shownAtStart(sidebarSet ? QVariant(m_wid->settings()->getBool("Windows/sidebar"))
@@ -835,6 +841,7 @@ QMdiSubWindow *MainWindow::addViewWindow(Added kind, const ValueRef &value, int 
     view->model()->setWindowSeconds(m_wid->settingsDialog()->graphPage()->windowSeconds());
     const Designs::GraphColors g = Designs::graphColors(Designs::current());
     graph->setThemeColors(g.background, g.grid, g.labels, g.data);
+    applyQGraphLook(view);
     if (!value.source.isEmpty())
       view->model()->setValues({ value });
     win = addView(graph, graph->windowTitle(), MdiArranger::Graph, prefix + QString::number(number));
@@ -1214,6 +1221,22 @@ void MainWindow::newQGraph(const ValueRef &value)
   // from the button its values are asked; next to another graph it shows that one's first value
   newView(Added::QGraph, !value.source.isEmpty() ? value : ctl ? ValueRef(0, ctl->source()) : ValueRef(),
           value.source.isEmpty());
+}
+
+// The Graph page of the settings on a graph on QCustomPlot: variant,
+// colours, line, points and width, as the graph on QtCharts takes them.
+void MainWindow::applyQGraphLook(QcpGraphView *view)
+{
+  const GraphPrefs *prefs = m_wid->settingsDialog()->graphPage();
+  GraphLook::Settings settings;
+  settings.background = prefs->bgColor();
+  settings.grid = prefs->gridColor();
+  settings.data = prefs->dataColor();
+  settings.lineMode = prefs->lineMode();
+  settings.pointMode = prefs->pointMode();
+  settings.lineWidth = prefs->lineWidth();
+  view->graph()->setLookSettings(settings);
+  view->setDefaultVariant(prefs->variant());
 }
 
 bool MainWindow::editQGraphSources(QcpGraphView *view)
@@ -2698,6 +2721,27 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
       if (!qgraph->model()->values().isEmpty())
         fillQGraphAxisMenu(menu.addMenu(tr("A&xis")), qgraph);
     }
+    {
+      // this graph's own colours, or those of the settings
+      QMenu *variants = menu.addMenu(tr("Colour &variant"));
+      auto *group = new QActionGroup(variants);
+      auto entry = [&](const QString &text, const QString &name)
+      {
+        QAction *a = variants->addAction(text);
+        a->setCheckable(true);
+        a->setChecked(qgraph->model()->variant() == name);
+        group->addAction(a);
+        connect(a, &QAction::triggered, qgraph, [qgraph, name] { qgraph->model()->setVariant(name); });
+      };
+      entry(tr("As in the &settings"), QString());
+      variants->addSeparator();
+      for (GraphLook::Variant v : GraphLook::variants())
+        entry(GraphLook::title(v), GraphLook::name(v));
+      QAction *patterns = menu.addAction(tr("&Patterned lines"));
+      patterns->setCheckable(true);
+      patterns->setChecked(qgraph->model()->patternedLines());
+      connect(patterns, &QAction::toggled, qgraph, [qgraph](bool on) { qgraph->model()->setPatternedLines(on); });
+    }
     if (qgraph->graph()->zoomed())
       connect(menu.addAction(tr("&Undo zoom")), &QAction::triggered, qgraph->graph(), [graph = qgraph->graph()] { graph->endZoom(true); });
     connect(menu.addAction(tr("&Load recording...")), &QAction::triggered, this, [this, qgraph] { loadIntoQGraph(qgraph); });
@@ -3701,6 +3745,8 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
     model->setValuesSetting(get(key + "-values", QString()).toString());
     model->setValueAxesSetting(get(key + "-value-axes", QString()).toString());
     model->setFixedRangesSetting(get(key + "-fixed-ranges", QString()).toString());
+    model->setVariant(get(key + "-variant", QString()).toString());
+    model->setPatternedLines(get(key + "-patterns", false).toBool());
     if (const int seconds = get(key + "-window", 0).toInt(); seconds > 0)
       model->setWindowSeconds(seconds);
     model->setFollowAll(get(key + "-all", false).toBool());
@@ -4055,6 +4101,8 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
     set("Windows/" + w->objectName() + "-values", model->valuesSetting());
     set("Windows/" + w->objectName() + "-value-axes", model->valueAxesSetting());
     set("Windows/" + w->objectName() + "-fixed-ranges", model->fixedRangesSetting());
+    set("Windows/" + w->objectName() + "-variant", model->variant());
+    set("Windows/" + w->objectName() + "-patterns", model->patternedLines());
     set("Windows/" + w->objectName() + "-window", model->windowSeconds());
     set("Windows/" + w->objectName() + "-all", model->followAll());
     set("Windows/" + w->objectName() + "-shown", !w->isHidden());

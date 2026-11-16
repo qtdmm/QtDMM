@@ -237,6 +237,7 @@ protected:
   /// The dialog of the values a graph on QCustomPlot shows; false when cancelled.
   bool        editQGraphSources(QcpGraphView *view);
   void        fillQGraphAxisMenu(QMenu *menu, QcpGraphView *view);
+  void        applyQGraphLook(QcpGraphView *view);
   /// Asks for a recording and shows it in the graph of @p view.
   void        loadIntoQGraph(QcpGraphView *view);
   void        newMeter(const ValueRef &value) { newView(Added::Meter, value); }

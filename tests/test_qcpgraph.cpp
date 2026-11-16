@@ -4,7 +4,8 @@
 // QcpGraph, the graph on QCustomPlot: the curve against the store's
 // readings, a reading at the end, gaps, clear, the time and the left axis,
 // hold; scrolling, Live held, "All", zoom, a file loaded; several values of
-// several meters on the list of axes; GraphModel's settings texts.
+// several meters on the list of axes; the colour variants (GraphLook), pens,
+// markers and divisions; GraphModel's settings texts.
 #include <QApplication>
 #include <QDateTime>
 #include <QScrollBar>
@@ -152,6 +153,75 @@ static void testModel()
   check(model.fixedRanges().size() == 1 && model.fixedRanges().value("V") == GraphModel::Range(0, 10), "fixed ranges as read, a turned one left out");
   model.clearFixedRange("V");
   check(model.fixedRanges().isEmpty(), "cleared");
+
+  int lookChanged = 0;
+  QObject::connect(&model, &GraphModel::lookChanged, [&] { lookChanged++; });
+  model.setVariant("scope");
+  model.setVariant("scope");
+  model.setPatternedLines(true);
+  check(lookChanged == 2 && model.variant() == "scope" && model.patternedLines(), "variant and patterns change once each");
+}
+
+static void testLook()
+{
+  using namespace GraphLook;
+  for (Variant v : variants())
+    check(fromName(name(v)) == v && !title(v).isEmpty(), "a variant's name reads back: " + name(v));
+  check(fromName("nonsense") == Neutral && fromName(QString()) == Neutral, "an unknown name is Neutral");
+
+  const PlotTheme design{ QColor("#202428"), QColor("#606870"), QColor("#d0d4d8"), QColor("#40a0ff") };
+  Settings settings;
+  const Look neutral = look(Neutral, design, settings);
+  check(neutral.theme.background == design.background && neutral.theme.labels == design.labels
+        && neutral.theme.data == design.data && !neutral.divisions && !neutral.oneHue, "Neutral follows the design");
+  check(curveColor(neutral, { 0, 0, -1 }) == design.data && curveColor(neutral, { 1, 1, -1 }) == QColor("#d95926")
+        && curveColor(neutral, { 1, 0, 0 }) == QColor("#5b8def"), "a dark design: the stepped hues, others for another meter");
+  const Look paper = look(Neutral, PlotTheme{ QColor(Qt::white), QColor(Qt::gray), QColor(Qt::black), QColor() }, settings);
+  check(paper.theme.data == QColor(Qt::black) && curveColor(paper, { 1, 1, -1 }) == QColor("#eb6834"), "a light design: the plain hues, the lettering as data colour");
+
+  const Look scope = look(ScopeBlue, design, settings);
+  check(scope.theme.background.color() == QColor("#0b1633") && scope.theme.labels == QColor("#b9c9e8")
+        && scope.theme.data == QColor("#ffe14d") && scope.divisions && scope.plot.style() == Qt::LinearGradientPattern,
+        "the scope: blue screen, yellow curve, divisions");
+  check(curveColor(scope, { 1, 1, -1 }) == QColor("#ff8a5c") && curveColor(scope, { 3, 3, -1 }) == QColor("#d9a6ff")
+        && curveColor(scope, { 4, 4, -1 }) == curveColor(scope, { 1, 1, -1 }), "a meter's other values: a hue by id, round again after three");
+  check(curveColor(scope, { 1, 0, 0 }) == QColor("#5ce1e6") && curveColor(scope, { 2, 1, 1 }) == QColor("#ff7eb6")
+        && curveColor(scope, { 5, 0, 4 }) == curveColor(scope, { 1, 0, 0 }), "other meters' curves: a hue by their turn, round again after four");
+  const Look recorder = look(ChartRecorder, design, settings);
+  check(recorder.minorGrid.style() != Qt::NoPen && recorder.theme.data == QColor("#1f4e9c") && recorder.divisions, "the recorder: paper with a fine grid");
+  const Look contrast = look(HighContrast, design, settings);
+  check(contrast.lineWidth == 3 && contrast.theme.background.color() == QColor(Qt::black) && !contrast.divisions, "high contrast: thicker lines");
+  const Look blind = look(ColourBlind, design, settings);
+  check(blind.theme.data == QColor("#0072b2") && curveColor(blind, { 1, 1, -1 }) == QColor("#d55e00"), "colour-blind safe: the Okabe-Ito hues");
+  const Look green = look(PhosphorGreen, design, settings);
+  check(green.oneHue && green.divisions && green.centreTicks.style() != Qt::NoPen && curveColor(green, { 1, 1, -1 }) == curveColor(green, { 2, 0, 0 }),
+        "phosphor: one hue for the other curves, fine ticks");
+
+  // the settings: a data colour of one's own goes for every variant, Custom takes all
+  settings.data = QColor("#ff0000");
+  check(look(ScopeBlue, design, settings).theme.data == QColor("#ff0000"), "a data colour chosen goes for the scope too");
+  settings.background = QColor("#101010");
+  settings.grid = QColor("#333333");
+  const Look custom = look(Custom, design, settings);
+  check(custom.theme.background.color() == QColor("#101010") && custom.grid.color() == QColor("#333333")
+        && custom.theme.labels.lightness() > 128, "Custom: the settings' colours, lettering that reads");
+
+  // the pens
+  settings = Settings();
+  settings.lineWidth = 4;
+  const Look l = look(ScopeBlue, design, settings);
+  check(curvePen(l, { 0, 0, -1 }, false).widthF() == 4 && curvePen(l, { 0, 0, -1 }, false).style() == Qt::SolidLine, "the first curve: the settings' width, solid");
+  check(curvePen(l, { 1, 0, 0 }, false).widthF() == 3 && curvePen(l, { 1, 0, 0 }, false).style() == Qt::SolidLine, "another meter's main value: thinner, solid");
+  check(curvePen(l, { 1, 1, -1 }, false).style() == Qt::DashLine && curvePen(l, { 2, 2, -1 }, false).style() == Qt::DotLine
+        && curvePen(l, { 3, 3, -1 }, false).style() == Qt::DashDotLine, "a meter's other values: dashes, dots, dash-dots");
+  check(curvePen(l, { 1, 0, 0 }, true).style() == Qt::CustomDashLine && curvePen(l, { 1, 0, 0 }, true).dashPattern() != curvePen(l, { 2, 0, 1 }, true).dashPattern()
+        && curvePen(l, { 0, 0, -1 }, true).style() == Qt::SolidLine, "patterned: each curve after the first its own dashes");
+  check(curvePen(green, { 1, 0, 0 }, false).style() == Qt::CustomDashLine, "phosphor: dashes also without the switch");
+  settings.lineMode = 2;
+  check(curvePen(look(Neutral, design, settings), { 0, 0, -1 }, false).style() == Qt::DotLine, "dotted line");
+  settings.lineMode = 0;
+  check(curvePen(look(Neutral, design, settings), { 0, 0, -1 }, false).style() == Qt::NoPen
+        && curvePen(look(Neutral, design, settings), { 1, 0, 0 }, false).style() == Qt::NoPen, "no line");
 }
 
 static void testCurve()
@@ -733,6 +803,120 @@ static void testParts()
   check(graph.axisTitle(1) == "[%]", "the axis in the newest unit: " + graph.axisTitle(1));
 }
 
+static void testGraphLook()
+{
+  Bench bench;
+  QcpGraph &graph = bench.graph;
+  const PlotTheme design{ QColor("#202428"), QColor("#606870"), QColor("#d0d4d8"), QColor("#40a0ff") };
+  graph.setTheme(design);
+  bench.a.live();
+  bench.b.live();
+  graph.setValues({ ValueRef(0, "device:a"), ValueRef(1, "device:a"), ValueRef(0, "device:b") });
+  for (int i = 0; i < 20; ++i)
+  {
+    bench.feedA.value(1 + 0.1 * i);
+    bench.feedA.now -= 1000;
+    bench.feedA.other(1, 50 + 0.01 * i, "Hz", Quantity::Frequency);
+    bench.feedA.now += 1000;
+    bench.feedB.value(2 + 0.1 * i);
+  }
+  graph.refreshNow();
+  check(graph.curveColor(0) == design.data && graph.curvePen(0).style() == Qt::SolidLine && graph.curvePen(1).style() == Qt::DashLine
+        && graph.curvePen(2).style() == Qt::SolidLine, "Neutral: the design's colour, the second display dashed");
+  // the frequency alone on its axis: the axis in its colour; two curves on the left: the lettering
+  check(graph.axisColor(1) == graph.curveColor(1) && graph.axisColor(0) == design.labels,
+        "an axis with one curve has its colour, one with two the lettering's");
+  check(!graph.curveMarkers(0), "no markers by default");
+
+  graph.setVariant(GraphLook::ScopeBlue);
+  graph.refreshNow();
+  check(graph.look().theme.background.color() == QColor("#0b1633") && graph.curveColor(0) == QColor("#ffe14d")
+        && graph.curveColor(1) == QColor("#ff8a5c") && graph.curveColor(2) == QColor("#5ce1e6"),
+        "the scope's colours: the second display orange, the other meter cyan");
+  // 8 divisions on every axis: whole steps, the values inside
+  QTest::qWait(30);   // the ticks are made with the picture
+  for (int axis = 0; axis < 2; ++axis)
+  {
+    const double span = graph.axisMax(axis) - graph.axisMin(axis), step = span / 8;
+    const double mantissa = step / std::pow(10.0, std::floor(std::log10(step) + 1e-9));
+    check(graph.axisTickCount(axis) == 9 && (std::abs(mantissa - 1) < 1e-6 || std::abs(mantissa - 2) < 1e-6 || std::abs(mantissa - 5) < 1e-6),
+          QString("axis %1: 8 divisions of a 1-2-5 step (%2 .. %3, %4 ticks)").arg(axis).arg(graph.axisMin(axis)).arg(graph.axisMax(axis)).arg(graph.axisTickCount(axis)));
+  }
+  check(graph.axisMin(0) <= 1 && graph.axisMax(0) >= 3.9 && graph.axisMin(1) <= 50 && graph.axisMax(1) >= 50.19, "the values are inside");
+  // a fixed range and a frame are not widened
+  graph.setFixedRanges({ { "Hz", { 49.95, 50.05 } } });
+  check(graph.axisMin(1) == 49.95 && graph.axisMax(1) == 50.05, "a fixed range stays as given");
+  graph.setFixedRanges({});
+
+  graph.setVariant(GraphLook::PhosphorGreen);
+  graph.refreshNow();
+  check(graph.curveColor(1) == graph.curveColor(2) && graph.curvePen(1).dashPattern() != graph.curvePen(2).dashPattern(),
+        "phosphor: one hue, the curves apart by their dashes");
+  graph.setVariant(GraphLook::Neutral);
+  graph.setPatternedLines(true);
+  check(graph.curvePen(2).style() == Qt::CustomDashLine && graph.curvePen(0).style() == Qt::SolidLine, "patterned lines");
+  graph.setPatternedLines(false);
+
+  // the settings' line, points and width
+  GraphLook::Settings settings;
+  settings.lineWidth = 3;
+  settings.pointMode = 2;
+  graph.setLookSettings(settings);
+  graph.refreshNow();
+  check(graph.curvePen(0).widthF() == 3 && graph.curvePen(1).widthF() == 2.25, "the width, the other curves three quarters of it");
+  check(graph.curveMarkers(0) && graph.curveMarkers(2), "20 readings on 800 pixels: markers");
+  settings.lineMode = 0;
+  graph.setLookSettings(settings);
+  graph.refreshNow();
+  check(graph.curvePen(0).style() == Qt::NoPen && graph.curveMarkers(0), "no line, the markers stay");
+  settings.lineMode = 1;
+  graph.setLookSettings(settings);
+  // dense readings: no markers
+  bench.feedA.step = bench.feedB.step = 100;
+  for (int i = 0; i < 500; ++i)
+  {
+    bench.feedA.value(1 + 0.001 * i);
+    bench.feedB.value(2 + 0.001 * i);
+  }
+  graph.refreshNow();
+  check(!graph.curveMarkers(0), QString("%1 readings on the plot: no markers").arg(graph.drawnPoints(0).size()));
+
+  // the legend shows the pens
+  check(!graph.legendText().isEmpty(), "the legend is there");
+}
+
+static void testStoreDeleted()
+{
+  // a store that goes without a word from the sources: its curves go, the rest stays
+  auto *first = new RecordingStore;
+  RecordingStore second;
+  Feed feedFirst(first, 1000), feedSecond(&second, 1000);
+  first->live();
+  second.live();
+  int asked = 0;
+  QcpGraph graph;
+  graph.resize(900, 400);
+  graph.show();
+  graph.setSources([&](const QString &source) -> RecordingStore * { ++asked; return source == "one" ? first : &second; },
+                   [](const QString &source) { return source; });
+  graph.setValues({ ValueRef(0, "one"), ValueRef(0, "two") });
+  for (int i = 0; i < 5; ++i)
+  {
+    feedFirst.value(i);
+    feedSecond.value(10 + i);
+  }
+  graph.refreshNow();
+  check(graph.curveCount() == 2 && graph.store() == first, "two curves, the first store gives the time");
+  asked = 0;
+  delete first;
+  check(asked == 0, "the sources are not asked while a store goes");
+  graph.refreshNow();
+  check(graph.curveCount() == 1 && graph.store() == &second && graph.curvePoints(0).size() == 5, "its curve is gone, the other one stays and gives the time");
+  feedSecond.value(20);
+  graph.refreshNow();
+  check(graph.curvePoints(0).size() == 6, "and goes on");
+}
+
 static void shot()
 {
   // a picture to look at: QTDMM_SHOT=<dir>
@@ -777,6 +961,15 @@ static void shot()
   bench.graph.refreshNow();
   QTest::qWait(50);
   bench.graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/qcpgraph_axes.png");
+  // the same in every colour variant
+  bench.graph.setTheme(PlotTheme{ QColor("#202428"), QColor("#606870"), QColor("#d0d4d8"), QColor("#40a0ff") });
+  for (GraphLook::Variant v : GraphLook::variants())
+  {
+    bench.graph.setVariant(v);
+    bench.graph.refreshNow();
+    QTest::qWait(50);
+    bench.graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/qcpgraph_look_" + GraphLook::name(v) + ".png");
+  }
 }
 
 int main(int argc, char **argv)
@@ -790,6 +983,7 @@ int main(int argc, char **argv)
     return 1;
   }
   testModel();
+  testLook();
   testCurve();
   testThinning();
   testGaps();
@@ -804,6 +998,8 @@ int main(int argc, char **argv)
   testFourUnits();
   testOtherTime();
   testParts();
+  testGraphLook();
+  testStoreDeleted();
   shot();
   return failed ? 1 : 0;
 }
