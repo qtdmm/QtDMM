@@ -64,6 +64,11 @@ void GraphTimeBar::setStatsChecked(bool on)
   m_stats->setChecked(on);
 }
 
+void GraphTimeBar::setNoteEnabled(bool on)
+{
+  m_note->setEnabled(on);
+}
+
 void GraphTimeBar::setWindow(int seconds, bool all)
 {
   m_seconds = seconds;

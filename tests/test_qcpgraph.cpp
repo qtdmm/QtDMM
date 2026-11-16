@@ -1403,7 +1403,7 @@ static void testMarks()
   {
     int moved = 0;
     QDateTime from, to;
-    QObject::connect(&graph, &QcpGraph::noteMoved, &graph, [&](const QDateTime &a, const QDateTime &b, const QString &)
+    const QMetaObject::Connection heard = QObject::connect(&graph, &QcpGraph::noteMoved, &graph, [&](const QDateTime &a, const QDateTime &b, const QString &)
     {
       ++moved;
       from = a;
@@ -1430,6 +1430,7 @@ static void testMarks()
     QTest::mouseMove(plotWidget, onAlarm + QPoint(40, 0));
     QTest::mouseRelease(plotWidget, Qt::LeftButton, Qt::NoModifier, onAlarm + QPoint(40, 0));
     check(graph.markTime(0) == 5000 && moved == 1, "an alarm's flag cannot be dragged");
+    QObject::disconnect(heard);   // it writes to this block's variables
   }
   else
     check(false, "the plot under the mouse");
@@ -1438,7 +1439,7 @@ static void testMarks()
   {
     QString added;
     QDateTime when;
-    QObject::connect(&graph, &QcpGraph::noteAdded, &graph, [&](const QDateTime &t, const QString &title)
+    const QMetaObject::Connection heard = QObject::connect(&graph, &QcpGraph::noteAdded, &graph, [&](const QDateTime &t, const QString &title)
     {
       when = t;
       added = title;
@@ -1466,8 +1467,35 @@ static void testMarks()
     check(graph.editMark(0) && store.marks().at(0).name == "Renamed", "editMark(): another title");
     graph.removeMark(0);
     check(graph.markCount() == 2 && graph.markName(0) == "Alarm Peak", "removeMark(): the note is gone");
+    QObject::disconnect(heard);
   }
   check(graph.timeBar()->findChild<QToolButton *>("ui_graphNoteButton") != nullptr, "the time bar has the note button");
+
+  // a mark that comes before the note while it is dragged: the drag keeps its note
+  {
+    int probe = -1;
+    for (int i = 0; i < graph.markCount(); ++i)
+      if (graph.markName(i) == "Probe")
+        probe = i;
+    const QPoint on(graph.markPixel(probe), plot.center().y());
+    QTest::mousePress(plotWidget, Qt::LeftButton, Qt::NoModifier, on);
+    QTest::mouseMove(plotWidget, on + QPoint(10, 0));
+    store.addNote(1000, "Early", QString());
+    QTest::mouseMove(plotWidget, on + QPoint(30, 0));
+    QTest::mouseRelease(plotWidget, Qt::LeftButton, Qt::NoModifier, on + QPoint(30, 0));
+    check(graph.markName(0) == "Early" && graph.markTime(0) == 1000 && graph.markName(probe + 1) == "Probe"
+          && graph.markPixel(probe + 1) >= on.x() + 28,
+          QString("a note coming meanwhile stays, the dragged one goes on (%1 px from %2)").arg(graph.markPixel(probe + 1)).arg(on.x()));
+    graph.removeMark(0);
+  }
+  // a recording only looked at: no notes, the marks stay as they are
+  graph.setMarksEditable(false);
+  const int marksBefore = graph.markCount();
+  graph.removeMark(0);
+  check(graph.addNote(4000, "No", QString()) == -1 && graph.askNote(4000) == -1 && graph.markCount() == marksBefore
+        && graph.moveMark(1, 1000) == 1 && !graph.timeBar()->findChild<QToolButton *>("ui_graphNoteButton")->isEnabled(),
+        "not editable: no note, nothing removed or moved, the button is off");
+  graph.setMarksEditable(true);
 
   // close marks: the flags do not cover each other, the later one loses its name first
   graph.addNote(5300, "Second", QString());

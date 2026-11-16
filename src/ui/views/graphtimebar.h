@@ -25,6 +25,8 @@ public:
   void        setWindow(int seconds, bool all);
   /// The statistics button is down.
   void        setStatsChecked(bool on);
+  /// The note button can be clicked.
+  void        setNoteEnabled(bool on);
   void        setStateText(const QString &text);
   QString     stateText() const;
   /// The curves' names in @p ink, in the longest form that fits between state and buttons; none: no legend.
