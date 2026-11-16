@@ -9,10 +9,13 @@ class DeviceSession;
 class GraphModel;
 class MeterController;
 class QcpGraph;
+class RecordingStore;
 
 /// What one window of the graph on QCustomPlot shows of the session: the
 /// store of the meter of its first value, none while that meter is not
 /// open. What it shows is in its GraphModel; the recording is the session's.
+/// A file loaded (loadFile()) lies in a store of the view's own and stays
+/// until a meter records or goes live, or closeFile().
 /// The counterpart of GraphView for the graph that is to replace GraphWidget.
 class QcpGraphView : public QObject
 {
@@ -25,9 +28,18 @@ public:
   GraphModel *model() const { return m_model; }
   QString     key() const { return m_key; }
 
+  /// Shows the recording in @p path instead of the meter's; false and
+  /// @p error when it cannot be read.
+  bool        loadFile(const QString &path, QString *error = nullptr);
+  bool        showsFile() const { return m_showsFile; }
+  /// Back to the meter of the first value.
+  void        closeFile();
+
 private:
   /// The store of the meter of the first value, when it is open.
   void        followBase();
+  /// A meter that records or goes live ends the look at a file.
+  void        watch(const MeterController *ctl);
 
   DeviceSession *m_session;
   QcpGraph   *m_graph;
@@ -35,4 +47,6 @@ private:
   QString     m_key;
   QPointer<MeterController> m_base;      ///< the meter whose store the graph draws
   MeterController *m_closing = nullptr;  ///< the meter closing now (DeviceSession::closing())
+  RecordingStore *m_fileStore = nullptr; ///< the file loaded, made with the first one
+  bool        m_showsFile = false;
 };
