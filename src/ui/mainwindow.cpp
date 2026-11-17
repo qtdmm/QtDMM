@@ -2267,7 +2267,7 @@ void MainWindow::createActions()
   connect(action_Print, &QAction::triggered, this, [this]
   {
     // the graph used last: a graph on QCustomPlot prints itself
-    if (QPointer<QcpGraphView> qgraph = m_pictureQGraph)
+    if (QPointer<QcpGraphView> qgraph = pictureQGraph())
       m_wid->printWith([qgraph](QPrinter *printer, const QString &title, const QString &comment)
       {
         if (qgraph)
@@ -3368,8 +3368,13 @@ void MainWindow::dropValue(const ValueRef &value, const QPoint &pos)
   else if (QcpGraphView *qgraph = qgraphViewOf(win))
   {
     // one more curve; a graph showing a file has none of a device
+    if (qgraph->showsFile())
+    {
+      statusBar()->showMessage(tr("A graph showing a loaded recording takes no values of a device: Back to the device in its menu"), 6000);
+      return;
+    }
     QList<ValueRef> values = qgraph->model()->values();
-    if (!qgraph->showsFile() && !values.contains(value))
+    if (!values.contains(value))
       qgraph->model()->setValues(values << value);
   }
   else if (win == m_readingsWin)
@@ -3982,22 +3987,7 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
     const QString key = "Windows/qgraph-" + number;
     QMdiSubWindow *win = addViewWindow(Added::QGraph, ValueRef(), number.toInt());
     GraphModel *model = qgraphViewOf(win)->model();
-    model->setValuesSetting(get(key + "-values", QString()).toString());
-    model->setValueAxesSetting(get(key + "-value-axes", QString()).toString());
-    model->setFixedRangesSetting(get(key + "-fixed-ranges", QString()).toString());
-    model->setVariant(get(key + "-variant", QString()).toString());
-    model->setPatternedLines(get(key + "-patterns", false).toBool());
-    model->setStatsVisible(get(key + "-stats", false).toBool());
-    model->setMinimapVisible(get(key + "-minimap", true).toBool());
-    model->setStatesVisible(get(key + "-states", true).toBool());
-    model->setEnvelopeVisible(get(key + "-envelope", false).toBool());
-    model->setReferenceSetting(get(key + "-reference", QString()).toString());
-    model->setReferenceLinesSetting(get(key + "-reference-lines", QString()).toString());
-    model->setCrossingsVisible(get(key + "-crossings", true).toBool());
-    model->setOutliersSetting(get(key + "-outliers", QString()).toString());
-    if (const int seconds = get(key + "-window", 0).toInt(); seconds > 0)
-      model->setWindowSeconds(seconds);
-    model->setFollowAll(get(key + "-all", false).toBool());
+    model->readSettings(get, key);
     win->setVisible(get(key + "-shown", true).toBool());
   }
   for (const QString &number : get("Windows/poincares", QString()).toString().split(' ', Qt::SkipEmptyParts))
@@ -4346,21 +4336,7 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
   {
     const GraphModel *model = qgraphViewOf(w)->model();
     qgraphs << w->objectName().section('-', 1);
-    set("Windows/" + w->objectName() + "-values", model->valuesSetting());
-    set("Windows/" + w->objectName() + "-value-axes", model->valueAxesSetting());
-    set("Windows/" + w->objectName() + "-fixed-ranges", model->fixedRangesSetting());
-    set("Windows/" + w->objectName() + "-variant", model->variant());
-    set("Windows/" + w->objectName() + "-patterns", model->patternedLines());
-    set("Windows/" + w->objectName() + "-stats", model->statsVisible());
-    set("Windows/" + w->objectName() + "-minimap", model->minimapVisible());
-    set("Windows/" + w->objectName() + "-states", model->statesVisible());
-    set("Windows/" + w->objectName() + "-envelope", model->envelopeVisible());
-    set("Windows/" + w->objectName() + "-reference", model->referenceSetting());
-    set("Windows/" + w->objectName() + "-reference-lines", model->referenceLinesSetting());
-    set("Windows/" + w->objectName() + "-crossings", model->crossingsVisible());
-    set("Windows/" + w->objectName() + "-outliers", model->outliersSetting());
-    set("Windows/" + w->objectName() + "-window", model->windowSeconds());
-    set("Windows/" + w->objectName() + "-all", model->followAll());
+    model->writeSettings(set, "Windows/" + w->objectName());
     set("Windows/" + w->objectName() + "-shown", !w->isHidden());
   }
   if (!qgraphs.isEmpty() || m_qgraphsKey)
@@ -4387,9 +4363,9 @@ QString MainWindow::basketName(ProjectFolder::Kind kind, const QString &suffix) 
 
 void MainWindow::graphToBasket()
 {
-  if (m_pictureQGraph)
+  if (QcpGraphView *qgraph = pictureQGraph())
   {
-    qgraphToBasket(m_pictureQGraph);
+    qgraphToBasket(qgraph);
     return;
   }
   const QString csv = basketName(ProjectFolder::Recordings, "csv");
@@ -4404,10 +4380,31 @@ void MainWindow::graphToBasket()
     Q_EMIT m_wid->error(tr("Into the project: %1").arg(QFileInfo(csv).completeBaseName()));
 }
 
+QcpGraphView *MainWindow::pictureQGraph() const
+{
+  return m_pictureQGraph && m_pictureQGraph->graph()->isVisibleTo(m_mdi) ? m_pictureQGraph.data() : nullptr;
+}
+
+bool MainWindow::writeQGraphRecording(QcpGraphView *view, const QString &path, bool everyReading)
+{
+  if (!view->showsFile())
+    return m_wid->writeRecordingTo(path, everyReading, view->model()->values());
+  // a file loaded into it: that recording, all its values
+  RecordingStore *store = view->graph()->store();
+  QString error = QCoreApplication::translate("InstanceWidget", "nothing recorded");
+  QList<int> extras;
+  for (int i = 0; store && i < store->extraCount(); ++i)
+    extras << i;
+  if (store && store->count() > 0 && store->write(path, &error, everyReading, extras))
+    return true;
+  Q_EMIT m_wid->error(tr("Export failed: %1").arg(error));
+  return false;
+}
+
 void MainWindow::qgraphToBasket(QcpGraphView *view)
 {
   const QString csv = basketName(ProjectFolder::Recordings, "csv");
-  if (!m_wid->writeRecordingTo(csv, false, view->model()->values()))
+  if (!writeQGraphRecording(view, csv, false))
     return;
   const QString png = BasketWidget::freeName(ProjectFolder::dirFor(m_basket->folder(), ProjectFolder::Images),
                                              QFileInfo(csv).completeBaseName() + ".png");
@@ -4444,7 +4441,7 @@ void MainWindow::exportQGraphImage(QcpGraphView *view)
 
 void MainWindow::exportDialog(int view)
 {
-  exportDialogFor(view, m_pictureQGraph);
+  exportDialogFor(view, pictureQGraph());
 }
 
 void MainWindow::exportDialogFor(int view, QcpGraphView *qgraph)
@@ -4462,8 +4459,9 @@ void MainWindow::exportDialogFor(int view, QcpGraphView *qgraph)
   switch (dlg.what())
   {
     case ExportDlg::Recording:
-      ok = qgraph && dlg.graphValuesOnly() ? m_wid->writeRecordingTo(path, dlg.everyReading(), qgraph->model()->values())
-                                           : m_wid->writeRecordingTo(path, dlg.everyReading(), dlg.graphValuesOnly());   // says why itself
+      // says why itself
+      ok = qgraph && (dlg.graphValuesOnly() || qgraph->showsFile()) ? writeQGraphRecording(qgraph, path, dlg.everyReading())
+                                                                    : m_wid->writeRecordingTo(path, dlg.everyReading(), dlg.graphValuesOnly());
       break;
     case ExportDlg::Table:
       ok = m_readings->log()->writeAny(path, &error);
