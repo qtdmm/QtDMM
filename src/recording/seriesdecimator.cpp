@@ -23,14 +23,9 @@ int SeriesDecimator::bucketStart(const RecordingSeries &series, int i, qint64 bu
 int SeriesDecimator::pointsOf(const RecordingSeries &series, int first, int last, QList<QPointF> &out,
                               const Options &options)
 {
-  auto value = [&](int i)
-  {
-    const RawPoint &p = series.at(i);
-    return options.integral ? options.integralOffset + p.integral * options.integralScale : p.value;
-  };
+  auto value = [&](int i) { return series.at(i).value; };
   auto x = [&](int i) { return series.at(i).t / 1000.0; };
-  const bool hide = !options.integral && options.hidden;
-  auto hidden = [&](int i) { return hide && options.hidden(i); };
+  auto hidden = [&](int i) { return options.hidden && options.hidden(i); };
   bool gap = false;
   while (first <= last && (std::isnan(value(first)) || hidden(first)))
     gap = std::isnan(value(first++)) || gap;

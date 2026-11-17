@@ -28,6 +28,8 @@
 #include "ui/qcpgraphview.h"
 #include "ui/views/graphband.h"
 #include "ui/views/graphminimap.h"
+#include "ui/views/graphoutliers.h"
+#include "ui/views/graphreference.h"
 #include "ui/views/graphstates.h"
 #include "ui/views/graphstats.h"
 #include "ui/views/graphtimebar.h"
@@ -1328,6 +1330,22 @@ static void testLevels()
           QString("an added line dragged to %1, crossed %2 times (8 of the sine, one of the 2.4 V after it)").arg(graph.referenceLines().value(1)).arg(graph.crossingCount(1)));
     check(graph.timeCursor(0) < 0 && graph.timeAxisStart() == 0, "dragging a line sets no cursor and moves no time");
     check(graph.roundedValueAt(plotWidget->mapToGlobal(QPoint(plot.left() + 40, pixelOf(1.0)))) == 1.0, "a line added under the mouse: a round value there");
+    // the start threshold: dragged into the store, a round value
+    bench.a.setStartMode(RecordingStore::Raising);
+    graph.refreshNow();
+    check(std::abs(graph.referencePixel(QcpGraph::kTriggerLine) - pixelOf(1.75)) <= 1, "the start threshold's line where its value is");
+    drag(QcpGraph::kTriggerLine, pixelOf(2.2));
+    check(std::abs(bench.a.raisingThreshold() - 2.2) < 0.06 && graph.triggerLevel() == bench.a.raisingThreshold()
+            && graph.reference().kind == GraphReference::Value,
+          QString("the start threshold dragged to %1, the reference line stays").arg(bench.a.raisingThreshold()));
+    bench.a.setStartMode(RecordingStore::Falling);
+    graph.refreshNow();
+    drag(QcpGraph::kTriggerLine, pixelOf(-0.2));
+    check(std::abs(bench.a.fallingThreshold() + 0.2) < 0.06 && std::abs(bench.a.raisingThreshold() - 2.2) < 0.06,
+          QString("falling: its own threshold, %1").arg(bench.a.fallingThreshold()));
+    bench.a.setStartMode(RecordingStore::Manual);
+    graph.refreshNow();
+    check(graph.referencePixel(QcpGraph::kTriggerLine) < 0, "manual start: no line to drag");
   }
 
   if (qEnvironmentVariableIsSet("QTDMM_SHOT"))
@@ -1719,6 +1737,78 @@ static void testOverview()
 
 // The strip's spans kept from reading to reading: the same as the states
 // counted anew over the window, each cut to it.
+// Outliers hidden in the drawing and the statistics, kept in the recording:
+// by σ from their neighbours, as spikes, outside limits; a step to another
+// level stays (the cases 7l10 of the graph on QtCharts)
+static void testOutliers()
+{
+  RecordingStore store;
+  Feed feed(&store);
+  store.live();
+  QcpGraph graph;
+  graph.resize(800, 500);
+  graph.show();
+  graph.setWindowSeconds(30);
+  graph.setStore(&store);
+  for (int i = 0; i < 250; ++i)
+    feed.value(i == 50 ? 5.0 : i == 120 ? -3.0 : (i < 150 ? 1.0 : 2.0) + (i % 2) * 0.01);
+  graph.refreshNow();
+  auto range = [&]
+  {
+    graph.refreshNow();
+    double lo = qInf(), hi = -qInf();
+    for (const QPointF &p : graph.curvePoints())
+      if (std::isfinite(p.y()))
+      {
+        lo = qMin(lo, p.y());
+        hi = qMax(hi, p.y());
+      }
+    return std::pair{ lo, hi };
+  };
+  check(range().first == -3.0 && range().second == 5.0, "all drawn at first");
+  const RecordingSeries &series = store.series();
+  using namespace GraphOutliers;
+  for (auto [mode, a, b, what] : { std::tuple{ Sigma, 3.0, 0.0, "3 sigma" }, std::tuple{ Jump, 1.0, 0.0, "spikes over 1 V" },
+                                   std::tuple{ Limits, 0.0, 3.0, "outside 0 .. 3 V" } })
+  {
+    const Rule rule{ mode, a, b, mode == Sigma ? QString() : QStringLiteral("V") };
+    graph.setOutliers(rule);
+    const auto [lo, hi] = range();
+    graph.countOutliers();
+    check(lo >= 0.99 && lo < 1.01 && hi > 2.0 && hi < 2.02 && graph.outliersHidden() == 2,
+          QString("%1: the spikes go, the step stays: %2 .. %3, %4 hidden").arg(what).arg(lo).arg(hi).arg(graph.outliersHidden()));
+    check(isOutlier(rule, series, 50, "V") && isOutlier(rule, series, 120, "V") && !isOutlier(rule, series, 150, "V")
+            && !isOutlier(rule, series, 149, "V"), QString("%1: readings 50 and 120").arg(what));
+    graph.setReference(GraphReference::line(GraphReference::Max));
+    check(graph.referenceValue() < 2.1, QString("%1: the window's maximum without them, %2").arg(what).arg(graph.referenceValue()));
+  }
+  check(store.series().count() == 250 && store.series().at(50).value == 5.0, "the recording keeps them");
+  graph.setStatsVisible(true);
+  graph.countOutliers();
+  check(graph.statsText().contains("without 2 outlier"), "the statistics say so: " + graph.statsText().left(160));
+  check(graph.stateText().contains("2 outlier(s) hidden"), "the state says so: " + graph.stateText());
+  graph.setStatsVisible(false);
+  // Jump and Limits leave other units alone
+  graph.setOutliers({ Limits, 0, 3, "A" });
+  graph.countOutliers();
+  check(graph.outliersHidden() == 0 && range().second == 5.0 && !graph.stateText().contains("outlier"),
+        "limits in A leave a V curve alone");
+  // kept as text
+  const Rule jump{ Jump, 1.0, 0, "V" };
+  check(jump.setting() == "jump 1 V" && Rule::fromSetting("jump 1 V") == jump && Rule::fromSetting("limits 0 3 V") == Rule{ Limits, 0, 3, "V" }
+          && Rule::fromSetting("sigma 2.5") == Rule{ Sigma, 2.5, 0, QString() } && !Rule::fromSetting("limits 3 0 V").active()
+          && !Rule::fromSetting("").active() && Rule().setting().isEmpty(),
+        "the settings' texts");
+  // Live: a spike is one only with the reading after it; drawn already, it goes then
+  graph.setOutliers(jump);
+  feed.value(7.0);
+  check(range().second == 7.0, "live: the newest reading shows");
+  feed.value(2.0);
+  check(range().second < 2.1, QString("live: with the next one the spike goes, max %1").arg(range().second));
+  graph.setOutliers({});
+  check(range().second == 7.0, "shown again");
+}
+
 static void testStatesCache()
 {
   RecordingStore store;
@@ -1812,6 +1902,7 @@ int main(int argc, char **argv)
   testBandRules();
   testOverview();
   testStatesCache();
+  testOutliers();
   shot();
   return failed ? 1 : 0;
 }

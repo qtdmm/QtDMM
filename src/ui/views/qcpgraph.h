@@ -14,8 +14,10 @@
 #include <functional>
 
 #include "core/valueref.h"
+#include "recording/seriesdecimator.h"
 #include "ui/views/graphlook.h"
 #include "ui/views/graphreference.h"
+#include "ui/views/graphoutliers.h"
 #include "ui/views/graphstates.h"
 #include "ui/views/graphstats.h"
 
@@ -260,6 +262,19 @@ public:
   bool        envelopeVisible() const { return m_envelopeOn; }
   /// @}
 
+  /// @name Outliers
+  /// @{
+  /// Readings not drawn and left out of the statistics; the store keeps them.
+  void        setOutliers(const GraphOutliers::Rule &rule);
+  GraphOutliers::Rule outliers() const { return m_outliers; }
+  /// How many readings in the time shown are hidden (counted at most four times a second).
+  int         outliersHidden() const { return m_outliersHidden; }
+  /// Counts them now (the tests).
+  void        countOutliers();
+  /// Asks for the rule's figures (Jump and Limits in the left axis' unit) and sets it.
+  void        askOutliers(GraphOutliers::Mode mode);
+  /// @}
+
   void        setHold(bool hold) override;
   /// Draws the store anew; the readings are the store's and stay.
   void        clear() override;
@@ -310,11 +325,15 @@ public:
   double      referenceValue(int line = -1) const;
   QString     referenceLabel(int line = -1) const;
   int         crossingCount(int line = -1) const;
+  /// The pixel row of line @p line (as referenceValue(), or kTriggerLine); -1: not drawn.
   int         referencePixel(int line = -1) const;
   /// The limit band drawn: its edges (base unit, infinite for an open side); false: none.
   bool        limitBand(double *low, double *high) const;
   /// The start threshold's line (base unit); NaN: none.
   double      triggerLevel() const { return m_triggerLevel; }
+  /// referencePixel() and levelAt(): no line, and the start threshold's.
+  static constexpr int kNoLine = -2;
+  static constexpr int kTriggerLine = -3;
   /// Mark @p mark: its time on the graph's time (ms), its title, its
   /// colour, the x of its line in the plot widget (-1 while it is not
   /// shown), its flag below the plot (empty while it has none) and what
@@ -355,6 +374,8 @@ Q_SIGNALS:
   void        leftValueChanged();
   /// Overview, states or the min/max band were switched.
   void        overviewChanged();
+  /// The rule for outliers changed (setOutliers(), askOutliers()).
+  void        outliersChanged();
   /// A note was set at @p when (askNote()): the readings table marks its reading.
   void        noteAdded(const QDateTime &when, const QString &title);
   /// A note was dragged from @p from to @p to: the readings table moves its mark.
@@ -408,6 +429,10 @@ private:
   /// The newest reading of @p series went into @p curve: a new bucket adds
   /// its points, one still filling replaces them.
   void        appendTail(Curve &curve, const RecordingSeries &series);
+  /// The decimator's options for @p series of @p curve: its hidden outliers.
+  SeriesDecimator::Options decimation(const Curve &curve, const RecordingSeries &series) const;
+  /// countOutliers() after a picture, at most four times a second and a tenth of the time.
+  void        scheduleOutlierCount();
   void        mainAppended(RecordingStore *store, bool shifted);
   void        extraAppended(RecordingStore *store, int index);
   /// What a store did other than a reading at the end.
@@ -466,9 +491,10 @@ private:
   void        updateLevels();
   /// The value the reference line follows (mean, minimum, maximum of the time shown); NaN: none.
   double      followedValue();
-  /// The line at @p pos one can drag: -1 the reference line, 0.. an added one; -2: none.
+  /// The line at @p pos one can drag: -1 the reference line, 0.. an added one, kTriggerLine; kNoLine: none.
   int         levelAt(const QPoint &pos) const;
-  /// The line dragged to @p y (plot widget pixels): the reference line snaps, an added one takes a round value.
+  /// The line dragged to @p y (plot widget pixels): the reference line snaps, an added one and
+  /// the start threshold take a round value.
   void        dragLevel(int line, double y);
   /// The cursor whose line is at @p pos (plot widget pixels): 0, 1, or -1.
   int         cursorAt(const QPoint &pos) const;
@@ -562,6 +588,10 @@ private:
   GraphReference::Line m_reference;
   QList<double> m_referenceLines;
   bool        m_crossingsOn = true;
+  GraphOutliers::Rule m_outliers;
+  int         m_outliersHidden = 0;
+  bool        m_outlierCountPending = false;
+  qint64      m_outlierCountCost = 0;   ///< ms the last count took
   QList<double> m_alarmThresholds;
   ValueRef    m_limitValue{ -1 };
   double      m_limitLow = 0;
@@ -574,6 +604,7 @@ private:
   QList<Level> m_levelsDrawn;
   bool        m_bandDrawn = false;
   double      m_triggerLevel = qQNaN();
+  int         m_triggerCurve = -1;       ///< the curve whose store's start threshold is drawn
   double      m_followed = qQNaN();      ///< followedValue(), kept while it costs
   QElapsedTimer m_followedAge;
   qint64      m_followedCost = 0;        ///< ms the last one took

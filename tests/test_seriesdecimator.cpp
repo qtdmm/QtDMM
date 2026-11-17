@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 // SeriesDecimator on its own: the bucket size, the points of one bucket
-// (minimum and maximum in time order, gaps, hidden readings, the integral)
+// (minimum and maximum in time order, gaps, hidden readings)
 // and a series thinned bucket by bucket.
 #include <QCoreApplication>
 #include <cmath>
@@ -126,26 +126,6 @@ static void testHidden()
   check(SeriesDecimator::pointsOf(withGap, 0, 1, out, options) == 1 && std::isnan(out[0].y()),
         "a gap and hidden readings: the gap");
 
-  out.clear();
-  options.integral = true;
-  SeriesDecimator::pointsOf(s, 0, 2, out, options);
-  check(out.size() == 1, "the integral does not ask for hidden readings");
-}
-
-static void testIntegral()
-{
-  const RecordingSeries s = seriesOf({ { 0, 5, 0 }, { 1000, 5, 5 }, { 2000, 5, 10 } });
-  SeriesDecimator::Options options;
-  options.integral = true;
-  QList<QPointF> out;
-  SeriesDecimator::pointsOf(s, 0, 2, out, options);
-  checkPoints(out, "0:0 2:10", "the integral's first and last point");
-
-  out.clear();
-  options.integralOffset = 1;
-  options.integralScale = 0.5;
-  SeriesDecimator::pointsOf(s, 0, 2, out, options);
-  checkPoints(out, "0:1 2:6", "offset and scale");
 }
 
 static void testAppend()
@@ -182,7 +162,6 @@ int main(int argc, char **argv)
   testOneBucket();
   testGaps();
   testHidden();
-  testIntegral();
   testAppend();
   return failed ? 1 : 0;
 }

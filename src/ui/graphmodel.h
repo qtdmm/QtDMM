@@ -9,6 +9,7 @@
 #include <QPair>
 
 #include "core/valueref.h"
+#include "ui/views/graphoutliers.h"
 #include "ui/views/graphreference.h"
 
 /// What a graph window shows, without anything that draws: its values and
@@ -87,6 +88,12 @@ public:
   bool        crossingsVisible() const { return m_crossings; }
   void        setCrossingsVisible(bool on);
 
+  /// Readings not drawn: the rule and its text ("sigma 3", "jump 0.5 V", "limits 0 10 V", "").
+  GraphOutliers::Rule outliers() const { return m_outliers; }
+  void        setOutliers(const GraphOutliers::Rule &rule);
+  QString     outliersSetting() const { return m_outliers.setting(); }
+  void        setOutliersSetting(const QString &text) { setOutliers(GraphOutliers::Rule::fromSetting(text)); }
+
   /// The time the graph shows, seconds; at least 1.
   int         windowSeconds() const { return m_windowSeconds; }
   void        setWindowSeconds(int seconds);
@@ -107,6 +114,7 @@ Q_SIGNALS:
   void        statsVisibleChanged(bool on);
   void        overviewChanged();
   void        referenceChanged();
+  void        outliersChanged();
   void        windowChanged(int seconds);
   void        followAllChanged(bool on);
 
@@ -123,6 +131,7 @@ private:
   GraphReference::Line m_reference;
   QList<double> m_referenceLines;
   bool        m_crossings = true;
+  GraphOutliers::Rule m_outliers;
   int         m_windowSeconds = kDefaultWindowSeconds;
   bool        m_followAll = false;
 };
