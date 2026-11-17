@@ -661,7 +661,12 @@ void MainWindow::createViews()
   connect(m_mdi, &QMdiArea::subWindowActivated, this, [this](QMdiSubWindow *win)
   {
     if (const GraphView *view = graphViewOf(win))
+    {
       m_wid->setCurrentGraph(view->graph());
+      m_pictureQGraph = nullptr;
+    }
+    else if (QcpGraphView *qgraph = qgraphViewOf(win))
+      m_pictureQGraph = qgraph;
   });
   m_readings->setWindowActions({ hideWindow(m_readingsWin), m_tableSources, m_tableToBasket, m_tableExport });
   m_displayAction->setObjectName("action_WindowDisplay");
@@ -1169,6 +1174,7 @@ void MainWindow::hookGraph(GraphWidget *graph, QMdiSubWindow *win)
 {
   graph->setWindowActions({ hideAction(win), m_graphSources, m_graphToBasket, m_graphExport, m_labPlotLive });
   graph->setPrintAction(action_Print);
+  connect(graph, &GraphWidget::used, this, [this] { m_pictureQGraph = nullptr; });
   // with or without a device, the graph shows what was loaded
   connect(graph, &GraphWidget::fileImported, win, [this, win] { showGraphWindow(win); });
   // a note set in the graph marks its reading in the table
@@ -2258,7 +2264,18 @@ void MainWindow::createActions()
   });
   connect(action_Stop, &QAction::triggered, m_wid, &InstanceWidget::stopSLOT);
   connect(action_Clear, &QAction::triggered, m_wid, &InstanceWidget::clearSLOT);
-  connect(action_Print, &QAction::triggered, m_wid, &InstanceWidget::printSLOT);
+  connect(action_Print, &QAction::triggered, this, [this]
+  {
+    // the graph used last: a graph on QCustomPlot prints itself
+    if (QPointer<QcpGraphView> qgraph = m_pictureQGraph)
+      m_wid->printWith([qgraph](QPrinter *printer, const QString &title, const QString &comment)
+      {
+        if (qgraph)
+          qgraph->graph()->print(printer, title, comment);
+      });
+    else
+      m_wid->printSLOT();
+  });
   connect(action_Import, &QAction::triggered, m_wid, &InstanceWidget::importSLOT);
   connect(action_Configure, &QAction::triggered, m_wid, &InstanceWidget::configSLOT);
   // Shift+F8: the settings of the device chosen in the sidebar, as its context menu there
@@ -2816,8 +2833,38 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
         QMessageBox::warning(this, tr("Save image"), tr("Could not save the image."));
     });
   };
-  if (QcpGraphView *qgraph = qgraphViewOf(win))
+  QcpGraphView *qgraph = qgraphViewOf(win);
+  if (qgraph)
+    m_pictureQGraph = qgraph;   // the window's picture actions are for it now
+  // on a mark's flag: its note (the texts are the old graph's)
+  const int qgraphMark = qgraph ? qgraph->graph()->markAtGlobal(globalPos) : -1;
+  if (qgraphMark >= 0)
   {
+    QcpGraph *graph = qgraph->graph();
+    auto word = [](const char *text) { return QCoreApplication::translate("GraphWidget", text); };
+    if (graph->markIsNote(qgraphMark) && graph->marksEditable())
+      connect(menu.addAction(word("&Edit note...")), &QAction::triggered, graph, [graph, qgraphMark] { graph->editMark(qgraphMark); });
+    if (graph->marksEditable())
+      connect(menu.addAction(word("&Remove mark")), &QAction::triggered, graph, [graph, qgraphMark] { graph->removeMark(qgraphMark); });
+  }
+  else if (qgraph)
+  {
+    auto word = [](const char *text) { return QCoreApplication::translate("GraphWidget", text); };
+    // recording, as the button does: only the devices whose values it shows
+    if (qgraph->graph()->store() && qgraph->graph()->store()->isRunning())
+      connect(menu.addAction(word("Stop recording")), &QAction::triggered, action_Stop, &QAction::trigger);
+    else if (!qgraph->showsFile() && action_Start->isEnabled())
+      connect(menu.addAction(word("Start recording")), &QAction::triggered, this, [this, qgraph]
+      {
+        QStringList sources;
+        for (const ValueRef &v : qgraph->model()->values())
+          sources << v.source;
+        m_session->setRecordingScope(sources);
+        action_Start->trigger();
+        if (!m_session->isRecording())
+          m_session->clearRecordingScope();   // cancelled
+      });
+    menu.addSeparator();
     // another one, first with the same value
     const QList<ValueRef> values = qgraph->model()->values();
     connect(menu.addAction(tr("&New graph (QCP)")), &QAction::triggered, this, [this, values]
@@ -2911,8 +2958,28 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
     if (qgraph->showsFile())
       connect(menu.addAction(tr("Back to the &device")), &QAction::triggered, qgraph, &QcpGraphView::closeFile);
     menu.addSeparator();
-    addBasicPlotActions(qgraph->graph(), qgraph->graph()->hold(), [graph = qgraph->graph()](bool on) { graph->setHold(on); },
-                        [graph = qgraph->graph()] { graph->clear(); }, QStringLiteral("graph.png"));
+    // the time cursors where the menu was opened (a click sets A, Shift+click B)
+    if (const qint64 t = qgraph->graph()->timeAt(globalPos); t >= 0)
+      for (int which : { 0, 1 })
+        connect(menu.addAction(which == 0 ? word("Cursor A here") : word("Cursor B here")), &QAction::triggered, qgraph->graph(),
+                [graph = qgraph->graph(), which, t] { graph->setTimeCursor(which, t); });
+    menu.addSeparator();
+    QAction *hold = menu.addAction(tr("&Hold picture"));
+    hold->setCheckable(true);
+    hold->setChecked(qgraph->graph()->hold());
+    connect(hold, &QAction::toggled, qgraph->graph(), [graph = qgraph->graph()](bool on) { graph->setHold(on); });
+    connect(menu.addAction(tr("&Reset")), &QAction::triggered, qgraph->graph(), [graph = qgraph->graph()] { graph->clear(); });
+    // the Graph page of the settings: colours, line, points, width
+    connect(menu.addAction(word("Configure...")), &QAction::triggered, m_wid, &InstanceWidget::configGraphSLOT);
+    // pictures and the recording; the window's actions without their letters, taken here
+    connect(menu.addAction(word("Copy image")), &QAction::triggered, qgraph->graph(), &QcpGraph::copyImage);
+    connect(menu.addAction(word("Export image...")), &QAction::triggered, this, [this, qgraph] { exportQGraphImage(qgraph); });
+    for (QAction *shared : { action_Print, m_graphExport, m_graphToBasket, m_labPlotLive })
+    {
+      QAction *a = menu.addAction(shared->icon(), QString(shared->text()).remove('&'));
+      a->setEnabled(shared->isEnabled());
+      connect(a, &QAction::triggered, shared, &QAction::trigger);
+    }
   }
   if (XYView *xy = xyViewOf(win))
   {
@@ -3298,6 +3365,13 @@ void MainWindow::dropValue(const ValueRef &value, const QPoint &pos)
     heatmap->setValues(value, heatmap->value(1), heatmap->value(2));
   else if (const GraphView *graph = graphViewOf(win))
     graph->graph()->setValueShown(value, true);
+  else if (QcpGraphView *qgraph = qgraphViewOf(win))
+  {
+    // one more curve; a graph showing a file has none of a device
+    QList<ValueRef> values = qgraph->model()->values();
+    if (!qgraph->showsFile() && !values.contains(value))
+      qgraph->model()->setValues(values << value);
+  }
   else if (win == m_readingsWin)
     setTableShown(value, true);
   else if (FrontPanel *panel = panelOf(win))
@@ -3326,6 +3400,7 @@ void MainWindow::dropValue(const ValueRef &value, const QPoint &pos)
     QAction *heatmap = menu.addAction(m_newHeatmapAction->icon(), tr("New &heatmap"));
     QAction *graph = menu.addAction(action_Graph->icon(), tr("In the &graph"));
     QAction *newGraph = menu.addAction(action_Graph->icon(), tr("New g&raph"));
+    QAction *newQGraphEntry = menu.addAction(m_qgraphAction->icon(), tr("&New graph (QCP)").remove('&'));   // the letter is the meter's here
     QAction *chosen = menu.exec(m_mdi->viewport()->mapToGlobal(pos));
     if (chosen == meter)
       newView(Added::Meter, value);
@@ -3337,6 +3412,8 @@ void MainWindow::dropValue(const ValueRef &value, const QPoint &pos)
       newView(Added::Heatmap, value, true);
     else if (chosen == newGraph)
       newView(Added::Graph, value);
+    else if (chosen == newQGraphEntry)
+      newQGraph(value);
     else if (chosen == graph)
     {
       m_wid->graph()->setValueShown(value, true);
@@ -4310,6 +4387,11 @@ QString MainWindow::basketName(ProjectFolder::Kind kind, const QString &suffix) 
 
 void MainWindow::graphToBasket()
 {
+  if (m_pictureQGraph)
+  {
+    qgraphToBasket(m_pictureQGraph);
+    return;
+  }
   const QString csv = basketName(ProjectFolder::Recordings, "csv");
   if (!m_wid->writeRecordingTo(csv))
     return;
@@ -4322,7 +4404,50 @@ void MainWindow::graphToBasket()
     Q_EMIT m_wid->error(tr("Into the project: %1").arg(QFileInfo(csv).completeBaseName()));
 }
 
+void MainWindow::qgraphToBasket(QcpGraphView *view)
+{
+  const QString csv = basketName(ProjectFolder::Recordings, "csv");
+  if (!m_wid->writeRecordingTo(csv, false, view->model()->values()))
+    return;
+  const QString png = BasketWidget::freeName(ProjectFolder::dirFor(m_basket->folder(), ProjectFolder::Images),
+                                             QFileInfo(csv).completeBaseName() + ".png");
+  if (!view->graph()->exportImageFile(png))
+    Q_EMIT m_wid->error(tr("Project: cannot write %1").arg(QDir::toNativeSeparators(png)));
+  else
+    Q_EMIT m_wid->error(tr("Into the project: %1").arg(QFileInfo(csv).completeBaseName()));
+}
+
+// The dialog of the graph on QtCharts, with its words and its last place
+void MainWindow::exportQGraphImage(QcpGraphView *view)
+{
+  auto word = [](const char *text) { return QCoreApplication::translate("GraphWidget", text); };
+  Settings *cfg = m_wid->settings();
+  const QFileInfo last(cfg->getString("QtDMM/LastImagePath"));
+  const QStringList suffixes = { "svg", "pdf", "png", "jpg" };
+  const QString suffix = suffixes.contains(last.suffix().toLower()) ? last.suffix().toLower() : "svg";
+  const QString name = last.baseName().isEmpty() ? QString("untitled") : last.absolutePath() + "/" + last.baseName();
+  const QString svgFilter = word("Scalable vector graphics (*.svg)"), pdfFilter = word("PDF (*.pdf)"),
+                pngFilter = word("PNG image (*.png)"), jpgFilter = word("JPEG image (*.jpg)");
+  QString filter = suffix == "pdf" ? pdfFilter : suffix == "png" ? pngFilter : suffix == "jpg" ? jpgFilter : svgFilter;
+  const ProjectFolder::Proposal where(name + "." + suffix, ProjectFolder::Images);
+  QString path = QFileDialog::getSaveFileName(this, word("Export image"), where.path(),
+                                              svgFilter + ";;" + pdfFilter + ";;" + pngFilter + ";;" + jpgFilter, &filter);
+  if (path.isEmpty())
+    return;
+  // a name typed without a suffix follows the chosen filter
+  if (!suffixes.contains(QFileInfo(path).suffix().toLower()))
+    path += "." + QString(filter == pdfFilter ? "pdf" : filter == pngFilter ? "png" : filter == jpgFilter ? "jpg" : "svg");
+  cfg->setString("QtDMM/LastImagePath", QDir().absoluteFilePath(path));
+  if (!view->graph()->exportImageFile(path))
+    Q_EMIT m_wid->error(word("Could not write %1").arg(QDir::toNativeSeparators(path)));
+}
+
 void MainWindow::exportDialog(int view)
+{
+  exportDialogFor(view, m_pictureQGraph);
+}
+
+void MainWindow::exportDialogFor(int view, QcpGraphView *qgraph)
 {
   ExportDlg dlg(static_cast<ExportDlg::What>(view), m_basket->folder(), m_wid->settings(), this);
   if (dlg.exec() != QDialog::Accepted)
@@ -4337,13 +4462,14 @@ void MainWindow::exportDialog(int view)
   switch (dlg.what())
   {
     case ExportDlg::Recording:
-      ok = m_wid->writeRecordingTo(path, dlg.everyReading(), dlg.graphValuesOnly());   // says why itself
+      ok = qgraph && dlg.graphValuesOnly() ? m_wid->writeRecordingTo(path, dlg.everyReading(), qgraph->model()->values())
+                                           : m_wid->writeRecordingTo(path, dlg.everyReading(), dlg.graphValuesOnly());   // says why itself
       break;
     case ExportDlg::Table:
       ok = m_readings->log()->writeAny(path, &error);
       break;
     case ExportDlg::Picture:
-      ok = m_wid->graph()->exportImageFile(path);
+      ok = qgraph ? qgraph->graph()->exportImageFile(path) : m_wid->graph()->exportImageFile(path);
       break;
   }
   QString labPlotError;
