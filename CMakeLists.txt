@@ -10,7 +10,7 @@ set(PROJECT_LICENSE "GPL-3.0-or-later AND LGPL-3.0-or-later")
 set(RESOURCES "${CMAKE_BINARY_DIR}/resources.qrc")
 set(APP_NAME "QtDMM")
 set(APP_ORGANIZATION "QtDMM")
-set(QT_COMPONENTS Widgets SerialPort PrintSupport Test LinguistTools Network Charts Svg OpenGL)
+set(QT_COMPONENTS Widgets SerialPort PrintSupport Test LinguistTools Network Svg OpenGL)
 
 include( cmake/git_version.cmake )
 
@@ -319,7 +319,6 @@ target_link_libraries(qtdmm_core PUBLIC
 	Qt6::SerialPort
 	Qt6::PrintSupport
 	Qt6::Network
-	Qt6::Charts
 	Qt6::Svg
 	Qt6::OpenGL
 	${HIDAPI_TARGET}
