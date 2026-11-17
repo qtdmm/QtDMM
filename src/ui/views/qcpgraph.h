@@ -16,6 +16,7 @@
 #include "core/valueref.h"
 #include "ui/views/graphlook.h"
 #include "ui/views/graphreference.h"
+#include "ui/views/graphstates.h"
 #include "ui/views/graphstats.h"
 
 class GraphMinimap;
@@ -543,6 +544,7 @@ private:
   };
   GraphMinimap *m_minimap = nullptr;
   qint64      m_minimapShift = 0;        ///< its store's time 0 on the graph's time, ms
+  GraphStates::Cache m_statesCache;   ///< the strip's spans, each reading scanned once
   GraphStateStrip *m_stateStrip = nullptr;
   QCPAbstractItem *m_bands = nullptr;    ///< dense curves and the min/max band
   bool        m_minimapOn = true;
