@@ -146,9 +146,14 @@ XLSX/ODS export - the ZIP container itself is written by
 `SpreadsheetWriter`, since LibreOffice rejects miniz's data descriptors on
 the ODS mimetype entry) and QCustomPlot 2.1.1 in Wireshark's fork
 (GPL-2.0-or-later, trimmed of old Qt code paths; the XY diagram, histogram
-and heatmap draw with it, on top of `QcpGraphCommon`, OpenGL only with
+and heatmap draw with it, on top of `QcpGraphCommon`, and the main graph in
+the making, `QcpGraph` (window "Graph (QCP)", `ui/qcpgraphview.*`,
+`ui/graphmodel.*`, `ui/views/qcpgraph*.cpp`), OpenGL only with
 `Graph/openGl`, off by default: classic QCustomPlot's OpenGL leaves artefacts
 and costs more with several plots). It is meant as a step towards NeoQCP.
+Upstream QCustomPlot is no longer developed: QtDMM keeps its copy, with
+fixes that leave the API alone, each marked `QtDMM:` and listed in
+`src/3rdparty/qcustomplot/QTDMM_CHANGES.md` (test `qcp_local`).
 
 **NeoQCP for a trial.** `./compile.sh neoqcp` (CMake: `-DQTDMM_WITH_NEOQCP=ON`,
 sources in `QTDMM_NEOQCP_DIR`, `.neoqcp/` by default) builds the same three
