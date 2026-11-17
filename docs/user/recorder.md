@@ -188,7 +188,7 @@ were; the integration curve carries on across a gap.
   colour of its own; a legend at the top left names the curves (in a
   narrow graph with shorter names: first without the device's vendor, then
   without the device, at last the units alone). Zoomed far out, with more
-  than two readings on every pixel column of the plot, a curve
+  readings than the plot has pixel columns, a curve
   becomes a band from its lowest to its
   highest reading: a faint fill with the outline in the curve's own dashes,
   so it is still told apart without its colour and every peak stays
