@@ -14,8 +14,10 @@
 /// (GraphWidget::columnBand()).
 namespace GraphBand
 {
-/// A window is drawn as a band when it has more points than this per pixel column.
-constexpr double kDensePoints = 1.0;
+/// A curve is drawn as a band when its window has more readings than this
+/// per pixel column: the line zigzags inside a column then. One per column
+/// came too early - at 4 Hz on a wide graph after four minutes, still readable.
+constexpr double kDensePoints = 2.0;
 /// A dense curve's band takes the extremes of this many columns either
 /// side: a bucket of the thinned curve is one to two columns wide, a column
 /// alone may hold only a part of the line between two of its points.

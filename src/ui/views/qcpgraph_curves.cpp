@@ -386,10 +386,13 @@ void QcpGraph::drawCurves(double from, double to)
     c.banded = false;
     if (c.axis >= 0)
     {
-      auto begin = std::lower_bound(c.points.cbegin(), c.points.cend(), from, byTime);
-      auto end = std::lower_bound(begin, c.points.cend(), to, byTime);
-      // more points than columns: a band says the same and costs less than the zigzag (updateOverview())
-      c.banded = width > 0 && double(end - begin) > width * GraphBand::kDensePoints;
+      // more readings than columns: a band says the same and costs less than
+      // the zigzag (updateOverview()). The readings, not the points thinned
+      // to the columns: those are never many more than the columns.
+      int readings = 0;
+      for (const RecordingSeries *s : seriesOf(c))
+        readings += s->lowerBound(qint64((to - c.shift) * 1000)) - s->lowerBound(qint64((from - c.shift) * 1000));
+      c.banded = width > 0 && readings > width * GraphBand::kDensePoints;
     }
     if (c.axis >= 0 && !c.banded)
     {
