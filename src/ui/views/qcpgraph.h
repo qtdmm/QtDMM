@@ -5,6 +5,8 @@
 #include "ui/views/qcpplotbase.h"
 
 #include <QDateTime>
+#include <QImage>
+#include <QPicture>
 #include <QElapsedTimer>
 #include <QHash>
 #include <QList>
@@ -29,8 +31,11 @@ class QCPAbstractItem;
 class QCPAxis;
 class QCPGraph;
 class QCPItemStraightLine;
+class QCPPainter;
 class QMouseEvent;
+class QPrinter;
 class QRubberBand;
+class QPrinter;
 class QScrollBar;
 class QWheelEvent;
 class RecordingSeries;
@@ -278,6 +283,27 @@ public:
   void        setHold(bool hold) override;
   /// Draws the store anew; the readings are the store's and stay.
   void        clear() override;
+
+  /// @name Pictures
+  /// What a picture of the graph shows: the legend, the plot with its axes,
+  /// lines and flags, and the states' strip; not the buttons, the overview
+  /// or the statistics. SVG and PDF keep the plot as vectors.
+  /// @{
+  /// The picture's natural size: the plot's, with the legend's row above it.
+  QSize       pictureSize() const;
+  /// The picture into @p target of @p painter, scaled to it, its proportions kept.
+  void        paintPicture(QCPPainter *painter, const QRectF &target);
+  /// The picture, recorded at the screen's resolution, to be played anywhere.
+  QPicture    picture();
+  /// The picture as an image at its natural size.
+  QImage      pictureImage();
+  /// The picture as a file, by its suffix: svg, pdf, png or jpg. False: not written.
+  bool        exportImageFile(const QString &fileName);
+  /// The picture on the clipboard.
+  void        copyImage();
+  /// A page: @p title, when the recording started, its sample time, @p comment, the picture below.
+  void        print(QPrinter *printer, const QString &title, const QString &comment);
+  /// @}
 
   /// @name For tests
   /// @{

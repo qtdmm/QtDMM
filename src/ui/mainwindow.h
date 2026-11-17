@@ -220,6 +220,9 @@ protected:
   QHash<XYPlot *, XYView *> m_xyViews;
   /// The graphs on QCustomPlot ("Graph (QCP)"), next to the ones on QtCharts until they can replace them.
   QHash<QcpGraph *, QcpGraphView *> m_qgraphViews;
+  /// The graph (QCP) the window's picture actions are for (Print, the export's
+  /// picture, Into the project): the one used last; nullptr: the graph's.
+  QPointer<QcpGraphView> m_pictureQGraph;
   QAction    *m_qgraphAction = nullptr;
   bool        m_qgraphsKey = false;   ///< Windows/qgraphs named graphs when read or written last: an empty list is written too
   QAction    *m_newHistogramAction = nullptr;
@@ -528,10 +531,16 @@ protected:
   void        benchIntoNewProject();
   /// The recording as CSV and the graph as PNG, into the project basket.
   void        graphToBasket();
+  /// The same for a graph (QCP): its values' recording, its picture.
+  void        qgraphToBasket(QcpGraphView *view);
+  /// Asks for a file (SVG, PDF, PNG, JPEG) and writes the picture of a graph (QCP) into it.
+  void        exportQGraphImage(QcpGraphView *view);
   /// The readings table as CSV, into the project basket.
   void        tableToBasket();
   /// The export dialog (ExportDlg::What @p view preselected), then writes.
   void        exportDialog(int view);
+  /// The export dialog for a graph (QCP): its picture, its values.
+  void        exportDialogFor(int view, QcpGraphView *qgraph);
   /// LabPlot follows the recording that goes on (LabPlotLive): a CSV and
   /// a project in the project basket, else in Documents/QtDMM; again while
   /// it runs: LabPlot opens that project once more.

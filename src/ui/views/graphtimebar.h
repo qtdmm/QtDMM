@@ -35,6 +35,8 @@ public:
   /// The curves' names in @p ink, in the longest form that fits between state and buttons; none: no legend.
   void        setLegend(const QList<GraphLegend::Entry> &entries, const QColor &ink);
   QString     legendText() const;
+  /// The legend's widget, for a picture of the graph.
+  GraphLegend *legend() const { return m_legend; }
   /// Text and buttons in @p text on the graph's background.
   void        setTextColor(const QColor &text);
   /// For tests: the button of @p seconds (0: "All"); nullptr without one.

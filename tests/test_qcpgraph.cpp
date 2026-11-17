@@ -9,6 +9,10 @@
 // the statistics (GraphStats); the reference lines; marks, notes and their
 // flags; the overview, the states' strip and the bands; GraphModel's settings texts.
 #include <QApplication>
+#include <QPrinter>
+#include <QImage>
+#include <QFileInfo>
+#include <QClipboard>
 #include <QDateTime>
 #include <QDialog>
 #include <QLineEdit>
@@ -33,6 +37,7 @@
 #include "ui/views/graphstates.h"
 #include "ui/views/graphstats.h"
 #include "ui/views/graphtimebar.h"
+#include "ui/views/qcp.h"
 #include "ui/views/qcpgraph.h"
 #include "testutil.h"
 
@@ -1809,6 +1814,69 @@ static void testOutliers()
   check(range().second == 7.0, "shown again");
 }
 
+// Pictures: a file of each kind, the clipboard, a printed page; the plot as
+// vectors in SVG and PDF, the legend above it
+static void testPictures()
+{
+  RecordingStore store;
+  Feed feed(&store);
+  store.live();
+  QcpGraph graph;
+  graph.resize(800, 500);
+  graph.show();
+  graph.setWindowSeconds(30);
+  graph.setStore(&store);
+  for (int i = 0; i < 200; ++i)
+    feed.value(std::sin(i * 0.1));
+  graph.refreshNow();
+  QCoreApplication::processEvents();
+  QTemporaryDir dir;
+  const QSize size = graph.pictureSize();
+  const QWidget *plotWidget = graph.findChild<QCustomPlot *>();
+  check(plotWidget && size.width() == plotWidget->width() && size.height() >= plotWidget->height(),
+        QString("the picture is the plot's size, the legend's row above it (%1 x %2)").arg(size.width()).arg(size.height()));
+  for (const QString suffix : { "svg", "pdf", "png", "jpg" })
+  {
+    const QString path = dir.filePath("graph." + suffix);
+    check(graph.exportImageFile(path) && QFileInfo(path).size() > 1000, "a picture as " + suffix);
+  }
+  const QImage png(dir.filePath("graph.png"));
+  if (qEnvironmentVariableIsSet("QTDMM_SHOT"))
+    png.save(qEnvironmentVariable("QTDMM_SHOT") + "/qcpgraph_picture.png");
+  check(png.size() == size, QString("the PNG at the picture's size: %1 x %2").arg(png.width()).arg(png.height()));
+  QFile svg(dir.filePath("graph.svg"));
+  svg.open(QIODevice::ReadOnly);
+  const QByteArray svgText = svg.readAll();
+  check(svgText.contains("<path") || svgText.contains("<polyline"), "the SVG draws the curve as vectors");
+  QFile pdf(dir.filePath("graph.pdf"));
+  pdf.open(QIODevice::ReadOnly);
+  check(pdf.read(5) == "%PDF-", "a PDF");
+  // the curve in the picture: the column at 2 s has ink between the grid's lines (the sine near its top)
+  // the screen's at its logical size (a high-DPI screen grabs more pixels)
+  QImage grabbed(plotWidget->size(), QImage::Format_ARGB32_Premultiplied);
+  grabbed.fill(Qt::white);
+  const_cast<QWidget *>(plotWidget)->render(&grabbed);
+  if (qEnvironmentVariableIsSet("QTDMM_SHOT"))
+    grabbed.save(qEnvironmentVariable("QTDMM_SHOT") + "/qcpgraph_screen.png");
+  int differ = 0;
+  for (int y = 0; y < grabbed.height(); ++y)
+    for (int x = 0; x < grabbed.width(); x += 3)
+      differ += png.pixelColor(x, y + size.height() - grabbed.height()) != grabbed.pixelColor(x, y) ? 1 : 0;
+  check(differ < grabbed.width() * grabbed.height() / 3 / 10,
+        QString("the picture's plot is the plot on the screen (%1 pixels differ)").arg(differ));
+  graph.copyImage();
+  check(QGuiApplication::clipboard()->image().size() == size, "the picture on the clipboard");
+
+  QPrinter printer(QPrinter::HighResolution);
+  printer.setOutputFormat(QPrinter::PdfFormat);
+  printer.setOutputFileName(dir.filePath("page.pdf"));
+  graph.print(&printer, "A title", "A comment");
+  check(QFileInfo(dir.filePath("page.pdf")).size() > 1000, "a printed page");
+  if (qEnvironmentVariableIsSet("QTDMM_SHOT"))
+    for (const QString name : { "page.pdf", "graph.pdf", "graph.svg" })
+      QFile::copy(dir.filePath(name), qEnvironmentVariable("QTDMM_SHOT") + "/qcpgraph_" + name);
+}
+
 static void testStatesCache()
 {
   RecordingStore store;
@@ -1903,6 +1971,7 @@ int main(int argc, char **argv)
   testOverview();
   testStatesCache();
   testOutliers();
+  testPictures();
   shot();
   return failed ? 1 : 0;
 }

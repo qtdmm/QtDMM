@@ -448,6 +448,11 @@ void InstanceWidget::configRecorderSLOT()
   openConfig(SettingsDialog::Recorder);
 }
 
+void InstanceWidget::configGraphSLOT()
+{
+  openConfig(SettingsDialog::Graph);
+}
+
 void InstanceWidget::configScpiSLOT()
 {
   openConfig(SettingsDialog::Scpi);
@@ -486,10 +491,15 @@ void InstanceWidget::zoomedSLOT()
 
 bool InstanceWidget::writeRecordingTo(const QString &file, bool everyReading, bool graphOnly)
 {
+  return writeRecordingTo(file, everyReading, graphOnly ? graph()->values() : QList<ValueRef>());
+}
+
+bool InstanceWidget::writeRecordingTo(const QString &file, bool everyReading, const QList<ValueRef> &values)
+{
   QString err;
   if (QPointer<MeterController> lead = m_current->recordingLead())
   {
-    if (lead->writeRecording(file, everyReading, &err, graphOnly ? graph()->values() : QList<ValueRef>()))
+    if (lead->writeRecording(file, everyReading, &err, values))
       return true;
   }
   else if (graph()->store()->count() <= 0)
@@ -543,6 +553,11 @@ bool InstanceWidget::importFile(const QString &path)
 
 void InstanceWidget::printSLOT()
 {
+  printWith([this](QPrinter *printer, const QString &title, const QString &comment) { graph()->print(printer, title, comment); });
+}
+
+void InstanceWidget::printWith(const std::function<void(QPrinter *, const QString &, const QString &)> &print)
+{
   // printing into a PDF with a project open: among its documents
   std::optional<ProjectFolder::Proposal> where;
   if (m_printer.outputFormat() == QPrinter::PdfFormat && !ProjectFolder::current().isEmpty())
@@ -556,7 +571,7 @@ void InstanceWidget::printSLOT()
   if (m_printDlg->exec())
   {
     m_configDlg->writePrinter(&m_printer);
-    graph()->print(&m_printer, m_printDlg->title(), m_printDlg->comment());
+    print(&m_printer, m_printDlg->title(), m_printDlg->comment());
   }
 }
 

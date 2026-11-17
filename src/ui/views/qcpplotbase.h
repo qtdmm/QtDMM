@@ -65,6 +65,9 @@ protected:
   void setAxisRange(QCPAxis *axis, const PlotAxis::Range &range);
   QString axisValueText(QCPAxis *axis, double value) const;
 
+  /// The crosshair gone until the mouse moves again (a picture of the plot).
+  void hideCrosshair();
+
   QCustomPlot *m_plot = nullptr;
   QCPItemText *m_crossText = nullptr;
 
@@ -72,7 +75,6 @@ private:
   static constexpr int kRefreshMs = 33;
   bool eventFilter(QObject *watched, QEvent *event) override;
   void moveCrosshair(QMouseEvent *event);
-  void hideCrosshair();
 
   QTimer               m_refreshTimer;
   QCPLayer            *m_crossLayer = nullptr;   ///< replotted on its own when the mouse moves

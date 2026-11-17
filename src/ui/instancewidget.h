@@ -171,9 +171,13 @@ public Q_SLOTS:
   void        configSLOT();
   /// Opens the settings dialog on the recording page.
   void        configRecorderSLOT();
+  /// Opens the settings dialog on the Graph page.
+  void        configGraphSLOT();
   /// Opens the settings dialog on the SCPI server page.
   void        configScpiSLOT();
   void        printSLOT();
+  /// The print dialog, then @p print with the printer, the title and the comment.
+  void        printWith(const std::function<void(QPrinter *, const QString &, const QString &)> &print);
   void        importSLOT();
   /// Loads @p path into the graph as importSLOT() does, without the dialog.
   bool        importFile(const QString &path);
@@ -181,6 +185,8 @@ public Q_SLOTS:
   /// by its suffix (csv, xlsx, ods), @p everyReading instead of the grid.
   /// @p graphOnly: the values of the current graph, else all devices'.
   bool        writeRecordingTo(const QString &file, bool everyReading = false, bool graphOnly = false);
+  /// The same with @p values as the graph's (a graph on QCustomPlot).
+  bool        writeRecordingTo(const QString &file, bool everyReading, const QList<ValueRef> &values);
   /// Settings dialog OK/Apply: re-reads the configuration (readConfig()).
   void        applySLOT();
 
