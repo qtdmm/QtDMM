@@ -1,8 +1,8 @@
 // Copyright (c) 2026 The QtDMM developers
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// QcpGraph: the values, their stores, the thinned points and the curves.
-#include "ui/views/qcpgraph.h"
+// GraphWidget: the values, their stores, the thinned points and the curves.
+#include "ui/views/graphwidget.h"
 
 #include "recording/recordingstore.h"
 #include "recording/seriesdecimator.h"
@@ -17,7 +17,7 @@
 #include <QResizeEvent>
 #include <QSet>
 
-QcpGraph::QcpGraph(QWidget *parent) : QcpPlotBase(parent)
+GraphWidget::GraphWidget(QWidget *parent) : QcpPlotBase(parent)
 {
   setMinimumSize(220, 180);
   setupAxes();
@@ -29,7 +29,7 @@ QcpGraph::QcpGraph(QWidget *parent) : QcpPlotBase(parent)
   refreshPlot();
 }
 
-void QcpGraph::setSources(std::function<RecordingStore *(const QString &source)> storeOf,
+void GraphWidget::setSources(std::function<RecordingStore *(const QString &source)> storeOf,
                           std::function<QString(const QString &source)> nameOf)
 {
   m_storeOf = std::move(storeOf);
@@ -37,12 +37,12 @@ void QcpGraph::setSources(std::function<RecordingStore *(const QString &source)>
   makeCurves();
 }
 
-void QcpGraph::sourcesChanged()
+void GraphWidget::sourcesChanged()
 {
   makeCurves();
 }
 
-void QcpGraph::setValues(const QList<ValueRef> &values)
+void GraphWidget::setValues(const QList<ValueRef> &values)
 {
   if (values == m_values)
     return;
@@ -50,7 +50,7 @@ void QcpGraph::setValues(const QList<ValueRef> &values)
   makeCurves();
 }
 
-void QcpGraph::setValueAxes(const QHash<ValueRef, int> &axes)
+void GraphWidget::setValueAxes(const QHash<ValueRef, int> &axes)
 {
   if (axes == m_valueAxes)
     return;
@@ -58,7 +58,7 @@ void QcpGraph::setValueAxes(const QHash<ValueRef, int> &axes)
   storeChanged();
 }
 
-void QcpGraph::setFixedRanges(const QMap<QString, QPair<double, double>> &ranges)
+void GraphWidget::setFixedRanges(const QMap<QString, QPair<double, double>> &ranges)
 {
   if (ranges == m_fixedRanges)
     return;
@@ -66,7 +66,7 @@ void QcpGraph::setFixedRanges(const QMap<QString, QPair<double, double>> &ranges
   redraw();
 }
 
-void QcpGraph::setStore(RecordingStore *store)
+void GraphWidget::setStore(RecordingStore *store)
 {
   if (store == m_ownStore)
     return;
@@ -74,7 +74,7 @@ void QcpGraph::setStore(RecordingStore *store)
   makeCurves();
 }
 
-void QcpGraph::setSourceName(const QString &name)
+void GraphWidget::setSourceName(const QString &name)
 {
   m_sourceName = name;
   updateTimeBar();
@@ -82,7 +82,7 @@ void QcpGraph::setSourceName(const QString &name)
 
 // One curve per value whose meter is open, or the main value of the store
 // given; the stores are connected once each.
-void QcpGraph::makeCurves()
+void GraphWidget::makeCurves()
 {
   for (const Curve &c : std::as_const(m_curves))
     m_plot->removeGraph(c.graph);
@@ -126,27 +126,27 @@ void QcpGraph::makeCurves()
     m_watched.append(store);
     connect(store, &RecordingStore::appended, this, [this, store](bool shifted) { mainAppended(store, shifted); });
     connect(store, &RecordingStore::extraAppended, this, [this, store](int index) { extraAppended(store, index); });
-    connect(store, &RecordingStore::extrasChanged, this, &QcpGraph::storeChanged);
-    connect(store, &RecordingStore::cleared, this, &QcpGraph::storeChanged);
-    connect(store, &RecordingStore::loaded, this, &QcpGraph::storeChanged);
-    connect(store, &RecordingStore::stateChanged, this, &QcpGraph::storeChanged);
+    connect(store, &RecordingStore::extrasChanged, this, &GraphWidget::storeChanged);
+    connect(store, &RecordingStore::cleared, this, &GraphWidget::storeChanged);
+    connect(store, &RecordingStore::loaded, this, &GraphWidget::storeChanged);
+    connect(store, &RecordingStore::stateChanged, this, &GraphWidget::storeChanged);
     // also while the picture is held: a mark is named by its place among them
     connect(store, &RecordingStore::marksChanged, this, [this]
     {
       updateMarks();
       m_plot->replot(QCustomPlot::rpQueuedReplot);
     });
-    connect(store, &QObject::destroyed, this, &QcpGraph::storeGone);
+    connect(store, &QObject::destroyed, this, &GraphWidget::storeGone);
   }
   // the time goes on without readings: the window follows
   if (m_store)
-    connect(m_store, &RecordingStore::progressChanged, this, &QcpGraph::scheduleRefresh);
+    connect(m_store, &RecordingStore::progressChanged, this, &GraphWidget::scheduleRefresh);
   storeChanged();
 }
 
 // Only what the graph holds itself: whoever gives the stores may be in the
 // middle of taking this one away.
-void QcpGraph::storeGone(QObject *store)
+void GraphWidget::storeGone(QObject *store)
 {
   for (int i = int(m_curves.size()) - 1; i >= 0; --i)
     if (!m_curves.at(i).store || m_curves.at(i).store.data() == store)
@@ -162,12 +162,12 @@ void QcpGraph::storeGone(QObject *store)
     m_followEnd = true;
     m_zoomed = false;
     if (base)
-      connect(base, &RecordingStore::progressChanged, this, &QcpGraph::scheduleRefresh, Qt::UniqueConnection);
+      connect(base, &RecordingStore::progressChanged, this, &GraphWidget::scheduleRefresh, Qt::UniqueConnection);
   }
   storeChanged();
 }
 
-QList<const RecordingSeries *> QcpGraph::seriesOf(const Curve &curve) const
+QList<const RecordingSeries *> GraphWidget::seriesOf(const Curve &curve) const
 {
   QList<const RecordingSeries *> parts;
   if (!curve.store)
@@ -181,7 +181,7 @@ QList<const RecordingSeries *> QcpGraph::seriesOf(const Curve &curve) const
   return parts;
 }
 
-void QcpGraph::setHold(bool hold)
+void GraphWidget::setHold(bool hold)
 {
   if (hold == this->hold())
     return;
@@ -192,27 +192,27 @@ void QcpGraph::setHold(bool hold)
     refreshPlot();
 }
 
-void QcpGraph::clear()
+void GraphWidget::clear()
 {
   cancelRefresh();
   m_dirty = true;
   refreshPlot();
 }
 
-void QcpGraph::refreshNow()
+void GraphWidget::refreshNow()
 {
   cancelRefresh();
   refreshPlot();
 }
 
-void QcpGraph::resizeEvent(QResizeEvent *event)
+void GraphWidget::resizeEvent(QResizeEvent *event)
 {
   QcpPlotBase::resizeEvent(event);
   layoutStats();
   scheduleRefresh();   // another width: other buckets
 }
 
-qint64 QcpGraph::bucketNow() const
+qint64 GraphWidget::bucketNow() const
 {
   if (!m_store)
     return 1;
@@ -221,7 +221,7 @@ qint64 QcpGraph::bucketNow() const
   return SeriesDecimator::bucketSize(shown, width > 0 ? width : this->width());
 }
 
-void QcpGraph::rebuildPoints()
+void GraphWidget::rebuildPoints()
 {
   m_dirty = false;
   m_bucket = bucketNow();
@@ -239,7 +239,7 @@ void QcpGraph::rebuildPoints()
 
 // The series of the value one after the other (a second display that went
 // from Hz to % began a new one), a gap between them, on the graph's time.
-void QcpGraph::rebuildCurve(Curve &curve)
+void GraphWidget::rebuildCurve(Curve &curve)
 {
   curve.points.clear();
   curve.tail = 0;
@@ -274,7 +274,7 @@ void QcpGraph::rebuildCurve(Curve &curve)
   }
 }
 
-SeriesDecimator::Options QcpGraph::decimation(const Curve &curve, const RecordingSeries &series) const
+SeriesDecimator::Options GraphWidget::decimation(const Curve &curve, const RecordingSeries &series) const
 {
   SeriesDecimator::Options options;
   if (m_outliers.active())
@@ -282,7 +282,7 @@ SeriesDecimator::Options QcpGraph::decimation(const Curve &curve, const Recordin
   return options;
 }
 
-void QcpGraph::appendTail(Curve &curve, const RecordingSeries &series)
+void GraphWidget::appendTail(Curve &curve, const RecordingSeries &series)
 {
   const int last = series.count() - 1;
   const int first = SeriesDecimator::bucketStart(series, last, m_bucket);
@@ -303,7 +303,7 @@ void QcpGraph::appendTail(Curve &curve, const RecordingSeries &series)
     curve.points.append(QPointF(p.x() + curve.shift, p.y()));
 }
 
-void QcpGraph::mainAppended(RecordingStore *store, bool shifted)
+void GraphWidget::mainAppended(RecordingStore *store, bool shifted)
 {
   // older readings went, or all is to be built anyway: with the next picture
   if (!shifted && !m_dirty)
@@ -322,7 +322,7 @@ void QcpGraph::mainAppended(RecordingStore *store, bool shifted)
   scheduleRefresh();
 }
 
-void QcpGraph::extraAppended(RecordingStore *store, int index)
+void GraphWidget::extraAppended(RecordingStore *store, int index)
 {
   if (!m_dirty && index >= 0 && index < store->extraCount())
   {
@@ -341,13 +341,13 @@ void QcpGraph::extraAppended(RecordingStore *store, int index)
   scheduleRefresh();
 }
 
-void QcpGraph::storeChanged()
+void GraphWidget::storeChanged()
 {
   m_dirty = true;
   scheduleRefresh();
 }
 
-void QcpGraph::refreshPlot()
+void GraphWidget::refreshPlot()
 {
   if (m_followAll)
     fitAll(true);   // before the buckets: they follow the window
@@ -366,7 +366,7 @@ void QcpGraph::refreshPlot()
   m_plot->replot(QCustomPlot::rpQueuedReplot);
 }
 
-void QcpGraph::redraw()
+void GraphWidget::redraw()
 {
   if (hold())
     return;
@@ -376,7 +376,7 @@ void QcpGraph::redraw()
 
 // The points of the time shown and one on either side, so the lines run to
 // the edges; the rest of the recording is not handed to the plot.
-void QcpGraph::drawCurves(double from, double to)
+void GraphWidget::drawCurves(double from, double to)
 {
   const auto byTime = [](const QPointF &p, double t) { return p.x() < t; };
   QVector<double> x, y;
@@ -421,7 +421,7 @@ void QcpGraph::drawCurves(double from, double to)
 
 // One entry per curve drawn; one curve alone needs none. With several meters
 // their names come first and go when it gets narrow.
-void QcpGraph::updateLegend()
+void GraphWidget::updateLegend()
 {
   QList<GraphLegend::Entry> entries;
   QSet<QString> sources;
@@ -441,12 +441,12 @@ void QcpGraph::updateLegend()
   m_timeBar->setLegend(entries, m_look.theme.labels);
 }
 
-QList<QPointF> QcpGraph::curvePoints(int i) const
+QList<QPointF> GraphWidget::curvePoints(int i) const
 {
   return m_curves.value(i).points;
 }
 
-QList<QPointF> QcpGraph::drawnPoints(int i) const
+QList<QPointF> GraphWidget::drawnPoints(int i) const
 {
   QList<QPointF> points;
   if (i < 0 || i >= m_curves.size())
@@ -457,20 +457,20 @@ QList<QPointF> QcpGraph::drawnPoints(int i) const
   return points;
 }
 
-int QcpGraph::curveAxis(int i) const
+int GraphWidget::curveAxis(int i) const
 {
   return i >= 0 && i < m_curves.size() ? m_curves.at(i).axis : -1;
 }
 
 
-QString QcpGraph::legendText() const
+QString GraphWidget::legendText() const
 {
   return m_timeBar->legendText();
 }
 
 // The turns of the curve in the time shown, of at least kTurnPixels on its
 // axis: a zigzag has one every few columns, a smooth curve two a period.
-int QcpGraph::turnsIn(const Curve &curve, double from, double to) const
+int GraphWidget::turnsIn(const Curve &curve, double from, double to) const
 {
   const Axis &axis = m_axes.at(curve.axis);
   const double span = axis.axis->range().size() * axis.factor;

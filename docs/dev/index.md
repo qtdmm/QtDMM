@@ -7,7 +7,7 @@ Documentation for people working on QtDMM itself. Planned pages:
   `tests/data/decoder/` are generated from the protocol specifications.
 - **Architecture** — the path from `Transport` and the `QIODevice` backends
   through `FrameReader` and the `DmmDecoder` subclasses to `MeterConnection`, `InstanceWidget`,
-  `LcdWidget` and `QcpGraph`; the `DmmChannel` value contract; the
+  `LcdWidget` and `GraphWidget`; the `DmmChannel` value contract; the
   `DeviceSession` with the meters of one process.
 - **Adding a protocol** — the `DmmDecoder` subclass, a value in the
   `FrameFormat::DataFormat` enum (before `EndOfList`), one row in the table in
@@ -77,7 +77,7 @@ screenshot - through the SCPI server.
 ## API documentation
 
 The headers under `src/` carry Doxygen comments; the class descriptions of
-`MeterConnection`, `Transport`, `FrameReader`, `DmmDecoder`, `InstanceWidget`, `QcpGraph`
+`MeterConnection`, `Transport`, `FrameReader`, `DmmDecoder`, `InstanceWidget`, `GraphWidget`
 and `DeviceSession` together describe the architecture. Generate the
 HTML with
 
@@ -147,8 +147,8 @@ XLSX/ODS export - the ZIP container itself is written by
 the ODS mimetype entry) and QCustomPlot 2.1.1 in Wireshark's fork
 (GPL-2.0-or-later, trimmed of old Qt code paths; the XY diagram, histogram
 and heatmap draw with it, on top of `QcpGraphCommon`, and the graph,
-`QcpGraph` (`ui/qcpgraphview.*`, `ui/graphmodel.*`,
-`ui/views/qcpgraph*.cpp`), OpenGL only with
+`GraphWidget` (`ui/graphview.*`, `ui/graphmodel.*`,
+`ui/views/graphwidget*.cpp`), OpenGL only with
 `Graph/openGl`, off by default: classic QCustomPlot's OpenGL leaves artefacts
 and costs more with several plots). It is meant as a step towards NeoQCP.
 Upstream QCustomPlot is no longer developed: QtDMM keeps its copy, with

@@ -168,7 +168,7 @@ GraphLook::Look GraphLook::look(Variant variant, const PlotTheme &design, const 
     data = settings.data;
   l.theme = PlotTheme{ background, l.grid.color(), labels, data };
   l.cursor = settings.cursor != QColor(Qt::black) ? settings.cursor : labels;
-  // the start threshold: as the graph on QtCharts has it per variant
+  // the start threshold per variant
   QColor trigger = Qt::magenta;
   switch (variant)
   {

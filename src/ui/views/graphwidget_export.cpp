@@ -1,10 +1,10 @@
 // Copyright (c) 2026 The QtDMM developers
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// QcpGraph: pictures of the graph - a file (SVG, PDF, PNG, JPEG), the
+// GraphWidget: pictures of the graph - a file (SVG, PDF, PNG, JPEG), the
 // clipboard, a printed page.
 
-#include "ui/views/qcpgraph.h"
+#include "ui/views/graphwidget.h"
 
 #include "recording/recordingstore.h"
 #include "ui/views/graphlegend.h"
@@ -25,21 +25,21 @@
 
 namespace
 {
-// a text the graph on QtCharts has translated already
+// a word of the context GraphWidget looked up through a variable (graphwords.h keeps it)
 QString word(const char *text)
 {
   return QCoreApplication::translate("GraphWidget", text);
 }
 }
 
-QSize QcpGraph::pictureSize() const
+QSize GraphWidget::pictureSize() const
 {
   const GraphLegend *legend = m_timeBar->legend();
   const int above = legend->isVisibleTo(m_timeBar) ? legend->height() : 0;
   return QSize(qMax(1, m_plot->width()), qMax(1, above + m_plot->height()));
 }
 
-void QcpGraph::paintPicture(QCPPainter *painter, const QRectF &target)
+void GraphWidget::paintPicture(QCPPainter *painter, const QRectF &target)
 {
   // the crosshair follows the mouse: it does not belong in the picture
   hideCrosshair();
@@ -66,7 +66,7 @@ void QcpGraph::paintPicture(QCPPainter *painter, const QRectF &target)
 // The picture recorded once, at the screen's resolution as the widget lays
 // it out; played into any device - a file, the clipboard, a page - it keeps
 // that layout, scaled, its texts too
-QPicture QcpGraph::picture()
+QPicture GraphWidget::picture()
 {
   QPicture picture;
   QCPPainter p(&picture);
@@ -91,7 +91,7 @@ static void play(QPainter &painter, const QPicture &picture, const QSize &size, 
   painter.restore();
 }
 
-QImage QcpGraph::pictureImage()
+QImage GraphWidget::pictureImage()
 {
   const QSize size = pictureSize();
   QImage image(size, QImage::Format_ARGB32_Premultiplied);
@@ -103,7 +103,7 @@ QImage QcpGraph::pictureImage()
   return image;
 }
 
-bool QcpGraph::exportImageFile(const QString &fileName)
+bool GraphWidget::exportImageFile(const QString &fileName)
 {
   const QSize size = pictureSize();
   const QString suffix = QFileInfo(fileName).suffix().toLower();
@@ -138,14 +138,14 @@ bool QcpGraph::exportImageFile(const QString &fileName)
   return pictureImage().save(fileName);
 }
 
-void QcpGraph::copyImage()
+void GraphWidget::copyImage()
 {
   QGuiApplication::clipboard()->setImage(pictureImage());
 }
 
-// The page of the graph on QtCharts: the title, when the recording started
+// The page: the title, when the recording started
 // and its sample time, the comment, the picture in the rest of the page
-void QcpGraph::print(QPrinter *printer, const QString &title, const QString &comment)
+void GraphWidget::print(QPrinter *printer, const QString &title, const QString &comment)
 {
   printer->setDocName(!title.isEmpty() ? title : word("QtDMM: %1").arg(QDateTime::currentDateTime().toString()));
   printer->setCreator("QtDMM");

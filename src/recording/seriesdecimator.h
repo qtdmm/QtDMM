@@ -17,8 +17,7 @@
 /// stays in its bucket and the drawn minima and maxima stay put instead of
 /// jittering with every new reading.
 ///
-/// The rules are those of the QtCharts graph (GraphWidget::pointsOf()), kept
-/// here without a widget for the graph on QCustomPlot.
+/// No widget: GraphWidget draws what it gives.
 namespace SeriesDecimator
 {
 struct Options

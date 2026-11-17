@@ -9,8 +9,7 @@
 
 /// The states a meter reported with the readings of a curve - HOLD, a
 /// stored MIN / MAX / PEAK, REL, an overload - and its gaps by their cause,
-/// as stretches of time: what GraphStateStrip draws. No drawing library; the
-/// rules are the ones of the graph on QtCharts (GraphWidget::stateSpans()).
+/// as stretches of time: what GraphStateStrip draws. No drawing library.
 namespace GraphStates
 {
 struct Span

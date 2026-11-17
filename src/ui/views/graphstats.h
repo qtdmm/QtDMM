@@ -15,8 +15,7 @@ class RecordingStore;
 
 /// The statistics a graph shows next to its curves, as text: the values at
 /// the time cursors A and B, what the curves did from A to B, and over the
-/// time shown. No drawing library and no widget: the rules are those of the
-/// graph on QtCharts (GraphWidget::statsHtml()), for the graph on QCustomPlot.
+/// time shown. No drawing library and no widget.
 namespace GraphStats
 {
 /// One curve: its series one after the other (a second display that went

@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The QtDMM developers
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// Texts of the graph's parts (qcpgraph_*.cpp); not part of its interface.
+// Texts of the graph's parts (graphwidget_*.cpp); not part of its interface.
 
 #pragma once
 

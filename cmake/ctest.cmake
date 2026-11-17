@@ -232,7 +232,7 @@ if (BUILD_TESTING)
 	qtdmm_add_test(series_decimator test_seriesdecimator tests/test_seriesdecimator.cpp)
 
 	## the graph on QCustomPlot: the curve against the store, gaps, axes, hold, scrolling, zoom, files
-	qtdmm_add_test(qcp_graph test_qcpgraph tests/test_qcpgraph.cpp "${TEST_DATA}/graph")
+	qtdmm_add_test(graph test_graph tests/test_graph.cpp "${TEST_DATA}/graph")
 
 	## the drawing clock of the views: wanted, off, slower when ticks cost too much
 	qtdmm_add_test(frame_clock test_frameclock tests/test_frameclock.cpp)

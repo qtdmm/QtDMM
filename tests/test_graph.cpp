@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The QtDMM developers
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// QcpGraph, the graph on QCustomPlot: the curve against the store's
+// GraphWidget, the graph: the curve against the store's
 // readings, a reading at the end, gaps, clear, the time and the left axis,
 // hold; scrolling, Live held, "All", zoom, a file loaded; several values of
 // several meters on the list of axes; the colour variants (GraphLook), pens,
@@ -29,7 +29,7 @@
 #include "recording/seriesdecimator.h"
 #include "service/devicesession.h"
 #include "ui/graphmodel.h"
-#include "ui/qcpgraphview.h"
+#include "ui/graphview.h"
 #include "ui/views/graphband.h"
 #include "ui/views/graphminimap.h"
 #include "ui/views/graphoutliers.h"
@@ -38,7 +38,7 @@
 #include "ui/views/graphstats.h"
 #include "ui/views/graphtimebar.h"
 #include "ui/views/qcp.h"
-#include "ui/views/qcpgraph.h"
+#include "ui/views/graphwidget.h"
 #include "testutil.h"
 
 // The readings a MeterController gives a store, on a clock of the test's
@@ -134,7 +134,7 @@ static void testModel()
   model.setFollowAll(true);
   check(model.followAll() && allChanged == 1, "\"All\" changes once");
 
-  // the window of "All", as GraphWidget::allTarget() counts
+  // the window of "All", as GraphModel::allTarget() counts
   check(GraphModel::allTarget(3, false, 0) == 10, "at least 10 s");
   check(GraphModel::allTarget(42.2, false, 0) == 43, "whole seconds, rounded up");
   check(GraphModel::allTarget(42.2, true, 0) == 53, "growing: a quarter more");
@@ -142,7 +142,7 @@ static void testModel()
   check(GraphModel::allTarget(100, true, 0) == 180, "125 s are 3 minutes");
   check(GraphModel::allTarget(1000, true, 600) == 600, "at most the recording's length");
 
-  // the axis of a value, in the words of the graph on QtCharts
+  // the axis of a value, in the words of the settings
   int axesChanged = 0;
   QObject::connect(&model, &GraphModel::valueAxesChanged, [&] { axesChanged++; });
   check(model.valueAxis(ValueRef(1, "device:b")) == GraphModel::kAxisAuto && model.valueAxesSetting().isEmpty(), "Auto is not written");
@@ -261,15 +261,15 @@ static void testModelSettings()
   model.setWindowSeconds(300);
   model.setFollowAll(true);
   QMap<QString, QVariant> kept;
-  model.writeSettings([&](const QString &key, const QVariant &value) { kept.insert(key, value); }, "Windows/qgraph-2");
+  model.writeSettings([&](const QString &key, const QVariant &value) { kept.insert(key, value); }, "Windows/graphView-2");
   const QStringList keys = kept.keys();
-  check(keys.size() == 15 && std::all_of(keys.cbegin(), keys.cend(), [](const QString &k) { return k.startsWith("Windows/qgraph-2-"); }),
+  check(keys.size() == 15 && std::all_of(keys.cbegin(), keys.cend(), [](const QString &k) { return k.startsWith("Windows/graphView-2-"); }),
         "15 keys under the window's: " + keys.join(' '));
 
   GraphModel back;
-  back.readSettings([&](const QString &key, const QVariant &def) { return kept.value(key, def); }, "Windows/qgraph-2");
+  back.readSettings([&](const QString &key, const QVariant &def) { return kept.value(key, def); }, "Windows/graphView-2");
   QMap<QString, QVariant> again;
-  back.writeSettings([&](const QString &key, const QVariant &value) { again.insert(key, value); }, "Windows/qgraph-2");
+  back.writeSettings([&](const QString &key, const QVariant &value) { again.insert(key, value); }, "Windows/graphView-2");
   QStringList differ;
   for (auto it = kept.cbegin(); it != kept.cend(); ++it)
     if (again.value(it.key()).toString() != it.value().toString())
@@ -277,7 +277,7 @@ static void testModelSettings()
   check(differ.isEmpty(), "read back the same: " + differ.join("; "));
   QStringList unset;
   for (const char *k : { "-values", "-value-axes", "-fixed-ranges", "-variant", "-reference", "-reference-lines", "-outliers" })
-    if (kept.value(QString("Windows/qgraph-2") + k).toString().isEmpty())
+    if (kept.value(QString("Windows/graphView-2") + k).toString().isEmpty())
       unset << k;
   check(unset.isEmpty(), "every text was set, none fell back to empty: " + unset.join(' '));
   check(back.valueAxis(ValueRef(1, "device:b")) == 1 && back.outliers().mode == GraphOutliers::Jump && !back.minimapVisible()
@@ -285,7 +285,7 @@ static void testModelSettings()
 
   // nothing in the layout: the defaults
   GraphModel empty;
-  empty.readSettings([](const QString &, const QVariant &def) { return def; }, "Windows/qgraph-3");
+  empty.readSettings([](const QString &, const QVariant &def) { return def; }, "Windows/graphView-3");
   check(empty.values().isEmpty() && empty.minimapVisible() && empty.statesVisible() && !empty.envelopeVisible()
           && empty.crossingsVisible() && !empty.outliers().active() && !empty.followAll()
           && empty.windowSeconds() == GraphModel::kDefaultWindowSeconds, "the defaults");
@@ -296,7 +296,7 @@ static void testCurve()
   RecordingStore store;
   Feed feed(&store);
   store.live();
-  QcpGraph graph;
+  GraphWidget graph;
   graph.resize(640, 400);
   graph.show();
   graph.setWindowSeconds(60);
@@ -339,7 +339,7 @@ static void testThinning()
   RecordingStore store;
   Feed feed(&store);
   store.start();
-  QcpGraph graph;
+  GraphWidget graph;
   graph.resize(640, 400);
   graph.show();
   graph.setWindowSeconds(600);
@@ -368,7 +368,7 @@ static void testGaps()
   RecordingStore store;
   Feed feed(&store);
   store.live();
-  QcpGraph graph;
+  GraphWidget graph;
   graph.resize(640, 400);
   graph.show();
   graph.setWindowSeconds(60);
@@ -394,7 +394,7 @@ static void testTimeAxis()
   RecordingStore store;
   Feed feed(&store, 1000);
   store.start();
-  QcpGraph graph;
+  GraphWidget graph;
   graph.resize(640, 400);
   graph.show();
   graph.setWindowSeconds(60);
@@ -432,7 +432,7 @@ static void testStoreGone()
   auto *store = new RecordingStore;
   Feed feed(store);
   store->live();
-  QcpGraph graph;
+  GraphWidget graph;
   graph.resize(640, 400);
   graph.show();
   graph.setStore(store);
@@ -462,7 +462,7 @@ static void testScroll()
   RecordingStore store;
   Feed feed(&store, 1000);
   store.start();
-  QcpGraph graph;
+  GraphWidget graph;
   graph.resize(640, 400);
   graph.show();
   graph.setWindowSeconds(60);
@@ -521,7 +521,7 @@ static void testLiveHeld()
   Feed feed(&store, 1000);
   store.setLiveWidth(300);
   store.live();
-  QcpGraph graph;
+  GraphWidget graph;
   graph.resize(640, 400);
   graph.show();
   graph.setWindowSeconds(60);
@@ -543,13 +543,13 @@ static void testAll()
   RecordingStore store;
   Feed feed(&store, 1000);
   store.start();
-  QcpGraph graph;
+  GraphWidget graph;
   graph.resize(640, 400);
   graph.show();
   graph.setWindowSeconds(60);
   graph.setStore(&store);
   int windows = 0;
-  QObject::connect(&graph, &QcpGraph::windowChanged, [&] { windows++; });
+  QObject::connect(&graph, &GraphWidget::windowChanged, [&] { windows++; });
   record(feed, 20);
   graph.timeBar()->button(0)->click();
   check(graph.followAll() && graph.windowSeconds() == 20 && graph.timeAxisStart() == 0,
@@ -582,7 +582,7 @@ static void testZoom()
   RecordingStore store;
   Feed feed(&store, 1000);
   store.start();
-  QcpGraph graph;
+  GraphWidget graph;
   graph.resize(640, 400);
   graph.show();
   graph.setWindowSeconds(100);
@@ -654,7 +654,7 @@ static void testFile(const QString &dataDir)
     rec.values << (i >= 50 && i < 55 ? qQNaN() : i * 0.1);
   RecordingStore store;
   store.load(rec);
-  QcpGraph graph;
+  GraphWidget graph;
   graph.resize(640, 400);
   graph.show();
   graph.setWindowSeconds(600);
@@ -669,8 +669,8 @@ static void testFile(const QString &dataDir)
 
   // through the view: a file instead of the meter, and back
   DeviceSession session;
-  QcpGraph viewGraph;
-  QcpGraphView view(&session, &viewGraph, "qgraph-2", nullptr);
+  GraphWidget viewGraph;
+  GraphView view(&session, &viewGraph, "graphView-2", nullptr);
   QString error;
   check(!view.loadFile(dataDir + "/no_such_file.csv", &error) && !error.isEmpty() && !view.showsFile(),
         "a file that is not there: refused with a reason");
@@ -700,7 +700,7 @@ struct Bench
 {
   RecordingStore a, b;
   Feed feedA{ &a, 1000 }, feedB{ &b, 1000 };
-  QcpGraph graph;
+  GraphWidget graph;
 
   Bench()
   {
@@ -719,7 +719,7 @@ struct Bench
 static void testAllStretches()
 {
   Bench bench;
-  QcpGraph &graph = bench.graph;
+  GraphWidget &graph = bench.graph;
   bench.a.live();
   graph.setValues({ ValueRef(0, "device:a") });
   for (int i = 0; i < 4; ++i)
@@ -741,7 +741,7 @@ static void testAllStretches()
 static void testValues()
 {
   Bench bench;
-  QcpGraph &graph = bench.graph;
+  GraphWidget &graph = bench.graph;
   bench.a.live();
   bench.b.live();
   graph.setValues({ ValueRef(0, "device:a"), ValueRef(1, "device:a"), ValueRef(0, "device:b"), ValueRef(0, "device:gone") });
@@ -827,7 +827,7 @@ static void testFourUnits()
   RecordingStore store;
   Feed feed(&store, 1000);
   store.live();
-  QcpGraph graph;
+  GraphWidget graph;
   graph.resize(900, 400);
   graph.show();
   graph.setSources([&store](const QString &) { return &store; }, [](const QString &) { return QString("Meter"); });
@@ -841,8 +841,8 @@ static void testFourUnits()
   }
   graph.refreshNow();
   check(graph.curveAxis(0) == 0 && graph.curveAxis(1) == 1 && graph.curveAxis(2) == 2 && graph.curveAxis(3) == -1,
-        QString("four units, %1 axes: the fourth is not drawn").arg(QcpGraph::kMaxAxes));
-  check(graph.axisCount() == QcpGraph::kMaxAxes && graph.notice().contains("°C"), "and is named: " + graph.notice());
+        QString("four units, %1 axes: the fourth is not drawn").arg(GraphWidget::kMaxAxes));
+  check(graph.axisCount() == GraphWidget::kMaxAxes && graph.notice().contains("°C"), "and is named: " + graph.notice());
   // one goes: the fourth takes its axis
   graph.setValues({ ValueRef(0, "m"), ValueRef(2, "m"), ValueRef(3, "m") });
   graph.refreshNow();
@@ -854,7 +854,7 @@ static void testOtherTime()
 {
   // the second meter starts 10 s after the first: its readings 10 s later on the graph
   Bench bench;
-  QcpGraph &graph = bench.graph;
+  GraphWidget &graph = bench.graph;
   bench.a.live();
   bench.feedB.now = 10000;
   bench.b.live();
@@ -878,7 +878,7 @@ static void testParts()
   RecordingStore store;
   Feed feed(&store, 1000);
   store.live();
-  QcpGraph graph;
+  GraphWidget graph;
   graph.resize(900, 400);
   graph.show();
   graph.setSources([&store](const QString &) { return &store; }, [](const QString &) { return QString(); });
@@ -904,7 +904,7 @@ static void testParts()
 static void testGraphLook()
 {
   Bench bench;
-  QcpGraph &graph = bench.graph;
+  GraphWidget &graph = bench.graph;
   const PlotTheme design{ QColor("#202428"), QColor("#606870"), QColor("#d0d4d8"), QColor("#40a0ff") };
   graph.setTheme(design);
   bench.a.live();
@@ -992,7 +992,7 @@ static void testStoreDeleted()
   first->live();
   second.live();
   int asked = 0;
-  QcpGraph graph;
+  GraphWidget graph;
   graph.resize(900, 400);
   graph.show();
   graph.setSources([&](const QString &source) -> RecordingStore * { ++asked; return source == "one" ? first : &second; },
@@ -1079,7 +1079,7 @@ static void testCrosshairAndCursors()
   RecordingStore store;
   Feed feed(&store, 1000);
   store.start();
-  QcpGraph graph;
+  GraphWidget graph;
   graph.resize(900, 400);
   graph.show();
   graph.setWindowSeconds(60);
@@ -1124,7 +1124,7 @@ static void testCrosshairAndCursors()
 
   // the cursors: set, bound to the recording, their levels
   int changed = 0;
-  QObject::connect(&graph, &QcpGraph::cursorsChanged, [&] { changed++; });
+  QObject::connect(&graph, &GraphWidget::cursorsChanged, [&] { changed++; });
   graph.setTimeCursor(0, 3400);
   check(graph.timeCursor(0) == 3400 && graph.cursorLevel(0) == 3 && changed == 1, "A at 3.4 s, its level on the value that holds");
   graph.setTimeCursor(1, 999999);
@@ -1167,7 +1167,7 @@ static void testCrosshairAndCursors()
   check(!graph.statsVisible(), "no statistics by default");
   const int width = graph.plotRect().width();
   int toggled = 0;
-  QObject::connect(&graph, &QcpGraph::statsVisibleChanged, [&] { toggled++; });
+  QObject::connect(&graph, &GraphWidget::statsVisibleChanged, [&] { toggled++; });
   graph.setStatsVisible(true);
   QTest::qWait(30);
   check(graph.statsVisible() && toggled == 1 && graph.plotRect().width() < width - 100,
@@ -1193,7 +1193,7 @@ static void shot()
   RecordingStore store;
   Feed feed(&store);
   store.live();
-  QcpGraph graph;
+  GraphWidget graph;
   graph.resize(800, 400);
   graph.setThemeColors(QColor(20, 24, 28), QColor(90, 100, 110), QColor(200, 205, 210), QColor(90, 200, 120));
   graph.show();
@@ -1203,7 +1203,7 @@ static void shot()
     feed.value(i > 200 && i < 215 ? qQNaN() : 0.02 * std::sin(i * 0.05) + 0.002 * std::sin(i * 1.3));
   graph.refreshNow();
   QTest::qWait(50);
-  graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/qcpgraph_curve.png");
+  graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/graph_curve.png");
 
   // three values of two meters on three axes
   Bench bench;
@@ -1228,7 +1228,7 @@ static void shot()
   }
   bench.graph.refreshNow();
   QTest::qWait(50);
-  bench.graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/qcpgraph_axes.png");
+  bench.graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/graph_axes.png");
   // cursors and the statistics column
   bench.graph.resize(1100, 520);
   bench.graph.setStatsVisible(true);
@@ -1236,7 +1236,7 @@ static void shot()
   bench.graph.setTimeCursor(1, 31000);
   bench.graph.refreshNow();
   QTest::qWait(300);
-  bench.graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/qcpgraph_stats.png");
+  bench.graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/graph_stats.png");
   bench.graph.setStatsVisible(false);
   bench.graph.clearTimeCursors();
   bench.graph.resize(900, 400);
@@ -1247,7 +1247,7 @@ static void shot()
     bench.graph.setVariant(v);
     bench.graph.refreshNow();
     QTest::qWait(50);
-    bench.graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/qcpgraph_look_" + GraphLook::name(v) + ".png");
+    bench.graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/graph_look_" + GraphLook::name(v) + ".png");
   }
 }
 
@@ -1299,7 +1299,7 @@ static void testReferenceRules()
 static void testLevels()
 {
   Bench bench;
-  QcpGraph &graph = bench.graph;
+  GraphWidget &graph = bench.graph;
   bench.a.live();
   bench.b.live();
   graph.setValues({ ValueRef(0, "device:a"), ValueRef(0, "device:b") });
@@ -1307,7 +1307,7 @@ static void testLevels()
   Feed &feed = bench.feedA;
   feed.step = 100;
   bench.feedB.step = 100;
-  // four periods of 1 + sin over 20 s, as the test of the graph on QtCharts
+  // four periods of 1 + sin over 20 s
   for (int i = 0; i < 200; ++i)
   {
     feed.value(1.0 + std::sin((i + 0.5) * 2 * M_PI / 50));
@@ -1320,7 +1320,7 @@ static void testLevels()
         "the reference line at 0 by default: " + graph.referenceLabel());
 
   int changed = 0;
-  QObject::connect(&graph, &QcpGraph::referenceChanged, [&] { changed++; });
+  QObject::connect(&graph, &GraphWidget::referenceChanged, [&] { changed++; });
   graph.setReference(GraphReference::line(GraphReference::Off));   // the minimum touches 0 V
   check(std::isnan(graph.referenceValue()) && changed == 1, "off: no line");
   graph.setReferenceLines({ 1.2, 2.5, 0.0, 0.5, 0.7, 0.9 });
@@ -1414,19 +1414,19 @@ static void testLevels()
     // the start threshold: dragged into the store, a round value
     bench.a.setStartMode(RecordingStore::Raising);
     graph.refreshNow();
-    check(std::abs(graph.referencePixel(QcpGraph::kTriggerLine) - pixelOf(1.75)) <= 1, "the start threshold's line where its value is");
-    drag(QcpGraph::kTriggerLine, pixelOf(2.2));
+    check(std::abs(graph.referencePixel(GraphWidget::kTriggerLine) - pixelOf(1.75)) <= 1, "the start threshold's line where its value is");
+    drag(GraphWidget::kTriggerLine, pixelOf(2.2));
     check(std::abs(bench.a.raisingThreshold() - 2.2) < 0.06 && graph.triggerLevel() == bench.a.raisingThreshold()
             && graph.reference().kind == GraphReference::Value,
           QString("the start threshold dragged to %1, the reference line stays").arg(bench.a.raisingThreshold()));
     bench.a.setStartMode(RecordingStore::Falling);
     graph.refreshNow();
-    drag(QcpGraph::kTriggerLine, pixelOf(-0.2));
+    drag(GraphWidget::kTriggerLine, pixelOf(-0.2));
     check(std::abs(bench.a.fallingThreshold() + 0.2) < 0.06 && std::abs(bench.a.raisingThreshold() - 2.2) < 0.06,
           QString("falling: its own threshold, %1").arg(bench.a.fallingThreshold()));
     bench.a.setStartMode(RecordingStore::Manual);
     graph.refreshNow();
-    check(graph.referencePixel(QcpGraph::kTriggerLine) < 0, "manual start: no line to drag");
+    check(graph.referencePixel(GraphWidget::kTriggerLine) < 0, "manual start: no line to drag");
   }
 
   if (qEnvironmentVariableIsSet("QTDMM_SHOT"))
@@ -1438,7 +1438,7 @@ static void testLevels()
     bench.a.setStartMode(RecordingStore::Raising);
     graph.refreshNow();
     QTest::qWait(50);
-    graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/qcpgraph_levels.png");
+    graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/graph_levels.png");
     bench.a.setStartMode(RecordingStore::Manual);
   }
 
@@ -1459,7 +1459,7 @@ static void testMarks()
   RecordingStore store;
   Feed feed(&store, 1000);
   store.start();
-  QcpGraph graph;
+  GraphWidget graph;
   graph.resize(900, 400);
   graph.show();
   graph.setWindowSeconds(60);
@@ -1515,7 +1515,7 @@ static void testMarks()
   {
     int moved = 0;
     QDateTime from, to;
-    const QMetaObject::Connection heard = QObject::connect(&graph, &QcpGraph::noteMoved, &graph, [&](const QDateTime &a, const QDateTime &b, const QString &)
+    const QMetaObject::Connection heard = QObject::connect(&graph, &GraphWidget::noteMoved, &graph, [&](const QDateTime &a, const QDateTime &b, const QString &)
     {
       ++moved;
       from = a;
@@ -1551,7 +1551,7 @@ static void testMarks()
   {
     QString added;
     QDateTime when;
-    const QMetaObject::Connection heard = QObject::connect(&graph, &QcpGraph::noteAdded, &graph, [&](const QDateTime &t, const QString &title)
+    const QMetaObject::Connection heard = QObject::connect(&graph, &GraphWidget::noteAdded, &graph, [&](const QDateTime &t, const QString &title)
     {
       when = t;
       added = title;
@@ -1626,7 +1626,7 @@ static void testMarks()
     graph.setTimeCursor(1, 15000);
     graph.refreshNow();
     QCoreApplication::processEvents();
-    graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/qcpgraph_marks.png");
+    graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/graph_marks.png");
   }
   // out of the time shown: neither line nor flag
   graph.setWindowSeconds(5);
@@ -1697,7 +1697,7 @@ static void testOverview()
   RecordingStore store;
   Feed feed(&store, 1000);
   store.start();
-  QcpGraph graph;
+  GraphWidget graph;
   graph.resize(900, 400);
   graph.show();
   graph.setWindowSeconds(60);
@@ -1797,7 +1797,7 @@ static void testOverview()
   if (qEnvironmentVariableIsSet("QTDMM_SHOT"))
   {
     QCoreApplication::processEvents();
-    graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/qcpgraph_band.png");
+    graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/graph_band.png");
   }
   graph.setWindowSeconds(2);
   graph.showFrom(60000);
@@ -1826,7 +1826,7 @@ static void testOverview()
     graph.setEnvelopeVisible(true);
     graph.refreshNow();
     QCoreApplication::processEvents();
-    graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/qcpgraph_overview.png");
+    graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/graph_overview.png");
   }
 }
 
@@ -1834,13 +1834,13 @@ static void testOverview()
 // counted anew over the window, each cut to it.
 // Outliers hidden in the drawing and the statistics, kept in the recording:
 // by σ from their neighbours, as spikes, outside limits; a step to another
-// level stays (the cases 7l10 of the graph on QtCharts)
+// level stays
 static void testOutliers()
 {
   RecordingStore store;
   Feed feed(&store);
   store.live();
-  QcpGraph graph;
+  GraphWidget graph;
   graph.resize(800, 500);
   graph.show();
   graph.setWindowSeconds(30);
@@ -1911,7 +1911,7 @@ static void testPictures()
   RecordingStore store;
   Feed feed(&store);
   store.live();
-  QcpGraph graph;
+  GraphWidget graph;
   graph.resize(800, 500);
   graph.show();
   graph.setWindowSeconds(30);
@@ -1932,7 +1932,7 @@ static void testPictures()
   }
   const QImage png(dir.filePath("graph.png"));
   if (qEnvironmentVariableIsSet("QTDMM_SHOT"))
-    png.save(qEnvironmentVariable("QTDMM_SHOT") + "/qcpgraph_picture.png");
+    png.save(qEnvironmentVariable("QTDMM_SHOT") + "/graph_picture.png");
   check(png.size() == size, QString("the PNG at the picture's size: %1 x %2").arg(png.width()).arg(png.height()));
   QFile svg(dir.filePath("graph.svg"));
   check(svg.open(QIODevice::ReadOnly), "the SVG opens");
@@ -1947,7 +1947,7 @@ static void testPictures()
   grabbed.fill(Qt::white);
   const_cast<QWidget *>(plotWidget)->render(&grabbed);
   if (qEnvironmentVariableIsSet("QTDMM_SHOT"))
-    grabbed.save(qEnvironmentVariable("QTDMM_SHOT") + "/qcpgraph_screen.png");
+    grabbed.save(qEnvironmentVariable("QTDMM_SHOT") + "/graph_screen.png");
   int differ = 0;
   for (int y = 0; y < grabbed.height(); ++y)
     for (int x = 0; x < grabbed.width(); x += 3)
@@ -1964,7 +1964,7 @@ static void testPictures()
   check(QFileInfo(dir.filePath("page.pdf")).size() > 1000, "a printed page");
   if (qEnvironmentVariableIsSet("QTDMM_SHOT"))
     for (const QString name : { "page.pdf", "graph.pdf", "graph.svg" })
-      QFile::copy(dir.filePath(name), qEnvironmentVariable("QTDMM_SHOT") + "/qcpgraph_" + name);
+      QFile::copy(dir.filePath(name), qEnvironmentVariable("QTDMM_SHOT") + "/graph_" + name);
 }
 
 static void testStatesCache()
@@ -2031,7 +2031,7 @@ int main(int argc, char **argv)
   QApplication app(argc, argv);
   if (argc != 2)
   {
-    qCritical() << "Usage: test_qcpgraph <data-dir>";
+    qCritical() << "Usage: test_graph <data-dir>";
     return 1;
   }
   testModel();

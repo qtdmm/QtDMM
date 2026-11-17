@@ -1,9 +1,9 @@
 // Copyright (c) 2026 The QtDMM developers
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// QcpGraph: the time shown (window, "All", scrolling), the time axis and
+// GraphWidget: the time shown (window, "All", scrolling), the time axis and
 // the left axis, the row above and the scrollbar below.
-#include "ui/views/qcpgraph.h"
+#include "ui/views/graphwidget.h"
 
 #include "recording/recordingstore.h"
 #include "ui/graphmodel.h"
@@ -24,7 +24,7 @@ static QString timeText(qint64 ms)
   return QString("%1:%2:%3").arg(seconds / 3600).arg(seconds / 60 % 60, 2, 10, QChar('0')).arg(seconds % 60, 2, 10, QChar('0'));
 }
 
-void QcpGraph::setupAxes()
+void GraphWidget::setupAxes()
 {
   // the time since the start of the recording
   QSharedPointer<QCPAxisTickerTime> time(new QCPAxisTickerTime);
@@ -71,7 +71,7 @@ void QcpGraph::setupAxes()
   });
 }
 
-void QcpGraph::setWindowSeconds(int seconds)
+void GraphWidget::setWindowSeconds(int seconds)
 {
   seconds = qMax(1, seconds);
   if (seconds == m_windowSeconds)
@@ -86,7 +86,7 @@ void QcpGraph::setWindowSeconds(int seconds)
   redraw();
 }
 
-void QcpGraph::applyWindow(int seconds)
+void GraphWidget::applyWindow(int seconds)
 {
   seconds = qMax(1, seconds);
   if (seconds == m_windowSeconds)
@@ -95,7 +95,7 @@ void QcpGraph::applyWindow(int seconds)
   Q_EMIT windowChanged(seconds);
 }
 
-void QcpGraph::setFollowAll(bool on)
+void GraphWidget::setFollowAll(bool on)
 {
   if (on == m_followAll)
     return;
@@ -109,7 +109,7 @@ void QcpGraph::setFollowAll(bool on)
   redraw();
 }
 
-void QcpGraph::fitAll(bool grow)
+void GraphWidget::fitAll(bool grow)
 {
   if (!m_store)
     return;
@@ -121,14 +121,14 @@ void QcpGraph::fitAll(bool grow)
   applyWindow(GraphModel::allTarget(recorded, grow, limit > 0 ? int((limit + 999) / 1000) : 0));
 }
 
-qint64 QcpGraph::lastStart() const
+qint64 GraphWidget::lastStart() const
 {
   if (!m_store)
     return 0;
   return qMax(m_store->origin(), m_store->duration() - qint64(m_windowSeconds) * 1000);
 }
 
-double QcpGraph::shownSeconds() const
+double GraphWidget::shownSeconds() const
 {
   if (!m_store || !m_followAll || !m_followEnd)
     return m_windowSeconds;
@@ -136,7 +136,7 @@ double QcpGraph::shownSeconds() const
   return recorded < m_windowSeconds ? qMax(10.0, recorded) : m_windowSeconds;
 }
 
-qint64 QcpGraph::windowStart() const
+qint64 GraphWidget::windowStart() const
 {
   if (!m_store)
     return 0;
@@ -145,7 +145,7 @@ qint64 QcpGraph::windowStart() const
   return qBound(m_store->origin(), m_start, lastStart());
 }
 
-void QcpGraph::showFrom(qint64 start)
+void GraphWidget::showFrom(qint64 start)
 {
   if (!m_store)
     return;
@@ -155,7 +155,7 @@ void QcpGraph::showFrom(qint64 start)
   redraw();
 }
 
-void QcpGraph::followEnd()
+void GraphWidget::followEnd()
 {
   if (m_followEnd)
     return;
@@ -163,7 +163,7 @@ void QcpGraph::followEnd()
   redraw();
 }
 
-void QcpGraph::zoomBy(double factor)
+void GraphWidget::zoomBy(double factor)
 {
   if (factor <= 0)
     return;
@@ -175,7 +175,7 @@ void QcpGraph::zoomBy(double factor)
     showFrom(middle - qint64(m_windowSeconds) * 500);
 }
 
-void QcpGraph::zoomFit()
+void GraphWidget::zoomFit()
 {
   if (!m_store)
     return;
@@ -189,7 +189,7 @@ void QcpGraph::zoomFit()
   redraw();
 }
 
-void QcpGraph::zoomToRect(const QRect &rect)
+void GraphWidget::zoomToRect(const QRect &rect)
 {
   const QRect plot = m_plot->axisRect()->rect();
   const QRect frame = rect.normalized().intersected(plot);
@@ -210,7 +210,7 @@ void QcpGraph::zoomToRect(const QRect &rect)
   showFrom(qRound64(t0 * 1000));
 }
 
-void QcpGraph::endZoom(bool restoreWindow)
+void GraphWidget::endZoom(bool restoreWindow)
 {
   if (!m_zoomed)
     return;
@@ -236,7 +236,7 @@ void QcpGraph::endZoom(bool restoreWindow)
 // unit: a value put on an axis of its own stays alone there while there is
 // room. A value whose unit finds no axis is not drawn. The values with a
 // choice come first, so Auto fills what is left.
-void QcpGraph::assignAxes()
+void GraphWidget::assignAxes()
 {
   for (Axis &a : m_axes)
     a.unit.clear();
@@ -281,7 +281,7 @@ void QcpGraph::assignAxes()
     m_notice = tr("%1: no free axis").arg(left.join(", "));
 }
 
-bool QcpGraph::valueSpan(int axis, double from, double to, double &lo, double &hi) const
+bool GraphWidget::valueSpan(int axis, double from, double to, double &lo, double &hi) const
 {
   bool any = false;
   const auto byTime = [](const QPointF &p, double t) { return p.x() < t; };
@@ -305,7 +305,7 @@ bool QcpGraph::valueSpan(int axis, double from, double to, double &lo, double &h
 // The time axis over the window; each value axis over the frame zoomed on,
 // the fixed range of its unit or the values shown, in the unit with the SI
 // prefix that suits them. An axis without a unit is not shown, but the left one.
-void QcpGraph::updateAxes(double &from, double &to)
+void GraphWidget::updateAxes(double &from, double &to)
 {
   from = windowStart() / 1000.0;
   to = from + shownSeconds();
@@ -364,7 +364,7 @@ void QcpGraph::updateAxes(double &from, double &to)
   setCrosshairEnabled(anyValue && m_lookSettings.crosshair);
 }
 
-void QcpGraph::updateScrollBar()
+void GraphWidget::updateScrollBar()
 {
   const QSignalBlocker quiet(m_scrollBar);
   const qint64 origin = m_store ? m_store->origin() : 0;
@@ -374,7 +374,7 @@ void QcpGraph::updateScrollBar()
   m_scrollBar->setValue(int((windowStart() - origin) / 100));
 }
 
-void QcpGraph::updateTimeBar()
+void GraphWidget::updateTimeBar()
 {
   m_timeBar->setWindow(m_windowSeconds, m_followAll);
   QString state;
@@ -400,17 +400,17 @@ void QcpGraph::updateTimeBar()
   m_timeBar->setStateText(state);
 }
 
-double QcpGraph::timeAxisStart() const
+double GraphWidget::timeAxisStart() const
 {
   return m_plot->xAxis->range().lower;
 }
 
-double QcpGraph::timeAxisEnd() const
+double GraphWidget::timeAxisEnd() const
 {
   return m_plot->xAxis->range().upper;
 }
 
-int QcpGraph::axisCount() const
+int GraphWidget::axisCount() const
 {
   int n = 1;
   for (int i = 1; i < m_axes.size(); ++i)
@@ -418,27 +418,27 @@ int QcpGraph::axisCount() const
   return n;
 }
 
-QString QcpGraph::axisTitle(int i) const
+QString GraphWidget::axisTitle(int i) const
 {
   return i >= 0 && i < m_axes.size() ? m_axes.at(i).axis->label() : QString();
 }
 
-double QcpGraph::axisMin(int i) const
+double GraphWidget::axisMin(int i) const
 {
   return i >= 0 && i < m_axes.size() ? m_axes.at(i).axis->range().lower : 0;
 }
 
-double QcpGraph::axisMax(int i) const
+double GraphWidget::axisMax(int i) const
 {
   return i >= 0 && i < m_axes.size() ? m_axes.at(i).axis->range().upper : 0;
 }
 
-QString QcpGraph::stateText() const
+QString GraphWidget::stateText() const
 {
   return m_timeBar->stateText();
 }
 
-QRect QcpGraph::plotRect() const
+QRect GraphWidget::plotRect() const
 {
   return m_plot->axisRect()->rect();
 }

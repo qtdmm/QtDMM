@@ -1,9 +1,9 @@
 // Copyright (c) 2026 The QtDMM developers
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// QcpGraph: the marks of the recordings shown - alarms, triggers, notes -
+// GraphWidget: the marks of the recordings shown - alarms, triggers, notes -
 // as lines with flags below the plot, and the notes one sets, edits and drags.
-#include "ui/views/qcpgraph.h"
+#include "ui/views/graphwidget.h"
 
 #include "recording/recordingstore.h"
 #include "ui/dialogs/notedlg.h"
@@ -19,8 +19,8 @@
 
 namespace
 {
-// A text the graph on QtCharts has translated already: not through tr(),
-// so it is not extracted a second time.
+// A word of the context GraphWidget looked up through a variable;
+// graphwords.h keeps it for lupdate.
 QString word(const char *text)
 {
   return QCoreApplication::translate("GraphWidget", text);
@@ -120,7 +120,7 @@ protected:
 };
 }
 
-void QcpGraph::setupMarks()
+void GraphWidget::setupMarks()
 {
   auto *item = new FlagLines(m_plot);
   item->setLayer(QStringLiteral("overlay"));
@@ -131,7 +131,7 @@ void QcpGraph::setupMarks()
 
 // The marks of every store shown, on the graph's time; then the entries of
 // the item: the marks numbered as they stand in time, and the cursors.
-void QcpGraph::updateMarks()
+void GraphWidget::updateMarks()
 {
   m_marks.clear();
   QList<const RecordingStore *> seen;
@@ -176,13 +176,13 @@ void QcpGraph::updateMarks()
                    [](const FlagLines::Entry &a, const FlagLines::Entry &b) { return a.x < b.x; });
 }
 
-void QcpGraph::setMarksEditable(bool on)
+void GraphWidget::setMarksEditable(bool on)
 {
   m_marksEditable = on;
   m_timeBar->setNoteEnabled(on);
 }
 
-int QcpGraph::draggedIndex() const
+int GraphWidget::draggedIndex() const
 {
   if (!m_dragStore)
     return -1;
@@ -196,7 +196,7 @@ int QcpGraph::draggedIndex() const
   return -1;
 }
 
-RecordingStore *QcpGraph::noteStore(qint64 *shift) const
+RecordingStore *GraphWidget::noteStore(qint64 *shift) const
 {
   if (!m_marksEditable)
     return nullptr;
@@ -206,7 +206,7 @@ RecordingStore *QcpGraph::noteStore(qint64 *shift) const
   return curve < 0 ? m_store.data() : m_curves.at(curve).store.data();
 }
 
-int QcpGraph::markOf(const RecordingStore *store, int index) const
+int GraphWidget::markOf(const RecordingStore *store, int index) const
 {
   for (int i = 0; i < m_marks.size(); ++i)
     if (m_marks.at(i).store == store && m_marks.at(i).index == index)
@@ -216,7 +216,7 @@ int QcpGraph::markOf(const RecordingStore *store, int index) const
 
 // A flag first - it lies below the plot -, then the line of a note: an
 // alarm's line takes no click, there may be many
-int QcpGraph::markAt(const QPoint &pos) const
+int GraphWidget::markAt(const QPoint &pos) const
 {
   const QList<FlagLines::Placed> placed = static_cast<const FlagLines *>(m_markItem)->place();
   for (const FlagLines::Placed &p : placed)
@@ -229,17 +229,17 @@ int QcpGraph::markAt(const QPoint &pos) const
   return -1;
 }
 
-int QcpGraph::markAtGlobal(const QPoint &globalPos) const
+int GraphWidget::markAtGlobal(const QPoint &globalPos) const
 {
   return markAt(m_plot->mapFromGlobal(globalPos));
 }
 
-bool QcpGraph::markIsNote(int mark) const
+bool GraphWidget::markIsNote(int mark) const
 {
   return mark >= 0 && mark < m_marks.size() && m_marks.at(mark).isNote;
 }
 
-int QcpGraph::addNote(qint64 t, const QString &title, const QString &note)
+int GraphWidget::addNote(qint64 t, const QString &title, const QString &note)
 {
   qint64 shift = 0;
   RecordingStore *store = noteStore(&shift);
@@ -249,7 +249,7 @@ int QcpGraph::addNote(qint64 t, const QString &title, const QString &note)
   return markOf(store, index);
 }
 
-int QcpGraph::askNote(qint64 t)
+int GraphWidget::askNote(qint64 t)
 {
   qint64 shift = 0;
   RecordingStore *store = noteStore(&shift);
@@ -264,7 +264,7 @@ int QcpGraph::askNote(qint64 t)
   return mark;
 }
 
-bool QcpGraph::editMark(int mark)
+bool GraphWidget::editMark(int mark)
 {
   if (!m_marksEditable || mark < 0 || mark >= m_marks.size() || !m_marks.at(mark).store)
     return false;
@@ -280,13 +280,13 @@ bool QcpGraph::editMark(int mark)
   return true;
 }
 
-void QcpGraph::removeMark(int mark)
+void GraphWidget::removeMark(int mark)
 {
   if (m_marksEditable && mark >= 0 && mark < m_marks.size() && m_marks.at(mark).store)
     m_marks.at(mark).store->removeMark(m_marks.at(mark).index);
 }
 
-int QcpGraph::moveMark(int mark, qint64 t)
+int GraphWidget::moveMark(int mark, qint64 t)
 {
   if (!m_marksEditable || !markIsNote(mark) || !m_marks.at(mark).store)
     return mark;
@@ -295,7 +295,7 @@ int QcpGraph::moveMark(int mark, qint64 t)
   return markOf(m.store, m.store->setMarkTime(m.index, at));
 }
 
-void QcpGraph::endMarkDrag(bool cancel)
+void GraphWidget::endMarkDrag(bool cancel)
 {
   if (m_drag != Drag::Mark)
     return;
@@ -313,7 +313,7 @@ void QcpGraph::endMarkDrag(bool cancel)
     Q_EMIT noteMoved(m_dragStore->startDateTime().addMSecs(m_dragFrom), m_dragStore->startDateTime().addMSecs(m.t), m.name);
 }
 
-QString QcpGraph::markTip(int mark) const
+QString GraphWidget::markTip(int mark) const
 {
   if (mark < 0 || mark >= m_marks.size() || !m_marks.at(mark).store)
     return QString();
@@ -327,28 +327,28 @@ QString QcpGraph::markTip(int mark) const
   return html;
 }
 
-qint64 QcpGraph::timeAt(const QPoint &globalPos) const
+qint64 GraphWidget::timeAt(const QPoint &globalPos) const
 {
   const QPoint pos = m_plot->mapFromGlobal(globalPos);
   return m_plot->axisRect()->rect().contains(pos) ? qRound64(m_plot->xAxis->pixelToCoord(pos.x()) * 1000) : -1;
 }
 
-qint64 QcpGraph::markTime(int mark) const
+qint64 GraphWidget::markTime(int mark) const
 {
   return mark >= 0 && mark < m_marks.size() ? m_marks.at(mark).t : -1;
 }
 
-QString QcpGraph::markName(int mark) const
+QString GraphWidget::markName(int mark) const
 {
   return mark >= 0 && mark < m_marks.size() ? m_marks.at(mark).name : QString();
 }
 
-QColor QcpGraph::markColor(int mark) const
+QColor GraphWidget::markColor(int mark) const
 {
   return mark >= 0 && mark < m_marks.size() ? QColor::fromRgba(m_marks.at(mark).color) : QColor();
 }
 
-int QcpGraph::markPixel(int mark) const
+int GraphWidget::markPixel(int mark) const
 {
   for (const FlagLines::Placed &p : static_cast<const FlagLines *>(m_markItem)->place())
     if (p.id == mark)
@@ -356,7 +356,7 @@ int QcpGraph::markPixel(int mark) const
   return -1;
 }
 
-QRect QcpGraph::markFlagRect(int mark) const
+QRect GraphWidget::markFlagRect(int mark) const
 {
   for (const FlagLines::Placed &p : static_cast<const FlagLines *>(m_markItem)->place())
     if (p.id == mark)
@@ -364,7 +364,7 @@ QRect QcpGraph::markFlagRect(int mark) const
   return QRect();
 }
 
-QString QcpGraph::markFlagText(int mark) const
+QString GraphWidget::markFlagText(int mark) const
 {
   for (const FlagLines::Placed &p : static_cast<const FlagLines *>(m_markItem)->place())
     if (p.id == mark)
@@ -372,7 +372,7 @@ QString QcpGraph::markFlagText(int mark) const
   return QString();
 }
 
-QRect QcpGraph::cursorFlagRect(int which) const
+QRect GraphWidget::cursorFlagRect(int which) const
 {
   return markFlagRect(-1 - (which & 1));
 }

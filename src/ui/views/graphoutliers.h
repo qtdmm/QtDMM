@@ -8,8 +8,7 @@ class RecordingSeries;
 
 /// Readings a graph does not draw: outliers by one of three rules. Only the
 /// drawing and the statistics pass them over, the store keeps them. No
-/// drawing library; the rules are the ones of the graph on QtCharts
-/// (GraphWidget::isOutlier()), for the graph on QCustomPlot.
+/// drawing library.
 namespace GraphOutliers
 {
 enum Mode
