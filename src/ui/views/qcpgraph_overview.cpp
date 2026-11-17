@@ -44,6 +44,52 @@ public:
   std::function<const QList<QPointF> *(int)> pointsOf;
 
 protected:
+  /// A band of columnBand() - its upper edge, then the lower one backwards -
+  /// in pieces of a few columns. Whole, a jagged band of a curve that swings
+  /// costs the raster engine more than linearly in its columns (the stroke
+  /// above all: 70 ms against 4.4 ms for 800 columns that swing over most
+  /// of the height); the pieces fill the same pixels.
+  static void drawBand(QPainter *painter, const QPolygonF &band, const QBrush &fill, const QPen &pen)
+  {
+    constexpr qsizetype kPiece = 16;
+    const qsizetype n = (band.size() - 1) / 2;   // columns; the last point closes the polygon
+    if (n < 2)
+      return;
+    auto upper = [&](qsizetype c) { return band.at(c); };
+    auto lower = [&](qsizetype c) { return band.at(2 * n - 1 - c); };
+    QPolygonF piece, edge;
+    for (qsizetype a = 0; a + 1 < n; a += kPiece)
+    {
+      const qsizetype b = qMin(n - 1, a + kPiece);
+      piece.clear();
+      for (qsizetype c = a; c <= b; ++c)
+        piece << upper(c);
+      for (qsizetype c = b; c >= a; --c)
+        piece << lower(c);
+      painter->setPen(Qt::NoPen);
+      painter->setBrush(fill);
+      painter->drawPolygon(piece);
+      if (pen.style() == Qt::NoPen)
+        continue;
+      painter->setPen(pen);
+      painter->setBrush(Qt::NoBrush);
+      edge.clear();
+      for (qsizetype c = a; c <= b; ++c)
+        edge << upper(c);
+      painter->drawPolyline(edge);
+      edge.clear();
+      for (qsizetype c = a; c <= b; ++c)
+        edge << lower(c);
+      painter->drawPolyline(edge);
+    }
+    if (pen.style() != Qt::NoPen)
+    {
+      // its ends
+      painter->drawLine(upper(0), lower(0));
+      painter->drawLine(upper(n - 1), lower(n - 1));
+    }
+  }
+
   void draw(QCPPainter *painter) override
   {
     const QRectF rect = parentPlot()->axisRect()->rect();
@@ -55,11 +101,9 @@ protected:
       if (!points)
         continue;
       const QCPRange values = e.axis->range();
-      painter->setBrush(e.fill);
-      painter->setPen(e.pen);
       for (const QPolygonF &outline : GraphBand::columnBand(*points, time.lower, time.upper, values.lower * e.factor,
                                                             values.upper * e.factor, rect, e.columns))
-        painter->drawPolygon(outline);
+        drawBand(painter, outline, e.fill, e.pen);
     }
   }
 };
