@@ -7,9 +7,9 @@ framework. Website: https://qtdmm.de
 
 Requirements:
 =============
-- Qt 6 development files with the SerialPort, Charts, PrintSupport, Network
+- Qt 6 development files with the SerialPort, PrintSupport, Network, Svg
   and LinguistTools modules (Debian/Ubuntu: qt6-base-dev qt6-serialport-dev
-  qt6-charts-dev qt6-tools-dev qt6-tools-dev-tools)
+  qt6-svg-dev qt6-tools-dev qt6-tools-dev-tools)
 - optional: Qt 6 Connectivity (Bluetooth LE meters; qt6-connectivity-dev) and
   Multimedia (sound and video; qt6-multimedia-dev)
 - CMake version 3.16 or higher
@@ -49,7 +49,7 @@ or
 
 FreeBSD:
 --------
-- pkg install cmake ninja pkgconf qt6-base qt6-serialport qt6-charts qt6-tools hidapi
+- pkg install cmake ninja pkgconf qt6-base qt6-serialport qt6-svg qt6-tools hidapi
   (python3 for the documentation check in ctest). CMake-generated Makefiles
   need GNU make (gmake), so either install gmake or use -G Ninja as below.
 - Build, test and install:

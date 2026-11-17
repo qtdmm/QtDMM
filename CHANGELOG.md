@@ -80,6 +80,10 @@
 - **ES51962: the 4000 V range** — it was missing, its readings showed as overload.
 - **ES51962: overload compared the wrong bytes** — digits from the first byte on, not the second.
 
+### Platforms and build
+
+- **Qt Charts is no longer needed** — the graph draws with QCustomPlot (bundled) now, so building and packaging need one Qt module less (CMake, Arch PKGBUILD, RPM spec, Nix flake, INSTALL, the CI).
+
 ## v26.4-rc1 — Many Meters, One Bench (2026-11-08)
 
 ### Multi-meter core

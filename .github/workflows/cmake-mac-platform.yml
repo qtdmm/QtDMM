@@ -46,7 +46,7 @@ jobs:
       uses: jurplel/install-qt-action@a9c63c7c123f3069cff414e7e482d95dfa9d8125 # v4
       with:
         version: '6.11.*'
-        modules: 'qtserialport qtcharts qtmultimedia'
+        modules: 'qtserialport qtmultimedia'
         cache: true
 
     # ccache: no cache is kept between runs, but the tests compile many

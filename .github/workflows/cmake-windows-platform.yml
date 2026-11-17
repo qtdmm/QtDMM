@@ -25,7 +25,7 @@ jobs:
       with:
         version: '6.8.*'
         arch: win64_msvc2022_64
-        modules: 'qtserialport qtcharts qtconnectivity qtmultimedia'
+        modules: 'qtserialport qtconnectivity qtmultimedia'
         cache: true
 
     # Qt ships no fonts; the offscreen platform used by the widget tests
