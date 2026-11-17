@@ -18,6 +18,13 @@ namespace GraphBand
 /// per pixel column: a denser line zigzags inside the columns, its peaks cut
 /// at random by the antialiasing (a moiré that moves with every new scale).
 constexpr double kDensePoints = 1.0;
+/// ... and when it turns more often than once in this many columns: a dense
+/// smooth curve (a sine, a ramp) stays a line, a band of it would be a
+/// ladder of two stepped outlines.
+constexpr int kTurnColumns = 4;
+/// A turn counts when the curve goes back by at least this many pixels:
+/// noise of a pixel or two on a ramp is no zigzag.
+constexpr double kTurnPixels = 3.0;
 /// A dense curve's band takes the extremes of this many columns either
 /// side: a bucket of the thinned curve is one to two columns wide, a column
 /// alone may hold only a part of the line between two of its points.

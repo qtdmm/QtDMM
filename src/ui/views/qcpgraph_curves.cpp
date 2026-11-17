@@ -12,6 +12,8 @@
 #include "ui/views/graphtext.h"   // curveName()
 #include "ui/views/qcp.h"
 
+#include <cmath>
+
 #include <QResizeEvent>
 #include <QSet>
 
@@ -392,7 +394,8 @@ void QcpGraph::drawCurves(double from, double to)
       int readings = 0;
       for (const RecordingSeries *s : seriesOf(c))
         readings += s->lowerBound(qint64((to - c.shift) * 1000)) - s->lowerBound(qint64((from - c.shift) * 1000));
-      c.banded = width > 0 && readings > width * GraphBand::kDensePoints;
+      c.banded = width > 0 && readings > width * GraphBand::kDensePoints
+                 && turnsIn(c, from, to) * GraphBand::kTurnColumns > width;
     }
     if (c.axis >= 0 && !c.banded)
     {
@@ -463,4 +466,50 @@ int QcpGraph::curveAxis(int i) const
 QString QcpGraph::legendText() const
 {
   return m_timeBar->legendText();
+}
+
+// The turns of the curve in the time shown, of at least kTurnPixels on its
+// axis: a zigzag has one every few columns, a smooth curve two a period.
+int QcpGraph::turnsIn(const Curve &curve, double from, double to) const
+{
+  const Axis &axis = m_axes.at(curve.axis);
+  const double span = axis.axis->range().size() * axis.factor;
+  const double height = m_plot->axisRect()->height();
+  if (!(span > 0) || height <= 0)
+    return 0;
+  const double perUnit = height / span;   // pixels per base unit
+  const auto byTime = [](const QPointF &p, double t) { return p.x() < t; };
+  auto it = std::lower_bound(curve.points.cbegin(), curve.points.cend(), from, byTime);
+  const auto end = std::lower_bound(it, curve.points.cend(), to, byTime);
+  int turns = 0, direction = 0;
+  double extreme = qQNaN();
+  for (; it != end; ++it)
+  {
+    const double y = it->y() * perUnit;
+    if (std::isnan(y))
+    {
+      extreme = qQNaN();   // a gap: a new start after it
+      direction = 0;
+      continue;
+    }
+    if (std::isnan(extreme))
+      extreme = y;
+    else if (direction == 0)
+    {
+      if (std::abs(y - extreme) >= GraphBand::kTurnPixels)
+      {
+        direction = y > extreme ? 1 : -1;
+        extreme = y;
+      }
+    }
+    else if ((y - extreme) * direction > 0)
+      extreme = y;   // on in the same direction
+    else if (std::abs(y - extreme) >= GraphBand::kTurnPixels)
+    {
+      ++turns;
+      direction = -direction;
+      extreme = y;
+    }
+  }
+  return turns;
 }

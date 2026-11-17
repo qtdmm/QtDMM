@@ -1804,6 +1804,20 @@ static void testOverview()
   graph.refreshNow();
   check(!graph.curveBanded(0) && !graph.drawnPoints(0).isEmpty() && !graph.bandAt(0, 61000, &lo, &hi), "200 readings in the window: a line again");
 
+  // dense but smooth: a sine stays a line (a band of it would be two stepped outlines)
+  RecordingStore smooth;
+  Feed smoothFeed(&smooth, 10);
+  smooth.start();
+  for (int i = 0; i < 12000; ++i)
+    smoothFeed.value(std::sin(i / 300.0));
+  smooth.stop();
+  graph.setStore(&smooth);
+  graph.setWindowSeconds(120);
+  graph.showFrom(0);
+  graph.refreshNow();
+  check(!graph.curveBanded(0) && !graph.drawnPoints(0).isEmpty(), "12000 readings of a smooth sine: a line");
+  graph.setStore(&fast);
+
   if (qEnvironmentVariableIsSet("QTDMM_SHOT"))
   {
     graph.setStore(&store);

@@ -463,6 +463,9 @@ private:
   void        makeCurves();
   /// The series of @p curve's value, oldest first.
   QList<const RecordingSeries *> seriesOf(const Curve &curve) const;
+  /// How often @p curve turns between @p from and @p to (s, graph time) by
+  /// at least GraphBand::kTurnPixels on its axis as it stands now.
+  int         turnsIn(const Curve &curve, double from, double to) const;
   /// The bucket for the time shown on the plot's width.
   qint64      bucketNow() const;
   /// All points anew, and which axis each curve has.
