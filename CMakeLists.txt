@@ -340,7 +340,8 @@ if (QTDMM_WITH_NEOQCP)
 	target_include_directories(qtdmm_core SYSTEM PUBLIC $<TARGET_PROPERTY:NeoQCP,INTERFACE_INCLUDE_DIRECTORIES>)
 	target_compile_definitions(qtdmm_core PUBLIC QTDMM_NEOQCP)
 else()
-	target_compile_definitions(qtdmm_core PRIVATE QCUSTOMPLOT_USE_OPENGL )
+	# PUBLIC: it changes QCustomPlot's class layout, so every user of the header needs it
+	target_compile_definitions(qtdmm_core PUBLIC QCUSTOMPLOT_USE_OPENGL)
 	# QCustomPlot's OpenGL buffer calls glClear()/glClearColor() itself; Qt6::OpenGL
 	# does not hand the system's GL library on with MSVC
 	if (WIN32)
