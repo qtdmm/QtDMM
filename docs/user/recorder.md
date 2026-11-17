@@ -200,16 +200,12 @@ were; the integration curve carries on across a gap.
   right axis takes the prefix of the range it shows: 12 kHz reads 12 under
   [kHz], 3.5 mV 3.5 under [mV]. The curve stays one curve when the meter
   changes range (Hz to kHz, V to mV); a value in mV shares the axis of a
-  value in V. A right click on a right
-  axis (or its entry in the graph's menu, **Right axis [Hz]**) chooses
-  **Automatic** or **Fixed range...**: a minimum and a maximum, 49.5 to
-  50.5 Hz say, while the left axis scales itself. The axis then shows at
-  least that range, whatever the readings do, its ticks on the grid lines
-  of the left axis and on round numbers: steps of 1, 1.5, 2, 3, 4, 5, 6 or
-  8 (times a power of ten), the one that needs the fewest decimals - 0 to
-  100 % over 8 divisions becomes 0 to 120 in steps of 15. It is kept
-  per unit with the window layout and in a saved bench. A right click on
-  the left axis opens the graph's settings, where its range is. At most three units are
+  value in V. **Axis → Range [Hz]** in
+  the graph's menu chooses **Automatic** or **Fixed range...** for the
+  axis of a unit, left or right: a minimum and a maximum, 49.5 to 50.5 Hz
+  say, while the other axes scale themselves. The axis then shows that
+  range, whatever the readings do. It is kept per unit with the window
+  layout and in a saved bench. At most three units are
   drawn at a time: putting a value in a fourth unit on an axis switches off
   the curves of the unit there. When the second display
   changes what it shows (Hz to %), its curve ends and a new one begins; the
@@ -229,8 +225,7 @@ were; the integration curve carries on across a gap.
   in its colour. With none of the graph's device (the device of its first
   value) on the left axis, the first value of another device there is the
   left axis' value: the overview, the reference line, the cursor levels
-  and the PASS/FAIL band are then that device's; the triggers are the main value's; the integration curve can
-  take value 2 (see *Integration* below). The export of a recording has all
+  and the PASS/FAIL band are then that device's; the triggers are the main value's. The export of a recording has all
   values of every device that recorded, also those switched off here (see
   [Export and import](#export-and-import)).
 - **Mouse wheel** zooms the time axis; the **middle button** drags it. On the
@@ -260,8 +255,7 @@ were; the integration curve carries on across a gap.
   line follows the readings and says what it is (`mean 1.83 A`). Where it
   stands is kept with the window layout and in a saved bench.
   **Add a line at ...** in the same menu adds up to four more lines at
-  fixed values, dashed, where the menu was opened (from the ― button: in
-  the middle); drag them like the first one, **Remove the line at ...**
+  fixed values, dashed, where the menu was opened; drag them like the first one, **Remove the line at ...**
   takes one away. The window layout keeps them.
 - **Crossings:** where the curve of the left axis crosses a reference line
   in the window shown, a small hollow triangle marks the place, pointing up
@@ -298,8 +292,7 @@ were; the integration curve carries on across a gap.
   time between them and for each value its change (Δ), its mean, standard
   deviation (σ), minimum, maximum, the number of readings and for a
   current or a power its integral, in Ah, Wh or VAh - the charge a battery
-  took between two points, for instance. The value of the integration curve
-  gets its integral too, in its unit times seconds (V·s). When a value
+  took between two points, for instance. When a value
   changed what it measures in between (Hz to %), the values are of what it
   measures at the later cursor.
 - **Statistics:** beside the graph, on its left, a column with the
@@ -329,14 +322,13 @@ were; the integration curve carries on across a gap.
   keeps the states (see Export), so a file loaded shows them again; files
   written before 27.1 have only OL.
 - **Buttons beside the time buttons:** ⊟ the overview, ≋ the min/max
-  band, ― the reference line (its menu), **A B ✕** removes the time
-  cursors and ✎ sets a note now. The right-click menu has the same under
-  **View**, where **Buttons** hides them (kept with the graph). A dashed line across the graph at the
+  band, ✎ sets a note now and Σ the statistics; the right-click menu has
+  the same. A dashed line across the graph at the
   value of the left axis under each cursor shows the change as the distance between them;
   the cursors' names hang as flags under the graph, at the time labels.
 - **Zoom on a frame:** hold Shift and drag a frame over the graph: the
   graph shows its time and its height, on the right axes too. New readings
-  leave the height alone. **Reset zoom** in the right-click menu gives back
+  leave the height alone. **Undo zoom** in the right-click menu gives back
   the window and the axes of before, **Live** follows the readings again
   with the axes automatic. A drag without Shift does what it did.
 - **Notes** mark a moment of the measurement: *Note here...* in the
@@ -353,18 +345,11 @@ were; the integration curve carries on across a gap.
   go into a QtDMM recording (`.qtdmm-rec`) and into the columns `mark` and
   `note` of a CSV or spreadsheet; a SCPI client sets a note with
   `QTDMM:MARK "title","text"`.
-- **Integration** (**Settings → Graph → Integration curve**) draws a second curve: the
-  integral over time of the readings above a threshold, in the unit times
-  seconds (V·s, A·s, W·s), scaled and offset as configured — for charge or
-  energy over time. Each reading counts for the time it was shown. For
-  ampere-hours or watt-hours set the scale to 1/3600, `0.000277778`. A
-  scale set before version 26.2, when the curve was the sum of the samples,
-  is converted once, so the curve looks as before. **Apply to** chooses the value
-  it integrates: value 1, the main display, or value 2, the second display
-  of a meter that has one (a current on a Victron, for instance); it then
-  goes on that value's axis. Without a second display there is no curve
-  for value 2.
 - **Print** (Ctrl+P) prints the graph with a title and comment.
+
+An integral over time (the charge of a battery, the energy of a load) is
+no curve of the graph: the statistics give it between the time cursors
+for a current or a power, in Ah or Wh.
 
 ## More than one graph
 
@@ -387,50 +372,35 @@ recording.
   goes into the graph it is dropped on.
 - Print, Export, *Into the project*, *Copy graph image* and the zoom and note
   keys work on the graph used last (a click in it, its menu, its window
-  active); from a graph's own menu on that graph. A file imported goes into
-  the graph it was imported in.
-- *Settings → Graph → Time axis* shows and sets the time window of the graph
-  used last; a new graph starts with it.
+  active); from a graph's own menu on that graph. *Import* in the toolbar
+  and a recording opened from the project go into the graph used last.
+- *Settings → Graph → Time axis* sets the time window a new graph starts
+  with.
 - **Close window** in an added graph's menu removes it; the first graph only
   hides. The window layout and benches keep the graphs with what they show.
 
-## Graph (QCP), the new graph
+## The graph's menu
 
-**Graph (QCP)** - its own button next to **Graph**, with the same icon - opens
-a graph drawn with QCustomPlot instead of Qt Charts. It is to replace the
-graph: it grows next to it until it does all the graph does, then it takes
-its place. It draws the same readings and costs far less CPU with long
-recordings and several curves.
+The right-click menu of a graph holds:
 
-It is used like the graph described above: the time buttons, scrolling,
-zoom (wheel, a frame with Shift, Esc), the keys, the overview and the strip
-of the meter's states, the min/max band, a curve too dense for a line drawn
-as a band, time cursors and the statistics column (Σ), the reference line
-and added lines with their crossings, the limit band of the PASS/FAIL test,
-the start threshold (drag its line to change it), marks and notes, outliers
-and the colour variants. Its right-click menu holds what the graph's menu
-and **View** submenu hold:
-
-- **Sources...** picks the values of any open device; **Axis** puts a value
-  on the left axis, one of two right ones, or leaves it to the graph; a value
-  dragged from the sidebar onto it adds a curve.
-- **Start recording** / **Stop recording**, **Load recording...** (a file
-  into this graph, **Back to the device** returns), **Hold picture**,
-  **Reset**. *Import* in the toolbar and a recording opened from the
-  project load into the Graph (QCP) used last, without one into a new
-  one; without a device *Live* and *Clear* go back from the file.
+- **Start recording** / **Stop recording**, **New graph** (with the same
+  first value), **Sources...** (the values of any open device), **Axis**
+  (each value on the left axis, one of the right ones or Automatic; the
+  range of each axis), **Colour variant**, **Patterned lines**, **Reference
+  line**, **Outliers**, **View** (overview, min/max band, meter states,
+  crossings, statistics), **Remove time cursors**, **Undo zoom**.
+- **Load recording...** shows a file in this graph instead of the
+  devices' readings; **Back to the device** returns. A device that starts
+  recording or goes live ends the look at the file, and so do *Live* and
+  *Clear* in the toolbar. A value dragged onto a graph that shows a file
+  is not taken.
+- **Cursor A here** / **Cursor B here**, **Note here...**, **Hold
+  picture**, **Reset**.
+- **Configure...** opens *Settings → Graph*.
 - **Copy image**, **Export image...** (SVG and PDF keep the plot as vectors,
   PNG, JPEG), **Print**, **Export...**, **Into the project**, **Live in
   LabPlot**. The picture is the legend, the plot and the states' strip,
-  without the buttons, the overview and the statistics. Print, Export and
-  *Into the project* in the main menu act on the graph used last, of either
-  kind.
-- **Configure...** opens *Settings → Graph*: variant, colours, line, points
-  and width apply to both kinds.
-
-It has no integration curve: the integral is to become a calculated value
-of its own, shown like any other value. Its windows are kept with the
-window layout and benches, under keys of their own (`qgraph-N-...`).
+  without the buttons, the overview and the statistics.
 
 ## Colours
 
@@ -449,7 +419,7 @@ artefacts and raise the load. QtDMM takes it at its next start.
   in up to 10 divisions of a whole step (10 min: 10 × 1 min, 1 min:
   6 × 10 s); in Live the grid lines run along with the readings, like the
   paper of a recorder.
-  The phosphor colours dash the integration curve and add a fine scale:
+  The phosphor colours add a fine scale:
   on the reference line, else along the bottom edge, and on the trigger
   of a pre-triggered recording, else along the left edge. They have no
   cross in the middle - it looked like a reference and said nothing.
@@ -468,8 +438,8 @@ sparse dots, long-short), so the curves are told apart without their
 colours; the meter's own values are dashed, dotted and dash-dotted anyway.
 The legend shows the patterns. It is off at first; whether it is on is kept
 with the window layout. The graph's
-right-click menu, **Graph colours**, can choose other colours for this graph
-only; *Default* goes back to the setting.
+right-click menu, **Colour variant**, can choose other colours for this graph
+only; *As in the settings* goes back to the setting.
 
 ## Export and import
 

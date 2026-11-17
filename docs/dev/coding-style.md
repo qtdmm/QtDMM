@@ -6,9 +6,9 @@ C++20 and Qt 6. The build with `-DQTDMM_WERROR=ON` has no warnings, and stays so
 
 ## Files
 
-- Lower case, no spaces: `graphwidget.cpp`, `recordingstore.h`. Decoders are named after the protocol or chip with underscores between vendor and model: `uni_t_ienv.cpp`, `cyrustek_es51922.cpp`.
+- Lower case, no spaces: `qcpgraph.cpp`, `recordingstore.h`. Decoders are named after the protocol or chip with underscores between vendor and model: `uni_t_ienv.cpp`, `cyrustek_es51922.cpp`.
 - One class per header and source pair, the file named after the class in lower case.
-- A class too large for one source file spreads its definitions over parts named `<class>_<part>.cpp`, each about one subject (`graphwidget_axes.cpp`, `graphwidget_input.cpp`); the header stays one. Helpers that several parts need go into `<class>_p.h`, which is not part of the interface.
+- A class too large for one source file spreads its definitions over parts named `<class>_<part>.cpp`, each about one subject (`qcpgraph_axes.cpp`, `qcpgraph_input.cpp`); the header stays one. Helpers that several parts need go into `<class>_p.h`, which is not part of the interface.
 - Headers use `#pragma once`.
 - A new file starts with:
 
@@ -64,7 +64,7 @@ camelCase throughout, no snake_case.
 
 - `Q_EMIT`, `Q_SIGNALS`, `Q_SLOTS`, not `emit`/`signals`/`slots`.
 - `nullptr`, not `Q_NULLPTR` or `0`.
-- Connections with member-function pointers or lambdas: `connect(m_store, &RecordingStore::appended, this, &GraphWidget::onAppended)`. No `SIGNAL()`/`SLOT()` strings and no `QMetaObject::invokeMethod(obj, "name")`: a typo there only shows at run time. `invokeMethod` with a lambda (queued call) is fine.
+- Connections with member-function pointers or lambdas: `connect(m_store, &RecordingStore::appended, this, &QcpGraph::onAppended)`. No `SIGNAL()`/`SLOT()` strings and no `QMetaObject::invokeMethod(obj, "name")`: a typo there only shows at run time. `invokeMethod` with a lambda (queued call) is fine.
 - `std::as_const` for range-for over Qt containers that are members.
 - `QStringLiteral` for string literals that become a `QString`, `QLatin1String`/`QLatin1Char` for comparisons.
 - Text the user sees goes through `tr()`; it is English, in the tone of the handbook.

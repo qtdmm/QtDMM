@@ -2,8 +2,8 @@
 
 QtDMM reads a digital multimeter over a serial, USB-HID, RFC2217 or sigrok
 connection, shows the live reading on an LCD-style display and an analog
-meter, and records it in a transient recorder with thresholds, an
-integration curve, CSV export and printing. Several meters run side by
+meter, and records it in a transient recorder with thresholds, statistics, CSV
+export and printing. Several meters run side by
 side, one window each, and can be combined into calculated values.
 
 ## Contents
@@ -15,7 +15,7 @@ side, one window each, and can be combined into calculated values.
 - [Needle meter](analog-meter.md) — the moving-coil style instrument: scale,
   red zone, readouts, styles.
 - [The recorder](recorder.md) — live graph, recording and view; starting manually, at a time or on a threshold;
-  zoom, pan and cursor; integration; CSV export and import.
+  zoom, pan and cursors; statistics; CSV export and import.
 - [Readings table](readings-table.md) — every reading the meter sent, with
   time, mode and range; copy to a spreadsheet or export as CSV.
 - [Project](project-basket.md) — optional: the files of a project in one folder,
