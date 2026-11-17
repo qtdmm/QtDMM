@@ -3982,22 +3982,7 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
     const QString key = "Windows/qgraph-" + number;
     QMdiSubWindow *win = addViewWindow(Added::QGraph, ValueRef(), number.toInt());
     GraphModel *model = qgraphViewOf(win)->model();
-    model->setValuesSetting(get(key + "-values", QString()).toString());
-    model->setValueAxesSetting(get(key + "-value-axes", QString()).toString());
-    model->setFixedRangesSetting(get(key + "-fixed-ranges", QString()).toString());
-    model->setVariant(get(key + "-variant", QString()).toString());
-    model->setPatternedLines(get(key + "-patterns", false).toBool());
-    model->setStatsVisible(get(key + "-stats", false).toBool());
-    model->setMinimapVisible(get(key + "-minimap", true).toBool());
-    model->setStatesVisible(get(key + "-states", true).toBool());
-    model->setEnvelopeVisible(get(key + "-envelope", false).toBool());
-    model->setReferenceSetting(get(key + "-reference", QString()).toString());
-    model->setReferenceLinesSetting(get(key + "-reference-lines", QString()).toString());
-    model->setCrossingsVisible(get(key + "-crossings", true).toBool());
-    model->setOutliersSetting(get(key + "-outliers", QString()).toString());
-    if (const int seconds = get(key + "-window", 0).toInt(); seconds > 0)
-      model->setWindowSeconds(seconds);
-    model->setFollowAll(get(key + "-all", false).toBool());
+    model->readSettings(get, key);
     win->setVisible(get(key + "-shown", true).toBool());
   }
   for (const QString &number : get("Windows/poincares", QString()).toString().split(' ', Qt::SkipEmptyParts))
@@ -4346,21 +4331,7 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
   {
     const GraphModel *model = qgraphViewOf(w)->model();
     qgraphs << w->objectName().section('-', 1);
-    set("Windows/" + w->objectName() + "-values", model->valuesSetting());
-    set("Windows/" + w->objectName() + "-value-axes", model->valueAxesSetting());
-    set("Windows/" + w->objectName() + "-fixed-ranges", model->fixedRangesSetting());
-    set("Windows/" + w->objectName() + "-variant", model->variant());
-    set("Windows/" + w->objectName() + "-patterns", model->patternedLines());
-    set("Windows/" + w->objectName() + "-stats", model->statsVisible());
-    set("Windows/" + w->objectName() + "-minimap", model->minimapVisible());
-    set("Windows/" + w->objectName() + "-states", model->statesVisible());
-    set("Windows/" + w->objectName() + "-envelope", model->envelopeVisible());
-    set("Windows/" + w->objectName() + "-reference", model->referenceSetting());
-    set("Windows/" + w->objectName() + "-reference-lines", model->referenceLinesSetting());
-    set("Windows/" + w->objectName() + "-crossings", model->crossingsVisible());
-    set("Windows/" + w->objectName() + "-outliers", model->outliersSetting());
-    set("Windows/" + w->objectName() + "-window", model->windowSeconds());
-    set("Windows/" + w->objectName() + "-all", model->followAll());
+    model->writeSettings(set, "Windows/" + w->objectName());
     set("Windows/" + w->objectName() + "-shown", !w->isHidden());
   }
   if (!qgraphs.isEmpty() || m_qgraphsKey)

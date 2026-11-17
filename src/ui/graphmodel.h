@@ -7,6 +7,8 @@
 #include <QMap>
 #include <QObject>
 #include <QPair>
+#include <QVariant>
+#include <functional>
 
 #include "core/valueref.h"
 #include "ui/views/graphoutliers.h"
@@ -105,6 +107,16 @@ public:
   /// (0: no limit). With @p grow a quarter more, so the window does not
   /// change with every reading.
   static int  allTarget(double recordedSeconds, bool grow, int limitSeconds);
+
+  /// Its settings in a window layout or bench under @p key ("Windows/qgraph-2"):
+  /// @p key + "-values", "-value-axes", "-fixed-ranges", "-variant",
+  /// "-patterns", "-stats", "-minimap", "-states", "-envelope",
+  /// "-reference", "-reference-lines", "-crossings", "-outliers",
+  /// "-window", "-all". What @p get does not have takes its default.
+  using Get = std::function<QVariant(const QString &key, const QVariant &def)>;
+  using Set = std::function<void(const QString &key, const QVariant &value)>;
+  void        readSettings(const Get &get, const QString &key);
+  void        writeSettings(const Set &set, const QString &key) const;
 
 Q_SIGNALS:
   void        valuesChanged();

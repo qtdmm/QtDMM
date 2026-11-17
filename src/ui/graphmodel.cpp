@@ -242,3 +242,43 @@ void GraphModel::setCrossingsVisible(bool on)
   m_crossings = on;
   Q_EMIT referenceChanged();
 }
+
+// The order matters: the axes and fixed ranges name the values
+void GraphModel::readSettings(const Get &get, const QString &key)
+{
+  setValuesSetting(get(key + "-values", QString()).toString());
+  setValueAxesSetting(get(key + "-value-axes", QString()).toString());
+  setFixedRangesSetting(get(key + "-fixed-ranges", QString()).toString());
+  setVariant(get(key + "-variant", QString()).toString());
+  setPatternedLines(get(key + "-patterns", false).toBool());
+  setStatsVisible(get(key + "-stats", false).toBool());
+  setMinimapVisible(get(key + "-minimap", true).toBool());
+  setStatesVisible(get(key + "-states", true).toBool());
+  setEnvelopeVisible(get(key + "-envelope", false).toBool());
+  setReferenceSetting(get(key + "-reference", QString()).toString());
+  setReferenceLinesSetting(get(key + "-reference-lines", QString()).toString());
+  setCrossingsVisible(get(key + "-crossings", true).toBool());
+  setOutliersSetting(get(key + "-outliers", QString()).toString());
+  if (const int seconds = get(key + "-window", 0).toInt(); seconds > 0)
+    setWindowSeconds(seconds);
+  setFollowAll(get(key + "-all", false).toBool());
+}
+
+void GraphModel::writeSettings(const Set &set, const QString &key) const
+{
+  set(key + "-values", valuesSetting());
+  set(key + "-value-axes", valueAxesSetting());
+  set(key + "-fixed-ranges", fixedRangesSetting());
+  set(key + "-variant", variant());
+  set(key + "-patterns", patternedLines());
+  set(key + "-stats", statsVisible());
+  set(key + "-minimap", minimapVisible());
+  set(key + "-states", statesVisible());
+  set(key + "-envelope", envelopeVisible());
+  set(key + "-reference", referenceSetting());
+  set(key + "-reference-lines", referenceLinesSetting());
+  set(key + "-crossings", crossingsVisible());
+  set(key + "-outliers", outliersSetting());
+  set(key + "-window", windowSeconds());
+  set(key + "-all", followAll());
+}

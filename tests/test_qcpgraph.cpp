@@ -240,6 +240,57 @@ static void testLook()
         && curvePen(look(Neutral, design, settings), { 1, 0, 0 }, false).style() == Qt::NoPen, "no line");
 }
 
+// The keys of a window layout or bench: every setting written and read back
+// the same; what a layout does not have takes its default
+static void testModelSettings()
+{
+  GraphModel model;
+  model.setValuesSetting("0@device:a 1@device:b");
+  model.setValueAxis(ValueRef(1, "device:b"), 1);
+  model.setFixedRange("V", 0, 10);
+  model.setVariant("scope");
+  model.setPatternedLines(true);
+  model.setStatsVisible(true);
+  model.setMinimapVisible(false);
+  model.setStatesVisible(false);
+  model.setEnvelopeVisible(true);
+  model.setReferenceSetting("1.5");
+  model.setReferenceLinesSetting("0.5 2");
+  model.setCrossingsVisible(false);
+  model.setOutliersSetting("jump 0.5 V");
+  model.setWindowSeconds(300);
+  model.setFollowAll(true);
+  QMap<QString, QVariant> kept;
+  model.writeSettings([&](const QString &key, const QVariant &value) { kept.insert(key, value); }, "Windows/qgraph-2");
+  const QStringList keys = kept.keys();
+  check(keys.size() == 15 && std::all_of(keys.cbegin(), keys.cend(), [](const QString &k) { return k.startsWith("Windows/qgraph-2-"); }),
+        "15 keys under the window's: " + keys.join(' '));
+
+  GraphModel back;
+  back.readSettings([&](const QString &key, const QVariant &def) { return kept.value(key, def); }, "Windows/qgraph-2");
+  QMap<QString, QVariant> again;
+  back.writeSettings([&](const QString &key, const QVariant &value) { again.insert(key, value); }, "Windows/qgraph-2");
+  QStringList differ;
+  for (auto it = kept.cbegin(); it != kept.cend(); ++it)
+    if (again.value(it.key()).toString() != it.value().toString())
+      differ << QString("%1: %2 / %3").arg(it.key(), it.value().toString(), again.value(it.key()).toString());
+  check(differ.isEmpty(), "read back the same: " + differ.join("; "));
+  QStringList unset;
+  for (const char *k : { "-values", "-value-axes", "-fixed-ranges", "-variant", "-reference", "-reference-lines", "-outliers" })
+    if (kept.value(QString("Windows/qgraph-2") + k).toString().isEmpty())
+      unset << k;
+  check(unset.isEmpty(), "every text was set, none fell back to empty: " + unset.join(' '));
+  check(back.valueAxis(ValueRef(1, "device:b")) == 1 && back.outliers().mode == GraphOutliers::Jump && !back.minimapVisible()
+          && back.followAll() && back.windowSeconds() == 300, "the settings themselves");
+
+  // nothing in the layout: the defaults
+  GraphModel empty;
+  empty.readSettings([](const QString &, const QVariant &def) { return def; }, "Windows/qgraph-3");
+  check(empty.values().isEmpty() && empty.minimapVisible() && empty.statesVisible() && !empty.envelopeVisible()
+          && empty.crossingsVisible() && !empty.outliers().active() && !empty.followAll()
+          && empty.windowSeconds() == GraphModel::kDefaultWindowSeconds, "the defaults");
+}
+
 static void testCurve()
 {
   RecordingStore store;
@@ -1945,6 +1996,7 @@ int main(int argc, char **argv)
     return 1;
   }
   testModel();
+  testModelSettings();
   testLook();
   testCurve();
   testThinning();
