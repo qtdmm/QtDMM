@@ -155,6 +155,10 @@ public:
   bool        following() const { return m_followEnd; }
   /// The start of the window, ms since the start of the recording.
   qint64      windowStart() const;
+  /// The seconds the time axis spans: the window; on "All" at the end of a
+  /// recording shorter than the window only the recording (at least 10 s),
+  /// so it fills the width and grows with it.
+  double      shownSeconds() const;
   /// The window narrower (@p factor > 1) or wider; ends "All".
   void        zoomBy(double factor);
   /// The window over the whole recording, once (not growing as "All").

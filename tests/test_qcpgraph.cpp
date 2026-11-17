@@ -713,6 +713,31 @@ struct Bench
   }
 };
 
+// "All" at the end of a recording shorter than its window: the time axis is
+// the recording, at least 10 s, and grows with it (the window behind it in
+// steps of a quarter, whole minutes)
+static void testAllStretches()
+{
+  Bench bench;
+  QcpGraph &graph = bench.graph;
+  bench.a.live();
+  graph.setValues({ ValueRef(0, "device:a") });
+  for (int i = 0; i < 4; ++i)
+    bench.feedA.value(1);
+  graph.setFollowAll(true);
+  graph.refreshNow();
+  check(graph.shownSeconds() == 10, QString("a few s recorded: the axis spans 10 s, got %1").arg(graph.shownSeconds()));
+  for (int i = 0; i < 97; ++i)
+    bench.feedA.value(1 + 0.01 * i);
+  graph.refreshNow();
+  check(graph.windowSeconds() > 101 && graph.shownSeconds() >= 100 && graph.shownSeconds() <= 101,
+        QString("100 s recorded: window %1 s, the axis %2 s").arg(graph.windowSeconds()).arg(graph.shownSeconds()));
+  graph.setFollowAll(false);
+  graph.setWindowSeconds(600);
+  graph.refreshNow();
+  check(graph.shownSeconds() == 600, "a window of its own: the axis is the window");
+}
+
 static void testValues()
 {
   Bench bench;
@@ -2008,6 +2033,7 @@ int main(int argc, char **argv)
   testAll();
   testZoom();
   testFile(QString::fromLocal8Bit(argv[1]));
+  testAllStretches();
   testValues();
   testFourUnits();
   testOtherTime();
