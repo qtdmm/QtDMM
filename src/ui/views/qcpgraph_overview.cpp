@@ -27,7 +27,7 @@ public:
   struct Entry
   {
     int      curve = 0;      ///< -1: the min/max band
-    QList<QPointF> points;   ///< the curve's, shared with it
+    int      source = 0;     ///< the curve whose points it draws
     QCPAxis *axis = nullptr;
     double   factor = 1;     ///< base unit per unit of the axis
     int      columns = 0;    ///< the columns either side that widen it
@@ -39,6 +39,9 @@ public:
   double selectTest(const QPointF &, bool, QVariant *) const override { return -1; }
 
   QList<Entry> entries;
+  /// The points of a curve, nullptr for none. Not held in the entries: a
+  /// copy shared with the curve would be copied whole by its next reading.
+  std::function<const QList<QPointF> *(int)> pointsOf;
 
 protected:
   void draw(QCPPainter *painter) override
@@ -48,10 +51,13 @@ protected:
     painter->setAntialiasing(false);
     for (const Entry &e : std::as_const(entries))
     {
+      const QList<QPointF> *points = pointsOf(e.source);
+      if (!points)
+        continue;
       const QCPRange values = e.axis->range();
       painter->setBrush(e.fill);
       painter->setPen(e.pen);
-      for (const QPolygonF &outline : GraphBand::columnBand(e.points, time.lower, time.upper, values.lower * e.factor,
+      for (const QPolygonF &outline : GraphBand::columnBand(*points, time.lower, time.upper, values.lower * e.factor,
                                                             values.upper * e.factor, rect, e.columns))
         painter->drawPolygon(outline);
     }
@@ -65,6 +71,7 @@ void QcpGraph::setupOverview()
   auto *bands = new Bands(m_plot);
   bands->setLayer(QStringLiteral("main"));
   bands->setSelectable(false);
+  bands->pointsOf = [this](int i) { return i >= 0 && i < m_curves.size() ? &m_curves.at(i).points : nullptr; };
   m_bands = bands;
 
   m_minimap = new GraphMinimap(this);
@@ -91,7 +98,7 @@ void QcpGraph::setupOverview()
     const double from = m_plot->xAxis->range().lower * 1000, width = m_plot->xAxis->range().size() * 1000;
     if (width <= 0 || leftCurve() < 0)
       return out;
-    for (const GraphStates::Span &s : GraphStates::spans(statsCurve(leftCurve()), qRound64(from), qRound64(from + width)))
+    for (const GraphStates::Span &s : m_statesCache.spans(statsCurve(leftCurve()), qRound64(from), qRound64(from + width)))
       out << GraphStateStrip::Span{ GraphStateStrip::Kind(s.kind), s.label, qBound(0.0, (s.from - from) / width, 1.0),
                                     qBound(0.0, (s.to - from) / width, 1.0), s.pattern };
     return out;
@@ -169,7 +176,7 @@ void QcpGraph::updateOverview()
     QColor fill = colorOf(left);
     fill.setAlpha(60);
     const Axis &axis = m_axes.first();
-    bands->entries << Bands::Entry{ -1, m_curves.at(left).points, axis.axis, axis.factor, GraphBand::kEnvelopeColumns, fill, QPen(Qt::NoPen) };
+    bands->entries << Bands::Entry{ -1, left, axis.axis, axis.factor, GraphBand::kEnvelopeColumns, fill, QPen(Qt::NoPen) };
   }
   for (int i = 0; i < m_curves.size(); ++i)
   {
@@ -181,7 +188,7 @@ void QcpGraph::updateOverview()
     // the outline as the line would be, never dashed: it is the edge of an area
     QPen pen(colorOf(i), c.pen.style() == Qt::NoPen ? 1 : c.pen.widthF());
     const Axis &axis = m_axes.at(c.axis);
-    bands->entries << Bands::Entry{ i, c.points, axis.axis, axis.factor, GraphBand::kDenseColumns, fill, pen };
+    bands->entries << Bands::Entry{ i, i, axis.axis, axis.factor, GraphBand::kDenseColumns, fill, pen };
   }
 }
 
@@ -198,9 +205,10 @@ bool QcpGraph::curveBanded(int i) const
 
 bool QcpGraph::bandAt(int i, qint64 t, double *lo, double *hi) const
 {
-  for (const Bands::Entry &e : static_cast<const Bands *>(m_bands)->entries)
-    if (e.curve == i)
-      return GraphBand::columnAt(e.points, m_plot->xAxis->range().lower, m_plot->xAxis->range().upper, m_plot->axisRect()->rect(),
+  const auto *bands = static_cast<const Bands *>(m_bands);
+  for (const Bands::Entry &e : bands->entries)
+    if (const QList<QPointF> *points = bands->pointsOf(e.source); e.curve == i && points)
+      return GraphBand::columnAt(*points, m_plot->xAxis->range().lower, m_plot->xAxis->range().upper, m_plot->axisRect()->rect(),
                                  e.columns, t / 1000.0, lo, hi);
   return false;
 }

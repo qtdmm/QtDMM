@@ -28,6 +28,7 @@
 #include "ui/qcpgraphview.h"
 #include "ui/views/graphband.h"
 #include "ui/views/graphminimap.h"
+#include "ui/views/graphstates.h"
 #include "ui/views/graphstats.h"
 #include "ui/views/graphtimebar.h"
 #include "ui/views/qcpgraph.h"
@@ -1716,6 +1717,65 @@ static void testOverview()
   }
 }
 
+// The strip's spans kept from reading to reading: the same as the states
+// counted anew over the window, each cut to it.
+static void testStatesCache()
+{
+  RecordingStore store;
+  Feed feed(&store, 1000);
+  store.start();
+  GraphStats::Curve curve;
+  curve.store = &store;
+  curve.parts = { &store.series() };
+  GraphStates::Cache cache;
+  const auto cut = [](const QList<GraphStates::Span> &spans, qint64 from, qint64 to)
+  {
+    QStringList out;
+    for (const GraphStates::Span &s : spans)
+      if (qMin(s.to, to) > qMax(s.from, from))
+        out << QString("%1 %2-%3").arg(s.label).arg(qMax(s.from, from)).arg(qMin(s.to, to));
+    out.sort();
+    return out.join(" | ");
+  };
+  // HOLD for a while, now and then an overload, REL with MAX on top
+  const quint32 states[] = { 0, quint32(SampleFlag::Hold), quint32(SampleFlag::Relative),
+                             quint32(SampleFlag::Relative) | quint32(SampleFlag::Max) };
+  int bad = 0;
+  QString first;
+  for (int i = 0; i < 300; ++i)
+  {
+    Reading r;
+    r.overload = i % 23 == 7;
+    r.value = r.overload ? qQNaN() : i;
+    r.text = r.overload ? QStringLiteral("OL") : QString::number(i);
+    r.unit = r.baseUnit = "V";
+    r.port.quantity = Quantity::Voltage;
+    r.flags = states[(i / 11) % 4];
+    r.hold = r.flags & SampleFlag::Hold;
+    r.t = feed.now;
+    r.msecs = Feed::wall(feed.now).toMSecsSinceEpoch();
+    store.setReading(r);
+    feed.now += 1000;
+    // the window at the end, one in the middle, the clock past the newest reading
+    for (const auto &[from, to] : { std::pair<qint64, qint64>{ feed.now - 60000, feed.now }, { i * 400, i * 600 + 5000 } })
+    {
+      const QString kept = cut(cache.spans(curve, from, to), from, to);
+      const QString anew = cut(GraphStates::spans(curve, from, to), from, to);
+      if (kept != anew && bad++ == 0)
+        first = QString("at %1 (%2..%3): %4 / %5").arg(i).arg(from).arg(to).arg(kept, anew);
+    }
+  }
+  check(bad == 0, QString("the kept spans are the counted ones (%1 differ) %2").arg(bad).arg(first));
+  // the readings discarded, new ones: counted anew
+  store.clear();
+  check(cache.spans(curve, 0, feed.now).isEmpty(), "a store emptied: none");
+  for (int i = 0; i < 5; ++i)
+    feed.value(i == 2 ? qQNaN() : i);
+  check(cut(cache.spans(curve, 0, feed.now), 0, feed.now) == cut(GraphStates::spans(curve, 0, feed.now), 0, feed.now)
+          && cut(cache.spans(curve, 0, feed.now), 0, feed.now).count("OL") == 1,
+        "new readings after clear(): " + cut(cache.spans(curve, 0, feed.now), 0, feed.now));
+}
+
 int main(int argc, char **argv)
 {
   if (qEnvironmentVariableIsEmpty("QT_QPA_PLATFORM"))
@@ -1751,6 +1811,7 @@ int main(int argc, char **argv)
   testMarks();
   testBandRules();
   testOverview();
+  testStatesCache();
   shot();
   return failed ? 1 : 0;
 }
