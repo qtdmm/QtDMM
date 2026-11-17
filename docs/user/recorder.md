@@ -416,7 +416,9 @@ and **View** submenu hold:
   dragged from the sidebar onto it adds a curve.
 - **Start recording** / **Stop recording**, **Load recording...** (a file
   into this graph, **Back to the device** returns), **Hold picture**,
-  **Reset**.
+  **Reset**. *Import* in the toolbar and a recording opened from the
+  project load into the Graph (QCP) used last, without one into a new
+  one; without a device *Live* and *Clear* go back from the file.
 - **Copy image**, **Export image...** (SVG and PDF keep the plot as vectors,
   PNG, JPEG), **Print**, **Export...**, **Into the project**, **Live in
   LabPlot**. The picture is the legend, the plot and the states' strip,

@@ -231,6 +231,12 @@ MainWindow::MainWindow(QCommandLineParser &parser, QWidget *parent)
       updateRecorderActions();
   });
   connect(m_wid, &InstanceWidget::recorderState, this, &MainWindow::updateRecorderActions);
+  // without a leading meter Record, Live, Clear and the export are for the
+  // file the graph used last shows
+  m_wid->setFileView({ [this] { const QcpGraphView *view = pictureQGraph(); return view && view->showsFile(); },
+                       [this] { if (QcpGraphView *view = pictureQGraph()) view->closeFile(); },
+                       [this](const QString &path, bool everyReading)
+                       { QcpGraphView *view = pictureQGraph(); return view && writeQGraphRecording(view, path, everyReading); } });
   // a file loaded without a device: the start page makes way for its graph
   connect(m_wid, &InstanceWidget::recorderState, this, &MainWindow::updateEmptyStart);
 
@@ -467,8 +473,7 @@ void MainWindow::createViews()
     else if ((suffix.compare("csv", Qt::CaseInsensitive) == 0 || suffix == RecordingFile::kSuffix)
              && RecordingFile::read(path).has_value())
     {
-      if (m_wid->importFile(path))
-        action_Graph->setChecked(true);
+      importRecording(path);
     }
     else
       m_basket->openWithSystem(path);
@@ -663,10 +668,10 @@ void MainWindow::createViews()
     if (const GraphView *view = graphViewOf(win))
     {
       m_wid->setCurrentGraph(view->graph());
-      m_pictureQGraph = nullptr;
+      setPictureQGraph(nullptr);
     }
     else if (QcpGraphView *qgraph = qgraphViewOf(win))
-      m_pictureQGraph = qgraph;
+      setPictureQGraph(qgraph);
   });
   m_readings->setWindowActions({ hideWindow(m_readingsWin), m_tableSources, m_tableToBasket, m_tableExport });
   m_displayAction->setObjectName("action_WindowDisplay");
@@ -849,6 +854,12 @@ QMdiSubWindow *MainWindow::addViewWindow(Added kind, const ValueRef &value, int 
     applyQGraphLook(view);
     if (!value.source.isEmpty())
       view->model()->setValues({ value });
+    // a file shown: Record and Live say so, the start page makes way
+    connect(view, &QcpGraphView::fileShownChanged, this, [this]
+    {
+      updateRecorderActions();
+      updateEmptyStart();
+    });
     win = addView(graph, graph->windowTitle(), MdiArranger::Graph, prefix + QString::number(number));
     graph->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(graph, &QWidget::customContextMenuRequested, this, [this, graph, win](const QPoint &pos)
@@ -955,7 +966,7 @@ QMdiSubWindow *MainWindow::addViewWindow(Added kind, const ValueRef &value, int 
   return win;
 }
 
-void MainWindow::newView(Added kind, const ValueRef &value, bool ask)
+QMdiSubWindow *MainWindow::newView(Added kind, const ValueRef &value, bool ask)
 {
   QMdiSubWindow *win = addViewWindow(kind, value);
   // from the menu its value is asked first (the active device's first one
@@ -968,7 +979,7 @@ void MainWindow::newView(Added kind, const ValueRef &value, bool ask)
     if ((meters.size() > 1 || (meters.size() == 1 && meters.first()->valueCount() > 1)) && !editQGraphSources(qgraphViewOf(win)))
     {
       removeAddedWindow(win);
-      return;
+      return nullptr;
     }
   }
   else if (ask && !m_session->controllers().isEmpty())
@@ -978,7 +989,7 @@ void MainWindow::newView(Added kind, const ValueRef &value, bool ask)
       if (!editXYSources(xyViewOf(win)))
       {
         removeAddedWindow(win);
-        return;
+        return nullptr;
       }
     }
     else
@@ -996,7 +1007,7 @@ void MainWindow::newView(Added kind, const ValueRef &value, bool ask)
                                  meter, plot, graph ? graph->graph() : nullptr, histogram, heatmap))
       {
         removeAddedWindow(win);
-        return;
+        return nullptr;
       }
     }
   }
@@ -1004,6 +1015,7 @@ void MainWindow::newView(Added kind, const ValueRef &value, bool ask)
   m_mdi->setActiveSubWindow(win);
   growFor(win);
   m_arranger->arrange();
+  return win;
 }
 
 void MainWindow::removeAddedWindow(QMdiSubWindow *win)
@@ -1174,7 +1186,7 @@ void MainWindow::hookGraph(GraphWidget *graph, QMdiSubWindow *win)
 {
   graph->setWindowActions({ hideAction(win), m_graphSources, m_graphToBasket, m_graphExport, m_labPlotLive });
   graph->setPrintAction(action_Print);
-  connect(graph, &GraphWidget::used, this, [this] { m_pictureQGraph = nullptr; });
+  connect(graph, &GraphWidget::used, this, [this] { setPictureQGraph(nullptr); });
   // with or without a device, the graph shows what was loaded
   connect(graph, &GraphWidget::fileImported, win, [this, win] { showGraphWindow(win); });
   // a note set in the graph marks its reading in the table
@@ -1254,15 +1266,62 @@ QList<QMdiSubWindow *> MainWindow::qgraphWindows() const
 
 void MainWindow::loadIntoQGraph(QcpGraphView *view)
 {
-  Settings *cfg = m_wid->settings();
-  const QString path = QFileDialog::getOpenFileName(this, tr("Load recording"), cfg->getString("QtDMM/LastUsesPath"),
-                                                    tr("Recordings (*.%1 *.csv *.txt);;All files (*)").arg(RecordingFile::kSuffix));
-  if (path.isEmpty())
-    return;
-  cfg->setString("QtDMM/LastUsesPath", QDir().absoluteFilePath(path));
+  if (const QString path = askRecordingPath(); !path.isEmpty())
+    loadRecordingInto(view, path);
+}
+
+QString MainWindow::askRecordingPath()
+{
+  return QFileDialog::getOpenFileName(this, tr("Load recording"), m_wid->settings()->getString("QtDMM/LastUsesPath"),
+                                      tr("Recordings (*.%1 *.csv *.txt);;All files (*)").arg(RecordingFile::kSuffix));
+}
+
+bool MainWindow::loadRecordingInto(QcpGraphView *view, const QString &path)
+{
+  m_wid->settings()->setString("QtDMM/LastUsesPath", QDir().absoluteFilePath(path));
   QString error;
-  if (!view->loadFile(path, &error))
-    QMessageBox::warning(this, tr("Load recording"), error);
+  if (view->loadFile(path, &error))
+    return true;
+  QMessageBox::warning(this, tr("Load recording"), error);
+  return false;
+}
+
+void MainWindow::importRecording()
+{
+  if (const QString path = askRecordingPath(); !path.isEmpty())
+    importRecording(path);
+}
+
+bool MainWindow::importRecording(const QString &path)
+{
+  QcpGraphView *view = pictureQGraph();
+  QMdiSubWindow *made = nullptr;
+  if (!view)
+  {
+    // a graph of its own: it shows no meter's value
+    made = newView(Added::QGraph, ValueRef());
+    view = made ? qgraphViewOf(made) : nullptr;
+  }
+  if (!view)
+    return false;
+  if (!loadRecordingInto(view, path))
+  {
+    if (made)
+      removeAddedWindow(made);   // an empty graph is not what was asked for
+    return false;
+  }
+  for (QMdiSubWindow *win : qgraphWindows())
+    if (qgraphViewOf(win) == view)
+      showGraphWindow(win);
+  return true;
+}
+
+void MainWindow::setPictureQGraph(QcpGraphView *view)
+{
+  if (m_pictureQGraph == view)
+    return;
+  m_pictureQGraph = view;
+  updateRecorderActions();
 }
 
 void MainWindow::newQGraph(const ValueRef &value)
@@ -2086,7 +2145,9 @@ void MainWindow::placeWindow()
 void MainWindow::updateEmptyStart()
 {
   const QList<GraphView *> graphs = m_wid->graphs();
-  const bool showsFile = std::any_of(graphs.cbegin(), graphs.cend(), [](const GraphView *v) { return v->graph()->showsFile(); });
+  const QList<QMdiSubWindow *> qgraphs = qgraphWindows();
+  const bool showsFile = std::any_of(graphs.cbegin(), graphs.cend(), [](const GraphView *v) { return v->graph()->showsFile(); })
+                         || std::any_of(qgraphs.cbegin(), qgraphs.cend(), [this](QMdiSubWindow *w) { return qgraphViewOf(w)->showsFile(); });
   const bool empty = m_session->controllers().isEmpty() && m_pendingOpen.isEmpty() && !showsFile;
   const bool noDevices = m_wid->devices()->list().isEmpty();
   m_emptyConnect->setVisible(!noDevices);
@@ -2276,7 +2337,7 @@ void MainWindow::createActions()
     else
       m_wid->printSLOT();
   });
-  connect(action_Import, &QAction::triggered, m_wid, &InstanceWidget::importSLOT);
+  connect(action_Import, &QAction::triggered, this, qOverload<>(&MainWindow::importRecording));
   connect(action_Configure, &QAction::triggered, m_wid, &InstanceWidget::configSLOT);
   // Shift+F8: the settings of the device chosen in the sidebar, as its context menu there
   connect(action_ConfigureDMM, &QAction::triggered, this, [this]
@@ -2507,8 +2568,7 @@ void MainWindow::connectSLOT(bool on)
 
 void MainWindow::updateRecorderActions()
 {
-  const MeterController *lead = m_session->lead();
-  const RecordingStore::State state = (lead ? lead->recorder() : m_wid->graph()->store())->state();
+  const auto state = RecordingStore::State(m_wid->recordingState());
   const bool recording = state == RecordingStore::Record;
   action_Record->setEnabled(recording ? action_Stop->isEnabled() : action_Start->isEnabled());
   action_Record->setIcon(QIcon(new RecordIconEngine(recording)));
@@ -2835,7 +2895,7 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
   };
   QcpGraphView *qgraph = qgraphViewOf(win);
   if (qgraph)
-    m_pictureQGraph = qgraph;   // the window's picture actions are for it now
+    setPictureQGraph(qgraph);   // the window's picture actions are for it now
   // on a mark's flag: its note (the texts are the old graph's)
   const int qgraphMark = qgraph ? qgraph->graph()->markAtGlobal(globalPos) : -1;
   if (qgraphMark >= 0)

@@ -156,6 +156,7 @@ bool QcpGraphView::loadFile(const QString &path, QString *error)
   m_graph->setMarksEditable(false);
   m_graph->setStore(m_fileStore);
   m_graph->setSourceName(QFileInfo(path).fileName());
+  Q_EMIT fileShownChanged(true);
   return true;
 }
 
@@ -167,6 +168,7 @@ void QcpGraphView::closeFile()
   m_graph->setMarksEditable(true);
   m_graph->setSourceName(QString());
   m_graph->setStore(nullptr);
+  Q_EMIT fileShownChanged(false);
 }
 
 void QcpGraphView::followBase()

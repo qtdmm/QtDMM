@@ -37,6 +37,10 @@ public:
   /// Back to the meter of the first value.
   void        closeFile();
 
+Q_SIGNALS:
+  /// A file is shown now, or no longer (loadFile(), closeFile()).
+  void        fileShownChanged(bool shown);
+
 private:
   /// The meters open now: the graph asks for their stores again.
   void        followBase();
