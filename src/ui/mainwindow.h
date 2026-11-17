@@ -223,6 +223,11 @@ protected:
   /// The graph (QCP) the window's picture actions are for (Print, the export's
   /// picture, Into the project): the one used last; nullptr: the graph's.
   QPointer<QcpGraphView> m_pictureQGraph;
+  /// m_pictureQGraph while its window is shown: a hidden one is no longer the one used.
+  QcpGraphView *pictureQGraph() const;
+  /// What Export writes for a graph (QCP): the file it shows, else the
+  /// recording of its values. False: not written, said why.
+  bool        writeQGraphRecording(QcpGraphView *view, const QString &path, bool everyReading);
   QAction    *m_qgraphAction = nullptr;
   bool        m_qgraphsKey = false;   ///< Windows/qgraphs named graphs when read or written last: an empty list is written too
   QAction    *m_newHistogramAction = nullptr;
