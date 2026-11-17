@@ -23,11 +23,8 @@ namespace SeriesDecimator
 {
 struct Options
 {
-  bool   integral = false;       ///< the points are the integral, not the value
-  double integralOffset = 0;     ///< integral: offset + integral x scale
-  double integralScale = 1;
   /// Readings passed over (hidden outliers): the line runs from the reading
-  /// before to the one after them, no gap. Never asked for the integral.
+  /// before to the one after them, no gap.
   std::function<bool(int)> hidden;
 };
 
