@@ -502,6 +502,8 @@ bool InstanceWidget::writeRecordingTo(const QString &file, bool everyReading, co
     if (lead->writeRecording(file, everyReading, &err, values))
       return true;
   }
+  else if (fileShown() && m_fileView.write)
+    return m_fileView.write(file, everyReading);   // it says why
   else if (graph()->store()->count() <= 0)
     err = tr("nothing recorded");
   else if (graph()->exportCsvFile(file, everyReading))
@@ -546,11 +548,6 @@ void InstanceWidget::importSLOT()
   graph()->importDataSLOT();
 }
 
-bool InstanceWidget::importFile(const QString &path)
-{
-  return keepUnsavedData(tr("Loading a file replaces it."), tr("Load without saving")) && graph()->importCsvFile(path);
-}
-
 void InstanceWidget::printSLOT()
 {
   printWith([this](QPrinter *printer, const QString &title, const QString &comment) { graph()->print(printer, title, comment); });
@@ -584,18 +581,28 @@ void InstanceWidget::clearSLOT()
     graph()->liveSLOT();
   else
     graph()->clearSLOT();
+  leaveFile();
+}
+
+void InstanceWidget::leaveFile() const
+{
+  if (fileShown() && m_fileView.leave)
+    m_fileView.leave();
 }
 
 void InstanceWidget::liveSLOT()
 {
   // a file without a device stays in view beside a meter that is live
-  if (recordingState() != RecordingStore::View && !graph()->showsFile())
+  if (recordingState() != RecordingStore::View && !graph()->showsFile() && !fileShown())
   {
     Q_EMIT recorderState(recordingState());   // the button shows the state again
     return;
   }
   if (keepUnsavedData(tr("Live clears it."), tr("Live without saving")))
+  {
     graph()->liveSLOT();
+    leaveFile();
+  }
   else
     Q_EMIT recorderState(recordingState());
 }
@@ -603,7 +610,9 @@ void InstanceWidget::liveSLOT()
 int InstanceWidget::recordingState() const
 {
   const MeterController *lead = m_session->lead();
-  return int(lead ? lead->recorder()->state() : graph()->store()->state());
+  if (lead)
+    return int(lead->recorder()->state());
+  return int(fileShown() ? RecordingStore::View : graph()->store()->state());
 }
 
 bool InstanceWidget::confirmRecording()

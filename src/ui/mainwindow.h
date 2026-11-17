@@ -223,6 +223,8 @@ protected:
   /// The graph (QCP) the window's picture actions are for (Print, the export's
   /// picture, Into the project): the one used last; nullptr: the graph's.
   QPointer<QcpGraphView> m_pictureQGraph;
+  /// m_pictureQGraph set: Record and Live show the state of what it shows.
+  void        setPictureQGraph(QcpGraphView *view);
   /// m_pictureQGraph while its window is shown: a hidden one is no longer the one used.
   QcpGraphView *pictureQGraph() const;
   /// What Export writes for a graph (QCP): the file it shows, else the
@@ -240,7 +242,7 @@ protected:
   QMdiSubWindow *addViewWindow(Added kind, const ValueRef &value, int number = 0);
   /// Another view of @p kind for @p value, shown and placed; with @p ask
   /// its Sources dialog first, cancelled no view.
-  void        newView(Added kind, const ValueRef &value, bool ask = false);
+  QMdiSubWindow *newView(Added kind, const ValueRef &value, bool ask = false);
   /// Another graph on QCustomPlot showing @p value, without one the first meter's main value.
   void        newQGraph(const ValueRef &value = ValueRef());
   /// The dialog of the values a graph on QCustomPlot shows; false when cancelled.
@@ -251,6 +253,15 @@ protected:
   void        applyQGraphLook(QcpGraphView *view);
   /// Asks for a recording and shows it in the graph of @p view.
   void        loadIntoQGraph(QcpGraphView *view);
+  /// The recording file the user picks to load; empty when cancelled.
+  QString     askRecordingPath();
+  /// Shows the recording in @p path in the graph of @p view; false (and a
+  /// message) when it cannot be read.
+  bool        loadRecordingInto(QcpGraphView *view, const QString &path);
+  /// A recording from the toolbar or the project: into the graph used last,
+  /// without one into a new graph.
+  void        importRecording();
+  bool        importRecording(const QString &path);
   void        newMeter(const ValueRef &value) { newView(Added::Meter, value); }
   void        removeAddedWindow(QMdiSubWindow *win);
   /// The analog meter or Poincaré plot in @p win, nullptr for another window.

@@ -125,6 +125,18 @@ public:
   /// gets one, or takes the entry at its place with its model. Empty when
   /// the window had none.
   QString     takeOldDevice();
+  /// The file a graph on QCustomPlot shows, for Record, Live, Clear and the
+  /// export without a leading meter (MainWindow's graph used last).
+  struct FileView
+  {
+    std::function<bool()> shown;    ///< that graph shows a file
+    std::function<void()> leave;    ///< back to its meter
+    std::function<bool(const QString &path, bool everyReading)> write;   ///< writes the file's readings
+  };
+  void        setFileView(const FileView &view) { m_fileView = view; }
+  /// The session's recording state (RecordingStore::State): the leading
+  /// meter's, else View for a file shown, else the graph store's.
+  int         recordingState() const;
   /// Before a new recording: unsaved readings viewed are exported or
   /// dropped, or the user cancels (false). True at once in Live.
   bool        confirmRecording();
@@ -179,8 +191,6 @@ public Q_SLOTS:
   /// The print dialog, then @p print with the printer, the title and the comment.
   void        printWith(const std::function<void(QPrinter *, const QString &, const QString &)> &print);
   void        importSLOT();
-  /// Loads @p path into the graph as importSLOT() does, without the dialog.
-  bool        importFile(const QString &path);
   /// Writes what Export writes into @p file, without the dialog; the format
   /// by its suffix (csv, xlsx, ods), @p everyReading instead of the grid.
   /// @p graphOnly: the values of the current graph, else all devices'.
@@ -211,6 +221,9 @@ protected:
   int         m_meterStyle = -1;   ///< the settings' style last applied, -1 before the first
   QList<PoincareView *> m_poincares;
   QPointer<ReadingsModel> m_readingLog;
+  FileView    m_fileView;   ///< setFileView()
+  bool        fileShown() const { return m_fileView.shown && m_fileView.shown(); }
+  void        leaveFile() const;
   /// The meters' values by name: the recording's choice of trigger value.
   void        updateValueNames();
   Settings    *m_settings;
@@ -219,8 +232,6 @@ protected:
   /// cancel. True when the caller may go on - nothing unsaved, exported or
   /// dropped; false for Cancel or a failed export.
   bool        keepUnsavedData(const QString &reason, const QString &discard);
-  /// The session's recording state (RecordingStore::State): the leading meter's, else the graph store's.
-  int         recordingState() const;
   /// Export with a file dialog: the session's recording with every meter
   /// that recorded, else what the graph shows; false when cancelled or failed.
   bool        exportRecording();
