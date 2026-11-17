@@ -227,6 +227,7 @@ if (BUILD_TESTING)
 	## the heatmap: cells averaged, no-data colour, hold, colour scale, clear
 	qtdmm_add_test(heatmap test_heatmap tests/test_heatmap.cpp)
 	qtdmm_add_test(qcp_xy test_qcpxy tests/test_qcpxy.cpp)
+	qtdmm_add_test(qcp_local test_qcplocal tests/test_qcplocal.cpp)
 	qtdmm_add_test(histogram test_histogram tests/test_histogram.cpp)
 
 	## the thinning of a series for drawing: buckets, minimum/maximum, gaps

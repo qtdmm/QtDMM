@@ -6686,6 +6686,8 @@ double QCPAxisTickerDateTime::getTickStep(const QCPRange &range)
 int QCPAxisTickerDateTime::getSubTickCount(double tickStep)
 {
   int result = QCPAxisTicker::getSubTickCount(tickStep);
+  if (!(tickStep < 4e7)) // QtDMM: beyond the largest step handled below (about a year), and out of int's range for qRound
+    return result;
   switch (qRound(tickStep)) // hand chosen subticks for specific minute/hour/day/week/month range (as specified in getTickStep)
   {
     case 5*60: result = 4; break;
@@ -7019,6 +7021,8 @@ double QCPAxisTickerTime::getTickStep(const QCPRange &range)
 int QCPAxisTickerTime::getSubTickCount(double tickStep)
 {
   int result = QCPAxisTicker::getSubTickCount(tickStep);
+  if (!(tickStep < 4e7)) // QtDMM: beyond the largest step handled below (3 h), and out of int's range for qRound
+    return result;
   switch (qRound(tickStep)) // hand chosen subticks for specific minute/hour/day range (as specified in getTickStep)
   {
     case 5*60: result = 4; break;
@@ -21758,8 +21762,10 @@ void QCPGraph::getOptimizedScatterData(QVector<QCPGraphData> *scatterData, QCPGr
   int maxCount = (std::numeric_limits<int>::max)();
   if (mAdaptiveSampling)
   {
-    int keyPixelSpan = int(qAbs(keyAxis->coordToPixel(begin->key)-keyAxis->coordToPixel((end-1)->key)));
-    maxCount = 2*keyPixelSpan+2;
+    // QtDMM: as in getOptimizedLineData, without the int overflow for a huge span
+    double keyPixelSpan = qAbs(keyAxis->coordToPixel(begin->key)-keyAxis->coordToPixel((end-1)->key));
+    if (2*keyPixelSpan+2 < static_cast<double>((std::numeric_limits<int>::max)()))
+      maxCount = int(2*keyPixelSpan+2);
   }
 
   if (mAdaptiveSampling && dataCount >= maxCount) // use adaptive sampling only if there are at least two points per pixel on average
@@ -25811,8 +25817,7 @@ QCPColorMapData::QCPColorMapData(int keySize, int valueSize, const QCPRange &key
   mAlpha(nullptr),
   mDataModified(true)
 {
-  setSize(keySize, valueSize);
-  fill(0);
+  setSize(keySize, valueSize); // QtDMM: it fills the cells with 0, no second fill
 }
 
 QCPColorMapData::~QCPColorMapData()
@@ -25913,6 +25918,13 @@ unsigned char QCPColorMapData::alpha(int keyIndex, int valueIndex)
 */
 void QCPColorMapData::setSize(int keySize, int valueSize)
 {
+  // QtDMM: no negative sizes, and no more cells than an int counts (fill(), fillAlpha() and the
+  // cell indices count in int)
+  if (keySize < 0 || valueSize < 0 || qint64(keySize)*qint64(valueSize) > (std::numeric_limits<int>::max)())
+  {
+    qDebug() << Q_FUNC_INFO << "invalid data dimensions" << keySize << "*" << valueSize;
+    return;
+  }
   if (keySize != mKeySize || valueSize != mValueSize)
   {
     mKeySize = keySize;
@@ -25924,14 +25936,20 @@ void QCPColorMapData::setSize(int keySize, int valueSize)
 #ifdef __EXCEPTIONS
       try { // 2D arrays get memory intensive fast. So if the allocation fails, at least output debug message
 #endif
-      mData = new double[size_t(mKeySize*mValueSize)];
+      mData = new double[size_t(mKeySize)*size_t(mValueSize)];
 #ifdef __EXCEPTIONS
       } catch (...) { mData = nullptr; }
 #endif
       if (mData)
         fill(0);
       else
+      {
         qDebug() << Q_FUNC_INFO << "out of memory for data dimensions "<< mKeySize << "*" << mValueSize;
+        // QtDMM: empty, not a size without its cells
+        mKeySize = 0;
+        mValueSize = 0;
+        mIsEmpty = true;
+      }
     } else
       mData = nullptr;
 
@@ -26158,8 +26176,9 @@ void QCPColorMapData::clearAlpha()
 */
 void QCPColorMapData::fill(double z)
 {
-  const int dataCount = mValueSize*mKeySize;
-  memset(mData, z, dataCount*sizeof(*mData));
+  // QtDMM: memset repeats a byte, it set no double but 0 to z; and no cells, nothing to fill
+  if (mData)
+    std::fill_n(mData, size_t(mKeySize)*size_t(mValueSize), z);
   mDataBounds = QCPRange(z, z);
   mDataModified = true;
 }
@@ -26177,8 +26196,7 @@ void QCPColorMapData::fillAlpha(unsigned char alpha)
 {
   if (mAlpha || createAlpha(false))
   {
-    const int dataCount = mValueSize*mKeySize;
-    memset(mAlpha, alpha, dataCount*sizeof(*mAlpha));
+    memset(mAlpha, alpha, size_t(mKeySize)*size_t(mValueSize)*sizeof(*mAlpha)); // QtDMM: counted in size_t
     mDataModified = true;
   }
 }
@@ -26225,10 +26243,13 @@ void QCPColorMapData::coordToCell(double key, double value, int *keyIndex, int *
 */
 void QCPColorMapData::cellToCoord(int keyIndex, int valueIndex, double *key, double *value) const
 {
+  // QtDMM: a single cell lies in the middle of its range, not at 0/0
   if (key)
-    *key = keyIndex/double(mKeySize-1)*(mKeyRange.upper-mKeyRange.lower)+mKeyRange.lower;
+    *key = mKeySize > 1 ? keyIndex/double(mKeySize-1)*(mKeyRange.upper-mKeyRange.lower)+mKeyRange.lower
+                        : (mKeyRange.lower+mKeyRange.upper)*0.5;
   if (value)
-    *value = valueIndex/double(mValueSize-1)*(mValueRange.upper-mValueRange.lower)+mValueRange.lower;
+    *value = mValueSize > 1 ? valueIndex/double(mValueSize-1)*(mValueRange.upper-mValueRange.lower)+mValueRange.lower
+                            : (mValueRange.lower+mValueRange.upper)*0.5;
 }
 
 /*! \internal
@@ -26253,7 +26274,7 @@ bool QCPColorMapData::createAlpha(bool initializeOpaque)
 #ifdef __EXCEPTIONS
   try { // 2D arrays get memory intensive fast. So if the allocation fails, at least output debug message
 #endif
-    mAlpha = new unsigned char[size_t(mKeySize*mValueSize)];
+    mAlpha = new unsigned char[size_t(mKeySize)*size_t(mValueSize)]; // QtDMM: counted in size_t
 #ifdef __EXCEPTIONS
   } catch (...) { mAlpha = nullptr; }
 #endif
