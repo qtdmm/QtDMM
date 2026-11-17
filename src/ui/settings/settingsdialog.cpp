@@ -35,7 +35,6 @@
 #include "ui/settings/recorderprefs.h"
 #include "core/settings.h"
 
-#include <iostream>
 
 SettingsDialog::SettingsDialog(Settings* settings, QWidget *parent)
   : QDialog(parent)
@@ -232,30 +231,6 @@ void SettingsDialog::on_ui_factoryDefaults_clicked()
   page(ui_stack->currentIndex())->factoryDefaultsSLOT();
 }
 
-void SettingsDialog::zoomInSLOT(double fac)
-{
-  m_graph->zoomInSLOT(fac);
-  Q_EMIT zoomed();
-}
-
-void SettingsDialog::zoomOutSLOT(double fac)
-{
-  m_graph->zoomOutSLOT(fac);
-  Q_EMIT zoomed();
-}
-
-void SettingsDialog::setSampleTimeSLOT(int sampleTime)
-{
-  m_recorder->setSampleTimeSLOT(sampleTime);
-  on_ui_buttonBox_accepted();
-}
-
-void SettingsDialog::setWindowSecondsSLOT(int seconds)
-{
-  m_graph->setWindowSecondsSLOT(seconds);
-  Q_EMIT zoomed();
-}
-
 void SettingsDialog::setRecordingLength(int value, int unit)
 {
   // kept at once, without applying the other pages
@@ -368,20 +343,9 @@ void SettingsDialog::on_ui_list_currentItemChanged(QListWidgetItem *current, QLi
   showHeader(wid);
 }
 
-void SettingsDialog::thresholdChangedSLOT(GraphWidget::CursorMode mode, double value)
+void SettingsDialog::thresholdChangedSLOT(double value)
 {
-  switch (mode)
-  {
-    case GraphWidget::Trigger:
-      m_recorder->setThreshold(value);
-      break;
-    case GraphWidget::Integration:
-      m_graph->setIntThreshold(value);
-      break;
-    default:
-      std::cerr << "Unexpected CursorMode in configdlg.cpp:418" << std::endl;
-      break;
-  }
+  m_recorder->setThreshold(value);
 }
 
 /////////////////////////////////////////////////////////////////

@@ -101,7 +101,7 @@ void QcpGraph::mouseMoved(QMouseEvent *event)
     const double width = m_plot->axisRect()->width();
     if (width <= 0)
       return;
-    const double secondsPerPixel = m_windowSeconds / width;
+    const double secondsPerPixel = shownSeconds() / width;
     showFrom(m_pressStart + qRound64((m_pressPos.x() - event->pos().x()) * secondsPerPixel * 1000));
   }
   else if (m_drag == Drag::Frame)

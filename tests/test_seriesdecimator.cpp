@@ -20,7 +20,7 @@ static RecordingSeries seriesOf(std::initializer_list<RawPoint> points)
 
 static RawPoint gapPoint(qint64 t, Quality quality)
 {
-  return RawPoint{ t, qQNaN(), qQNaN(), quality, 0 };
+  return RawPoint{ t, qQNaN(), quality, 0 };
 }
 
 // "0.1:2 0.3:nan": x in seconds, the value

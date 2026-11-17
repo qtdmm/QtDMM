@@ -209,7 +209,7 @@ void QcpGraph::updateOverview()
     m_minimap->setValue(left < 0 || m_ownStore ? 0 : m_curves.at(left).value.id);
     if (left >= 0)
       m_minimap->setCurveColor(colorOf(left));
-    m_minimap->setView(windowStart() - m_minimapShift, qint64(m_windowSeconds) * 1000);
+    m_minimap->setView(windowStart() - m_minimapShift, qRound64(shownSeconds() * 1000));
   }
 
   auto *bands = static_cast<Bands *>(m_bands);

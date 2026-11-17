@@ -41,14 +41,11 @@
 #include "ui/controlbar.h"
 #include "ui/frontpanel.h"
 #include "ui/meterview.h"
-#include "ui/graphview.h"
 #include "ui/poincareview.h"
-#include "ui/views/graphwidget.h"
 #include "ui/settings/settingsdialog.h"
 #include "ui/devicesettings.h"
 #include "ui/settings/alarmprefs.h"
 #include "ui/settings/generalprefs.h"
-#include "ui/settings/graphprefs.h"
 #include "ui/settings/guiprefs.h"
 #include "ui/settings/keyboardprefs.h"
 #include "ui/settings/recorderprefs.h"
@@ -58,6 +55,7 @@
 #include "ui/views/lcdwidget.h"
 #include "ui/views/analogmeter.h"
 #include "ui/views/poincareplot.h"
+#include "recording/recordingfile.h"
 #include "recording/recordingstore.h"
 #include "recording/readingsmodel.h"
 #include "core/alarm.h"
@@ -71,7 +69,6 @@
 
 InstanceWidget::InstanceWidget(QString instanceId, QString configPath, DeviceSession *session, QWidget *parent) :  QFrame(parent)
 {
-  setupUi(this);
   setWindowIcon(QPixmap(":/Symbols/icon.xpm"));
 
   m_session = session;
@@ -81,8 +78,6 @@ InstanceWidget::InstanceWidget(QString instanceId, QString configPath, DeviceSes
   m_instanceId = instanceId;
   m_configPath = configPath;
   m_settings  = new Settings(instanceId, configPath, this);
-  // the integral is over time since 26.2: its scale once per settings file
-  GraphWidget::migrateIntegralScale(m_settings);
   // "My devices", one file for all instances next to their settings. What
   // an entry keeps depends on how its model connects; the model table is
   // not in QtCore
@@ -142,9 +137,6 @@ InstanceWidget::InstanceWidget(QString instanceId, QString configPath, DeviceSes
   // dialog has no meter page, a meter is changed through takeOver()
   connect(m_configDlg, &SettingsDialog::accepted, this, &InstanceWidget::applySLOT);
   connect(m_configDlg, &SettingsDialog::applied, this, &InstanceWidget::applySLOT);
-  connect(m_configDlg, &SettingsDialog::zoomed, this, &InstanceWidget::zoomedSLOT);
-  // the first graph is this widget's own; MainWindow adds the others
-  addGraph(ui_graph, QStringLiteral("graph"));
 
   m_settings->save();
 
@@ -152,7 +144,6 @@ InstanceWidget::InstanceWidget(QString instanceId, QString configPath, DeviceSes
   // and runs the program; they are kept with its entry (DeviceSession). The
   // sound, the popup and raising the window are AlarmService's, the banner
   // MainWindow's, the LCD's colour its FrontPanel's
-  applyLimitBands();
   // a recording asked for by a meter (SCPI INITiate, an alarm's program):
   // as the Record button, with its questions
   m_session->setRecordingRequests([this](bool start)
@@ -222,94 +213,6 @@ void InstanceWidget::removePoincare(PoincareView *view)
   delete view;
 }
 
-GraphView *InstanceWidget::addGraph(GraphWidget *graph, const QString &key)
-{
-  auto *view = new GraphView(m_session, graph, key, this);
-  const bool first = m_graphs.isEmpty();
-  m_graphs << view;
-  if (first)
-    m_current = view;
-  // what is done in a graph is done to it: the actions follow
-  auto use = [this, graph] { setCurrentGraph(graph); };
-  connect(graph, &GraphWidget::used, this, use);
-  connect(graph, &GraphWidget::info, this, [this, view](const QString &text)
-  {
-    if (view == m_current)
-      Q_EMIT info(text);
-  });
-  connect(graph, &GraphWidget::error, this, &InstanceWidget::error);
-  connect(graph, &GraphWidget::error, this, [](const QString &text) { AppLog::error("Graph", text); });
-  connect(graph, &GraphWidget::stateChanged, this, &InstanceWidget::recorderState);
-  connect(graph, &GraphWidget::liveRequested, this, [this, use] { use(); liveSLOT(); });
-  // its window: through the settings page, which shows the current graph's
-  connect(graph, &GraphWidget::windowRequested, this, [this, use](int seconds)
-  {
-    use();
-    m_configDlg->setWindowSecondsSLOT(seconds);
-  });
-  connect(graph, &GraphWidget::zoomOut, this, [this, use](double factor) { use(); m_configDlg->zoomOutSLOT(factor); });
-  connect(graph, &GraphWidget::zoomIn, this, [this, use](double factor) { use(); m_configDlg->zoomInSLOT(factor); });
-  connect(graph, &GraphWidget::sampleTime, m_configDlg, &SettingsDialog::setSampleTimeSLOT);
-  connect(graph, &GraphWidget::thresholdChanged, m_configDlg, &SettingsDialog::thresholdChangedSLOT);
-  // this graph's own colours from its context menu (empty = the default
-  // from the settings page, applied in readConfig())
-  connect(graph, &GraphWidget::colorVariantChanged, this, [this, key](int v)
-  {
-    m_settings->setString("Windows/" + key + "-variant",
-                          v < 0 ? QString() : GraphWidget::variantName(static_cast<GraphWidget::ColorVariant>(v)));
-  });
-  connect(graph, &GraphWidget::configure, this, [this, use] { use(); openConfig(SettingsDialog::Graph); });
-  connect(graph, &GraphWidget::clearRequested, this, [this, use] { use(); clearSLOT(); });
-  connect(graph, &GraphWidget::importData, this, [this, use] { use(); importSLOT(); });
-  graph->setSettings(m_settings);
-  if (!first)
-  {
-    // one added later: as the settings say, as wide as the current one
-    applyGraphLook(view);
-    graph->setGraphSize(m_configDlg->graphPage()->windowSeconds());
-    graph->setAlertUnsaved(m_configDlg->generalPage()->alertUnsavedData());
-    view->applyLimitBand();
-  }
-  return view;
-}
-
-void InstanceWidget::removeGraph(GraphView *view)
-{
-  if (view == m_graphs.first())
-    return;   // this widget's own
-  m_graphs.removeOne(view);
-  if (view == m_current)
-    setCurrentGraph(m_graphs.first()->graph());
-  delete view;
-}
-
-GraphWidget *InstanceWidget::graph() const
-{
-  return m_current->graph();
-}
-
-void InstanceWidget::setCurrentGraph(GraphWidget *graph)
-{
-  if (graph == m_current->graph())
-    return;
-  for (GraphView *view : std::as_const(m_graphs))
-    if (view->graph() == graph)
-    {
-      m_current = view;
-      // the settings page shows its window; Record and Live its state
-      m_configDlg->graphPage()->setWindowSecondsSLOT(graph->windowSetting());
-      Q_EMIT recorderState(recordingState());
-      return;
-    }
-}
-
-void InstanceWidget::setGraphWindow(GraphWidget *graph, int seconds)
-{
-  graph->setGraphSize(seconds);
-  if (graph == m_current->graph())
-    m_configDlg->graphPage()->setWindowSecondsSLOT(seconds);
-}
-
 void InstanceWidget::setReadingLog(ReadingsModel *log)
 {
   // the table shows the stores' readings series (MainWindow chooses the
@@ -326,13 +229,11 @@ bool InstanceWidget::closeWin()
 
 bool InstanceWidget::keepUnsavedData(const QString &reason, const QString &discard)
 {
-  // the recording is the session's: any meter's not saved, or a file loaded
-  // into the graph
+  // the recording is the session's: any meter's not saved
   const QStringList unsaved = m_session->unsavedRecordings();
-  const bool file = std::any_of(m_graphs.cbegin(), m_graphs.cend(), [](const GraphView *v) { return v->graph()->dirty(); });
-  if ((unsaved.isEmpty() && !file) || !m_configDlg->generalPage()->alertUnsavedData())
+  if (unsaved.isEmpty() || !m_configDlg->generalPage()->alertUnsavedData())
     return true;
-  const QString text = unsaved.isEmpty() ? reason : tr("Not saved: %1.").arg(unsaved.join(", ")) + ' ' + reason;
+  const QString text = tr("Not saved: %1.").arg(unsaved.join(", ")) + ' ' + reason;
 
   QMessageBox question;
   question.setWindowTitle(tr("QtDMM: Unsaved data"));
@@ -461,8 +362,6 @@ void InstanceWidget::configScpiSLOT()
 void InstanceWidget::applySLOT()
 {
   readConfig();
-  for (const GraphView *view : std::as_const(m_graphs))
-    view->graph()->setAlertUnsaved(m_configDlg->generalPage()->alertUnsavedData());
   applyScpi();
   Q_EMIT configChanged();
 }
@@ -484,44 +383,60 @@ void InstanceWidget::applyScpi()
                            all.isEmpty() ? QString() : all.first()->model());
 }
 
-void InstanceWidget::zoomedSLOT()
-{
-  m_current->graph()->setGraphSize(m_configDlg->graphPage()->windowSeconds());
-}
-
-bool InstanceWidget::writeRecordingTo(const QString &file, bool everyReading, bool graphOnly)
-{
-  return writeRecordingTo(file, everyReading, graphOnly ? graph()->values() : QList<ValueRef>());
-}
-
 bool InstanceWidget::writeRecordingTo(const QString &file, bool everyReading, const QList<ValueRef> &values)
 {
-  QString err;
-  if (QPointer<MeterController> lead = m_current->recordingLead())
-  {
-    if (lead->writeRecording(file, everyReading, &err, values))
-      return true;
-  }
-  else if (fileShown() && m_fileView.write)
+  // a file viewed: that file; else the session's recording (Live too),
+  // every meter that recorded with all its values, as QTDMM:RECord:SAVE
+  // writes it
+  if (fileShown() && m_fileView.write)
     return m_fileView.write(file, everyReading);   // it says why
-  else if (graph()->store()->count() <= 0)
-    err = tr("nothing recorded");
-  else if (graph()->exportCsvFile(file, everyReading))
+  QString err = tr("nothing recorded");
+  QPointer<MeterController> lead = m_session->lead();
+  if (lead && lead->recorder()->count() > 0 && lead->writeRecording(file, everyReading, &err, values))
     return true;
-  else
-    return false;   // the graph said why
   AppLog::error("app", "Export failed: " + err);
   Q_EMIT error(tr("Export failed: %1").arg(err));
   return false;
 }
 
+QString InstanceWidget::askExportFile(bool *raw)
+{
+  // the texts were the graph's, translated there
+  auto word = [](const char *text) { return QCoreApplication::translate("GraphWidget", text); };
+  const QFileInfo fileInfo(m_settings->getString("QtDMM/LastUsesPath"));
+  const QStringList validSuffixes = { "csv", "xlsx", "ods", RecordingFile::kSuffix };
+  const QString fnSuffix = validSuffixes.contains(fileInfo.suffix()) ? fileInfo.suffix() : "csv";
+  QString fn = fileInfo.baseName().isEmpty() ? "untitled." + fnSuffix : fileInfo.absolutePath() + "/untitled." + fnSuffix;
+  const QString csvFilter = word("CSV (*.csv)"), xlsxFilter = word("Excel (*.xlsx)"), odsFilter = word("OpenDocument (*.ods)");
+  // the CSV with what it does not keep (marks), in a ZIP
+  const QString qtdmmFilter = word("QtDMM recording (*.%1)").arg(RecordingFile::kSuffix);
+  // every reading at its time instead of the sample time's grid
+  const QString rawFilter = word("CSV, every reading (*.csv)");
+  QString filter = fnSuffix == "xlsx" ? xlsxFilter : fnSuffix == "ods" ? odsFilter
+                 : fnSuffix == RecordingFile::kSuffix ? qtdmmFilter : csvFilter;
+  ProjectFolder::Proposal where(fn, ProjectFolder::Recordings);
+  fn = QFileDialog::getSaveFileName(this, word("Export data"), where.path(),
+                                    csvFilter + ";;" + xlsxFilter + ";;" + odsFilter + ";;" + rawFilter + ";;" + qtdmmFilter,
+                                    &filter);
+  if (fn.isNull())
+    return QString();
+  // the chosen filter decides when no suffix was typed
+  if (QFileInfo(fn).suffix().isEmpty())
+    fn += filter == xlsxFilter ? ".xlsx" : filter == odsFilter ? ".ods"
+          : filter == qtdmmFilter ? QString(".") + RecordingFile::kSuffix : ".csv";
+  *raw = filter == rawFilter;
+  where.keep(fn);   // written by the caller
+  m_settings->setString("QtDMM/LastUsesPath", QDir().absoluteFilePath(fn));
+  return fn;
+}
+
 bool InstanceWidget::exportRecording()
 {
-  QPointer<MeterController> lead = m_current->recordingLead();
+  QPointer<MeterController> lead = m_session->lead();
   if (!lead)
-    return graph()->exportDataSLOT();
+    return true;   // nothing of a meter to keep
   bool raw = false;
-  const QString file = graph()->askExportFile(&raw);
+  const QString file = askExportFile(&raw);
   if (file.isEmpty())
     return false;
   // the dialog runs events: SCPI may have closed it meanwhile
@@ -539,18 +454,6 @@ bool InstanceWidget::exportRecording()
     return false;
   }
   return true;
-}
-
-void InstanceWidget::importSLOT()
-{
-  if (!keepUnsavedData(tr("Loading a file replaces it."), tr("Load without saving")))
-    return;
-  graph()->importDataSLOT();
-}
-
-void InstanceWidget::printSLOT()
-{
-  printWith([this](QPrinter *printer, const QString &title, const QString &comment) { graph()->print(printer, title, comment); });
 }
 
 void InstanceWidget::printWith(const std::function<void(QPrinter *, const QString &, const QString &)> &print)
@@ -578,9 +481,9 @@ void InstanceWidget::clearSLOT()
     return;
   // an empty view is nothing to look at: Live again
   if (recordingState() == RecordingStore::View)
-    graph()->liveSLOT();
+    m_session->goLive();
   else
-    graph()->clearSLOT();
+    m_session->clearRecording();
   leaveFile();
 }
 
@@ -593,14 +496,14 @@ void InstanceWidget::leaveFile() const
 void InstanceWidget::liveSLOT()
 {
   // a file without a device stays in view beside a meter that is live
-  if (recordingState() != RecordingStore::View && !graph()->showsFile() && !fileShown())
+  if (recordingState() != RecordingStore::View && !fileShown())
   {
     Q_EMIT recorderState(recordingState());   // the button shows the state again
     return;
   }
   if (keepUnsavedData(tr("Live clears it."), tr("Live without saving")))
   {
-    graph()->liveSLOT();
+    m_session->goLive();
     leaveFile();
   }
   else
@@ -612,7 +515,7 @@ int InstanceWidget::recordingState() const
   const MeterController *lead = m_session->lead();
   if (lead)
     return int(lead->recorder()->state());
-  return int(fileShown() ? RecordingStore::View : graph()->store()->state());
+  return int(fileShown() ? RecordingStore::View : RecordingStore::Live);
 }
 
 bool InstanceWidget::confirmRecording()
@@ -626,9 +529,9 @@ bool InstanceWidget::askRecordingLength()
 {
   // a start the settings set up waits in Live; this one starts now
   QString hint;
-  if (m_configDlg->recorderPage()->sampleMode() == GraphWidget::Time)
+  if (m_configDlg->recorderPage()->sampleMode() == RecordingStore::Time)
     hint = tr("It starts now. A recording at %1 starts by itself from Live.").arg(m_configDlg->recorderPage()->startTime().toString());
-  else if (m_configDlg->recorderPage()->sampleMode() == GraphWidget::Raising || m_configDlg->recorderPage()->sampleMode() == GraphWidget::Falling)
+  else if (m_configDlg->recorderPage()->sampleMode() == RecordingStore::Raising || m_configDlg->recorderPage()->sampleMode() == RecordingStore::Falling)
     hint = tr("It starts now. A recording at the threshold starts by itself from Live.");
   RecordLengthDlg dlg(m_configDlg->recorderPage()->lengthValue(), m_configDlg->recorderPage()->lengthUnit(), hint, this);
   if (dlg.exec() != QDialog::Accepted)
@@ -646,39 +549,31 @@ void InstanceWidget::applyRecordingSetup()
   setup.sampleTime = recorder->sampleStep();
   setup.sampleLength = recorder->sampleLength();
   setup.preTrigger = recorder->preTrigger();
-  setup.mode = RecordingStore::StartMode(recorder->sampleMode());
+  setup.mode = recorder->sampleMode();
   setup.startTime = recorder->startTime();
   setup.falling = recorder->fallingThreshold();
   setup.raising = recorder->raisingThreshold();
   setup.trigger = recorder->triggerValue();
   m_session->setRecordingSetup(setup);
-  for (const GraphView *view : std::as_const(m_graphs))
-    view->graph()->recordingSetupChanged();
 }
 
 void InstanceWidget::startSLOT()
 {
-  graph()->startSLOT();
+  m_session->startRecording();
+  leaveFile();
 }
 
 void InstanceWidget::stopSLOT()
 {
-  graph()->stopSLOT();
+  m_session->stopRecording();
 }
 
 void InstanceWidget::readConfig()
 {
-  const GraphPrefs *graph = m_configDlg->graphPage();
   const RecorderPrefs *recorder = m_configDlg->recorderPage();
   const GuiPrefs *gui = m_configDlg->guiPage();
 
-  // the sample time first: setGraphSize() counts the window in samples, and
-  // the x axis converts them back with the sample time
   applyRecordingSetup();
-  // the window is the current graph's; the others keep theirs
-  m_current->graph()->setGraphSize(graph->windowSeconds());
-  for (const GraphView *view : std::as_const(m_graphs))
-    applyGraphLook(view);
 
   // a style chosen on the page Appearance: for all analog meters again
   const MeterView::Look look = meterLook();
@@ -691,45 +586,21 @@ void InstanceWidget::readConfig()
     view->setLook(look);
   }
 
-  if (recorder->sampleMode() == GraphWidget::Time)
+  if (recorder->sampleMode() == RecordingStore::Time)
     Q_EMIT info(tr("Automatic start at %1").arg(recorder->startTime().toString()));
-  else if (recorder->sampleMode() == GraphWidget::Raising)
+  else if (recorder->sampleMode() == RecordingStore::Raising)
     Q_EMIT info(tr("Raising threshold %1").arg(recorder->raisingThreshold()));
-  else if (recorder->sampleMode() == GraphWidget::Falling)
+  else if (recorder->sampleMode() == RecordingStore::Falling)
     Q_EMIT info(tr("Falling threshold %1").arg(recorder->fallingThreshold()));
   Q_EMIT useTextLabel(gui->useTextLabel());
   Q_EMIT iconSet(gui->iconSet());
   Q_EMIT showDisplay(gui->showDisplay());
 }
 
-void InstanceWidget::applyGraphLook(const GraphView *view)
-{
-  const GraphPrefs *graph = m_configDlg->graphPage();
-  GraphWidget *g = view->graph();
-  g->setCrosshair(graph->crosshair());
-  g->setStatsLeft(graph->statsLeft());
-  g->setScale(graph->automaticScale(), graph->includeZero(), graph->scaleMin(), graph->scaleMax());
-  const QString own = m_settings->getString("Windows/" + view->key() + "-variant");
-  g->setColorVariant(GraphWidget::variantFromName(graph->variant()),
-                     own.isEmpty() ? -1 : int(GraphWidget::variantFromName(own)));
-  g->setColors(graph->bgColor(), graph->gridColor(), graph->dataColor(), graph->cursorColor(), graph->startColor(),
-               graph->intColor(), graph->intThresholdColor());
-  g->setLineStyle(graph->lineMode(), graph->pointMode(), graph->intLineMode(), graph->intPointMode());
-  g->setLine(graph->lineWidth(), graph->intLineWidth());
-  g->setIntegration(graph->showIntegration(), graph->intScale(), graph->intThreshold(), graph->intOffset());
-  g->setIntegrationValue(graph->intValue());
-}
-
 void InstanceWidget::openAlarms(const QString &source)
 {
   openConfig(SettingsDialog::Alarms);
   m_configDlg->alarmPage()->setCurrentDevice(source);
-}
-
-void InstanceWidget::applyLimitBands()
-{
-  for (GraphView *view : std::as_const(m_graphs))
-    view->applyLimitBand();
 }
 
 MeterView::Look InstanceWidget::meterLook() const

@@ -212,7 +212,7 @@ QVector<GridPoint> RecordingStore::gridOf(const RecordingSeries &series, int ten
     for (int i = 0; i < n; ++i)
     {
       const RawPoint &p = series.at(i);
-      out.append({ p.t, p.value, p.integral, p.quality, p.flags & (SampleFlag::Limit | SampleFlag::State) });
+      out.append({ p.t, p.value, p.quality, p.flags & (SampleFlag::Limit | SampleFlag::State) });
     }
     return out;
   }
@@ -241,21 +241,11 @@ QVector<GridPoint> RecordingStore::gridOf(const RecordingSeries &series, int ten
     const int j = series.lowerBound(t);
     return j > 0 ? j - 1 : j < n && series.at(j).t == t ? j : -1;
   };
-  // the integral at time t: the last point's, plus its value since then
-  auto integralAt = [&](qint64 t)
-  {
-    const int j = before(t);
-    if (j < 0 || series.at(j).gap())
-      return qQNaN();
-    const RawPoint &p = series.at(j);
-    return p.value > m_integrationThreshold ? p.integral + p.value * double(t - p.t) / 1000.0 : p.integral;
-  };
 
   for (qint64 k = kFirst; k <= kLast; ++k)
   {
     GridPoint g;
     g.t = k * step;
-    g.integral = integralAt(g.t);
     if (k == 0)
     {
       // the first step is the value at the start
@@ -713,22 +703,8 @@ int RecordingStore::extraIndex(int id) const
 void RecordingStore::appendExtraPoint(int i, RawPoint p)
 {
   RecordingSeries &s = m_extra[i];
-  // the integral as for the main value (appendPoint()): the graph can draw
-  // it for a value other than the main one
-  double run = s.runningIntegral;
   if (!s.isEmpty())
-  {
-    const RawPoint &prev = s.last();
-    p.t = qMax(p.t, prev.t);
-    if (!prev.gap() && prev.value > m_integrationThreshold)
-      run += prev.value * double(p.t - prev.t) / 1000.0;
-  }
-  else
-    run = 0;
-  if (!p.gap() && p.value <= m_integrationThreshold)
-    run = 0;
-  s.runningIntegral = run;
-  p.integral = p.gap() ? qQNaN() : run;
+    p.t = qMax(p.t, s.last().t);
   s.append(p);
   if (m_state == Record)
     m_dirty = true;
@@ -1196,7 +1172,6 @@ void RecordingStore::clear()
   m_loadedGrid = 0;
   m_fromFile = false;
   m_fileInfo = QJsonObject();
-  m_integral = 0;
   m_dirty = false;
   Q_EMIT cleared();
   if (hadMarks)
@@ -1261,20 +1236,7 @@ int RecordingStore::setMarkTime(int index, qint64 t)
 void RecordingStore::appendPoint(RawPoint p)
 {
   if (!m_series.isEmpty())
-  {
-    const RawPoint &prev = m_series.last();
-    p.t = qMax(p.t, prev.t);
-    // integration: the values above the threshold over the time they held;
-    // at or below it the integral is back to 0 (the first value, too), a
-    // gap adds nothing and the integral carries over it
-    if (!prev.gap() && prev.value > m_integrationThreshold)
-      m_integral += prev.value * double(p.t - prev.t) / 1000.0;
-  }
-  else
-    m_integral = 0;
-  if (!p.gap() && p.value <= m_integrationThreshold)
-    m_integral = 0;
-  p.integral = p.gap() ? qQNaN() : m_integral;
+    p.t = qMax(p.t, m_series.last().t);
   m_series.append(p);
 }
 

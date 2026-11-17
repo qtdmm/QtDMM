@@ -45,8 +45,6 @@ if (BUILD_TESTING)
 	## the core's base types and ReadingAdapter (the decoder fixtures check the ports too)
 	qtdmm_add_test(reading_adapter test_adapter tests/test_adapter.cpp)
 
-	qtdmm_add_test(dmmgraph test_graph tests/test_graph.cpp "${TEST_DATA}/graph")
-
 	## the recorder's store on its own
 	qtdmm_add_test(recording_store test_recordingstore tests/test_recordingstore.cpp "${TEST_DATA}/graph")
 

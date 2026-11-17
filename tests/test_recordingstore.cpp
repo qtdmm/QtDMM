@@ -3,7 +3,7 @@
 //
 // RecordingStore on its own: QCoreApplication only, no widgets. What it
 // records against a stream of readings over time (the grid export, the
-// integral, the triggers) is in test_recording_golden; this is the rest:
+// triggers) is in test_recording_golden; this is the rest:
 // the points and their quality, the limits, marks by time, load, gaps, one
 // function per recording and the readings series.
 #include <QCoreApplication>
@@ -124,15 +124,12 @@ int main(int argc, char **argv)
     check(store.count() == 1 && store.extraCount() == 1, QString("other value: %1 series").arg(store.extraCount()));
     const RecordingSeries &hz = store.extra(0);
     check(hz.id == 1 && hz.unit == "Hz" && hz.port.quantity == Quantity::Frequency && hz.count() == 1
-            && hz.last().t == 10 && hz.last().value == 50 && hz.last().integral == 0,
+            && hz.last().t == 10 && hz.last().value == 50,
           QString("other value: id %1 unit %2 t %3").arg(hz.id).arg(hz.unit).arg(hz.count() ? hz.last().t : -1));
     check(began.count() == 1 && added.count() == 0, "other value: a series began");
     store.setReading(clock.at(500, other(1, 51, "51.00", "Hz")));
     check(store.extra(0).count() == 2 && added.count() == 1 && added.last().at(0).toInt() == 0,
           "other value: the next reading appended");
-    // its integral over time, as the main value's: 50 Hz for 0.24 s
-    check(std::abs(store.extra(0).last().integral - 12) < 1e-9,
-          QString("other value: integral %1, expected 12").arg(store.extra(0).last().integral));
     // its stats as the main value's: up to now, nothing before its first reading
     {
       const RecordingStore::Stats st = store.statsOf(store.extra(0), 0, 250);
@@ -238,18 +235,14 @@ int main(int argc, char **argv)
       store.setReading(clock.at(t + 10, other(1, 50, "50.00", "Hz")));
     }
     // the second display's frames end without an "off" (iDMM bit 7), the
-    // main value goes on: a gap at the stale limit; the integral counts the
-    // last value up to it, as for the main value, then stays
+    // main value goes on: a gap at the stale limit
     for (qint64 t = 2100; t <= 8000; t += 100)
       store.setReading(clock.at(t, reading(0.001, "1.000", "DC")));
     const RecordingSeries &hz = store.extra(0);
     check(store.extraCount() == 1 && hz.last().gap() && hz.last().quality == Quality::Stale && hz.last().t == 2010 + 3000,
           QString("silent value: last point t %1 gap %2").arg(hz.last().t).arg(hz.last().gap()));
-    const double integral = hz.at(hz.count() - 2).integral;
     store.setReading(clock.at(8010, other(1, 50, "50.00", "Hz")));
-    check(store.extraCount() == 1 && !store.extra(0).last().gap()
-            && std::abs(store.extra(0).last().integral - (integral + 50 * 3.0)) < 1e-9,
-          QString("silent value back: same series, integral %1 (was %2)").arg(store.extra(0).last().integral).arg(integral));
+    check(store.extraCount() == 1 && !store.extra(0).last().gap(), "silent value back: same series");
     // only one gap for the silence
     int gaps = 0;
     for (int i = 0; i < store.extra(0).count(); ++i)
@@ -905,26 +898,8 @@ int main(int argc, char **argv)
           "extras grid: export, import, export the same\n" + fileText(grid2));
   }
 
-  // --- 5b. gaps and the integral: over time (V s) for the values above
-  //         the threshold; a gap adds nothing, the integral carries over
-  //         it; the start triggers compare with the last value there was ---
+  // --- 5b. gaps: the start triggers compare with the last value there was ---
   {
-    RecordingStore store;
-    TestClock clock;
-    clock.attach(store);
-    store.setIntegrationThreshold(0);
-    store.start();
-    store.setReading(clock.at(0, reading(2, "2.000", "DC")));
-    store.setReading(clock.at(1000, reading(4, "4.000", "DC")));
-    check(store.series().last().integral == 2, QString("integral: 2 V for 1 s, got %1").arg(store.series().last().integral));
-    store.setReading(clock.at(1500, reading(0, "OL", "DC")));
-    check(std::isnan(store.series().last().integral), "integral: a gap has none");
-    store.setReading(clock.at(3000, reading(6, "6.000", "DC")));
-    check(store.series().last().integral == 4, QString("integral: carried over the gap, 2 + 4 x 0.5, got %1")
-                                                  .arg(store.series().last().integral));
-    store.setReading(clock.at(4000, reading(-1, "-1.000", "DC")));
-    check(store.series().last().integral == 0, "integral: at or below the threshold it is 0");
-
     RecordingStore trig;
     TestClock tc;
     tc.attach(trig);

@@ -128,6 +128,14 @@ qint64 QcpGraph::lastStart() const
   return qMax(m_store->origin(), m_store->duration() - qint64(m_windowSeconds) * 1000);
 }
 
+double QcpGraph::shownSeconds() const
+{
+  if (!m_store || !m_followAll || !m_followEnd)
+    return m_windowSeconds;
+  const double recorded = (m_store->duration() - m_store->origin()) / 1000.0;
+  return recorded < m_windowSeconds ? qMax(10.0, recorded) : m_windowSeconds;
+}
+
 qint64 QcpGraph::windowStart() const
 {
   if (!m_store)
@@ -300,7 +308,7 @@ bool QcpGraph::valueSpan(int axis, double from, double to, double &lo, double &h
 void QcpGraph::updateAxes(double &from, double &to)
 {
   from = windowStart() / 1000.0;
-  to = from + m_windowSeconds;
+  to = from + shownSeconds();
   m_plot->xAxis->setRange(from, to);
   // a label is about 70 pixels wide: fewer ticks on a narrow plot
   // with divisions up to 10 of them

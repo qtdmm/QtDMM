@@ -56,14 +56,9 @@ int main(int argc, char **argv)
       { "Meter/scale-mode", 2 }, { "Meter/style", 0 }, { "Meter/ballistics", false }, { "Meter/red-zone", 75 },
       { "Graph/variant", QString("custom") }, { "Graph/line-mode", 2 }, { "Graph/point-mode", 3 },
       { "Graph/line-width", 4 }, { "Graph/crosshair-cursor", false },
-      { "Scale/automatic", false }, { "Scale/automatic-include-zero", false },
-      { "Scale/minimum", QString("-2") }, { "Scale/maximum", QString("7k") },
       { "Window/size", 45 }, { "Window/size-unit", 1 },
-      { "Graph/show-integration", true }, { "Graph/int-line-mode", 1 }, { "Graph/int-point-mode", 4 },
-      { "Graph/int-line-width", 3 }, { "Graph/int-scale", QString("0.5") }, { "Graph/int-offset", QString("1") },
-      { "Graph/int-threshold", QString("2m") },
       { "Sample/rate", 5 }, { "Sample/rate-unit", 2 }, { "Sample/time", 90 }, { "Sample/time-unit", 1 },
-      { "Start/mode", int(GraphWidget::Falling) }, { "Start/hour", 13 }, { "Start/minute", 14 }, { "Start/second", 15 },
+      { "Start/mode", int(RecordingStore::Falling) }, { "Start/hour", 13 }, { "Start/minute", 14 }, { "Start/second", 15 },
       { "Start/raising-threshold", QString("1.5") }, { "Start/falling-threshold", QString("-3") },
       { "Start/pre-trigger", true }, { "Start/pre-trigger-time", 7 }, { "Start/pre-trigger-unit", 1 },
       { "Start/trigger-value", QString("2@device:ab12cd34") } };
@@ -125,9 +120,8 @@ int main(int argc, char **argv)
     }
 
     // what the dialog reads
-    check(graph.windowSeconds() == 45 * 60 && !graph.automaticScale() && graph.scaleMax() == 7000,
-          "graph: window or Y axis");
-    check(recorder.sampleLength() == 90 * 60 * 10 && recorder.sampleMode() == GraphWidget::Falling
+    check(graph.windowSeconds() == 45 * 60, "graph: window");
+    check(recorder.sampleLength() == 90 * 60 * 10 && recorder.sampleMode() == RecordingStore::Falling
             && recorder.startTime() == QTime(13, 14, 15) && recorder.preTrigger() == 7 * 60 * 1000,
           "recorder: length, start or pre-trigger");
     // the value the threshold watches: chosen among the values of every
@@ -150,15 +144,9 @@ int main(int argc, char **argv)
     graph.show();
     recorder.show();
     QApplication::processEvents();
-    check(shown(child<QWidget>(graph, "ui_scaleMin")) && shown(child<QWidget>(graph, "ui_intScale")),
-          "graph: fixed axis and integration show their fields");
     check(shown(child<QWidget>(graph, "ui_dataColor")), "graph: Custom shows the own colours");
     child<QComboBox>(graph, "ui_variant")->setCurrentIndex(0);
-    child<QRadioButton>(graph, "autoScaleBut")->setChecked(true);
-    child<QCheckBox>(graph, "ui_showInt")->setChecked(false);
     check(!shown(child<QWidget>(graph, "ui_dataColor")), "graph: the own colours go with Custom");
-    check(!shown(child<QWidget>(graph, "ui_scaleMin")), "graph: the limits go with the fixed axis");
-    check(!shown(child<QWidget>(graph, "ui_intScale")), "graph: the integration fields go with it");
     check(shown(child<QWidget>(graph, "ui_cursorColor")), "graph: the cursor colour stays");
 
     check(shown(child<QWidget>(recorder, "ui_fallingThreshold")) && !shown(child<QWidget>(recorder, "ui_raisingThreshold"))

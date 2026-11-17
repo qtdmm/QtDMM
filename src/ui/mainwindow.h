@@ -53,8 +53,6 @@ class LogDlg;
 class AnalogMeter;
 class MeterView;
 class PoincareView;
-class GraphView;
-class GraphWidget;
 class BasketWidget;
 class ReadingsWidget;
 class PoincarePlot;
@@ -92,6 +90,9 @@ public:
   /// @param parser the processed command line (--debug, --config-dir, --config-id)
   /// @param parent parent widget, normally none
   MainWindow(QCommandLineParser &parser, QWidget *parent = nullptr);
+  /// The views' lookups (m_qgraphViews, ...) go before the windows: the
+  /// MDI area must not report a window activated while they are torn down.
+  ~MainWindow() override;
   /// --debug: frame dump and the qtdmm.hid logging category.
   void      setConsoleLogging(bool);
 
@@ -209,7 +210,7 @@ protected:
   /// the menu, each with its value (a meter also its style), and go when
   /// closed.
   /// @{
-  enum class Added { Meter, Poincare, XY, Histogram, Heatmap, Graph, QGraph };
+  enum class Added { Meter, Poincare, XY, Histogram, Heatmap, Graph };
   QList<QMdiSubWindow *> m_added;
   QAction    *m_newMeterAction = nullptr;
   QAction    *m_newPoincareAction = nullptr;
@@ -218,20 +219,21 @@ protected:
   XYPlot     *m_xyPlot = nullptr;
   QMdiSubWindow *m_xyWin = nullptr;
   QHash<XYPlot *, XYView *> m_xyViews;
-  /// The graphs on QCustomPlot ("Graph (QCP)"), next to the ones on QtCharts until they can replace them.
+  /// The graphs (on QCustomPlot): the first one in m_graphWin, more added.
   QHash<QcpGraph *, QcpGraphView *> m_qgraphViews;
   /// The graph (QCP) the window's picture actions are for (Print, the export's
-  /// picture, Into the project): the one used last; nullptr: the graph's.
+  /// picture, Into the project): the one used last; nullptr: none used yet.
   QPointer<QcpGraphView> m_pictureQGraph;
   /// m_pictureQGraph set: Record and Live show the state of what it shows.
   void        setPictureQGraph(QcpGraphView *view);
   /// m_pictureQGraph while its window is shown: a hidden one is no longer the one used.
   QcpGraphView *pictureQGraph() const;
+  /// The graph whose window is active, else pictureQGraph(), else the first
+  /// one: zoom, note, copy image and Sources... are for it.
+  QcpGraphView *currentQGraph() const;
   /// What Export writes for a graph (QCP): the file it shows, else the
   /// recording of its values. False: not written, said why.
   bool        writeQGraphRecording(QcpGraphView *view, const QString &path, bool everyReading);
-  QAction    *m_qgraphAction = nullptr;
-  bool        m_qgraphsKey = false;   ///< Windows/qgraphs named graphs when read or written last: an empty list is written too
   QAction    *m_newHistogramAction = nullptr;
   QAction    *m_newHeatmapAction = nullptr;
   QAction    *m_heatmapAction = nullptr;
@@ -243,7 +245,7 @@ protected:
   /// Another view of @p kind for @p value, shown and placed; with @p ask
   /// its Sources dialog first, cancelled no view.
   QMdiSubWindow *newView(Added kind, const ValueRef &value, bool ask = false);
-  /// Another graph on QCustomPlot showing @p value, without one the first meter's main value.
+  /// Another graph showing @p value, without one the first meter's main value.
   void        newQGraph(const ValueRef &value = ValueRef());
   /// The dialog of the values a graph on QCustomPlot shows; false when cancelled.
   bool        editQGraphSources(QcpGraphView *view);
@@ -269,34 +271,31 @@ protected:
   PoincareView *poincareViewOf(const QMdiSubWindow *win) const;
   XYView      *xyViewOf(const QMdiSubWindow *win) const;
   QList<QMdiSubWindow *> xyWindows() const;
-  QcpGraphView *qgraphViewOf(const QMdiSubWindow *win) const;
-  QList<QMdiSubWindow *> qgraphWindows() const;
   bool        editXYSources(XYView *view);
   /// The design's colours on a side plot (XY diagram, histogram, heatmap).
   void        applyPlotColors(GraphCommon *plot);
   HistogramView *histogramViewOf(const QMdiSubWindow *win) const;
   HeatmapView *heatmapViewOf(const QMdiSubWindow *win) const;
   /// @name Graphs
-  /// The first one ("graph", InstanceWidget's own) is always there, more
-  /// ("graph-2", ...) come from the menu and go when closed. All work alike
-  /// on the session's readings: each with its curves, axes, time window,
-  /// cursors and statistics. The window's actions (print, export, zoom, note)
-  /// are for the one used last (InstanceWidget::graph()).
+  /// The first one ("graph") is always there, more ("graph-2", ...) come
+  /// from the menu and go when closed. All work alike on the session's
+  /// readings: each with its curves, axes, time window, cursors and
+  /// statistics. The window's actions (print, export, zoom, note) are for
+  /// the one used last (pictureQGraph()).
   /// @{
-  GraphView  *graphViewOf(const QMdiSubWindow *win) const;
-  QMdiSubWindow *graphWindowOf(const GraphWidget *graph) const;
-  QList<QMdiSubWindow *> graphWindows() const;
-  /// The graphs showing a value of @p ctl, one of those sharing a store.
-  QList<GraphWidget *> graphsShowing(const MeterController *ctl) const;
-  /// The recording of @p ctl when a graph (QCP) shows a value of it and no
-  /// graph of graphsShowing() put the mark there already; else nullptr.
+  /// The window of a graph @p name ("graph", "graph-2") with @p title,
+  /// showing @p value; not shown yet, not among m_added.
+  QMdiSubWindow *addQGraphWindow(const QString &name, const QString &title, const ValueRef &value);
+  QcpGraphView *qgraphViewOf(const QMdiSubWindow *win) const;
+  /// The graph windows, the first one first.
+  QList<QMdiSubWindow *> qgraphWindows() const;
+  /// The recording of @p ctl when a graph shows a value of it, else nullptr:
+  /// a mark of an alarm or SCPI goes there.
   RecordingStore *qgraphStoreFor(const MeterController *ctl) const;
   /// Shows a graph's window: the first one by its action.
   void        showGraphWindow(QMdiSubWindow *win);
   /// The window's entry of a view's own menu: Hide view, Close window for one added.
   QAction    *hideAction(QMdiSubWindow *win);
-  /// A graph's signals and its menu's window actions.
-  void        hookGraph(GraphWidget *graph, QMdiSubWindow *win);
   /// @}
   /// The windows of all analog meters or Poincaré plots, the first one first.
   QList<QMdiSubWindow *> meterWindows() const;
@@ -486,7 +485,7 @@ protected:
   /// "Sources..." of a view; for View::Meter the analog meter @p meter,
   /// nullptr for the first. False when cancelled.
   bool        editSources(ValueMenu::View view, MeterView *meter = nullptr, PoincareView *plot = nullptr,
-                          GraphWidget *graph = nullptr, HistogramView *histogram = nullptr, HeatmapView *heatmap = nullptr);
+                          QcpGraphView *graph = nullptr, HistogramView *histogram = nullptr, HeatmapView *heatmap = nullptr);
   /// Values... of a front panel: its device's values on the big and small line.
   void        editPanelValues(FrontPanel *panel);
   QAction    *m_graphSources = nullptr;   ///< in the graph's menu, with more than one meter
@@ -530,10 +529,10 @@ protected:
   /// Shows the windows, mode, tree, title bars, design and (Free) positions.
   void        applyWorkspace(const WorkspaceGet &get);
   void        storeWorkspace(const WorkspaceSet &set);
-  /// One graph's part of it, under its key (GraphView::key()).
-  void        applyGraphState(const GraphView *view, const WorkspaceGet &get,
+  /// One graph's part of it, under its key (QcpGraphView::key()); the
+  /// first one also reads the values of a bench from before 26.4.
+  void        applyGraphState(QcpGraphView *view, const WorkspaceGet &get,
                               const std::function<ValueRef(const QString &)> &valueOf);
-  void        storeGraphState(const GraphView *view, const WorkspaceSet &set) const;
   void        loadWorkspace();
   /// Loads the workspace @p file; false (with a message) when it is none.
   bool        loadWorkspaceFile(const QString &file);

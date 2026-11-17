@@ -168,6 +168,14 @@ QColor QcpGraph::colorOf(int curve) const
   return GraphLook::curveColor(m_look, keyOf(curve));
 }
 
+QColor QcpGraph::drawnColor(const ValueRef &value) const
+{
+  for (int i = 0; i < m_curves.size(); ++i)
+    if (m_curves.at(i).value == value && m_curves.at(i).axis >= 0)
+      return colorOf(i);
+  return QColor();
+}
+
 void QcpGraph::styleCurves()
 {
   QList<int> onAxis(m_axes.size(), 0), single(m_axes.size(), -1);

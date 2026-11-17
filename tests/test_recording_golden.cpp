@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 // The recorder against a stream of readings with given times, the way the
-// MeterController feeds it: the export on the sample time's grid, the
-// integral and the start triggers. Recorded with the store as it sampled
+// MeterController feeds it: the export on the sample time's grid and the
+// start triggers. Recorded with the store as it sampled
 // the main value ten times a second; the store that keeps every reading has
 // to give the same.
 //
@@ -174,38 +174,6 @@ int main(int argc, char **argv)
         check(same, QString("grid: row %1 is '%2', expected '%3'").arg(i).arg(got[i], want[i]));
       }
     }
-  }
-
-  // --- 2. the integral at a regular rate: one reading a second, sample time
-  //        1 s, threshold 0.5. With the sample clock it was the running sum
-  //        of the samples, 1 3 6 0 1 2 6, falling back to 0 at or below the
-  //        threshold; now it is the integral over time (V s): the same sum
-  //        times the sample time, without the first sample (the value at
-  //        the start had no time yet) until the first reset, the same after
-  //        it ---
-  {
-    RecordingStore store;
-    store.setSampleTime(10);
-    store.setIntegrationThreshold(0.5);
-    Player p(store);
-    const double values[] = { 1, 2, 3, 0.25, 1, 1, 4 };
-    // the value of sample k arrives at the start of its sample time
-    p.reading(-1000, values[0], "1.000");
-    p.start(0);
-    for (int i = 1; i < 7; ++i)
-      p.reading((i - 1) * 1000, values[i], QString::number(values[i], 'f', 3));
-    p.stop(6050);
-    QStringList got;
-    for (const GridPoint &g : store.grid(10))
-      got << QString::number(g.integral);
-    check(got.join(' ') == "0 2 5 0 1 2 6", "integral: got " + got.join(' ') + ", expected 0 2 5 0 1 2 6");
-
-    // the same at another sample time: the integral does not depend on it
-    QStringList half;
-    const QVector<GridPoint> fine = store.grid(5);
-    for (int i = 0; i < fine.size(); i += 2)
-      half << QString::number(fine[i].integral);
-    check(half.join(' ') == got.join(' '), "integral: at 0.5 s got " + half.join(' '));
   }
 
   // --- 3. start triggers: when the recording starts (ms of the stream) ---

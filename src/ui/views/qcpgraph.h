@@ -155,6 +155,10 @@ public:
   bool        following() const { return m_followEnd; }
   /// The start of the window, ms since the start of the recording.
   qint64      windowStart() const;
+  /// The seconds the time axis spans: the window; on "All" at the end of a
+  /// recording shorter than the window only the recording (at least 10 s),
+  /// so it fills the width and grows with it.
+  double      shownSeconds() const;
   /// The window narrower (@p factor > 1) or wider; ends "All".
   void        zoomBy(double factor);
   /// The window over the whole recording, once (not growing as "All").
@@ -280,6 +284,13 @@ public:
   void        askOutliers(GraphOutliers::Mode mode);
   /// @}
 
+  /// The units of the value axes drawn, the left one first.
+  QStringList axisUnits() const;
+  /// Asks for a fixed range of the axis of @p unit (base unit), with
+  /// @p min and @p max at first; without them what the axis shows now.
+  /// False when cancelled.
+  bool        askFixedRange(const QString &unit, double &min, double &max, bool given);
+
   void        setHold(bool hold) override;
   /// Draws the store anew; the readings are the store's and stay.
   void        clear() override;
@@ -303,6 +314,9 @@ public:
   void        copyImage();
   /// A page: @p title, when the recording started, its sample time, @p comment, the picture below.
   void        print(QPrinter *printer, const QString &title, const QString &comment);
+  /// The colour @p value is drawn in; invalid while it is not drawn (not
+  /// shown, or no axis for its unit).
+  QColor      drawnColor(const ValueRef &value) const;
   /// @}
 
   /// @name For tests
@@ -402,6 +416,8 @@ Q_SIGNALS:
   void        overviewChanged();
   /// The rule for outliers changed (setOutliers(), askOutliers()).
   void        outliersChanged();
+  /// The start threshold was dragged to @p value (base unit): the settings take it.
+  void        startThresholdDragged(double value);
   /// A note was set at @p when (askNote()): the readings table marks its reading.
   void        noteAdded(const QDateTime &when, const QString &title);
   /// A note was dragged from @p from to @p to: the readings table moves its mark.
@@ -447,6 +463,9 @@ private:
   void        makeCurves();
   /// The series of @p curve's value, oldest first.
   QList<const RecordingSeries *> seriesOf(const Curve &curve) const;
+  /// How often @p curve turns between @p from and @p to (s, graph time) by
+  /// at least GraphBand::kTurnPixels on its axis as it stands now.
+  int         turnsIn(const Curve &curve, double from, double to) const;
   /// The bucket for the time shown on the plot's width.
   qint64      bucketNow() const;
   /// All points anew, and which axis each curve has.
@@ -502,6 +521,9 @@ private:
   void        redraw();
   // qcpgraph_overlays.cpp
   void        setupOverlays();
+  /// A dialog for a minimum and a maximum in @p unit (base unit), titled
+  /// @p title; false when cancelled.
+  bool        askMinMax(const QString &title, const QString &unit, double &min, double &max);
   /// The curve the crosshair, the cursors' levels and later the reference line go by: the first on the left axis; -1: none.
   int         leftCurve() const;
   GraphStats::Curve statsCurve(int curve) const;
