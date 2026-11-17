@@ -167,6 +167,13 @@ private:
 };
 }
 
+MainWindow::~MainWindow()
+{
+  // the members go first, the child windows after them: a window activated
+  // meanwhile would look the graph up in a hash already gone
+  disconnect(m_mdi, nullptr, this, nullptr);
+}
+
 MainWindow::MainWindow(QCommandLineParser &parser, QWidget *parent)
   : QMainWindow(parent)
   , m_running(false)
@@ -2901,7 +2908,9 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
     hold->setCheckable(true);
     hold->setChecked(qgraph->graph()->hold());
     connect(hold, &QAction::toggled, qgraph->graph(), [graph = qgraph->graph()](bool on) { graph->setHold(on); });
-    connect(menu.addAction(tr("&Reset")), &QAction::triggered, qgraph->graph(), [graph = qgraph->graph()] { graph->clear(); });
+    // as Clear in the toolbar: the recording goes (asked first when not
+    // saved), a recording or a file viewed: Live again
+    connect(menu.addAction(tr("&Reset")), &QAction::triggered, action_Clear, &QAction::trigger);
     // the Graph page of the settings: colours, line, points, width
     connect(menu.addAction(word("Configure...")), &QAction::triggered, m_wid, &InstanceWidget::configGraphSLOT);
     // pictures and the recording; the window's actions without their letters, taken here

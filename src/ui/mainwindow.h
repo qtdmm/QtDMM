@@ -90,6 +90,9 @@ public:
   /// @param parser the processed command line (--debug, --config-dir, --config-id)
   /// @param parent parent widget, normally none
   MainWindow(QCommandLineParser &parser, QWidget *parent = nullptr);
+  /// The views' lookups (m_qgraphViews, ...) go before the windows: the
+  /// MDI area must not report a window activated while they are torn down.
+  ~MainWindow() override;
   /// --debug: frame dump and the qtdmm.hid logging category.
   void      setConsoleLogging(bool);
 
