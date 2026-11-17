@@ -746,33 +746,68 @@ void QcpGraph::askOutliers(GraphOutliers::Mode mode)
     {
       double lo = m_outliers.mode == GraphOutliers::Limits ? m_outliers.a : shown.lower * factor;
       double hi = m_outliers.mode == GraphOutliers::Limits ? m_outliers.b : shown.upper * factor;
-      QDialog dlg(this);
-      dlg.setWindowTitle(word("Hide outliers outside [%1]").arg(SiPrefix::displayText(unit)));
-      auto *form = new QFormLayout(&dlg);
-      auto spin = [&](double v)
-      {
-        auto *s = new QDoubleSpinBox(&dlg);
-        s->setDecimals(6);
-        s->setRange(-1e12, 1e12);
-        s->setSuffix(" " + SiPrefix::displayText(unit));
-        s->setValue(v);
-        return s;
-      };
-      QDoubleSpinBox *min = spin(lo);
-      QDoubleSpinBox *max = spin(hi);
-      form->addRow(word("M&inimum:"), min);
-      form->addRow(word("M&aximum:"), max);
-      auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dlg);
-      connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
-      connect(buttons, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
-      form->addRow(buttons);
-      auto valid = [=] { buttons->button(QDialogButtonBox::Ok)->setEnabled(max->value() > min->value()); };
-      connect(min, &QDoubleSpinBox::valueChanged, &dlg, valid);
-      connect(max, &QDoubleSpinBox::valueChanged, &dlg, valid);
-      valid();
-      if (dlg.exec() == QDialog::Accepted)
-        setOutliers({ GraphOutliers::Limits, min->value(), max->value(), unit });
+      if (askMinMax(word("Hide outliers outside [%1]").arg(SiPrefix::displayText(unit)), unit, lo, hi))
+        setOutliers({ GraphOutliers::Limits, lo, hi, unit });
       return;
     }
   }
+}
+
+QStringList QcpGraph::axisUnits() const
+{
+  QStringList units;
+  for (const Axis &a : m_axes)
+    if (!a.unit.isEmpty())
+      units << a.unit;
+  return units;
+}
+
+// The words of the graph on QtCharts, translated there
+bool QcpGraph::askFixedRange(const QString &unit, double &min, double &max, bool given)
+{
+  if (!given)
+    for (const Axis &a : std::as_const(m_axes))
+      if (a.unit == unit)
+      {
+        min = a.axis->range().lower * a.factor;
+        max = a.axis->range().upper * a.factor;
+      }
+  return askMinMax(QCoreApplication::translate("GraphWidget", "Fixed range [%1]").arg(SiPrefix::displayText(unit)),
+                   unit, min, max);
+}
+
+bool QcpGraph::askMinMax(const QString &title, const QString &unit, double &min, double &max)
+{
+  auto word = [](const char *text) { return QCoreApplication::translate("GraphWidget", text); };
+  QDialog dlg(this);
+  dlg.setWindowTitle(title);
+  auto *form = new QFormLayout(&dlg);
+  auto spin = [&](double v)
+  {
+    auto *s = new QDoubleSpinBox(&dlg);
+    s->setDecimals(6);
+    s->setRange(-1e12, 1e12);
+    s->setSuffix(" " + SiPrefix::displayText(unit));
+    s->setValue(v);
+    return s;
+  };
+  QDoubleSpinBox *low = spin(min);
+  QDoubleSpinBox *high = spin(max);
+  low->setObjectName("ui_axisMin");
+  high->setObjectName("ui_axisMax");
+  form->addRow(word("M&inimum:"), low);
+  form->addRow(word("M&aximum:"), high);
+  auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dlg);
+  connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
+  connect(buttons, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
+  form->addRow(buttons);
+  auto valid = [=] { buttons->button(QDialogButtonBox::Ok)->setEnabled(high->value() > low->value()); };
+  connect(low, &QDoubleSpinBox::valueChanged, &dlg, valid);
+  connect(high, &QDoubleSpinBox::valueChanged, &dlg, valid);
+  valid();
+  if (dlg.exec() != QDialog::Accepted)
+    return false;
+  min = low->value();
+  max = high->value();
+  return true;
 }

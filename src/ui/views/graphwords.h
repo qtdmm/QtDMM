@@ -100,5 +100,8 @@
   QT_TRANSLATE_NOOP("GraphWidget", "Could not write %1"),
   QT_TRANSLATE_NOOP("GraphWidget", "right"),
   QT_TRANSLATE_NOOP("GraphWidget", "left"),
-  QT_TRANSLATE_NOOP("GraphWidget", "third")
+  QT_TRANSLATE_NOOP("GraphWidget", "third"),
+  QT_TRANSLATE_NOOP("GraphWidget", "&Fixed: %1 .. %2 %3..."),
+  QT_TRANSLATE_NOOP("GraphWidget", "&Fixed range..."),
+  QT_TRANSLATE_NOOP("GraphWidget", "Fixed range [%1]")
 };

@@ -280,6 +280,13 @@ public:
   void        askOutliers(GraphOutliers::Mode mode);
   /// @}
 
+  /// The units of the value axes drawn, the left one first.
+  QStringList axisUnits() const;
+  /// Asks for a fixed range of the axis of @p unit (base unit), with
+  /// @p min and @p max at first; without them what the axis shows now.
+  /// False when cancelled.
+  bool        askFixedRange(const QString &unit, double &min, double &max, bool given);
+
   void        setHold(bool hold) override;
   /// Draws the store anew; the readings are the store's and stay.
   void        clear() override;
@@ -507,6 +514,9 @@ private:
   void        redraw();
   // qcpgraph_overlays.cpp
   void        setupOverlays();
+  /// A dialog for a minimum and a maximum in @p unit (base unit), titled
+  /// @p title; false when cancelled.
+  bool        askMinMax(const QString &title, const QString &unit, double &min, double &max);
   /// The curve the crosshair, the cursors' levels and later the reference line go by: the first on the left axis; -1: none.
   int         leftCurve() const;
   GraphStats::Curve statsCurve(int curve) const;

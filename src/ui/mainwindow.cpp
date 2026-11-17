@@ -1316,6 +1316,38 @@ void MainWindow::fillQGraphAxisMenu(QMenu *menu, QcpGraphView *view)
     for (int axis = 0; axis < QcpGraph::kMaxAxes; ++axis)
       entry(axis < 3 ? places[axis] : tr("Axis %1").arg(axis + 1), axis);
   }
+  // the range of each axis drawn: fitted to the values, or fixed by unit
+  // (the words of the old graph, translated there)
+  auto word = [](const char *text) { return QCoreApplication::translate("GraphWidget", text); };
+  const QStringList units = view->graph()->axisUnits();
+  if (!units.isEmpty())
+    menu->addSeparator();
+  for (const QString &unit : units)
+  {
+    QMenu *sub = menu->addMenu(tr("Range [%1]").arg(SiPrefix::displayText(unit)).replace('&', "&&"));
+    const QMap<QString, GraphModel::Range> ranges = view->model()->fixedRanges();
+    const bool fixed = ranges.contains(unit);
+    auto *group = new QActionGroup(sub);
+    QAction *automatic = sub->addAction(word("&Automatic"));
+    QAction *range = sub->addAction(fixed ? word("&Fixed: %1 .. %2 %3...")
+                                              .arg(QLocale().toString(ranges.value(unit).first),
+                                                   QLocale().toString(ranges.value(unit).second),
+                                                   SiPrefix::displayText(unit))
+                                          : word("&Fixed range..."));
+    for (QAction *a : { automatic, range })
+    {
+      a->setCheckable(true);
+      group->addAction(a);
+    }
+    (fixed ? range : automatic)->setChecked(true);
+    connect(automatic, &QAction::triggered, view, [view, unit] { view->model()->clearFixedRange(unit); });
+    connect(range, &QAction::triggered, view, [view, unit, fixed, ranges]
+    {
+      double min = ranges.value(unit).first, max = ranges.value(unit).second;
+      if (view->graph()->askFixedRange(unit, min, max, fixed))
+        view->model()->setFixedRange(unit, min, max);
+    });
+  }
 }
 
 QList<QMdiSubWindow *> MainWindow::xyWindows() const
@@ -2768,7 +2800,7 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
     menu.addSeparator();
     // another one, first with the same value
     const QList<ValueRef> values = qgraph->model()->values();
-    connect(menu.addAction(tr("&New graph (QCP)")), &QAction::triggered, this, [this, values]
+    connect(menu.addAction(tr("&New graph")), &QAction::triggered, this, [this, values]
     {
       newQGraph(values.value(0));
     });
