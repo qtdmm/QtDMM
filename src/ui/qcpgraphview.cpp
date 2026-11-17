@@ -57,6 +57,9 @@ QcpGraphView::QcpGraphView(DeviceSession *session, QcpGraph *graph, const QStrin
     m_model->setReferenceLines(m_graph->referenceLines());
     m_model->setCrossingsVisible(m_graph->crossingsVisible());
   });
+  m_graph->setOutliers(m_model->outliers());
+  connect(m_model, &GraphModel::outliersChanged, m_graph, [this] { m_graph->setOutliers(m_model->outliers()); });
+  connect(m_graph, &QcpGraph::outliersChanged, m_model, [this] { m_model->setOutliers(m_graph->outliers()); });
   connect(m_graph, &QcpGraph::leftValueChanged, this, &QcpGraphView::followLeftValue);
   for (const MeterController *ctl : m_session->controllers())
     watch(ctl);

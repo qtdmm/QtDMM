@@ -13,6 +13,12 @@
 #include "ui/views/qcp.h"
 
 #include <QCoreApplication>
+#include <QDialog>
+#include <QDialogButtonBox>
+#include <QDoubleSpinBox>
+#include <QFormLayout>
+#include <QInputDialog>
+#include <QPushButton>
 #include <QElapsedTimer>
 #include <QLayout>
 #include <cmath>
@@ -163,6 +169,8 @@ GraphStats::Curve QcpGraph::statsCurve(int curve) const
   out.store = c.store;
   out.parts = seriesOf(c);
   out.shift = qRound64(c.shift * 1000);
+  if (m_outliers.active())
+    out.hidden = [rule = m_outliers, unit = c.unit](const RecordingSeries &s, int i) { return GraphOutliers::isOutlier(rule, s, i, unit); };
   return out;
 }
 
@@ -177,7 +185,62 @@ GraphStats::Input QcpGraph::statsInput() const
   input.from = windowStart();
   input.to = input.from + qint64(m_windowSeconds) * 1000;
   input.end = m_store ? m_store->duration() : 0;
+  input.outliersHidden = m_outliersHidden;
   return input;
+}
+
+void QcpGraph::setOutliers(const GraphOutliers::Rule &rule)
+{
+  if (rule == m_outliers)
+    return;
+  m_outliers = rule;
+  Q_EMIT outliersChanged();
+  m_dirty = true;   // every curve, and with them the bands and the crossings
+  countOutliers();
+  scheduleRefresh();
+}
+
+// The hidden readings of the curves drawn in the time shown
+void QcpGraph::countOutliers()
+{
+  QElapsedTimer cost;
+  cost.start();
+  int n = 0;
+  if (m_outliers.active())
+  {
+    const qint64 from = windowStart(), to = from + qint64(m_windowSeconds) * 1000;
+    for (int c = 0; c < m_curves.size(); ++c)
+    {
+      const Curve &curve = m_curves.at(c);
+      if (curve.axis < 0 || !curve.store)
+        continue;
+      const qint64 shift = qRound64(curve.shift * 1000);
+      for (const RecordingSeries *s : seriesOf(curve))
+        for (int i = qMax(0, s->lowerBound(from - shift)), end = qMin(s->lowerBound(to - shift + 1), s->count()); i < end; ++i)
+          n += GraphOutliers::isOutlier(m_outliers, *s, i, curve.unit) ? 1 : 0;
+    }
+  }
+  m_outlierCountCost = cost.elapsed();
+  if (n != m_outliersHidden)
+  {
+    m_outliersHidden = n;
+    updateTimeBar();
+    scheduleStats();
+  }
+}
+
+// After a picture, at most four times a second; over millions of readings
+// (σ asks 50 neighbours each) a tenth of the time at most
+void QcpGraph::scheduleOutlierCount()
+{
+  if (!m_outliers.active() || m_outlierCountPending)
+    return;
+  m_outlierCountPending = true;
+  QTimer::singleShot(qMax<qint64>(250, m_outlierCountCost * 10), this, [this]
+  {
+    m_outlierCountPending = false;
+    countOutliers();
+  });
 }
 
 // On the reading of the left axis' value that holds under the mouse, or
@@ -420,7 +483,7 @@ double QcpGraph::followedValue()
   // the series at the end of the time shown
   if (const RecordingSeries *series = curve.seriesAt(qMin(to, m_store ? m_store->duration() : to)); series && curve.store)
   {
-    const RecordingStore::Stats st = curve.store->statsOf(*series, from - curve.shift, to - curve.shift);
+    const RecordingStore::Stats st = curve.statsOf(*series, from, to);
     if (st.count > 0)
       m_followed = m_reference.kind == GraphReference::Mean ? st.mean : m_reference.kind == GraphReference::Min ? st.min : st.max;
   }
@@ -447,6 +510,7 @@ void QcpGraph::updateLevels()
   m_levelsDrawn.clear();
   m_bandDrawn = false;
   m_triggerLevel = qQNaN();
+  m_triggerCurve = -1;
   const int curve = leftCurve();
   const Axis &axis = m_axes.first();
   const double lo = axis.axis->range().lower * axis.factor, hi = axis.axis->range().upper * axis.factor;
@@ -509,8 +573,9 @@ void QcpGraph::updateLevels()
     }
   }
   // the start threshold of a recording waiting for it, on the axis of the value it compares
-  for (const Curve &c : std::as_const(m_curves))
+  for (int i = 0; i < m_curves.size(); ++i)
   {
+    const Curve &c = m_curves.at(i);
     if (m_ownStore || c.axis < 0 || !c.store)
       continue;
     const RecordingStore::StartMode mode = c.store->startMode();
@@ -519,6 +584,7 @@ void QcpGraph::updateLevels()
         || !(trigger.source.isEmpty() || trigger.source == c.value.source))
       continue;
     m_triggerLevel = mode == RecordingStore::Raising ? c.store->raisingThreshold() : c.store->fallingThreshold();
+    m_triggerCurve = i;
     const Axis &on = m_axes.at(c.axis);
     levels->lines << LevelLines::Line{ on.axis, m_triggerLevel / on.factor, QPen(m_look.trigger, 1, m_look.oneHue ? Qt::DashLine : Qt::SolidLine), QString() };
     break;
@@ -551,6 +617,13 @@ int QcpGraph::crossingCount(int line) const
 
 int QcpGraph::referencePixel(int line) const
 {
+  if (line == kTriggerLine)
+  {
+    if (m_triggerCurve < 0 || m_triggerCurve >= m_curves.size() || !std::isfinite(m_triggerLevel))
+      return -1;
+    const Axis &on = m_axes.at(qMax(0, m_curves.at(m_triggerCurve).axis));
+    return qRound(on.axis->coordToPixel(m_triggerLevel / on.factor));
+  }
   const double value = referenceValue(line);
   return std::isfinite(value) ? qRound(m_plot->yAxis->coordToPixel(value / m_axes.first().factor)) : -1;
 }
@@ -567,11 +640,13 @@ bool QcpGraph::limitBand(double *low, double *high) const
 int QcpGraph::levelAt(const QPoint &pos) const
 {
   if (!m_plot->axisRect()->rect().contains(pos))
-    return -2;
+    return kNoLine;
   for (const Level &level : m_levelsDrawn)
     if (std::abs(referencePixel(level.line) - pos.y()) <= 4)
       return level.line;
-  return -2;
+  if (const int trigger = referencePixel(kTriggerLine); trigger >= 0 && std::abs(trigger - pos.y()) <= 4)
+    return kTriggerLine;
+  return kNoLine;
 }
 
 double QcpGraph::roundedValueAt(const QPoint &globalPos) const
@@ -587,6 +662,23 @@ double QcpGraph::roundedValueAt(const QPoint &globalPos) const
 // time shown, to the alarm thresholds and to the limits drawn
 void QcpGraph::dragLevel(int line, double y)
 {
+  if (line == kTriggerLine)
+  {
+    // the start threshold: a round value, into the store whose start waits for it
+    if (m_triggerCurve < 0 || m_triggerCurve >= m_curves.size())
+      return;
+    const Curve &c = m_curves.at(m_triggerCurve);
+    const Axis &on = m_axes.at(qMax(0, c.axis));
+    if (!c.store || !(on.axis->range().size() > 0))
+      return;
+    const double value = GraphReference::rounded(on.axis->pixelToCoord(y) * on.factor, on.axis->range().size() * on.factor);
+    if (c.store->startMode() == RecordingStore::Raising)
+      c.store->setRaisingThreshold(value);
+    else
+      c.store->setFallingThreshold(value);
+    redraw();
+    return;
+  }
   const Axis &axis = m_axes.first();
   const double span = axis.axis->range().size() * axis.factor, height = m_plot->axisRect()->height();
   if (!(span > 0) || height <= 0)
@@ -605,7 +697,7 @@ void QcpGraph::dragLevel(int line, double y)
   const GraphStats::Curve curve = statsCurve(leftCurve());
   const qint64 from = windowStart(), to = from + qint64(m_windowSeconds) * 1000;
   if (const RecordingSeries *series = curve.seriesAt(qMin(to, m_store ? m_store->duration() : to)); series && curve.store)
-    if (const RecordingStore::Stats st = curve.store->statsOf(*series, from - curve.shift, to - curve.shift); st.count > 0)
+    if (const RecordingStore::Stats st = curve.statsOf(*series, from, to); st.count > 0)
       snaps << Snap{ Mean, st.mean } << Snap{ Min, st.min } << Snap{ Max, st.max };
   if (leftValue().id >= 0)
     for (double a : std::as_const(m_alarmThresholds))
@@ -615,4 +707,71 @@ void QcpGraph::dragLevel(int line, double y)
       if (std::isfinite(bound))
         snaps << Snap{ Value, bound };
   setReference(dragged(value, span, span / height, snaps));
+}
+
+// How outliers are hidden; Jump and Limits ask in the left axis' unit (the
+// dialogs and words of the graph on QtCharts)
+void QcpGraph::askOutliers(GraphOutliers::Mode mode)
+{
+  auto word = [](const char *text) { return QCoreApplication::translate("GraphWidget", text); };
+  const QString unit = m_axes.isEmpty() ? QString() : m_axes.first().unit;
+  const double factor = m_axes.isEmpty() ? 1 : m_axes.first().factor;
+  const QCPRange shown = m_axes.isEmpty() ? QCPRange(0, 1) : m_axes.first().axis->range();
+  bool ok = true;
+  switch (mode)
+  {
+    case GraphOutliers::Shown:
+      setOutliers({});
+      return;
+    case GraphOutliers::Sigma:
+    {
+      const double n = QInputDialog::getDouble(this, word("Hide outliers"), word("More than n σ from their neighbours, n:"),
+                                               m_outliers.mode == GraphOutliers::Sigma ? m_outliers.a : 3.0, 1.0, 20.0, 1, &ok);
+      if (ok)
+        setOutliers({ GraphOutliers::Sigma, n, 0, QString() });
+      return;
+    }
+    case GraphOutliers::Jump:
+    {
+      const double x = QInputDialog::getDouble(this, word("Hide outliers"),
+                                               word("Spikes larger than (%1):").arg(SiPrefix::displayText(unit)),
+                                               m_outliers.mode == GraphOutliers::Jump ? m_outliers.a : shown.size() * factor / 4,
+                                               0, 1e12, 6, &ok);
+      if (ok && x > 0)
+        setOutliers({ GraphOutliers::Jump, x, 0, unit });
+      return;
+    }
+    case GraphOutliers::Limits:
+    {
+      double lo = m_outliers.mode == GraphOutliers::Limits ? m_outliers.a : shown.lower * factor;
+      double hi = m_outliers.mode == GraphOutliers::Limits ? m_outliers.b : shown.upper * factor;
+      QDialog dlg(this);
+      dlg.setWindowTitle(word("Hide outliers outside [%1]").arg(SiPrefix::displayText(unit)));
+      auto *form = new QFormLayout(&dlg);
+      auto spin = [&](double v)
+      {
+        auto *s = new QDoubleSpinBox(&dlg);
+        s->setDecimals(6);
+        s->setRange(-1e12, 1e12);
+        s->setSuffix(" " + SiPrefix::displayText(unit));
+        s->setValue(v);
+        return s;
+      };
+      QDoubleSpinBox *min = spin(lo);
+      QDoubleSpinBox *max = spin(hi);
+      form->addRow(word("M&inimum:"), min);
+      form->addRow(word("M&aximum:"), max);
+      auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dlg);
+      connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
+      connect(buttons, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
+      form->addRow(buttons);
+      auto valid = [=] { buttons->button(QDialogButtonBox::Ok)->setEnabled(max->value() > min->value()); };
+      connect(min, &QDoubleSpinBox::valueChanged, &dlg, valid);
+      connect(max, &QDoubleSpinBox::valueChanged, &dlg, valid);
+      valid();
+      if (dlg.exec() == QDialog::Accepted)
+        setOutliers({ GraphOutliers::Limits, min->value(), max->value(), unit });
+      return;
+    }
+  }
 }

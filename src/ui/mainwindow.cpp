@@ -2853,6 +2853,27 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
     }
     if (!qgraph->showsFile())
       fillQGraphReferenceMenu(menu.addMenu(tr("Re&ference line")), qgraph, QCursor::pos());
+    {
+      // readings not drawn, the recording keeps them; the entries are the
+      // old graph's, the menu's letter its own (that one is taken here)
+      using namespace GraphOutliers;
+      auto word = [](const char *text) { return QCoreApplication::translate("GraphWidget", text); };
+      QMenu *outliers = menu.addMenu(tr("Outli&ers"));
+      const Rule rule = qgraph->model()->outliers();
+      const QString unit = SiPrefix::displayText(rule.unit);
+      auto entry = [&](const QString &text, Mode mode)
+      {
+        QAction *a = outliers->addAction(text);
+        a->setCheckable(true);
+        a->setChecked(rule.mode == mode);
+        connect(a, &QAction::triggered, qgraph->graph(), [graph = qgraph->graph(), mode] { graph->askOutliers(mode); });
+      };
+      entry(word("&Show all"), Shown);
+      entry(rule.mode == Sigma ? word("&More than %1 σ from their neighbours...").arg(rule.a)
+                               : word("&More than n σ from their neighbours..."), Sigma);
+      entry(rule.mode == Jump ? word("&Spikes larger than %1 %2...").arg(rule.a).arg(unit) : word("&Spikes larger than..."), Jump);
+      entry(rule.mode == Limits ? word("Outside %1 .. %2 %3...").arg(rule.a).arg(rule.b).arg(unit) : word("Outside &limits..."), Limits);
+    }
     if (qgraph->graph()->store() && qgraph->graph()->marksEditable())
     {
       // a note where the menu was opened, or at the newest reading (the texts are the old graph's)
@@ -3896,6 +3917,7 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
     model->setReferenceSetting(get(key + "-reference", QString()).toString());
     model->setReferenceLinesSetting(get(key + "-reference-lines", QString()).toString());
     model->setCrossingsVisible(get(key + "-crossings", true).toBool());
+    model->setOutliersSetting(get(key + "-outliers", QString()).toString());
     if (const int seconds = get(key + "-window", 0).toInt(); seconds > 0)
       model->setWindowSeconds(seconds);
     model->setFollowAll(get(key + "-all", false).toBool());
@@ -4259,6 +4281,7 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
     set("Windows/" + w->objectName() + "-reference", model->referenceSetting());
     set("Windows/" + w->objectName() + "-reference-lines", model->referenceLinesSetting());
     set("Windows/" + w->objectName() + "-crossings", model->crossingsVisible());
+    set("Windows/" + w->objectName() + "-outliers", model->outliersSetting());
     set("Windows/" + w->objectName() + "-window", model->windowSeconds());
     set("Windows/" + w->objectName() + "-all", model->followAll());
     set("Windows/" + w->objectName() + "-shown", !w->isHidden());

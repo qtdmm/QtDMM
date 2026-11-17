@@ -54,7 +54,7 @@ void QcpGraph::mousePressed(QMouseEvent *event)
     m_drag = Drag::Cursor;
     m_dragCursor = cursor;
   }
-  else if (const int level = levelAt(event->pos()); event->button() == Qt::LeftButton && !shift && level > -2)
+  else if (const int level = levelAt(event->pos()); event->button() == Qt::LeftButton && !shift && level != kNoLine)
   {
     m_drag = Drag::Level;
     m_dragLevel = level;
@@ -78,7 +78,7 @@ void QcpGraph::mouseMoved(QMouseEvent *event)
     const int mark = markAt(event->pos());
     const int flag = mark >= 0 && markFlagRect(mark).contains(event->pos()) ? mark : -1;
     m_plot->setCursor(flag >= 0 ? Qt::PointingHandCursor : cursorAt(event->pos()) >= 0 || mark >= 0 ? Qt::SplitHCursor
-                      : levelAt(event->pos()) > -2 ? Qt::SplitVCursor : Qt::ArrowCursor);
+                      : levelAt(event->pos()) != kNoLine ? Qt::SplitVCursor : Qt::ArrowCursor);
     // outside the plot the crosshair's clock time is no longer true: a flag's note, or nothing
     if (!m_plot->axisRect()->rect().contains(event->pos()))
       m_plot->setToolTip(flag >= 0 ? markTip(flag) : QString());

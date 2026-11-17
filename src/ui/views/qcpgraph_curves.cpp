@@ -266,21 +266,37 @@ void QcpGraph::rebuildCurve(Curve &curve)
     if (!curve.points.isEmpty())
       curve.points.append(QPointF(s->first().t / 1000.0 + curve.shift, qQNaN()));
     points.clear();
-    curve.tail = SeriesDecimator::append(*s, 0, s->count() - 1, m_bucket, points);
+    curve.tail = SeriesDecimator::append(*s, 0, s->count() - 1, m_bucket, points, decimation(curve, *s));
     for (const QPointF &p : std::as_const(points))
       curve.points.append(QPointF(p.x() + curve.shift, p.y()));
   }
+}
+
+SeriesDecimator::Options QcpGraph::decimation(const Curve &curve, const RecordingSeries &series) const
+{
+  SeriesDecimator::Options options;
+  if (m_outliers.active())
+    options.hidden = [rule = m_outliers, unit = curve.unit, &series](int i) { return GraphOutliers::isOutlier(rule, series, i, unit); };
+  return options;
 }
 
 void QcpGraph::appendTail(Curve &curve, const RecordingSeries &series)
 {
   const int last = series.count() - 1;
   const int first = SeriesDecimator::bucketStart(series, last, m_bucket);
+  // A spike is one only with the reading after it: the reading before the
+  // newest, drawn already in an earlier bucket, is an outlier now - the
+  // curve anew with the next picture. Rare: only when one turns up.
+  if (m_outliers.active() && last - 1 >= 0 && last - 1 < first && GraphOutliers::isOutlier(m_outliers, series, last - 1, curve.unit))
+  {
+    m_dirty = true;
+    return;
+  }
   // the bucket was there before this reading: its points go for the new ones
   if (first < last)
     curve.points.remove(curve.points.size() - curve.tail, curve.tail);
   QList<QPointF> points;
-  curve.tail = SeriesDecimator::pointsOf(series, first, last, points);
+  curve.tail = SeriesDecimator::pointsOf(series, first, last, points, decimation(curve, series));
   for (const QPointF &p : std::as_const(points))
     curve.points.append(QPointF(p.x() + curve.shift, p.y()));
 }
@@ -342,6 +358,7 @@ void QcpGraph::refreshPlot()
   updateLevels();
   updateCursors();
   scheduleStats();
+  scheduleOutlierCount();
   updateScrollBar();
   updateTimeBar();
   m_plot->replot(QCustomPlot::rpQueuedReplot);

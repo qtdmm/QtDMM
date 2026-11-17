@@ -11,6 +11,7 @@
 #include "core/siprefix.h"
 #include "ui/views/qcp.h"
 
+#include <QCoreApplication>
 #include <QScrollBar>
 #include <QSignalBlocker>
 #include <QVBoxLayout>
@@ -380,6 +381,11 @@ void QcpGraph::updateTimeBar()
       state = tr("%1 · %2").arg(m_sourceName, length);
     else if (m_store->count() > 0)
       state = tr("Stopped · %1").arg(length);
+  }
+  if (m_outliersHidden > 0)
+  {
+    const QString hidden = QCoreApplication::translate("GraphWidget", "%n outlier(s) hidden", nullptr, m_outliersHidden);
+    state = state.isEmpty() ? hidden : state + QStringLiteral(" · ") + hidden;
   }
   if (!m_notice.isEmpty())
     state = state.isEmpty() ? m_notice : state + "   " + m_notice;

@@ -210,6 +210,14 @@ void GraphModel::setEnvelopeVisible(bool on)
   Q_EMIT overviewChanged();
 }
 
+void GraphModel::setOutliers(const GraphOutliers::Rule &rule)
+{
+  if (rule == m_outliers)
+    return;
+  m_outliers = rule;
+  Q_EMIT outliersChanged();
+}
+
 void GraphModel::setReference(const GraphReference::Line &line)
 {
   if (line == m_reference)

@@ -16,6 +16,16 @@ static QString word(const char *text)
   return QCoreApplication::translate("GraphWidget", text);
 }
 
+RecordingStore::Stats GraphStats::Curve::statsOf(const RecordingSeries &series, qint64 from, qint64 to) const
+{
+  if (!store)
+    return {};
+  std::function<bool(int)> skip;
+  if (hidden)
+    skip = [this, &series](int i) { return hidden(series, i); };
+  return store->statsOf(series, from - shift, to - shift, skip);
+}
+
 const RecordingSeries *GraphStats::Curve::seriesAt(qint64 t) const
 {
   // the series whose reading holds is the one with the latest reading up to t
@@ -163,7 +173,7 @@ QString GraphStats::html(const Input &input, const QFontMetrics &fm, int room, i
   auto between = [](const Curve &c, qint64 from, qint64 to)
   {
     const RecordingSeries *series = c.seriesAt(qMax(from, to));
-    return series && c.store ? c.store->statsOf(*series, from - c.shift, to - c.shift) : RecordingStore::Stats();
+    return series ? c.statsOf(*series, from, to) : RecordingStore::Stats();
   };
   // a row: the number in full, its name cut to what the column leaves; the
   // widest row says how wide the column wants to be
@@ -232,7 +242,9 @@ QString GraphStats::html(const Input &input, const QFontMetrics &fm, int room, i
   }
 
   // the time shown
-  html += title(word("Shown") + QStringLiteral("   ") + spanText(input.to - input.from));
+  html += title(word("Shown") + QStringLiteral("   ") + spanText(input.to - input.from)
+                + (input.outliersHidden > 0 ? QStringLiteral("   ")
+                     + QCoreApplication::translate("GraphWidget", "without %n outlier(s)", nullptr, input.outliersHidden) : QString()));
   rows.clear();
   for (const Curve &curve : input.curves)
   {

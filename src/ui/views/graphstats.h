@@ -6,8 +6,10 @@
 #include <QFontMetrics>
 #include <QList>
 #include <QString>
+#include <functional>
 
 #include "recording/recordingseries.h"
+#include "recording/recordingstore.h"
 
 class RecordingStore;
 
@@ -27,7 +29,12 @@ struct Curve
   const RecordingStore *store = nullptr;
   QList<const RecordingSeries *> parts;
   qint64  shift = 0;
+  /// Readings the graph does not draw (hidden outliers): the statistics pass them over.
+  std::function<bool(const RecordingSeries &, int)> hidden;
 
+  /// The statistics of @p series (one of parts) from @p from to @p to, the
+  /// graph's time, without the hidden readings.
+  RecordingStore::Stats statsOf(const RecordingSeries &series, qint64 from, qint64 to) const;
   /// The series whose reading holds at @p t (the graph's time); nullptr before the first.
   const RecordingSeries *seriesAt(qint64 t) const;
   /// The value that holds at @p t; NaN in a gap, before the first reading or after the recording.
@@ -69,6 +76,7 @@ struct Input
   qint64 from = 0;                 ///< the time shown
   qint64 to = 0;
   qint64 end = 0;                  ///< the recording's end on the graph's time
+  int    outliersHidden = 0;       ///< in the time shown, for its title
 };
 /// The statistics as HTML. With @p room > 0 (pixels for a name, measured
 /// with @p metrics) names are cut; @p want: how wide the widest row would
