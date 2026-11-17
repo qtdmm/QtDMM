@@ -1845,11 +1845,11 @@ static void testPictures()
     png.save(qEnvironmentVariable("QTDMM_SHOT") + "/qcpgraph_picture.png");
   check(png.size() == size, QString("the PNG at the picture's size: %1 x %2").arg(png.width()).arg(png.height()));
   QFile svg(dir.filePath("graph.svg"));
-  svg.open(QIODevice::ReadOnly);
+  check(svg.open(QIODevice::ReadOnly), "the SVG opens");
   const QByteArray svgText = svg.readAll();
   check(svgText.contains("<path") || svgText.contains("<polyline"), "the SVG draws the curve as vectors");
   QFile pdf(dir.filePath("graph.pdf"));
-  pdf.open(QIODevice::ReadOnly);
+  check(pdf.open(QIODevice::ReadOnly), "the PDF opens");
   check(pdf.read(5) == "%PDF-", "a PDF");
   // the curve in the picture: the column at 2 s has ink between the grid's lines (the sine near its top)
   // the screen's at its logical size (a high-DPI screen grabs more pixels)
