@@ -394,6 +394,42 @@ recording.
 - **Close window** in an added graph's menu removes it; the first graph only
   hides. The window layout and benches keep the graphs with what they show.
 
+## Graph (QCP), the new graph
+
+**Graph (QCP)** - its own button next to **Graph**, with the same icon - opens
+a graph drawn with QCustomPlot instead of Qt Charts. It is to replace the
+graph: it grows next to it until it does all the graph does, then it takes
+its place. It draws the same readings and costs far less CPU with long
+recordings and several curves.
+
+It is used like the graph described above: the time buttons, scrolling,
+zoom (wheel, a frame with Shift, Esc), the keys, the overview and the strip
+of the meter's states, the min/max band, a curve too dense for a line drawn
+as a band, time cursors and the statistics column (Σ), the reference line
+and added lines with their crossings, the limit band of the PASS/FAIL test,
+the start threshold (drag its line to change it), marks and notes, outliers
+and the colour variants. Its right-click menu holds what the graph's menu
+and **View** submenu hold:
+
+- **Sources...** picks the values of any open device; **Axis** puts a value
+  on the left axis, one of two right ones, or leaves it to the graph; a value
+  dragged from the sidebar onto it adds a curve.
+- **Start recording** / **Stop recording**, **Load recording...** (a file
+  into this graph, **Back to the device** returns), **Hold picture**,
+  **Reset**.
+- **Copy image**, **Export image...** (SVG and PDF keep the plot as vectors,
+  PNG, JPEG), **Print**, **Export...**, **Into the project**, **Live in
+  LabPlot**. The picture is the legend, the plot and the states' strip,
+  without the buttons, the overview and the statistics. Print, Export and
+  *Into the project* in the main menu act on the graph used last, of either
+  kind.
+- **Configure...** opens *Settings → Graph*: variant, colours, line, points
+  and width apply to both kinds.
+
+It has no integration curve: the integral is to become a calculated value
+of its own, shown like any other value. Its windows are kept with the
+window layout and benches, under keys of their own (`qgraph-N-...`).
+
 ## Colours
 
 At the top of **Settings → Graph**, **Draw the XY diagram, histogram and
