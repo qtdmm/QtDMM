@@ -154,17 +154,17 @@ void RecorderPrefs::defaultsSLOT()
   m_lengthValue = m_cfg->getInt("Sample/time", 500);
   m_lengthUnit = qBound(0, m_cfg->getInt("Sample/time-unit"), 3);
 
-  GraphWidget::SampleMode mode = static_cast<GraphWidget::SampleMode>(m_cfg->getInt("Start/mode"));
-  if (mode == GraphWidget::Time)
+  RecordingStore::StartMode mode = static_cast<RecordingStore::StartMode>(m_cfg->getInt("Start/mode"));
+  if (mode == RecordingStore::Time)
     predefinedBut->setChecked(true);
-  else if (mode == GraphWidget::Raising || mode == GraphWidget::Falling)
+  else if (mode == RecordingStore::Raising || mode == RecordingStore::Falling)
     triggerBut->setChecked(true);
   else
     manualBut->setChecked(true);
   // the edge of a start by hand is kept for the threshold, as before
-  if (mode == GraphWidget::Falling)
+  if (mode == RecordingStore::Falling)
     ui_edge->setCurrentIndex(1);
-  else if (mode == GraphWidget::Raising)
+  else if (mode == RecordingStore::Raising)
     ui_edge->setCurrentIndex(0);
 
   ui_startTime->setTime(QTime(qBound(0, m_cfg->getInt("Start/hour"), 23), qBound(0, m_cfg->getInt("Start/minute"), 59),
@@ -233,13 +233,13 @@ void RecorderPrefs::setTriggerChoices(const QList<TriggerChoice> &choices)
   ui_triggerValue->setVisible(ui_triggerValue->count() > 1);
 }
 
-GraphWidget::SampleMode RecorderPrefs::sampleMode() const
+RecordingStore::StartMode RecorderPrefs::sampleMode() const
 {
   if (predefinedBut->isChecked())
-    return GraphWidget::Time;
+    return RecordingStore::Time;
   if (triggerBut->isChecked())
-    return ui_edge->currentIndex() == 1 ? GraphWidget::Falling : GraphWidget::Raising;
-  return GraphWidget::Manual;
+    return ui_edge->currentIndex() == 1 ? RecordingStore::Falling : RecordingStore::Raising;
+  return RecordingStore::Manual;
 }
 
 int RecorderPrefs::sampleStep() const
@@ -299,9 +299,4 @@ void RecorderPrefs::setThreshold(double value)
 QTime RecorderPrefs::startTime() const
 {
   return ui_startTime->time();
-}
-
-void RecorderPrefs::setSampleTimeSLOT(int sampleTime)
-{
-  sampleEvery->setValue(sampleTime);
 }

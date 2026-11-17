@@ -9,7 +9,7 @@
 #include "ui/dialogs/notedlg.h"
 #include "ui/views/graphflags.h"
 #include "ui/views/graphtimebar.h"
-#include "ui/views/graphwidget_p.h"   // durationText()
+#include "ui/views/graphtext.h"   // durationText()
 #include "ui/views/qcp.h"
 
 #include <QCoreApplication>

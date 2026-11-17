@@ -26,7 +26,6 @@
 #include <QtSerialPort>
 
 #include "ui_uisettingsdialog.h"
-#include "ui/views/graphwidget.h"
 #include "device/frameformat.h"
 #include "device/dmmdecoder.h"
 #include "device/metersetup.h"
@@ -63,7 +62,7 @@ public:
   {
     General = 0,
     GUI,   ///< "Appearance"
-    Graph,      ///< with the Y axis, the time window and the integration curve
+    Graph,      ///< colours, lines, the time window of a new graph
     Recorder,
     Alarms,
     Scpi,
@@ -105,14 +104,8 @@ public Q_SLOTS:
   /// OK or Apply: applies all pages and saves.
   void                  on_ui_buttonBox_accepted();
   void                  on_ui_buttonBox_rejected();
-  /// The graph changed the sample time (recorder page follows).
-  void                  setSampleTimeSLOT(int);
-  /// A time button of the graph: the visible window, applied like a zoom.
-  void                  setWindowSecondsSLOT(int seconds);
-  void                  zoomInSLOT(double);
-  void                  zoomOutSLOT(double);
-  /// A threshold cursor was dragged in the graph; updates the spin box.
-  void                  thresholdChangedSLOT(GraphWidget::CursorMode, double);
+  /// The start threshold was dragged in a graph: the Recording page takes it.
+  void                  thresholdChangedSLOT(double value);
 
 Q_SIGNALS:
   /// Apply pressed: settings saved, dialog stays open.
@@ -120,8 +113,6 @@ Q_SIGNALS:
   /// OK pressed: settings saved, dialog closes.
   void                  accepted();
   void                  rejected();
-  /// The visible window changed on the graph page.
-  void                  zoomed();
 
 protected:
   QPrinter             *m_printer;

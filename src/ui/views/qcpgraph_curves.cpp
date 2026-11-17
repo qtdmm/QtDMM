@@ -9,7 +9,7 @@
 #include "ui/views/graphband.h"
 #include "ui/views/graphlegend.h"
 #include "ui/views/graphtimebar.h"
-#include "ui/views/graphwidget_p.h"   // curveName()
+#include "ui/views/graphtext.h"   // curveName()
 #include "ui/views/qcp.h"
 
 #include <QResizeEvent>

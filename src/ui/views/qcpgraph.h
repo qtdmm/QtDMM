@@ -303,6 +303,9 @@ public:
   void        copyImage();
   /// A page: @p title, when the recording started, its sample time, @p comment, the picture below.
   void        print(QPrinter *printer, const QString &title, const QString &comment);
+  /// The colour @p value is drawn in; invalid while it is not drawn (not
+  /// shown, or no axis for its unit).
+  QColor      drawnColor(const ValueRef &value) const;
   /// @}
 
   /// @name For tests
@@ -402,6 +405,8 @@ Q_SIGNALS:
   void        overviewChanged();
   /// The rule for outliers changed (setOutliers(), askOutliers()).
   void        outliersChanged();
+  /// The start threshold was dragged to @p value (base unit): the settings take it.
+  void        startThresholdDragged(double value);
   /// A note was set at @p when (askNote()): the readings table marks its reading.
   void        noteAdded(const QDateTime &when, const QString &title);
   /// A note was dragged from @p from to @p to: the readings table moves its mark.

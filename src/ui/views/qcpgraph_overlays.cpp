@@ -676,6 +676,7 @@ void QcpGraph::dragLevel(int line, double y)
       c.store->setRaisingThreshold(value);
     else
       c.store->setFallingThreshold(value);
+    Q_EMIT startThresholdDragged(value);
     redraw();
     return;
   }

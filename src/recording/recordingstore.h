@@ -23,7 +23,6 @@ struct GridPoint
 {
   qint64  t = 0;            ///< ms since the start of the recording, a multiple of the step
   double  value = 0;        ///< the time-weighted mean over the step (the value at t for the first); NaN = none
-  double  integral = 0;     ///< the integral at t; NaN in a gap
   Quality quality = Quality::Valid;   ///< the worst in the step
   quint32 limit = 0;        ///< the limit test's verdicts and the meter's states in the step (SampleFlag::Limit*, State)
 };
@@ -54,14 +53,13 @@ struct LoggedReading
 /// While recording it keeps every main reading (id 0) with its time, as a
 /// RecordingSeries of RawPoint: setReading() from the MeterController. The
 /// other values of the meter (a second display, id > 0) go into series of
-/// their own on the same time axis (extra()), with their integral too; the
+/// their own on the same time axis (extra()); the
 /// length, the marks and the export are the main value's, the triggers
 /// watch the main value or the one setTriggerValue() chose. An
 /// overload is a point without a value, and so is the moment the value went
 /// stale (setStale()). The sample time is no longer the rate it records at
 /// but the grid of the export: grid() gives the time-weighted mean of every
-/// step. The integral is one over time (unit x s) of the values above the
-/// integration threshold.
+/// step.
 ///
 /// The store is in one of three states (State): Live, the readings of the
 /// last liveKept() running through without being a recording; Record,
@@ -82,9 +80,9 @@ struct LoggedReading
 /// table). Its signals come in pairs around every change, so a table model
 /// can turn them into begin/end calls one to one.
 ///
-/// GraphWidget shows the store and follows its signals; it keeps only what is
-/// a matter of display (window, zoom, scale, colours, the integral's scale
-/// and offset). Only QtCore, so it can be tested on its own.
+/// The graph shows the store and follows its signals; it keeps only what is
+/// a matter of display (window, zoom, scale, colours). Only QtCore, so it
+/// can be tested on its own.
 ///
 /// Sample time and recording length are in tenths of a second, like the
 /// settings: a sample time of 5 is a grid of 0.5 s.
@@ -187,9 +185,6 @@ public:
   /// takes its start too; the others start with it (startAt()) and never on
   /// their own: Manual.
   void        applySetup(const Setup &setup, bool lead);
-  /// Values at or below it reset the integral to 0.
-  void        setIntegrationThreshold(double v) { m_integrationThreshold = v; }
-  double      integrationThreshold() const { return m_integrationThreshold; }
   /// Unit of the recorded values, without SI prefix ("V"). While the store
   /// holds samples their unit stays; a new one applies from the next
   /// start() or clear() on.
@@ -214,8 +209,7 @@ public:
   /// something else (a second display from Hz to %), its series ends with a
   /// gap and a new one begins, or the one of that port goes on and moves to
   /// the end; the recording goes on. Their readings count from the
-  /// main value's first one; a display that is off is a gap. Their points
-  /// carry the integral as the main value's do (the graph may draw it).
+  /// main value's first one; a display that is off is a gap.
   int         extraCount() const { return int(m_extra.size()); }
   const RecordingSeries &extra(int i) const { return m_extra.at(i); }
   /// ms since the start the recording covers: up to now while it runs (and
@@ -453,7 +447,7 @@ private:
   int         readingNearest(qint64 wall) const;
   /// ms since the start of the recording, now.
   qint64      elapsed() const { return m_monotonic() - m_t0; }
-  /// Adds a point with the integral up to it.
+  /// Adds a point, not before the last one.
   void        appendPoint(RawPoint p);
   /// A gap in the other values not heard of for the stale limit at @p now.
   void        closeSilentExtras(qint64 now);
@@ -532,7 +526,6 @@ private:
   int         m_preMs = 0;
   bool        m_holdOrigin = false;   ///< holdOrigin(), startAt(): the start stays
   qint64      m_preUsed = 0;          ///< ms the current recording reaches back before its trigger
-  double      m_integral = 0;   ///< the running integral, carried over gaps
   State       m_state = View;
   bool        m_dirty = false;
   QDateTime   m_start;
@@ -545,7 +538,6 @@ private:
   ValueRef    m_triggerValue;
   double      m_lastVal = 0;
   bool        m_lastValValid = false;
-  double      m_integrationThreshold = 0;
 
   /// The newest main reading: the first value of a recording that starts.
   Reading     m_reading;

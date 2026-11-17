@@ -1,8 +1,7 @@
 // Copyright (c) 2026 The QtDMM developers
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// Helpers that more than one part of GraphWidget needs (graphwidget*.cpp);
-// not part of its interface.
+// Texts of the graph's parts (qcpgraph_*.cpp); not part of its interface.
 
 #pragma once
 
@@ -34,31 +33,4 @@ inline QString curveName(const RecordingSeries &s, const QString &unit)
   if (s.port.defining & (SampleFlag::AC | SampleFlag::DC))
     text += ' ' + couplingText(s.port.defining);
   return u.isEmpty() ? text : QString("%1 (%2)").arg(text, u);
-}
-
-/// The auto scale takes @p val in, with a margin; true when it grew.
-inline bool growScale(double val, double &min, double &max)
-{
-  bool ret = false;
-
-  if (val > max * 0.95)
-  {
-    if (val > 0)
-      max = val * 1.2;
-    else
-      max = val / 1.2;
-
-    ret = true;
-  }
-  if (val < min * 0.95)
-  {
-    if (val > 0)
-      min = val / 1.2;
-    else
-      min = val * 1.2;
-
-    ret = true;
-  }
-
-  return ret;
 }
