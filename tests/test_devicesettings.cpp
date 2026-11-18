@@ -46,6 +46,16 @@ int main(int argc, char **argv)
   check(shown(w, "ButtonGroup11") && !w.findChild<QWidget *>("ui_advanced"), "UT61E: port row, no Advanced button");
   check(!shown(w, "ui_advancedBox") && !shown(w, "ui_protocol_title"), "UT61E: port parameters and protocol hidden");
 
+  // a microcontroller: a model, but the baud rate of its sketch to choose
+  w.load({{"DMM/model", "Generic Microcontroller (text lines: Serial Plotter, Teleplot)"},
+          {"Port settings/device", "/dev/ttyUSB0"}, {"Port settings/baud", "57600"}});
+  check(w.portParametersShown() && w.findChild<QComboBox *>("baudRate")->isEnabled()
+          && !w.findChild<QComboBox *>("bitsCombo")->isEnabled(),
+        "microcontroller: the baud rate shown and free, the rest fixed");
+  check(w.speed() == 57600 && w.keys().value("Port settings/baud") == "57600", "microcontroller: 57600 kept");
+  w.load({{"DMM/model", "Generic Microcontroller (text lines: Serial Plotter, Teleplot)"}, {"Port settings/device", "/dev/ttyUSB0"}});
+  check(w.speed() == 115200, "microcontroller without a saved rate: 115200");
+
   // 2. manual settings: Advanced open, the model "Manual"
   w.load({{"DMM/model", "Manual"}, {"Port settings/device", "/dev/ttyUSB1"}, {"Port settings/baud", "2400"}});
   check(w.portParametersShown(), "manual: port parameters shown");

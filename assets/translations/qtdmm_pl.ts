@@ -2652,12 +2652,12 @@
         <translation>Monitor CO2 TFA AIRCO2NTROL</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="191"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="208"/>
         <source>No access: %1 belongs to %2:%3</source>
         <translation>Brak dostępu: %1 należy do %2:%3</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="196"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="213"/>
         <source>A udev rule lets you open the cable. The packages of QtDMM install one; for the AppImage or Flatpak, put this line into /etc/udev/rules.d/70-qtdmm.rules:
 
 %1
@@ -2674,7 +2674,7 @@ następnie załaduj ją i podłącz kabel ponownie:
 sudo udevadm control --reload-rules &amp;&amp; sudo udevadm trigger</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="204"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="221"/>
         <source>Serial ports belong to the group %1. Add yourself to it:
 
 sudo usermod -aG %1 $USER
@@ -2687,68 +2687,83 @@ sudo usermod -aG %1 $USER
 a potem wyloguj się i zaloguj ponownie.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="236"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="253"/>
         <source>%1 cable · %2</source>
         <translation>Kabel %1 · %2</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="274"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="298"/>
+        <source>Microcontroller board (%1)</source>
+        <translation>Płytka mikrokontrolera (%1)</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/discovery/discovery.cpp" line="299"/>
+        <source>If it prints its values as text lines (Serial Plotter, Teleplot), choose the microcontroller.</source>
+        <translation>Jeśli wysyła wartości jako linie tekstu (Serial Plotter, Teleplot), wybierz mikrokontroler.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/discovery/discovery.cpp" line="310"/>
+        <source>A meter&apos;s cable or a microcontroller board, QtDMM cannot tell yet: choose the model.</source>
+        <translation>Kabel miernika lub płytka mikrokontrolera, QtDMM nie potrafi jeszcze tego rozpoznać: wybierz model.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/discovery/discovery.cpp" line="315"/>
         <source>Serial port</source>
         <translation>Port szeregowy</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="274"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="309"/>
         <source>USB-serial adapter (%1)</source>
         <translation>Adapter USB-szeregowy (%1)</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="276"/>
-        <location filename="../../src/device/discovery/discovery.cpp" line="304"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="316"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="345"/>
         <source>Which meter is on it, QtDMM cannot tell yet: choose the model.</source>
         <translation>QtDMM nie wie jeszcze, jaki miernik jest podłączony: wybierz model.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="302"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="343"/>
         <source>qtdmm-bridge on %1</source>
         <translation>qtdmm-bridge na %1</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="346"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="387"/>
         <source>No Bluetooth adapter found (or the Bluetooth service is not running).</source>
         <translation>Nie znaleziono adaptera Bluetooth (lub usługa Bluetooth nie działa).</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="350"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="391"/>
         <source>Bluetooth is switched off.</source>
         <translation>Bluetooth jest wyłączony.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="352"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="393"/>
         <source>This build of QtDMM has no Bluetooth.</source>
         <translation>Ta wersja QtDMM nie ma Bluetooth.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="391"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="432"/>
         <source>Victron device</source>
         <translation>Urządzenie Victron</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="391"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="432"/>
         <source>Victron %1</source>
         <translation>Victron %1</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="392"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="433"/>
         <source>The device key is in the VictronConnect app: Product info, Instant readout.</source>
         <translation>Klucz urządzenia jest w aplikacji VictronConnect: Informacje o produkcie, Instant readout.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="418"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="459"/>
         <source>Bluetooth meter</source>
         <translation>Miernik Bluetooth</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="419"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="460"/>
         <source>Switch Bluetooth on at the meter.</source>
         <translation>Włącz Bluetooth w mierniku.</translation>
     </message>

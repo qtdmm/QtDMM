@@ -85,6 +85,12 @@ int main(int argc, char **argv)
           && Families::adapter(0x067b, 0x2303) == "PL2303" && Families::adapter(0x0557, 0x2008) == "PL2303"
           && Families::adapter(0x10c4, 0xea60) == "CP210x" && Families::adapter(0x1234, 0x5678).isEmpty(),
         "adapters by VID:PID");
+  check(Families::board(0x2341, 0x0043) == "Arduino" && Families::board(0x2e8a, 0x000a) == "Raspberry Pi Pico"
+          && Families::board(0x303a, 0x1001) == "ESP32" && Families::board(0x16c0, 0x0483) == "Teensy"
+          && Families::board(0x16c0, 0x05dc).isEmpty() && Families::board(0x0483, 0x5740) == "STM32"
+          && Families::board(0x1a86, 0x7523).isEmpty(), "boards with their own USB by VID:PID; a CH340 is none");
+  check(Families::models(FrameFormat::TextLines, true).value(0).startsWith("Generic Microcontroller"),
+        "the microcontroller device for a board");
   check(Families::models(FrameFormat::Invalid, true).size() > 50, "all serial models");
   {
     const QStringList victron = Families::models(FrameFormat::VictronBLE, false);

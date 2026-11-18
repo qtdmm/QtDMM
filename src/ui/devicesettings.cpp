@@ -50,6 +50,10 @@ DeviceSettings::DeviceSettings(QWidget *parent) : QWidget(parent)
   port->setModel(m_portlist);
 
   setupComboBoxModel();
+  // the rates of microcontroller boards above the meters' 19200
+  for (const char *rate : { "38400", "57600", "74880", "115200", "230400", "250000", "460800", "500000", "921600",
+                            "1000000", "2000000" })
+    baudRate->addItem(QString::fromLatin1(rate));
 
   message2->hide();
   ui_calcGroup->hide();
@@ -446,8 +450,11 @@ void DeviceSettings::load(const QVariantMap &keys)
     enterManualMode();
   else
     on_ui_model_activated(ui_model->currentIndex());
-  // a known model brings its port parameters and protocol: nothing to set
-  showPortParameters(ui_vendor->currentIndex() == 0);
+  // a known model brings its port parameters and protocol: nothing to set,
+  // but for a microcontroller the baud rate saved
+  if (m_dmmInfo.baudChoosable() && cfgInt("Port settings/baud") > 0)
+    baudRate->setCurrentText(cfgString("Port settings/baud"));
+  showPortParameters(ui_vendor->currentIndex() == 0 || m_dmmInfo.baudChoosable());
 }
 
 void DeviceSettings::showPortParameters(bool show)
@@ -840,6 +847,13 @@ void DeviceSettings::on_ui_model_activated(int id)
   uidtr->setChecked(m_currentVendorModels[id].dtr);
 
   ui_filename->setText("");
+  // a microcontroller: the rate its sketch sets, the rest from the model
+  if (m_dmmInfo.baudChoosable())
+  {
+    showPortParameters(true);
+    baudRate->setDisabled(false);
+    ui_baudLabel->setDisabled(false);
+  }
   updateCalcMode();
 }
 

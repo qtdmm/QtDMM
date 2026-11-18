@@ -40,7 +40,9 @@ int main(int argc, char **argv)
     const QString what = cfg.name + ": ";
     check(direct.knownModel && direct.info.name == cfg.name, what + "model found");
     check(direct.format == cfg.protocol && fresh.format() == cfg.protocol, what + "protocol");
-    check(direct.info.baud == cfg.baud && direct.info.display == fresh.display()
+    // a microcontroller keeps the rate saved, the others take the model's
+    check(direct.info.baud == (cfg.baudChoosable() ? 1200 : cfg.baud)
+            && direct.info.display == fresh.display()
             && direct.info.framesPerReading == fresh.framesPerReading() && direct.info.externalSetup == fresh.externalSetup()
             && direct.info.rts == fresh.rts() && direct.info.dtr == fresh.dtr(),
           what + "port parameters as the page has them");

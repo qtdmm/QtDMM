@@ -119,6 +119,9 @@ public:
 
     /// How many values the meter has: channels, or one per frame.
     int valueCount() const { return channels > 0 ? channels : framesPerReading; }
+    /// The baud rate is the user's, the model's only the default: a
+    /// microcontroller's sketch sets its own (Serial.begin()).
+    bool baudChoosable() const { return protocol == FrameFormat::TextLines; }
   };
 
   explicit DmmDecoder(FrameFormat::DataFormat df);
