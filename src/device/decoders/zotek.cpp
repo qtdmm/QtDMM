@@ -16,6 +16,12 @@ static const bool registered = []() {
   DmmDecoder::addConfig({"ANENG", "ST207 *", "", 0, FrameFormat::ZotekBLE, 8, 1, 1, 0, 6000, 0, 0, 0});
   DmmDecoder::addConfig({"ANENG", "AN9002 *", "", 0, FrameFormat::ZotekBLE, 8, 1, 1, 0, 6000, 0, 0, 0});
   DmmDecoder::addConfig({"ANENG", "AN999S *", "", 0, FrameFormat::ZotekBLE, 8, 1, 1, 0, 20000, 0, 0, 0, "", "", 2});
+  // BSIDE sells the pocket meters and the dial meter under ZOTEK's names;
+  // BABATools' AD900 is of the family, its layout unknown (libreble bdm.md)
+  DmmDecoder::addConfig({"BSIDE", "ZT-5B *", "", 0, FrameFormat::ZotekBLE, 8, 1, 1, 0, 6000, 0, 0, 0});
+  DmmDecoder::addConfig({"BSIDE", "ZT-5BQ *", "", 0, FrameFormat::ZotekBLE, 8, 1, 1, 0, 6000, 0, 0, 0});
+  DmmDecoder::addConfig({"BSIDE", "ZT-300AB *", "", 0, FrameFormat::ZotekBLE, 8, 1, 1, 0, 6000, 0, 0, 0});
+  DmmDecoder::addConfig({"BABATools", "AD900 *", "", 0, FrameFormat::ZotekBLE, 8, 1, 1, 0, 6000, 0, 0, 0});
   return true;
 }();
 
@@ -35,9 +41,9 @@ struct ModelType
   int type;
 };
 const ModelType kModels[] = {
-  { "ZOTEK ZT-5BQ", 1 }, { "ANENG ST207", 1 },
-  { "ZOTEK ZT-5B", 2 }, { "ANENG V05B", 2 },
-  { "ZOTEK ZT-300AB", 3 }, { "ANENG AN9002", 3 },
+  { "ZOTEK ZT-5BQ", 1 }, { "ANENG ST207", 1 }, { "BSIDE ZT-5BQ", 1 },
+  { "ZOTEK ZT-5B", 2 }, { "ANENG V05B", 2 }, { "BSIDE ZT-5B", 2 },
+  { "ZOTEK ZT-300AB", 3 }, { "ANENG AN9002", 3 }, { "BSIDE ZT-300AB", 3 },
   { "ZOTEK ZT-5566SE", 4 }, { "ANENG AN999S", 4 },
 };
 
@@ -428,8 +434,11 @@ QStringList DecoderZotek::modelsFromFrame(const QByteArray &frame) const
 {
   const int type = packetType(frame);
   QStringList out;
+  if (type == 0)
+    return out;   // no packet
+  // a model of no known layout (the AD900) may send any of them
   for (const DMMInfo &info : getDeviceConfigurations())
-    if (info.protocol == m_type && typeOfModel(info.name) == type)
+    if (info.protocol == m_type && (typeOfModel(info.name) == type || typeOfModel(info.name) == 0))
       out << info.name;
   return out;
 }

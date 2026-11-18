@@ -806,7 +806,9 @@
     "zotek": {
       "name": "ZOTEK",
       "match": [
-        "ZOTEK"
+        "ZOTEK",
+        "BSIDE",
+        "BABATools"
       ],
       "url": "",
       "example_device": "ZT-5B",
