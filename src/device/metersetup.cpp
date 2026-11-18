@@ -90,6 +90,8 @@ MeterSetup MeterSetup::fromKeys(const QVariantMap &keys, const QString &sigrokEx
     {
       s.info = cfg;
       s.knownModel = true;
+      if (cfg.baudChoosable() && cfgInt("Port settings/baud") > 0)
+        s.info.baud = cfgInt("Port settings/baud");
       break;
     }
   if (!s.knownModel)
