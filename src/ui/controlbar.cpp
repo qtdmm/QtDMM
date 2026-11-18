@@ -167,6 +167,7 @@ bool ControlBar::supported(const DmmDecoder::DMMInfo &info)
 
 void ControlBar::setConnected(bool connected)
 {
+  m_connected = connected;
   for (QToolButton *b : std::as_const(m_keys))
     b->setEnabled(connected);
 }
@@ -174,6 +175,8 @@ void ControlBar::setConnected(bool connected)
 void ControlBar::setProtocol(FrameFormat::DataFormat format, const QString &model)
 {
   const std::shared_ptr<DmmDecoder> decoder = DmmDecoder::getInstance(format);
+  m_decoder = decoder;
+  m_model = model;
   for (QToolButton *b : std::as_const(m_keys))
     b->setVisible(decoder && decoder->hasKey(b->property("key").toString(), model));
   // a key held sends its long key only where the meter has one; NCV held
@@ -214,6 +217,10 @@ void ControlBar::showReading(const Reading &reading)
   m_max->setChecked(reading.flags & SampleFlag::Max);
   m_min->setChecked(reading.flags & SampleFlag::Min);
   m_avg->setChecked(reading.flags & SampleFlag::Avg);
+  // a key the meter ignores in this mode: grey, so a press is not lost
+  if (m_decoder)
+    for (QToolButton *b : { m_hold, m_rel, m_minmax })
+      b->setEnabled(m_connected && m_decoder->keyWorks(b->property("key").toString(), m_model, reading));
 }
 
 int ControlBar::layoutGroups(int width, bool apply) const

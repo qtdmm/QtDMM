@@ -4,6 +4,7 @@
 
 #include <QRegularExpression>
 
+#include "core/reading.h"
 #include "core/sampletypes.h"
 
 static const bool registered = []() {
@@ -242,6 +243,22 @@ bool DecoderUniTiDMM::hasKey(const QString &key, const QString &model) const
       && (model.startsWith(QLatin1String("UT61B+")) || model.startsWith(QLatin1String("UT161B"))))
     return false;
   return !keyRequest(key).isEmpty();
+}
+
+bool DecoderUniTiDMM::keyWorks(const QString &key, const QString &model, const Reading &reading) const
+{
+  if (!model.startsWith(QLatin1String("UT61")) && !model.startsWith(QLatin1String("UT161")))
+    return true;
+  const Quantity q = reading.port.quantity;
+  const bool ncv = q == Quantity::Unknown && reading.baseUnit.isEmpty();
+  const bool noRel = ncv || reading.continuity() || reading.diode() || q == Quantity::Frequency || q == Quantity::DutyCycle;
+  if (key == QLatin1String("hold"))
+    return !ncv;
+  if (key == QLatin1String("rel"))
+    return !noRel;
+  if (key == QLatin1String("minmax"))
+    return !noRel && q != Quantity::Capacitance;
+  return true;
 }
 
 bool DecoderUniTiDMM::frameValid(const unsigned char *f)

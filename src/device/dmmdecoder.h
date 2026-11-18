@@ -7,6 +7,8 @@
 
 #include "device/frameformat.h"
 
+struct Reading;
+
 /// Base class of all protocol decoders and registry of the supported meters.
 ///
 /// A decoder turns one frame of meter bytes into a DmmResponse. Each protocol
@@ -166,6 +168,16 @@ public:
   {
     Q_UNUSED(model);
     return !keyRequest(key).isEmpty();
+  }
+  /// False when the meter @p model ignores the key @p key with @p reading on
+  /// its display (a mode where the key does nothing): ControlBar greys it
+  /// out. By default every key works.
+  virtual bool keyWorks(const QString &key, const QString &model, const Reading &reading) const
+  {
+    Q_UNUSED(key);
+    Q_UNUSED(model);
+    Q_UNUSED(reading);
+    return true;
   }
   /// Every key name keyRequest() may know, in the order of the meters' keypads.
   static QStringList keyNames()
