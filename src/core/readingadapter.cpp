@@ -275,16 +275,19 @@ Reading ReadingAdapter::reading(const PortSample &ps)
   r.quality = ps.sample.quality;
   r.measuringRange = ps.sample.range;
   r.name = ps.name;
+  r.battery = ps.battery;
   return r;
 }
 
 QList<PortSample> ReadingAdapter::adapt(const DmmDecoder::DmmResponse &r, qint64 wall)
 {
   QList<PortSample> out;
+  // a level when the meter sends one; else its low-battery annunciator
+  const Battery battery = r.battery != Battery::Unknown ? r.battery : r.lowBat ? Battery::Low : Battery::Unknown;
   for (const DmmDecoder::DmmChannel &c : r.channels)
   {
     const Quality shown = !c.fault.isEmpty() ? Quality::Fault : c.noValue ? Quality::NoValue : Quality::Valid;
-    out << adaptValue(c.dval, c.val, c.unit, c.special, r.range, r.hold, r.showBar, r.lowBat, c.id,
+    out << adaptValue(c.dval, c.val, c.unit, c.special, r.range, r.hold, r.showBar, battery == Battery::Low, c.id,
                       r.receivedWall != 0 ? r.receivedWall : wall, shown);
     if (r.received != 0)
       out.last().sample.t = r.received;
@@ -292,6 +295,7 @@ QList<PortSample> ReadingAdapter::adapt(const DmmDecoder::DmmResponse &r, qint64
     out.last().sample.flags |= c.states & (SampleFlag::Max | SampleFlag::Min | SampleFlag::Avg | SampleFlag::Relative
                                            | SampleFlag::Peak);
     out.last().name = c.name;
+    out.last().battery = battery;
   }
   return out;
 }

@@ -27,15 +27,23 @@ vectors:
   - source_line: "live 523.4 lx, battery 5 (synthetic)"
     bytes: AA BB 0C 01 00 05 44 02 D9 9A 00 00 00 03 30
     reading: {value: "523.4", unit: "lx"}
-    expect: {val: "523.4"}
+    expect: {val: "523.4", battery: full}
+  - source_line: "live 523.4 lx, battery 2 (synthetic)"
+    bytes: AA BB 0C 01 00 02 44 02 D9 9A 00 00 00 03 2D
+    reading: {value: "523.4", unit: "lx"}
+    expect: {val: "523.4", battery: mid}
+  - source_line: "live 523.4 lx, battery 0 (synthetic)"
+    bytes: AA BB 0C 01 00 00 44 02 D9 9A 00 00 00 03 2B
+    reading: {value: "523.4", unit: "lx"}
+    expect: {val: "523.4", battery: low}
   - source_line: "MAX 45.67 lx (synthetic)"
     bytes: AA BB 0C 01 01 05 42 36 AE 14 00 00 00 02 B2
     reading: {value: "45.67", unit: "lx"}
-    expect: {val: "45.67"}
+    expect: {val: "45.67", battery: full}
   - source_line: "MIN 12.50 lx, battery 4 (synthetic)"
     bytes: AA BB 0C 01 02 04 41 48 00 00 00 00 00 02 01
     reading: {value: "12.50", unit: "lx"}
-    expect: {val: "12.50"}
+    expect: {val: "12.50", battery: full}
   - source_line: "AVG 1234.5 lx (synthetic)"
     bytes: AA BB 0C 01 03 05 44 9A 50 00 00 00 00 02 A8
     reading: {value: "1234.5", unit: "lx"}

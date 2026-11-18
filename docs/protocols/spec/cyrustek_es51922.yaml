@@ -45,6 +45,7 @@ vectors:
   - source_line: "DC  0.0000 V A. LowBat"
     bytes: 30 30 30 30 30 30 3B 32 30 30 3A 30 0D 0A
     reading: {value: "0.0000", unit: "V", coupling: DC, range_mode: auto, flags: [LowBat]}
+    expect: {lowBat: true}
   - source_line: "DC - 30.55 mV MANU BG"
     bytes: 34 30 33 30 35 35 3B 34 30 30 38 30 0D 0A
     reading: {value: "- 30.55", unit: "mV", coupling: DC, range_mode: manual, flags: [BG]}

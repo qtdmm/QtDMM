@@ -35,6 +35,7 @@ struct Reading
   Quality quality = Quality::Valid;
   Range   measuringRange;  ///< autorange and full scale (NaN when not known)
   QString name;            ///< the meter's own name of the value ("Battery voltage"), empty when none
+  Battery battery = Battery::Unknown;   ///< the meter's battery, of the frame this value came in
   QString source;          ///< which meter it comes from (MeterController::source()): "device:<id>", "instance:<id>"
 
   /// The meter shows no number, or a fault word (text): no value, no overload.

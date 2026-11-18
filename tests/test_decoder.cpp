@@ -248,6 +248,8 @@ int main(int argc, char **argv)
       if (!c || c->channels.size() != 4 || c->main().val != "23.4" || c->channels[3].val != "850.0"
           || c->channels[2].val != "-12.3" || c->channels[1].name != "T2 (K)" || c->hold)
         bad("not four values T1-T4 (K) 23.4 ... 850.0 C");
+      if (!c || c->battery != Battery::Mid)
+        bad("the panel's battery 3 of 5 is not mid");
       ut325f->decode(QByteArray::fromHex("aa55001306010101000000000001000000000300010120"), 0);
       if (ut325f->takeCommand().size())
         bad("a panel with the live output on is written back");
@@ -1325,6 +1327,11 @@ int main(int argc, char **argv)
     if (expected.contains("noValue")) check("noValue", main.noValue,      expected["noValue"]);
     if (expected.contains("fault"))   check("fault",   main.fault,        expected["fault"]);
     if (expected.contains("lowBat"))  check("lowBat",  result->lowBat,    expected["lowBat"]);
+    if (expected.contains("battery"))
+    {
+      static const char *const names[] = { "unknown", "low", "mid", "full" };
+      check("battery", QString::fromLatin1(names[int(result->battery)]), expected["battery"]);
+    }
     if (expected.contains("relative")) check("relative", bool(main.states & SampleFlag::Relative), expected["relative"]);
     if (expected.contains("max"))     check("max",     bool(main.states & SampleFlag::Max), expected["max"]);
     if (expected.contains("min"))     check("min",     bool(main.states & SampleFlag::Min), expected["min"]);

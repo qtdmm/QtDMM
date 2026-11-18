@@ -3780,8 +3780,12 @@ QString MainWindow::deviceStatus(const QString &id) const
   QString html = para(state);
   if (ago >= 0)
     html += para(tr("Last reading %n s ago.", "", int(ago)));
-  if (last.flags & SampleFlag::LowBattery)
+  if (last.battery == Battery::Low)
     html += para(tr("The meter's battery is low."));
+  else if (last.battery == Battery::Mid)
+    html += para(tr("The meter's battery is half full."));
+  else if (last.battery == Battery::Full)
+    html += para(tr("The meter's battery is full."));
   // its values with their readings
   QString rows;
   for (int value = 0; value < ctl->valueCount(); ++value)

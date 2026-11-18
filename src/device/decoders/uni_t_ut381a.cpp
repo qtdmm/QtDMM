@@ -86,6 +86,7 @@ std::optional<DmmDecoder::DmmResponse> DecoderUT381A::decode(const QByteArray &d
   c.unit = m_fc ? QStringLiteral("fc") : QStringLiteral("lx");
   m_result.hold = m_hold;
   m_result.showBar = true;
+  m_result.battery = batteryOfLevel(f[5] & 0x07, 5);   // BATT_Status 0..5, 5 full
   switch (f[4])
   {
     case 1: c.states |= SampleFlag::Max; break;

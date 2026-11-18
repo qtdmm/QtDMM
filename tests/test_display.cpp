@@ -261,8 +261,27 @@ int main(int argc, char **argv)
     check(!scalableFont || qFuzzyCompare(l.flagsPx, l.flags.height() * 0.75), "wide panel: annunciator font is the row's");
   }
 
+  // the battery: nothing while unknown, the symbol with 1-3 bars as told
+  {
+    w.setBattery(Battery::Unknown);
+    const QImage none = render(w, size);
+    w.setBattery(Battery::Low);
+    const QImage low = render(w, size);
+    w.setBattery(Battery::Full);
+    const QImage full = render(w, size);
+    w.setBattery(Battery::Unknown);
+    check(none != low && low != full && render(w, size) == none, "battery symbol: off, low, full differ; off again");
+  }
+
   if (!dump.isEmpty())
   {
+    for (const auto &[battery, name] : { std::pair{ Battery::Low, "low" }, std::pair{ Battery::Mid, "mid" },
+                                         std::pair{ Battery::Full, "full" } })
+    {
+      w.setBattery(battery);
+      render(w, size).save(QDir(dump).filePath(QString("display_battery_%1.png").arg(name)));
+    }
+    w.setBattery(Battery::Unknown);
     w.setValue(0, "0.L");
     w.setUnit(0, "Ohm");
     w.setMode(0, 0, Quantity::Resistance);
