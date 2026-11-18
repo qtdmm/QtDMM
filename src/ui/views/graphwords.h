@@ -44,6 +44,7 @@
   QT_TRANSLATE_NOOP("GraphWidget", "Start recording"),
   QT_TRANSLATE_NOOP("GraphWidget", "Cursor A here"),
   QT_TRANSLATE_NOOP("GraphWidget", "Cursor B here"),
+  QT_TRANSLATE_NOOP("GraphWidget", "Note here..."),
   QT_TRANSLATE_NOOP("GraphWidget", "Configure..."),
   QT_TRANSLATE_NOOP("GraphWidget", "Copy image"),
   QT_TRANSLATE_NOOP("GraphWidget", "Export image..."),

@@ -173,10 +173,10 @@ were; the integration curve carries on across a gap.
   bracket to widen or narrow the window. Moved back while live, the graph
   stays at that part (`Live paused` top left) while the readings go on; a
   click at the right end of the overview, a time button or *Live* follows
-  the newest reading again. **Overview** in the right-click menu switches it
+  the newest reading again. **Display → Overview** in the right-click menu switches it
   off: the scroll bar is back. Whether it shows is kept with the window
   layout and in a saved bench.
-- **Min/max band** in the right-click menu draws a faint band behind the
+- **Display → Min/max band** in the right-click menu draws a faint band behind the
   curve: at each point the lowest to the highest the curve reaches within
   four pixels to either side. It shows how much a value scatters around
   the curve, as wide on screen at 1 minute as at 1 hour. It is off at
@@ -262,9 +262,9 @@ were; the integration curve carries on across a gap.
   where the curve rose through the line and down where it fell; the line's
   label counts them (`1.2 V · 8×`). Crossings closer than three pixels
   count once. A line on the mean, minimum or maximum gets none - a noisy
-  curve crosses its mean at every other reading. **View → Crossings**
+  curve crosses its mean at every other reading. **Display → Reference line → Crossings**
   switches the marks off; kept with the window layout.
-- **Outliers:** **View → Outliers** leaves single wrong readings out of the
+- **Outliers:** **Display → Outliers** leaves single wrong readings out of the
   drawing - a contact that bounced, a spike from a motor starting. The
   recording, its export and the readings table keep them; the line runs
   from the reading before to the one after.
@@ -299,7 +299,7 @@ were; the integration curve carries on across a gap.
   cursors (as above) and, under **Shown**, each value's mean, σ, minimum,
   maximum, peak-peak and number of readings over the window the graph
   shows; it follows the readings a few times a second. It is hidden at
-  first: the **Σ** button beside the time buttons, or **View → Statistics**
+  first: the **Σ** button beside the time buttons, or **Display → Statistics**
   in the right-click menu, shows and hides it; whether it shows is kept with
   the graph (window layout and bench). *Settings → Graph → Statistics* puts
   it left or right of the graph, for every graph. The mean and σ weigh each
@@ -317,7 +317,7 @@ were; the integration curve carries on across a gap.
   value at that time), **REL** (a difference to a reference) and **OL**
   (overload). Each state has a lane, a colour and its name in the bar; the
   line under the mouse names the state of the reading. Without such a state
-  in the window there is no strip. **View → Meter states** in the
+  in the window there is no strip. **Display → Meter states** in the
   right-click menu switches it off, kept with the graph. A recording saved
   keeps the states (see Export), so a file loaded shows them again; files
   written before 27.1 have only OL.
@@ -332,7 +332,7 @@ were; the integration curve carries on across a gap.
   the window and the axes of before, **Live** follows the readings again
   with the axes automatic. A drag without Shift does what it did.
 - **Notes** mark a moment of the measurement: *Note here...* in the
-  graph's context menu sets one where you clicked, *Note now...* (N in the
+  graph's context menu sets one where you clicked, N (in the
   graph, Ctrl+Shift+N anywhere) at the newest reading. A note has a title,
   shown on its flag under the graph next to the alarm marks, and an
   optional longer text. The marks are numbered in the order of their time.
@@ -381,26 +381,29 @@ recording.
 
 ## The graph's menu
 
-The right-click menu of a graph holds:
+The right-click menu of a graph holds, from top to bottom:
 
-- **Start recording** / **Stop recording**, **New graph** (with the same
-  first value), **Sources...** (the values of any open device), **Axis**
-  (each value on the left axis, one of the right ones or Automatic; the
-  range of each axis), **Colour variant**, **Patterned lines**, **Reference
-  line**, **Outliers**, **View** (overview, min/max band, meter states,
-  crossings, statistics), **Remove time cursors**, **Undo zoom**.
-- **Load recording...** shows a file in this graph instead of the
-  devices' readings; **Back to the device** returns. A device that starts
-  recording or goes live ends the look at the file, and so do *Live* and
-  *Clear* in the toolbar. A value dragged onto a graph that shows a file
-  is not taken.
-- **Cursor A here** / **Cursor B here**, **Note here...**, **Hold
-  picture**, **Reset**.
-- **Configure...** opens *Settings → Graph*.
-- **Copy image**, **Export image...** (SVG and PDF keep the plot as vectors,
-  PNG, JPEG), **Print**, **Export...**, **Into the project**, **Live in
-  LabPlot**. The picture is the legend, the plot and the states' strip,
-  without the buttons, the overview and the statistics.
+- What the click point means: **Note here...** (a note where you clicked;
+  N alone sets one at the newest reading), **Cursor A here** / **Cursor B
+  here**, and only when there is something to undo **Undo zoom** and
+  **Remove time cursors**.
+- **Start recording** / **Stop recording**, **Hold picture**, **Reset**.
+- **Display**: the switches **Overview**, **Min/max band**, **Meter
+  states**, **Statistics**, then the looks of this graph: **Colour
+  variant**, **Patterned lines**, **Axis** (each value on the left axis, one
+  of the right ones or Automatic; the range of each axis), **Reference
+  line** (with its crossings), **Outliers**.
+- **Output**: **Copy image**, **Export image...** (SVG and PDF keep the
+  plot as vectors, PNG, JPEG), **Print**, **Export...**, **Into the
+  project**, **Live in LabPlot**. The picture is the legend, the plot and
+  the states' strip, without the buttons, the overview and the statistics.
+- **Sources...** (the values of any open device), **Load recording...**
+  (a file in this graph instead of the devices' readings; **Back to the
+  device** returns. A device that starts recording or goes live ends the
+  look at the file, and so do *Live* and *Clear* in the toolbar. A value
+  dragged onto a graph that shows a file is not taken), **New graph** (with
+  the same first value), **Configure...** (*Settings → Graph*).
+- **Hide view** / **Close window** last.
 
 ## Colours
 
@@ -432,13 +435,13 @@ artefacts and raise the load. QtDMM takes it at its next start.
 
 A curve colour you chose yourself stays in every variant.
 
-**View → Patterned lines** in a graph's right-click menu dashes each curve
+**Display → Patterned lines** in a graph's right-click menu dashes each curve
 of another device in a pattern of its own (long dashes, dash-dot-dot,
 sparse dots, long-short), so the curves are told apart without their
 colours; the meter's own values are dashed, dotted and dash-dotted anyway.
 The legend shows the patterns. It is off at first; whether it is on is kept
 with the window layout. The graph's
-right-click menu, **Colour variant**, can choose other colours for this graph
+right-click menu, **Display → Colour variant**, can choose other colours for this graph
 only; *As in the settings* goes back to the setting.
 
 ## Export and import

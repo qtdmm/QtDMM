@@ -2795,9 +2795,32 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
   }
   else if (graphView)
   {
+    // the core menu (tmp/redesign/graph_kontextmenue.md): first what the
+    // click point means, then recording and picture, the switches and the
+    // looks in "Display", the pictures and files in "Output", the window last
+    GraphWidget *graph = graphView->graph();
+    GraphModel *model = graphView->model();
     auto word = [](const char *text) { return QCoreApplication::translate("GraphWidget", text); };
+    // at the click point: a note, the time cursors (a click sets A, Shift+click B)
+    const qint64 at = graph->timeAt(globalPos);
+    if (graph->store() && graph->marksEditable() && at >= 0)
+    {
+      QAction *note = menu.addAction(word("Note here..."));
+      note->setShortcut(QKeySequence(Qt::Key_N));   // shown as a hint: N alone notes at the newest reading
+      connect(note, &QAction::triggered, graph, [graph, at] { graph->askNote(at); });
+    }
+    if (at >= 0)
+      for (int which : { 0, 1 })
+        connect(menu.addAction(which == 0 ? word("Cursor A here") : word("Cursor B here")), &QAction::triggered, graph,
+                [graph, which, at] { graph->setTimeCursor(which, at); });
+    // only when they do something
+    if (graph->zoomed())
+      connect(menu.addAction(tr("&Undo zoom")), &QAction::triggered, graph, [graph] { graph->endZoom(true); });
+    if (graph->timeCursor(0) >= 0 || graph->timeCursor(1) >= 0)
+      connect(menu.addAction(tr("Remove &time cursors")), &QAction::triggered, graph, &GraphWidget::clearTimeCursors);
+    menu.addSeparator();
     // recording, as the button does: only the devices whose values it shows
-    if (graphView->graph()->store() && graphView->graph()->store()->isRunning())
+    if (graph->store() && graph->store()->isRunning())
       connect(menu.addAction(word("Stop recording")), &QAction::triggered, action_Stop, &QAction::trigger);
     else if (!graphView->showsFile() && action_Start->isEnabled())
       connect(menu.addAction(word("Start recording")), &QAction::triggered, this, [this, graphView]
@@ -2810,124 +2833,96 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
         if (!m_session->isRecording())
           m_session->clearRecordingScope();   // cancelled
       });
+    QAction *hold = menu.addAction(tr("&Hold picture"));
+    hold->setCheckable(true);
+    hold->setChecked(graph->hold());
+    connect(hold, &QAction::toggled, graph, [graph](bool on) { graph->setHold(on); });
+    // as Clear in the toolbar: the recording goes (asked first when not
+    // saved), a recording or a file viewed: Live again
+    connect(menu.addAction(tr("&Reset")), &QAction::triggered, action_Clear, &QAction::trigger);
     menu.addSeparator();
-    // another one, first with the same value
-    const QList<ValueRef> values = graphView->model()->values();
-    connect(menu.addAction(tr("&New graph")), &QAction::triggered, this, [this, values]
     {
-      newGraph(values.value(0));
-    });
-    if (!graphView->showsFile() && !m_session->controllers().isEmpty())
-    {
-      connect(menu.addAction(tr("S&ources...")), &QAction::triggered, this, [this, graphView] { editGraphSources(graphView); });
-      if (!graphView->model()->values().isEmpty())
-        fillGraphAxisMenu(menu.addMenu(tr("A&xis")), graphView);
-    }
-    {
+      // what it shows: the switches, then its looks (own texts: the letters
+      // of the GraphWidget words are taken in this menu)
+      QMenu *display = menu.addMenu(tr("Displa&y"));
+      auto toggle = [&](const QString &text, bool on, void (GraphModel::*set)(bool))
+      {
+        QAction *a = display->addAction(text);
+        a->setCheckable(true);
+        a->setChecked(on);
+        connect(a, &QAction::toggled, model, set);
+      };
+      toggle(tr("Overvie&w"), model->minimapVisible(), &GraphModel::setMinimapVisible);
+      toggle(tr("Min/max &band"), model->envelopeVisible(), &GraphModel::setEnvelopeVisible);
+      toggle(tr("&Meter states"), model->statesVisible(), &GraphModel::setStatesVisible);
+      toggle(tr("Stat&istics"), model->statsVisible(), &GraphModel::setStatsVisible);
+      display->addSeparator();
       // this graph's own colours, or those of the settings
-      QMenu *variants = menu.addMenu(tr("Colour &variant"));
+      QMenu *variants = display->addMenu(tr("Colour &variant"));
       auto *group = new QActionGroup(variants);
       auto entry = [&](const QString &text, const QString &name)
       {
         QAction *a = variants->addAction(text);
         a->setCheckable(true);
-        a->setChecked(graphView->model()->variant() == name);
+        a->setChecked(model->variant() == name);
         group->addAction(a);
-        connect(a, &QAction::triggered, graphView, [graphView, name] { graphView->model()->setVariant(name); });
+        connect(a, &QAction::triggered, graphView, [model, name] { model->setVariant(name); });
       };
       entry(tr("As in the &settings"), QString());
       variants->addSeparator();
       for (GraphLook::Variant v : GraphLook::variants())
         entry(GraphLook::title(v), GraphLook::name(v));
-      QAction *patterns = menu.addAction(tr("&Patterned lines"));
-      patterns->setCheckable(true);
-      patterns->setChecked(graphView->model()->patternedLines());
-      connect(patterns, &QAction::toggled, graphView, [graphView](bool on) { graphView->model()->setPatternedLines(on); });
-    }
-    if (!graphView->showsFile())
-      fillGraphReferenceMenu(menu.addMenu(tr("Re&ference line")), graphView, QCursor::pos());
-    {
+      toggle(tr("&Patterned lines"), model->patternedLines(), &GraphModel::setPatternedLines);
+      if (!graphView->showsFile() && !m_session->controllers().isEmpty() && !model->values().isEmpty())
+        fillGraphAxisMenu(display->addMenu(tr("A&xis")), graphView);
+      if (!graphView->showsFile())
+        fillGraphReferenceMenu(display->addMenu(tr("Re&ference line")), graphView, QCursor::pos());
       // readings not drawn, the recording keeps them; the entries are the
-      // words of the context GraphWidget, the menu's letter its own (that one is taken here)
+      // words of the context GraphWidget, the menu's letter its own
       using namespace GraphOutliers;
-      auto word = [](const char *text) { return QCoreApplication::translate("GraphWidget", text); };
-      QMenu *outliers = menu.addMenu(tr("Outli&ers"));
-      const Rule rule = graphView->model()->outliers();
+      QMenu *outliers = display->addMenu(tr("Outli&ers"));
+      const Rule rule = model->outliers();
       const QString unit = SiPrefix::displayText(rule.unit);
-      auto entry = [&](const QString &text, Mode mode)
+      auto mode = [&](const QString &text, Mode m)
       {
         QAction *a = outliers->addAction(text);
         a->setCheckable(true);
-        a->setChecked(rule.mode == mode);
-        connect(a, &QAction::triggered, graphView->graph(), [graph = graphView->graph(), mode] { graph->askOutliers(mode); });
+        a->setChecked(rule.mode == m);
+        connect(a, &QAction::triggered, graph, [graph, m] { graph->askOutliers(m); });
       };
-      entry(word("&Show all"), Shown);
-      entry(rule.mode == Sigma ? word("&More than %1 σ from their neighbours...").arg(rule.a)
-                               : word("&More than n σ from their neighbours..."), Sigma);
-      entry(rule.mode == Jump ? word("&Spikes larger than %1 %2...").arg(rule.a).arg(unit) : word("&Spikes larger than..."), Jump);
-      entry(rule.mode == Limits ? word("Outside %1 .. %2 %3...").arg(rule.a).arg(rule.b).arg(unit) : word("Outside &limits..."), Limits);
-    }
-    if (graphView->graph()->store() && graphView->graph()->marksEditable())
-    {
-      // a note where the menu was opened, or at the newest reading (words of the context GraphWidget)
-      GraphWidget *graph = graphView->graph();
-      if (const qint64 t = graph->timeAt(globalPos); t >= 0)
-        connect(menu.addAction(QCoreApplication::translate("GraphWidget", "Note here...")), &QAction::triggered, graph, [graph, t] { graph->askNote(t); });
-      QAction *now = menu.addAction(QCoreApplication::translate("GraphWidget", "Note now..."));
-      now->setShortcut(QKeySequence(Qt::Key_N));
-      connect(now, &QAction::triggered, graph, [graph] { graph->askNote(); });
+      mode(word("&Show all"), Shown);
+      mode(rule.mode == Sigma ? word("&More than %1 σ from their neighbours...").arg(rule.a)
+                              : word("&More than n σ from their neighbours..."), Sigma);
+      mode(rule.mode == Jump ? word("&Spikes larger than %1 %2...").arg(rule.a).arg(unit) : word("&Spikes larger than..."), Jump);
+      mode(rule.mode == Limits ? word("Outside %1 .. %2 %3...").arg(rule.a).arg(rule.b).arg(unit) : word("Outside &limits..."), Limits);
     }
     {
-      // own texts: the letters of the GraphWidget words are taken in this menu
-      auto toggle = [&](const QString &text, bool on, void (GraphModel::*set)(bool))
+      // pictures and the recording; the window's actions without their letters
+      QMenu *output = menu.addMenu(tr("Out&put"));
+      connect(output->addAction(word("Copy image")), &QAction::triggered, graph, &GraphWidget::copyImage);
+      connect(output->addAction(word("Export image...")), &QAction::triggered, this, [this, graphView] { exportGraphImage(graphView); });
+      for (QAction *shared : { action_Print, m_graphExport, m_graphToBasket, m_labPlotLive })
       {
-        QAction *a = menu.addAction(text);
-        a->setCheckable(true);
-        a->setChecked(on);
-        connect(a, &QAction::toggled, graphView->model(), set);
-      };
-      toggle(tr("Overvie&w"), graphView->model()->minimapVisible(), &GraphModel::setMinimapVisible);
-      toggle(tr("Min/max &band"), graphView->model()->envelopeVisible(), &GraphModel::setEnvelopeVisible);
-      toggle(tr("&Meter states"), graphView->model()->statesVisible(), &GraphModel::setStatesVisible);
+        QAction *a = output->addAction(shared->icon(), QString(shared->text()).remove('&'));
+        a->setEnabled(shared->isEnabled());
+        connect(a, &QAction::triggered, shared, &QAction::trigger);
+      }
     }
-    {
-      QAction *stats = menu.addAction(tr("Stat&istics"));
-      stats->setCheckable(true);
-      stats->setChecked(graphView->model()->statsVisible());
-      connect(stats, &QAction::toggled, graphView, [graphView](bool on) { graphView->model()->setStatsVisible(on); });
-      if (graphView->graph()->timeCursor(0) >= 0 || graphView->graph()->timeCursor(1) >= 0)
-        connect(menu.addAction(tr("Remove &time cursors")), &QAction::triggered, graphView->graph(), &GraphWidget::clearTimeCursors);
-    }
-    if (graphView->graph()->zoomed())
-      connect(menu.addAction(tr("&Undo zoom")), &QAction::triggered, graphView->graph(), [graph = graphView->graph()] { graph->endZoom(true); });
+    menu.addSeparator();
+    if (!graphView->showsFile() && !m_session->controllers().isEmpty())
+      connect(menu.addAction(tr("S&ources...")), &QAction::triggered, this, [this, graphView] { editGraphSources(graphView); });
     connect(menu.addAction(tr("&Load recording...")), &QAction::triggered, this, [this, graphView] { loadIntoGraph(graphView); });
     if (graphView->showsFile())
       connect(menu.addAction(tr("Back to the &device")), &QAction::triggered, graphView, &GraphView::closeFile);
-    menu.addSeparator();
-    // the time cursors where the menu was opened (a click sets A, Shift+click B)
-    if (const qint64 t = graphView->graph()->timeAt(globalPos); t >= 0)
-      for (int which : { 0, 1 })
-        connect(menu.addAction(which == 0 ? word("Cursor A here") : word("Cursor B here")), &QAction::triggered, graphView->graph(),
-                [graph = graphView->graph(), which, t] { graph->setTimeCursor(which, t); });
-    menu.addSeparator();
-    QAction *hold = menu.addAction(tr("&Hold picture"));
-    hold->setCheckable(true);
-    hold->setChecked(graphView->graph()->hold());
-    connect(hold, &QAction::toggled, graphView->graph(), [graph = graphView->graph()](bool on) { graph->setHold(on); });
-    // as Clear in the toolbar: the recording goes (asked first when not
-    // saved), a recording or a file viewed: Live again
-    connect(menu.addAction(tr("&Reset")), &QAction::triggered, action_Clear, &QAction::trigger);
+    // another one, first with the same value
+    const QList<ValueRef> values = model->values();
+    connect(menu.addAction(tr("&New graph")), &QAction::triggered, this, [this, values] { newGraph(values.value(0)); });
     // the Graph page of the settings: colours, line, points, width
     connect(menu.addAction(word("Configure...")), &QAction::triggered, m_wid, &InstanceWidget::configGraphSLOT);
-    // pictures and the recording; the window's actions without their letters, taken here
-    connect(menu.addAction(word("Copy image")), &QAction::triggered, graphView->graph(), &GraphWidget::copyImage);
-    connect(menu.addAction(word("Export image...")), &QAction::triggered, this, [this, graphView] { exportGraphImage(graphView); });
-    for (QAction *shared : { action_Print, m_graphExport, m_graphToBasket, m_labPlotLive })
-    {
-      QAction *a = menu.addAction(shared->icon(), QString(shared->text()).remove('&'));
-      a->setEnabled(shared->isEnabled());
-      connect(a, &QAction::triggered, shared, &QAction::trigger);
-    }
+    // the window last
+    menu.removeAction(hide);
+    menu.addSeparator();
+    menu.addAction(hide);
   }
   if (XYView *xy = xyViewOf(win))
   {
