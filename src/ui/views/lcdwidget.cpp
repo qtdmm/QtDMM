@@ -160,6 +160,7 @@ void LcdWidget::setMinUnit(const QString &v) { m_minUnit = v; }
 void LcdWidget::setMaxUnit(const QString &v) { m_maxUnit = v; }
 void LcdWidget::setShowBar(bool on) { m_paintBar = on; }
 void LcdWidget::setHold(bool on) { m_hold = on; }
+void LcdWidget::setBattery(Battery battery) { m_battery = battery; }
 
 void LcdWidget::setAuto(bool on)
 {
@@ -548,14 +549,20 @@ double LcdWidget::drawUnit(QPainter &p, const QPointF &origin, double h, const Q
 
 namespace
 {
+// the drawn annunciators are marked by a leading \x01, a literal of its own:
+// "\x01battery" read "ba" as hex digits too (MSVC refuses it)
 // the diode annunciator is drawn, not typed: the usual schematic symbol
 // (triangle, bar, a line through) as on a meter's LCD
-const QString kDiodeFlag = QStringLiteral("\x01diode");
+const QString kDiodeFlag = QStringLiteral("\x01" "diode");
 double diodeWidth(double fontPx) { return fontPx * 1.7; }
 // HOLD is drawn too: a filled square with an H cut out, the symbol of the
 // old hold.xpm and of many meters' LCDs
-const QString kHoldFlag = QStringLiteral("\x01hold");
+const QString kHoldFlag = QStringLiteral("\x01" "hold");
 double holdWidth(double fontPx) { return fontPx * 0.95; }
+// the battery: a cell lying down, its contact on the right, with up to three
+// bars inside (low, mid, full)
+const QString kBatteryFlag = QStringLiteral("\x01" "battery");
+double batteryWidth(double fontPx) { return fontPx * 1.5; }
 // the gap after annunciator @p t when @p next follows: "AC+DC" stays together
 double flagGap(const QString &t, const QString &next, double gap)
 {
@@ -568,6 +575,8 @@ double flagWidth(const QString &t, const QFontMetricsF &fm, double fontPx)
     return diodeWidth(fontPx);
   if (t == kHoldFlag)
     return holdWidth(fontPx);
+  if (t == kBatteryFlag)
+    return batteryWidth(fontPx);
   return fm.horizontalAdvance(t);
 }
 }
@@ -616,6 +625,30 @@ void LcdWidget::drawAnnunciator(QPainter &p, const QRectF &r, const QString &tex
     p.save();
     p.setRenderHint(QPainter::Antialiasing, true);
     p.fillPath(square.subtracted(h.simplified()), c);
+    p.restore();
+    return;
+  }
+  if (text == kBatteryFlag)
+  {
+    // the outline lit with the symbol, the bars up to the level; the
+    // others as ghosts, as on a meter's LCD
+    const double w = batteryWidth(fontPx);
+    const double h = fontPx * 0.72;
+    const double lineW = qMax(1.0, fontPx * 0.09);
+    const QRectF body(r.left() + lineW / 2, r.center().y() - h / 2, w * 0.86 - lineW, h);
+    const QRectF nub(body.right() + lineW / 2, r.center().y() - h * 0.22, w * 0.14 - lineW / 2, h * 0.44);
+    const int bars = m_battery == Battery::Full ? 3 : m_battery == Battery::Mid ? 2 : m_battery == Battery::Low ? 1 : 0;
+    p.save();
+    p.setRenderHint(QPainter::Antialiasing, true);
+    p.setPen(QPen(c, lineW));
+    p.setBrush(Qt::NoBrush);
+    p.drawRect(body);
+    p.fillRect(nub, c);
+    const QRectF in = body.adjusted(lineW * 1.5, lineW * 1.5, -lineW * 1.5, -lineW * 1.5);
+    const double barGap = lineW;
+    const double barW = (in.width() - 2 * barGap) / 3;
+    for (int i = 0; i < 3; ++i)
+      p.fillRect(QRectF(in.left() + i * (barW + barGap), in.top(), barW, in.height()), on && i < bars ? m_segment : ghost());
     p.restore();
     return;
   }
@@ -701,9 +734,10 @@ const QStringList &leftFlags()
 {
   // manual range is AUTO off, as on the meters; MAX, MIN and AVG: the
   // meter shows its own maximum, minimum or average (its MAX/MIN keys); P
-  // before them: the peak maximum or minimum (UT202BT)
+  // before them: the peak maximum or minimum (UT202BT); the battery last,
+  // where it comes and goes without moving the others
   static const QStringList l = { LcdWidget::tr("AUTO"), QStringLiteral("P"), LcdWidget::tr("MAX"), QStringLiteral("P"),
-                                 LcdWidget::tr("MIN"), LcdWidget::tr("AVG") };
+                                 LcdWidget::tr("MIN"), LcdWidget::tr("AVG"), kBatteryFlag };
   return l;
 }
 const QStringList &rightFlags()
@@ -763,6 +797,7 @@ void LcdWidget::drawFlags(QPainter &p, const Layout &l) const
     { lt[3], peak && (flags & SampleFlag::Min), AnnPeak },
     { lt[4], bool(flags & SampleFlag::Min), AnnMin },
     { lt[5], bool(flags & SampleFlag::Avg), AnnAvg },
+    { lt[6], m_battery != Battery::Unknown, AnnBattery },
     { rt[0], ac, AnnAc },
     { rt[1], ac && dc, AnnAc | AnnDc },
     { rt[2], dc, AnnDc },
@@ -1067,6 +1102,7 @@ void LcdWidget::paintEvent(QPaintEvent *)
 void LcdWidget::showReading(const Reading &r)
 {
   setHold(r.hold);
+  setBattery(r.battery);
   if (r.range == "AUTO")
     setAuto(true);
   if (r.range == "MANU")

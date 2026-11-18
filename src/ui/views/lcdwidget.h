@@ -95,6 +95,7 @@ public:
   {
     AnnAuto = 0x001, AnnPeak = 0x002, AnnMax = 0x004, AnnMin = 0x008, AnnAvg = 0x010,
     AnnAc = 0x020, AnnDc = 0x040, AnnDiode = 0x080, AnnContinuity = 0x100, AnnHold = 0x200,
+    AnnBattery = 0x400,   ///< no look has it as a ghost: shown only while the meter tells its battery
     AnnAll = 0x3ff
   };
   /// What the display of a kind of meter has: a bar graph, its annunciators.
@@ -127,6 +128,8 @@ public:
   /// @name Annunciators
   /// @{
   void setHold(bool);
+  /// The battery symbol: off while Unknown, else with 1 (Low) to 3 (Full) bars.
+  void setBattery(Battery battery);
   void setAuto(bool);
   void setManu(bool);
   /// @}
@@ -256,6 +259,7 @@ private:
   int m_primary = 0;   ///< setPrimary()
   std::optional<QList<int>> m_secondaries;   ///< setSecondaries(), unset: the first ones
   bool m_hold = false;
+  Battery m_battery = Battery::Unknown;   ///< setBattery()
   bool m_auto = false;
   bool m_stale = false;
   QString m_caption;   ///< setCaption()

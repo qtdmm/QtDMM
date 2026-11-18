@@ -56,5 +56,6 @@ private:
   QByteArray setPanel(int field = -1, quint8 value = 0) const;
 
   QByteArray m_panel;     ///< the 13 bytes of the last panel, as "set panel" wants them
+  Battery m_battery = Battery::Unknown;   ///< from the last panel (its BATT_Status)
   QByteArray m_pending;   ///< for takeCommand()
 };

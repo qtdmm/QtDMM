@@ -4368,7 +4368,7 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
     </message>
     <message>
         <location filename="../../src/ui/instancewidget.cpp" line="393"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="4277"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4281"/>
         <source>nothing recorded</source>
         <translation>nada grabado</translation>
     </message>
@@ -4589,46 +4589,46 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
 <context>
     <name>LcdWidget</name>
     <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="705"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="737"/>
         <source>AUTO</source>
         <translation>AUTO</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="705"/>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="732"/>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="898"/>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="914"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="737"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="764"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="931"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="947"/>
         <source>MAX</source>
         <translation>MAX</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="706"/>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="913"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="738"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="946"/>
         <source>MIN</source>
         <translation>MIN</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="706"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="738"/>
         <source>AVG</source>
         <translation>AVG</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="864"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="897"/>
         <source>FAIL</source>
         <translation>FAIL</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="864"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="897"/>
         <source>PASS</source>
         <translation>PASS</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="870"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="903"/>
         <source>HI</source>
         <translation>HI</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="870"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="903"/>
         <source>LO</source>
         <translation>LO</translation>
     </message>
@@ -5042,12 +5042,12 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
         <translation>&amp;Nueva gráfica</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3836"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3840"/>
         <source>Show the toolbar</source>
         <translation>Mostrar la barra de herramientas</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3836"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3840"/>
         <source>Hide the toolbar</source>
         <translation>Ocultar la barra de herramientas</translation>
     </message>
@@ -5081,7 +5081,7 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
         <location filename="../../src/ui/mainwindow.cpp" line="1548"/>
         <location filename="../../src/ui/mainwindow.cpp" line="1554"/>
         <location filename="../../src/ui/mainwindow.cpp" line="3471"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="4521"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4525"/>
         <source>%1: %2</source>
         <translation>%1: %2</translation>
     </message>
@@ -5384,84 +5384,84 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
         <translation>No conectado. Conectar lo saca de Mis dispositivos.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3806"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3810"/>
         <source>%1 is connected already</source>
         <translation>%1 ya está conectado</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3807"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3811"/>
         <source>%1: its port is in use by %2</source>
         <translation>%1: su puerto lo usa %2</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3813"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3817"/>
         <source>%1: waiting for the device</source>
         <translation>%1: esperando el dispositivo</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3815"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3819"/>
         <source>%1 connected</source>
         <translation>%1 conectado</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4361"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4365"/>
         <source>Exported to %1</source>
         <translation>Exportado a %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4283"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="4363"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4287"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4367"/>
         <source>Export failed: %1</source>
         <translation>Error al exportar: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4379"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4383"/>
         <source>Live in LabPlot: start a recording first</source>
         <translation>En vivo en LabPlot: primero inicie una grabación</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4393"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4397"/>
         <source>live</source>
         <translation>en vivo</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4411"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4415"/>
         <source>Live in LabPlot: the recording ended, the file has all of it</source>
         <translation>En vivo en LabPlot: la grabación terminó, el archivo la contiene completa</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4417"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="4423"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4421"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4427"/>
         <source>Live in LabPlot: %1</source>
         <translation>En vivo en LabPlot: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4591"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4595"/>
         <source>Bench loaded</source>
         <translation>Puesto de medida cargado</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4602"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4606"/>
         <source>project %1 closed: the bench is not in it</source>
         <translation>proyecto %1 cerrado: el puesto de medida no está en él</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4603"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4607"/>
         <source>project %1 opened: the bench is in it</source>
         <translation>proyecto %1 abierto: el puesto de medida está en él</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4606"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4610"/>
         <source>back in My devices: %1</source>
         <translation>de nuevo en Mis aparatos: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4608"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4612"/>
         <source>the programs of their alarms were left out, set them again in Alarms...</source>
         <translation>los programas de sus alarmas se han omitido, vuelva a definirlos en Alarmas...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4610"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4614"/>
         <source>%1 without its key: enter it in the device settings</source>
         <translation>%1 sin su clave: introdúzcala en los ajustes del aparato</translation>
     </message>
@@ -5959,70 +5959,80 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
         <translation>La batería del medidor está baja.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4295"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3786"/>
+        <source>The meter&apos;s battery is half full.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="3788"/>
+        <source>The meter&apos;s battery is full.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="4299"/>
         <source>Project: cannot write %1</source>
         <translation>Proyecto: no se puede escribir %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4297"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="4433"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4301"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4437"/>
         <source>Into the project: %1</source>
         <translation>Al proyecto: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4409"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4413"/>
         <source>Live in LabPlot: cannot write %1, stopped</source>
         <translation>En vivo en LabPlot: no se puede escribir %1, detenido</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4431"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4435"/>
         <source>Project: cannot write %1: %2</source>
         <translation>Proyecto: no se puede escribir %1: %2</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4464"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4468"/>
         <source>Save bench</source>
         <translation>Guardar puesto de medida</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4465"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="4509"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4469"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4513"/>
         <source>QtDMM bench (*.%1)</source>
         <translation>Puesto de medida de QtDMM (*.%1)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4489"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4493"/>
         <source>QtDMM: Save bench</source>
         <translation>QtDMM: Guardar puesto de medida</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4496"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4500"/>
         <source>Bench saved to %1</source>
         <translation>Puesto de medida guardado en %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4508"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4512"/>
         <source>Load bench</source>
         <translation>Cargar puesto de medida</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4521"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="4538"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4525"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4542"/>
         <source>QtDMM: Load bench</source>
         <translation>QtDMM: Cargar puesto de medida</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4539"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4543"/>
         <source>The bench closes %1, its recording is not saved.</source>
         <translation>El puesto de medida cierra %1, su grabación no está guardada.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4489"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4493"/>
         <source>Could not write %1.</source>
         <translation>No se pudo escribir %1.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4722"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4726"/>
         <source>&amp;Clear list</source>
         <translation>&amp;Vaciar lista</translation>
     </message>
@@ -6878,222 +6888,222 @@ Después cierre la sesión y vuelva a iniciarla para que la pertenencia al grupo
 <context>
     <name>Quantity</name>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="145"/>
+        <location filename="../../src/core/sampletypes.h" line="146"/>
         <source>Unknown</source>
         <translation>Desconocido</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="146"/>
+        <location filename="../../src/core/sampletypes.h" line="147"/>
         <source>Voltage</source>
         <translation>Tensión</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="147"/>
+        <location filename="../../src/core/sampletypes.h" line="148"/>
         <source>Current</source>
         <translation>Corriente</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="148"/>
+        <location filename="../../src/core/sampletypes.h" line="149"/>
         <source>Resistance</source>
         <translation>Resistencia</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="149"/>
+        <location filename="../../src/core/sampletypes.h" line="150"/>
         <source>Capacitance</source>
         <translation>Capacidad</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="150"/>
+        <location filename="../../src/core/sampletypes.h" line="151"/>
         <source>Temperature</source>
         <translation>Temperatura</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="151"/>
+        <location filename="../../src/core/sampletypes.h" line="152"/>
         <source>Frequency</source>
         <translation>Frecuencia</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="152"/>
+        <location filename="../../src/core/sampletypes.h" line="153"/>
         <source>Duty cycle</source>
         <translation>Ciclo de trabajo</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="153"/>
+        <location filename="../../src/core/sampletypes.h" line="154"/>
         <source>Continuity</source>
         <translation>Continuidad</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="154"/>
+        <location filename="../../src/core/sampletypes.h" line="155"/>
         <source>Pulse width</source>
         <translation>Ancho de pulso</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="155"/>
+        <location filename="../../src/core/sampletypes.h" line="156"/>
         <source>Conductance</source>
         <translation>Conductancia</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="156"/>
+        <location filename="../../src/core/sampletypes.h" line="157"/>
         <source>Power</source>
         <translation>Potencia</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="157"/>
+        <location filename="../../src/core/sampletypes.h" line="158"/>
         <source>Gain</source>
         <translation>Ganancia</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="158"/>
+        <location filename="../../src/core/sampletypes.h" line="159"/>
         <source>Sound pressure level</source>
         <translation>Nivel de presión sonora</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="159"/>
+        <location filename="../../src/core/sampletypes.h" line="160"/>
         <source>Carbon monoxide</source>
         <translation>Monóxido de carbono</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="160"/>
+        <location filename="../../src/core/sampletypes.h" line="161"/>
         <source>Relative humidity</source>
         <translation>Humedad relativa</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="161"/>
+        <location filename="../../src/core/sampletypes.h" line="162"/>
         <source>Time</source>
         <translation>Tiempo</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="162"/>
+        <location filename="../../src/core/sampletypes.h" line="163"/>
         <source>Wind speed</source>
         <translation>Velocidad del viento</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="163"/>
+        <location filename="../../src/core/sampletypes.h" line="164"/>
         <source>Pressure</source>
         <translation>Presión</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="164"/>
+        <location filename="../../src/core/sampletypes.h" line="165"/>
         <source>Parallel inductance</source>
         <translation>Inductancia en paralelo</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="165"/>
+        <location filename="../../src/core/sampletypes.h" line="166"/>
         <source>Parallel capacitance</source>
         <translation>Capacidad en paralelo</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="166"/>
+        <location filename="../../src/core/sampletypes.h" line="167"/>
         <source>Parallel resistance</source>
         <translation>Resistencia en paralelo</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="167"/>
+        <location filename="../../src/core/sampletypes.h" line="168"/>
         <source>Series inductance</source>
         <translation>Inductancia en serie</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="168"/>
+        <location filename="../../src/core/sampletypes.h" line="169"/>
         <source>Series capacitance</source>
         <translation>Capacidad en serie</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="169"/>
+        <location filename="../../src/core/sampletypes.h" line="170"/>
         <source>Series resistance</source>
         <translation>Resistencia en serie</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="170"/>
+        <location filename="../../src/core/sampletypes.h" line="171"/>
         <source>Dissipation factor</source>
         <translation>Factor de disipación</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="171"/>
+        <location filename="../../src/core/sampletypes.h" line="172"/>
         <source>Quality factor</source>
         <translation>Factor de calidad</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="172"/>
+        <location filename="../../src/core/sampletypes.h" line="173"/>
         <source>Phase angle</source>
         <translation>Ángulo de fase</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="173"/>
+        <location filename="../../src/core/sampletypes.h" line="174"/>
         <source>Difference</source>
         <translation>Diferencia</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="174"/>
+        <location filename="../../src/core/sampletypes.h" line="175"/>
         <source>Count</source>
         <translation>Cantidad</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="175"/>
+        <location filename="../../src/core/sampletypes.h" line="176"/>
         <source>Power factor</source>
         <translation>Factor de potencia</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="176"/>
+        <location filename="../../src/core/sampletypes.h" line="177"/>
         <source>Apparent power</source>
         <translation>Potencia aparente</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="177"/>
+        <location filename="../../src/core/sampletypes.h" line="178"/>
         <source>Mass</source>
         <translation>Masa</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="178"/>
+        <location filename="../../src/core/sampletypes.h" line="179"/>
         <source>Harmonic ratio</source>
         <translation>Tasa de armónicos</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="179"/>
+        <location filename="../../src/core/sampletypes.h" line="180"/>
         <source>Energy</source>
         <translation>Energía</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="180"/>
+        <location filename="../../src/core/sampletypes.h" line="181"/>
         <source>Electric charge</source>
         <translation>Carga eléctrica</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="181"/>
+        <location filename="../../src/core/sampletypes.h" line="182"/>
         <source>State of charge</source>
         <translation>Estado de carga</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="182"/>
+        <location filename="../../src/core/sampletypes.h" line="183"/>
         <source>Time to go</source>
         <translation>Tiempo restante</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="183"/>
+        <location filename="../../src/core/sampletypes.h" line="184"/>
         <source>Carbon dioxide</source>
         <translation>Dióxido de carbono</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="184"/>
+        <location filename="../../src/core/sampletypes.h" line="185"/>
         <source>Illuminance</source>
         <translation>Iluminancia</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="185"/>
+        <location filename="../../src/core/sampletypes.h" line="186"/>
         <source>Linear speed</source>
         <translation>Velocidad lineal</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="186"/>
+        <location filename="../../src/core/sampletypes.h" line="187"/>
         <source>Length</source>
         <translation>Longitud</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="187"/>
+        <location filename="../../src/core/sampletypes.h" line="188"/>
         <source>Light exposure</source>
         <translation>Exposición luminosa</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="188"/>
+        <location filename="../../src/core/sampletypes.h" line="189"/>
         <source>Luminous intensity</source>
         <translation>Intensidad luminosa</translation>
     </message>

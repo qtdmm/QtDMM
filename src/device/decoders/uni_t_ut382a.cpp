@@ -141,6 +141,7 @@ std::optional<DmmDecoder::DmmResponse> DecoderUT382A::decode(const QByteArray &d
     default: break;
   }
   const quint8 flags = f[5];
+  m_result.battery = batteryOfLevel(flags & 0x07, 5);   // BATT_Status 0..5, 5 full
   if (flags & 0x80)
   {
     c.unit = lux;

@@ -137,7 +137,10 @@ for AC+DC a "+" lights between AC and DC. Unlit ones stay faintly visible,
 like on the meter itself. Only those a meter of its kind has are there: a
 thermometer has HOLD, MAX and MIN, a luxmeter or sound level meter AUTO as
 well, an anemometer or air quality meter AVG as well, a Victron device none;
-one a reading lights shows anyway. Then the bar graph (multimeters and clamp
+one a reading lights shows anyway. After them, at the left, a battery
+when the meter tells its battery: one bar low, two half full, three full. A
+meter that only reports a low battery shows it with one bar, and nothing
+otherwise; one that tells nothing never shows it. Then the bar graph (multimeters and clamp
 meters only; the others leave its room empty) and, below the value, the minimum
 and maximum since the last **Reset** (F4), each as the meter showed it
 ("MIN 221.18 mV" stays so when the meter has moved on to V). A range change

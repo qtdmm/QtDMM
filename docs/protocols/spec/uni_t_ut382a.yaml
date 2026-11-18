@@ -31,7 +31,11 @@ vectors:
   - source_line: "523.4 lx (synthetic)"
     bytes: AA BB 10 01 00 04 44 02 D9 9A 00 00 00 00 00 00 00 03 33
     reading: {value: "523.4", unit: "lx"}
-    expect: {val: "523.4"}
+    expect: {val: "523.4", battery: full}
+  - source_line: "523.4 lx, battery 1 (synthetic)"
+    bytes: AA BB 10 01 00 01 44 02 D9 9A 00 00 00 00 00 00 00 03 30
+    reading: {value: "523.4", unit: "lx"}
+    expect: {val: "523.4", battery: low}
   - source_line: "MAX 85.27 lx (synthetic)"
     bytes: AA BB 10 01 01 04 42 AA 8A 3D 00 00 00 00 00 00 00 03 2E
     reading: {value: "85.27", unit: "lx"}

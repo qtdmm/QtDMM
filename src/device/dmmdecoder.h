@@ -5,6 +5,7 @@
 #include <QByteArray>
 #include <optional>
 
+#include "core/battery.h"
 #include "device/frameformat.h"
 
 struct Reading;
@@ -76,6 +77,7 @@ public:
     bool hold = false;    ///< the meter's HOLD annunciator is on
     bool showBar = false; ///< the meter shows a bar graph for this reading
     bool lowBat = false;  ///< low battery indicator
+    Battery battery = Battery::Unknown; ///< the battery's level, when the meter sends one (batteryOfLevel()); else lowBat says Low
     QString error;    ///< non-empty when the frame was understood but flagged an error
     qint64 received = 0;     ///< Sample::now() when the frame came in (FrameReader); 0 = not known, take the time of adapting
     qint64 receivedWall = 0; ///< the same as ms since the epoch

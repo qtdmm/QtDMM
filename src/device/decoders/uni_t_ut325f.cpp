@@ -130,6 +130,7 @@ std::optional<DmmDecoder::DmmResponse> DecoderUT325F::decode(const QByteArray &d
   if (f[4] == kPanel && length >= kPanelLength)
   {
     m_panel = QByteArray(reinterpret_cast<const char *>(f + 5), kPanelFields);
+    m_battery = batteryOfLevel(f[18], 5);   // after the fields: BATT_Status 0..5, 5 full
     // the live stream off (as after switching the meter on): on, once
     if (m_panel[kLiveOut] != 1 || m_panel[kBle] != 1)
       m_pending = setPanel();
@@ -157,6 +158,7 @@ std::optional<DmmDecoder::DmmResponse> DecoderUT325F::decode(const QByteArray &d
     fill(c, i + 1, f + 5 + 4 * i, f[21 + i], unit);
   }
   m_result.hold = m_panel.size() == kPanelFields && m_panel[kHold] == 1;
+  m_result.battery = m_battery;
   return m_result;
 }
 

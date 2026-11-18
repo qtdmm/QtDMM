@@ -338,6 +338,7 @@ std::optional<DmmDecoder::DmmResponse> DecoderUniTiDMM::decode(const QByteArray 
     return displayed(f, prefix);
   }
   m_result.hold = m_hold = flagsA & 0x02;
+  m_result.lowBat = flagsB & 0x02;   // B bit 1: low battery (UNI-T's app)
   // the meter's other keys: A bit3 MAX, bit2 MIN, bit0 REL; C bit2/bit1 peak
   // max/min
   if (flagsA & 0x08)
