@@ -677,7 +677,7 @@ void MainWindow::createViews()
     // them [E 18.11.]: a board sends them to be plotted
     QList<ValueRef> plotted { ValueRef(0, ctl->source()) };
     if (ctl->dmm() && DeviceType::ofProtocol(ctl->dmm()->dmmInfo().protocol) == DeviceType::Microcontroller)
-      for (int id = 1; id < ctl->valueCount(); ++id)
+      for (int id = 1; id < kMaxValues; ++id)   // they come with its lines; one never sent is not drawn
         plotted << ValueRef(id, ctl->source());
     for (GraphView *view : std::as_const(m_graphViews))
       if (view->model()->values().isEmpty())
@@ -3695,12 +3695,12 @@ void MainWindow::deviceSettings(const QString &id, bool settingsTab)
       return std::nullopt;
     return ctl->lastReading();
   });
-  // the names a connected microcontroller gave its values, beside their units
+  // the names of a connected microcontroller's values, beside their units
   if (const MeterController *ctl = m_session->controller("device:" + id); ctl && ctl->dmm())
   {
     QStringList names;
     for (int i = 0; i < kMaxValues; ++i)
-      names << ctl->lastReading(i).name;
+      names << ctl->valueName(i);
     dlg.settings()->setValueNames(names);
   }
   // Connect, as the sidebar's menu

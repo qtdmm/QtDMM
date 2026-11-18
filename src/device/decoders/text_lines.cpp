@@ -10,7 +10,7 @@
 
 static const bool registered = []() {
   DmmDecoder::addConfig({"Generic", "Microcontroller (text lines: Serial Plotter, Teleplot)", "", 115200,
-                         FrameFormat::TextLines, 8, 1, 1, 0, 0, 0, 0, 0, "", "", 4});
+                         FrameFormat::TextLines, 8, 1, 1, 0, 0, 0, 0, 0, "", "", 1});   // more as the lines bring them
   return true;
 }();
 
@@ -190,10 +190,6 @@ std::optional<DmmDecoder::DmmResponse> DecoderTextLines::decode(const QByteArray
     c.id = id + slot;
     c.val = item.text;
     c.unit = item.unit;
-    // unnamed numbers keep the name of their place only as a key
-    static const QRegularExpression place(QStringLiteral("^\\d+$"));
-    if (!place.match(item.key).hasMatch())
-      c.name = item.key;
     c.dval = item.value * SiPrefix::factor(SiPrefix::split(item.unit).prefix);
     // the unit the user chose for this value: the number as sent, in it
     const QString chosen = m_units.value(slot);
@@ -202,6 +198,12 @@ std::optional<DmmDecoder::DmmResponse> DecoderTextLines::decode(const QByteArray
       c.unit = chosen == QLatin1String(kNoUnit) ? QString() : chosen;
       c.dval = item.value;
     }
+    // unnamed numbers keep the name of their place only as a key; a label
+    // that is the value's unit ("A:") is no name either: the value is
+    // named by what it measures ("Current (A)"), as a meter's
+    static const QRegularExpression place(QStringLiteral("^\\d+$"));
+    if (!place.match(item.key).hasMatch() && !(chosen.isEmpty() && !c.unit.isEmpty() && unitOfLabel(item.key) == c.unit))
+      c.name = item.key;
     m_result.channels << c;
   }
   if (m_result.channels.isEmpty())

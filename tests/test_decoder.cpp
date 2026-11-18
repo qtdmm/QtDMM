@@ -381,10 +381,10 @@ int main(int argc, char **argv)
       // a label that is a unit is the unit too; "C" alone and words are names
       auto units = DmmDecoder::getInstance(FrameFormat::TextLines);
       const auto va = units->decode("V:3.31,mA:12.5,temp:20,C:1\r\n", 0);
-      if (!va || va->channels.size() != 4 || va->channels[0].unit != "V" || va->channels[0].name != "V"
+      if (!va || va->channels.size() != 4 || va->channels[0].unit != "V" || !va->channels[0].name.isEmpty()
           || va->channels[1].unit != "mA" || std::abs(va->channels[1].dval - 0.0125) > 1e-12
           || !va->channels[2].unit.isEmpty() || !va->channels[3].unit.isEmpty())
-        bad("V, mA as units; temp and C not");
+        bad("V, mA as units and not as names (named by what they measure); temp and C not");
       // units chosen in the settings: the number as sent, in that unit;
       // "none" takes the label's unit away, an empty entry keeps it
       auto chosen = DmmDecoder::getInstance(FrameFormat::TextLines);
@@ -392,7 +392,8 @@ int main(int argc, char **argv)
       const auto ch = chosen->decode("mV:3.31,mA:12.5,temp:20\r\n", 0);
       if (!ch || ch->channels.size() != 3 || ch->channels[0].unit != "°C" || std::abs(ch->channels[0].dval - 3.31) > 1e-12
           || !ch->channels[1].unit.isEmpty() || std::abs(ch->channels[1].dval - 12.5) > 1e-12
-          || !ch->channels[2].unit.isEmpty() || ch->channels[2].name != "temp")
+          || !ch->channels[2].unit.isEmpty() || ch->channels[2].name != "temp"
+          || ch->channels[0].name != "mV" || ch->channels[1].name != "mA")
         bad("units chosen per value");
       const auto ch2 = chosen->decode("mV:1,mA:2,temp:3,V:4\r\n", 0);
       if (!ch2 || ch2->channels.size() != 4 || ch2->channels[3].unit != "V")

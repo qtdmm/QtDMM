@@ -1074,6 +1074,10 @@ void LcdWidget::showReading(const Reading &r)
   // the bar is the big value's (a meter sends it with its main value only)
   if (r.id == idAt(0))
     setShowBar(r.showBar);
+  // a value beyond those of the model: a microcontroller's lines bring
+  // more, as they come
+  if (r.id >= m_numValues && r.id < kMaxValues)
+    setValueCount(r.id + 1);
   setMode(r.id, r.flags, r.port.quantity);
   if (!r.hold)
   {

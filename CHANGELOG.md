@@ -75,6 +75,7 @@
 
 ### Meters
 
+- **Microcontroller: only the values it sends** — the sidebar and the display show the values the board's lines bring, not always four; a label that is the unit (`A:`) names the value by what it measures (*Current (A)* instead of *A (A)*).
 - **Microcontroller: a unit per value** — the device's settings list the values (with the names the board sent) and offer *Automatic*, a unit (V, A, Ω, °C, …) or *No unit* for each; a chosen unit takes the number as sent.
 - **Microcontroller: the graph shows all its values** — an empty graph takes every value of a connected microcontroller, not only the main one, as the Arduino IDE's plotter does.
 - **Microcontroller: a name that is a unit is the unit** — `V:3.31,A:0.12` from a sketch is now a voltage and a current (V, mA, kOhm, °C, %RH, … with SI prefixes; a single letter like `C` stays a name).

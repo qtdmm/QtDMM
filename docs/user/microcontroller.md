@@ -21,7 +21,8 @@ XY diagram, alarms.
    the one port setting of this model you choose; the others are fixed
    (8N1).
 3. *Connect*. Each name the board sends becomes a value of the device, in
-   the order they first come, up to four. A fifth name is left out. An empty
+   the order they first come, up to four; the sidebar and the display show
+   those the board sends. A fifth name is left out. An empty
    graph takes all of them at once, as the Arduino IDE's plotter does; each
    unit gets its axis.
 
@@ -50,7 +51,7 @@ Without names (`Serial.println(u)`) the values are named by their place:
 
 A name that is a unit is the value's unit too: `V:3.31,mA:12.5` is a
 voltage of 3.31 V and a current of 12.5 mA - a voltage in the recorder, the
-alarms and the graph's axes. Units QtDMM takes so: V, A, Ohm (or Ω), F, Hz,
+alarms and the graph's axes, named *Voltage (V)* and *Current (mA)* as a meter's. Units QtDMM takes so: V, A, Ohm (or Ω), F, Hz,
 W, Wh, Ah, VA, %, %RH, lx, ppm, dB, °C, °F, m/s, each also with an SI prefix
 (mV, kOhm, µA). A single letter like `C` stays a name; write `°C`. Other
 names (`voltage`, `temp`) are values without a unit; the graph draws them
