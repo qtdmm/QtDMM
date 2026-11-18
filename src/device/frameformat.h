@@ -92,6 +92,7 @@ public:
     BrymenBM78xBT,
     RawCapture,            ///< no decoder: frames cut at a pause, only for the capture window
     UniTUT381A,
+    UniTUT372D,
     EndOfList              // new stuff always before!
   };
 

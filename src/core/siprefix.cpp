@@ -54,7 +54,7 @@ double factor(const QString &prefix)
 const QStringList &wholeUnits()
 {
   static const QStringList kWhole = { "ppm", "fc", "min", "mol", "dB", "dBm", "dBV", "cosphi", "hFE", "HFE", "m/s",
-                                      "%RH", "dBA", "dBC" };
+                                      "%RH", "dBA", "dBC", "m/min", "in/min", "ft/min", "ft", "REV" };
   return kWhole;
 }
 

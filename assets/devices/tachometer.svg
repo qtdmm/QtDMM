@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-15 -15 230 410" width="230" height="410">
+  <!-- Generic tachometer (optical / contact). Template: #FF00FF = primary, #00FFFF = secondary, #FFFF00 = outline (replaced at build time; outline dark grey in light design, light in dark design). -->
+  <style>
+    .primary { fill: #FF00FF; }
+    .secondary { fill: #00FFFF; }
+    .lcd { fill: #C9D3C0; }
+    .lcdtext { fill: #2A2E2A; font-weight: bold; font-size: 30px; font-family: monospace; }
+    .light { fill: #E6E8EA; }
+    .key { fill: #8A9096; }
+    .dark { fill: #1E2124; }
+    .beam { fill: none; stroke: #E6E8EA; stroke-width: 3; stroke-dasharray: 6 5; stroke-linecap: round; }
+    .label { fill: #E6E8EA; font-size: 10px; font-family: sans-serif; text-anchor: middle; }
+  </style>
+  <!-- the beam to the reflective mark on a turning disc -->
+  <circle class="key" cx="100" cy="22" r="20"/>
+  <circle class="dark" cx="100" cy="22" r="7"/>
+  <rect class="light" x="114" y="17" width="10" height="10"/>
+  <path class="beam" d="M100 44 L100 60"/>
+  <!-- the optical head -->
+  <rect class="dark" x="58" y="62" width="84" height="56" rx="10" stroke="#FFFF00" stroke-width="2" vector-effect="non-scaling-stroke"/>
+  <rect class="dark" x="58" y="62" width="84" height="56" rx="10"/>
+  <circle class="key" cx="100" cy="86" r="17"/>
+  <circle class="light" cx="100" cy="86" r="8"/>
+  <rect class="dark" x="80" y="116" width="40" height="44"/>
+  <rect class="primary" x="30" y="158" stroke="#FFFF00" stroke-width="2" vector-effect="non-scaling-stroke" width="140" height="218" rx="22"/>
+  <rect class="primary" x="30" y="158" width="140" height="218" rx="22"/>
+  <rect class="secondary" x="42" y="170" width="116" height="194" rx="14"/>
+  <rect class="dark" x="52" y="184" width="96" height="58" rx="6"/>
+  <rect class="lcd" x="57" y="189" width="86" height="48" rx="3"/>
+  <text class="lcdtext" style="font-weight:bold;font-family:monospace;font-size:26px" x="100.0" y="222.1" text-anchor="middle">1450</text>
+  <text style="font-size:10px;font-family:sans-serif" class="label" x="100" y="260">RPM</text>
+  <g class="key"><rect x="56" y="290" width="26" height="14" rx="4"/><rect x="87" y="290" width="26" height="14" rx="4"/><rect x="118" y="290" width="26" height="14" rx="4"/></g>
+</svg>
