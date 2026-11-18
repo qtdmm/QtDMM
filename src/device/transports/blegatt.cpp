@@ -4,6 +4,7 @@
 #include "device/decoders/brymen_bm78xbt.h"
 #include "device/decoders/uni_t_ut381a.h"
 #include "device/decoders/uni_t_ut320i.h"
+#include "device/decoders/uni_t_ut325f.h"
 #include "device/decoders/uni_t_ut382a.h"
 #include "device/transports/ble.h"
 
@@ -115,6 +116,11 @@ std::optional<BleGattDevice::Profile> BleGattDevice::profile(FrameFormat::DataFo
       // advertised as "UT320i SN:<serial>"; it pushes once notifications
       // are on, the settings asked first for the unit it shows
       return Profile{ kIenvService, kIenvNotify, { kIenvWrite }, { "UT320i" }, DecoderUT320i::settingsRequest() };
+    case FrameFormat::UniTUT325F:
+      // the name UNI-T's app looks for; the panel first, the decoder then
+      // switches the live stream on (takeCommand()). UNVERIFIED: the app
+      // sets the clock before, whether the meter needs it
+      return Profile{ kIenvService, kIenvNotify, { kIenvWrite }, { "UT325F" }, DecoderUT325F::getPanel() };
     case FrameFormat::UniTUT202BT:
       // UNI-T's app asks the name (0x5F) before anything else, and a UT60BT
       // is reported to need it (dmm-tools, UT61 family spec §6.4; our UT60BT

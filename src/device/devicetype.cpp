@@ -58,6 +58,7 @@ Type ofProtocol(FrameFormat::DataFormat protocol)
       return BenchDmm;
     case FrameFormat::UniTUT32x:
     case FrameFormat::UniTUT320i:
+    case FrameFormat::UniTUT325F:
     case FrameFormat::MastechMS6514:
       return Thermometer;
     case FrameFormat::UniTUT382:

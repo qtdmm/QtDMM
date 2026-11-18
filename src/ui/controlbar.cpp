@@ -160,7 +160,7 @@ bool ControlBar::supported(const DmmDecoder::DMMInfo &info)
   return info.protocol == FrameFormat::UniTiDMM || info.protocol == FrameFormat::UniTUT61Plus
          || info.protocol == FrameFormat::UniTUT202BT || info.protocol == FrameFormat::UniTiENV
          || info.protocol == FrameFormat::UniTUT381A || info.protocol == FrameFormat::UniTUT372D
-         || info.protocol == FrameFormat::UniTUT382A
+         || info.protocol == FrameFormat::UniTUT382A || info.protocol == FrameFormat::UniTUT325F
          || info.protocol == FrameFormat::ZotekBLE || info.protocol == FrameFormat::OwonBLE
          || info.protocol == FrameFormat::OwonBLE15 || info.protocol == FrameFormat::UniTUT181A
          || info.protocol == FrameFormat::VoltcraftVC880 || info.protocol == FrameFormat::VoltcraftVC890
