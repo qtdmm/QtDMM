@@ -228,7 +228,11 @@ int main(int argc, char **argv)
       for (const QString &name : QDir(":/specs").entryList({ "*.json" }))
       {
         QFile f(":/specs/" + name);
-        f.open(QIODevice::ReadOnly);
+        if (!f.open(QIODevice::ReadOnly))
+        {
+          unknown << name + ": not readable";
+          continue;
+        }
         for (const QJsonValue &t : QJsonDocument::fromJson(f.readAll()).object().value("tables").toArray())
         {
           const QString heading = t.toObject().value("table").toString();
