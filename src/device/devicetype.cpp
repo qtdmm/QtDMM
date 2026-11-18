@@ -61,6 +61,7 @@ Type ofProtocol(FrameFormat::DataFormat protocol)
       return Thermometer;
     case FrameFormat::UniTUT382:
     case FrameFormat::UniTUT381A:
+    case FrameFormat::UniTUT382A:
     case FrameFormat::BenetechGM1020:
       return Luxmeter;
     case FrameFormat::UniTUT202BT:

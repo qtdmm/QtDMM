@@ -78,6 +78,8 @@ Meaning meaning(const QString &base, const QString &mode, FrameFormat::DataForma
     { "ppm",    Quantity::Unknown,           "ppm" },   // a concentration; of what, the meter says
     { "lx",     Quantity::Illuminance,       "lx" },
     { "fc",     Quantity::Illuminance,       "fc" },    // foot-candle, 1 fc = 10.764 lx
+    { "lx·h",   Quantity::LightExposure,     "lx·h" },  // a luxmeter's integral
+    { "cd",     Quantity::LuminousIntensity, "cd" },    // from lux and distance
     { "%RH",    Quantity::RelativeHumidity,  "%" },     // hygrometers
     { "m/s",    Quantity::WindSpeed,         "m/s" },
     { "m/min",  Quantity::LinearSpeed,       "m/min" },   // a tachometer's measuring wheel

@@ -357,6 +357,7 @@ meter working, please report it on the
 | Uni-Trend | UT372D ¹ | Tachometer | - | `UniTUT372D` | Bluetooth LE | - | 100000 |
 | Uni-Trend | UT381A ¹ | Luxmeter | - | `UniTUT381A` | Bluetooth LE | - | 200000 |
 | Uni-Trend | UT382 ¹ | Luxmeter | - | `UniTUT382` | 19200 8N1 | - | 2000 |
+| Uni-Trend | UT382A ¹ | Luxmeter | - | `UniTUT382A` | Bluetooth LE | - | 400000 |
 | Uni-Trend | UT383BT | Luxmeter | - | `UniTiENV` | Bluetooth LE | - | 100000 |
 | Uni-Trend | UT60A | Handheld multimeter | FS9721 LP3 | `VC820Continuous` | 2400 8N1 | DTR | 4000 |
 | Uni-Trend | UT60BT | Handheld multimeter | - | `UniTiDMM` | Bluetooth LE | - | 10000 |
@@ -447,9 +448,9 @@ meter working, please report it on the
 - **Generic DTM0660 4000 count, DTM0660 6000 count, DTM0660 8000 count**: the DTM0660 chip has a UART, but meters built on it (Victor VC921 and similar) ship without an interface: an IR LED with a 100 Ω resistor goes on the chip's TX pin and the RS232 bit in the 24C02 EEPROM has to be set - [eevblog: hacking the Victor VC-921](https://www.eevblog.com/forum/testgear/hacking-the-victor-vc-921/). PeakTech 3415 and Velleman DVM4100 use the same chip but come with a cable and need no change.
 - **Vichy VC99**: the FS9922-DMM4 chip sends the display at 2400 baud on an unused pin; a wire or IR LED has to be soldered to it and *REL* held to start the output - [Hackaday](https://hackaday.com/2010/11/30/unlocking-rs232-serial-comm-on-a-multimeter/), [David Pilling](https://www.davidpilling.com/wiki/index.php/VC99).
 
-326 devices across 57 vendors.
+327 devices across 57 vendors.
 
-By type: Handheld multimeter 242, Bench multimeter 33, Clamp meter 25, Thermometer 6, Air quality meter 4, Generic 4, Luxmeter 4, Battery monitor 2, Solar charge controller 2, Anemometer 1, Inverter 1, Sound level meter 1, Tachometer 1.
+By type: Handheld multimeter 242, Bench multimeter 33, Clamp meter 25, Thermometer 6, Luxmeter 5, Air quality meter 4, Generic 4, Battery monitor 2, Solar charge controller 2, Anemometer 1, Inverter 1, Sound level meter 1, Tachometer 1.
 
 ## Command line
 

@@ -3,6 +3,7 @@
 #include "device/transports/blegatt.h"
 #include "device/decoders/brymen_bm78xbt.h"
 #include "device/decoders/uni_t_ut381a.h"
+#include "device/decoders/uni_t_ut382a.h"
 #include "device/transports/ble.h"
 
 #include <QBluetoothAddress>
@@ -105,6 +106,10 @@ std::optional<BleGattDevice::Profile> BleGattDevice::profile(FrameFormat::DataFo
     case FrameFormat::UniTUT372D:
       // the name UNI-T's app looks for; it streams once notifications are on
       return Profile{ kIenvService, kIenvNotify, { kIenvWrite }, { "UT372D" } };
+    case FrameFormat::UniTUT382A:
+      // the name UNI-T's app looks for; the status first (unit, HOLD), then
+      // the decoder's poll for live frames
+      return Profile{ kIenvService, kIenvNotify, { kIenvWrite }, { "UT382A" }, DecoderUT382A::checkStatus() };
     case FrameFormat::UniTUT202BT:
       // UNI-T's app asks the name (0x5F) before anything else, and a UT60BT
       // is reported to need it (dmm-tools, UT61 family spec §6.4; our UT60BT
