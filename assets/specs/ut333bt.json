@@ -1,0 +1,60 @@
+{
+ "source": "specifications of the UNI-T UT333BT",
+ "device": "ut333bt",
+ "models": [
+  "Uni-Trend UT333BT"
+ ],
+ "model": "UT333BT",
+ "tables": [
+  {
+   "table": "Humidity",
+   "page": 1,
+   "input_impedance": null,
+   "overload_protection": null,
+   "notes": [
+    "Ambient temperature 23°C ±5°C, ambient humidity ≤90%RH"
+   ],
+   "ranges": [
+    {
+     "range": "0~100.0%RH",
+     "resolution": "0.1%RH",
+     "accuracy": [
+      {
+       "freq_range": null,
+       "accuracy": "5%RH"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "table": "Temperature",
+   "page": 1,
+   "input_impedance": null,
+   "overload_protection": null,
+   "notes": [],
+   "ranges": [
+    {
+     "range": "-10~60°C",
+     "resolution": "0.1°C",
+     "accuracy": [
+      {
+       "freq_range": null,
+       "accuracy": "1.0°C"
+      }
+     ]
+    },
+    {
+     "range": "14~140°F",
+     "resolution": "0.2°F",
+     "accuracy": [
+      {
+       "freq_range": null,
+       "accuracy": "2.0°F"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

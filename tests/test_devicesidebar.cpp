@@ -190,7 +190,58 @@ int main(int argc, char **argv)
     check(DeviceSpecs::html(DeviceSpecs::find("Uni-Trend", "UT363BT")).contains("0~30 m/s")
             && DeviceSpecs::html(DeviceSpecs::find("Uni-Trend", "UT383BT")).contains("0~9999 Lux"),
           "UT363BT, UT383BT: from their manuals");
+    check(DeviceSpecs::html(DeviceSpecs::find("Uni-Trend", "UT353BT")).contains("30~130dB")
+            && DeviceSpecs::html(DeviceSpecs::find("Uni-Trend", "UT333BT")).contains("0~100.0%RH"),
+          "UT353BT, UT333BT: their specifications");
     check(DeviceSpecs::html(DeviceSpecs::find("OWON", "CM2100B")).contains("100.0A"), "CM2100B: from its spec sheet");
+    // the range of the reading on the display, marked (UT803: A. DC Voltage
+    // 600mV and 6V..1000V, E. Resistance with a note on 600Ω, G. Diode)
+    {
+      const QJsonObject ut803 = DeviceSpecs::find("Uni-Trend", "UT803");
+      auto reading = [](Quantity q, quint32 flags, double full)
+      {
+        Reading r;
+        r.port.quantity = q;
+        r.flags = flags;
+        r.measuringRange.full = full;
+        return r;
+      };
+      auto at = [&](const Reading &r, int table, int row)
+      {
+        const DeviceSpecs::Match m = DeviceSpecs::match(ut803, r);
+        return m.table == table && m.row == row;
+      };
+      check(at(reading(Quantity::Voltage, SampleFlag::DC, 60), 1, 1), "DC 60 V: second DC table, 60V");
+      check(at(reading(Quantity::Voltage, SampleFlag::DC, 0.6), 0, 0), "DC 600 mV: the mV table");
+      check(at(reading(Quantity::Voltage, SampleFlag::AC, 6), 3, 0), "AC 6 V: the AC table");
+      check(at(reading(Quantity::Resistance, 0, 600), 10, 0), "600 Ω");
+      check(at(reading(Quantity::Voltage, SampleFlag::DC | SampleFlag::Diode, std::nan("")), 12, 0), "diode");
+      check(at(reading(Quantity::Current, SampleFlag::DC, std::nan("")), 4, -1), "DC A, no full scale: first table only");
+      check(!DeviceSpecs::match(ut803, reading(Quantity::Unknown, 0, 1)).isValid(), "an unknown quantity: no mark");
+      const QString marked = DeviceSpecs::html(ut803, { 10, 0 }, QColor("#ffff00"));
+      const int row = marked.indexOf("<tr style=\"background-color:#ffff00\"><td>600Ω");
+      const int note = marked.indexOf("600Ω: accuracy");
+      check(marked.contains("<a name=\"current\">") && row >= 0 && note > row
+              && !marked.contains("<li>600Ω: accuracy"), "the 600Ω row marked, its note below it");
+      // every heading of the data files is known, but for these two
+      QStringList unknown;
+      for (const QString &name : QDir(":/specs").entryList({ "*.json" }))
+      {
+        QFile f(":/specs/" + name);
+        f.open(QIODevice::ReadOnly);
+        for (const QJsonValue &t : QJsonDocument::fromJson(f.readAll()).object().value("tables").toArray())
+        {
+          const QString heading = t.toObject().value("table").toString();
+          if (!DeviceSpecs::knowsHeading(heading) && heading != "Auto" && heading != "Wind Rating")
+            unknown << name + ": " + heading;
+        }
+      }
+      check(unknown.isEmpty(), "headings match() does not know: " + unknown.join(", "));
+      dlg.setReading([&] { return std::optional<Reading>(reading(Quantity::Voltage, SampleFlag::DC, 60)); });
+      check(dlg.dataMark().table == 1 && dlg.dataMark().row == 1, "the dialog marks the live range");
+      dlg.setReading([] { return std::optional<Reading>(); });
+      check(!dlg.dataMark().isValid(), "not connected: no mark");
+    }
     // Connect at the bottom left: only once set up, greyed while connected
     check(dlg.connectButton()->isHidden(), "no Connect without setConnect()");
     bool connected = false;

@@ -1,0 +1,33 @@
+{
+ "source": "specifications of the UNI-T UT353BT",
+ "device": "ut353bt",
+ "models": [
+  "Uni-Trend UT353BT"
+ ],
+ "model": "UT353BT",
+ "tables": [
+  {
+   "table": "Sound Level",
+   "page": 1,
+   "input_impedance": null,
+   "overload_protection": null,
+   "notes": [
+    "Frequency response 31.5Hz~8kHz",
+    "Ambient temperature 23°C ±5°C, ambient humidity ≤80%RH",
+    "Temperature coefficient 0.1 × accuracy /°C"
+   ],
+   "ranges": [
+    {
+     "range": "30~130dB",
+     "resolution": "0.1dB",
+     "accuracy": [
+      {
+       "freq_range": null,
+       "accuracy": "1.5dB"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

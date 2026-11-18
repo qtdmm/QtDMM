@@ -10,6 +10,7 @@
 #include <QLabel>
 #include <QLocale>
 #include <QPushButton>
+#include <QScrollBar>
 #include <QTabWidget>
 #include <QTextBrowser>
 #include <QUrl>
@@ -181,9 +182,11 @@ void DeviceSettingsDlg::updateInfo()
   if (model != m_dataModel)
   {
     m_dataModel = model;
-    const QJsonObject spec = DeviceSpecs::find(vendor, m_settings->dmmInfo().model);
-    m_data->setHtml(spec.isEmpty() ? QString() : DeviceSpecs::html(spec));
-    m_tabs->setTabVisible(m_tabs->indexOf(m_data), !spec.isEmpty());
+    m_dataSpec = DeviceSpecs::find(vendor, m_settings->dmmInfo().model);
+    m_dataMark = {};
+    m_data->setHtml(m_dataSpec.isEmpty() ? QString() : DeviceSpecs::html(m_dataSpec));
+    m_tabs->setTabVisible(m_tabs->indexOf(m_data), !m_dataSpec.isEmpty());
+    updateDataMark();
   }
   QStringList links;
   const QString site = DeviceSymbol::website(vendor);
@@ -218,4 +221,31 @@ void DeviceSettingsDlg::updateStatus()
     html += QString("<p>%1</p>").arg(tr("Sample rate: %1").arg(sampleRate(m_frameTimes)).toHtmlEscaped());
   }
   m_status->setText(html);
+  updateDataMark();
+}
+
+void DeviceSettingsDlg::setReading(const std::function<std::optional<Reading>()> &reading)
+{
+  m_reading = reading;
+  updateDataMark();
+}
+
+void DeviceSettingsDlg::updateDataMark()
+{
+  if (m_dataSpec.isEmpty())
+    return;
+  const std::optional<Reading> r = m_reading ? m_reading() : std::nullopt;
+  const DeviceSpecs::Match mark = r ? DeviceSpecs::match(m_dataSpec, *r) : DeviceSpecs::Match();
+  if (mark == m_dataMark)
+    return;   // the same: the text stays, with where it is scrolled to and what is selected
+  m_dataMark = mark;
+  QColor color = palette().color(QPalette::Highlight);
+  color.setAlpha(255);
+  color = color.lighter(m_data->palette().color(QPalette::Base).lightness() > 128 ? 170 : 60);
+  const int scrolled = m_data->verticalScrollBar()->value();
+  m_data->setHtml(DeviceSpecs::html(m_dataSpec, mark, color));
+  if (mark.isValid())
+    m_data->scrollToAnchor(QStringLiteral("current"));
+  else
+    m_data->verticalScrollBar()->setValue(scrolled);
 }

@@ -3680,6 +3680,14 @@ void MainWindow::deviceSettings(const QString &id, bool settingsTab)
     const MeterController *ctl = m_session->controller("device:" + id);
     return ctl ? ctl->dmm() : nullptr;
   });
+  // the Data tab marks the range of the reading on the display
+  dlg.setReading([this, id]() -> std::optional<Reading>
+  {
+    const MeterController *ctl = m_session->controller("device:" + id);
+    if (!ctl || !ctl->dmm())
+      return std::nullopt;
+    return ctl->lastReading();
+  });
   // Connect, as the sidebar's menu
   dlg.setConnect([this, id] { return m_sidebar->isConnected(id); }, [this, id] { openBeside(id); });
   if (settingsTab)
