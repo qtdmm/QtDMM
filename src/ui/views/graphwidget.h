@@ -433,6 +433,9 @@ protected:
   CrosshairAt crosshairAt(double x, double y) override;
   void        resizeEvent(QResizeEvent *event) override;
   void        keyPressEvent(QKeyEvent *event) override;
+  /// As narrow as the row above still holds its buttons and one short
+  /// legend entry; the arrangement of the windows keeps to it.
+  QSize       minimumSizeHint() const override;
 
 private:
   /// One value drawn.

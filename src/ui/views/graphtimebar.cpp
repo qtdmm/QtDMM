@@ -128,12 +128,17 @@ void GraphTimeBar::fitLegend()
   if (m_entries.isEmpty())
     return;
   // what the state and the buttons leave
-  int room = width() - m_state->sizeHint().width() - 12 - 12 - 2 * 6;
-  for (const QToolButton *b : std::as_const(m_buttons))
-    room -= b->sizeHint().width() + 2;
-  room -= m_overview->sizeHint().width() + m_envelope->sizeHint().width() + m_note->sizeHint().width() + m_stats->sizeHint().width() + 14;
-  m_legend->setEntries(m_entries, m_ink, qMax(1, room));
+  m_legend->setEntries(m_entries, m_ink, qMax(1, width() - fixedWidth()));
   m_legend->setFixedSize(m_legend->sizeHint());
+}
+
+int GraphTimeBar::fixedWidth() const
+{
+  int w = m_state->sizeHint().width() + 12 + 12 + 2 * 6;
+  for (const QToolButton *b : std::as_const(m_buttons))
+    w += b->sizeHint().width() + 2;
+  return w + m_overview->sizeHint().width() + m_envelope->sizeHint().width() + m_note->sizeHint().width()
+         + m_stats->sizeHint().width() + 14;
 }
 
 QString GraphTimeBar::legendText() const

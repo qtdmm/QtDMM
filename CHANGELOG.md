@@ -75,6 +75,7 @@
 
 ### Meters
 
+- **Graph in a narrow window** — the legend wraps into more lines instead of covering the time buttons, and the graph keeps a minimum width for its row of buttons: the automatic arrangement makes the instruments or the table narrower instead.
 - **Battery on the display** — the LCD shows the meter's battery as a symbol with one bar (low), two (half full) or three (full); meters that only report a low battery (about 90 models, now also the UT61E and the UT60BT/UT61+/UT161 family) show it with one bar when low. UT381A, UT382A and UT325F send their level (0–5). The sidebar's tooltip names the level.
 - **Microcontroller: only the values it sends** — the sidebar and the display show the values the board's lines bring, not always four; a label that is the unit (`A:`) names the value by what it measures (*Current (A)* instead of *A (A)*).
 - **Microcontroller: a unit per value** — the device's settings list the values (with the names the board sent) and offer *Automatic*, a unit (V, A, Ω, °C, …) or *No unit* for each; a chosen unit takes the number as sent.

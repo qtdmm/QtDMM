@@ -518,7 +518,8 @@ void MdiArranger::arrangeNow()
   QList<Role> roles;
   for (int i : visible)
     roles << m_roles[i];
-  const QList<QRect> rects = layout(m_area->viewport()->rect(), roles, headerHeight(), tableMinWidth(visible));
+  const QList<QRect> rects = layout(m_area->viewport()->rect(), roles, headerHeight(), tableMinWidth(visible), false, {},
+                                    graphMinWidth(visible));
   for (int k = 0; k < visible.size(); ++k)
     m_order[visible[k]]->setGeometry(rects[k]);
 }
@@ -530,7 +531,7 @@ void MdiArranger::arrangeNow()
 // anything else - and the graph in the rest, with a table in a column on the
 // right.
 MdiArranger::Node MdiArranger::ruleTree(const QRect &area, const QList<Role> &roles, bool left, int headerHeight,
-                                        int tableMinWidth, const QList<Fit> &fits)
+                                        int tableMinWidth, const QList<Fit> &fits, int graphMinWidth)
 {
   const QRect all = area.adjusted(kGap, kGap, -kGap, -kGap);
   QList<int> inst, graphs, tables;
@@ -551,8 +552,9 @@ MdiArranger::Node MdiArranger::ruleTree(const QRect &area, const QList<Role> &ro
     if (tables.isEmpty())
       return line(Qt::Vertical, graphs);
     // the table's footer (buttons, statistics) must not be squeezed, but the
-    // graph keeps at least half
-    const int tw = qMin(qMax(tableMinWidth, int(r.width() * 0.3)), r.width() / 2);
+    // graph keeps at least half, and its own minimum (its row of buttons)
+    const int tw = qMax(qMin(qMin(qMax(tableMinWidth, int(r.width() * 0.3)), r.width() / 2),
+                             r.width() - kGap - graphMinWidth), qMin(120, r.width() / 2));
     const double avail = r.width() - kGap;
     return splitNode(Qt::Horizontal, { line(Qt::Vertical, graphs), line(Qt::Vertical, tables) },
                      { (avail - tw) / avail, tw / avail });
@@ -589,6 +591,13 @@ MdiArranger::Node MdiArranger::ruleTree(const QRect &area, const QList<Role> &ro
       bestLines = lines;
       bestExtent = extent;
     }
+  }
+  // instruments on the left leave the graphs their minimum width (the row of
+  // buttons above), as far as the instruments keep a useful size
+  if (left && !graphs.isEmpty() && graphMinWidth > 0)
+  {
+    const double room = all.width() - kGap - graphMinWidth - (tables.isEmpty() ? 0 : tableMinWidth + kGap);
+    bestExtent = qMax(qMin(bestExtent, room), qMin(bestExtent, 120.0 * bestLines));
   }
   const int per = (n + bestLines - 1) / bestLines;
   // a line of instruments: no cell bigger than its content can fill (an LCD
@@ -673,12 +682,12 @@ void MdiArranger::applyTree(const Node &node, const QRect &area, QList<QRect> &r
 }
 
 QList<QRect> MdiArranger::layout(const QRect &area, const QList<Role> &roles, int headerHeight, int tableMinWidth,
-                                 bool left, const QList<Fit> &fits)
+                                 bool left, const QList<Fit> &fits, int graphMinWidth)
 {
   QList<QRect> rects(roles.size());
   if (!roles.isEmpty())
-    applyTree(ruleTree(area, roles, left, headerHeight, tableMinWidth, fits), area.adjusted(kGap, kGap, -kGap, -kGap),
-              rects);
+    applyTree(ruleTree(area, roles, left, headerHeight, tableMinWidth, fits, graphMinWidth),
+              area.adjusted(kGap, kGap, -kGap, -kGap), rects);
   return rects;
 }
 
@@ -867,6 +876,15 @@ int MdiArranger::tableMinWidth(const QList<int> &visible) const
   return w;
 }
 
+int MdiArranger::graphMinWidth(const QList<int> &visible) const
+{
+  int w = 0;
+  for (int i : visible)
+    if (m_roles[i] == Graph)
+      w = qMax(w, m_order[i]->minimumSizeHint().width());
+  return w;
+}
+
 QRect MdiArranger::cellArea() const
 {
   return m_area->viewport()->rect().adjusted(kGap, kGap, -kGap, -kGap);
@@ -914,7 +932,8 @@ void MdiArranger::doArrange()
       }
       fits << f;
     }
-    m_root = ruleTree(m_area->viewport()->rect(), roles, left, headerHeight(), tableMinWidth(visible), fits);
+    m_root = ruleTree(m_area->viewport()->rect(), roles, left, headerHeight(), tableMinWidth(visible), fits,
+                      graphMinWidth(visible));
     remapLeaves(m_root, visible);
     m_hasTree = true;
   };

@@ -39,6 +39,9 @@ public:
   GraphLegend *legend() const { return m_legend; }
   /// Text and buttons in @p text on the graph's background.
   void        setTextColor(const QColor &text);
+  /// The width of the row without the legend: margins, the state and all
+  /// the buttons (the graph's minimum width builds on it).
+  int         fixedWidth() const;
   /// For tests: the button of @p seconds (0: "All"); nullptr without one.
   QToolButton *button(int seconds) const;
 
