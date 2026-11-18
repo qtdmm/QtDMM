@@ -105,6 +105,32 @@ DeviceSettings::DeviceSettings(QWidget *parent) : QWidget(parent)
     connect(m_virtualValues, &QSpinBox::valueChanged, this, &DeviceSettings::changed);
     updateVirtualValues();
   }
+  // a microcontroller's values: the unit of each, from its label or chosen
+  {
+    m_unitsGroup = new QGroupBox(tr("Values"), this);
+    m_unitsGroup->setObjectName("ui_unitsGroup");
+    auto *grid = new QGridLayout(m_unitsGroup);
+    for (int i = 0; i < kMaxValues; ++i)
+    {
+      m_unitLabels[size_t(i)] = new QLabel(m_unitsGroup);
+      auto *combo = new QComboBox(m_unitsGroup);
+      combo->setObjectName(QString("ui_unit%1").arg(i + 1));
+      combo->addItem(tr("Automatic"), QString());
+      for (const QString &unit : DecoderTextLines::units())
+        combo->addItem(unit == QLatin1String("Ohm") ? QStringLiteral("\u03A9") : unit, unit);
+      combo->addItem(tr("No unit"), QString::fromLatin1(DecoderTextLines::kNoUnit));
+      combo->setToolTip(tr("The unit of value %1. Automatic: the unit its label names (\"V:\", \"mA:\"), else none. "
+                           "A unit chosen here takes the number as sent.").arg(i + 1));
+      m_unitLabels[size_t(i)]->setBuddy(combo);
+      m_unitCombos[size_t(i)] = combo;
+      grid->addWidget(m_unitLabels[size_t(i)], i, 0);
+      grid->addWidget(combo, i, 1);
+    }
+    grid->setColumnStretch(2, 1);
+    verticalLayout_2->insertWidget(verticalLayout_2->indexOf(ui_advancedBox) + 1, m_unitsGroup);
+    m_unitsGroup->hide();
+    setValueNames({});
+  }
   // no frames: a section title above each group, shown with it
   for (QGroupBox *group : findChildren<QGroupBox *>())
     sectionTitle(group);
@@ -411,6 +437,11 @@ void DeviceSettings::load(const QVariantMap &keys)
     m_virtualRows[size_t(i)].coupling->setCurrentText(cfgString("DMM/virtual-coupling" + n, "DC"));
     m_virtualRows[size_t(i)].formula->setText(cfgString("DMM/virtual-formula" + n, MeterSetup::kVirtualDefaults[i][1]));
   }
+  for (int i = 0; i < kMaxValues; ++i)
+  {
+    const int idx = m_unitCombos[size_t(i)]->findData(cfgString(QString("DMM/unit-%1").arg(i + 1)).trimmed());
+    m_unitCombos[size_t(i)]->setCurrentIndex(qMax(0, idx));
+  }
   baudRate->setCurrentText    (cfgString("Port settings/baud"));
   bitsCombo->setCurrentText   (cfgString("Port settings/bits", "7"));
   stopBitsCombo->setCurrentText(cfgString("Port settings/stop-bits", "1"));
@@ -455,6 +486,15 @@ void DeviceSettings::load(const QVariantMap &keys)
   if (m_dmmInfo.baudChoosable() && cfgInt("Port settings/baud") > 0)
     baudRate->setCurrentText(cfgString("Port settings/baud"));
   showPortParameters(ui_vendor->currentIndex() == 0 || m_dmmInfo.baudChoosable());
+}
+
+void DeviceSettings::setValueNames(const QStringList &names)
+{
+  for (int i = 0; i < kMaxValues; ++i)
+  {
+    const QString name = names.value(i);
+    m_unitLabels[size_t(i)]->setText(name.isEmpty() ? tr("Value %1:").arg(i + 1) : tr("Value %1 (%2):").arg(i + 1).arg(name));
+  }
 }
 
 void DeviceSettings::showPortParameters(bool show)
@@ -546,6 +586,12 @@ QVariantMap DeviceSettings::keys() const
     keys.insert("DMM/virtual-formula" + n, m_virtualRows[size_t(i)].formula->text().trimmed());
   }
   keys.insert("Port settings/baud", baudRate->currentText());
+  // only a microcontroller's, and only a chosen one: the other meters'
+  // entries stay as they were (an extra key would read as a change)
+  if (ui_vendor->currentIndex() != 0 && m_dmmInfo.unitsChoosable())
+    for (int i = 0; i < kMaxValues; ++i)
+      if (const QString unit = m_unitCombos[size_t(i)]->currentData().toString(); !unit.isEmpty())
+        keys.insert(QString("DMM/unit-%1").arg(i + 1), unit);
   keys.insert("Port settings/bits", bitsCombo->currentText());
   keys.insert("Port settings/stop-bits", stopBitsCombo->currentText());
   keys.insert("Port settings/parity", parityCombo->currentIndex());
@@ -671,6 +717,7 @@ void DeviceSettings::updateCalcMode()
   ui_protocol->setVisible(!calc && !virt);
   ui_calcGroup->setVisible(calc);
   ui_virtualGroup->setVisible(virt);
+  m_unitsGroup->setVisible(ui_vendor->currentIndex() != 0 && m_dmmInfo.unitsChoosable() && !calc && !virt && !ble && !sigrok);
   ui_bleGroup->setVisible(ble);
   const bool gatt = isGatt();
   for (QWidget *w : std::initializer_list<QWidget *>{ ui_bleKeyLabel, ui_bleKey, ui_bleMainLabel, ui_bleMain,

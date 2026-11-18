@@ -33,7 +33,8 @@ int main(int argc, char **argv)
     const QVariantMap saved {
       {"DMM/model", cfg.name}, {"Port settings/device", "/dev/ttyUSB1"}, {"Port settings/baud", "1200"},
       {"Port settings/ble-address", "AA:BB:CC:DD:EE:FF"}, {"Port settings/ble-key", "00112233445566778899aabbccddeeff"},
-      {"Port settings/sigrok-conn", "/dev/ttyUSB0"}, {"DMM/calc-expression", "u * i"}, {"DMM/number-of-values", 3}};
+      {"Port settings/sigrok-conn", "/dev/ttyUSB0"}, {"DMM/calc-expression", "u * i"}, {"DMM/number-of-values", 3},
+      {"DMM/unit-1", "°C"}, {"DMM/unit-3", "none"}};
     fresh.load(saved);
     const MeterSetup direct = MeterSetup::fromKeys(saved);
     const MeterSetup page = MeterSetup::fromKeys(fresh.keys());
@@ -46,6 +47,15 @@ int main(int argc, char **argv)
             && direct.info.framesPerReading == fresh.framesPerReading() && direct.info.externalSetup == fresh.externalSetup()
             && direct.info.rts == fresh.rts() && direct.info.dtr == fresh.dtr(),
           what + "port parameters as the page has them");
+    // a microcontroller's units: from the keys and through the page; the
+    // others have none, and the page adds no keys for them
+    const QStringList units = cfg.unitsChoosable() ? QStringList{"°C", "", "none", ""} : QStringList();
+    check(direct.info.units == units && page.info.units == units,
+          what + "units " + direct.info.units.join('|') + ", page " + page.info.units.join('|'));
+    check(cfg.unitsChoosable() == fresh.keys().contains("DMM/unit-1") && !fresh.keys().contains("DMM/unit-2"),
+          what + "unit keys of the page");
+    const QGroupBox *unitsGroup = fresh.findChild<QGroupBox *>("ui_unitsGroup");
+    check(unitsGroup && unitsGroup->isVisibleTo(&fresh) == cfg.unitsChoosable(), what + "units group shown");
     check(direct.device == page.device, what + direct.device + " != " + page.device);
     check(direct.valueCount == page.valueCount && direct.valueCount == fresh.valueCount(),
           what + QString("values %1, page %2").arg(direct.valueCount).arg(fresh.valueCount()));

@@ -30,6 +30,7 @@ class QGroupBox;
 
 #include "ui_uidevicesettings.h"
 #include "device/frameformat.h"
+#include "core/sampletypes.h"
 #include "device/dmmdecoder.h"
 #include "device/transports/calc.h"
 #include <QTimer>
@@ -115,6 +116,9 @@ public:
   bool           isGatt() const;
   /// A bench meter read through sigrok-cli: the sigrok group replaces the port.
   bool           isSigrokMeter() const;
+  /// The names the meter gave its values 1..4 (empty: none yet), shown
+  /// beside the unit choice.
+  void           setValueNames(const QStringList &names);
   /// The readings of the meters open here (DeviceSession::calcInputs()),
   /// shown as a hint below the formula.
   void           setCalcInputs(const CalcDevice::Inputs &inputs);
@@ -197,4 +201,8 @@ private:
   };
   QSpinBox      *m_virtualValues = nullptr;   ///< how many values the simulated meter has
   std::array<VirtualValue, 3> m_virtualRows;
+  /// A microcontroller's unit per value (DMMInfo::unitsChoosable()).
+  QGroupBox     *m_unitsGroup = nullptr;
+  std::array<QLabel *, kMaxValues> m_unitLabels {};
+  std::array<QComboBox *, kMaxValues> m_unitCombos {};
 };

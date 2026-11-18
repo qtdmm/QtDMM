@@ -116,12 +116,16 @@ public:
     QString sigrokExe{""};             ///< sigrok-cli path for SigrokDevice, empty otherwise
     QString sigrokDriver{""};          ///< libsigrok driver of a bench meter read through sigrok-cli ("scpi-dmm"), empty otherwise
     int   channels{0};                 ///< values the meter shows (main + secondary displays); 0 = framesPerReading
+    QStringList units;                 ///< the user's unit of values 1..4 (unitsChoosable()), empty entry = automatic
 
     /// How many values the meter has: channels, or one per frame.
     int valueCount() const { return channels > 0 ? channels : framesPerReading; }
     /// The baud rate is the user's, the model's only the default: a
     /// microcontroller's sketch sets its own (Serial.begin()).
     bool baudChoosable() const { return protocol == FrameFormat::TextLines; }
+    /// The unit of each value is the user's choice too: a microcontroller
+    /// sends numbers and names, the unit only when its label is one.
+    bool unitsChoosable() const { return protocol == FrameFormat::TextLines; }
   };
 
   explicit DmmDecoder(FrameFormat::DataFormat df);
@@ -201,6 +205,10 @@ public:
   /// The meter chosen (DMMInfo::model), for a protocol whose models read a
   /// frame differently; set before the first frame, from the GUI thread.
   virtual void setModel(const QString &model) { Q_UNUSED(model); }
+  /// The units the user chose for values 1..4 (DMMInfo::units), for a
+  /// protocol whose units are the user's (unitsChoosable()); set like
+  /// setModel(). An empty entry: the decoder's own unit.
+  virtual void setUnits(const QStringList &units) { Q_UNUSED(units); }
   /// The models (DMMInfo::name) a meter that sent @p frame can be; empty
   /// when the frames do not tell (tellsModel()).
   virtual QStringList modelsFromFrame(const QByteArray &frame) const { Q_UNUSED(frame); return {}; }

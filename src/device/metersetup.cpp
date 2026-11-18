@@ -92,6 +92,9 @@ MeterSetup MeterSetup::fromKeys(const QVariantMap &keys, const QString &sigrokEx
       s.knownModel = true;
       if (cfg.baudChoosable() && cfgInt("Port settings/baud") > 0)
         s.info.baud = cfgInt("Port settings/baud");
+      if (cfg.unitsChoosable())
+        for (int i = 1; i <= kMaxValues; ++i)
+          s.info.units << cfgString(QString("DMM/unit-%1").arg(i)).trimmed();
       break;
     }
   if (!s.knownModel)

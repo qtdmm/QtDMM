@@ -75,6 +75,7 @@
 
 ### Meters
 
+- **Microcontroller: a unit per value** — the device's settings list the values (with the names the board sent) and offer *Automatic*, a unit (V, A, Ω, °C, …) or *No unit* for each; a chosen unit takes the number as sent.
 - **Microcontroller: the graph shows all its values** — an empty graph takes every value of a connected microcontroller, not only the main one, as the Arduino IDE's plotter does.
 - **Microcontroller: a name that is a unit is the unit** — `V:3.31,A:0.12` from a sketch is now a voltage and a current (V, mA, kOhm, °C, %RH, … with SI prefixes; a single letter like `C` stays a name).
 - **Microcontroller: the baud rate is yours** — the device's settings show the baud rate for this model, saved with the device (115200 by default; the list now goes up to 2000000); the other port settings stay fixed.

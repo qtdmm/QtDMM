@@ -35,7 +35,8 @@ const QStringList kBleKeys { "Port settings/ble-address", "Port settings/ble-key
 const QStringList kSigrokKeys { "Port settings/sigrok-conn", "Port settings/sigrok-options" };
 const QStringList kCalcKeys { "DMM/calc-unit", "DMM/calc-expression" };
 const QStringList kSerialKeys { "Port settings/baud", "Port settings/bits", "Port settings/parity",
-                                "Port settings/stop-bits", "DMM/rts", "DMM/dtr", "DMM/external-setup" };
+                                "Port settings/stop-bits", "DMM/rts", "DMM/dtr", "DMM/external-setup",
+                                "DMM/unit-1", "DMM/unit-2", "DMM/unit-3", "DMM/unit-4" };   // the units: microcontroller only
 const QLatin1String kVirtualPrefix("DMM/virtual-");
 
 // "SERIAL /dev/ttyUSB0" -> "serial"; a port without type is a serial port
