@@ -21,7 +21,9 @@ XY diagram, alarms.
    the one port setting of this model you choose; the others are fixed
    (8N1).
 3. *Connect*. Each name the board sends becomes a value of the device, in
-   the order they first come, up to four. A fifth name is left out.
+   the order they first come, up to four. A fifth name is left out. An empty
+   graph takes all of them at once, as the Arduino IDE's plotter does; each
+   unit gets its axis.
 
 ## What the board sends
 

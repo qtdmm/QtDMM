@@ -83,6 +83,7 @@ static const char *kWorkspaceSuffix = "qtdmm-workspace";
 #include "ui/alarmservice.h"
 #include "ui/mdiarranger.h"
 #include "service/metercontroller.h"
+#include "device/devicetype.h"
 #include "device/meterconnection.h"
 #include "ui/designs.h"
 #include "ui/controlbar.h"
@@ -672,9 +673,15 @@ void MainWindow::createViews()
   {
     auto free = [this](const ValueRef &v)
     { return !m_session->controller(v) && !m_openingPending.contains(v.source.section(':', 1)); };
+    // a microcontroller's values all, as the Arduino IDE's plotter shows
+    // them [E 18.11.]: a board sends them to be plotted
+    QList<ValueRef> plotted { ValueRef(0, ctl->source()) };
+    if (ctl->dmm() && DeviceType::ofProtocol(ctl->dmm()->dmmInfo().protocol) == DeviceType::Microcontroller)
+      for (int id = 1; id < ctl->valueCount(); ++id)
+        plotted << ValueRef(id, ctl->source());
     for (GraphView *view : std::as_const(m_graphViews))
       if (view->model()->values().isEmpty())
-        view->model()->setValues({ ValueRef(0, ctl->source()) });
+        view->model()->setValues(plotted);
     for (MeterView *meter : m_wid->meters())
       if (free(meter->value()))
         meter->setValue(ValueRef(0, ctl->source()));
