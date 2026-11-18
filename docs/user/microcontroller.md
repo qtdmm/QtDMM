@@ -10,7 +10,12 @@ XY diagram, alarms.
 ## Setting it up
 
 1. *Add device*, the maker **Generic**, the model **Microcontroller (text
-   lines: Serial Plotter, Teleplot)**.
+   lines: Serial Plotter, Teleplot)**. *Find device* names a board with its
+   own USB as such - "Microcontroller board (Arduino)", likewise Raspberry
+   Pi Pico, ESP32 (S2, S3, C3, C6 on their own USB), Adafruit, Teensy,
+   Seeed, SparkFun, STM32 - with the microcontroller first. Boards with a
+   CH340, CP210x or FTDI chip (most clones, ESP32 DevKits) show up as that
+   chip, like a meter's cable.
 2. Choose the board's serial port. The baud rate is 115200; for another one,
    tick *External device setup* and set it.
 3. *Connect*. Each name the board sends becomes a value of the device, in

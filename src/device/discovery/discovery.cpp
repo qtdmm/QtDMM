@@ -154,6 +154,23 @@ QString Families::adapter(quint16 vid, quint16 pid)
   return QString();
 }
 
+QString Families::board(quint16 vid, quint16 pid)
+{
+  switch (vid)
+  {
+    case 0x2341:
+    case 0x2a03: return QStringLiteral("Arduino");
+    case 0x2e8a: return QStringLiteral("Raspberry Pi Pico");
+    case 0x303a: return QStringLiteral("ESP32");   // Espressif's own USB (S2, S3, C3, C6)
+    case 0x239a: return QStringLiteral("Adafruit");
+    case 0x2886: return QStringLiteral("Seeed");
+    case 0x1b4f: return QStringLiteral("SparkFun");
+    case 0x16c0: return pid == 0x0483 ? QStringLiteral("Teensy") : QString();
+    case 0x0483: return pid == 0x5740 ? QStringLiteral("STM32") : QString();
+    default: return QString();
+  }
+}
+
 // ---------------------------------------------------------------- access
 
 QString udevRules()
@@ -271,9 +288,33 @@ void SerialDiscoverer::start()
       c.key = port;
       const QString chip = p.hasVendorIdentifier() ? Families::adapter(p.vendorIdentifier(), p.productIdentifier())
                                                    : QString();
-      c.title = chip.isEmpty() ? QCoreApplication::translate("Discovery", "Serial port") : QCoreApplication::translate("Discovery", "USB-serial adapter (%1)").arg(chip);
+      const QString board = p.hasVendorIdentifier() ? Families::board(p.vendorIdentifier(), p.productIdentifier())
+                                                    : QString();
       c.detail = p.manufacturer().isEmpty() ? port : QString("%1 · %2").arg(p.manufacturer(), port);
-      c.hint = QCoreApplication::translate("Discovery", "Which meter is on it, QtDMM cannot tell yet: choose the model.");
+      if (!board.isEmpty())
+      {
+        // a board with its own USB: the microcontroller device first, the
+        // meters after it (a sketch may imitate one)
+        c.title = QCoreApplication::translate("Discovery", "Microcontroller board (%1)").arg(board);
+        c.hint = QCoreApplication::translate("Discovery", "If it prints its values as text lines (Serial Plotter, Teleplot), "
+                                                          "choose the microcontroller.");
+        c.models = Families::models(FrameFormat::TextLines, true);
+        for (const QString &m : Families::models(FrameFormat::Invalid, true))
+          if (!c.models.contains(m))
+            c.models << m;
+      }
+      else if (!chip.isEmpty())
+      {
+        // the chip of meter cables and of many boards (Nano clones, ESP32 DevKit) alike
+        c.title = QCoreApplication::translate("Discovery", "USB-serial adapter (%1)").arg(chip);
+        c.hint = QCoreApplication::translate("Discovery", "A meter's cable or a microcontroller board, QtDMM cannot tell yet: "
+                                                          "choose the model.");
+      }
+      else
+      {
+        c.title = QCoreApplication::translate("Discovery", "Serial port");
+        c.hint = QCoreApplication::translate("Discovery", "Which meter is on it, QtDMM cannot tell yet: choose the model.");
+      }
       c.keys.insert("Port settings/device", SerialDevice::stableDevice("SERIAL " + port));   // by-id, as saved
       const AccessProblem a = accessProblem(port, false);
       c.problem = a.problem;

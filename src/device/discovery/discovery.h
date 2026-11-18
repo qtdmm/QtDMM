@@ -85,6 +85,10 @@ std::optional<Family> forUsb(quint16 vid, quint16 pid);
 /// The chip of a USB-serial adapter ("FTDI", "CH340", "PL2303", "CP210x"),
 /// empty when unknown.
 QString     adapter(quint16 vid, quint16 pid);
+/// The maker of a microcontroller board with its own USB ("Arduino",
+/// "Raspberry Pi Pico", "ESP32", "Teensy", ...), by VID (and PID); empty for
+/// anything else - a board with a CH340, CP210x or FTDI chip says only that.
+QString     board(quint16 vid, quint16 pid);
 /// The models (DMMInfo::name) with @p format, the serial ones (baud > 0)
 /// or the others; all serial models for FrameFormat::Invalid.
 QStringList models(FrameFormat::DataFormat format, bool serial);
