@@ -56,7 +56,8 @@ ControlBar::ControlBar(QWidget *parent) :
     { { "rel", QT_TR_NOOP("REL"), QT_TR_NOOP("Relative reading: the current value becomes zero"), true },
       { "zero", QT_TR_NOOP("ZERO"), QT_TR_NOOP("Zero the capacitance reading, with the leads open"), false },
       { "minmax", QT_TR_NOOP("MIN/MAX"), QT_TR_NOOP("The meter's own minimum and maximum"), true },
-      { "peak", QT_TR_NOOP("PEAK"), QT_TR_NOOP("Peak minimum and maximum"), true } },
+      { "peak", QT_TR_NOOP("PEAK"), QT_TR_NOOP("Peak minimum and maximum"), true },
+      { "inrush", QT_TR_NOOP("INRUSH"), QT_TR_NOOP("Inrush current: the peak when a motor starts"), true } },
     // the UNI-T iENV meters (UT333BT, UT353BT, UT363BT, UT383BT): a key for each mode
     { { "max", QT_TR_NOOP("MAX"), QT_TR_NOOP("The meter shows its maximum"), true },
       { "min", QT_TR_NOOP("MIN"), QT_TR_NOOP("The meter shows its minimum"), true },
@@ -66,7 +67,8 @@ ControlBar::ControlBar(QWidget *parent) :
       { "weighting", QT_TR_NOOP("FAST/SLOW"), QT_TR_NOOP("Fast or slow time weighting"), false } },
     // HOLD on the right, as on the UT60BT, where it shares its key with LIGHT
     { { "lamp", QT_TR_NOOP("LIGHT"), QT_TR_NOOP("The display backlight"), false },
-      { "hold", QT_TR_NOOP("HOLD"), QT_TR_NOOP("Freeze the display"), true } },
+      { "hold", QT_TR_NOOP("HOLD"), QT_TR_NOOP("Freeze the display"), true },
+      { "autohold", QT_TR_NOOP("A-HOLD"), QT_TR_NOOP("Auto hold: the display freezes once the reading is steady"), true } },
   };
   for (const QList<Key> &keys : groups)
   {
@@ -162,7 +164,7 @@ bool ControlBar::supported(const DmmDecoder::DMMInfo &info)
          || info.protocol == FrameFormat::UniTUT202BT || info.protocol == FrameFormat::UniTiENV
          || info.protocol == FrameFormat::UniTUT381A || info.protocol == FrameFormat::UniTUT372D
          || info.protocol == FrameFormat::UniTUT382A || info.protocol == FrameFormat::UniTUT325F
-         || info.protocol == FrameFormat::UniTUT117C
+         || info.protocol == FrameFormat::UniTUT117C || info.protocol == FrameFormat::UniTUT219PV
          || info.protocol == FrameFormat::ZotekBLE || info.protocol == FrameFormat::OwonBLE
          || info.protocol == FrameFormat::OwonBLE15 || info.protocol == FrameFormat::UniTUT181A
          || info.protocol == FrameFormat::VoltcraftVC880 || info.protocol == FrameFormat::VoltcraftVC890

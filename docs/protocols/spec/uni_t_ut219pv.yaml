@@ -1,0 +1,54 @@
+protocol: UniTUT219PV
+decoder: src/device/decoders/uni_t_ut219pv.cpp
+devices: [Uni-Trend UT219PV]
+frames_per_reading: 1
+sources:
+  - "ablage/uni-t/uni-t-protocols/ut219pv.md (notes decompiled from UNI-T's multimeter app: transport §1, frame §2, commands §3, live frame §5, functions §6)"
+
+# UNI-T UT219PV clamp meter for photovoltaics over Bluetooth LE, the ISSC
+# service (write ...8841..., notify ...9616...). Frames: AB CD, a length
+# (BE16, frame = length + 4), command, data, 16-bit BE sum (unchecked, as
+# in the app). Polled: AB CD 00 04 05 00 01 81; the reading, command 0x02,
+# 38 bytes:
+#
+#   5     function       1-19 (DC A, DC V, AC V/Hz, AC V low-pass/Hz, DC
+#                        power/DC A, DC V/DC A, AC A/Hz, AC A low-pass/Hz,
+#                        flex clamp AC A/Hz and low-pass, inrush/peak A (11,
+#                        12), Ω, diode, capacitance, DC mV, °C/°F, °F/°C,
+#                        19 flex clamp missing)
+#   6     range 1        ASCII digit
+#   7-12  main value     ASCII, space padded
+#   13-15 main unit      ASCII: "oC" °C, "oF" °F, "o" Ω, "u" µ
+#   16    range 2
+#   17-22 second value
+#   23-25 second unit
+#   26-28 stored count   ASCII
+#   29-30 OL flags       main, second: '1' OL, '2' -OL
+#   31    MAX/MIN        values unknown, not shown
+#   32    battery level  ASCII digit, scale unknown, left out
+#   33    flags          bit 3 AUTO, bit 2 HOLD, bit 1 ZERO, bit 0 polarity
+#   34-35 flags          CLR, backlight, MS, HV warning; Mr
+#
+# Main display value 1, second value 2; the vectors check the first.
+# SYNTHETIC vectors: built from that layout, no capture of a meter exists.
+vectors:
+  - source_line: "AC V 230.4 V, 50.00 Hz (synthetic)"
+    bytes: AB CD 00 22 02 03 30 20 32 33 30 2E 34 56 20 20 30 20 35 30 2E 30 30 48 7A 20 20 20 30 30 30 00 34 00 00 00 06 A5
+    reading: {value: "230.4", unit: "V"}
+    expect: {special: "AC", val: "230.4"}
+  - source_line: "DC V 812.5 V, DC A 9.87 A (synthetic)"
+    bytes: AB CD 00 22 02 06 30 20 38 31 32 2E 35 56 20 20 30 20 20 39 2E 38 37 41 20 20 20 20 30 30 30 00 34 00 00 00 06 51
+    reading: {value: "812.5", unit: "V"}
+    expect: {special: "DC", val: "812.5"}
+  - source_line: "inrush 45.6 A, peak 61.2 A (synthetic)"
+    bytes: AB CD 00 22 02 0B 30 20 20 34 35 2E 36 41 20 20 30 20 20 36 31 2E 32 41 20 20 20 20 30 30 30 00 34 00 00 00 06 21
+    reading: {value: "45.6", unit: "A"}
+    expect: {special: "AC", val: "45.6"}
+  - source_line: "23.5 °C, 74.3 °F (synthetic)"
+    bytes: AB CD 00 22 02 11 30 20 20 32 33 2E 35 6F 43 20 30 20 20 37 34 2E 33 6F 46 20 20 20 30 30 30 00 34 00 00 00 06 CC
+    reading: {value: "23.5", unit: "C"}
+    expect: {special: "TE", val: "23.5"}
+  - source_line: "Ω overload (synthetic)"
+    bytes: AB CD 00 22 02 0D 30 20 20 20 20 20 20 4B 6F 20 30 20 20 20 20 20 20 20 20 20 20 20 30 31 30 00 34 00 00 00 05 C8
+    reading: {value: "OL", unit: "kOhm"}
+    expect: {special: "OH", val: "OL"}

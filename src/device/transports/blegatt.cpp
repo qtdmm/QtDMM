@@ -4,6 +4,7 @@
 #include "device/decoders/brymen_bm78xbt.h"
 #include "device/decoders/uni_t_ut381a.h"
 #include "device/decoders/uni_t_ut117c.h"
+#include "device/decoders/uni_t_ut219pv.h"
 #include "device/decoders/uni_t_ut320i.h"
 #include "device/decoders/uni_t_ut325f.h"
 #include "device/decoders/uni_t_ut382a.h"
@@ -96,6 +97,9 @@ std::optional<BleGattDevice::Profile> BleGattDevice::profile(FrameFormat::DataFo
     case FrameFormat::UniTUT117C:
       // the name UNI-T's app wants exactly; polled, it streams nothing
       return Profile{ kIsscService, kIsscNotify, { kIsscWrite }, { "UT117C" } };
+    case FrameFormat::UniTUT219PV:
+      // the name UNI-T's app wants exactly; polled, it streams nothing
+      return Profile{ kIsscService, kIsscNotify, { kIsscWrite }, { "UT219PV" } };
     case FrameFormat::UniTUT61Plus:   // UT161 built in; UT61B+/D+/E+ through the UT-D07B adapter
     case FrameFormat::UniTUT181A:     // through the UT-D07B adapter
     case FrameFormat::UniTUT171:      // the UT171B/C through the UT-D07B adapter
