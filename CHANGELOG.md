@@ -74,6 +74,7 @@
 
 ### Meters
 
+- **Microcontroller (text lines)** — an Arduino, ESP32 or Pico sending its values over USB serial in the Arduino Serial Plotter's or Teleplot's format, told apart line by line; each name becomes a value, up to four; Teleplot units (`§V`), `|xy` as two values for the XY diagram. A new device kind *Microcontroller* with its own symbol, and a help page *Your own board* with example sketches.
 - **UNI-T UT219PV clamp meter for photovoltaics over Bluetooth LE** (`*`, untried) — polled; main and second display as two values (V/A with Hz, DC V with DC A, inrush with peak current, °C with °F, …), OL, HOLD, ZERO. Keys SET, HOLD, MIN/MAX, LPF, ZERO and two new keys **INRUSH** and **A-HOLD** (auto hold); a save key pressed on the meter is answered as UNI-T's app does. From the notes decompiled from UNI-T's multimeter app; its stored readings are left out.
 - **UNI-T UT117C multimeter over Bluetooth LE** (`*`, untried) — polled; AC/DC V and mV, Ω, continuity, diode, capacitance, LoZ, Hz, NCV (HI/LO), A and the clamp input; OL, HOLD, REL, low battery. Keys SELECT, RANGE/AUTO, REL, MIN/MAX, HOLD, LIGHT and a new key **LPF** (low-pass filter), greyed out in the functions where the meter ignores them. From the notes decompiled from UNI-T's multimeter app and libreble.
 - **BSIDE ZT-5B, ZT-5BQ, ZT-300AB and BABATools AD900** (`*`, untried) — more brands of the ZOTEK Bluetooth LE family. The AD900's packet layout is unknown; QtDMM reads all four, so it does not suggest another model for it.

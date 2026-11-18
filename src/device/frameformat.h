@@ -98,6 +98,7 @@ public:
     UniTUT325F,
     UniTUT117C,
     UniTUT219PV,
+    TextLines,
     EndOfList              // new stuff always before!
   };
 

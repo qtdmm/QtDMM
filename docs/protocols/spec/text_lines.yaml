@@ -1,0 +1,62 @@
+protocol: TextLines
+decoder: src/device/decoders/text_lines.cpp
+devices: [Generic Microcontroller (text lines: Serial Plotter, Teleplot)]
+frames_per_reading: 1
+sources:
+  - "Arduino IDE Serial Plotter: numbers or label:number per line, as sketches commonly print them"
+  - "https://github.com/nesnes/teleplot (README: the line format A:B:C§D|E)"
+
+# Text lines of a microcontroller over USB serial (115200 8N1 by default),
+# each ending with LF (CR before it dropped). Two formats, told apart per
+# line:
+#
+#   Arduino Serial Plotter  512 | 512,300,128 | voltage:3.31 current:0.12
+#                           numbers or label:number, separated by commas,
+#                           spaces or tabs; one reading per line
+#   Teleplot                name:value | name:ms:value | name:value§unit |
+#                           name:x:y|xy | name:t1:v1;t2:v2 | flags after |
+#                           one variable per line
+#
+# A line with §, |, ; or name:a:b is Teleplot, any other the Serial
+# Plotter's. Each name takes a value when it first comes, up to four;
+# Teleplot's time stamps are not used (the last of several points counts),
+# |xy gives name.x and name.y, text/log/3D lines are skipped. The vectors
+# are built from the formats, no capture of a board; they run through one
+# decoder, so the names stay within four (1, 2, 3, voltage).
+vectors:
+  - source_line: "Serial Plotter: one number (512)"
+    bytes: 35 31 32 0D 0A
+    reading: {value: "512", unit: ""}
+    expect: {val: "512"}
+  - source_line: "Serial Plotter: three numbers, the first counts here (512,300,128)"
+    bytes: 35 31 32 2C 33 30 30 2C 31 32 38 0D 0A
+    reading: {value: "512", unit: ""}
+    expect: {val: "512"}
+  - source_line: "Serial Plotter: tabs and a negative number (1.5<TAB>2.5<TAB>-3)"
+    bytes: 31 2E 35 09 32 2E 35 09 2D 33 0D 0A
+    reading: {value: "1.5", unit: ""}
+    expect: {val: "1.5"}
+  - source_line: "Serial Plotter: labels (voltage:3.31,current:0.12)"
+    bytes: 76 6F 6C 74 61 67 65 3A 33 2E 33 31 2C 63 75 72 72 65 6E 74 3A 30 2E 31 32 0D 0A
+    reading: {value: "3.31", unit: ""}
+    expect: {val: "3.31"}
+  - source_line: "Teleplot: unit (voltage:3.31§V)"
+    bytes: 76 6F 6C 74 61 67 65 3A 33 2E 33 31 C2 A7 56 0D 0A
+    reading: {value: "3.31", unit: "V"}
+    expect: {val: "3.31"}
+  - source_line: "Teleplot: time stamp (voltage:1627551892437:1.5)"
+    bytes: 76 6F 6C 74 61 67 65 3A 31 36 32 37 35 35 31 38 39 32 34 33 37 3A 31 2E 35 0D 0A
+    reading: {value: "1.5", unit: ""}
+    expect: {val: "1.5"}
+  - source_line: "Teleplot: several points, the last counts, unit mV (voltage:100:1;200:2;300:3§mV)"
+    bytes: 76 6F 6C 74 61 67 65 3A 31 30 30 3A 31 3B 32 30 30 3A 32 3B 33 30 30 3A 33 C2 A7 6D 56 0D 0A
+    reading: {value: "3", unit: "mV"}
+    expect: {val: "3"}
+  - source_line: "Teleplot: a flag statsd left (voltage:1234|g)"
+    bytes: 76 6F 6C 74 61 67 65 3A 31 32 33 34 7C 67 0D 0A
+    reading: {value: "1234", unit: ""}
+    expect: {val: "1234"}
+  - source_line: "Teleplot: exponent (voltage:12.34e+2)"
+    bytes: 76 6F 6C 74 61 67 65 3A 31 32 2E 33 34 65 2B 32 0D 0A
+    reading: {value: "1234", unit: ""}
+    expect: {val: "1234"}

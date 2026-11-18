@@ -28,6 +28,7 @@ enum Type
   SoundLevel,
   Anemometer,
   Tachometer,      ///< revolutions (optical or contact), a measuring wheel's speed and length
+  Microcontroller, ///< a board printing its values as text lines (Serial Plotter, Teleplot)
   BatteryMonitor,
   SolarCharger,
   Inverter,

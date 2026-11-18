@@ -184,6 +184,7 @@ LcdWidget::Look LcdWidget::lookOf(DeviceType::Type type)
     case DeviceType::Tachometer:
     case DeviceType::Environment:
       return { false, AnnHold | AnnMax | AnnMin | AnnAvg };
+    case DeviceType::Microcontroller:   // plain numbers, no meter's annunciators
     case DeviceType::BatteryMonitor:
     case DeviceType::SolarCharger:
     case DeviceType::Inverter:

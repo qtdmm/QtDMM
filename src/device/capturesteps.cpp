@@ -142,6 +142,11 @@ QList<Step> forType(DeviceType::Type type)
                                                       "Without a wheel, skip this step."),
            quantity(Quantity::LinearSpeed)),
     };
+  case DeviceType::Microcontroller:
+    return {
+      step("lines", QT_TRANSLATE_NOOP("CaptureSteps", "Let the board print its values for a few seconds, as it does for the "
+                                                      "Serial Plotter or Teleplot.")),
+    };
   case DeviceType::SoundLevel:
     return {
       step("spl", QT_TRANSLATE_NOOP("CaptureSteps", "Measure the sound level of the room."),

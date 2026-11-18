@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-8 -8 216 216" width="216" height="216">
+  <!-- Microcontroller board (Arduino, ESP32, Pico ...) sending text lines over USB serial. Template: #FF00FF = primary, #00FFFF = secondary, #FFFF00 = outline (replaced at build time; outline dark grey in light design, light in dark design). -->
+  <style>
+    .primary { fill: #FF00FF; }
+    .secondary { fill: #00FFFF; }
+    .light { fill: #E6E8EA; }
+    .key { fill: #8A9096; }
+    .dark { fill: #1E2124; }
+    .trace { fill: none; stroke: #E6E8EA; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+  </style>
+  <!-- the USB socket on the left edge -->
+  <rect class="key" x="0" y="80" width="30" height="40" rx="4" stroke="#FFFF00" stroke-width="2" vector-effect="non-scaling-stroke"/>
+  <rect class="key" x="0" y="80" width="30" height="40" rx="4"/>
+  <rect class="dark" x="6" y="92" width="14" height="16" rx="2"/>
+  <!-- the board -->
+  <rect class="primary" x="20" y="36" stroke="#FFFF00" stroke-width="2" vector-effect="non-scaling-stroke" width="172" height="128" rx="10"/>
+  <rect class="primary" x="20" y="36" width="172" height="128" rx="10"/>
+  <rect class="secondary" x="28" y="44" width="156" height="112" rx="6"/>
+  <!-- pin headers, top and bottom -->
+  <g class="key">
+    <rect x="44" y="48" width="132" height="14" rx="2"/>
+    <rect x="44" y="138" width="132" height="14" rx="2"/>
+  </g>
+  <g class="dark">
+    <circle cx="52" cy="55" r="3"/><circle cx="68" cy="55" r="3"/><circle cx="84" cy="55" r="3"/><circle cx="100" cy="55" r="3"/>
+    <circle cx="116" cy="55" r="3"/><circle cx="132" cy="55" r="3"/><circle cx="148" cy="55" r="3"/><circle cx="164" cy="55" r="3"/>
+    <circle cx="52" cy="145" r="3"/><circle cx="68" cy="145" r="3"/><circle cx="84" cy="145" r="3"/><circle cx="100" cy="145" r="3"/>
+    <circle cx="116" cy="145" r="3"/><circle cx="132" cy="145" r="3"/><circle cx="148" cy="145" r="3"/><circle cx="164" cy="145" r="3"/>
+  </g>
+  <!-- the chip with its legs -->
+  <g class="key">
+    <rect x="98" y="74" width="4" height="8"/><rect x="110" y="74" width="4" height="8"/><rect x="122" y="74" width="4" height="8"/><rect x="134" y="74" width="4" height="8"/>
+    <rect x="98" y="118" width="4" height="8"/><rect x="110" y="118" width="4" height="8"/><rect x="122" y="118" width="4" height="8"/><rect x="134" y="118" width="4" height="8"/>
+  </g>
+  <rect class="dark" x="92" y="80" width="52" height="40" rx="3"/>
+  <circle class="key" cx="99" cy="87" r="2.5"/>
+  <!-- a power LED and a plotted line: the values it sends -->
+  <circle class="light" cx="168" cy="88" r="5"/>
+  <path class="trace" d="M40 112 Q50 76 60 100 T80 92"/>
+</svg>

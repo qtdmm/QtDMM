@@ -76,6 +76,8 @@ Type ofProtocol(FrameFormat::DataFormat protocol)
       return Environment;
     case FrameFormat::UniTUT372D:
       return Tachometer;
+    case FrameFormat::TextLines:
+      return Microcontroller;
     case FrameFormat::VictronBLE:
       return BatteryMonitor;
     case FrameFormat::Invalid:
@@ -180,7 +182,7 @@ QList<std::pair<QString, QString>> exceptions()
 QString id(Type type)
 {
   static const char *const ids[] = { "handheld_dmm", "bench_dmm", "clamp_meter", "thermometer", "luxmeter",
-                                     "environment", "sound_level", "anemometer", "tachometer", "battery_monitor",
+                                     "environment", "sound_level", "anemometer", "tachometer", "microcontroller", "battery_monitor",
                                      "solar_charger", "inverter", "virtual", "generic" };
   return QString::fromLatin1(ids[type]);
 }
@@ -198,6 +200,7 @@ QString displayName(Type type)
     case SoundLevel:     return QCoreApplication::translate("DeviceType", "Sound level meter");
     case Anemometer:     return QCoreApplication::translate("DeviceType", "Anemometer");
     case Tachometer:     return QCoreApplication::translate("DeviceType", "Tachometer");
+    case Microcontroller: return QCoreApplication::translate("DeviceType", "Microcontroller");
     case BatteryMonitor: return QCoreApplication::translate("DeviceType", "Battery monitor");
     case SolarCharger:   return QCoreApplication::translate("DeviceType", "Solar charge controller");
     case Inverter:       return QCoreApplication::translate("DeviceType", "Inverter");
