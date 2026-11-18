@@ -1,0 +1,46 @@
+protocol: UniTUT381A
+decoder: src/device/decoders/uni_t_ut381a.cpp
+devices: [Uni-Trend UT381A]
+frames_per_reading: 1
+sources:
+  - "ablage/uni-t/uni-t-protocols/ut381a.md (notes decompiled from UNI-T's iENV app: transport §1, frame §2, commands §3, live frame §4.1)"
+
+# UNI-T UT381A luxmeter over Bluetooth LE, the iENV service FF12 (write
+# FF01, notify FF02). Frames:
+#
+#   0-1   AA BB          header
+#   2     length         type + payload + 2 (a frame is length + 3 bytes)
+#   3     type           1 live, 2 settings, 3 HOLD, ... (§4)
+#   4..   payload
+#   last  16-bit BE sum of the bytes before (the app checks none it gets)
+#
+# Live frames (type 1, 15 bytes) flow after "Start live", AA BB 03 39 01 A1:
+#   4     mode           0 live, 1 MAX, 2 MIN, 3 AVG
+#   5     flag           bit 7 overload, bits 0-2 battery level 0..5
+#   6-9   value          float32 big-endian, always lux (the app shows abs())
+#   10-12 extra time     unused
+# The app converts lux to fc (x 0.093) when the settings frame (type 2,
+# byte 4 bit 7) says fc, and shows two decimals below 100, else one.
+#
+# SYNTHETIC vectors: built from that layout, no capture of a meter exists.
+vectors:
+  - source_line: "live 523.4 lx, battery 5 (synthetic)"
+    bytes: AA BB 0C 01 00 05 44 02 D9 9A 00 00 00 03 30
+    reading: {value: "523.4", unit: "lx"}
+    expect: {val: "523.4"}
+  - source_line: "MAX 45.67 lx (synthetic)"
+    bytes: AA BB 0C 01 01 05 42 36 AE 14 00 00 00 02 B2
+    reading: {value: "45.67", unit: "lx"}
+    expect: {val: "45.67"}
+  - source_line: "MIN 12.50 lx, battery 4 (synthetic)"
+    bytes: AA BB 0C 01 02 04 41 48 00 00 00 00 00 02 01
+    reading: {value: "12.50", unit: "lx"}
+    expect: {val: "12.50"}
+  - source_line: "AVG 1234.5 lx (synthetic)"
+    bytes: AA BB 0C 01 03 05 44 9A 50 00 00 00 00 02 A8
+    reading: {value: "1234.5", unit: "lx"}
+    expect: {val: "1234.5"}
+  - source_line: "overload, flag bit 7 (synthetic)"
+    bytes: AA BB 0C 01 00 85 00 00 00 00 00 00 00 01 F7
+    reading: {value: "OL", unit: "lx"}
+    expect: {val: "OL"}

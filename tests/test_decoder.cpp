@@ -68,6 +68,37 @@ int main(int argc, char **argv)
     expect(ut60bt, "minmax", "");
     expect(ut60bt, "peak", "");
     expect(ut60bt, "nosuchkey", "");
+    // UT381A (synthetic frames, ut381a.md): HOLD sends 0x31 with the other
+    // state than the meter's last; the settings frame switches the unit to
+    // fc (lux x 0.093); the live frame's mode reaches the states
+    {
+      auto ut381a = DmmDecoder::getInstance(FrameFormat::UniTUT381A);
+      auto bad = [&](const char *what)
+      {
+        qWarning() << "UT381A:" << what;
+        ++problems;
+      };
+      const QByteArray live = QByteArray::fromHex("aabb0c0100054402d99a0000000330");
+      if (ut381a->keyRequest("hold") != QByteArray::fromHex("aabb043101019b"))
+        bad("HOLD while not held is not 31 01");
+      if (ut381a->decode(QByteArray::fromHex("aabb040301016d"), 0))
+        bad("the HOLD frame gives a reading");
+      if (ut381a->keyRequest("hold") != QByteArray::fromHex("aabb043100019a"))
+        bad("HOLD while held is not 31 00");
+      const auto held = ut381a->decode(live, 0);
+      if (!held || !held->hold || held->main().unit != "lx" || held->main().val != "523.4")
+        bad("the live frame after HOLD: not 523.4 lx held");
+      ut381a->decode(QByteArray::fromHex("aabb0702e00300000251"), 0);
+      const auto fc = ut381a->decode(live, 0);
+      if (!fc || fc->main().unit != "fc" || fc->main().val != "48.68")
+        bad(qPrintable("the settings frame's fc: got " + (fc ? fc->main().val + " " + fc->main().unit : QString("none"))));
+      const auto max = DmmDecoder::getInstance(FrameFormat::UniTUT381A)
+                         ->decode(QByteArray::fromHex("aabb0c0101054236ae1400000002b2"), 0);
+      if (!max || !(max->main().states & SampleFlag::Max))
+        bad("mode 1 is not MAX");
+      if (DmmDecoder::getInstance(FrameFormat::UniTUT381A)->keyRequest("minmax").size())
+        bad("a key other than HOLD gives a frame");
+    }
     expect(ut61plus, "hold", "abcd034a01c5");
     expect(ut61plus, "minmax", "abcd034101bc");
     expect(ut61plus, "minmax_off", "abcd034201bd");
