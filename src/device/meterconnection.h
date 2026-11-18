@@ -164,6 +164,11 @@ protected:
   int                   m_reconnectSeconds = 5;
   int                   m_secondsInError = 0;
   QElapsedTimer         m_lastFrame;            ///< since the last complete frame (or open)
+  /// The models whose data the meter sends when its frames name others than
+  /// the one it was set up as (DmmDecoder::tellsModel()), checked with the
+  /// first frame after initDecoder(); empty: as set up.
+  QStringList           m_otherModels;
+  bool                  m_modelChecked = false;
   QString               m_name;
   bool                  m_consoleLogging;
   QString               m_consoleName;

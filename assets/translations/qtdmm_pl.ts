@@ -1737,13 +1737,13 @@
     </message>
     <message>
         <location filename="../../src/ui/controlbar.cpp" line="44"/>
-        <location filename="../../src/ui/controlbar.cpp" line="188"/>
+        <location filename="../../src/ui/controlbar.cpp" line="191"/>
         <source>NCV/PEAK</source>
         <translation>NCV/PEAK</translation>
     </message>
     <message>
         <location filename="../../src/ui/controlbar.cpp" line="44"/>
-        <location filename="../../src/ui/controlbar.cpp" line="189"/>
+        <location filename="../../src/ui/controlbar.cpp" line="192"/>
         <source>Non-contact voltage; held, peak capture (AC V and AC A)</source>
         <translation>Bezdotykowy wykrywacz napięcia; przytrzymany: wartość szczytowa (AC V i AC A)</translation>
     </message>
@@ -1893,12 +1893,12 @@
         <translation>Przytrzymaj klawisz, aby wyjść, jak na mierniku.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="188"/>
+        <location filename="../../src/ui/controlbar.cpp" line="191"/>
         <source>NCV</source>
         <translation>NCV</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="189"/>
+        <location filename="../../src/ui/controlbar.cpp" line="192"/>
         <source>Non-contact voltage</source>
         <translation>Napięcie bezdotykowe</translation>
     </message>
@@ -2862,12 +2862,12 @@ a potem wyloguj się i zaloguj ponownie.</translation>
 <context>
     <name>FoldButton</name>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="321"/>
+        <location filename="../../src/ui/controlbar.cpp" line="328"/>
         <source>Show controls</source>
         <translation>Pokaż przyciski</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="321"/>
+        <location filename="../../src/ui/controlbar.cpp" line="328"/>
         <source>Hide controls</source>
         <translation>Ukryj przyciski</translation>
     </message>
@@ -5970,138 +5970,143 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
 <context>
     <name>MeterConnection</name>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="218"/>
+        <location filename="../../src/device/meterconnection.cpp" line="220"/>
         <source>Error creating port %1.</source>
         <translation>Błąd tworzenia portu %1.</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="239"/>
+        <location filename="../../src/device/meterconnection.cpp" line="241"/>
         <source>Missing Permission</source>
         <translation>Brak uprawnień</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="242"/>
+        <location filename="../../src/device/meterconnection.cpp" line="244"/>
         <source>No such device %1.</source>
         <translation>Brak urządzenia %1.</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="245"/>
+        <location filename="../../src/device/meterconnection.cpp" line="247"/>
         <source>Error opening %1.
 DMM connected and switched on?</source>
         <translation>Błąd otwierania %1.
 Czy multimetr jest podłączony i włączony?</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="257"/>
+        <location filename="../../src/device/meterconnection.cpp" line="259"/>
         <source>Error configuring serial port %1.</source>
         <translation>Błąd konfiguracji portu szeregowego %1.</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="311"/>
+        <location filename="../../src/device/meterconnection.cpp" line="313"/>
         <source>Connecting ...</source>
         <translation>Łączenie…</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="335"/>
+        <location filename="../../src/device/meterconnection.cpp" line="337"/>
         <source>not connected</source>
         <translation>niepołączony</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="336"/>
+        <location filename="../../src/device/meterconnection.cpp" line="338"/>
         <source>connecting ...</source>
         <translation>łączenie…</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="338"/>
+        <location filename="../../src/device/meterconnection.cpp" line="340"/>
         <source>no data</source>
         <translation>brak danych</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="339"/>
+        <location filename="../../src/device/meterconnection.cpp" line="341"/>
         <source>no connection</source>
         <translation>brak połączenia</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="370"/>
+        <location filename="../../src/device/meterconnection.cpp" line="372"/>
         <source>Lost connection to %1.</source>
         <translation>Utracono połączenie z %1.</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="206"/>
-        <location filename="../../src/device/meterconnection.cpp" line="374"/>
-        <location filename="../../src/device/meterconnection.cpp" line="458"/>
+        <location filename="../../src/device/meterconnection.cpp" line="208"/>
+        <location filename="../../src/device/meterconnection.cpp" line="376"/>
+        <location filename="../../src/device/meterconnection.cpp" line="460"/>
         <source>Retrying every %1 s.</source>
         <translation>Ponowna próba co %1 s.</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="400"/>
+        <location filename="../../src/device/meterconnection.cpp" line="402"/>
         <source>Bluetooth</source>
         <translation>Bluetooth</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="403"/>
+        <location filename="../../src/device/meterconnection.cpp" line="405"/>
         <source>network</source>
         <translation>sieć</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="411"/>
+        <location filename="../../src/device/meterconnection.cpp" line="413"/>
         <source>serial port</source>
         <translation>port szeregowy</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="419"/>
+        <location filename="../../src/device/meterconnection.cpp" line="421"/>
         <source>connected (%1)</source>
         <translation>połączono (%1)</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="429"/>
+        <location filename="../../src/device/meterconnection.cpp" line="431"/>
         <source>Access denied for %1.</source>
         <translation>Odmowa dostępu do %1.</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="441"/>
+        <location filename="../../src/device/meterconnection.cpp" line="443"/>
         <source>Not connected</source>
         <translation>Niepołączony</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="217"/>
+        <location filename="../../src/device/meterconnection.cpp" line="219"/>
         <source>This QtDMM was built without Bluetooth support.</source>
         <translation>Ten QtDMM zbudowano bez obsługi Bluetooth.</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="393"/>
+        <location filename="../../src/device/meterconnection.cpp" line="395"/>
         <source>Simulated</source>
         <translation>Symulowane</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="393"/>
+        <location filename="../../src/device/meterconnection.cpp" line="395"/>
         <source>Calculated</source>
         <translation>Obliczane</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="471"/>
+        <location filename="../../src/device/meterconnection.cpp" line="473"/>
         <source>Connecting to %1 over Bluetooth ...</source>
         <translation>Łączenie z %1 przez Bluetooth ...</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="520"/>
+        <location filename="../../src/device/meterconnection.cpp" line="530"/>
+        <source>%1 sends the data of a %2: choose that model in its settings</source>
+        <translation>%1 wysyła dane modelu %2: wybierz ten model w jego ustawieniach</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/meterconnection.cpp" line="536"/>
         <source>Capture only %1</source>
         <translation>Tylko zapis ramek %1</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="522"/>
+        <location filename="../../src/device/meterconnection.cpp" line="538"/>
         <source>Error %1</source>
         <translation>Błąd %1</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="350"/>
+        <location filename="../../src/device/meterconnection.cpp" line="352"/>
         <source>The USB cable answers, but the meter sends nothing.
 Switch on the meter&apos;s serial output (on UNI-T meters: hold the RS232/USB button).</source>
         <translation>Kabel USB odpowiada, ale multimetr nic nie wysyła.
 Włącz wyjście szeregowe multimetru (w UNI-T: przytrzymaj przycisk RS232/USB).</translation>
     </message>
     <message>
-        <location filename="../../src/device/meterconnection.cpp" line="352"/>
+        <location filename="../../src/device/meterconnection.cpp" line="354"/>
         <source>Timeout on device %1.
 DMM connected and switched on?</source>
         <translation>Przekroczono czas oczekiwania na %1.
