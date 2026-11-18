@@ -549,17 +549,19 @@ double LcdWidget::drawUnit(QPainter &p, const QPointF &origin, double h, const Q
 
 namespace
 {
+// the drawn annunciators are marked by a leading \x01, a literal of its own:
+// "\x01battery" read "ba" as hex digits too (MSVC refuses it)
 // the diode annunciator is drawn, not typed: the usual schematic symbol
 // (triangle, bar, a line through) as on a meter's LCD
-const QString kDiodeFlag = QStringLiteral("\x01diode");
+const QString kDiodeFlag = QStringLiteral("\x01" "diode");
 double diodeWidth(double fontPx) { return fontPx * 1.7; }
 // HOLD is drawn too: a filled square with an H cut out, the symbol of the
 // old hold.xpm and of many meters' LCDs
-const QString kHoldFlag = QStringLiteral("\x01hold");
+const QString kHoldFlag = QStringLiteral("\x01" "hold");
 double holdWidth(double fontPx) { return fontPx * 0.95; }
 // the battery: a cell lying down, its contact on the right, with up to three
 // bars inside (low, mid, full)
-const QString kBatteryFlag = QStringLiteral("\x01battery");
+const QString kBatteryFlag = QStringLiteral("\x01" "battery");
 double batteryWidth(double fontPx) { return fontPx * 1.5; }
 // the gap after annunciator @p t when @p next follows: "AC+DC" stays together
 double flagGap(const QString &t, const QString &next, double gap)
