@@ -3451,13 +3451,13 @@ und melden Sie sich danach ab und wieder an.</translation>
         <translation>Notiz jetzt … (N)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="389"/>
+        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="395"/>
         <location filename="../../src/ui/views/graphwords.h" line="26"/>
         <source>%1 · %2</source>
         <translation>%1 · %2</translation>
     </message>
     <message numerus="yes">
-        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="395"/>
+        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="401"/>
         <source>%n outlier(s) hidden</source>
         <translation>
             <numerusform>%n Ausreißer ausgeblendet</numerusform>
@@ -3465,7 +3465,7 @@ und melden Sie sich danach ab und wieder an.</translation>
         </translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="385"/>
+        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="391"/>
         <location filename="../../src/ui/views/graphwords.h" line="27"/>
         <source>Live</source>
         <translation>Live</translation>
@@ -3890,22 +3890,27 @@ und melden Sie sich danach ab und wieder an.</translation>
         <translation>Fester Bereich [%1]</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="281"/>
+        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="241"/>
+        <source>no unit</source>
+        <translation>ohne Einheit</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="287"/>
         <source>%1: no free axis</source>
         <translation>%1: keine freie Achse</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="385"/>
+        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="391"/>
         <source>Live · held</source>
         <translation>Live · angehalten</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="387"/>
+        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="393"/>
         <source>Recording · %1</source>
         <translation>Aufnahme · %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="391"/>
+        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="397"/>
         <source>Stopped · %1</source>
         <translation>Gestoppt · %1</translation>
     </message>

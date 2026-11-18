@@ -770,7 +770,7 @@ bool GraphWidget::askFixedRange(const QString &unit, double &min, double &max, b
         min = a.axis->range().lower * a.factor;
         max = a.axis->range().upper * a.factor;
       }
-  return askMinMax(QCoreApplication::translate("GraphWidget", "Fixed range [%1]").arg(SiPrefix::displayText(unit)),
+  return askMinMax(QCoreApplication::translate("GraphWidget", "Fixed range [%1]").arg(unitText(unit)),
                    unit, min, max);
 }
 
@@ -785,7 +785,7 @@ bool GraphWidget::askMinMax(const QString &title, const QString &unit, double &m
     auto *s = new QDoubleSpinBox(&dlg);
     s->setDecimals(6);
     s->setRange(-1e12, 1e12);
-    s->setSuffix(" " + SiPrefix::displayText(unit));
+    s->setSuffix(unit == kNoUnit ? QString() : " " + SiPrefix::displayText(unit));
     s->setValue(v);
     return s;
   };

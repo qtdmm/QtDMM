@@ -245,6 +245,7 @@ void GraphWidget::rebuildCurve(Curve &curve)
   curve.tail = 0;
   curve.newest = nullptr;
   curve.unit.clear();
+  curve.unitless = false;
   curve.label.clear();
   if (!curve.store || !m_store)
     return;
@@ -272,6 +273,7 @@ void GraphWidget::rebuildCurve(Curve &curve)
     for (const QPointF &p : std::as_const(points))
       curve.points.append(QPointF(p.x() + curve.shift, p.y()));
   }
+  curve.unitless = curve.unit.isEmpty() && !curve.points.isEmpty();
 }
 
 SeriesDecimator::Options GraphWidget::decimation(const Curve &curve, const RecordingSeries &series) const
@@ -312,7 +314,7 @@ void GraphWidget::mainAppended(RecordingStore *store, bool shifted)
       if (c.store != store || c.value.id != 0)
         continue;
       // the first reading names the unit, and with it the axis
-      if (c.unit.isEmpty() || c.newest != &store->series())
+      if ((c.unit.isEmpty() && !c.unitless) || c.newest != &store->series())
         m_dirty = true;
       else
         appendTail(c, store->series());
@@ -332,7 +334,7 @@ void GraphWidget::extraAppended(RecordingStore *store, int index)
       if (c.store != store || c.value.id != series.id || c.value.id == 0)
         continue;
       // a series that began, or one without a unit yet: all anew
-      if (c.newest != &series || c.unit.isEmpty() || c.unit != series.unit)
+      if (c.newest != &series || (c.unit.isEmpty() && !c.unitless) || c.unit != series.unit)
         m_dirty = true;
       else
         appendTail(c, series);

@@ -46,6 +46,14 @@ void loop() {
 Without names (`Serial.println(u)`) the values are named by their place:
 1, 2, 3, 4.
 
+A name that is a unit is the value's unit too: `V:3.31,mA:12.5` is a
+voltage of 3.31 V and a current of 12.5 mA - a voltage in the recorder, the
+alarms and the graph's axes. Units QtDMM takes so: V, A, Ohm (or Ω), F, Hz,
+W, Wh, Ah, VA, %, %RH, lx, ppm, dB, °C, °F, m/s, each also with an SI prefix
+(mV, kOhm, µA). A single letter like `C` stays a name; write `°C`. Other
+names (`voltage`, `temp`) are values without a unit; the graph draws them
+on an axis of their own.
+
 **Teleplot** - one variable per line, `name:value`, optionally with a unit
 after `§`:
 

@@ -1330,7 +1330,7 @@ void MainWindow::fillGraphAxisMenu(QMenu *menu, GraphView *view)
     menu->addSeparator();
   for (const QString &unit : units)
   {
-    QMenu *sub = menu->addMenu(tr("Range [%1]").arg(SiPrefix::displayText(unit)).replace('&', "&&"));
+    QMenu *sub = menu->addMenu(tr("Range [%1]").arg(GraphWidget::unitText(unit)).replace('&', "&&"));
     const QMap<QString, GraphModel::Range> ranges = view->model()->fixedRanges();
     const bool fixed = ranges.contains(unit);
     auto *group = new QActionGroup(sub);
@@ -1338,7 +1338,7 @@ void MainWindow::fillGraphAxisMenu(QMenu *menu, GraphView *view)
     QAction *range = sub->addAction(fixed ? word("&Fixed: %1 .. %2 %3...")
                                               .arg(QLocale().toString(ranges.value(unit).first),
                                                    QLocale().toString(ranges.value(unit).second),
-                                                   SiPrefix::displayText(unit))
+                                                   unit == GraphWidget::kNoUnit ? QString() : SiPrefix::displayText(unit))
                                           : word("&Fixed range..."));
     for (QAction *a : { automatic, range })
     {

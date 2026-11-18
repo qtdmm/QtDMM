@@ -16,6 +16,10 @@
 ///    `name:ms:value`, a unit `name:value§V`, flags `|xy`, `|t`, `|clr`, several
 ///    points `name:t1:v1;t2:v2`. One variable per line.
 ///
+/// A label that is a unit QtDMM knows (`V`, `mA`, `kOhm`, `°C`, `%RH`; not
+/// a letter like `C` alone) is the value's unit too: `V:3.31,A:0.12` is a
+/// voltage and a current [E 18.11.]; Teleplot's `§` comes first.
+///
 /// A line with `§`, `|`, `;` or two colons after the name is Teleplot, any
 /// other the Serial Plotter's ("name:value" means the same in both). Each
 /// name takes a value of the meter when it first comes, up to four [E 18.11.];
