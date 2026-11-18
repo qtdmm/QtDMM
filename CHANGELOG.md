@@ -73,6 +73,7 @@
 
 ### Meters
 
+- **UNI-T UT117C multimeter over Bluetooth LE** (`*`, untried) — polled; AC/DC V and mV, Ω, continuity, diode, capacitance, LoZ, Hz, NCV (HI/LO), A and the clamp input; OL, HOLD, REL, low battery. Keys SELECT, RANGE/AUTO, REL, MIN/MAX, HOLD, LIGHT and a new key **LPF** (low-pass filter), greyed out in the functions where the meter ignores them. From the notes decompiled from UNI-T's multimeter app and libreble.
 - **BSIDE ZT-5B, ZT-5BQ, ZT-300AB and BABATools AD900** (`*`, untried) — more brands of the ZOTEK Bluetooth LE family. The AD900's packet layout is unknown; QtDMM reads all four, so it does not suggest another model for it.
 - **UNI-T UT325F four-channel thermocouple thermometer over Bluetooth LE** (`*`, untried) — T1 to T4 as four values named with their thermocouple type ("T1 (K)"), in °C, °F or K as the meter shows; OL, -OL, a missing probe without a value, MAX/MIN/AVG and HOLD; keys HOLD, MIN/MAX and UNIT. QtDMM switches the meter's live output on in its panel settings, keeping the rest. From the notes decompiled from UNI-T's iENV app; its 80000 stored readings, thermocouple setup and clock are left out.
 - **UNI-T UT320i pipe clamp thermometer over Bluetooth LE** (`*`, untried) — both probes T1 and T2 as two values, in °C, °F or K as the meter shows; over and under range, a missing probe without a value. From the notes decompiled from UNI-T's iENV app; its 10000 stored readings, clock and settings are left out.

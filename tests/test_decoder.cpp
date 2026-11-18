@@ -13,6 +13,7 @@
 #include "device/dmmdecoder.h"
 #include "device/protocols.h"
 #include "device/decoders/uni_t_ienv.h"
+#include "device/decoders/uni_t_ut117c.h"
 #include "device/decoders/uni_t_ut320i.h"
 #include "device/decoders/uni_t_ut325f.h"
 #include "device/decoders/brymen_bm78xbt.h"
@@ -256,6 +257,48 @@ int main(int argc, char **argv)
       const auto max = ut325f->decode(QByteArray::fromHex("aa5500200166661242666614420000000000000000000030300000ac41000000000104b0"), 0);
       if (!max || max->main().unit != "dF" || max->main().val != "97.9" || !(max->channels[1].states & SampleFlag::Max))
         bad(qPrintable("MAX in F: got " + (max ? max->main().val + " " + max->main().unit : QString("none"))));
+    }
+    // UT117C (synthetic frames, ut117c.md): the poll and the keys as the
+    // app sends them, keys greyed out by function, NCV, µF and low
+    // battery, both length conventions, a wrong sum
+    {
+      auto ut117c = DmmDecoder::getInstance(FrameFormat::UniTUT117C);
+      auto bad = [&](const char *what)
+      {
+        qWarning() << "UT117C:" << what;
+        ++problems;
+      };
+      if (ut117c->pollRequest() != QByteArray::fromHex("abcd0004050001" "81"))
+        bad("the poll is not AB CD 00 04 05 00 01 81");
+      const QList<QPair<const char *, const char *>> keys = {
+        { "hold", "abcd0004125a01e8" }, { "select1", "abcd0004015a01d7" }, { "range", "abcd00040201017f" },
+        { "auto", "abcd00040200017e" }, { "rel", "abcd0004035a01d9" }, { "minmax", "abcd000404010181" },
+        { "minmax_off", "abcd000404000180" }, { "lpf", "abcd0004145a01ea" }, { "lamp", "abcd0004155a01eb" },
+      };
+      for (const auto &k : keys)
+        if (ut117c->keyRequest(k.first) != QByteArray::fromHex(k.second))
+          bad(qPrintable(QString("key %1 is not %2").arg(k.first, k.second)));
+      const Reading none;
+      const auto ncv = ut117c->decode(QByteArray::fromHex("abcd0014020d31002020202020202020202030000000033c"), 0);
+      if (!ncv || ncv->main().val != "HI" || !ncv->main().noValue || ncv->main().special != "NCV")
+        bad("NCV range '1' is not HI without a value");
+      if (ut117c->keyWorks("hold", "", none) || !ut117c->keyWorks("select1", "", none))
+        bad("NCV: HOLD not grey or SELECT grey");
+      const auto cap = ut117c->decode(QByteArray::fromHex("abcd001402093100202020342e3730754620300008000404"), 0);
+      if (!cap || cap->main().unit != QString::fromUtf8("µF") || cap->main().val != "4.70" || !cap->lowBat
+          || std::abs(cap->main().dval - 4.7e-6) > 1e-12)
+        bad("capacitance: not 4.70 µF with low battery");
+      if (!ut117c->keyWorks("range", "", none) || ut117c->keyWorks("lpf", "", none))
+        bad("capacitance: RANGE grey or LPF not grey");
+      const auto dcv = ut117c->decode(QByteArray::fromHex("abcd0012020430002020352e3132335620203000000003bf"), 0);
+      if (!dcv || dcv->main().val != "5.123" || dcv->main().special != "DC")
+        bad("the reading with length 0x12 (libreble) is not read");
+      if (ut117c->keyWorks("select1", "", none))
+        bad("DC V: SELECT not grey");
+      if (ut117c->decode(QByteArray::fromHex("abcd0014020430002020352e3132335620203000000003c2"), 0))
+        bad("a wrong sum gives a reading");
+      if (ut117c->decode(QByteArray::fromHex("abcd0004010001" "7d"), 0))
+        bad("a key's answer gives a reading");
     }
     expect(ut61plus, "hold", "abcd034a01c5");
     expect(ut61plus, "minmax", "abcd034101bc");

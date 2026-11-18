@@ -188,7 +188,7 @@ public:
   static QStringList keyNames()
   {
     return { "fn_v", "fn_a", "fn_a_long", "fn_ohm", "fn_ncv", "fn_ncv_long", "fn_auto", "fn_cap", "fn_diode",
-             "fn_hz", "select1", "select2", "range", "auto", "hold", "rel", "zero", "minmax", "minmax_off", "peak",
+             "fn_hz", "select1", "select2", "lpf", "range", "auto", "hold", "rel", "zero", "minmax", "minmax_off", "peak",
              "peak_off", "max", "min", "avg", "unit", "unit2", "weighting", "lamp" };
   }
   /// True when the meter tells which model of the protocol it is: its frames
