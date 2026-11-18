@@ -1,10 +1,10 @@
 // Copyright (c) 2026 The QtDMM developers
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// QcpGraph: what lies over the curves to read them - the crosshair on a
+// GraphWidget: what lies over the curves to read them - the crosshair on a
 // reading, the time cursors A and B, the reference lines with their
 // crossings, the limit band, the start threshold - and the statistics column.
-#include "ui/views/qcpgraph.h"
+#include "ui/views/graphwidget.h"
 
 #include "core/siprefix.h"
 #include "recording/recordingstore.h"
@@ -25,8 +25,8 @@
 
 namespace
 {
-// A word the graph on QtCharts has translated already ("mean", "alarm"):
-// not through tr(), so it is not extracted a second time.
+// A word of the context GraphWidget looked up through a variable ("mean",
+// "alarm"); graphwords.h keeps it for lupdate.
 QString word(const char *text)
 {
   return QCoreApplication::translate("GraphWidget", text);
@@ -34,7 +34,7 @@ QString word(const char *text)
 
 /// Horizontal lines at values of an axis with a label at the right, a band
 /// between two values and the triangles of crossings: one item draws what
-/// QcpGraph::updateLevels() gave it, at the place the axes have now.
+/// GraphWidget::updateLevels() gave it, at the place the axes have now.
 class LevelLines : public QCPAbstractItem
 {
 public:
@@ -116,7 +116,7 @@ protected:
 };
 }
 
-void QcpGraph::setupOverlays()
+void GraphWidget::setupOverlays()
 {
   // band and lines over the grid and under the curves; labels and crossings over them
   auto *levels = new LevelLines(m_plot);
@@ -141,11 +141,11 @@ void QcpGraph::setupOverlays()
   m_statsPanel->hide();
   m_statsTimer.setSingleShot(true);
   m_statsTimer.setInterval(250);
-  connect(&m_statsTimer, &QTimer::timeout, this, &QcpGraph::updateStats);
-  connect(m_timeBar, &GraphTimeBar::statsToggled, this, &QcpGraph::setStatsVisible);
+  connect(&m_statsTimer, &QTimer::timeout, this, &GraphWidget::updateStats);
+  connect(m_timeBar, &GraphTimeBar::statsToggled, this, &GraphWidget::setStatsVisible);
 }
 
-int QcpGraph::leftCurve() const
+int GraphWidget::leftCurve() const
 {
   for (int i = 0; i < m_curves.size(); ++i)
     if (m_curves.at(i).axis == 0)
@@ -153,7 +153,7 @@ int QcpGraph::leftCurve() const
   return -1;
 }
 
-GraphStats::Curve QcpGraph::statsCurve(int curve) const
+GraphStats::Curve GraphWidget::statsCurve(int curve) const
 {
   GraphStats::Curve out;
   if (curve < 0 || curve >= m_curves.size())
@@ -174,7 +174,7 @@ GraphStats::Curve QcpGraph::statsCurve(int curve) const
   return out;
 }
 
-GraphStats::Input QcpGraph::statsInput() const
+GraphStats::Input GraphWidget::statsInput() const
 {
   GraphStats::Input input;
   for (int i = 0; i < m_curves.size(); ++i)
@@ -189,7 +189,7 @@ GraphStats::Input QcpGraph::statsInput() const
   return input;
 }
 
-void QcpGraph::setOutliers(const GraphOutliers::Rule &rule)
+void GraphWidget::setOutliers(const GraphOutliers::Rule &rule)
 {
   if (rule == m_outliers)
     return;
@@ -201,7 +201,7 @@ void QcpGraph::setOutliers(const GraphOutliers::Rule &rule)
 }
 
 // The hidden readings of the curves drawn in the time shown
-void QcpGraph::countOutliers()
+void GraphWidget::countOutliers()
 {
   QElapsedTimer cost;
   cost.start();
@@ -231,7 +231,7 @@ void QcpGraph::countOutliers()
 
 // After a picture, at most four times a second; over millions of readings
 // (σ asks 50 neighbours each) a tenth of the time at most
-void QcpGraph::scheduleOutlierCount()
+void GraphWidget::scheduleOutlierCount()
 {
   if (!m_outliers.active() || m_outlierCountPending)
     return;
@@ -246,7 +246,7 @@ void QcpGraph::scheduleOutlierCount()
 // On the reading of the left axis' value that holds under the mouse, or
 // the next one when that is nearer: the vertical line at the mouse, the
 // horizontal one on the value. In a gap it says why there is no value.
-QcpPlotBase::CrosshairAt QcpGraph::crosshairAt(double x, double y)
+QcpPlotBase::CrosshairAt GraphWidget::crosshairAt(double x, double y)
 {
   CrosshairAt at{ x, y, false, QString() };
   const qint64 t = qRound64(x * 1000);
@@ -274,12 +274,12 @@ QcpPlotBase::CrosshairAt QcpGraph::crosshairAt(double x, double y)
   return at;
 }
 
-QString QcpGraph::crosshairTextAt(const QPoint &pos)
+QString GraphWidget::crosshairTextAt(const QPoint &pos)
 {
   return crosshairAt(m_plot->xAxis->pixelToCoord(pos.x()), m_plot->yAxis->pixelToCoord(pos.y())).text;
 }
 
-void QcpGraph::setTimeCursor(int which, qint64 t)
+void GraphWidget::setTimeCursor(int which, qint64 t)
 {
   which &= 1;
   if (t >= 0 && m_store)
@@ -295,7 +295,7 @@ void QcpGraph::setTimeCursor(int which, qint64 t)
   Q_EMIT cursorsChanged();
 }
 
-void QcpGraph::clearTimeCursors()
+void GraphWidget::clearTimeCursors()
 {
   if (m_cursorT[0] < 0 && m_cursorT[1] < 0)
     return;
@@ -308,7 +308,7 @@ void QcpGraph::clearTimeCursors()
 
 // Each cursor a line at its time, and the level of the left axis' value
 // there - none in a gap. Its letter is a flag among those of the marks.
-void QcpGraph::updateCursors()
+void GraphWidget::updateCursors()
 {
   const GraphStats::Curve curve = statsCurve(leftCurve());
   for (int i = 0; i < 2; ++i)
@@ -332,7 +332,7 @@ void QcpGraph::updateCursors()
   updateMarks();   // the flags share a row
 }
 
-int QcpGraph::cursorAt(const QPoint &pos) const
+int GraphWidget::cursorAt(const QPoint &pos) const
 {
   if (!m_plot->axisRect()->rect().contains(pos))
     return -1;
@@ -342,19 +342,19 @@ int QcpGraph::cursorAt(const QPoint &pos) const
   return -1;
 }
 
-double QcpGraph::cursorLevel(int which) const
+double GraphWidget::cursorLevel(int which) const
 {
   const QCPItemStraightLine *level = m_cursorLevel[which & 1];
   return level->visible() ? level->point1->coords().y() : qQNaN();
 }
 
-int QcpGraph::cursorPixel(int which) const
+int GraphWidget::cursorPixel(int which) const
 {
   const qint64 t = m_cursorT[which & 1];
   return t < 0 ? -1 : qRound(m_plot->xAxis->coordToPixel(t / 1000.0));
 }
 
-void QcpGraph::setStatsVisible(bool on)
+void GraphWidget::setStatsVisible(bool on)
 {
   if (on == m_statsOn)
     return;
@@ -365,13 +365,13 @@ void QcpGraph::setStatsVisible(bool on)
   Q_EMIT statsVisibleChanged(on);
 }
 
-void QcpGraph::scheduleStats()
+void GraphWidget::scheduleStats()
 {
   if (m_statsOn && !m_statsTimer.isActive())
     m_statsTimer.start();
 }
 
-void QcpGraph::updateStats()
+void GraphWidget::updateStats()
 {
   if (!m_statsOn)
     return;
@@ -395,7 +395,7 @@ void QcpGraph::updateStats()
   m_statsTimer.setInterval(qMax(250, int(cost.elapsed()) * 10));
 }
 
-void QcpGraph::layoutStats()
+void GraphWidget::layoutStats()
 {
   const int side = m_statsOn ? m_statsPanel->wantedWidth(width() / 2) : 0;
   const bool left = m_lookSettings.statsLeft;
@@ -404,18 +404,18 @@ void QcpGraph::layoutStats()
   m_statsPanel->setVisible(m_statsOn);
 }
 
-QString QcpGraph::statsText() const
+QString GraphWidget::statsText() const
 {
   return GraphStats::text(statsInput());
 }
 
-ValueRef QcpGraph::leftValue() const
+ValueRef GraphWidget::leftValue() const
 {
   const int curve = leftCurve();
   return curve < 0 || m_ownStore ? ValueRef(-1) : m_curves.at(curve).value;
 }
 
-void QcpGraph::setReference(const GraphReference::Line &line)
+void GraphWidget::setReference(const GraphReference::Line &line)
 {
   if (line == m_reference)
     return;
@@ -425,7 +425,7 @@ void QcpGraph::setReference(const GraphReference::Line &line)
   Q_EMIT referenceChanged();
 }
 
-void QcpGraph::setReferenceLines(const QList<double> &values)
+void GraphWidget::setReferenceLines(const QList<double> &values)
 {
   const QList<double> lines = GraphReference::lines(values);
   if (lines == m_referenceLines)
@@ -435,7 +435,7 @@ void QcpGraph::setReferenceLines(const QList<double> &values)
   Q_EMIT referenceChanged();
 }
 
-void QcpGraph::setCrossingsVisible(bool on)
+void GraphWidget::setCrossingsVisible(bool on)
 {
   if (on == m_crossingsOn)
     return;
@@ -444,14 +444,14 @@ void QcpGraph::setCrossingsVisible(bool on)
   Q_EMIT referenceChanged();
 }
 
-void QcpGraph::setAlarmThresholds(const QList<double> &values)
+void GraphWidget::setAlarmThresholds(const QList<double> &values)
 {
   m_alarmThresholds = values;
   if (m_reference.kind == GraphReference::Alarm && !values.contains(m_reference.value))
     setReference(GraphReference::line(GraphReference::Value, m_reference.value));
 }
 
-void QcpGraph::setLimits(const ValueRef &value, double low, double high)
+void GraphWidget::setLimits(const ValueRef &value, double low, double high)
 {
   m_limitValue = value;
   m_limitLow = low;
@@ -460,7 +460,7 @@ void QcpGraph::setLimits(const ValueRef &value, double low, double high)
 }
 
 // As the axis' numbers: four digits with the prefix that suits the value
-QString QcpGraph::levelText(double value) const
+QString GraphWidget::levelText(double value) const
 {
   const int curve = leftCurve();
   const QString base = curve < 0 ? QString() : m_curves.at(curve).unit;
@@ -471,7 +471,7 @@ QString QcpGraph::levelText(double value) const
 
 // Over millions of readings the statistics of the window take a while:
 // then not with every picture, a tenth of the time at most
-double QcpGraph::followedValue()
+double GraphWidget::followedValue()
 {
   if (m_followedAge.isValid() && m_followedAge.elapsed() < m_followedCost * 10)
     return m_followed;
@@ -492,7 +492,7 @@ double QcpGraph::followedValue()
   return m_followed;
 }
 
-void QcpGraph::updateLevels()
+void GraphWidget::updateLevels()
 {
   // another value on the left: its alarms and its limit band
   if (const ValueRef left = leftValue(); left != m_lastLeft)
@@ -591,7 +591,7 @@ void QcpGraph::updateLevels()
   }
 }
 
-double QcpGraph::referenceValue(int line) const
+double GraphWidget::referenceValue(int line) const
 {
   for (const Level &level : m_levelsDrawn)
     if (level.line == line)
@@ -599,7 +599,7 @@ double QcpGraph::referenceValue(int line) const
   return qQNaN();
 }
 
-QString QcpGraph::referenceLabel(int line) const
+QString GraphWidget::referenceLabel(int line) const
 {
   for (const Level &level : m_levelsDrawn)
     if (level.line == line)
@@ -607,7 +607,7 @@ QString QcpGraph::referenceLabel(int line) const
   return QString();
 }
 
-int QcpGraph::crossingCount(int line) const
+int GraphWidget::crossingCount(int line) const
 {
   for (const Level &level : m_levelsDrawn)
     if (level.line == line)
@@ -615,7 +615,7 @@ int QcpGraph::crossingCount(int line) const
   return 0;
 }
 
-int QcpGraph::referencePixel(int line) const
+int GraphWidget::referencePixel(int line) const
 {
   if (line == kTriggerLine)
   {
@@ -628,7 +628,7 @@ int QcpGraph::referencePixel(int line) const
   return std::isfinite(value) ? qRound(m_plot->yAxis->coordToPixel(value / m_axes.first().factor)) : -1;
 }
 
-bool QcpGraph::limitBand(double *low, double *high) const
+bool GraphWidget::limitBand(double *low, double *high) const
 {
   if (m_bandDrawn && low)
     *low = std::isfinite(m_limitLow) ? m_limitLow : -qInf();
@@ -637,7 +637,7 @@ bool QcpGraph::limitBand(double *low, double *high) const
   return m_bandDrawn;
 }
 
-int QcpGraph::levelAt(const QPoint &pos) const
+int GraphWidget::levelAt(const QPoint &pos) const
 {
   if (!m_plot->axisRect()->rect().contains(pos))
     return kNoLine;
@@ -649,7 +649,7 @@ int QcpGraph::levelAt(const QPoint &pos) const
   return kNoLine;
 }
 
-double QcpGraph::roundedValueAt(const QPoint &globalPos) const
+double GraphWidget::roundedValueAt(const QPoint &globalPos) const
 {
   const Axis &axis = m_axes.first();
   const QRect rect = m_plot->axisRect()->rect();
@@ -660,7 +660,7 @@ double QcpGraph::roundedValueAt(const QPoint &globalPos) const
 
 // The reference line snaps to 0, to the mean, minimum and maximum of the
 // time shown, to the alarm thresholds and to the limits drawn
-void QcpGraph::dragLevel(int line, double y)
+void GraphWidget::dragLevel(int line, double y)
 {
   if (line == kTriggerLine)
   {
@@ -710,9 +710,8 @@ void QcpGraph::dragLevel(int line, double y)
   setReference(dragged(value, span, span / height, snaps));
 }
 
-// How outliers are hidden; Jump and Limits ask in the left axis' unit (the
-// dialogs and words of the graph on QtCharts)
-void QcpGraph::askOutliers(GraphOutliers::Mode mode)
+// How outliers are hidden; Jump and Limits ask in the left axis' unit
+void GraphWidget::askOutliers(GraphOutliers::Mode mode)
 {
   auto word = [](const char *text) { return QCoreApplication::translate("GraphWidget", text); };
   const QString unit = m_axes.isEmpty() ? QString() : m_axes.first().unit;
@@ -753,7 +752,7 @@ void QcpGraph::askOutliers(GraphOutliers::Mode mode)
   }
 }
 
-QStringList QcpGraph::axisUnits() const
+QStringList GraphWidget::axisUnits() const
 {
   QStringList units;
   for (const Axis &a : m_axes)
@@ -762,8 +761,7 @@ QStringList QcpGraph::axisUnits() const
   return units;
 }
 
-// The words of the graph on QtCharts, translated there
-bool QcpGraph::askFixedRange(const QString &unit, double &min, double &max, bool given)
+bool GraphWidget::askFixedRange(const QString &unit, double &min, double &max, bool given)
 {
   if (!given)
     for (const Axis &a : std::as_const(m_axes))
@@ -776,7 +774,7 @@ bool QcpGraph::askFixedRange(const QString &unit, double &min, double &max, bool
                    unit, min, max);
 }
 
-bool QcpGraph::askMinMax(const QString &title, const QString &unit, double &min, double &max)
+bool GraphWidget::askMinMax(const QString &title, const QString &unit, double &min, double &max)
 {
   auto word = [](const char *text) { return QCoreApplication::translate("GraphWidget", text); };
   QDialog dlg(this);

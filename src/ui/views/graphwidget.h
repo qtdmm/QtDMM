@@ -99,13 +99,13 @@ class RecordingStore;
 /// shown or fixed by unit, the legend, the time buttons and the state above
 /// the plot, the scrollbar below, zoom, hold and the crosshair.
 ///
-/// The code that names QCustomPlot's types is in qcpgraph_<part>.cpp
+/// The code that names QCustomPlot's types is in graphwidget_<part>.cpp
 /// (curves, axes, input, theme, overlays, marks, overview); nothing outside knows them, for the move to NeoQCP.
-class QcpGraph : public QcpPlotBase
+class GraphWidget : public QcpPlotBase
 {
   Q_OBJECT
 public:
-  explicit QcpGraph(QWidget *parent = nullptr);
+  explicit GraphWidget(QWidget *parent = nullptr);
 
   /// The most value axes: one on the left, the others on the right.
   static constexpr int kMaxAxes = 3;
@@ -458,7 +458,7 @@ private:
     bool        divided = false; ///< its ticker is the one of the 8 divisions
   };
 
-  // qcpgraph_curves.cpp
+  // graphwidget_curves.cpp
   /// The curves anew from values and sources: stores, plot graphs, connections.
   void        makeCurves();
   /// The series of @p curve's value, oldest first.
@@ -486,7 +486,7 @@ private:
   void        updateLegend();
   /// A store is gone: its curves go, without asking the sources.
   void        storeGone(QObject *store);
-  // qcpgraph_theme.cpp
+  // graphwidget_theme.cpp
   void        setupTheme();
   /// The look from variant, design and settings, onto the plot and the curves.
   void        applyLook();
@@ -502,7 +502,7 @@ private:
   void        styleDensity(const Curve &curve, int shown);
   /// The 8 divisions of an axis showing @p lo .. @p hi (its unit): the range widened to whole 1-2-5 steps.
   static void divide(double &lo, double &hi, double &step);
-  // qcpgraph_axes.cpp
+  // graphwidget_axes.cpp
   void        setupAxes();
   /// Each curve on the axis chosen for it or of its unit, else the next free one.
   void        assignAxes();
@@ -519,7 +519,7 @@ private:
   void        updateTimeBar();
   /// After the window moved: the picture now, unless it is held.
   void        redraw();
-  // qcpgraph_overlays.cpp
+  // graphwidget_overlays.cpp
   void        setupOverlays();
   /// A dialog for a minimum and a maximum in @p unit (base unit), titled
   /// @p title; false when cancelled.
@@ -546,13 +546,13 @@ private:
   void        dragLevel(int line, double y);
   /// The cursor whose line is at @p pos (plot widget pixels): 0, 1, or -1.
   int         cursorAt(const QPoint &pos) const;
-  // qcpgraph_overview.cpp
+  // graphwidget_overview.cpp
   void        setupOverview();
   /// The overview's store, value and window, the strip, the bands: as the curves are now.
   void        updateOverview();
   /// The strip at the bottom of the axes' rectangle.
   void        placeStates();
-  // qcpgraph_marks.cpp
+  // graphwidget_marks.cpp
   void        setupMarks();
   /// The marks anew from the stores, and the flags of marks and cursors.
   void        updateMarks();
@@ -566,7 +566,7 @@ private:
   int         draggedIndex() const;
   /// Ends the drag of a note: it stays (noteMoved()) or goes back (@p cancel).
   void        endMarkDrag(bool cancel);
-  // qcpgraph_input.cpp
+  // graphwidget_input.cpp
   void        setupInput();
   void        mouseDoubleClicked(QMouseEvent *event);
   void        mousePressed(QMouseEvent *event);

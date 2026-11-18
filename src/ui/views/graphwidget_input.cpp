@@ -1,8 +1,8 @@
 // Copyright (c) 2026 The QtDMM developers
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// QcpGraph: mouse, wheel and keys.
-#include "ui/views/qcpgraph.h"
+// GraphWidget: mouse, wheel and keys.
+#include "ui/views/graphwidget.h"
 
 #include "recording/recordingstore.h"
 #include "ui/views/qcp.h"
@@ -11,24 +11,24 @@
 #include <QRubberBand>
 #include <QToolTip>
 
-void QcpGraph::setupInput()
+void GraphWidget::setupInput()
 {
   // the keys are the graph's: a click into the plot gives it the focus
   setFocusPolicy(Qt::StrongFocus);
-  connect(m_plot, &QCustomPlot::mousePress, this, &QcpGraph::mousePressed);
-  connect(m_plot, &QCustomPlot::mouseMove, this, &QcpGraph::mouseMoved);
-  connect(m_plot, &QCustomPlot::mouseRelease, this, &QcpGraph::mouseReleased);
-  connect(m_plot, &QCustomPlot::mouseDoubleClick, this, &QcpGraph::mouseDoubleClicked);
-  connect(m_plot, &QCustomPlot::mouseWheel, this, &QcpGraph::wheelTurned);
+  connect(m_plot, &QCustomPlot::mousePress, this, &GraphWidget::mousePressed);
+  connect(m_plot, &QCustomPlot::mouseMove, this, &GraphWidget::mouseMoved);
+  connect(m_plot, &QCustomPlot::mouseRelease, this, &GraphWidget::mouseReleased);
+  connect(m_plot, &QCustomPlot::mouseDoubleClick, this, &GraphWidget::mouseDoubleClicked);
+  connect(m_plot, &QCustomPlot::mouseWheel, this, &GraphWidget::wheelTurned);
 }
 
 // A drag with the left or middle button moves the time, with Shift and the
-// left button it draws a frame to zoom on (as the graph on QtCharts). A
+// left button it draws a frame to zoom on. A
 // click - no more than a slip of the mouse - sets the time cursor A, with
 // Shift B; a press on a cursor's line drags that cursor, one on a reference
 // line that line (a cursor goes before a line where they meet). A click on
 // a mark's flag tells its note; a note is dragged by its flag or its line.
-void QcpGraph::mousePressed(QMouseEvent *event)
+void GraphWidget::mousePressed(QMouseEvent *event)
 {
   if (!m_store)
     return;
@@ -70,7 +70,7 @@ void QcpGraph::mousePressed(QMouseEvent *event)
   m_pressStart = windowStart();
 }
 
-void QcpGraph::mouseMoved(QMouseEvent *event)
+void GraphWidget::mouseMoved(QMouseEvent *event)
 {
   if (m_drag == Drag::None)
   {
@@ -131,7 +131,7 @@ void QcpGraph::mouseMoved(QMouseEvent *event)
     setTimeCursor(m_dragCursor, qRound64(m_plot->xAxis->pixelToCoord(event->pos().x()) * 1000));
 }
 
-void QcpGraph::mouseReleased(QMouseEvent *event)
+void GraphWidget::mouseReleased(QMouseEvent *event)
 {
   const Drag drag = m_drag;
   if (drag == Drag::Mark)
@@ -160,24 +160,24 @@ void QcpGraph::mouseReleased(QMouseEvent *event)
 }
 
 // A mark's flag: its title and text
-void QcpGraph::mouseDoubleClicked(QMouseEvent *event)
+void GraphWidget::mouseDoubleClicked(QMouseEvent *event)
 {
   if (const int mark = markAt(event->pos()); event->button() == Qt::LeftButton && mark >= 0)
     editMark(mark);
 }
 
-void QcpGraph::wheelTurned(QWheelEvent *event)
+void GraphWidget::wheelTurned(QWheelEvent *event)
 {
   const bool out = event->angleDelta().x() < 0 || event->angleDelta().y() < 0;
   zoomBy(out ? 1 / 1.1 : 1.1);
 }
 
-void QcpGraph::pan(double fraction)
+void GraphWidget::pan(double fraction)
 {
   showFrom(windowStart() + qRound64(m_windowSeconds * 1000.0 * fraction));
 }
 
-void QcpGraph::keyPressEvent(QKeyEvent *event)
+void GraphWidget::keyPressEvent(QKeyEvent *event)
 {
   const bool shift = event->modifiers() & Qt::ShiftModifier;
   switch (event->key())

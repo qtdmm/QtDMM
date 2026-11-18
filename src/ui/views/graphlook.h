@@ -11,9 +11,7 @@
 
 /// How a graph of a recording looks: its colour variant - the screen of an
 /// oscilloscope, a phosphor tube, a chart recorder's paper - turned into
-/// the colours and pens a graph draws with. No drawing library: the tables
-/// are those of the graph on QtCharts (GraphWidget::applyThemeColors(),
-/// dataColor(), extraColor(), otherColor()), for the graph on QCustomPlot.
+/// the colours and pens a graph draws with. No drawing library.
 namespace GraphLook
 {
 enum Variant

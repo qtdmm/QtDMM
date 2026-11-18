@@ -102,7 +102,7 @@ public:
   /// gets one, or takes the entry at its place with its model. Empty when
   /// the window had none.
   QString     takeOldDevice();
-  /// The file a graph on QCustomPlot shows, for Record, Live, Clear and the
+  /// The file a graph shows, for Record, Live, Clear and the
   /// export without a leading meter (MainWindow's graph used last).
   struct FileView
   {

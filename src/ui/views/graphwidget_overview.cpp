@@ -1,10 +1,10 @@
 // Copyright (c) 2026 The QtDMM developers
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// QcpGraph: the overview strip below the plot, the strip of the meter's
+// GraphWidget: the overview strip below the plot, the strip of the meter's
 // states at its bottom, and the curves drawn as bands - the dense ones and
 // the min/max band.
-#include "ui/views/qcpgraph.h"
+#include "ui/views/graphwidget.h"
 
 #include "recording/recordingstore.h"
 #include "ui/views/graphband.h"
@@ -109,7 +109,7 @@ protected:
 };
 }
 
-void QcpGraph::setupOverview()
+void GraphWidget::setupOverview()
 {
   // before the curves on their layer: under them
   auto *bands = new Bands(m_plot);
@@ -122,7 +122,7 @@ void QcpGraph::setupOverview()
   m_minimap->setFixedHeight(GraphMinimap::kHeight);
   layout()->addWidget(m_minimap);
   connect(m_minimap, &GraphMinimap::moveRequested, this, [this](qint64 start) { showFrom(start + m_minimapShift); });
-  connect(m_minimap, &GraphMinimap::endRequested, this, &QcpGraph::followEnd);
+  connect(m_minimap, &GraphMinimap::endRequested, this, &GraphWidget::followEnd);
   connect(m_minimap, &GraphMinimap::widthRequested, this, [this](qint64 start, qint64 width, bool atEnd)
   {
     setWindowSeconds(qMax(1, qRound(width / 1000.0)));
@@ -148,14 +148,14 @@ void QcpGraph::setupOverview()
     return out;
   });
   // the axes' rectangle is known when the plot was laid out
-  connect(m_plot, &QCustomPlot::afterReplot, this, &QcpGraph::placeStates);
-  connect(m_timeBar, &GraphTimeBar::overviewToggled, this, &QcpGraph::setMinimapVisible);
-  connect(m_timeBar, &GraphTimeBar::envelopeToggled, this, &QcpGraph::setEnvelopeVisible);
+  connect(m_plot, &QCustomPlot::afterReplot, this, &GraphWidget::placeStates);
+  connect(m_timeBar, &GraphTimeBar::overviewToggled, this, &GraphWidget::setMinimapVisible);
+  connect(m_timeBar, &GraphTimeBar::envelopeToggled, this, &GraphWidget::setEnvelopeVisible);
   m_timeBar->setOverviewChecked(m_minimapOn);
   m_timeBar->setEnvelopeChecked(m_envelopeOn);
 }
 
-void QcpGraph::setMinimapVisible(bool on)
+void GraphWidget::setMinimapVisible(bool on)
 {
   if (on == m_minimapOn)
     return;
@@ -167,7 +167,7 @@ void QcpGraph::setMinimapVisible(bool on)
   Q_EMIT overviewChanged();
 }
 
-void QcpGraph::setStatesVisible(bool on)
+void GraphWidget::setStatesVisible(bool on)
 {
   if (on == m_statesOn)
     return;
@@ -176,7 +176,7 @@ void QcpGraph::setStatesVisible(bool on)
   Q_EMIT overviewChanged();
 }
 
-void QcpGraph::setEnvelopeVisible(bool on)
+void GraphWidget::setEnvelopeVisible(bool on)
 {
   if (on == m_envelopeOn)
     return;
@@ -187,7 +187,7 @@ void QcpGraph::setEnvelopeVisible(bool on)
   Q_EMIT overviewChanged();
 }
 
-void QcpGraph::placeStates()
+void GraphWidget::placeStates()
 {
   const QRect rect = m_plot->axisRect()->rect();
   m_stateStrip->setGeometry(rect.left(), rect.bottom() + 1 - GraphStateStrip::fullHeight(), rect.width(), GraphStateStrip::fullHeight());
@@ -198,7 +198,7 @@ void QcpGraph::placeStates()
 // The overview draws the value of the left axis from the recording of its
 // meter, on that recording's time; the bands are the curves too dense for
 // a line and, behind the left axis' curve, its min/max band.
-void QcpGraph::updateOverview()
+void GraphWidget::updateOverview()
 {
   const int left = leftCurve();
   RecordingStore *store = left < 0 ? m_store.data() : m_curves.at(left).store.data();
@@ -236,18 +236,18 @@ void QcpGraph::updateOverview()
   }
 }
 
-QString QcpGraph::statesText() const
+QString GraphWidget::statesText() const
 {
   const double from = m_plot->xAxis->range().lower * 1000, to = m_plot->xAxis->range().upper * 1000;
   return leftCurve() < 0 ? QString() : GraphStates::text(GraphStates::spans(statsCurve(leftCurve()), qRound64(from), qRound64(to)));
 }
 
-bool QcpGraph::curveBanded(int i) const
+bool GraphWidget::curveBanded(int i) const
 {
   return i >= 0 && i < m_curves.size() && m_curves.at(i).banded;
 }
 
-bool QcpGraph::bandAt(int i, qint64 t, double *lo, double *hi) const
+bool GraphWidget::bandAt(int i, qint64 t, double *lo, double *hi) const
 {
   const auto *bands = static_cast<const Bands *>(m_bands);
   for (const Bands::Entry &e : bands->entries)

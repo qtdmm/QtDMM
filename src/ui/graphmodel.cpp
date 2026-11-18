@@ -7,7 +7,7 @@
 #include <QJsonObject>
 #include <cmath>
 
-// the words of the first three axes, as the graph on QtCharts writes them
+// the words of the first three axes in the settings
 static const char *const kAxisWords[] = { "left", "right", "third" };
 
 GraphModel::GraphModel(QObject *parent) : QObject(parent)

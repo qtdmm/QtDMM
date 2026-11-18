@@ -34,9 +34,9 @@
 #include "ui/poincareview.h"
 #include "ui/xyview.h"
 #include "ui/graphmodel.h"
-#include "ui/qcpgraphview.h"
+#include "ui/graphview.h"
 #include "ui/settings/graphprefs.h"
-#include "ui/views/qcpgraph.h"
+#include "ui/views/graphwidget.h"
 #include "ui/histogramview.h"
 #include "ui/heatmapview.h"
 #include "ui/dialogs/helpdlg.h"
@@ -238,10 +238,10 @@ MainWindow::MainWindow(QCommandLineParser &parser, QWidget *parent)
   connect(m_wid, &InstanceWidget::recorderState, this, &MainWindow::updateRecorderActions);
   // without a leading meter Record, Live, Clear and the export are for the
   // file the graph used last shows
-  m_wid->setFileView({ [this] { const QcpGraphView *view = pictureQGraph(); return view && view->showsFile(); },
-                       [this] { if (QcpGraphView *view = pictureQGraph()) view->closeFile(); },
+  m_wid->setFileView({ [this] { const GraphView *view = pictureGraph(); return view && view->showsFile(); },
+                       [this] { if (GraphView *view = pictureGraph()) view->closeFile(); },
                        [this](const QString &path, bool everyReading)
-                       { QcpGraphView *view = pictureQGraph(); return view && writeQGraphRecording(view, path, everyReading); } });
+                       { GraphView *view = pictureGraph(); return view && writeGraphRecording(view, path, everyReading); } });
   // a file loaded without a device: the start page makes way for its graph
   connect(m_wid, &InstanceWidget::recorderState, this, &MainWindow::updateEmptyStart);
 
@@ -283,11 +283,11 @@ MainWindow::MainWindow(QCommandLineParser &parser, QWidget *parent)
       applyLcdLook(panelOf(win));
   });
   connect(m_wid, &InstanceWidget::configChanged, this, &MainWindow::updateRecentWorkspaces);
-  // the Graph page: the graphs on QCustomPlot take its look too
+  // the Graph page: the graphs take its look
   connect(m_wid, &InstanceWidget::configChanged, this, [this]
   {
-    for (QcpGraphView *view : std::as_const(m_qgraphViews))
-      applyQGraphLook(view);
+    for (GraphView *view : std::as_const(m_graphViews))
+      applyGraphLook(view);
   });
   // the sidebar as left, with two devices or more
   const bool sidebarSet = !m_wid->settings()->getString("Windows/sidebar").isEmpty();
@@ -376,7 +376,7 @@ void MainWindow::createViews()
 
   // the first graph: hidden, never closed; the session widget has no window
   m_wid->hide();
-  m_graphWin = addQGraphWindow("graph", tr("Graph"), ValueRef());
+  m_graphWin = addGraphWindow("graph", tr("Graph"), ValueRef());
   // the drawing clock of the views; 0 = off, the graph moves with each reading only
   FrameClock::instance()->setRate(m_wid->settings()->getInt("Graph/frame-rate", 30));
 
@@ -613,8 +613,8 @@ void MainWindow::createViews()
   connect(m_graphSources, &QAction::triggered, this, [this]
   {
     // the graph used last, else the first one
-    if (QcpGraphView *view = currentQGraph())
-      editQGraphSources(view);
+    if (GraphView *view = currentGraph())
+      editGraphSources(view);
   });
   connect(m_tableSources, &QAction::triggered, this, [this] { editSources(ValueMenu::View::Table); });
   auto sourcesShown = [this]
@@ -651,8 +651,8 @@ void MainWindow::createViews()
   // the actions are for the graph used last, also the one whose window is active
   connect(m_mdi, &QMdiArea::subWindowActivated, this, [this](QMdiSubWindow *win)
   {
-    if (QcpGraphView *qgraph = qgraphViewOf(win))
-      setPictureQGraph(qgraph);
+    if (GraphView *graphView = graphViewOf(win))
+      setPictureGraph(graphView);
   });
   m_readings->setWindowActions({ hideWindow(m_readingsWin), m_tableSources, m_tableToBasket, m_tableExport });
   m_displayAction->setObjectName("action_WindowDisplay");
@@ -672,7 +672,7 @@ void MainWindow::createViews()
   {
     auto free = [this](const ValueRef &v)
     { return !m_session->controller(v) && !m_openingPending.contains(v.source.section(':', 1)); };
-    for (QcpGraphView *view : std::as_const(m_qgraphViews))
+    for (GraphView *view : std::as_const(m_graphViews))
       if (view->model()->values().isEmpty())
         view->model()->setValues({ ValueRef(0, ctl->source()) });
     for (MeterView *meter : m_wid->meters())
@@ -788,26 +788,26 @@ void MainWindow::removePanel(const QString &source)
   m_arranger->arrange();
 }
 
-QMdiSubWindow *MainWindow::addQGraphWindow(const QString &name, const QString &title, const ValueRef &value)
+QMdiSubWindow *MainWindow::addGraphWindow(const QString &name, const QString &title, const ValueRef &value)
 {
-  auto *graph = new QcpGraph(this);
+  auto *graph = new GraphWidget(this);
   graph->setWindowTitle(title);
-  auto *view = new QcpGraphView(m_session, graph, name, this);
-  m_qgraphViews.insert(graph, view);
+  auto *view = new GraphView(m_session, graph, name, this);
+  m_graphViews.insert(graph, view);
   view->model()->setWindowSeconds(m_wid->settingsDialog()->graphPage()->windowSeconds());
   const Designs::GraphColors g = Designs::graphColors(Designs::current());
   graph->setThemeColors(g.background, g.grid, g.labels, g.data);
-  applyQGraphLook(view);
+  applyGraphLook(view);
   if (!value.source.isEmpty())
     view->model()->setValues({ value });
   // a file shown: Record and Live say so, the start page makes way
-  connect(view, &QcpGraphView::fileShownChanged, this, [this]
+  connect(view, &GraphView::fileShownChanged, this, [this]
   {
     updateRecorderActions();
     updateEmptyStart();
   });
   // the start threshold dragged: the Recording page takes it
-  connect(graph, &QcpGraph::startThresholdDragged, m_wid->settingsDialog(), &SettingsDialog::thresholdChangedSLOT);
+  connect(graph, &GraphWidget::startThresholdDragged, m_wid->settingsDialog(), &SettingsDialog::thresholdChangedSLOT);
   QMdiSubWindow *win = addView(graph, title, MdiArranger::Graph, name);
   graph->setContextMenuPolicy(Qt::CustomContextMenu);
   connect(graph, &QWidget::customContextMenuRequested, this, [this, graph, win](const QPoint &pos)
@@ -834,11 +834,11 @@ QMdiSubWindow *MainWindow::addQGraphWindow(const QString &name, const QString &t
     windowMenu(win, globalPos);
   });
   // a note set in the graph marks its reading in the table
-  connect(graph, &QcpGraph::noteAdded, this, [this](const QDateTime &when, const QString &title)
+  connect(graph, &GraphWidget::noteAdded, this, [this](const QDateTime &when, const QString &title)
   {
     m_readings->log()->markAt(when, QColor::fromRgba(RecordingStore::kNoteColor), title);
   });
-  connect(graph, &QcpGraph::noteMoved, this, [this](const QDateTime &from, const QDateTime &to, const QString &title)
+  connect(graph, &GraphWidget::noteMoved, this, [this](const QDateTime &from, const QDateTime &to, const QString &title)
   {
     m_readings->log()->moveMark(from, to, QColor::fromRgba(RecordingStore::kNoteColor), title);
   });
@@ -863,7 +863,7 @@ QMdiSubWindow *MainWindow::addViewWindow(Added kind, const ValueRef &value, int 
   QMdiSubWindow *win;
   if (kind == Added::Graph)
   {
-    win = addQGraphWindow(prefix + QString::number(number), tr("Graph %1").arg(number), value);
+    win = addGraphWindow(prefix + QString::number(number), tr("Graph %1").arg(number), value);
     m_added << win;
     return win;
   }
@@ -946,7 +946,7 @@ QMdiSubWindow *MainWindow::newView(Added kind, const ValueRef &value, bool ask)
   {
     // one device with one value has nothing to choose from
     const QList<MeterController *> meters = m_session->controllers();
-    if ((meters.size() > 1 || (meters.size() == 1 && meters.first()->valueCount() > 1)) && !editQGraphSources(qgraphViewOf(win)))
+    if ((meters.size() > 1 || (meters.size() == 1 && meters.first()->valueCount() > 1)) && !editGraphSources(graphViewOf(win)))
     {
       removeAddedWindow(win);
       return nullptr;
@@ -1007,9 +1007,9 @@ void MainWindow::removeAddedWindow(QMdiSubWindow *win)
     m_xyViews.remove(view->plot());
     delete view;
   }
-  if (QcpGraphView *graph = qgraphViewOf(win))
+  if (GraphView *graph = graphViewOf(win))
   {
-    m_qgraphViews.remove(graph->graph());
+    m_graphViews.remove(graph->graph());
     delete graph;
   }
   m_grown.remove(win->widget());
@@ -1068,9 +1068,9 @@ XYView *MainWindow::xyViewOf(const QMdiSubWindow *win) const
 }
 
 // A graph draws the marks of its meters' own recordings
-RecordingStore *MainWindow::qgraphStoreFor(const MeterController *ctl) const
+RecordingStore *MainWindow::graphStoreFor(const MeterController *ctl) const
 {
-  for (const QcpGraphView *view : m_qgraphViews)
+  for (const GraphView *view : m_graphViews)
   {
     const QList<ValueRef> shown = view->model()->values();
     if (std::any_of(shown.cbegin(), shown.cend(), [ctl](const ValueRef &v) { return v.source == ctl->source(); }))
@@ -1126,24 +1126,24 @@ QList<QMdiSubWindow *> MainWindow::histogramWindows() const
   return wins;
 }
 
-QcpGraphView *MainWindow::qgraphViewOf(const QMdiSubWindow *win) const
+GraphView *MainWindow::graphViewOf(const QMdiSubWindow *win) const
 {
-  for (QcpGraphView *view : m_qgraphViews)
+  for (GraphView *view : m_graphViews)
     if (win && view->graph() == win->widget())
       return view;
   return nullptr;
 }
 
-QList<QMdiSubWindow *> MainWindow::qgraphWindows() const
+QList<QMdiSubWindow *> MainWindow::graphWindows() const
 {
   QList<QMdiSubWindow *> wins { m_graphWin };
   for (QMdiSubWindow *win : m_added)
-    if (qgraphViewOf(win))
+    if (graphViewOf(win))
       wins << win;
   return wins;
 }
 
-void MainWindow::loadIntoQGraph(QcpGraphView *view)
+void MainWindow::loadIntoGraph(GraphView *view)
 {
   if (const QString path = askRecordingPath(); !path.isEmpty())
     loadRecordingInto(view, path);
@@ -1155,7 +1155,7 @@ QString MainWindow::askRecordingPath()
                                       tr("Recordings (*.%1 *.csv *.txt);;All files (*)").arg(RecordingFile::kSuffix));
 }
 
-bool MainWindow::loadRecordingInto(QcpGraphView *view, const QString &path)
+bool MainWindow::loadRecordingInto(GraphView *view, const QString &path)
 {
   m_wid->settings()->setString("QtDMM/LastUsesPath", QDir().absoluteFilePath(path));
   QString error;
@@ -1175,25 +1175,25 @@ bool MainWindow::importRecording(const QString &path)
 {
   // the graph used last, else the first one; it is the one used now, so
   // Record and Live follow its file
-  QcpGraphView *view = pictureQGraph() ? pictureQGraph() : qgraphViewOf(m_graphWin);
+  GraphView *view = pictureGraph() ? pictureGraph() : graphViewOf(m_graphWin);
   if (!loadRecordingInto(view, path))
     return false;
-  for (QMdiSubWindow *win : qgraphWindows())
-    if (qgraphViewOf(win) == view)
+  for (QMdiSubWindow *win : graphWindows())
+    if (graphViewOf(win) == view)
       showGraphWindow(win);
-  setPictureQGraph(view);
+  setPictureGraph(view);
   return true;
 }
 
-void MainWindow::setPictureQGraph(QcpGraphView *view)
+void MainWindow::setPictureGraph(GraphView *view)
 {
-  if (m_pictureQGraph == view)
+  if (m_pictureGraph == view)
     return;
-  m_pictureQGraph = view;
+  m_pictureGraph = view;
   updateRecorderActions();
 }
 
-void MainWindow::newQGraph(const ValueRef &value)
+void MainWindow::newGraph(const ValueRef &value)
 {
   const MeterController *ctl = m_session->controllers().value(0);
   // from the button its values are asked; next to another graph it shows that one's first value
@@ -1201,9 +1201,9 @@ void MainWindow::newQGraph(const ValueRef &value)
           value.source.isEmpty());
 }
 
-// The Graph page of the settings on a graph on QCustomPlot: variant,
-// colours, line, points and width, as the graph on QtCharts takes them.
-void MainWindow::applyQGraphLook(QcpGraphView *view)
+// The Graph page of the settings on a graph: variant, colours, line,
+// points and width.
+void MainWindow::applyGraphLook(GraphView *view)
 {
   const GraphPrefs *prefs = m_wid->settingsDialog()->graphPage();
   GraphLook::Settings settings;
@@ -1221,7 +1221,7 @@ void MainWindow::applyQGraphLook(QcpGraphView *view)
   view->setDefaultVariant(prefs->variant());
 }
 
-bool MainWindow::editQGraphSources(QcpGraphView *view)
+bool MainWindow::editGraphSources(GraphView *view)
 {
   // the open meters with their values
   QList<SourcesDlg::Meter> meters;
@@ -1242,16 +1242,15 @@ bool MainWindow::editQGraphSources(QcpGraphView *view)
   return true;
 }
 
-// "Axis" in the menu of a graph on QCustomPlot: for each value Automatic or
-// one of the axes the graph has.
-// The entries of the graph on QtCharts, with its translations (context
-// "GraphWidget", not through tr(): they are not extracted a second time)
-void MainWindow::fillQGraphReferenceMenu(QMenu *menu, QcpGraphView *view, const QPoint &globalPos)
+// "Axis" in the menu of a graph: for each value Automatic or one of the
+// axes the graph has. The entries are words of the context "GraphWidget"
+// (graphwords.h)
+void MainWindow::fillGraphReferenceMenu(QMenu *menu, GraphView *view, const QPoint &globalPos)
 {
   using namespace GraphReference;
   auto word = [](const char *text) { return QCoreApplication::translate("GraphWidget", text); };
   GraphModel *model = view->model();
-  const QcpGraph *graph = view->graph();
+  const GraphWidget *graph = view->graph();
   const Line now = model->reference();
   auto entry = [&](const QString &text, const Line &line)
   {
@@ -1297,7 +1296,7 @@ void MainWindow::fillQGraphReferenceMenu(QMenu *menu, QcpGraphView *view, const 
   connect(crossings, &QAction::toggled, model, &GraphModel::setCrossingsVisible);
 }
 
-void MainWindow::fillQGraphAxisMenu(QMenu *menu, QcpGraphView *view)
+void MainWindow::fillGraphAxisMenu(QMenu *menu, GraphView *view)
 {
   const QList<ValueRef> values = view->model()->values();
   const QString places[] = { tr("&Left axis"), tr("&Right axis"), tr("&Third axis") };
@@ -1320,11 +1319,11 @@ void MainWindow::fillQGraphAxisMenu(QMenu *menu, QcpGraphView *view)
       connect(a, &QAction::triggered, view, [view, value, axis] { view->model()->setValueAxis(value, axis); });
     };
     entry(tr("&Automatic"), GraphModel::kAxisAuto);
-    for (int axis = 0; axis < QcpGraph::kMaxAxes; ++axis)
+    for (int axis = 0; axis < GraphWidget::kMaxAxes; ++axis)
       entry(axis < 3 ? places[axis] : tr("Axis %1").arg(axis + 1), axis);
   }
   // the range of each axis drawn: fitted to the values, or fixed by unit
-  // (the words of the old graph, translated there)
+  // (words of the context GraphWidget)
   auto word = [](const char *text) { return QCoreApplication::translate("GraphWidget", text); };
   const QStringList units = view->graph()->axisUnits();
   if (!units.isEmpty())
@@ -1538,13 +1537,13 @@ void MainWindow::createSidebar()
     {
       if (!graph)
         return;
-      if (RecordingStore *own = qgraphStoreFor(ctl))
+      if (RecordingStore *own = graphStoreFor(ctl))
         own->addMark(color.rgba(), tr("%1: %2").arg(ctl->deviceName(), name));
     });
     // a SCPI client's note in the graph (the table: markRequested())
     connect(ctl, &MeterController::noteRequested, this, [this, ctl](const QString &title, const QString &note)
     {
-      if (RecordingStore *own = qgraphStoreFor(ctl))
+      if (RecordingStore *own = graphStoreFor(ctl))
         own->addNote(-1, tr("%1: %2").arg(ctl->deviceName(), title), note);
     });
   });
@@ -1703,7 +1702,7 @@ void MainWindow::fillViewToolbar()
   });
   addViewMenu(action_Graph, [this](QMenu *menu)
   {
-    for (QMdiSubWindow *win : qgraphWindows())
+    for (QMdiSubWindow *win : graphWindows())
       addViewEntry(menu, win, win->windowTitle());
     if (m_graphSources->isVisible())
       menu->addAction(m_graphSources);
@@ -1732,7 +1731,7 @@ void MainWindow::fillViewToolbar()
       m_arranger->arrange();
     });
   };
-  kindClicked(action_Graph, [this] { return qgraphWindows(); }, [] { return true; });
+  kindClicked(action_Graph, [this] { return graphWindows(); }, [] { return true; });
   kindClicked(m_meterAction, [this] { return meterWindows(); }, [this]
   {
     const bool none = meterWindows().size() == 1 && meterViewOf(m_meterWin)->value().source.isEmpty();
@@ -2030,8 +2029,8 @@ void MainWindow::placeWindow()
 
 void MainWindow::updateEmptyStart()
 {
-  const QList<QMdiSubWindow *> qgraphs = qgraphWindows();
-  const bool showsFile = std::any_of(qgraphs.cbegin(), qgraphs.cend(), [this](QMdiSubWindow *w) { return qgraphViewOf(w)->showsFile(); });
+  const QList<QMdiSubWindow *> graphWins = graphWindows();
+  const bool showsFile = std::any_of(graphWins.cbegin(), graphWins.cend(), [this](QMdiSubWindow *w) { return graphViewOf(w)->showsFile(); });
   const bool empty = m_session->controllers().isEmpty() && m_pendingOpen.isEmpty() && !showsFile;
   const bool noDevices = m_wid->devices()->list().isEmpty();
   m_emptyConnect->setVisible(!noDevices);
@@ -2212,11 +2211,11 @@ void MainWindow::createActions()
   connect(action_Print, &QAction::triggered, this, [this]
   {
     // the graph used last, else the first one
-    if (QPointer<QcpGraphView> qgraph = pictureQGraph() ? pictureQGraph() : qgraphViewOf(m_graphWin))
-      m_wid->printWith([qgraph](QPrinter *printer, const QString &title, const QString &comment)
+    if (QPointer<GraphView> graphView = pictureGraph() ? pictureGraph() : graphViewOf(m_graphWin))
+      m_wid->printWith([graphView](QPrinter *printer, const QString &title, const QString &comment)
       {
-        if (qgraph)
-          qgraph->graph()->print(printer, title, comment);
+        if (graphView)
+          graphView->graph()->print(printer, title, comment);
       });
   });
   connect(action_Import, &QAction::triggered, this, qOverload<>(&MainWindow::importRecording));
@@ -2282,7 +2281,7 @@ void MainWindow::createExtraActions()
   m_zoomIn->setShortcuts({QKeySequence::ZoomIn, QKeySequence("Ctrl+=")});
   connect(m_zoomIn, &QAction::triggered, this, [this]
   {
-    if (const QcpGraphView *view = currentQGraph())
+    if (const GraphView *view = currentGraph())
       view->graph()->zoomBy(1.25);
   });
   m_zoomOut = new QAction(tr("Zoom &out"), this);
@@ -2290,7 +2289,7 @@ void MainWindow::createExtraActions()
   m_zoomOut->setShortcut(QKeySequence::ZoomOut);
   connect(m_zoomOut, &QAction::triggered, this, [this]
   {
-    if (const QcpGraphView *view = currentQGraph())
+    if (const GraphView *view = currentGraph())
       view->graph()->zoomBy(1 / 1.25);
   });
   m_zoomFit = new QAction(tr("Show &whole recording"), this);
@@ -2298,7 +2297,7 @@ void MainWindow::createExtraActions()
   m_zoomFit->setShortcut(QKeySequence("Ctrl+0"));
   connect(m_zoomFit, &QAction::triggered, this, [this]
   {
-    if (const QcpGraphView *view = currentQGraph())
+    if (const GraphView *view = currentGraph())
       view->graph()->zoomFit();
   });
   // a note in the graph at the newest reading, also while the graph has no focus
@@ -2311,7 +2310,7 @@ void MainWindow::createExtraActions()
                                 "N in the graph does the same.</p></body></html>"));
   connect(m_noteAction, &QAction::triggered, this, [this]
   {
-    if (QcpGraphView *view = currentQGraph())
+    if (GraphView *view = currentGraph())
       view->graph()->askNote();
   });
   m_copyImage = new QAction(tr("Cop&y graph image"), this);
@@ -2322,7 +2321,7 @@ void MainWindow::createExtraActions()
                                "report or a chat.</p></body></html>"));
   connect(m_copyImage, &QAction::triggered, this, [this]
   {
-    if (QcpGraphView *view = currentQGraph())
+    if (GraphView *view = currentGraph())
       view->graph()->copyImage();
   });
 
@@ -2773,31 +2772,31 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
         QMessageBox::warning(this, tr("Save image"), tr("Could not save the image."));
     });
   };
-  QcpGraphView *qgraph = qgraphViewOf(win);
-  if (qgraph)
-    setPictureQGraph(qgraph);   // the window's picture actions are for it now
-  // on a mark's flag: its note (the texts are the old graph's)
-  const int qgraphMark = qgraph ? qgraph->graph()->markAtGlobal(globalPos) : -1;
-  if (qgraphMark >= 0)
+  GraphView *graphView = graphViewOf(win);
+  if (graphView)
+    setPictureGraph(graphView);   // the window's picture actions are for it now
+  // on a mark's flag: its note (words of the context GraphWidget)
+  const int graphMark = graphView ? graphView->graph()->markAtGlobal(globalPos) : -1;
+  if (graphMark >= 0)
   {
-    QcpGraph *graph = qgraph->graph();
+    GraphWidget *graph = graphView->graph();
     auto word = [](const char *text) { return QCoreApplication::translate("GraphWidget", text); };
-    if (graph->markIsNote(qgraphMark) && graph->marksEditable())
-      connect(menu.addAction(word("&Edit note...")), &QAction::triggered, graph, [graph, qgraphMark] { graph->editMark(qgraphMark); });
+    if (graph->markIsNote(graphMark) && graph->marksEditable())
+      connect(menu.addAction(word("&Edit note...")), &QAction::triggered, graph, [graph, graphMark] { graph->editMark(graphMark); });
     if (graph->marksEditable())
-      connect(menu.addAction(word("&Remove mark")), &QAction::triggered, graph, [graph, qgraphMark] { graph->removeMark(qgraphMark); });
+      connect(menu.addAction(word("&Remove mark")), &QAction::triggered, graph, [graph, graphMark] { graph->removeMark(graphMark); });
   }
-  else if (qgraph)
+  else if (graphView)
   {
     auto word = [](const char *text) { return QCoreApplication::translate("GraphWidget", text); };
     // recording, as the button does: only the devices whose values it shows
-    if (qgraph->graph()->store() && qgraph->graph()->store()->isRunning())
+    if (graphView->graph()->store() && graphView->graph()->store()->isRunning())
       connect(menu.addAction(word("Stop recording")), &QAction::triggered, action_Stop, &QAction::trigger);
-    else if (!qgraph->showsFile() && action_Start->isEnabled())
-      connect(menu.addAction(word("Start recording")), &QAction::triggered, this, [this, qgraph]
+    else if (!graphView->showsFile() && action_Start->isEnabled())
+      connect(menu.addAction(word("Start recording")), &QAction::triggered, this, [this, graphView]
       {
         QStringList sources;
-        for (const ValueRef &v : qgraph->model()->values())
+        for (const ValueRef &v : graphView->model()->values())
           sources << v.source;
         m_session->setRecordingScope(sources);
         action_Start->trigger();
@@ -2806,16 +2805,16 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
       });
     menu.addSeparator();
     // another one, first with the same value
-    const QList<ValueRef> values = qgraph->model()->values();
+    const QList<ValueRef> values = graphView->model()->values();
     connect(menu.addAction(tr("&New graph")), &QAction::triggered, this, [this, values]
     {
-      newQGraph(values.value(0));
+      newGraph(values.value(0));
     });
-    if (!qgraph->showsFile() && !m_session->controllers().isEmpty())
+    if (!graphView->showsFile() && !m_session->controllers().isEmpty())
     {
-      connect(menu.addAction(tr("S&ources...")), &QAction::triggered, this, [this, qgraph] { editQGraphSources(qgraph); });
-      if (!qgraph->model()->values().isEmpty())
-        fillQGraphAxisMenu(menu.addMenu(tr("A&xis")), qgraph);
+      connect(menu.addAction(tr("S&ources...")), &QAction::triggered, this, [this, graphView] { editGraphSources(graphView); });
+      if (!graphView->model()->values().isEmpty())
+        fillGraphAxisMenu(menu.addMenu(tr("A&xis")), graphView);
     }
     {
       // this graph's own colours, or those of the settings
@@ -2825,9 +2824,9 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
       {
         QAction *a = variants->addAction(text);
         a->setCheckable(true);
-        a->setChecked(qgraph->model()->variant() == name);
+        a->setChecked(graphView->model()->variant() == name);
         group->addAction(a);
-        connect(a, &QAction::triggered, qgraph, [qgraph, name] { qgraph->model()->setVariant(name); });
+        connect(a, &QAction::triggered, graphView, [graphView, name] { graphView->model()->setVariant(name); });
       };
       entry(tr("As in the &settings"), QString());
       variants->addSeparator();
@@ -2835,25 +2834,25 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
         entry(GraphLook::title(v), GraphLook::name(v));
       QAction *patterns = menu.addAction(tr("&Patterned lines"));
       patterns->setCheckable(true);
-      patterns->setChecked(qgraph->model()->patternedLines());
-      connect(patterns, &QAction::toggled, qgraph, [qgraph](bool on) { qgraph->model()->setPatternedLines(on); });
+      patterns->setChecked(graphView->model()->patternedLines());
+      connect(patterns, &QAction::toggled, graphView, [graphView](bool on) { graphView->model()->setPatternedLines(on); });
     }
-    if (!qgraph->showsFile())
-      fillQGraphReferenceMenu(menu.addMenu(tr("Re&ference line")), qgraph, QCursor::pos());
+    if (!graphView->showsFile())
+      fillGraphReferenceMenu(menu.addMenu(tr("Re&ference line")), graphView, QCursor::pos());
     {
       // readings not drawn, the recording keeps them; the entries are the
-      // old graph's, the menu's letter its own (that one is taken here)
+      // words of the context GraphWidget, the menu's letter its own (that one is taken here)
       using namespace GraphOutliers;
       auto word = [](const char *text) { return QCoreApplication::translate("GraphWidget", text); };
       QMenu *outliers = menu.addMenu(tr("Outli&ers"));
-      const Rule rule = qgraph->model()->outliers();
+      const Rule rule = graphView->model()->outliers();
       const QString unit = SiPrefix::displayText(rule.unit);
       auto entry = [&](const QString &text, Mode mode)
       {
         QAction *a = outliers->addAction(text);
         a->setCheckable(true);
         a->setChecked(rule.mode == mode);
-        connect(a, &QAction::triggered, qgraph->graph(), [graph = qgraph->graph(), mode] { graph->askOutliers(mode); });
+        connect(a, &QAction::triggered, graphView->graph(), [graph = graphView->graph(), mode] { graph->askOutliers(mode); });
       };
       entry(word("&Show all"), Shown);
       entry(rule.mode == Sigma ? word("&More than %1 σ from their neighbours...").arg(rule.a)
@@ -2861,10 +2860,10 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
       entry(rule.mode == Jump ? word("&Spikes larger than %1 %2...").arg(rule.a).arg(unit) : word("&Spikes larger than..."), Jump);
       entry(rule.mode == Limits ? word("Outside %1 .. %2 %3...").arg(rule.a).arg(rule.b).arg(unit) : word("Outside &limits..."), Limits);
     }
-    if (qgraph->graph()->store() && qgraph->graph()->marksEditable())
+    if (graphView->graph()->store() && graphView->graph()->marksEditable())
     {
-      // a note where the menu was opened, or at the newest reading (the texts are the old graph's)
-      QcpGraph *graph = qgraph->graph();
+      // a note where the menu was opened, or at the newest reading (words of the context GraphWidget)
+      GraphWidget *graph = graphView->graph();
       if (const qint64 t = graph->timeAt(globalPos); t >= 0)
         connect(menu.addAction(QCoreApplication::translate("GraphWidget", "Note here...")), &QAction::triggered, graph, [graph, t] { graph->askNote(t); });
       QAction *now = menu.addAction(QCoreApplication::translate("GraphWidget", "Note now..."));
@@ -2872,50 +2871,50 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
       connect(now, &QAction::triggered, graph, [graph] { graph->askNote(); });
     }
     {
-      // own texts: the old graph's letters are taken in this menu
+      // own texts: the letters of the GraphWidget words are taken in this menu
       auto toggle = [&](const QString &text, bool on, void (GraphModel::*set)(bool))
       {
         QAction *a = menu.addAction(text);
         a->setCheckable(true);
         a->setChecked(on);
-        connect(a, &QAction::toggled, qgraph->model(), set);
+        connect(a, &QAction::toggled, graphView->model(), set);
       };
-      toggle(tr("Overvie&w"), qgraph->model()->minimapVisible(), &GraphModel::setMinimapVisible);
-      toggle(tr("Min/max &band"), qgraph->model()->envelopeVisible(), &GraphModel::setEnvelopeVisible);
-      toggle(tr("&Meter states"), qgraph->model()->statesVisible(), &GraphModel::setStatesVisible);
+      toggle(tr("Overvie&w"), graphView->model()->minimapVisible(), &GraphModel::setMinimapVisible);
+      toggle(tr("Min/max &band"), graphView->model()->envelopeVisible(), &GraphModel::setEnvelopeVisible);
+      toggle(tr("&Meter states"), graphView->model()->statesVisible(), &GraphModel::setStatesVisible);
     }
     {
       QAction *stats = menu.addAction(tr("Stat&istics"));
       stats->setCheckable(true);
-      stats->setChecked(qgraph->model()->statsVisible());
-      connect(stats, &QAction::toggled, qgraph, [qgraph](bool on) { qgraph->model()->setStatsVisible(on); });
-      if (qgraph->graph()->timeCursor(0) >= 0 || qgraph->graph()->timeCursor(1) >= 0)
-        connect(menu.addAction(tr("Remove &time cursors")), &QAction::triggered, qgraph->graph(), &QcpGraph::clearTimeCursors);
+      stats->setChecked(graphView->model()->statsVisible());
+      connect(stats, &QAction::toggled, graphView, [graphView](bool on) { graphView->model()->setStatsVisible(on); });
+      if (graphView->graph()->timeCursor(0) >= 0 || graphView->graph()->timeCursor(1) >= 0)
+        connect(menu.addAction(tr("Remove &time cursors")), &QAction::triggered, graphView->graph(), &GraphWidget::clearTimeCursors);
     }
-    if (qgraph->graph()->zoomed())
-      connect(menu.addAction(tr("&Undo zoom")), &QAction::triggered, qgraph->graph(), [graph = qgraph->graph()] { graph->endZoom(true); });
-    connect(menu.addAction(tr("&Load recording...")), &QAction::triggered, this, [this, qgraph] { loadIntoQGraph(qgraph); });
-    if (qgraph->showsFile())
-      connect(menu.addAction(tr("Back to the &device")), &QAction::triggered, qgraph, &QcpGraphView::closeFile);
+    if (graphView->graph()->zoomed())
+      connect(menu.addAction(tr("&Undo zoom")), &QAction::triggered, graphView->graph(), [graph = graphView->graph()] { graph->endZoom(true); });
+    connect(menu.addAction(tr("&Load recording...")), &QAction::triggered, this, [this, graphView] { loadIntoGraph(graphView); });
+    if (graphView->showsFile())
+      connect(menu.addAction(tr("Back to the &device")), &QAction::triggered, graphView, &GraphView::closeFile);
     menu.addSeparator();
     // the time cursors where the menu was opened (a click sets A, Shift+click B)
-    if (const qint64 t = qgraph->graph()->timeAt(globalPos); t >= 0)
+    if (const qint64 t = graphView->graph()->timeAt(globalPos); t >= 0)
       for (int which : { 0, 1 })
-        connect(menu.addAction(which == 0 ? word("Cursor A here") : word("Cursor B here")), &QAction::triggered, qgraph->graph(),
-                [graph = qgraph->graph(), which, t] { graph->setTimeCursor(which, t); });
+        connect(menu.addAction(which == 0 ? word("Cursor A here") : word("Cursor B here")), &QAction::triggered, graphView->graph(),
+                [graph = graphView->graph(), which, t] { graph->setTimeCursor(which, t); });
     menu.addSeparator();
     QAction *hold = menu.addAction(tr("&Hold picture"));
     hold->setCheckable(true);
-    hold->setChecked(qgraph->graph()->hold());
-    connect(hold, &QAction::toggled, qgraph->graph(), [graph = qgraph->graph()](bool on) { graph->setHold(on); });
+    hold->setChecked(graphView->graph()->hold());
+    connect(hold, &QAction::toggled, graphView->graph(), [graph = graphView->graph()](bool on) { graph->setHold(on); });
     // as Clear in the toolbar: the recording goes (asked first when not
     // saved), a recording or a file viewed: Live again
     connect(menu.addAction(tr("&Reset")), &QAction::triggered, action_Clear, &QAction::trigger);
     // the Graph page of the settings: colours, line, points, width
     connect(menu.addAction(word("Configure...")), &QAction::triggered, m_wid, &InstanceWidget::configGraphSLOT);
     // pictures and the recording; the window's actions without their letters, taken here
-    connect(menu.addAction(word("Copy image")), &QAction::triggered, qgraph->graph(), &QcpGraph::copyImage);
-    connect(menu.addAction(word("Export image...")), &QAction::triggered, this, [this, qgraph] { exportQGraphImage(qgraph); });
+    connect(menu.addAction(word("Copy image")), &QAction::triggered, graphView->graph(), &GraphWidget::copyImage);
+    connect(menu.addAction(word("Export image...")), &QAction::triggered, this, [this, graphView] { exportGraphImage(graphView); });
     for (QAction *shared : { action_Print, m_graphExport, m_graphToBasket, m_labPlotLive })
     {
       QAction *a = menu.addAction(shared->icon(), QString(shared->text()).remove('&'));
@@ -3137,14 +3136,14 @@ static QString readingText(const Reading &r)
     .trimmed();
 }
 
-bool MainWindow::editSources(ValueMenu::View view, MeterView *meter, PoincareView *plot, QcpGraphView *graph,
+bool MainWindow::editSources(ValueMenu::View view, MeterView *meter, PoincareView *plot, GraphView *graph,
                              HistogramView *histogram, HeatmapView *heatmap)
 {
   if (view == ValueMenu::View::Graph)
   {
     if (!graph)
-      graph = currentQGraph();
-    return editQGraphSources(graph);
+      graph = currentGraph();
+    return editGraphSources(graph);
   }
   if (!meter)
     meter = meterViewOf(m_meterWin);
@@ -3300,17 +3299,17 @@ void MainWindow::dropValue(const ValueRef &value, const QPoint &pos)
     histogram->setValue(value);
   else if (HeatmapView *heatmap = heatmapViewOf(win))
     heatmap->setValues(value, heatmap->value(1), heatmap->value(2));
-  else if (QcpGraphView *qgraph = qgraphViewOf(win))
+  else if (GraphView *graphView = graphViewOf(win))
   {
     // one more curve; a graph showing a file has none of a device
-    if (qgraph->showsFile())
+    if (graphView->showsFile())
     {
       statusBar()->showMessage(tr("A graph showing a loaded recording takes no values of a device: Back to the device in its menu"), 6000);
       return;
     }
-    QList<ValueRef> values = qgraph->model()->values();
+    QList<ValueRef> values = graphView->model()->values();
     if (!values.contains(value))
-      qgraph->model()->setValues(values << value);
+      graphView->model()->setValues(values << value);
   }
   else if (win == m_readingsWin)
     setTableShown(value, true);
@@ -3354,7 +3353,7 @@ void MainWindow::dropValue(const ValueRef &value, const QPoint &pos)
     else if (chosen == graph)
     {
       // the first graph; one more curve
-      QcpGraphView *first = qgraphViewOf(m_graphWin);
+      GraphView *first = graphViewOf(m_graphWin);
       if (first->showsFile())
         first->closeFile();
       QList<ValueRef> values = first->model()->values();
@@ -3482,8 +3481,8 @@ DeviceSidebar::Value MainWindow::otherValueRow(const MeterController *ctl, int i
   const ValueRef value(id, ctl->source());
   // a curve where one sees it
   QStringList inGraphs;
-  for (QMdiSubWindow *win : qgraphWindows())
-    if (const QColor color = win->isHidden() ? QColor() : qgraphViewOf(win)->graph()->drawnColor(value); color.isValid())
+  for (QMdiSubWindow *win : graphWindows())
+    if (const QColor color = win->isHidden() ? QColor() : graphViewOf(win)->graph()->drawnColor(value); color.isValid())
     {
       if (!row.color.isValid())
         row.color = color;   // the first graph's
@@ -3560,8 +3559,8 @@ void MainWindow::pointToViews(const ValueRef &value)
   QList<QMdiSubWindow *> wins;
   if (row.onPanel)
     wins << m_panelWins.value(value.source);
-  for (QMdiSubWindow *win : qgraphWindows())
-    if (!win->isHidden() && qgraphViewOf(win)->graph()->drawnColor(value).isValid())
+  for (QMdiSubWindow *win : graphWindows())
+    if (!win->isHidden() && graphViewOf(win)->graph()->drawnColor(value).isValid())
       wins << win;
   for (QMdiSubWindow *win : meterWindows())
     if (const MeterView *meter = meterViewOf(win); meter && !win->isHidden() && meter->value() == value)
@@ -3618,14 +3617,14 @@ void MainWindow::fillValueMenu(QMenu *menu, const ValueRef &value)
   target.graphs = [this]
   {
     QList<std::pair<QString, GraphModel *>> graphs;
-    for (const QMdiSubWindow *win : qgraphWindows())
-      graphs << std::make_pair(win->windowTitle(), qgraphViewOf(win)->model());
+    for (const QMdiSubWindow *win : graphWindows())
+      graphs << std::make_pair(win->windowTitle(), graphViewOf(win)->model());
     return graphs;
   };
   target.showGraph = [this](const GraphModel *model)
   {
-    for (QMdiSubWindow *win : qgraphWindows())
-      if (qgraphViewOf(win)->model() == model)
+    for (QMdiSubWindow *win : graphWindows())
+      if (graphViewOf(win)->model() == model)
         showGraphWindow(win);
   };
   target.show = [this](ValueMenu::View view, const QString &source)
@@ -3964,7 +3963,7 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
     // (a workspace loaded with its meters connected)
     auto windows = [this]
     {
-      return meterWindows() + poincareWindows() + xyWindows() + histogramWindows() + heatmapWindows() + qgraphWindows()
+      return meterWindows() + poincareWindows() + xyWindows() + histogramWindows() + heatmapWindows() + graphWindows()
              + QList<QMdiSubWindow *>{ m_readingsWin } + panelWindows();
     };
     QMap<QString, QString> geometry;
@@ -4004,8 +4003,8 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
                                          valueOf(get("Windows/heatmap-y", QString()).toString()),
                                          valueOf(get("Windows/heatmap-z", QString()).toString()));
   heatmapViewOf(m_heatmapWin)->plot()->setColorScheme(ColorMap::fromKey(get("Windows/heatmap-scheme", QString()).toString()));
-  for (QMdiSubWindow *win : qgraphWindows())
-    applyGraphState(qgraphViewOf(win), get, valueOf);
+  for (QMdiSubWindow *win : graphWindows())
+    applyGraphState(graphViewOf(win), get, valueOf);
   // the values the readings table leaves out, "1 2", another meter's
   // "1@device:ab12cd34"; none at first. The other meters in it, by source
   {
@@ -4039,7 +4038,7 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
   m_arranger->arrange();
 }
 
-void MainWindow::applyGraphState(QcpGraphView *view, const WorkspaceGet &get,
+void MainWindow::applyGraphState(GraphView *view, const WorkspaceGet &get,
                                  const std::function<ValueRef(const QString &)> &valueOf)
 {
   GraphModel *model = view->model();
@@ -4055,7 +4054,7 @@ void MainWindow::applyGraphState(QcpGraphView *view, const WorkspaceGet &get,
   if (list != QLatin1String("-"))
     for (const QString &text : list.split(' ', Qt::SkipEmptyParts))
       values << valueOf(text);
-  else if (view == qgraphViewOf(m_graphWin))
+  else if (view == graphViewOf(m_graphWin))
   {
     if (get("Windows/graph-main-shown", true).toBool())
       values << valueOf("0");
@@ -4100,7 +4099,7 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
   set("Windows/toolbar-hidden", m_toolbars->isChecked());
   set("Windows/design", Designs::name(Designs::current()));
   if (m_arranger->mode() == MdiArranger::Free)
-    for (QMdiSubWindow *w : meterWindows() + poincareWindows() + xyWindows() + histogramWindows() + heatmapWindows() + qgraphWindows() + QList<QMdiSubWindow *>{ m_readingsWin }
+    for (QMdiSubWindow *w : meterWindows() + poincareWindows() + xyWindows() + histogramWindows() + heatmapWindows() + graphWindows() + QList<QMdiSubWindow *>{ m_readingsWin }
                             + panelWindows())
     {
       const QRect g = w->geometry();
@@ -4197,9 +4196,9 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
   }
   set("Windows/heatmaps", heatmaps.join(' '));
   QStringList graphs;
-  for (QMdiSubWindow *w : qgraphWindows())
+  for (QMdiSubWindow *w : graphWindows())
   {
-    qgraphViewOf(w)->model()->writeSettings([&set](const QString &k, const QVariant &v) { set(k, v); },
+    graphViewOf(w)->model()->writeSettings([&set](const QString &k, const QVariant &v) { set(k, v); },
                                             "Windows/" + w->objectName());
     if (w != m_graphWin)
     {
@@ -4230,23 +4229,23 @@ QString MainWindow::basketName(ProjectFolder::Kind kind, const QString &suffix) 
 void MainWindow::graphToBasket()
 {
   // the graph used last, else the first one
-  qgraphToBasket(pictureQGraph() ? pictureQGraph() : qgraphViewOf(m_graphWin));
+  graphToBasketOf(pictureGraph() ? pictureGraph() : graphViewOf(m_graphWin));
 }
 
-QcpGraphView *MainWindow::currentQGraph() const
+GraphView *MainWindow::currentGraph() const
 {
   // the graph whose window is active, else the one used last, else the first
-  if (QcpGraphView *view = qgraphViewOf(m_mdi->activeSubWindow()))
+  if (GraphView *view = graphViewOf(m_mdi->activeSubWindow()))
     return view;
-  return pictureQGraph() ? pictureQGraph() : qgraphViewOf(m_graphWin);
+  return pictureGraph() ? pictureGraph() : graphViewOf(m_graphWin);
 }
 
-QcpGraphView *MainWindow::pictureQGraph() const
+GraphView *MainWindow::pictureGraph() const
 {
-  return m_pictureQGraph && m_pictureQGraph->graph()->isVisibleTo(m_mdi) ? m_pictureQGraph.data() : nullptr;
+  return m_pictureGraph && m_pictureGraph->graph()->isVisibleTo(m_mdi) ? m_pictureGraph.data() : nullptr;
 }
 
-bool MainWindow::writeQGraphRecording(QcpGraphView *view, const QString &path, bool everyReading)
+bool MainWindow::writeGraphRecording(GraphView *view, const QString &path, bool everyReading)
 {
   if (!view->showsFile())
     return m_wid->writeRecordingTo(path, everyReading, view->model()->values());
@@ -4262,10 +4261,10 @@ bool MainWindow::writeQGraphRecording(QcpGraphView *view, const QString &path, b
   return false;
 }
 
-void MainWindow::qgraphToBasket(QcpGraphView *view)
+void MainWindow::graphToBasketOf(GraphView *view)
 {
   const QString csv = basketName(ProjectFolder::Recordings, "csv");
-  if (!writeQGraphRecording(view, csv, false))
+  if (!writeGraphRecording(view, csv, false))
     return;
   const QString png = BasketWidget::freeName(ProjectFolder::dirFor(m_basket->folder(), ProjectFolder::Images),
                                              QFileInfo(csv).completeBaseName() + ".png");
@@ -4275,8 +4274,8 @@ void MainWindow::qgraphToBasket(QcpGraphView *view)
     Q_EMIT m_wid->error(tr("Into the project: %1").arg(QFileInfo(csv).completeBaseName()));
 }
 
-// The dialog of the graph on QtCharts, with its words and its last place
-void MainWindow::exportQGraphImage(QcpGraphView *view)
+// The dialog of a graph's picture, with its last place
+void MainWindow::exportGraphImage(GraphView *view)
 {
   auto word = [](const char *text) { return QCoreApplication::translate("GraphWidget", text); };
   Settings *cfg = m_wid->settings();
@@ -4302,10 +4301,10 @@ void MainWindow::exportQGraphImage(QcpGraphView *view)
 
 void MainWindow::exportDialog(int view)
 {
-  exportDialogFor(view, pictureQGraph() ? pictureQGraph() : qgraphViewOf(m_graphWin));
+  exportDialogFor(view, pictureGraph() ? pictureGraph() : graphViewOf(m_graphWin));
 }
 
-void MainWindow::exportDialogFor(int view, QcpGraphView *qgraph)
+void MainWindow::exportDialogFor(int view, GraphView *graphView)
 {
   ExportDlg dlg(static_cast<ExportDlg::What>(view), m_basket->folder(), m_wid->settings(), this);
   if (dlg.exec() != QDialog::Accepted)
@@ -4321,14 +4320,14 @@ void MainWindow::exportDialogFor(int view, QcpGraphView *qgraph)
   {
     case ExportDlg::Recording:
       // says why itself
-      ok = qgraph && (dlg.graphValuesOnly() || qgraph->showsFile()) ? writeQGraphRecording(qgraph, path, dlg.everyReading())
+      ok = graphView && (dlg.graphValuesOnly() || graphView->showsFile()) ? writeGraphRecording(graphView, path, dlg.everyReading())
                                                                     : m_wid->writeRecordingTo(path, dlg.everyReading());
       break;
     case ExportDlg::Table:
       ok = m_readings->log()->writeAny(path, &error);
       break;
     case ExportDlg::Picture:
-      ok = qgraph && qgraph->graph()->exportImageFile(path);
+      ok = graphView && graphView->graph()->exportImageFile(path);
       break;
   }
   QString labPlotError;
@@ -4714,7 +4713,7 @@ int MainWindow::em() const
 
 QSize MainWindow::growthFor(QMdiSubWindow *win) const
 {
-  if (qgraphViewOf(win))
+  if (graphViewOf(win))
     return QSize(0, 18 * em());    // below the instruments
   if (isColumn(win))
     return QSize(19 * em(), 0);    // a column on the right
@@ -4881,7 +4880,7 @@ void MainWindow::setDesign(int design)
   for (QMdiSubWindow *win : std::as_const(m_panelWins))
     applyFrame(win->widget());
   const Designs::GraphColors g = Designs::graphColors(d);
-  for (const QcpGraphView *view : std::as_const(m_qgraphViews))
+  for (const GraphView *view : std::as_const(m_graphViews))
     view->graph()->setThemeColors(g.background, g.grid, g.labels, g.data);
   for (QMdiSubWindow *win : poincareWindows())
     applyPoincareColors(static_cast<PoincarePlot *>(win->widget()));

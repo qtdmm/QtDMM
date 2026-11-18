@@ -58,8 +58,8 @@ class ReadingsWidget;
 class PoincarePlot;
 class XYPlot;
 class XYView;
-class QcpGraph;
-class QcpGraphView;
+class GraphWidget;
+class GraphView;
 class HistogramPlot;
 class HistogramView;
 class GraphCommon;
@@ -90,7 +90,7 @@ public:
   /// @param parser the processed command line (--debug, --config-dir, --config-id)
   /// @param parent parent widget, normally none
   MainWindow(QCommandLineParser &parser, QWidget *parent = nullptr);
-  /// The views' lookups (m_qgraphViews, ...) go before the windows: the
+  /// The views' lookups (m_graphViews, ...) go before the windows: the
   /// MDI area must not report a window activated while they are torn down.
   ~MainWindow() override;
   /// --debug: frame dump and the qtdmm.hid logging category.
@@ -219,21 +219,21 @@ protected:
   XYPlot     *m_xyPlot = nullptr;
   QMdiSubWindow *m_xyWin = nullptr;
   QHash<XYPlot *, XYView *> m_xyViews;
-  /// The graphs (on QCustomPlot): the first one in m_graphWin, more added.
-  QHash<QcpGraph *, QcpGraphView *> m_qgraphViews;
+  /// The graphs: the first one in m_graphWin, more added.
+  QHash<GraphWidget *, GraphView *> m_graphViews;
   /// The graph (QCP) the window's picture actions are for (Print, the export's
   /// picture, Into the project): the one used last; nullptr: none used yet.
-  QPointer<QcpGraphView> m_pictureQGraph;
-  /// m_pictureQGraph set: Record and Live show the state of what it shows.
-  void        setPictureQGraph(QcpGraphView *view);
-  /// m_pictureQGraph while its window is shown: a hidden one is no longer the one used.
-  QcpGraphView *pictureQGraph() const;
-  /// The graph whose window is active, else pictureQGraph(), else the first
+  QPointer<GraphView> m_pictureGraph;
+  /// m_pictureGraph set: Record and Live show the state of what it shows.
+  void        setPictureGraph(GraphView *view);
+  /// m_pictureGraph while its window is shown: a hidden one is no longer the one used.
+  GraphView *pictureGraph() const;
+  /// The graph whose window is active, else pictureGraph(), else the first
   /// one: zoom, note, copy image and Sources... are for it.
-  QcpGraphView *currentQGraph() const;
+  GraphView *currentGraph() const;
   /// What Export writes for a graph (QCP): the file it shows, else the
   /// recording of its values. False: not written, said why.
-  bool        writeQGraphRecording(QcpGraphView *view, const QString &path, bool everyReading);
+  bool        writeGraphRecording(GraphView *view, const QString &path, bool everyReading);
   QAction    *m_newHistogramAction = nullptr;
   QAction    *m_newHeatmapAction = nullptr;
   QAction    *m_heatmapAction = nullptr;
@@ -246,20 +246,20 @@ protected:
   /// its Sources dialog first, cancelled no view.
   QMdiSubWindow *newView(Added kind, const ValueRef &value, bool ask = false);
   /// Another graph showing @p value, without one the first meter's main value.
-  void        newQGraph(const ValueRef &value = ValueRef());
-  /// The dialog of the values a graph on QCustomPlot shows; false when cancelled.
-  bool        editQGraphSources(QcpGraphView *view);
-  void        fillQGraphAxisMenu(QMenu *menu, QcpGraphView *view);
-  /// Where the reference line of a graph on QCustomPlot stands, its added lines, the crossings.
-  void        fillQGraphReferenceMenu(QMenu *menu, QcpGraphView *view, const QPoint &globalPos);
-  void        applyQGraphLook(QcpGraphView *view);
+  void        newGraph(const ValueRef &value = ValueRef());
+  /// The dialog of the values a graph shows; false when cancelled.
+  bool        editGraphSources(GraphView *view);
+  void        fillGraphAxisMenu(QMenu *menu, GraphView *view);
+  /// Where the reference line of a graph stands, its added lines, the crossings.
+  void        fillGraphReferenceMenu(QMenu *menu, GraphView *view, const QPoint &globalPos);
+  void        applyGraphLook(GraphView *view);
   /// Asks for a recording and shows it in the graph of @p view.
-  void        loadIntoQGraph(QcpGraphView *view);
+  void        loadIntoGraph(GraphView *view);
   /// The recording file the user picks to load; empty when cancelled.
   QString     askRecordingPath();
   /// Shows the recording in @p path in the graph of @p view; false (and a
   /// message) when it cannot be read.
-  bool        loadRecordingInto(QcpGraphView *view, const QString &path);
+  bool        loadRecordingInto(GraphView *view, const QString &path);
   /// A recording from the toolbar or the project: into the graph used last,
   /// without one into a new graph.
   void        importRecording();
@@ -281,17 +281,17 @@ protected:
   /// from the menu and go when closed. All work alike on the session's
   /// readings: each with its curves, axes, time window, cursors and
   /// statistics. The window's actions (print, export, zoom, note) are for
-  /// the one used last (pictureQGraph()).
+  /// the one used last (pictureGraph()).
   /// @{
   /// The window of a graph @p name ("graph", "graph-2") with @p title,
   /// showing @p value; not shown yet, not among m_added.
-  QMdiSubWindow *addQGraphWindow(const QString &name, const QString &title, const ValueRef &value);
-  QcpGraphView *qgraphViewOf(const QMdiSubWindow *win) const;
+  QMdiSubWindow *addGraphWindow(const QString &name, const QString &title, const ValueRef &value);
+  GraphView *graphViewOf(const QMdiSubWindow *win) const;
   /// The graph windows, the first one first.
-  QList<QMdiSubWindow *> qgraphWindows() const;
+  QList<QMdiSubWindow *> graphWindows() const;
   /// The recording of @p ctl when a graph shows a value of it, else nullptr:
   /// a mark of an alarm or SCPI goes there.
-  RecordingStore *qgraphStoreFor(const MeterController *ctl) const;
+  RecordingStore *graphStoreFor(const MeterController *ctl) const;
   /// Shows a graph's window: the first one by its action.
   void        showGraphWindow(QMdiSubWindow *win);
   /// The window's entry of a view's own menu: Hide view, Close window for one added.
@@ -485,7 +485,7 @@ protected:
   /// "Sources..." of a view; for View::Meter the analog meter @p meter,
   /// nullptr for the first. False when cancelled.
   bool        editSources(ValueMenu::View view, MeterView *meter = nullptr, PoincareView *plot = nullptr,
-                          QcpGraphView *graph = nullptr, HistogramView *histogram = nullptr, HeatmapView *heatmap = nullptr);
+                          GraphView *graph = nullptr, HistogramView *histogram = nullptr, HeatmapView *heatmap = nullptr);
   /// Values... of a front panel: its device's values on the big and small line.
   void        editPanelValues(FrontPanel *panel);
   QAction    *m_graphSources = nullptr;   ///< in the graph's menu, with more than one meter
@@ -529,9 +529,9 @@ protected:
   /// Shows the windows, mode, tree, title bars, design and (Free) positions.
   void        applyWorkspace(const WorkspaceGet &get);
   void        storeWorkspace(const WorkspaceSet &set);
-  /// One graph's part of it, under its key (QcpGraphView::key()); the
+  /// One graph's part of it, under its key (GraphView::key()); the
   /// first one also reads the values of a bench from before 26.4.
-  void        applyGraphState(QcpGraphView *view, const WorkspaceGet &get,
+  void        applyGraphState(GraphView *view, const WorkspaceGet &get,
                               const std::function<ValueRef(const QString &)> &valueOf);
   void        loadWorkspace();
   /// Loads the workspace @p file; false (with a message) when it is none.
@@ -547,15 +547,15 @@ protected:
   /// The recording as CSV and the graph as PNG, into the project basket.
   void        graphToBasket();
   /// The same for a graph (QCP): its values' recording, its picture.
-  void        qgraphToBasket(QcpGraphView *view);
+  void        graphToBasketOf(GraphView *view);
   /// Asks for a file (SVG, PDF, PNG, JPEG) and writes the picture of a graph (QCP) into it.
-  void        exportQGraphImage(QcpGraphView *view);
+  void        exportGraphImage(GraphView *view);
   /// The readings table as CSV, into the project basket.
   void        tableToBasket();
   /// The export dialog (ExportDlg::What @p view preselected), then writes.
   void        exportDialog(int view);
   /// The export dialog for a graph (QCP): its picture, its values.
-  void        exportDialogFor(int view, QcpGraphView *qgraph);
+  void        exportDialogFor(int view, GraphView *graphView);
   /// LabPlot follows the recording that goes on (LabPlotLive): a CSV and
   /// a project in the project basket, else in Documents/QtDMM; again while
   /// it runs: LabPlot opens that project once more.

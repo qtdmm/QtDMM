@@ -8,23 +8,23 @@
 class DeviceSession;
 class GraphModel;
 class MeterController;
-class QcpGraph;
+class GraphWidget;
 class RecordingStore;
 
-/// What one window of the graph on QCustomPlot shows of the session: the
+/// What one graph window shows of the session: the
 /// stores of the meters of its values, on the time of the first one that is
 /// open. What it shows is in its GraphModel; the recording is the session's.
 /// A file loaded (loadFile()) lies in a store of the view's own and stays
 /// until a meter records or goes live, or closeFile().
 /// The counterpart of GraphView for the graph that is to replace GraphWidget.
-class QcpGraphView : public QObject
+class GraphView : public QObject
 {
   Q_OBJECT
 public:
-  /// @param key  the graph's name in the settings ("qgraph-2", ...)
-  QcpGraphView(DeviceSession *session, QcpGraph *graph, const QString &key, QObject *parent);
+  /// @param key  the graph's name in the settings ("graphView-2", ...)
+  GraphView(DeviceSession *session, GraphWidget *graph, const QString &key, QObject *parent);
 
-  QcpGraph   *graph() const { return m_graph; }
+  GraphWidget   *graph() const { return m_graph; }
   GraphModel *model() const { return m_model; }
   QString     key() const { return m_key; }
   /// The settings' colour variant by its name; the model's own goes before it.
@@ -52,7 +52,7 @@ private:
   void        applyLeftValue();
 
   DeviceSession *m_session;
-  QcpGraph   *m_graph;
+  GraphWidget   *m_graph;
   GraphModel *m_model;
   QString     m_key;
   QString     m_defaultVariant;

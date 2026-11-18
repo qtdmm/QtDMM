@@ -10,8 +10,7 @@
 /// A curve as a band: per pixel column the lowest and the highest of the
 /// curve as drawn, its points and the lines between them. For a curve too
 /// dense for a line and for the min/max band behind a curve. No drawing
-/// library; the rules are the ones of the graph on QtCharts
-/// (GraphWidget::columnBand()).
+/// library.
 namespace GraphBand
 {
 /// A curve is drawn as a band when its window has more readings than this

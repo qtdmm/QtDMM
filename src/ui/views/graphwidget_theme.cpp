@@ -1,9 +1,9 @@
 // Copyright (c) 2026 The QtDMM developers
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// QcpGraph: the look - colour variant, pens and markers of the curves, the
+// GraphWidget: the look - colour variant, pens and markers of the curves, the
 // colours of the axes.
-#include "ui/views/qcpgraph.h"
+#include "ui/views/graphwidget.h"
 
 #include "recording/recordingstore.h"
 #include "ui/views/graphstatspanel.h"
@@ -45,7 +45,7 @@ private:
 };
 }
 
-void QcpGraph::setupTheme()
+void GraphWidget::setupTheme()
 {
   auto *ticks = new CentreTicks(m_plot);
   ticks->setLayer(QStringLiteral("grid"));
@@ -57,13 +57,13 @@ void QcpGraph::setupTheme()
   applyLook();
 }
 
-void QcpGraph::setTheme(const PlotTheme &theme)
+void GraphWidget::setTheme(const PlotTheme &theme)
 {
   m_design = theme;
   applyLook();
 }
 
-void QcpGraph::setVariant(GraphLook::Variant variant)
+void GraphWidget::setVariant(GraphLook::Variant variant)
 {
   if (variant == m_variant)
     return;
@@ -71,13 +71,13 @@ void QcpGraph::setVariant(GraphLook::Variant variant)
   applyLook();
 }
 
-void QcpGraph::setLookSettings(const GraphLook::Settings &settings)
+void GraphWidget::setLookSettings(const GraphLook::Settings &settings)
 {
   m_lookSettings = settings;
   applyLook();
 }
 
-void QcpGraph::setPatternedLines(bool on)
+void GraphWidget::setPatternedLines(bool on)
 {
   if (on == m_patterns)
     return;
@@ -87,7 +87,7 @@ void QcpGraph::setPatternedLines(bool on)
   m_plot->replot(QCustomPlot::rpQueuedReplot);
 }
 
-void QcpGraph::applyLook()
+void GraphWidget::applyLook()
 {
   m_look = GraphLook::look(m_variant, m_design, m_lookSettings);
   const PlotTheme &theme = m_look.theme;
@@ -146,7 +146,7 @@ void QcpGraph::applyLook()
 // By the value's place among the values, so a curve keeps its colour and
 // its dashes while another meter is closed. The meter of the first value is
 // the graph's own: its other values by their id, other meters' in their turn.
-GraphLook::CurveKey QcpGraph::keyOf(int curve) const
+GraphLook::CurveKey GraphWidget::keyOf(int curve) const
 {
   GraphLook::CurveKey key;
   if (m_ownStore || m_values.isEmpty())
@@ -163,12 +163,12 @@ GraphLook::CurveKey QcpGraph::keyOf(int curve) const
   return key;
 }
 
-QColor QcpGraph::colorOf(int curve) const
+QColor GraphWidget::colorOf(int curve) const
 {
   return GraphLook::curveColor(m_look, keyOf(curve));
 }
 
-QColor QcpGraph::drawnColor(const ValueRef &value) const
+QColor GraphWidget::drawnColor(const ValueRef &value) const
 {
   for (int i = 0; i < m_curves.size(); ++i)
     if (m_curves.at(i).value == value && m_curves.at(i).axis >= 0)
@@ -176,7 +176,7 @@ QColor QcpGraph::drawnColor(const ValueRef &value) const
   return QColor();
 }
 
-void QcpGraph::styleCurves()
+void GraphWidget::styleCurves()
 {
   QList<int> onAxis(m_axes.size(), 0), single(m_axes.size(), -1);
   for (int i = 0; i < m_curves.size(); ++i)
@@ -200,7 +200,7 @@ void QcpGraph::styleCurves()
   }
 }
 
-void QcpGraph::styleDensity(const Curve &curve, int shown)
+void GraphWidget::styleDensity(const Curve &curve, int shown)
 {
   const int width = qMax(1, m_plot->axisRect()->width());
   // more than a point per pixel: a band of strokes
@@ -236,7 +236,7 @@ void QcpGraph::styleDensity(const Curve &curve, int shown)
 }
 
 // 8 divisions of a whole 1-2-5 step that take lo .. hi in.
-void QcpGraph::divide(double &lo, double &hi, double &step)
+void GraphWidget::divide(double &lo, double &hi, double &step)
 {
   const double span = qMax(hi - lo, 1e-12);
   const double magnitude = std::pow(10.0, std::floor(std::log10(span / 8)));
@@ -258,29 +258,29 @@ void QcpGraph::divide(double &lo, double &hi, double &step)
   hi = lo + 8 * step;
 }
 
-QColor QcpGraph::curveColor(int i) const
+QColor GraphWidget::curveColor(int i) const
 {
   return i >= 0 && i < m_curves.size() ? colorOf(i) : QColor();
 }
 
-QPen QcpGraph::curvePen(int i) const
+QPen GraphWidget::curvePen(int i) const
 {
   if (i < 0 || i >= m_curves.size())
     return QPen(Qt::NoPen);
   return m_curves.at(i).pen;
 }
 
-bool QcpGraph::curveMarkers(int i) const
+bool GraphWidget::curveMarkers(int i) const
 {
   return i >= 0 && i < m_curves.size() && m_curves.at(i).graph->scatterStyle().shape() != QCPScatterStyle::ssNone;
 }
 
-QColor QcpGraph::axisColor(int i) const
+QColor GraphWidget::axisColor(int i) const
 {
   return i >= 0 && i < m_axes.size() ? m_axes.at(i).axis->tickLabelColor() : QColor();
 }
 
-int QcpGraph::axisTickCount(int i) const
+int GraphWidget::axisTickCount(int i) const
 {
   return i >= 0 && i < m_axes.size() ? int(m_axes.at(i).axis->tickVector().size()) : 0;
 }

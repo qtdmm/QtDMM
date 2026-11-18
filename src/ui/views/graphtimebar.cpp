@@ -40,7 +40,7 @@ GraphTimeBar::GraphTimeBar(QWidget *parent) : QWidget(parent)
     m_buttons.append(b);
   }
   bar->addSpacing(6);
-  // signs and words of the graph on QtCharts, translated there already
+  // signs and words of the context GraphWidget (graphwords.h)
   auto toggle = [&](const char *name, ushort sign, const char *tip)
   {
     auto *b = new QToolButton(this);
@@ -62,7 +62,7 @@ GraphTimeBar::GraphTimeBar(QWidget *parent) : QWidget(parent)
   m_note->setText(QString(QChar(0x270e)));   // the pencil
   m_note->setAutoRaise(true);
   m_note->setFocusPolicy(Qt::NoFocus);
-  // translated for the graph on QtCharts already
+  // a word of the context GraphWidget
   m_note->setToolTip(QCoreApplication::translate("GraphWidget", "Note now... (N)"));
   connect(m_note, &QToolButton::clicked, this, &GraphTimeBar::noteClicked);
   bar->addWidget(m_note);

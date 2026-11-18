@@ -1,8 +1,7 @@
 // Copyright (c) 2026 The QtDMM developers
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// The words the graph takes from the context "GraphWidget" (the graph on
-// QtCharts translated them first): they are looked up through a variable,
+// Words of the context "GraphWidget" that are looked up through a variable,
 // QCoreApplication::translate("GraphWidget", text), which lupdate does not
 // see. Listed here, they keep their translations. Not compiled into
 // anything; a new word of the graph goes through tr() of its own class.

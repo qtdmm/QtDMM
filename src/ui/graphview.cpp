@@ -1,6 +1,6 @@
 // Copyright (c) 2026 The QtDMM developers
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "ui/qcpgraphview.h"
+#include "ui/graphview.h"
 
 #include <QFileInfo>
 #include <QScopedValueRollback>
@@ -11,22 +11,22 @@
 #include "service/devicesession.h"
 #include "service/metercontroller.h"
 #include "ui/graphmodel.h"
-#include "ui/views/qcpgraph.h"
+#include "ui/views/graphwidget.h"
 
-QcpGraphView::QcpGraphView(DeviceSession *session, QcpGraph *graph, const QString &key, QObject *parent)
+GraphView::GraphView(DeviceSession *session, GraphWidget *graph, const QString &key, QObject *parent)
   : QObject(parent), m_session(session), m_graph(graph), m_model(new GraphModel(this)), m_key(key)
 {
   // window and "All" both ways: the model is what the bench keeps, the
   // graph changes them itself (zoom, time buttons, "All" growing)
   m_graph->setWindowSeconds(m_model->windowSeconds());
   m_graph->setFollowAll(m_model->followAll());
-  connect(m_model, &GraphModel::windowChanged, m_graph, &QcpGraph::setWindowSeconds);
-  connect(m_model, &GraphModel::followAllChanged, m_graph, &QcpGraph::setFollowAll);
-  connect(m_graph, &QcpGraph::windowChanged, m_model, &GraphModel::setWindowSeconds);
-  connect(m_graph, &QcpGraph::followAllChanged, m_model, &GraphModel::setFollowAll);
+  connect(m_model, &GraphModel::windowChanged, m_graph, &GraphWidget::setWindowSeconds);
+  connect(m_model, &GraphModel::followAllChanged, m_graph, &GraphWidget::setFollowAll);
+  connect(m_graph, &GraphWidget::windowChanged, m_model, &GraphModel::setWindowSeconds);
+  connect(m_graph, &GraphWidget::followAllChanged, m_model, &GraphModel::setFollowAll);
   m_graph->setStatsVisible(m_model->statsVisible());
-  connect(m_model, &GraphModel::statsVisibleChanged, m_graph, &QcpGraph::setStatsVisible);
-  connect(m_graph, &QcpGraph::statsVisibleChanged, m_model, &GraphModel::setStatsVisible);
+  connect(m_model, &GraphModel::statsVisibleChanged, m_graph, &GraphWidget::setStatsVisible);
+  connect(m_graph, &GraphWidget::statsVisibleChanged, m_model, &GraphModel::setStatsVisible);
   // overview, states and band both ways: the graph's buttons switch them
   auto overviewToGraph = [this]
   {
@@ -36,7 +36,7 @@ QcpGraphView::QcpGraphView(DeviceSession *session, QcpGraph *graph, const QStrin
   };
   overviewToGraph();
   connect(m_model, &GraphModel::overviewChanged, m_graph, overviewToGraph);
-  connect(m_graph, &QcpGraph::overviewChanged, m_model, [this]
+  connect(m_graph, &GraphWidget::overviewChanged, m_model, [this]
   {
     m_model->setMinimapVisible(m_graph->minimapVisible());
     m_model->setStatesVisible(m_graph->statesVisible());
@@ -51,7 +51,7 @@ QcpGraphView::QcpGraphView(DeviceSession *session, QcpGraph *graph, const QStrin
   };
   referenceToGraph();
   connect(m_model, &GraphModel::referenceChanged, m_graph, referenceToGraph);
-  connect(m_graph, &QcpGraph::referenceChanged, m_model, [this]
+  connect(m_graph, &GraphWidget::referenceChanged, m_model, [this]
   {
     m_model->setReference(m_graph->reference());
     m_model->setReferenceLines(m_graph->referenceLines());
@@ -59,11 +59,11 @@ QcpGraphView::QcpGraphView(DeviceSession *session, QcpGraph *graph, const QStrin
   });
   m_graph->setOutliers(m_model->outliers());
   connect(m_model, &GraphModel::outliersChanged, m_graph, [this] { m_graph->setOutliers(m_model->outliers()); });
-  connect(m_graph, &QcpGraph::outliersChanged, m_model, [this] { m_model->setOutliers(m_graph->outliers()); });
-  connect(m_graph, &QcpGraph::leftValueChanged, this, &QcpGraphView::followLeftValue);
+  connect(m_graph, &GraphWidget::outliersChanged, m_model, [this] { m_model->setOutliers(m_graph->outliers()); });
+  connect(m_graph, &GraphWidget::leftValueChanged, this, &GraphView::followLeftValue);
   for (const MeterController *ctl : m_session->controllers())
     watch(ctl);
-  connect(m_session, &DeviceSession::opened, this, &QcpGraphView::watch);
+  connect(m_session, &DeviceSession::opened, this, &GraphView::watch);
   // the values' stores are the meters', their names the legend's
   m_graph->setSources([this](const QString &source) -> RecordingStore *
   {
@@ -81,8 +81,8 @@ QcpGraphView::QcpGraphView(DeviceSession *session, QcpGraph *graph, const QStrin
   connect(m_model, &GraphModel::valuesChanged, this, [this] { m_graph->setValues(m_model->values()); });
   connect(m_model, &GraphModel::valueAxesChanged, this, [this] { m_graph->setValueAxes(m_model->valueAxes()); });
   connect(m_model, &GraphModel::fixedRangesChanged, this, [this] { m_graph->setFixedRanges(m_model->fixedRanges()); });
-  connect(m_model, &GraphModel::lookChanged, this, &QcpGraphView::applyLook);
-  connect(m_session, &DeviceSession::opened, this, &QcpGraphView::followBase);
+  connect(m_model, &GraphModel::lookChanged, this, &GraphView::applyLook);
+  connect(m_session, &DeviceSession::opened, this, &GraphView::followBase);
   // a store goes with its meter: let go of it before
   connect(m_session, &DeviceSession::closing, this, [this](MeterController *ctl)
   {
@@ -93,7 +93,7 @@ QcpGraphView::QcpGraphView(DeviceSession *session, QcpGraph *graph, const QStrin
 
 // The alarm thresholds on the left axis' value, which the reference line
 // snaps to, and the band of the limit test on it
-void QcpGraphView::followLeftValue()
+void GraphView::followLeftValue()
 {
   disconnect(m_alarms);
   disconnect(m_limits);
@@ -103,13 +103,13 @@ void QcpGraphView::followLeftValue()
     ctl = nullptr;
   if (ctl)
   {
-    m_alarms = connect(ctl, &MeterController::alarmsChanged, this, &QcpGraphView::applyLeftValue);
-    m_limits = connect(ctl, &MeterController::limitTestChanged, this, &QcpGraphView::applyLeftValue);
+    m_alarms = connect(ctl, &MeterController::alarmsChanged, this, &GraphView::applyLeftValue);
+    m_limits = connect(ctl, &MeterController::limitTestChanged, this, &GraphView::applyLeftValue);
   }
   applyLeftValue();
 }
 
-void QcpGraphView::applyLeftValue()
+void GraphView::applyLeftValue()
 {
   const ValueRef left = m_graph->leftValue();
   const MeterController *ctl = left.id < 0 ? nullptr : m_session->controller(left.source);
@@ -133,7 +133,7 @@ void QcpGraphView::applyLeftValue()
     m_graph->setLimits(ValueRef(-1));
 }
 
-void QcpGraphView::watch(const MeterController *ctl)
+void GraphView::watch(const MeterController *ctl)
 {
   connect(ctl->recorder(), &RecordingStore::stateChanged, this, [this](RecordingStore::State state)
   {
@@ -142,7 +142,7 @@ void QcpGraphView::watch(const MeterController *ctl)
   });
 }
 
-bool QcpGraphView::loadFile(const QString &path, QString *error)
+bool GraphView::loadFile(const QString &path, QString *error)
 {
   const std::optional<Recording> rec = RecordingFile::read(path, error);
   if (!rec)
@@ -160,7 +160,7 @@ bool QcpGraphView::loadFile(const QString &path, QString *error)
   return true;
 }
 
-void QcpGraphView::closeFile()
+void GraphView::closeFile()
 {
   if (!m_showsFile)
     return;
@@ -171,18 +171,18 @@ void QcpGraphView::closeFile()
   Q_EMIT fileShownChanged(false);
 }
 
-void QcpGraphView::followBase()
+void GraphView::followBase()
 {
   m_graph->sourcesChanged();
 }
 
-void QcpGraphView::setDefaultVariant(const QString &name)
+void GraphView::setDefaultVariant(const QString &name)
 {
   m_defaultVariant = name;
   applyLook();
 }
 
-void QcpGraphView::applyLook()
+void GraphView::applyLook()
 {
   m_graph->setVariant(GraphLook::fromName(m_model->variant().isEmpty() ? m_defaultVariant : m_model->variant()));
   m_graph->setPatternedLines(m_model->patternedLines());

@@ -8,8 +8,7 @@
 
 /// The reference line of a graph and the lines added to it, as numbers and
 /// texts: where the line stands, how the settings keep it, where a curve
-/// crosses it and where a drag puts it. No drawing library; the rules are
-/// the ones of the graph on QtCharts (GraphWidget).
+/// crosses it and where a drag puts it. No drawing library.
 namespace GraphReference
 {
 /// What the line stands at: 0, a value of its own (dragged there), the

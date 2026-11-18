@@ -16,8 +16,7 @@
 
 /// What a graph window shows, without anything that draws: its values and
 /// its time window, with the texts they have in the settings and benches
-/// (the formats of the graph on QtCharts, under keys of its own). The graph
-/// on QCustomPlot shows what its model says; it grows with that graph.
+/// (graph-N-...). GraphWidget shows what its model says.
 class GraphModel : public QObject
 {
   Q_OBJECT
@@ -41,7 +40,7 @@ public:
   int         valueAxis(const ValueRef &value) const { return m_valueAxes.value(value, kAxisAuto); }
   QHash<ValueRef, int> valueAxes() const { return m_valueAxes; }
   void        setValueAxis(const ValueRef &value, int axis);
-  /// "1@device:a:right 0@device:b:left", as the graph on QtCharts keeps
+  /// "1@device:a:right 0@device:b:left", as benches since 26.4 keep
   /// them: left, right, third, then "axis4", "axis5"; Auto is left out.
   QString     valueAxesSetting() const;
   void        setValueAxesSetting(const QString &text);
@@ -108,7 +107,7 @@ public:
   /// change with every reading.
   static int  allTarget(double recordedSeconds, bool grow, int limitSeconds);
 
-  /// Its settings in a window layout or bench under @p key ("Windows/qgraph-2"):
+  /// Its settings in a window layout or bench under @p key ("Windows/graphView-2"):
   /// @p key + "-values", "-value-axes", "-fixed-ranges", "-variant",
   /// "-patterns", "-stats", "-minimap", "-states", "-envelope",
   /// "-reference", "-reference-lines", "-crossings", "-outliers",

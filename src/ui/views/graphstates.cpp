@@ -12,7 +12,7 @@
 
 namespace
 {
-// the hatching of a gap's cause, as the graph on QtCharts has it
+// the hatching of a gap's cause
 Qt::BrushStyle gapPattern(const RawPoint &p)
 {
   if (p.quality == Quality::Fault)
