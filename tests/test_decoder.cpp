@@ -123,6 +123,53 @@ int main(int argc, char **argv)
       if (ut372d->keyRequest("unit") != QByteArray::fromHex("aabb0631030000019f"))
         bad("unit after ft on a wheel is not m/min (31 03 00)");
     }
+    // UT382A (synthetic frames, ut382a.md): HOLD and fc from the status
+    // frame, lx·h as value 2 in the integral, cd once a start frame told
+    // the distance, the zero calibration skipped
+    {
+      auto ut382a = DmmDecoder::getInstance(FrameFormat::UniTUT382A);
+      auto bad = [&](const char *what)
+      {
+        qWarning() << "UT382A:" << what;
+        ++problems;
+      };
+      const QByteArray live = QByteArray::fromHex("aabb100100044402d99a000000000000000333");
+      if (ut382a->pollRequest() != QByteArray::fromHex("aabb04390001a2"))
+        bad("the poll is not 39 00");
+      if (ut382a->keyRequest("hold") != QByteArray::fromHex("aabb043101019b"))
+        bad("HOLD while not held is not 31 01");
+      if (ut382a->decode(QByteArray::fromHex("aabb080c01800103e80365"), 0))
+        bad("the status frame gives a reading");
+      const auto held = ut382a->decode(live, 0);
+      if (!held || !held->hold || held->main().unit != "fc" || held->main().val != "48.68")
+        bad("after the status (held, fc): not 48.68 fc held");
+      if (ut382a->keyRequest("hold") != QByteArray::fromHex("aabb043100019a"))
+        bad("HOLD while held is not 31 00");
+      ut382a->decode(QByteArray::fromHex("aabb080c00000103e80265"), 0);
+      const auto integral = ut382a->decode(QByteArray::fromHex("aabb10010704449a533342631eb8000c1e048a"), 0);
+      if (!integral || integral->channels.size() != 2 || integral->main().val != "1235" || integral->main().unit != "lx"
+          || integral->channels[1].val != "56.78" || integral->channels[1].unit != "lx·h" || integral->hold)
+        bad("integral: not 1235 lx and 56.78 lx·h");
+      const QByteArray intensity = QByteArray::fromHex("aabb10010804437a000000000000000000023f");
+      const auto plain = ut382a->decode(intensity, 0);
+      if (!plain || plain->channels.size() != 1 || plain->main().unit != "lx")
+        bad("intensity without a distance is not lux alone");
+      ut382a->decode(QByteArray::fromHex("aabb0c040100000000c8000000023e"), 0);
+      const auto cd = ut382a->decode(intensity, 0);
+      if (!cd || cd->main().unit != "cd" || cd->main().val != "1000" || cd->channels.size() != 2
+          || cd->channels[1].val != "250.0")
+        bad(qPrintable("250 lx at 2 m: got " + (cd ? cd->main().val + " " + cd->main().unit : QString("none"))));
+      const auto diff = ut382a->decode(QByteArray::fromHex("aabb1001062441480000000000000000000229"), 0);
+      if (!diff || diff->main().val != "-12.50")
+        bad("difference with the sign bit is not -12.50");
+      const auto err = ut382a->decode(QByteArray::fromHex("aabb10010044000000000000000000000001ba"), 0);
+      if (!err || !err->main().noValue)
+        bad("the error flag is not no value");
+      if (ut382a->decode(QByteArray::fromHex("aabb100104043f80000000000000000000023d"), 0))
+        bad("the zero calibration gives a reading");
+      if (ut382a->keyRequest("minmax").size())
+        bad("a key other than HOLD gives a frame");
+    }
     expect(ut61plus, "hold", "abcd034a01c5");
     expect(ut61plus, "minmax", "abcd034101bc");
     expect(ut61plus, "minmax_off", "abcd034201bd");

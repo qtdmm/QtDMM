@@ -242,6 +242,8 @@ QString ScpiServer::unit(const QString &baseUnit)
     return QStringLiteral("F");
   if (baseUnit == QStringLiteral("Ω"))
     return QStringLiteral("Ohm");
+  if (baseUnit == QStringLiteral("lx·h"))
+    return QStringLiteral("lx*h");
   return baseUnit;
 }
 

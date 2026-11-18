@@ -50,11 +50,12 @@ double factor(const QString &prefix)
 
 // units of their own that start with a prefix letter: "ppm" (CO2 sensors)
 // is not pico-"pm", "min" (APPA) not milli-"in", "fc" (foot-candle,
-// luxmeters) not femto-"c", "m/s" (anemometers) not milli-"/s"
+// luxmeters) not femto-"c", "cd" (candela) not centi-"d", "m/s" (anemometers) not milli-"/s"
 const QStringList &wholeUnits()
 {
   static const QStringList kWhole = { "ppm", "fc", "min", "mol", "dB", "dBm", "dBV", "cosphi", "hFE", "HFE", "m/s",
-                                      "%RH", "dBA", "dBC", "m/min", "in/min", "ft/min", "ft", "REV" };
+                                      "%RH", "dBA", "dBC", "m/min", "in/min", "ft/min", "ft", "REV",
+                                      "cd", "lx·h" };
   return kWhole;
 }
 

@@ -78,7 +78,9 @@ enum class Quantity : quint16
   CarbonDioxide,        ///< ppm (TFA AirControl)
   Illuminance,          ///< lx or fc (luxmeters; libsigrok has no such quantity)
   LinearSpeed,          ///< m/min, in/min, ft/min (a tachometer's measuring wheel)
-  Length                ///< m, in, ft (dito)
+  Length,               ///< m, in, ft (dito)
+  LightExposure,        ///< lx·h (a luxmeter's integral)
+  LuminousIntensity     ///< cd (a luxmeter from lux and distance)
 };
 
 /// State and mode of a value, a bit mask after libsigrok's sr_mqflag, plus
@@ -182,6 +184,8 @@ inline const Entry *table(int *count)
     { Quantity::Illuminance,         "illuminance",          QT_TRANSLATE_NOOP("Quantity", "Illuminance") },
     { Quantity::LinearSpeed,         "linear_speed",         QT_TRANSLATE_NOOP("Quantity", "Linear speed") },
     { Quantity::Length,              "length",               QT_TRANSLATE_NOOP("Quantity", "Length") },
+    { Quantity::LightExposure,       "light_exposure",       QT_TRANSLATE_NOOP("Quantity", "Light exposure") },
+    { Quantity::LuminousIntensity,   "luminous_intensity",   QT_TRANSLATE_NOOP("Quantity", "Luminous intensity") },
   };
   *count = int(sizeof(kTable) / sizeof(kTable[0]));
   return kTable;
