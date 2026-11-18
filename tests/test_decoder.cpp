@@ -13,6 +13,7 @@
 #include "device/dmmdecoder.h"
 #include "device/protocols.h"
 #include "device/decoders/uni_t_ienv.h"
+#include "device/decoders/text_lines.h"
 #include "device/decoders/uni_t_ut117c.h"
 #include "device/decoders/uni_t_ut219pv.h"
 #include "device/decoders/uni_t_ut320i.h"
@@ -347,6 +348,44 @@ int main(int argc, char **argv)
       ut219pv->decode(QByteArray::fromHex("abcd00040a5a01e0"), 0);
       if (ut219pv->takeCommand() != QByteArray::fromHex("abcd00040a000186"))
         bad("the multi-save key is not answered with 0A 00");
+    }
+    // text lines (Serial Plotter, Teleplot): a value per name up to four,
+    // a Teleplot line gives its one value, xy two, skipped lines, the rest
+    // of a line too long for the reader
+    {
+      auto lines = DmmDecoder::getInstance(FrameFormat::TextLines);
+      auto bad = [&](const char *what)
+      {
+        qWarning() << "TextLines:" << what;
+        ++problems;
+      };
+      auto line = [&](const char *text) { return lines->decode(QByteArray(text) + "\r\n", 0); };
+      const auto first = line("a:1,b:2");
+      if (!first || first->channels.size() != 2 || first->channels[0].id != 0 || first->channels[1].id != 1
+          || first->channels[1].name != "b" || first->channels[1].val != "2")
+        bad("a:1,b:2 is not values 1 and 2 named a and b");
+      const auto b = line("b:7.5\xc2\xa7mV");
+      if (!b || b->channels.size() != 1 || b->main().id != 1 || b->main().unit != "mV" || std::abs(b->main().dval - 0.0075) > 1e-12)
+        bad("Teleplot b:7.5 mV is not value 2 alone, 0.0075");
+      const auto xy = line("p:12.3:45.67|xy");
+      if (!xy || xy->channels.size() != 2 || xy->channels[0].id != 2 || xy->channels[0].name != "p.x"
+          || xy->channels[1].id != 3 || xy->channels[1].val != "45.67")
+        bad("p:12.3:45.67|xy is not values 3 and 4, p.x and p.y");
+      const auto fifth = line("e:5,a:9");
+      if (!fifth || fifth->channels.size() != 1 || fifth->main().id != 0 || fifth->main().val != "9")
+        bad("a fifth name is not left out");
+      for (const char *skipped : { "hello world", "v:abc", "nan", "inf", "x:1:2:3", "p:1|xy", "a:1,b:x",
+                                   "state:on|t", ">:Hello world", "3D|cube:S:cube", "", "\xff\xfe" })
+        if (line(skipped))
+          bad(qPrintable(QString("not skipped: ") + skipped));
+      const QByteArray longLine(120, '1');
+      for (int i = 0; i < longLine.size(); ++i)
+        if (lines->checkFormat(longLine.constData(), size_t(qMin(i, FIFO_LENGTH - 1))))
+          bad("a line without LF ends");
+      if (line("a:23"))
+        bad("the rest of a line too long for the reader is taken");
+      if (!line("a:23"))
+        bad("the line after it is not taken");
     }
     expect(ut61plus, "hold", "abcd034a01c5");
     expect(ut61plus, "minmax", "abcd034101bc");

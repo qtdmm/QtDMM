@@ -34,6 +34,8 @@ side, one window each, and can be combined into calculated values.
   upper limit: PASS or FAIL, HI or LO and the deviation on the display.
 - [Supported devices](supported-devices.md) — every meter QtDMM knows, with
   protocol and serial settings.
+- [Your own board](microcontroller.md) — an Arduino, ESP32 or Pico sending
+  its values as text lines (Serial Plotter, Teleplot).
 - [Calculated values](calculated-values.md) — power from a voltage and a
   current meter: formulas over the readings of the open devices; the
   simulated meter for demos without hardware.
