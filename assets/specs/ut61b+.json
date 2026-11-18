@@ -1,10 +1,10 @@
 {
- "source": "dmm-tools f96e318",
+ "source": "dmm-tools 96b4d0d",
  "device": "ut61b+",
  "models": [
   "Uni-Trend UT61B+"
  ],
- "model": "UT61B+",
+ "model": "UNI-T UT61B+",
  "tables": [
   {
    "input_impedance": "About 1GΩ",
