@@ -8,6 +8,10 @@
 #include <QPointer>
 #include <QTimer>
 #include <QVariantMap>
+#include <optional>
+
+#include "core/reading.h"
+#include "ui/devicespecs.h"
 
 class DeviceSettings;
 class DeviceSummary;
@@ -48,6 +52,11 @@ public:
   /// asked every second (nullptr while not connected). Counted only while
   /// the dialog is open.
   void        setFrameSource(const std::function<MeterConnection *()> &source);
+  /// The device's last reading (nullopt while not connected), asked every
+  /// second: the Data tab marks its table and range.
+  void        setReading(const std::function<std::optional<Reading>()> &reading);
+  /// Where the Data tab's mark is (for the tests).
+  DeviceSpecs::Match dataMark() const { return m_dataMark; }
   /// The sample rate of frames received at @p times (ms, oldest first):
   /// "2.0 Hz", below 1 Hz "0.50 Hz", "-" with fewer than two.
   static QString sampleRate(const QList<qint64> &times);
@@ -65,12 +74,16 @@ Q_SIGNALS:
 private:
   void        updateInfo();
   void        updateStatus();
+  void        updateDataMark();
 
   QString         m_name;
   QTabWidget     *m_tabs = nullptr;
   QWidget        *m_info = nullptr;
   QTextBrowser   *m_data = nullptr;
   QString         m_dataModel;   ///< whose specifications m_data shows
+  QJsonObject     m_dataSpec;    ///< they
+  DeviceSpecs::Match m_dataMark; ///< the table and range marked in m_data
+  std::function<std::optional<Reading>()> m_reading;
   DeviceSummary  *m_summary = nullptr;
   QLabel         *m_status = nullptr;
   QLabel         *m_links = nullptr;
