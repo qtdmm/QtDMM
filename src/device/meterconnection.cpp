@@ -161,6 +161,7 @@ void MeterConnection::initDecoder( FrameFormat::DataFormat df)
     m_readerThread->setDecoder(m_decoder);
   }
   m_decoder->setModel(m_dmmInfo.model);
+  m_decoder->setUnits(m_dmmInfo.units);
   m_modelChecked = false;
   m_otherModels.clear();
 }

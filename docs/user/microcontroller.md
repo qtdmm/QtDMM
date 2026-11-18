@@ -56,6 +56,13 @@ W, Wh, Ah, VA, %, %RH, lx, ppm, dB, °C, °F, m/s, each also with an SI prefix
 names (`voltage`, `temp`) are values without a unit; the graph draws them
 on an axis of their own.
 
+**Choosing the units yourself:** the device's settings list the values
+under *Values*, with the names the board sent when it is connected. Each
+has *Automatic* (the unit its name stands for, as above) or a unit you
+choose: `temp:21.5` with °C chosen is a temperature. A unit chosen there
+takes the number as sent, without a prefix; *No unit* takes a name's unit
+away (a sketch that prints `A:` for an input pin).
+
 **Teleplot** - one variable per line, `name:value`, optionally with a unit
 after `§`:
 

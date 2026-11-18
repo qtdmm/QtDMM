@@ -3695,6 +3695,14 @@ void MainWindow::deviceSettings(const QString &id, bool settingsTab)
       return std::nullopt;
     return ctl->lastReading();
   });
+  // the names a connected microcontroller gave its values, beside their units
+  if (const MeterController *ctl = m_session->controller("device:" + id); ctl && ctl->dmm())
+  {
+    QStringList names;
+    for (int i = 0; i < kMaxValues; ++i)
+      names << ctl->lastReading(i).name;
+    dlg.settings()->setValueNames(names);
+  }
   // Connect, as the sidebar's menu
   dlg.setConnect([this, id] { return m_sidebar->isConnected(id); }, [this, id] { openBeside(id); });
   if (settingsTab)

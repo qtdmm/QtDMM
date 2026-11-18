@@ -34,8 +34,7 @@ bool number(const QString &s, double *value)
 // names (a channel "C" is no temperature). Empty for any other label.
 QString unitOfLabel(const QString &label)
 {
-  static const QStringList bases = { "V", "A", "Ohm", "F", "Hz", "W", "Wh", "Ah", "VA", "%", "%RH", "lx",
-                                     "ppm", "dB", "dBm", "dBA", "dBC", "°C", "°F", "m/s" };
+  const QStringList &bases = DecoderTextLines::units();
   QString unit = label;
   unit.replace(QChar(0x03A9), QStringLiteral("Ohm")).replace(QChar(0x2126), QStringLiteral("Ohm"));   // Ω, Ω
   SiPrefix::Split split = SiPrefix::split(unit);
@@ -129,6 +128,13 @@ QList<DecoderTextLines::Item> teleplot(QString line)
 }
 }
 
+const QStringList &DecoderTextLines::units()
+{
+  static const QStringList bases = { "V", "A", "Ohm", "F", "Hz", "W", "Wh", "Ah", "VA", "%", "%RH", "lx",
+                                     "ppm", "dB", "dBm", "dBA", "dBC", "°C", "°F", "m/s" };
+  return bases;
+}
+
 QList<DecoderTextLines::Item> DecoderTextLines::parse(const QString &line)
 {
   if (line.isEmpty() || line.contains(QChar::ReplacementCharacter))
@@ -189,6 +195,13 @@ std::optional<DmmDecoder::DmmResponse> DecoderTextLines::decode(const QByteArray
     if (!place.match(item.key).hasMatch())
       c.name = item.key;
     c.dval = item.value * SiPrefix::factor(SiPrefix::split(item.unit).prefix);
+    // the unit the user chose for this value: the number as sent, in it
+    const QString chosen = m_units.value(slot);
+    if (!chosen.isEmpty())
+    {
+      c.unit = chosen == QLatin1String(kNoUnit) ? QString() : chosen;
+      c.dval = item.value;
+    }
     m_result.channels << c;
   }
   if (m_result.channels.isEmpty())

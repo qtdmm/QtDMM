@@ -42,6 +42,13 @@ public:
   std::optional<DmmDecoder::DmmResponse> decode(const QByteArray &data, int id) override;
   bool checkFormat(const char *data, size_t idx) override;
   size_t getPacketLength() override { return 0; }   // variable, ends with LF
+  void setUnits(const QStringList &units) override { m_units = units; }
+
+  /// The units a label stands for and the settings offer, without prefix
+  /// ("Ohm" for Ω).
+  static const QStringList &units();
+  /// The setting for a value without unit (DMMInfo::units).
+  static constexpr const char *kNoUnit = "none";
 
   /// One value of a line: its name, the number as text and as a number, the unit.
   struct Item
@@ -57,5 +64,6 @@ public:
 
 private:
   QStringList m_keys;          ///< the names, in the order of their values
+  QStringList m_units;         ///< the user's unit per value (setUnits()), empty = from the label
   bool m_dropNext = false;     ///< the rest of a line too long for the reader
 };
