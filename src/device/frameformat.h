@@ -91,6 +91,7 @@ public:
     Eevblog121GW,
     BrymenBM78xBT,
     RawCapture,            ///< no decoder: frames cut at a pause, only for the capture window
+    UniTUT381A,
     EndOfList              // new stuff always before!
   };
 

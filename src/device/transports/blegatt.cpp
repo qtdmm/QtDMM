@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "device/transports/blegatt.h"
 #include "device/decoders/brymen_bm78xbt.h"
+#include "device/decoders/uni_t_ut381a.h"
 #include "device/transports/ble.h"
 
 #include <QBluetoothAddress>
@@ -96,6 +97,11 @@ std::optional<BleGattDevice::Profile> BleGattDevice::profile(FrameFormat::DataFo
       // the UT353BT advertises as "UT353BT" (esphome_uni_trend_sound_meter);
       // the UT383BT's name is assumed alike
       return Profile{ kIenvService, kIenvNotify, { kIenvWrite }, { "UT383BT", "UT353BT" } };
+    case FrameFormat::UniTUT381A:
+      // the name UNI-T's app looks for; live frames only after "Start live"
+      // (the app sets the clock and asks the settings first: UNVERIFIED
+      // whether the meter needs that)
+      return Profile{ kIenvService, kIenvNotify, { kIenvWrite }, { "UT381A" }, DecoderUT381A::startLive() };
     case FrameFormat::UniTUT202BT:
       // UNI-T's app asks the name (0x5F) before anything else, and a UT60BT
       // is reported to need it (dmm-tools, UT61 family spec §6.4; our UT60BT
