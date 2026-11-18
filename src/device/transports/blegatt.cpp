@@ -102,6 +102,9 @@ std::optional<BleGattDevice::Profile> BleGattDevice::profile(FrameFormat::DataFo
       // (the app sets the clock and asks the settings first: UNVERIFIED
       // whether the meter needs that)
       return Profile{ kIenvService, kIenvNotify, { kIenvWrite }, { "UT381A" }, DecoderUT381A::startLive() };
+    case FrameFormat::UniTUT372D:
+      // the name UNI-T's app looks for; it streams once notifications are on
+      return Profile{ kIenvService, kIenvNotify, { kIenvWrite }, { "UT372D" } };
     case FrameFormat::UniTUT202BT:
       // UNI-T's app asks the name (0x5F) before anything else, and a UT60BT
       // is reported to need it (dmm-tools, UT61 family spec §6.4; our UT60BT

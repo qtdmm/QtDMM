@@ -1,0 +1,47 @@
+protocol: UniTUT372D
+decoder: src/device/decoders/uni_t_ut372d.cpp
+devices: [Uni-Trend UT372D]
+frames_per_reading: 1
+sources:
+  - "ablage/uni-t/uni-t-protocols/ut372d.md (notes decompiled from UNI-T's iENV app: transport §1, frame §2, commands §3, live frame §4)"
+
+# UNI-T UT372D tachometer over Bluetooth LE, the iENV service FF12 (write
+# FF01, notify FF02); it streams once notifications are on. Frames:
+#
+#   0-1   AA BB          header
+#   2     length         type + payload + 2 (a frame is length + 3 bytes)
+#   3     type           1 live, 5 broadcast (the same layout)
+#   4     probe          0 non-contact, 1 contact, 2 0.1 m wheel, 3 6 inch wheel
+#   5     unit           probes 0/1: 0 RPM, 1 Hz, 2 REV; 2/3: 0 m/min,
+#                        1 in/min, 2 ft/min, 3 m, 4 in, 5 ft
+#   6     function       not read
+#   7-30  four displays  NOW, MAX, MIN, AVG: overflow mark, decimals, int32
+#                        BE = value x 100
+#   31    measuring      0 held, 1 measuring
+#   32    battery        1 low
+#   33-34 16-bit BE sum  (the app checks none it gets)
+#
+# The decoder gives the four displays as values 1-4; the vectors check the
+# first. SYNTHETIC vectors: built from that layout, no capture of a meter
+# exists.
+vectors:
+  - source_line: "non-contact 1450.0 RPM (synthetic)"
+    bytes: AA BB 20 01 00 00 00 00 01 00 02 36 68 00 01 00 02 3B 36 00 01 00 02 32 B2 00 01 00 02 36 E0 01 00 04 9C
+    reading: {value: "1450.0", unit: "RPM"}
+    expect: {val: "1450.0"}
+  - source_line: "contact 24.17 Hz (synthetic)"
+    bytes: AA BB 20 01 01 01 00 00 02 00 00 09 71 00 02 00 00 09 88 00 02 00 00 09 56 00 02 00 00 09 6F 01 00 03 73
+    reading: {value: "24.17", unit: "Hz"}
+    expect: {val: "24.17"}
+  - source_line: "0.1 m wheel 12.35 m/min (synthetic)"
+    bytes: AA BB 20 01 02 00 00 00 02 00 00 04 D3 00 02 00 00 05 14 00 02 00 00 04 9C 00 02 00 00 04 D8 01 00 03 FD
+    reading: {value: "12.35", unit: "m/min"}
+    expect: {val: "12.35"}
+  - source_line: "6 inch wheel 3.7 ft, held, battery low, type 5 (synthetic)"
+    bytes: AA BB 20 05 03 05 00 00 01 00 00 01 72 00 01 00 00 01 72 00 01 00 00 00 00 00 01 00 00 00 BE 00 01 03 3B
+    reading: {value: "3.7", unit: "ft", flags: [HOLD]}
+    expect: {val: "3.7", lowBat: true}
+  - source_line: "REV, overflow mark (synthetic)"
+    bytes: AA BB 20 01 00 02 00 01 00 00 00 00 00 00 00 00 00 03 E8 00 00 00 00 00 00 00 00 00 00 01 F4 01 00 03 6A
+    reading: {value: "OL", unit: "REV"}
+    expect: {val: "OL"}

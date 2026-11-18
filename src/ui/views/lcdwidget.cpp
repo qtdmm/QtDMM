@@ -181,6 +181,7 @@ LcdWidget::Look LcdWidget::lookOf(DeviceType::Type type)
     case DeviceType::SoundLevel:
       return { false, AnnAuto | AnnHold | AnnMax | AnnMin };
     case DeviceType::Anemometer:
+    case DeviceType::Tachometer:
     case DeviceType::Environment:
       return { false, AnnHold | AnnMax | AnnMin | AnnAvg };
     case DeviceType::BatteryMonitor:

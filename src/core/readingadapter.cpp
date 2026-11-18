@@ -80,6 +80,13 @@ Meaning meaning(const QString &base, const QString &mode, FrameFormat::DataForma
     { "fc",     Quantity::Illuminance,       "fc" },    // foot-candle, 1 fc = 10.764 lx
     { "%RH",    Quantity::RelativeHumidity,  "%" },     // hygrometers
     { "m/s",    Quantity::WindSpeed,         "m/s" },
+    { "m/min",  Quantity::LinearSpeed,       "m/min" },   // a tachometer's measuring wheel
+    { "in/min", Quantity::LinearSpeed,       "in/min" },
+    { "ft/min", Quantity::LinearSpeed,       "ft/min" },
+    { "m",      Quantity::Length,            "m" },
+    { "in",     Quantity::Length,            "in" },
+    { "ft",     Quantity::Length,            "ft" },
+    { "REV",    Quantity::Count,             "REV" },     // revolutions counted
     { "dBA",    Quantity::SoundPressureLevel, "dBA" },  // sound level meters, A and C weighting
     { "dBC",    Quantity::SoundPressureLevel, "dBC" },
   };

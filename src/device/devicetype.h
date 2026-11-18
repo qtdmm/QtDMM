@@ -27,6 +27,7 @@ enum Type
   Environment,     ///< CO2, temperature, humidity
   SoundLevel,
   Anemometer,
+  Tachometer,      ///< revolutions (optical or contact), a measuring wheel's speed and length
   BatteryMonitor,
   SolarCharger,
   Inverter,

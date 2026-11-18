@@ -99,6 +99,30 @@ int main(int argc, char **argv)
       if (DmmDecoder::getInstance(FrameFormat::UniTUT381A)->keyRequest("minmax").size())
         bad("a key other than HOLD gives a frame");
     }
+    // UT372D (synthetic frames, ut372d.md): the four displays are values
+    // 1-4; HOLD and "unit" send set frames with the probe and unit last seen
+    {
+      auto ut372d = DmmDecoder::getInstance(FrameFormat::UniTUT372D);
+      auto bad = [&](const char *what)
+      {
+        qWarning() << "UT372D:" << what;
+        ++problems;
+      };
+      const auto hz = ut372d->decode(QByteArray::fromHex("aabb200101010000020000097100020000098800020000095600020000096f01000373"), 0);
+      if (!hz || hz->channels.size() != 4 || hz->main().val != "24.17" || hz->channels[1].val != "24.40"
+          || !(hz->channels[1].states & SampleFlag::Max) || !(hz->channels[3].states & SampleFlag::Avg)
+          || hz->channels[2].unit != "Hz" || hz->hold)
+        bad("24.17 Hz: not four values NOW, MAX, MIN, AVG measuring");
+      if (ut372d->keyRequest("hold") != QByteArray::fromHex("aabb0632010100019f"))
+        bad("HOLD while measuring is not 32 <probe> <unit> 00");
+      if (ut372d->keyRequest("unit") != QByteArray::fromHex("aabb0631010200019f"))
+        bad("unit after Hz on the contact probe is not REV (31 01 02)");
+      ut372d->decode(QByteArray::fromHex("aabb20050305000001000001720001000001720001000000000001000000be0001033b"), 0);
+      if (ut372d->keyRequest("hold") != QByteArray::fromHex("aabb063203050101a6"))
+        bad("HOLD while held is not 32 03 05 01");
+      if (ut372d->keyRequest("unit") != QByteArray::fromHex("aabb0631030000019f"))
+        bad("unit after ft on a wheel is not m/min (31 03 00)");
+    }
     expect(ut61plus, "hold", "abcd034a01c5");
     expect(ut61plus, "minmax", "abcd034101bc");
     expect(ut61plus, "minmax_off", "abcd034201bd");

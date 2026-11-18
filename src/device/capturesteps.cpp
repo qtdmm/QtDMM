@@ -132,6 +132,16 @@ QList<Step> forType(DeviceType::Type type)
       key("hold", QT_TRANSLATE_NOOP("CaptureSteps", "Switch back to lx and press HOLD."), "hold", "HOLD", flag(SampleFlag::Hold)),
       key("max", QT_TRANSLATE_NOOP("CaptureSteps", "Release HOLD, then press MAX."), "max", "MAX", flag(SampleFlag::Max)),
     };
+  case DeviceType::Tachometer:
+    return {
+      step("rpm", QT_TRANSLATE_NOOP("CaptureSteps", "Point the meter at the reflective mark on something turning (a fan, a drill)."),
+           quantity(Quantity::Frequency)),
+      key("unit", QT_TRANSLATE_NOOP("CaptureSteps", "Switch the unit: RPM, Hz, REV."), "unit", "UNIT"),
+      key("hold", QT_TRANSLATE_NOOP("CaptureSteps", "Press HOLD."), "hold", "HOLD", flag(SampleFlag::Hold)),
+      step("wheel", QT_TRANSLATE_NOOP("CaptureSteps", "With a measuring wheel fitted, roll it along a surface. "
+                                                      "Without a wheel, skip this step."),
+           quantity(Quantity::LinearSpeed)),
+    };
   case DeviceType::SoundLevel:
     return {
       step("spl", QT_TRANSLATE_NOOP("CaptureSteps", "Measure the sound level of the room."),

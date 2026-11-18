@@ -1068,57 +1068,57 @@
 <context>
     <name>BleGattDevice</name>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="178"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="181"/>
         <source>No Bluetooth address configured.</source>
         <translation>Nie ustawiono adresu Bluetooth.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="183"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="186"/>
         <source>This meter does not use a Bluetooth LE connection.</source>
         <translation>Ten miernik nie używa połączenia Bluetooth LE.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="267"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="270"/>
         <source>The meter %1 closed the Bluetooth connection.</source>
         <translation>Miernik %1 zamknął połączenie Bluetooth.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="271"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="274"/>
         <source>Bluetooth: %1</source>
         <translation>Bluetooth: %1</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="198"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="201"/>
         <source>No answer from %1 - is the meter on and its Bluetooth switched on?</source>
         <translation>Brak odpowiedzi od %1 - czy miernik jest włączony i ma włączony Bluetooth?</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="333"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="336"/>
         <source>%1 does not offer the expected Bluetooth service - is it the right meter?</source>
         <translation>%1 nie oferuje oczekiwanej usługi Bluetooth - czy to właściwy miernik?</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="339"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="342"/>
         <source>Could not open the Bluetooth service of %1.</source>
         <translation>Nie można otworzyć usługi Bluetooth urządzenia %1.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="366"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="369"/>
         <source>Bluetooth service error %1 on %2.</source>
         <translation>Błąd usługi Bluetooth %1 na %2.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="387"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="390"/>
         <source>%1 has no notify characteristic.</source>
         <translation>%1 nie ma charakterystyki powiadomień.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="401"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="404"/>
         <source>%1 has no writable characteristic.</source>
         <translation>%1 nie ma zapisywalnej charakterystyki.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="351"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="354"/>
         <source>Bluetooth receive buffer limit exceeded.</source>
         <translation>Przekroczono limit bufora odbiorczego Bluetooth.</translation>
     </message>
@@ -1574,42 +1574,58 @@
     </message>
     <message>
         <location filename="../../src/device/capturesteps.cpp" line="133"/>
-        <location filename="../../src/device/capturesteps.cpp" line="142"/>
+        <location filename="../../src/device/capturesteps.cpp" line="152"/>
         <source>Release HOLD, then press MAX.</source>
         <translation>Zwolnij HOLD, potem naciśnij MAX.</translation>
     </message>
     <message>
         <location filename="../../src/device/capturesteps.cpp" line="137"/>
+        <source>Point the meter at the reflective mark on something turning (a fan, a drill).</source>
+        <translation>Skieruj miernik na znacznik odblaskowy na czymś obracającym się (wentylator, wiertarka).</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="139"/>
+        <source>Switch the unit: RPM, Hz, REV.</source>
+        <translation>Przełącz jednostkę: RPM, Hz, REV.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="141"/>
+        <source>With a measuring wheel fitted, roll it along a surface. Without a wheel, skip this step.</source>
+        <translation>Z założonym kółkiem pomiarowym przetocz je po powierzchni. Bez kółka pomiń ten krok.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/capturesteps.cpp" line="147"/>
         <source>Measure the sound level of the room.</source>
         <translation>Zmierz poziom dźwięku w pomieszczeniu.</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="139"/>
+        <location filename="../../src/device/capturesteps.cpp" line="149"/>
         <source>Switch the weighting between dBA and dBC.</source>
         <translation>Przełącz korekcję między dBA a dBC.</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="140"/>
+        <location filename="../../src/device/capturesteps.cpp" line="150"/>
         <source>Switch the time weighting between FAST and SLOW.</source>
         <translation>Przełącz stałą czasową między FAST a SLOW.</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="141"/>
+        <location filename="../../src/device/capturesteps.cpp" line="140"/>
+        <location filename="../../src/device/capturesteps.cpp" line="151"/>
         <source>Press HOLD.</source>
         <translation>Naciśnij HOLD.</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="223"/>
+        <location filename="../../src/device/capturesteps.cpp" line="233"/>
         <source>diode</source>
         <translation>dioda</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="227"/>
+        <location filename="../../src/device/capturesteps.cpp" line="237"/>
         <source>negative</source>
         <translation>ujemne</translation>
     </message>
     <message>
-        <location filename="../../src/device/capturesteps.cpp" line="235"/>
+        <location filename="../../src/device/capturesteps.cpp" line="245"/>
         <source>manual range</source>
         <translation>zakres ręczny</translation>
     </message>
@@ -2488,67 +2504,72 @@
 <context>
     <name>DeviceType</name>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="185"/>
+        <location filename="../../src/device/devicetype.cpp" line="187"/>
         <source>Handheld multimeter</source>
         <translation>Multimetr ręczny</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="186"/>
+        <location filename="../../src/device/devicetype.cpp" line="188"/>
         <source>Bench multimeter</source>
         <translation>Multimetr stacjonarny</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="187"/>
+        <location filename="../../src/device/devicetype.cpp" line="189"/>
         <source>Clamp meter</source>
         <translation>Miernik cęgowy</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="188"/>
+        <location filename="../../src/device/devicetype.cpp" line="190"/>
         <source>Thermometer</source>
         <translation>Termometr</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="189"/>
+        <location filename="../../src/device/devicetype.cpp" line="191"/>
         <source>Luxmeter</source>
         <translation>Luksomierz</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="190"/>
+        <location filename="../../src/device/devicetype.cpp" line="192"/>
         <source>Air quality meter</source>
         <translation>Miernik jakości powietrza</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="191"/>
+        <location filename="../../src/device/devicetype.cpp" line="193"/>
         <source>Sound level meter</source>
         <translation>Miernik poziomu dźwięku</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="192"/>
+        <location filename="../../src/device/devicetype.cpp" line="194"/>
         <source>Anemometer</source>
         <translation>Anemometr</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="193"/>
+        <location filename="../../src/device/devicetype.cpp" line="195"/>
+        <source>Tachometer</source>
+        <translation>Tachometr</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/devicetype.cpp" line="196"/>
         <source>Battery monitor</source>
         <translation>Monitor baterii</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="194"/>
+        <location filename="../../src/device/devicetype.cpp" line="197"/>
         <source>Solar charge controller</source>
         <translation>Regulator ładowania solarnego</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="195"/>
+        <location filename="../../src/device/devicetype.cpp" line="198"/>
         <source>Inverter</source>
         <translation>Falownik</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="196"/>
+        <location filename="../../src/device/devicetype.cpp" line="199"/>
         <source>Virtual meter</source>
         <translation>Miernik wirtualny</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="197"/>
+        <location filename="../../src/device/devicetype.cpp" line="200"/>
         <source>Generic</source>
         <translation>Ogólny</translation>
     </message>
@@ -4484,46 +4505,46 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
 <context>
     <name>LcdWidget</name>
     <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="703"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="704"/>
         <source>AUTO</source>
         <translation>AUTO</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="703"/>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="730"/>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="896"/>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="912"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="704"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="731"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="897"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="913"/>
         <source>MAX</source>
         <translation>MAX</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="704"/>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="911"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="705"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="912"/>
         <source>MIN</source>
         <translation>MIN</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="704"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="705"/>
         <source>AVG</source>
         <translation>AVG</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="862"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="863"/>
         <source>FAIL</source>
         <translation>FAIL</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="862"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="863"/>
         <source>PASS</source>
         <translation>PASS</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="868"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="869"/>
         <source>HI</source>
         <translation>HI</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="868"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="869"/>
         <source>LO</source>
         <translation>LO</translation>
     </message>
@@ -6525,106 +6546,111 @@ Czy multimetr jest podłączony i włączony?</translation>
     </message>
     <message>
         <location filename="../../src/device/protocols.cpp" line="52"/>
+        <source>35 bytes binary, streamed over Bluetooth LE, RPM, Hz or a wheel&apos;s speed and length (UNI-T UT372D)</source>
+        <translation>35 bajtów binarnie, wysyłane przez Bluetooth LE, RPM, Hz lub prędkość i długość kółka pomiarowego (UNI-T UT372D)</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/protocols.cpp" line="53"/>
         <source>text lines from HID records, CO2/temperature/humidity (TFA AIRCO2NTROL)</source>
         <translation>wiersze tekstu z rekordów HID, CO2/temperatura/wilgotność (TFA AIRCO2NTROL)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="53"/>
+        <location filename="../../src/device/protocols.cpp" line="54"/>
         <source>variable bytes ASCII, polled with CONF?/FETC? (Agilent/Keysight U12xx)</source>
         <translation>zmienna liczba bajtów ASCII, odpytywany przez CONF?/FETC? (Agilent/Keysight U12xx)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="54"/>
+        <location filename="../../src/device/protocols.cpp" line="55"/>
         <source>19 bytes ASCII, continuous after a start byte (UNI-T UT32x thermometers)</source>
         <translation>19 bajtów ASCII, ciągły po bajcie startowym (termometry UNI-T UT32x)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="55"/>
+        <location filename="../../src/device/protocols.cpp" line="56"/>
         <source>18 bytes binary, continuous, two values (MASTECH MS6514 thermometer)</source>
         <translation>18 bajtów binarnych, ciągły, dwie wartości (termometr MASTECH MS6514)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="56"/>
+        <location filename="../../src/device/protocols.cpp" line="57"/>
         <source>17 bytes binary, polled (APPA 506/208, BENNING MM 12; APPA S, 150B, 170B over Bluetooth LE)</source>
         <translation>17 bajtów binarnych, odpytywany (APPA 506/208, BENNING MM 12; APPA S, 150B, 170B przez Bluetooth LE)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="57"/>
+        <location filename="../../src/device/protocols.cpp" line="58"/>
         <source>59 bytes binary, polled (APPA 503/505, Voltcraft VC-930/950)</source>
         <translation>59 bajtów binarnych, odpytywany (APPA 503/505, Voltcraft VC-930/950)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="58"/>
+        <location filename="../../src/device/protocols.cpp" line="59"/>
         <source>33 bytes, continuous, lx or fc (UNI-T UT382 luxmeter)</source>
         <translation>33 bajty, ciągły, lx lub fc (luksomierz UNI-T UT382)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="59"/>
+        <location filename="../../src/device/protocols.cpp" line="60"/>
         <source>8 bytes binary, continuous after a start command, lx and °C (Benetech GM1020)</source>
         <translation>8 bajtów binarnych, ciągły po poleceniu startowym, lx i °C (Benetech GM1020)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="60"/>
+        <location filename="../../src/device/protocols.cpp" line="61"/>
         <source>10 to 19 bytes, scrambled LCD segments, streamed over Bluetooth LE (ZOTEK, ANENG)</source>
         <translation>10 do 19 bajtów, zaszyfrowane segmenty LCD, wysyłane przez Bluetooth LE (ZOTEK, ANENG)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="61"/>
+        <location filename="../../src/device/protocols.cpp" line="62"/>
         <source>14 bytes binary, streamed over Bluetooth LE (FS9721, HoldPeak HP-570C-APP)</source>
         <translation>14 bajtów binarnych, wysyłane przez Bluetooth LE (FS9721, HoldPeak HP-570C-APP)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="62"/>
+        <location filename="../../src/device/protocols.cpp" line="63"/>
         <source>6 bytes binary, streamed over Bluetooth LE (OWON B35T+, B41T+, OW18E, CM2100B)</source>
         <translation>6 bajtów binarnie, wysyłane przez Bluetooth LE (OWON B35T+, B41T+, OW18E, CM2100B)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="63"/>
+        <location filename="../../src/device/protocols.cpp" line="64"/>
         <source>15 bytes binary, streamed over Bluetooth LE (OWON CMS101, OW65B-OW69B, Voltcraft VC871-VC925 PV)</source>
         <translation>15 bajtów binarnie, przesyłane przez Bluetooth LE (OWON CMS101, OW65B-OW69B, Voltcraft VC871-VC925 PV)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="64"/>
+        <location filename="../../src/device/protocols.cpp" line="65"/>
         <source>AB CD frames of any length with float values, streamed once asked (UNI-T UT181A, UT-D09 cable or UT-D07B adapter)</source>
         <translation>Ramki AB CD o dowolnej długości z wartościami zmiennoprzecinkowymi, wysyłane na żądanie (UNI-T UT181A, kabel UT-D09 lub adapter UT-D07B)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="65"/>
+        <location filename="../../src/device/protocols.cpp" line="66"/>
         <source>39 bytes, streamed (Voltcraft VC-880, VC650BT, CP2110 USB cable)</source>
         <translation>39 bajtów, strumieniowo (Voltcraft VC-880, VC650BT, kabel USB CP2110)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="66"/>
+        <location filename="../../src/device/protocols.cpp" line="67"/>
         <source>66 bytes, polled (Voltcraft VC-890, CP2110 USB cable)</source>
         <translation>66 bajtów, odpytywany (Voltcraft VC-890, kabel USB CP2110)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="67"/>
+        <location filename="../../src/device/protocols.cpp" line="68"/>
         <source>AB CD frames with float values, streamed after a connect command (UNI-T UT171A/B/C, UT-D09 cable or UT-D07B adapter)</source>
         <translation>Ramki AB CD z wartościami zmiennoprzecinkowymi, wysyłane po poleceniu połączenia (UNI-T UT171A/B/C, kabel UT-D09 lub adapter UT-D07B)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="68"/>
+        <location filename="../../src/device/protocols.cpp" line="69"/>
         <source>8 bytes from AC, BCD digits, no checksum (UNI-T UT8802 bench meter, CP2110 USB)</source>
         <translation>8 bajtów od AC, cyfry BCD, bez sumy kontrolnej (multimetr stołowy UNI-T UT8802, CP2110 USB)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="69"/>
+        <location filename="../../src/device/protocols.cpp" line="70"/>
         <source>21 bytes from AB CD, ASCII display (UNI-T UT8803 bench meter with LCR, CP2110 USB)</source>
         <translation>21 bajtów od AB CD, wyświetlacz ASCII (multimetr stołowy UNI-T UT8803 z LCR, CP2110 USB)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="70"/>
+        <location filename="../../src/device/protocols.cpp" line="71"/>
         <source>19 bytes from F2 with an XOR check, main and secondary display (EEVblog 121GW, Bluetooth LE)</source>
         <translation>19 bajtów od F2 z kontrolą XOR, wyświetlacz główny i pomocniczy (EEVblog 121GW, Bluetooth LE)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="71"/>
+        <location filename="../../src/device/protocols.cpp" line="72"/>
         <source>32-byte reading packets with CRC-16 after a password login (Brymen BM788BT, BM787BT, Bluetooth LE)</source>
         <translation>32-bajtowe pakiety odczytu z CRC-16 po logowaniu hasłem (Brymen BM788BT, BM787BT, Bluetooth LE)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="72"/>
+        <location filename="../../src/device/protocols.cpp" line="73"/>
         <source>Unknown meter: bytes only, for a capture (Capture...)</source>
         <translation>Nieznany miernik: tylko bajty, do zapisu ramek (Zapis ramek…)</translation>
     </message>
@@ -6740,204 +6766,214 @@ Następnie wyloguj się i zaloguj ponownie, aby członkostwo w grupie zaczęło 
 <context>
     <name>Quantity</name>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="141"/>
+        <location filename="../../src/core/sampletypes.h" line="143"/>
         <source>Unknown</source>
         <translation>Nieznana</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="142"/>
+        <location filename="../../src/core/sampletypes.h" line="144"/>
         <source>Voltage</source>
         <translation>Napięcie</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="143"/>
+        <location filename="../../src/core/sampletypes.h" line="145"/>
         <source>Current</source>
         <translation>Prąd</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="144"/>
+        <location filename="../../src/core/sampletypes.h" line="146"/>
         <source>Resistance</source>
         <translation>Rezystancja</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="145"/>
+        <location filename="../../src/core/sampletypes.h" line="147"/>
         <source>Capacitance</source>
         <translation>Pojemność</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="146"/>
+        <location filename="../../src/core/sampletypes.h" line="148"/>
         <source>Temperature</source>
         <translation>Temperatura</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="147"/>
+        <location filename="../../src/core/sampletypes.h" line="149"/>
         <source>Frequency</source>
         <translation>Częstotliwość</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="148"/>
+        <location filename="../../src/core/sampletypes.h" line="150"/>
         <source>Duty cycle</source>
         <translation>Współczynnik wypełnienia</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="149"/>
+        <location filename="../../src/core/sampletypes.h" line="151"/>
         <source>Continuity</source>
         <translation>Ciągłość</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="150"/>
+        <location filename="../../src/core/sampletypes.h" line="152"/>
         <source>Pulse width</source>
         <translation>Szerokość impulsu</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="151"/>
+        <location filename="../../src/core/sampletypes.h" line="153"/>
         <source>Conductance</source>
         <translation>Konduktancja</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="152"/>
+        <location filename="../../src/core/sampletypes.h" line="154"/>
         <source>Power</source>
         <translation>Moc</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="153"/>
+        <location filename="../../src/core/sampletypes.h" line="155"/>
         <source>Gain</source>
         <translation>Wzmocnienie</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="154"/>
+        <location filename="../../src/core/sampletypes.h" line="156"/>
         <source>Sound pressure level</source>
         <translation>Poziom ciśnienia akustycznego</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="155"/>
+        <location filename="../../src/core/sampletypes.h" line="157"/>
         <source>Carbon monoxide</source>
         <translation>Tlenek węgla</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="156"/>
+        <location filename="../../src/core/sampletypes.h" line="158"/>
         <source>Relative humidity</source>
         <translation>Wilgotność względna</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="157"/>
+        <location filename="../../src/core/sampletypes.h" line="159"/>
         <source>Time</source>
         <translation>Czas</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="158"/>
+        <location filename="../../src/core/sampletypes.h" line="160"/>
         <source>Wind speed</source>
         <translation>Prędkość wiatru</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="159"/>
+        <location filename="../../src/core/sampletypes.h" line="161"/>
         <source>Pressure</source>
         <translation>Ciśnienie</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="160"/>
+        <location filename="../../src/core/sampletypes.h" line="162"/>
         <source>Parallel inductance</source>
         <translation>Indukcyjność równoległa</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="161"/>
+        <location filename="../../src/core/sampletypes.h" line="163"/>
         <source>Parallel capacitance</source>
         <translation>Pojemność równoległa</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="162"/>
+        <location filename="../../src/core/sampletypes.h" line="164"/>
         <source>Parallel resistance</source>
         <translation>Rezystancja równoległa</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="163"/>
+        <location filename="../../src/core/sampletypes.h" line="165"/>
         <source>Series inductance</source>
         <translation>Indukcyjność szeregowa</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="164"/>
+        <location filename="../../src/core/sampletypes.h" line="166"/>
         <source>Series capacitance</source>
         <translation>Pojemność szeregowa</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="165"/>
+        <location filename="../../src/core/sampletypes.h" line="167"/>
         <source>Series resistance</source>
         <translation>Rezystancja szeregowa</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="166"/>
+        <location filename="../../src/core/sampletypes.h" line="168"/>
         <source>Dissipation factor</source>
         <translation>Współczynnik strat</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="167"/>
+        <location filename="../../src/core/sampletypes.h" line="169"/>
         <source>Quality factor</source>
         <translation>Dobroć</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="168"/>
+        <location filename="../../src/core/sampletypes.h" line="170"/>
         <source>Phase angle</source>
         <translation>Kąt fazowy</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="169"/>
+        <location filename="../../src/core/sampletypes.h" line="171"/>
         <source>Difference</source>
         <translation>Różnica</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="170"/>
+        <location filename="../../src/core/sampletypes.h" line="172"/>
         <source>Count</source>
         <translation>Liczba</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="171"/>
+        <location filename="../../src/core/sampletypes.h" line="173"/>
         <source>Power factor</source>
         <translation>Współczynnik mocy</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="172"/>
+        <location filename="../../src/core/sampletypes.h" line="174"/>
         <source>Apparent power</source>
         <translation>Moc pozorna</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="173"/>
+        <location filename="../../src/core/sampletypes.h" line="175"/>
         <source>Mass</source>
         <translation>Masa</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="174"/>
+        <location filename="../../src/core/sampletypes.h" line="176"/>
         <source>Harmonic ratio</source>
         <translation>Zawartość harmonicznych</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="175"/>
+        <location filename="../../src/core/sampletypes.h" line="177"/>
         <source>Energy</source>
         <translation>Energia</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="176"/>
+        <location filename="../../src/core/sampletypes.h" line="178"/>
         <source>Electric charge</source>
         <translation>Ładunek elektryczny</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="177"/>
+        <location filename="../../src/core/sampletypes.h" line="179"/>
         <source>State of charge</source>
         <translation>Stan naładowania</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="178"/>
+        <location filename="../../src/core/sampletypes.h" line="180"/>
         <source>Time to go</source>
         <translation>Pozostały czas</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="179"/>
+        <location filename="../../src/core/sampletypes.h" line="181"/>
         <source>Carbon dioxide</source>
         <translation>Dwutlenek węgla</translation>
     </message>
     <message>
-        <location filename="../../src/core/sampletypes.h" line="180"/>
+        <location filename="../../src/core/sampletypes.h" line="182"/>
         <source>Illuminance</source>
         <translation>Natężenie oświetlenia</translation>
+    </message>
+    <message>
+        <location filename="../../src/core/sampletypes.h" line="183"/>
+        <source>Linear speed</source>
+        <translation>Prędkość liniowa</translation>
+    </message>
+    <message>
+        <location filename="../../src/core/sampletypes.h" line="184"/>
+        <source>Length</source>
+        <translation>Długość</translation>
     </message>
 </context>
 <context>
@@ -8621,16 +8657,19 @@ Następnie wyloguj się i zaloguj ponownie, aby członkostwo w grupie zaczęło 
     </message>
     <message>
         <location filename="../../src/device/decoders/uni_t_ut181a.cpp" line="263"/>
+        <location filename="../../src/device/decoders/uni_t_ut372d.cpp" line="97"/>
         <source>Max</source>
         <translation>Maks</translation>
     </message>
     <message>
         <location filename="../../src/device/decoders/uni_t_ut181a.cpp" line="264"/>
+        <location filename="../../src/device/decoders/uni_t_ut372d.cpp" line="99"/>
         <source>Min</source>
         <translation>Min</translation>
     </message>
     <message>
         <location filename="../../src/device/decoders/uni_t_ut181a.cpp" line="265"/>
+        <location filename="../../src/device/decoders/uni_t_ut372d.cpp" line="101"/>
         <source>Average</source>
         <translation>Średnia</translation>
     </message>
