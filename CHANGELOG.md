@@ -63,7 +63,7 @@
 - **A file loaded is always shown** — *Import* turns the graph on also with a meter connected, before only the status bar changed.
 - **The statistics line of the readings table follows four times a second** — not at each reading: it goes over all rows, about half the time of a reading in a full table.
 - **Overview strip: the last digit around 0 stays small** — an open input between 0.000 and 0.001 no longer fills the strip as a square wave.
-- **Data tab follows the reading:** with the device connected, the Data tab of its info marks the table and range of the reading on the display and scrolls there. A note on one range ("600Ω: accuracy + test-lead resistance") now stands below that range. New data sheets for the UNI-T UT353BT and UT333BT.
+- **Data tab follows the reading** — with the device connected, the Data tab of its info marks the table and range of the reading on the display and scrolls there. A note on one range ("600Ω: accuracy + test-lead resistance") now stands below that range. New data sheets for the UNI-T UT353BT and UT333BT.
 
 ### Fixes
 
