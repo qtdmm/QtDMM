@@ -286,6 +286,11 @@ public:
 
   /// The units of the value axes drawn, the left one first.
   QStringList axisUnits() const;
+  /// The axis key of values that have readings but no unit (a
+  /// microcontroller's numbers): they get an axis of their own like a unit.
+  static inline const QString kNoUnit = QStringLiteral("1");
+  /// @p unit of an axis as shown: SiPrefix::displayText(), "no unit" for kNoUnit.
+  static QString unitText(const QString &unit);
   /// Asks for a fixed range of the axis of @p unit (base unit), with
   /// @p min and @p max at first; without them what the axis shows now.
   /// False when cancelled.
@@ -446,6 +451,7 @@ private:
     QList<QPointF> points;       ///< thinned, all the store keeps, on the graph's time
     int         tail = 0;        ///< how many of them are the newest bucket's
     bool        banded = false;  ///< too dense for a line: drawn as a band (drawCurves())
+    bool        unitless = false; ///< readings, but no unit: on the axis of kNoUnit
   };
   /// One value axis: the unit it has now, and the frame zoomed on.
   struct Axis

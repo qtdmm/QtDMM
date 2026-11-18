@@ -67,6 +67,7 @@
 
 ### Fixes
 
+- **Graph: values without a unit are drawn** — a value with readings but no unit (a microcontroller's numbers) got no axis and stayed invisible, only the overview strip showed it; such values now share an axis of their own.
 - **Side plots and graph axes** — the heatmap counts each sample in the cell it is drawn in (it could be half a cell off) and its cells fill the axes; XY, histogram and heatmap keep their points when a reading without a number and unit comes; the histogram's crosshair gives the height of the bar under the mouse; the heatmap's colour scheme is saved in the workspace; a right axis on a narrow fixed range labels every tick (230.04 was left out); no light line at 0 in the XY diagram and histogram on dark designs (review R19-01, -02, -06, -08, -09, -11)
 - **Project files** — a project ZIP can no longer write outside the new project folder (an entry like `Bench//home/…` passed the path check); a `project.json` broken by hand is left as it is instead of being overwritten with the description alone; CSV and QtDMM recording exports report a full disk instead of "written"; *Live in LabPlot* follows a recording beyond 2 million readings and says when its file cannot be written (review R19-03, -05, -07, -10)
 - **Fixed layout: a window shown again gets a place** — a window hidden before a new one was added, or shown again after all windows had gone and a new one came, could end up without a cell, over another window, until the mode was changed (review R19-04)
@@ -74,6 +75,7 @@
 
 ### Meters
 
+- **Microcontroller: a name that is a unit is the unit** — `V:3.31,A:0.12` from a sketch is now a voltage and a current (V, mA, kOhm, °C, %RH, … with SI prefixes; a single letter like `C` stays a name).
 - **Microcontroller (text lines)** — an Arduino, ESP32 or Pico sending its values over USB serial in the Arduino Serial Plotter's or Teleplot's format, told apart line by line; each name becomes a value, up to four; Teleplot units (`§V`), `|xy` as two values for the XY diagram. A new device kind *Microcontroller* with its own symbol, and a help page *Your own board* with example sketches.
 - **UNI-T UT219PV clamp meter for photovoltaics over Bluetooth LE** (`*`, untried) — polled; main and second display as two values (V/A with Hz, DC V with DC A, inrush with peak current, °C with °F, …), OL, HOLD, ZERO. Keys SET, HOLD, MIN/MAX, LPF, ZERO and two new keys **INRUSH** and **A-HOLD** (auto hold); a save key pressed on the meter is answered as UNI-T's app does. From the notes decompiled from UNI-T's multimeter app; its stored readings are left out.
 - **UNI-T UT117C multimeter over Bluetooth LE** (`*`, untried) — polled; AC/DC V and mV, Ω, continuity, diode, capacitance, LoZ, Hz, NCV (HI/LO), A and the clamp input; OL, HOLD, REL, low battery. Keys SELECT, RANGE/AUTO, REL, MIN/MAX, HOLD, LIGHT and a new key **LPF** (low-pass filter), greyed out in the functions where the meter ignores them. From the notes decompiled from UNI-T's multimeter app and libreble.

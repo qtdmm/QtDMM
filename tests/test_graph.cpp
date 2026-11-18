@@ -738,6 +738,31 @@ static void testAllStretches()
   check(graph.shownSeconds() == 600, "a window of its own: the axis is the window");
 }
 
+// Values without a unit (a microcontroller's numbers) are drawn on an axis
+// of their own, both on one, its title without a unit
+static void testUnitless()
+{
+  Bench bench;
+  GraphWidget &graph = bench.graph;
+  bench.a.live();
+  graph.setValues({ ValueRef(0, "device:a"), ValueRef(1, "device:a"), ValueRef(2, "device:a") });
+  for (int i = 0; i < 20; ++i)
+  {
+    bench.feedA.value(1 + 0.1 * i);
+    bench.feedA.now -= 1000;
+    bench.feedA.other(1, 0.5 + 0.01 * i, QString(), Quantity::Unknown);
+    bench.feedA.other(2, 7 + 0.01 * i, QString(), Quantity::Unknown);
+    bench.feedA.now += 1000;
+  }
+  graph.refreshNow();
+  const int axis = graph.curveAxis(1);
+  check(graph.curvePoints(1).size() == 20 && axis > 0 && graph.curveAxis(2) == axis && graph.axisCount() == 2,
+        QString("unitless: 20 points on an axis of their own, both on it (%1 %2)").arg(axis).arg(graph.curveAxis(2)));
+  check(!graph.axisTitle(axis).contains('1') && graph.axisMin(axis) < 0.6 && graph.axisMax(axis) > 7,
+        "unitless: the axis without a unit, over both: " + graph.axisTitle(axis));
+  check(GraphWidget::unitText(GraphWidget::kNoUnit) == "no unit" && GraphWidget::unitText("V") == "V", "unit texts");
+}
+
 static void testValues()
 {
   Bench bench;
@@ -2049,6 +2074,7 @@ int main(int argc, char **argv)
   testFile(QString::fromLocal8Bit(argv[1]));
   testAllStretches();
   testValues();
+  testUnitless();
   testFourUnits();
   testOtherTime();
   testParts();

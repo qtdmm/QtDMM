@@ -236,6 +236,11 @@ void GraphWidget::endZoom(bool restoreWindow)
 // unit: a value put on an axis of its own stays alone there while there is
 // room. A value whose unit finds no axis is not drawn. The values with a
 // choice come first, so Auto fills what is left.
+QString GraphWidget::unitText(const QString &unit)
+{
+  return unit == kNoUnit ? QCoreApplication::translate("GraphWidget", "no unit") : SiPrefix::displayText(unit);
+}
+
 void GraphWidget::assignAxes()
 {
   for (Axis &a : m_axes)
@@ -252,30 +257,31 @@ void GraphWidget::assignAxes()
       if ((chosen == kAxisAuto) != (pass == 1))
         continue;
       c.axis = -1;
-      if (c.unit.isEmpty())
+      const QString unit = c.unitless ? kNoUnit : c.unit;
+      if (unit.isEmpty())
         continue;   // no reading yet
       if (chosen != kAxisAuto)
       {
-        c.axis = fits(chosen, c.unit) ? chosen : -1;
+        c.axis = fits(chosen, unit) ? chosen : -1;
         if (c.axis >= 0)
           chosenAxis[c.axis] = true;
       }
       else
       {
         for (int i = 0; i < m_axes.size() && c.axis < 0; ++i)
-          if (m_axes.at(i).unit == c.unit && !chosenAxis.at(i))
+          if (m_axes.at(i).unit == unit && !chosenAxis.at(i))
             c.axis = i;
         for (int i = 0; i < m_axes.size() && c.axis < 0; ++i)
           if (m_axes.at(i).unit.isEmpty())
             c.axis = i;
         for (int i = 0; i < m_axes.size() && c.axis < 0; ++i)
-          if (m_axes.at(i).unit == c.unit)
+          if (m_axes.at(i).unit == unit)
             c.axis = i;
       }
       if (c.axis >= 0)
-        m_axes[c.axis].unit = c.unit;
-      else if (const QString unit = SiPrefix::displayText(c.unit); !left.contains(unit))
-        left << unit;
+        m_axes[c.axis].unit = unit;
+      else if (const QString shown = unitText(unit); !left.contains(shown))
+        left << shown;
     }
   if (!left.isEmpty())
     m_notice = tr("%1: no free axis").arg(left.join(", "));
@@ -339,7 +345,7 @@ void GraphWidget::updateAxes(double &from, double &to)
       lo -= room;
       hi += room;
     }
-    PlotAxis::Range range = PlotAxis::range(lo, hi, a.unit);
+    PlotAxis::Range range = PlotAxis::range(lo, hi, a.unit == kNoUnit ? QString() : a.unit);
     // a scope's or a recorder's graticule: 8 divisions of a whole step on
     // every axis, so one grid is right for all; not for a range that is given
     const bool given = m_zoomed || (!a.unit.isEmpty() && m_fixedRanges.contains(a.unit));

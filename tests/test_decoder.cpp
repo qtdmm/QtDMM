@@ -378,6 +378,13 @@ int main(int argc, char **argv)
                                    "state:on|t", ">:Hello world", "3D|cube:S:cube", "", "\xff\xfe" })
         if (line(skipped))
           bad(qPrintable(QString("not skipped: ") + skipped));
+      // a label that is a unit is the unit too; "C" alone and words are names
+      auto units = DmmDecoder::getInstance(FrameFormat::TextLines);
+      const auto va = units->decode("V:3.31,mA:12.5,temp:20,C:1\r\n", 0);
+      if (!va || va->channels.size() != 4 || va->channels[0].unit != "V" || va->channels[0].name != "V"
+          || va->channels[1].unit != "mA" || std::abs(va->channels[1].dval - 0.0125) > 1e-12
+          || !va->channels[2].unit.isEmpty() || !va->channels[3].unit.isEmpty())
+        bad("V, mA as units; temp and C not");
       const QByteArray longLine(120, '1');
       for (int i = 0; i < longLine.size(); ++i)
         if (lines->checkFormat(longLine.constData(), size_t(qMin(i, FIFO_LENGTH - 1))))

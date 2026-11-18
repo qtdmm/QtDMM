@@ -3436,13 +3436,13 @@ puis déconnectez-vous et reconnectez-vous.</translation>
         <translation>Note maintenant… (N)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="389"/>
+        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="395"/>
         <location filename="../../src/ui/views/graphwords.h" line="26"/>
         <source>%1 · %2</source>
         <translation>%1 · %2</translation>
     </message>
     <message numerus="yes">
-        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="395"/>
+        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="401"/>
         <source>%n outlier(s) hidden</source>
         <translation>
             <numerusform>%n point aberrant masqué</numerusform>
@@ -3450,7 +3450,7 @@ puis déconnectez-vous et reconnectez-vous.</translation>
         </translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="385"/>
+        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="391"/>
         <location filename="../../src/ui/views/graphwords.h" line="27"/>
         <source>Live</source>
         <translation>Direct</translation>
@@ -3875,22 +3875,27 @@ puis déconnectez-vous et reconnectez-vous.</translation>
         <translation>Plage fixe [%1]</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="281"/>
+        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="241"/>
+        <source>no unit</source>
+        <translation>sans unité</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="287"/>
         <source>%1: no free axis</source>
         <translation>%1 : aucun axe libre</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="385"/>
+        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="391"/>
         <source>Live · held</source>
         <translation>Direct · figé</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="387"/>
+        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="393"/>
         <source>Recording · %1</source>
         <translation>Enregistrement · %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="391"/>
+        <location filename="../../src/ui/views/graphwidget_axes.cpp" line="397"/>
         <source>Stopped · %1</source>
         <translation>Arrêté · %1</translation>
     </message>

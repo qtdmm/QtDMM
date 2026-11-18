@@ -29,6 +29,23 @@ bool number(const QString &s, double *value)
   return ok && std::isfinite(*value);
 }
 
+// a label that is a unit QtDMM knows ("V", "mA", "kOhm", "°C", "%RH"): the
+// unit of its value too [E 18.11.]; "C", "K" and other letters alone stay
+// names (a channel "C" is no temperature). Empty for any other label.
+QString unitOfLabel(const QString &label)
+{
+  static const QStringList bases = { "V", "A", "Ohm", "F", "Hz", "W", "Wh", "Ah", "VA", "%", "%RH", "lx",
+                                     "ppm", "dB", "dBm", "dBA", "dBC", "°C", "°F", "m/s" };
+  QString unit = label;
+  unit.replace(QChar(0x03A9), QStringLiteral("Ohm")).replace(QChar(0x2126), QStringLiteral("Ohm"));   // Ω, Ω
+  SiPrefix::Split split = SiPrefix::split(unit);
+  if (!bases.contains(split.baseUnit))
+    return QString();
+  if (split.prefix == QLatin1String("u"))
+    split.prefix = QStringLiteral("µ");
+  return split.prefix + split.baseUnit;
+}
+
 // the number as QtDMM shows it: as sent, but without "+" and exponent
 QString shown(const QString &s, double value)
 {
@@ -51,7 +68,7 @@ QList<DecoderTextLines::Item> serialPlotter(const QString &line)
     double v = 0;
     if ((colon >= 0 && (label.isEmpty() || s.contains(QLatin1Char(':')))) || !number(s, &v))
       return {};   // one bad token: the whole line is not one
-    out << DecoderTextLines::Item{ label.isEmpty() ? QString::number(i + 1) : label, shown(s, v), v, QString() };
+    out << DecoderTextLines::Item{ label.isEmpty() ? QString::number(i + 1) : label, shown(s, v), v, unitOfLabel(label) };
   }
   return out;
 }
@@ -105,7 +122,7 @@ QList<DecoderTextLines::Item> teleplot(QString line)
       double v = 0, ts = 0;
       if ((f.size() != 1 && f.size() != 2) || !number(f.last(), &v) || (f.size() == 2 && !number(f.first(), &ts)))
         return {};
-      out << DecoderTextLines::Item{ key, shown(f.last(), v), v, unit };
+      out << DecoderTextLines::Item{ key, shown(f.last(), v), v, unit.isEmpty() ? unitOfLabel(key) : unit };
     }
   }
   return out;
