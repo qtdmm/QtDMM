@@ -46,7 +46,8 @@ public:
   int heightForWidth(int width) const override;
 
 public Q_SLOTS:
-  /// The key states the reading reports (HOLD, AUTO).
+  /// The key states the reading reports (HOLD, AUTO); a key the meter
+  /// ignores in this mode greyed out (DmmDecoder::keyWorks()).
   void showReading(const Reading &reading);
 
 Q_SIGNALS:
@@ -68,6 +69,9 @@ private:
   QToolButton *m_max = nullptr;
   QToolButton *m_min = nullptr;
   QToolButton *m_avg = nullptr;
+  std::shared_ptr<DmmDecoder> m_decoder;   ///< setProtocol()
+  QString     m_model;
+  bool        m_connected = false;
   /// Places the groups in rows for @p width; returns the height used.
   int layoutGroups(int width, bool apply) const;
   /// layoutGroups() for the width now, the height to fit.

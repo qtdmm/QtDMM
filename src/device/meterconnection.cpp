@@ -161,6 +161,8 @@ void MeterConnection::initDecoder( FrameFormat::DataFormat df)
     m_readerThread->setDecoder(m_decoder);
   }
   m_decoder->setModel(m_dmmInfo.model);
+  m_modelChecked = false;
+  m_otherModels.clear();
 }
 
 
@@ -503,6 +505,16 @@ void MeterConnection::readEventSLOT(const QByteArray &data, int id, qint64 t, qi
   static const QMetaMethod frameSignal = QMetaMethod::fromSignal(&MeterConnection::frame);
   if (isSignalConnected(frameSignal))
     Q_EMIT frame(data, wall, r);
+  // a meter sending another model's frames (a ZOTEK layout): it says once
+  // which model to choose (dmm-tools abe0fc8)
+  if (r && !m_modelChecked && m_decoder->tellsModel())
+  {
+    m_modelChecked = true;
+    const QStringList models = m_decoder->modelsFromFrame(data);
+    if (!models.isEmpty() && !models.contains(m_dmmInfo.name))
+      for (const QString &m : models)
+        m_otherModels << QString(m).remove(QLatin1String(" *"));
+  }
   if (r)
   {
     Q_EMIT response(*r);
@@ -513,7 +525,11 @@ void MeterConnection::readEventSLOT(const QByteArray &data, int id, qint64 t, qi
     if (m_portType == Transport::PortType::Calc)
       setState(LinkState::Connected, m_error);
     else
-      setState(LinkState::Connected, r->error.isEmpty() ? connectedMessage() : QString("%1 %2").arg(r->error, deviceName()));
+      setState(LinkState::Connected, !r->error.isEmpty() ? QString("%1 %2").arg(r->error, deviceName())
+                                     : !m_otherModels.isEmpty()
+                                       ? tr("%1 sends the data of a %2: choose that model in its settings")
+                                           .arg(deviceName(), m_otherModels.join(QLatin1String(" / ")))
+                                       : connectedMessage());
   }
   else if (m_decoder->getType() == FrameFormat::RawCapture)
     // no value by design: the bytes are only for the capture window

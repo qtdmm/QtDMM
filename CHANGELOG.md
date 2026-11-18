@@ -79,6 +79,7 @@
 - **Damaged frames of meters without a checksum are no reading** — ES51922, ES51962, ES51986 and VC940: a function or range byte they do not know gave a valid 0, now the reading is a gap.
 - **ES51962: the 4000 V range** — it was missing, its readings showed as overload.
 - **ES51962: overload compared the wrong bytes** — digits from the first byte on, not the second.
+- **dmm-tools sync (18.11.)** — what dmm-tools learned up to 17.11.: the UT61B+/D+/E+ and UT161 grey out HOLD in NCV, REL in continuity, diode, Hz, duty and NCV, and MIN/MAX there and in capacitance, where the meter ignores the key; a ZOTEK meter that sends another model's data says in the status bar which model to choose; the UT217A's AC A beside Hz in Hz/A is confirmed on a real meter with a clamped conductor (two more test frames); the OWON CMS061/UT217A and CMS101/UT217B show their manual's specifications in the *Data* tab.
 
 ### Platforms and build
 

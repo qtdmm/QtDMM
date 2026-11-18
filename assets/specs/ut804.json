@@ -1,10 +1,10 @@
 {
- "source": "dmm-tools f96e318",
+ "source": "dmm-tools 96b4d0d",
  "device": "ut804",
  "models": [
   "Uni-Trend UT804"
  ],
- "model": "UT804",
+ "model": "UNI-T UT804",
  "tables": [
   {
    "input_impedance": "Around 2.5GΩ",

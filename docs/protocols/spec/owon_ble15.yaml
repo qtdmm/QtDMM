@@ -28,7 +28,7 @@ sources:
 #
 # The vectors are the 28 VC871 frames of §14.5 (community captures), with
 # the readings dmm-tools' tests give them; the VC871's sub-display rule is
-# not used by them (no REL/MIN/MAX). Then 20 UT217A (CMS061) frames whose
+# not used by them (no REL/MIN/MAX). Then 22 UT217A (CMS061) frames whose
 # readings the meter's LCD confirmed; it sends model code 61 and NCV with
 # decimal code 1.
 vectors:
@@ -194,6 +194,14 @@ vectors:
     bytes: E2 00 F0 00 00 00 A3 01 F0 00 00 00 04 00 00
     reading: {value: "0", unit: "A", range_mode: "auto"}
     expect: {special: "AC"}
+  - source_line: "UT217A AC A 3.64 A, clamped around a conductor (cms061/aca_clamped)"
+    bytes: E2 00 F0 6C 01 00 A0 01 F0 20 CC 07 04 00 00
+    reading: {value: "3.64", unit: "A", range_mode: "auto"}
+    expect: {special: "AC"}
+  - source_line: "UT217A Hz/A 49.99 Hz, sub AC A 4.49 A on AC A's scale, clamped (cms061/aca_hz_clamped)"
+    bytes: A2 11 F0 87 13 00 E2 10 F0 C1 01 00 04 00 00
+    reading: {value: "49.99", unit: "Hz", range_mode: "auto"}
+    expect: {special: "HZ", val2: "4.49", unit2: "A", id2: 1}
   - source_line: "UT217A Inrush on AC A 0 A, waiting (cms061/inrush)"
     bytes: E2 00 F0 00 00 00 A2 01 F0 00 00 00 00 00 02
     reading: {value: "0", unit: "A", range_mode: "manual"}

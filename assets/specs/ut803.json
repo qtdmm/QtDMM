@@ -1,10 +1,10 @@
 {
- "source": "dmm-tools f96e318",
+ "source": "dmm-tools 96b4d0d",
  "device": "ut803",
  "models": [
   "Uni-Trend UT803"
  ],
- "model": "UT803",
+ "model": "UNI-T UT803",
  "tables": [
   {
    "input_impedance": "Around > 3000MΩ",

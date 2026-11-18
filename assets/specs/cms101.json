@@ -1,0 +1,568 @@
+{
+ "source": "dmm-tools 96b4d0d",
+ "device": "cms101",
+ "models": [
+  "OWON CMS101",
+  "Uni-Trend UT217B"
+ ],
+ "model": "OWON CMS101",
+ "tables": [
+  {
+   "input_impedance": null,
+   "notes": [
+    "Accuracy valid 5%–100% of range"
+   ],
+   "overload_protection": null,
+   "page": 35,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.1%+20",
+       "freq_range": null
+      }
+     ],
+     "range": "20.000mV",
+     "resolution": "0.001mV"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.1%+6",
+       "freq_range": null
+      }
+     ],
+     "range": "200.00mV",
+     "resolution": "0.01mV"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.1%+5",
+       "freq_range": null
+      }
+     ],
+     "range": "2.0000V",
+     "resolution": "0.0001V"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.1%+5",
+       "freq_range": null
+      }
+     ],
+     "range": "20.000V",
+     "resolution": "0.001V"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.1%+5",
+       "freq_range": null
+      }
+     ],
+     "range": "200.00V",
+     "resolution": "0.01V"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.15%+5",
+       "freq_range": null
+      }
+     ],
+     "range": "1000.0V",
+     "resolution": "0.1V"
+    }
+   ],
+   "table": "DC Voltage (V)"
+  },
+  {
+   "input_impedance": null,
+   "notes": [
+    "Accuracy valid 10%–100% of range"
+   ],
+   "overload_protection": null,
+   "page": 35,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.6%+10",
+       "freq_range": "40Hz–1000Hz"
+      }
+     ],
+     "range": "200.00mV",
+     "resolution": "0.01mV"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.6%+10",
+       "freq_range": "40Hz–1000Hz"
+      }
+     ],
+     "range": "2.0000V",
+     "resolution": "0.0001V"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.6%+10",
+       "freq_range": "40Hz–1000Hz"
+      }
+     ],
+     "range": "20.000V",
+     "resolution": "0.001V"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.6%+10",
+       "freq_range": "40Hz–1000Hz"
+      }
+     ],
+     "range": "200.00V",
+     "resolution": "0.01V"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.8%+10",
+       "freq_range": "40Hz–1000Hz"
+      }
+     ],
+     "range": "1000.0V",
+     "resolution": "0.1V"
+    }
+   ],
+   "table": "AC Voltage (V)"
+  },
+  {
+   "input_impedance": null,
+   "notes": [
+    "Accuracy valid 5%–100% of range"
+   ],
+   "overload_protection": null,
+   "page": 35,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "2.0%+10",
+       "freq_range": null
+      }
+     ],
+     "range": "20.00A",
+     "resolution": "0.01A"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "2.0%+5",
+       "freq_range": null
+      }
+     ],
+     "range": "200.0A",
+     "resolution": "0.1A"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "2.0%+5",
+       "freq_range": null
+      }
+     ],
+     "range": "1000A",
+     "resolution": "1A"
+    }
+   ],
+   "table": "DC Current (A)"
+  },
+  {
+   "input_impedance": null,
+   "notes": [
+    "Accuracy valid 10%–100% of range"
+   ],
+   "overload_protection": null,
+   "page": 35,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "3.0%+10",
+       "freq_range": "40Hz–1000Hz"
+      }
+     ],
+     "range": "20.00A",
+     "resolution": "0.01A"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "2.5%+5",
+       "freq_range": "40Hz–1000Hz"
+      }
+     ],
+     "range": "200.0A",
+     "resolution": "0.1A"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "2.5%+5",
+       "freq_range": "40Hz–1000Hz"
+      }
+     ],
+     "range": "1000A",
+     "resolution": "1A"
+    }
+   ],
+   "table": "AC Current (A)"
+  },
+  {
+   "input_impedance": null,
+   "notes": [],
+   "overload_protection": null,
+   "page": 35,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "10.0%+10",
+       "freq_range": "40Hz–1000Hz"
+      }
+     ],
+     "range": "20.00A",
+     "resolution": "0.01A"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "10.0%+10",
+       "freq_range": "40Hz–1000Hz"
+      }
+     ],
+     "range": "200.0A",
+     "resolution": "0.1A"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "10.0%+10",
+       "freq_range": "40Hz–1000Hz"
+      }
+     ],
+     "range": "1000A",
+     "resolution": "1A"
+    }
+   ],
+   "table": "Inrush Current(A)"
+  },
+  {
+   "input_impedance": null,
+   "notes": [
+    "Allow for the test leads' own resistance and reactance"
+   ],
+   "overload_protection": null,
+   "page": 35,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.8%+10",
+       "freq_range": null
+      }
+     ],
+     "range": "200.00Ω",
+     "resolution": "0.01Ω"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.3%+10",
+       "freq_range": null
+      }
+     ],
+     "range": "2.0000kΩ",
+     "resolution": "0.0001kΩ"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.3%+10",
+       "freq_range": null
+      }
+     ],
+     "range": "20.000kΩ",
+     "resolution": "0.001kΩ"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.3%+10",
+       "freq_range": null
+      }
+     ],
+     "range": "200.00kΩ",
+     "resolution": "0.01kΩ"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.3%+10",
+       "freq_range": null
+      }
+     ],
+     "range": "2.0000MΩ",
+     "resolution": "0.0001MΩ"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.5%+5",
+       "freq_range": null
+      }
+     ],
+     "range": "20.000MΩ",
+     "resolution": "0.001MΩ"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "5.0%+10",
+       "freq_range": null
+      }
+     ],
+     "range": "100.00MΩ",
+     "resolution": "0.01MΩ"
+    }
+   ],
+   "table": "Resistance(Ω)"
+  },
+  {
+   "input_impedance": null,
+   "notes": [
+    "Accuracy valid 5%–100% of range",
+    "Allow for the test leads' own resistance and reactance",
+    "20.00mF: measuring duration should be over 30 seconds"
+   ],
+   "overload_protection": null,
+   "page": 36,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "5.0%+10",
+       "freq_range": null
+      }
+     ],
+     "range": "2.000nF",
+     "resolution": "0.001nF"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "3.0%+10",
+       "freq_range": null
+      }
+     ],
+     "range": "20.00nF",
+     "resolution": "0.01nF"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "3.0%+10",
+       "freq_range": null
+      }
+     ],
+     "range": "200.0nF",
+     "resolution": "0.1nF"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "3.0%+10",
+       "freq_range": null
+      }
+     ],
+     "range": "2.000µF",
+     "resolution": "0.001µF"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "3.0%+10",
+       "freq_range": null
+      }
+     ],
+     "range": "20.00µF",
+     "resolution": "0.01µF"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "3.0%+10",
+       "freq_range": null
+      }
+     ],
+     "range": "200.0µF",
+     "resolution": "0.1µF"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "3.0%+10",
+       "freq_range": null
+      }
+     ],
+     "range": "2000µF",
+     "resolution": "1µF"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "3.0%+10",
+       "freq_range": null
+      }
+     ],
+     "range": "20.00mF",
+     "resolution": "0.01mF"
+    }
+   ],
+   "table": "Capacitance(F)"
+  },
+  {
+   "input_impedance": null,
+   "notes": [
+    "Typical waveform: square or sine",
+    "Signal: 1Hz–20MHz, ≥ 1V rms"
+   ],
+   "overload_protection": null,
+   "page": 36,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.1%+5",
+       "freq_range": null
+      }
+     ],
+     "range": "200.00Hz",
+     "resolution": "0.01Hz"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.1%+5",
+       "freq_range": null
+      }
+     ],
+     "range": "2.0000kHz",
+     "resolution": "0.0001kHz"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.1%+5",
+       "freq_range": null
+      }
+     ],
+     "range": "20.000kHz",
+     "resolution": "0.001kHz"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.1%+5",
+       "freq_range": null
+      }
+     ],
+     "range": "200.00kHz",
+     "resolution": "0.01kHz"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.1%+5",
+       "freq_range": null
+      }
+     ],
+     "range": "2.0000MHz",
+     "resolution": "0.0001MHz"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.1%+5",
+       "freq_range": null
+      }
+     ],
+     "range": "20.000MHz",
+     "resolution": "0.001MHz"
+    }
+   ],
+   "table": "Frequency (Hz)"
+  },
+  {
+   "input_impedance": null,
+   "notes": [
+    "Typical waveform: square"
+   ],
+   "overload_protection": null,
+   "page": 36,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "1.2%+3",
+       "freq_range": "Typical: Vrms=1 V, f=100Hz"
+      },
+      {
+       "accuracy": "2.5%+10",
+       "freq_range": "≥1 kHz"
+      }
+     ],
+     "range": "0.1%-99.9%",
+     "resolution": "0.10%"
+    }
+   ],
+   "table": "Duty Cycle (%)"
+  },
+  {
+   "input_impedance": null,
+   "notes": [
+    "Open circuit 3.2V"
+   ],
+   "overload_protection": null,
+   "page": 36,
+   "ranges": [
+    {
+     "accuracy": [],
+     "range": "3.0000V",
+     "resolution": "0.0001V"
+    }
+   ],
+   "table": "Diode"
+  },
+  {
+   "input_impedance": null,
+   "notes": [
+    "Beeps <50Ω",
+    "Shows OL above 200.0Ω"
+   ],
+   "overload_protection": null,
+   "page": 36,
+   "ranges": [
+    {
+     "accuracy": [],
+     "range": "0~200.0Ω",
+     "resolution": "0.1Ω"
+    }
+   ],
+   "table": "On-Off"
+  }
+ ]
+}

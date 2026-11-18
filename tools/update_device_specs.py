@@ -31,6 +31,8 @@ MODELS = {
     "ut161d": ["Uni-Trend UT161D"],
     "ut161e": ["Uni-Trend UT161E"],
     "zt5b": ["ZOTEK ZT-5B", "ANENG V05B"],
+    "cms061": ["OWON CMS061", "Uni-Trend UT217A"],
+    "cms101": ["OWON CMS101", "Uni-Trend UT217B"],
 }
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
