@@ -16,8 +16,10 @@ XY diagram, alarms.
    Seeed, SparkFun, STM32 - with the microcontroller first. Boards with a
    CH340, CP210x or FTDI chip (most clones, ESP32 DevKits) show up as that
    chip, like a meter's cable.
-2. Choose the board's serial port. The baud rate is 115200; for another one,
-   tick *External device setup* and set it.
+2. Choose the board's serial port and the baud rate the sketch sets with
+   `Serial.begin()` - 115200 unless you change it; up to 2000000. It is
+   the one port setting of this model you choose; the others are fixed
+   (8N1).
 3. *Connect*. Each name the board sends becomes a value of the device, in
    the order they first come, up to four. A fifth name is left out.
 

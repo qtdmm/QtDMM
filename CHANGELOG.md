@@ -74,6 +74,7 @@
 
 ### Meters
 
+- **Microcontroller: the baud rate is yours** — the device's settings show the baud rate for this model, saved with the device (115200 by default; the list now goes up to 2000000); the other port settings stay fixed.
 - **Find device knows microcontroller boards** — a board with its own USB (Arduino, Raspberry Pi Pico, ESP32 S2/S3/C3/C6, Adafruit, Teensy, Seeed, SparkFun, STM32) is listed as *Microcontroller board* with the microcontroller device first; at a CH340, CP210x or FTDI adapter the hint says it may be a meter's cable or a board.
 - **Microcontroller (text lines)** — an Arduino, ESP32 or Pico sending its values over USB serial in the Arduino Serial Plotter's or Teleplot's format, told apart line by line; each name becomes a value, up to four; Teleplot units (`§V`), `|xy` as two values for the XY diagram. A new device kind *Microcontroller* with its own symbol, and a help page *Your own board* with example sketches.
 - **UNI-T UT219PV clamp meter for photovoltaics over Bluetooth LE** (`*`, untried) — polled; main and second display as two values (V/A with Hz, DC V with DC A, inrush with peak current, °C with °F, …), OL, HOLD, ZERO. Keys SET, HOLD, MIN/MAX, LPF, ZERO and two new keys **INRUSH** and **A-HOLD** (auto hold); a save key pressed on the meter is answered as UNI-T's app does. From the notes decompiled from UNI-T's multimeter app; its stored readings are left out.
