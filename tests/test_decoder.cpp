@@ -14,6 +14,7 @@
 #include "device/protocols.h"
 #include "device/decoders/uni_t_ienv.h"
 #include "device/decoders/uni_t_ut117c.h"
+#include "device/decoders/uni_t_ut219pv.h"
 #include "device/decoders/uni_t_ut320i.h"
 #include "device/decoders/uni_t_ut325f.h"
 #include "device/decoders/brymen_bm78xbt.h"
@@ -299,6 +300,53 @@ int main(int argc, char **argv)
         bad("a wrong sum gives a reading");
       if (ut117c->decode(QByteArray::fromHex("abcd0004010001" "7d"), 0))
         bad("a key's answer gives a reading");
+    }
+    // UT219PV (synthetic frames, ut219pv.md): two displays, none where the
+    // function has none; HOLD and ZERO; the keys; a save key on the meter
+    // answered once; LPF only with a low-pass twin
+    {
+      auto ut219pv = DmmDecoder::getInstance(FrameFormat::UniTUT219PV);
+      auto bad = [&](const char *what)
+      {
+        qWarning() << "UT219PV:" << what;
+        ++problems;
+      };
+      const QList<QPair<const char *, const char *>> keys = {
+        { "select1", "abcd0004015a01d7" }, { "hold", "abcd0004125a01e8" }, { "autohold", "abcd0004115a01e7" },
+        { "minmax", "abcd000404010181" }, { "minmax_off", "abcd000404000180" }, { "inrush", "abcd0004135a01e9" },
+        { "lpf", "abcd0004145a01ea" }, { "zero", "abcd0004035a01d9" },
+      };
+      for (const auto &k : keys)
+        if (ut219pv->keyRequest(k.first) != QByteArray::fromHex(k.second))
+          bad(qPrintable(QString("key %1 is not %2").arg(k.first, k.second)));
+      const Reading none;
+      const auto acv = ut219pv->decode(QByteArray::fromHex("abcd0022020330203233302e34562020302035302e3030487a202020303030003400000006a5"), 0);
+      if (!acv || acv->channels.size() != 2 || acv->channels[1].val != "50.00" || acv->channels[1].unit != "Hz"
+          || acv->channels[1].special != "HZ")
+        bad("AC V: the second display is not 50.00 Hz");
+      if (!ut219pv->keyWorks("lpf", "", none))
+        bad("AC V: LPF grey");
+      const auto dca = ut219pv->decode(QByteArray::fromHex("abcd00220201302031322e3334412020302020202020202020202020303030003400000005ba"), 0);
+      if (!dca || dca->main().val != "12.34" || !dca->channels[1].val.isEmpty())
+        bad("DC A: not 12.34 A with the second value empty");
+      if (ut219pv->keyWorks("lpf", "", none))
+        bad("DC A: LPF not grey");
+      const auto temp = ut219pv->decode(QByteArray::fromHex("abcd0022021130202032332e356f432030202037342e336f46202020303030003400000006cc"), 0);
+      if (!temp || temp->main().unit != "C" || temp->channels[1].unit != "dF" || temp->channels[1].val != "74.3")
+        bad("temperature: not 23.5 C and 74.3 dF");
+      const auto held = ut219pv->decode(QByteArray::fromHex("abcd002202023020202d312e32562020302020202020202020202020303030003406000005bc"), 0);
+      if (!held || !held->hold || held->main().val != "-1.2" || !(held->main().states & SampleFlag::Relative))
+        bad("HOLD and ZERO: not -1.2 V held, relative");
+      const auto flex = ut219pv->decode(QByteArray::fromHex("abcd002202133020202020202020202030202020202020202020202030303000340000000553"), 0);
+      if (!flex || !flex->main().noValue)
+        bad("flex clamp missing: not without a value");
+      if (ut219pv->decode(QByteArray::fromHex("abcd00040c000188"), 0))
+        bad("a save key gives a reading");
+      if (ut219pv->takeCommand() != QByteArray::fromHex("abcd00040c000188") || ut219pv->takeCommand().size())
+        bad("the single-save key is not answered once with 0C 00");
+      ut219pv->decode(QByteArray::fromHex("abcd00040a5a01e0"), 0);
+      if (ut219pv->takeCommand() != QByteArray::fromHex("abcd00040a000186"))
+        bad("the multi-save key is not answered with 0A 00");
     }
     expect(ut61plus, "hold", "abcd034a01c5");
     expect(ut61plus, "minmax", "abcd034101bc");

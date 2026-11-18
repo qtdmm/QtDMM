@@ -68,6 +68,7 @@ Type ofProtocol(FrameFormat::DataFormat protocol)
     case FrameFormat::BenetechGM1020:
       return Luxmeter;
     case FrameFormat::UniTUT202BT:
+    case FrameFormat::UniTUT219PV:
     case FrameFormat::VC820BLE:
       return ClampMeter;
     case FrameFormat::TfaAirControl:
