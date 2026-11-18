@@ -129,14 +129,15 @@ public:
   /// The rule tree for the windows with @p roles inside @p area (viewport
   /// coordinates); @p left: the instruments on the left instead of on top.
   static Node ruleTree(const QRect &area, const QList<Role> &roles, bool left, int headerHeight,
-                       int tableMinWidth = 260, const QList<Fit> &fits = {});
+                       int tableMinWidth = 260, const QList<Fit> &fits = {}, int graphMinWidth = 0);
   /// Lays @p node out in @p area: the rect of each leaf (indexed by leaf)
   /// and, if wanted, the dividers.
   static void applyTree(const Node &node, const QRect &area, QList<QRect> &rects,
                         std::vector<Divider> *dividers = nullptr);
   /// The rects the automatic mode gives the windows with @p roles.
   static QList<QRect> layout(const QRect &area, const QList<Role> &roles, int headerHeight,
-                             int tableMinWidth = 260, bool left = false, const QList<Fit> &fits = {});
+                             int tableMinWidth = 260, bool left = false, const QList<Fit> &fits = {},
+                             int graphMinWidth = 0);
   /// A tree from hand-placed rects: cut where the windows (with @p tolerance)
   /// leave a gap, the cut in the middle of the gap. Leaves are the indices
   /// of @p rects.
@@ -177,6 +178,8 @@ private:
   QList<int> visibleWindows() const;
   int headerHeight() const;
   int tableMinWidth(const QList<int> &visible) const;
+  /// The widest minimum of the graphs shown (their row of buttons), 0 without one.
+  int graphMinWidth(const QList<int> &visible) const;
   QRect cellArea() const;
   Node *nodeAt(const std::vector<int> &path);
   // drag to swap

@@ -68,6 +68,18 @@ static void testLayout()
     checkTiling(area, r, "no graph");
     check(r[1].width() == area.width() - 12, "no graph: table full width");
   }
+  // a narrow area, instruments on the left: the graph keeps its minimum
+  // (its row of buttons), the instruments and the table give way
+  {
+    const QRect narrow(0, 0, 640, 600);
+    QList<QRect> r = MdiArranger::layout(narrow, { R::Instrument, R::Instrument, R::Graph }, 22, 260, true, {}, 450);
+    checkTiling(narrow, r, "narrow left");
+    check(r[2].width() >= 450, QString("narrow left: graph %1 wide, at least 450").arg(r[2].width()));
+    r = MdiArranger::layout(QRect(0, 0, 900, 600), { R::Graph, R::Table }, 22, 260, false, {}, 600);
+    check(r[0].width() >= 600 && r[1].width() >= 120, QString("graph and table: graph %1, table %2").arg(r[0].width()).arg(r[1].width()));
+    r = MdiArranger::layout(narrow, { R::Instrument, R::Instrument, R::Graph }, 22, 260, true);
+    check(r[2].width() < 450, "without a minimum: as before");
+  }
 }
 
 static void testWindows()

@@ -19,7 +19,7 @@
 
 GraphWidget::GraphWidget(QWidget *parent) : QcpPlotBase(parent)
 {
-  setMinimumSize(220, 180);
+  setMinimumHeight(180);   // the width: minimumSizeHint(), from the row above
   setupAxes();
   setupInput();
   setupOverview();   // the bands under the curves
@@ -27,6 +27,12 @@ GraphWidget::GraphWidget(QWidget *parent) : QcpPlotBase(parent)
   setupMarks();
   setupTheme();
   refreshPlot();
+}
+
+QSize GraphWidget::minimumSizeHint() const
+{
+  // one legend entry: its line piece and a short name ("mA")
+  return QSize(qMax(220, m_timeBar->fixedWidth() + 60), 180);
 }
 
 void GraphWidget::setSources(std::function<RecordingStore *(const QString &source)> storeOf,
