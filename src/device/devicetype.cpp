@@ -34,6 +34,7 @@ Type ofProtocol(FrameFormat::DataFormat protocol)
     case FrameFormat::BrymenBM82x:
     case FrameFormat::FlukeQM:
     case FrameFormat::UniTiDMM:
+    case FrameFormat::UniTUT117C:
     case FrameFormat::UniTUT61Plus:
     case FrameFormat::KeysightU12xx:
     case FrameFormat::AppaDmm:

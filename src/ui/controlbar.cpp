@@ -49,7 +49,8 @@ ControlBar::ControlBar(QWidget *parent) :
       { "fn_diode", QT_TR_NOOP("Diode"), QT_TR_NOOP("Diode and continuity"), false },
       { "fn_hz", QT_TR_NOOP("Hz"), QT_TR_NOOP("Frequency"), false } },
     { { "select1", QT_TR_NOOP("SELECT"), QT_TR_NOOP("The meter's SELECT key (the orange one): the next function on this switch position"), false },
-      { "select2", QT_TR_NOOP("Hz/%"), QT_TR_NOOP("Frequency and duty cycle"), false } },
+      { "select2", QT_TR_NOOP("Hz/%"), QT_TR_NOOP("Frequency and duty cycle"), false },
+      { "lpf", QT_TR_NOOP("LPF"), QT_TR_NOOP("Low-pass filter: AC voltage of a motor drive without its switching noise"), false } },
     { { "range", QT_TR_NOOP("RANGE"), QT_TR_NOOP("The next range (switches to manual ranging)"), false },
       { "auto", QT_TR_NOOP("AUTO"), QT_TR_NOOP("Automatic ranging"), true } },
     { { "rel", QT_TR_NOOP("REL"), QT_TR_NOOP("Relative reading: the current value becomes zero"), true },
@@ -161,6 +162,7 @@ bool ControlBar::supported(const DmmDecoder::DMMInfo &info)
          || info.protocol == FrameFormat::UniTUT202BT || info.protocol == FrameFormat::UniTiENV
          || info.protocol == FrameFormat::UniTUT381A || info.protocol == FrameFormat::UniTUT372D
          || info.protocol == FrameFormat::UniTUT382A || info.protocol == FrameFormat::UniTUT325F
+         || info.protocol == FrameFormat::UniTUT117C
          || info.protocol == FrameFormat::ZotekBLE || info.protocol == FrameFormat::OwonBLE
          || info.protocol == FrameFormat::OwonBLE15 || info.protocol == FrameFormat::UniTUT181A
          || info.protocol == FrameFormat::VoltcraftVC880 || info.protocol == FrameFormat::VoltcraftVC890
