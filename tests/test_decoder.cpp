@@ -330,7 +330,9 @@ int main(int argc, char **argv)
       zcheck(!zdecode("1b847055a2c1227166fa3a"), "blank display: no reading");
       // the layout names the model
       zcheck(z->modelsFromFrame(QByteArray::fromHex("1b847041085c7d7f66fa3a"))
-               == QStringList({ "ZOTEK ZT-300AB *", "ANENG AN9002 *" }), "type 3 is the ZT-300AB");
+               == QStringList({ "ZOTEK ZT-300AB *", "ANENG AN9002 *", "BSIDE ZT-300AB *", "BABATools AD900 *" }),
+             "type 3 is the ZT-300AB (and the AD900 of unknown layout)");
+      zcheck(z->hasKey("fn_auto", "BSIDE ZT-5B *") && !z->hasKey("hold", "BABATools AD900 *"), "BSIDE keys, none for the AD900");
       zcheck(z->modelsFromFrame(QByteArray::fromHex("1b8471153c2bd9fa66a9")).value(0) == "ZOTEK ZT-5B *", "type 2 is the ZT-5B");
       zcheck(z->modelsFromFrame(QByteArray::fromHex("0102030405")).isEmpty(), "no packet, no model");
       // a notification longer than its packet (zeros after it, the key on

@@ -363,7 +363,8 @@ int main(int argc, char **argv)
       dlg.chooseCandidate(c.key);
       waitFor([&] { return dlg.candidateModels(c.key).value(0) == "ZOTEK ZT-300AB *"; });
       check(dlg.candidateModels(c.key)
-              == QStringList({ "ZOTEK ZT-300AB *", "ANENG AN9002 *", "ZOTEK ZT-5B *", "ZOTEK ZT-5BQ *" }),
+              == QStringList({ "ZOTEK ZT-300AB *", "ANENG AN9002 *", "BSIDE ZT-300AB *", "BABATools AD900 *",
+                               "ZOTEK ZT-5B *", "ZOTEK ZT-5BQ *" }),
             "ZOTEK: the type-3 packet puts the ZT-300AB first: " + dlg.candidateModels(c.key).join(", "));
       dlg.chooseCandidate(c.key);
       check(opened == 1, "ZOTEK: listened to once");
