@@ -32,13 +32,42 @@ jobs:
     - name: Trust the checkout
       run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
-    - uses: flatpak/flatpak-github-actions/flatpak-builder@79327416609af08178ad73b352877e51450790b3 # v6
+    # The image's runtimes lie in a lower layer of the container's overlay
+    # file system. When Flathub has a newer SDK, flatpak-builder updates it,
+    # the update renames into that layer and fails with "Invalid cross-device
+    # link", and flatpak-builder then crashes (exit 139). A copy puts the
+    # installation into the writable layer.
+    - name: Make the Flatpak installation writable
+      run: |
+        for dir in /var/lib/flatpak "$HOME/.local/share/flatpak"; do
+          [ -d "$dir" ] || continue
+          du -sh "$dir"
+          cp -a "$dir" "$dir.copy"
+          rm -rf "$dir"
+          mv "$dir.copy" "$dir"
+        done
+
+    - name: Build
+      id: build
+      # a second try below, should the runtime update fail all the same
+      continue-on-error: true
+      uses: flatpak/flatpak-github-actions/flatpak-builder@79327416609af08178ad73b352877e51450790b3 # v6
       with:
         manifest-path: assets/flatpak/manifest.yml
         bundle: QtDMM.flatpak
         # hidapi comes from the cache while the manifest stays the same
         cache-key: flatpak-builder-${{ hashFiles('assets/flatpak/manifest.yml') }}
         # an artifact only when it may be used: not for pull requests
+        upload-artifact: ${{ github.event_name != 'pull_request' }}
+        artifact-name: QtDMM-linux-Flatpak
+
+    - name: Build (second try)
+      if: steps.build.outcome == 'failure'
+      uses: flatpak/flatpak-github-actions/flatpak-builder@79327416609af08178ad73b352877e51450790b3 # v6
+      with:
+        manifest-path: assets/flatpak/manifest.yml
+        bundle: QtDMM.flatpak
+        cache-key: flatpak-builder-${{ hashFiles('assets/flatpak/manifest.yml') }}
         upload-artifact: ${{ github.event_name != 'pull_request' }}
         artifact-name: QtDMM-linux-Flatpak
 
