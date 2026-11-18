@@ -1068,57 +1068,57 @@
 <context>
     <name>BleGattDevice</name>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="186"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="191"/>
         <source>No Bluetooth address configured.</source>
         <translation>Nie ustawiono adresu Bluetooth.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="191"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="196"/>
         <source>This meter does not use a Bluetooth LE connection.</source>
         <translation>Ten miernik nie używa połączenia Bluetooth LE.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="275"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="280"/>
         <source>The meter %1 closed the Bluetooth connection.</source>
         <translation>Miernik %1 zamknął połączenie Bluetooth.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="279"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="284"/>
         <source>Bluetooth: %1</source>
         <translation>Bluetooth: %1</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="206"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="211"/>
         <source>No answer from %1 - is the meter on and its Bluetooth switched on?</source>
         <translation>Brak odpowiedzi od %1 - czy miernik jest włączony i ma włączony Bluetooth?</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="341"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="346"/>
         <source>%1 does not offer the expected Bluetooth service - is it the right meter?</source>
         <translation>%1 nie oferuje oczekiwanej usługi Bluetooth - czy to właściwy miernik?</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="347"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="352"/>
         <source>Could not open the Bluetooth service of %1.</source>
         <translation>Nie można otworzyć usługi Bluetooth urządzenia %1.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="374"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="379"/>
         <source>Bluetooth service error %1 on %2.</source>
         <translation>Błąd usługi Bluetooth %1 na %2.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="395"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="400"/>
         <source>%1 has no notify characteristic.</source>
         <translation>%1 nie ma charakterystyki powiadomień.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="409"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="414"/>
         <source>%1 has no writable characteristic.</source>
         <translation>%1 nie ma zapisywalnej charakterystyki.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="359"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="364"/>
         <source>Bluetooth receive buffer limit exceeded.</source>
         <translation>Przekroczono limit bufora odbiorczego Bluetooth.</translation>
     </message>
@@ -2504,72 +2504,72 @@
 <context>
     <name>DeviceType</name>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="188"/>
+        <location filename="../../src/device/devicetype.cpp" line="189"/>
         <source>Handheld multimeter</source>
         <translation>Multimetr ręczny</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="189"/>
+        <location filename="../../src/device/devicetype.cpp" line="190"/>
         <source>Bench multimeter</source>
         <translation>Multimetr stacjonarny</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="190"/>
+        <location filename="../../src/device/devicetype.cpp" line="191"/>
         <source>Clamp meter</source>
         <translation>Miernik cęgowy</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="191"/>
+        <location filename="../../src/device/devicetype.cpp" line="192"/>
         <source>Thermometer</source>
         <translation>Termometr</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="192"/>
+        <location filename="../../src/device/devicetype.cpp" line="193"/>
         <source>Luxmeter</source>
         <translation>Luksomierz</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="193"/>
+        <location filename="../../src/device/devicetype.cpp" line="194"/>
         <source>Air quality meter</source>
         <translation>Miernik jakości powietrza</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="194"/>
+        <location filename="../../src/device/devicetype.cpp" line="195"/>
         <source>Sound level meter</source>
         <translation>Miernik poziomu dźwięku</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="195"/>
+        <location filename="../../src/device/devicetype.cpp" line="196"/>
         <source>Anemometer</source>
         <translation>Anemometr</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="196"/>
+        <location filename="../../src/device/devicetype.cpp" line="197"/>
         <source>Tachometer</source>
         <translation>Tachometr</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="197"/>
+        <location filename="../../src/device/devicetype.cpp" line="198"/>
         <source>Battery monitor</source>
         <translation>Monitor baterii</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="198"/>
+        <location filename="../../src/device/devicetype.cpp" line="199"/>
         <source>Solar charge controller</source>
         <translation>Regulator ładowania solarnego</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="199"/>
+        <location filename="../../src/device/devicetype.cpp" line="200"/>
         <source>Inverter</source>
         <translation>Falownik</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="200"/>
+        <location filename="../../src/device/devicetype.cpp" line="201"/>
         <source>Virtual meter</source>
         <translation>Miernik wirtualny</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="201"/>
+        <location filename="../../src/device/devicetype.cpp" line="202"/>
         <source>Generic</source>
         <translation>Ogólny</translation>
     </message>
@@ -6556,106 +6556,111 @@ Czy multimetr jest podłączony i włączony?</translation>
     </message>
     <message>
         <location filename="../../src/device/protocols.cpp" line="54"/>
+        <source>23 bytes binary, streamed over Bluetooth LE, two temperatures (UNI-T UT320i)</source>
+        <translation>23 bajty binarnie, przesyłane przez Bluetooth LE, dwie temperatury (UNI-T UT320i)</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/protocols.cpp" line="55"/>
         <source>text lines from HID records, CO2/temperature/humidity (TFA AIRCO2NTROL)</source>
         <translation>wiersze tekstu z rekordów HID, CO2/temperatura/wilgotność (TFA AIRCO2NTROL)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="55"/>
+        <location filename="../../src/device/protocols.cpp" line="56"/>
         <source>variable bytes ASCII, polled with CONF?/FETC? (Agilent/Keysight U12xx)</source>
         <translation>zmienna liczba bajtów ASCII, odpytywany przez CONF?/FETC? (Agilent/Keysight U12xx)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="56"/>
+        <location filename="../../src/device/protocols.cpp" line="57"/>
         <source>19 bytes ASCII, continuous after a start byte (UNI-T UT32x thermometers)</source>
         <translation>19 bajtów ASCII, ciągły po bajcie startowym (termometry UNI-T UT32x)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="57"/>
+        <location filename="../../src/device/protocols.cpp" line="58"/>
         <source>18 bytes binary, continuous, two values (MASTECH MS6514 thermometer)</source>
         <translation>18 bajtów binarnych, ciągły, dwie wartości (termometr MASTECH MS6514)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="58"/>
+        <location filename="../../src/device/protocols.cpp" line="59"/>
         <source>17 bytes binary, polled (APPA 506/208, BENNING MM 12; APPA S, 150B, 170B over Bluetooth LE)</source>
         <translation>17 bajtów binarnych, odpytywany (APPA 506/208, BENNING MM 12; APPA S, 150B, 170B przez Bluetooth LE)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="59"/>
+        <location filename="../../src/device/protocols.cpp" line="60"/>
         <source>59 bytes binary, polled (APPA 503/505, Voltcraft VC-930/950)</source>
         <translation>59 bajtów binarnych, odpytywany (APPA 503/505, Voltcraft VC-930/950)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="60"/>
+        <location filename="../../src/device/protocols.cpp" line="61"/>
         <source>33 bytes, continuous, lx or fc (UNI-T UT382 luxmeter)</source>
         <translation>33 bajty, ciągły, lx lub fc (luksomierz UNI-T UT382)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="61"/>
+        <location filename="../../src/device/protocols.cpp" line="62"/>
         <source>8 bytes binary, continuous after a start command, lx and °C (Benetech GM1020)</source>
         <translation>8 bajtów binarnych, ciągły po poleceniu startowym, lx i °C (Benetech GM1020)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="62"/>
+        <location filename="../../src/device/protocols.cpp" line="63"/>
         <source>10 to 19 bytes, scrambled LCD segments, streamed over Bluetooth LE (ZOTEK, ANENG)</source>
         <translation>10 do 19 bajtów, zaszyfrowane segmenty LCD, wysyłane przez Bluetooth LE (ZOTEK, ANENG)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="63"/>
+        <location filename="../../src/device/protocols.cpp" line="64"/>
         <source>14 bytes binary, streamed over Bluetooth LE (FS9721, HoldPeak HP-570C-APP)</source>
         <translation>14 bajtów binarnych, wysyłane przez Bluetooth LE (FS9721, HoldPeak HP-570C-APP)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="64"/>
+        <location filename="../../src/device/protocols.cpp" line="65"/>
         <source>6 bytes binary, streamed over Bluetooth LE (OWON B35T+, B41T+, OW18E, CM2100B)</source>
         <translation>6 bajtów binarnie, wysyłane przez Bluetooth LE (OWON B35T+, B41T+, OW18E, CM2100B)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="65"/>
+        <location filename="../../src/device/protocols.cpp" line="66"/>
         <source>15 bytes binary, streamed over Bluetooth LE (OWON CMS101, OW65B-OW69B, Voltcraft VC871-VC925 PV)</source>
         <translation>15 bajtów binarnie, przesyłane przez Bluetooth LE (OWON CMS101, OW65B-OW69B, Voltcraft VC871-VC925 PV)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="66"/>
+        <location filename="../../src/device/protocols.cpp" line="67"/>
         <source>AB CD frames of any length with float values, streamed once asked (UNI-T UT181A, UT-D09 cable or UT-D07B adapter)</source>
         <translation>Ramki AB CD o dowolnej długości z wartościami zmiennoprzecinkowymi, wysyłane na żądanie (UNI-T UT181A, kabel UT-D09 lub adapter UT-D07B)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="67"/>
+        <location filename="../../src/device/protocols.cpp" line="68"/>
         <source>39 bytes, streamed (Voltcraft VC-880, VC650BT, CP2110 USB cable)</source>
         <translation>39 bajtów, strumieniowo (Voltcraft VC-880, VC650BT, kabel USB CP2110)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="68"/>
+        <location filename="../../src/device/protocols.cpp" line="69"/>
         <source>66 bytes, polled (Voltcraft VC-890, CP2110 USB cable)</source>
         <translation>66 bajtów, odpytywany (Voltcraft VC-890, kabel USB CP2110)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="69"/>
+        <location filename="../../src/device/protocols.cpp" line="70"/>
         <source>AB CD frames with float values, streamed after a connect command (UNI-T UT171A/B/C, UT-D09 cable or UT-D07B adapter)</source>
         <translation>Ramki AB CD z wartościami zmiennoprzecinkowymi, wysyłane po poleceniu połączenia (UNI-T UT171A/B/C, kabel UT-D09 lub adapter UT-D07B)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="70"/>
+        <location filename="../../src/device/protocols.cpp" line="71"/>
         <source>8 bytes from AC, BCD digits, no checksum (UNI-T UT8802 bench meter, CP2110 USB)</source>
         <translation>8 bajtów od AC, cyfry BCD, bez sumy kontrolnej (multimetr stołowy UNI-T UT8802, CP2110 USB)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="71"/>
+        <location filename="../../src/device/protocols.cpp" line="72"/>
         <source>21 bytes from AB CD, ASCII display (UNI-T UT8803 bench meter with LCR, CP2110 USB)</source>
         <translation>21 bajtów od AB CD, wyświetlacz ASCII (multimetr stołowy UNI-T UT8803 z LCR, CP2110 USB)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="72"/>
+        <location filename="../../src/device/protocols.cpp" line="73"/>
         <source>19 bytes from F2 with an XOR check, main and secondary display (EEVblog 121GW, Bluetooth LE)</source>
         <translation>19 bajtów od F2 z kontrolą XOR, wyświetlacz główny i pomocniczy (EEVblog 121GW, Bluetooth LE)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="73"/>
+        <location filename="../../src/device/protocols.cpp" line="74"/>
         <source>32-byte reading packets with CRC-16 after a password login (Brymen BM788BT, BM787BT, Bluetooth LE)</source>
         <translation>32-bajtowe pakiety odczytu z CRC-16 po logowaniu hasłem (Brymen BM788BT, BM787BT, Bluetooth LE)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="74"/>
+        <location filename="../../src/device/protocols.cpp" line="75"/>
         <source>Unknown meter: bytes only, for a capture (Capture...)</source>
         <translation>Nieznany miernik: tylko bajty, do zapisu ramek (Zapis ramek…)</translation>
     </message>

@@ -1,0 +1,42 @@
+protocol: UniTUT320i
+decoder: src/device/decoders/uni_t_ut320i.cpp
+devices: [Uni-Trend UT320i]
+frames_per_reading: 1
+sources:
+  - "ablage/uni-t/uni-t-protocols/ut320i.md (notes decompiled from UNI-T's iENV app: GATT §3, frame §4, commands §5, live data §6.1/6.2, settings §6.3)"
+
+# UNI-T UT320i pipe clamp thermometer over Bluetooth LE, the iENV service
+# FF12 (write FF01, notify FF02); it pushes once notifications are on.
+# QtDMM asks the settings once (AA BB 04 31 06 01 A0) for the unit the
+# meter shows. Frames: AA BB, length (command + payload + 2), command,
+# payload, 16-bit BE sum of all bytes before (checked, as the app does).
+#
+# Live frame, command 0x01 (23 bytes), payload:
+#   0-7   two float32 BE  unused (pressure fields of a shared template)
+#   8-11  float32 LE      T1 in °C
+#   12-15 float32 LE      T2 in °C
+#   16    flags           bits 2-3 T1, bits 0-1 T2: 0 valid, 1 OL, 2 -OL,
+#                         3 no probe
+# Command 0x11 (no probe chosen on the meter): 10 bytes serial number, one
+# temperature float32 LE, its flag. Settings, command 0x06: byte 1 the
+# unit (0 °C, 1 °F, 2 K); the decoder converts to it.
+#
+# T1 and T2 are values 1 and 2; the vectors check the first. SYNTHETIC
+# vectors: built from that layout, no capture of a meter exists.
+vectors:
+  - source_line: "T1 23.4 °C, T2 -5.6 °C (synthetic)"
+    bytes: AA BB 14 01 00 00 00 00 00 00 00 00 33 33 BB 41 33 33 B3 C0 00 04 B5
+    reading: {value: "23.4", unit: "C"}
+    expect: {special: "TE", val: "23.4"}
+  - source_line: "T1 61.2 °C, no probe on T2 (synthetic)"
+    bytes: AA BB 14 01 00 00 00 00 00 00 00 00 CD CC 74 42 00 00 00 00 03 03 CC
+    reading: {value: "61.2", unit: "C"}
+    expect: {special: "TE", val: "61.2"}
+  - source_line: "T1 over range, T2 under range (synthetic)"
+    bytes: AA BB 14 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 06 01 80
+    reading: {value: "OL", unit: "C"}
+    expect: {special: "TE", val: "OL"}
+  - source_line: "no probe chosen: 36.6 °C (synthetic)"
+    bytes: AA BB 12 11 01 02 03 04 05 06 07 08 09 0A 66 66 12 42 00 02 DF
+    reading: {value: "36.6", unit: "C"}
+    expect: {special: "TE", val: "36.6"}
