@@ -173,6 +173,9 @@ protected:
   bool                  m_consoleLogging;
   QString               m_consoleName;
   void                  consoleLine(const QByteArray &text) const;
+  /// Writes @p frame once (a key, a decoder's command; GATT: not as the poll),
+  /// logged as @p what on the console. False when empty or not connected.
+  bool                  sendOnce(const QByteArray &frame, const QByteArray &what);
   int                   m_flags;
   int                   m_delayTimer;
   std::shared_ptr<DmmDecoder> m_decoder;

@@ -14,6 +14,7 @@
 #include "device/protocols.h"
 #include "device/decoders/uni_t_ienv.h"
 #include "device/decoders/uni_t_ut320i.h"
+#include "device/decoders/uni_t_ut325f.h"
 #include "device/decoders/brymen_bm78xbt.h"
 #include "device/decoders/uni_t_ut181a.h"
 #include "core/readingadapter.h"
@@ -209,6 +210,52 @@ int main(int argc, char **argv)
         bad("command 0x11: not 36.6 with the second value cleared");
       if (ut320i->decode(QByteArray::fromHex("aabb140100000000000000003333bb413333b3c00004b4"), 0))
         bad("a wrong sum gives a reading");
+    }
+    // UT325F (synthetic frames, ut325f.md): the panel with the live output
+    // off is written back once with it on (takeCommand()); the keys change
+    // one field of the panel; four values named with their thermocouple
+    {
+      auto ut325f = DmmDecoder::getInstance(FrameFormat::UniTUT325F);
+      auto bad = [&](const char *what)
+      {
+        qWarning() << "UT325F:" << what;
+        ++problems;
+      };
+      if (DecoderUT325F::getPanel() != QByteArray::fromHex("aa550003350137"))
+        bad("get panel is not AA 55 00 03 35 01 37");
+      if (!ut325f->hasKey("hold", "") || !ut325f->hasKey("unit", "") || ut325f->keyRequest("hold").size())
+        bad("the keys before the panel: shown, but no frame");
+      const QByteArray live = QByteArray::fromHex("aa550020013333bb410000c942cdcc44c100805444000000000000ac4100000000000830");
+      const QByteArray split = live.left(20);
+      if (ut325f->checkFormat(split.constData(), size_t(split.size() - 1)) || !ut325f->checkFormat(live.constData(), size_t(live.size() - 1)))
+        bad("the live frame is not found by its length alone");
+      if (ut325f->decode(QByteArray::fromHex("aa5500130600000100000000000100000000030001011e"), 0))
+        bad("the panel gives a reading");
+      if (ut325f->takeCommand() != QByteArray::fromHex("aa55001036010001000000000001000000000148"))
+        bad("the panel with the live output off is not written back with it on");
+      if (ut325f->takeCommand().size())
+        bad("the command is given twice");
+      if (ut325f->keyRequest("hold") != QByteArray::fromHex("aa55001036010101000000000001000000000149"))
+        bad("HOLD is not the panel with hold 1");
+      if (ut325f->keyRequest("minmax") != QByteArray::fromHex("aa55001036010001000000000001010000000149"))
+        bad("MIN/MAX is not the panel with mode 1");
+      if (ut325f->keyRequest("unit") != QByteArray::fromHex("aa55001036010001000000000001000100000149"))
+        bad("UNIT is not the panel with unit 1");
+      const auto c = ut325f->decode(live, 0);
+      if (!c || c->channels.size() != 4 || c->main().val != "23.4" || c->channels[3].val != "850.0"
+          || c->channels[2].val != "-12.3" || c->channels[1].name != "T2 (K)" || c->hold)
+        bad("not four values T1-T4 (K) 23.4 ... 850.0 C");
+      ut325f->decode(QByteArray::fromHex("aa55001306010101000000000001000000000300010120"), 0);
+      if (ut325f->takeCommand().size())
+        bad("a panel with the live output on is written back");
+      const auto words = ut325f->decode(QByteArray::fromHex("aa550020013333bb41000000000000000000000000003122150000ac41000000000003d7"), 0);
+      if (!words || !words->hold || !words->channels[1].noValue || words->channels[2].val != "OL"
+          || words->channels[3].val != "-OL" || words->channels[2].name != "T3 (T)" || words->channels[3].name != "T4 (S)")
+        bad("held: T2 no probe, T3 OL (T), T4 -OL (S) not shown so");
+      ut325f->decode(QByteArray::fromHex("aa55001306010001000000000001000100000300010120"), 0);
+      const auto max = ut325f->decode(QByteArray::fromHex("aa5500200166661242666614420000000000000000000030300000ac41000000000104b0"), 0);
+      if (!max || max->main().unit != "dF" || max->main().val != "97.9" || !(max->channels[1].states & SampleFlag::Max))
+        bad(qPrintable("MAX in F: got " + (max ? max->main().val + " " + max->main().unit : QString("none"))));
     }
     expect(ut61plus, "hold", "abcd034a01c5");
     expect(ut61plus, "minmax", "abcd034101bc");

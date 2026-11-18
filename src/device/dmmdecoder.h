@@ -160,6 +160,11 @@ public:
   /// keyNames()); empty when the meter has no such key, cannot be
   /// remote-controlled or the key needs a reading first.
   virtual QByteArray keyRequest(const QString &key) const { Q_UNUSED(key); return QByteArray(); }
+  /// Bytes to send once, asked after every decode(): a meter that wants a
+  /// setting written back after reading it (the UT325F switches its live
+  /// stream on in a settings block). MeterConnection sends them like a key,
+  /// not as a poll that is repeated. Empty: nothing to send.
+  virtual QByteArray takeCommand() { return QByteArray(); }
   /// True when the meter @p model (DMMInfo::model) has the key @p key. By
   /// default every key keyRequest() knows; a decoder for several meters with
   /// different keypads, or one whose keys need a reading first (a unit key

@@ -168,12 +168,16 @@ void MeterConnection::initDecoder( FrameFormat::DataFormat df)
 
 bool MeterConnection::sendKey(const QString &key)
 {
-  const QByteArray frame = m_decoder ? m_decoder->keyRequest(key) : QByteArray();
+  return sendOnce(m_decoder ? m_decoder->keyRequest(key) : QByteArray(), "key " + key.toUtf8());
+}
+
+bool MeterConnection::sendOnce(const QByteArray &frame, const QByteArray &what)
+{
   QIODevice *port = m_portHandler->port();
   if (frame.isEmpty() || !port || !port->isOpen())
     return false;
   if (m_consoleLogging)
-    consoleLine("key " + key.toUtf8() + ": " + frame.toHex(' '));
+    consoleLine(what + ": " + frame.toHex(' '));
 #ifdef QTDMM_WITH_BLE
   // a GATT link repeats what is written as its poll: a key goes once
   if (auto *gatt = dynamic_cast<BleGattDevice *>(port))
@@ -496,6 +500,7 @@ void MeterConnection::readEventSLOT(const QByteArray &data, int id, qint64 t, qi
 
   m_lastFrame.restart();
   auto r = m_decoder->decode(data, id);
+  sendOnce(m_decoder->takeCommand(), "command");
   if (r)
   {
     r->received = t;

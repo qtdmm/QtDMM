@@ -95,6 +95,7 @@ public:
     UniTUT372D,
     UniTUT382A,
     UniTUT320i,
+    UniTUT325F,
     EndOfList              // new stuff always before!
   };
 

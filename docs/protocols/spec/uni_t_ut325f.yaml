@@ -1,0 +1,37 @@
+protocol: UniTUT325F
+decoder: src/device/decoders/uni_t_ut325f.cpp
+devices: [Uni-Trend UT325F]
+frames_per_reading: 1
+sources:
+  - "ablage/uni-t/uni-t-protocols/ut325f.md (notes decompiled from UNI-T's iENV app: transport §1, frame §2, commands §3, live data and panel §4, start order §5)"
+
+# UNI-T UT325F four-channel thermocouple thermometer over Bluetooth LE, the
+# iENV service FF12 (write FF01, notify FF02). Frames: AA 55, a length
+# (BE16: type + payload + 2), type, payload, 16-bit BE sum (unchecked, as in
+# the app). QtDMM asks the panel (AA 55 00 03 35 01 37); when its live
+# output or BLE is off, the decoder writes the panel back with both on
+# (takeCommand()). Live frame, type 1 (36 bytes):
+#
+#   5-20  4 x float32 LE  T1-T4 in °C
+#   21-24 status T1-T4    high nibble 0 valid, 1 -OL, 2 OL, 3 no probe;
+#                         low nibble the thermocouple K J T E R S N B
+#   25-28 float32 LE      ambient temperature (left out)
+#   29-32 int32 BE        time/count of the MAX/MIN/AVG mode
+#   33    mode            0 normal, 1 MAX, 2 MIN, 3 AVG
+#
+# The unit (°C, °F, K) comes from the panel; T1-T4 are values 1-4, the
+# vectors check the first. SYNTHETIC vectors: built from that layout, no
+# capture of a meter exists.
+vectors:
+  - source_line: "T1 23.4, T2 100.5, T3 -12.3, T4 850.0 °C, type K (synthetic)"
+    bytes: AA 55 00 20 01 33 33 BB 41 00 00 C9 42 CD CC 44 C1 00 80 54 44 00 00 00 00 00 00 AC 41 00 00 00 00 00 08 30
+    reading: {value: "23.4", unit: "C"}
+    expect: {special: "TE", val: "23.4"}
+  - source_line: "T1 23.4 °C; T2 no probe, T3 OL, T4 -OL (synthetic)"
+    bytes: AA 55 00 20 01 33 33 BB 41 00 00 00 00 00 00 00 00 00 00 00 00 00 31 22 15 00 00 AC 41 00 00 00 00 00 03 D7
+    reading: {value: "23.4", unit: "C"}
+    expect: {special: "TE", val: "23.4"}
+  - source_line: "MAX: T1 36.6, T2 37.1 °C, T3/T4 no probe (synthetic)"
+    bytes: AA 55 00 20 01 66 66 12 42 66 66 14 42 00 00 00 00 00 00 00 00 00 00 30 30 00 00 AC 41 00 00 00 00 01 04 B0
+    reading: {value: "36.6", unit: "C"}
+    expect: {special: "TE", val: "36.6"}
