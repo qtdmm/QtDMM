@@ -13,6 +13,7 @@
 #include "device/dmmdecoder.h"
 #include "device/protocols.h"
 #include "device/decoders/uni_t_ienv.h"
+#include "device/decoders/uni_t_ut320i.h"
 #include "device/decoders/brymen_bm78xbt.h"
 #include "device/decoders/uni_t_ut181a.h"
 #include "core/readingadapter.h"
@@ -169,6 +170,45 @@ int main(int argc, char **argv)
         bad("the zero calibration gives a reading");
       if (ut382a->keyRequest("minmax").size())
         bad("a key other than HOLD gives a frame");
+    }
+    // UT320i (synthetic frames, ut320i.md): T1 and T2 as two values, a
+    // missing probe without a value, the unit of the settings frame, the
+    // sum checked
+    {
+      auto ut320i = DmmDecoder::getInstance(FrameFormat::UniTUT320i);
+      auto bad = [&](const char *what)
+      {
+        qWarning() << "UT320i:" << what;
+        ++problems;
+      };
+      if (DecoderUT320i::settingsRequest() != QByteArray::fromHex("aabb04310601a0"))
+        bad("the settings request is not 31 06");
+      const QByteArray both = QByteArray::fromHex("aabb140100000000000000003333bb413333b3c00004b5");
+      const auto c = ut320i->decode(both, 0);
+      if (!c || c->channels.size() != 2 || c->main().val != "23.4" || c->main().unit != "C"
+          || c->channels[1].val != "-5.6" || c->channels[1].name != "T2")
+        bad("not T1 23.4 C and T2 -5.6 C");
+      const auto missing = ut320i->decode(QByteArray::fromHex("aabb14010000000000000000cdcc744200000000030" "3cc"), 0);
+      if (!missing || missing->main().val != "61.2" || !missing->channels[1].noValue)
+        bad("T2 without a probe is not no value");
+      const auto ol = ut320i->decode(QByteArray::fromHex("aabb14010000000000000000000000000000000006" "0180"), 0);
+      if (!ol || ol->main().val != "OL" || ol->channels[1].val != "-OL")
+        bad("flags 1/2 are not OL / -OL");
+      if (ut320i->decode(QByteArray::fromHex("aabb0a06ff0100000001000276"), 0))
+        bad("the settings frame gives a reading");
+      const auto f = ut320i->decode(both, 0);
+      if (!f || f->main().unit != "dF" || f->main().val != "74.1" || f->channels[1].val != "21.9")
+        bad(qPrintable("after the settings (F): got " + (f ? f->main().val + " " + f->main().unit : QString("none"))));
+      ut320i->decode(QByteArray::fromHex("aabb0a06ff0200000001000277"), 0);
+      const auto k = ut320i->decode(both, 0);
+      if (!k || k->main().unit != "K" || k->main().val != "296.5")
+        bad("after the settings (K): not 296.5 K (23.4 as float32 + 273.15)");
+      const auto one = DmmDecoder::getInstance(FrameFormat::UniTUT320i)
+                         ->decode(QByteArray::fromHex("aabb12110102030405060708090a6666124200" "02df"), 0);
+      if (!one || one->main().val != "36.6" || !one->channels[1].val.isEmpty())
+        bad("command 0x11: not 36.6 with the second value cleared");
+      if (ut320i->decode(QByteArray::fromHex("aabb140100000000000000003333bb413333b3c00004b4"), 0))
+        bad("a wrong sum gives a reading");
     }
     expect(ut61plus, "hold", "abcd034a01c5");
     expect(ut61plus, "minmax", "abcd034101bc");

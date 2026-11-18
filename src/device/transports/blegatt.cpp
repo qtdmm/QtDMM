@@ -3,6 +3,7 @@
 #include "device/transports/blegatt.h"
 #include "device/decoders/brymen_bm78xbt.h"
 #include "device/decoders/uni_t_ut381a.h"
+#include "device/decoders/uni_t_ut320i.h"
 #include "device/decoders/uni_t_ut382a.h"
 #include "device/transports/ble.h"
 
@@ -110,6 +111,10 @@ std::optional<BleGattDevice::Profile> BleGattDevice::profile(FrameFormat::DataFo
       // the name UNI-T's app looks for; the status first (unit, HOLD), then
       // the decoder's poll for live frames
       return Profile{ kIenvService, kIenvNotify, { kIenvWrite }, { "UT382A" }, DecoderUT382A::checkStatus() };
+    case FrameFormat::UniTUT320i:
+      // advertised as "UT320i SN:<serial>"; it pushes once notifications
+      // are on, the settings asked first for the unit it shows
+      return Profile{ kIenvService, kIenvNotify, { kIenvWrite }, { "UT320i" }, DecoderUT320i::settingsRequest() };
     case FrameFormat::UniTUT202BT:
       // UNI-T's app asks the name (0x5F) before anything else, and a UT60BT
       // is reported to need it (dmm-tools, UT61 family spec §6.4; our UT60BT

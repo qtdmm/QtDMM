@@ -73,6 +73,7 @@
 
 ### Meters
 
+- **UNI-T UT320i pipe clamp thermometer over Bluetooth LE** (`*`, untried) — both probes T1 and T2 as two values, in °C, °F or K as the meter shows; over and under range, a missing probe without a value. From the notes decompiled from UNI-T's iENV app; its 10000 stored readings, clock and settings are left out.
 - **UNI-T UT382A luxmeter over Bluetooth LE** (`*`, untried) — lx or fc as the meter shows, MAX/MIN/AVG, the difference to a start value, the integral with the light exposure in lx·h as a second value, and the luminous intensity in cd once the meter reports the distance; overload, error and HOLD, with a HOLD key. New quantities *Light exposure* and *Luminous intensity*. From the notes decompiled from UNI-T's iENV app; zero calibration, timers, stored readings and the settings are left out. Not the UT382 with its cable.
 - **UNI-T UT372D tachometer over Bluetooth LE** (`*`, untried) — RPM, Hz and revolutions (REV), with a measuring wheel its speed (m/min, in/min, ft/min) and length (m, in, ft); its four displays NOW, MAX, MIN and AVG as four values, HOLD and battery low; keys HOLD and unit. A new device kind *Tachometer* with its own symbol and capture steps, and the quantities *Linear speed* and *Length*. From the notes decompiled from UNI-T's iENV app.
 - **UNI-T UT381A luxmeter over Bluetooth LE** (`*`, untried) — lx or fc as the meter shows, MAX/MIN/AVG, overload and HOLD, with a HOLD key; from the notes decompiled from UNI-T's iENV app. Colour correction, zero calibration and its 99 stored readings are left out.
