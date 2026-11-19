@@ -4,7 +4,9 @@
 // The rack (PR 4): an insert for each logic node open on the bench, none
 // for a device; the LED switches a node and is kept in its entry; a node
 // waiting for an input shows the warning with why; the order, set and by a
-// move; the gear, "+ Insert", "Remove", "Show in the rack".
+// move; the gear, "+ Insert", "Remove", "Show in the rack". The logic
+// status window (PR 5a): an LED per node in the rack's order, switching
+// and kept, the count, the warning count leading to the first waiting one.
 
 #include <QSignalSpy>
 #include <QtWidgets>
@@ -15,6 +17,7 @@
 #include "service/devicesession.h"
 #include "service/metercontroller.h"
 #include "service/noderunner.h"
+#include "ui/rack/nodestatus.h"
 #include "ui/rack/rackwindow.h"
 #include "testutil.h"
 
@@ -45,6 +48,8 @@ int main(int argc, char **argv)
   const QString t = lib->add("Twice", { { "DMM/model", "QtDMM Formula" }, { "Node/json", twice.toJsonText() } });
 
   RackWindow rack(&session);
+  NodeStatus status(&session);
+  check(status.nodes().isEmpty(), "status: no node, no LED");
   check(rack.inserts().isEmpty() && rack.findChild<QLabel *>("ui_rackEmpty")->isVisibleTo(&rack), "nothing open: empty, said so");
 
   QString error;
@@ -68,6 +73,32 @@ int main(int argc, char **argv)
           && twiceInsert->findChild<QLabel *>("ui_rackValues")->text().contains("V"),
         "running: no warning, its value: " + twiceInsert->findChild<QLabel *>("ui_rackValues")->text());
 
+  // the status window: an LED each, the count, Power waiting
+  status.show();
+  status.refresh();
+  check(status.nodes() == QStringList({ g, p, t }), "status: an LED for each node: " + status.nodes().join(","));
+  auto *countLabel = status.findChild<QLabel *>("ui_nodeStatusCount");
+  check(countLabel->text() == "3 of 3 on", "status: all on: " + countLabel->text());
+  auto *warn = status.findChild<QToolButton *>("ui_nodeStatusWarning");
+  check(warn->isVisibleTo(&status) && warn->text().endsWith('1') && status.waiting() == QStringList({ p }),
+        "status: one waits: " + warn->text());
+  check(status.findChild<QToolButton *>("ui_nodeStatusLed_" + p)->toolTip().contains('\n'),
+        "status: why in the LED's tooltip");
+  QSignalSpy wanted(&status, &NodeStatus::rackRequested);
+  warn->click();
+  check(wanted.size() == 1 && wanted.first().first().toString() == p, "status: the warning asks for the rack at Power");
+  status.findChild<QToolButton *>("ui_nodeStatusRack")->click();
+  check(wanted.size() == 2 && wanted.last().first().toString().isEmpty(), "status: Rack asks for the rack");
+  QSignalSpy statusSwitched(&status, &NodeStatus::switched);
+  status.findChild<QToolButton *>("ui_nodeStatusLed_" + t)->click();
+  check(!NodeRunner::of(session.controller("device:" + t))->node()->isOn() && statusSwitched.size() == 1
+          && countLabel->text() == "2 of 3 on",
+        "status: its LED switched Twice off: " + countLabel->text());
+  status.findChild<QToolButton *>("ui_nodeStatusLed_" + t)->click();
+  check(NodeRunner::of(session.controller("device:" + t))->node()->isOn(), "status: and on again");
+  status.setOrder({ t, g });
+  check(status.nodes() == QStringList({ t, g, p }), "status: in the rack's order: " + status.nodes().join(","));
+
   // the LED: off in the runner and in the entry
   twiceInsert->findChild<QToolButton *>("ui_rackLed")->click();
   check(!NodeRunner::of(session.controller("device:" + t))->node()->isOn(), "the LED switched it off");
@@ -90,6 +121,7 @@ int main(int argc, char **argv)
   // a node closed: its insert gone; a device: none
   session.close(t);
   check(rack.inserts().size() == 2, "closed: its insert gone");
+  check(status.nodes().size() == 2, "closed: its status LED gone");
 
   // the gear, Remove, + Insert
   QSignalSpy settings(&rack, &RackWindow::settingsRequested);

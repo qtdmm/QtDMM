@@ -84,6 +84,10 @@ public:
   /// Open as the user left it: shown, and not closed by them - hidden
   /// with the main window when QtDMM ends it stays open (the bench's).
   bool        isOpen() const { return m_open; }
+  /// The LED of a node: green and lit when on, a dark green when off.
+  static QIcon ledIcon(bool on);
+  /// Writes a node's on/off into its entry of My devices.
+  static void storeOn(DeviceSession *session, const QString &id, bool on);
 
 Q_SIGNALS:
   void        settingsRequested(const QString &id);
@@ -106,8 +110,6 @@ private:
   /// The place a drop at @p y (in the list) goes to.
   int         dropIndex(int y) const;
   void        refresh();
-  /// Writes a node's on/off into its entry of My devices.
-  void        storeOn(const QString &id, bool on);
 
   DeviceSession *m_session;
   QWidget       *m_list;

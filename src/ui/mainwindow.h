@@ -45,6 +45,7 @@ class LabPlotLive;
 class InstanceWidget;
 class DeviceSession;
 class WorkspaceFile;
+class NodeStatus;
 class RackWindow;
 class MeterController;
 class RecordingStore;
@@ -332,11 +333,19 @@ protected:
   QMdiSubWindow *m_histogramWin = nullptr;
   QMdiSubWindow *m_heatmapWin = nullptr;
   QMdiSubWindow *m_basketWin;
+  /// The logic nodes' small window (NodeStatus): there while a node is
+  /// open, unless the user closed it (Arrange > Logic status brings it back).
+  QMdiSubWindow *m_nodeStatusWin = nullptr;
+  bool        m_nodeStatusClosed = false;   ///< Windows/logic-status-closed
+  bool        m_nodeStatusAuto = false;     ///< updateNodeStatus() shows or hides it
+  /// Shows or hides the logic status window by the nodes open.
+  void        updateNodeStatus();
   QAction    *m_displayAction = nullptr;
   QAction    *m_meterAction = nullptr;
   QAction    *m_readingsAction = nullptr;
   QAction    *m_poincareAction = nullptr;
   QAction    *m_basketAction = nullptr;
+  QAction    *m_nodeStatusAction = nullptr;
   QAction    *m_graphToBasket = nullptr;   ///< the recording and the graph into the project basket
   QAction    *m_labPlotLive = nullptr;     ///< Live in LabPlot, while it records
   QAction    *m_projectAction = nullptr;   ///< the toolbar's project button: its window or a new one, the arrow the rest

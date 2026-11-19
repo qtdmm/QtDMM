@@ -24,6 +24,7 @@
 #include <QtGui>
 #include <QtWidgets>
 #include <QFrame>
+#include <QScopedValueRollback>
 #include <QTimer>
 #include <QMenu>
 #include <cmath>
@@ -52,6 +53,7 @@
 #include "logic/integralnode.h"
 #include "service/noderunner.h"
 #include "ui/dialogs/integralnodedlg.h"
+#include "ui/rack/nodestatus.h"
 #include "ui/rack/rackwindow.h"
 #include "logic/legacynodes.h"
 #include "ui/dialogs/generatornodedlg.h"
@@ -436,6 +438,32 @@ void MainWindow::createViews()
   {
     windowMenu(m_heatmapWin, m_heatmap->mapToGlobal(pos));
   });
+
+  // the logic nodes at a glance: there with the first one (updateNodeStatus())
+  auto *nodeStatus = new NodeStatus(m_session, this);
+  m_nodeStatusWin = addView(nodeStatus, nodeStatus->windowTitle(), MdiArranger::Instrument, "logic-status");
+  m_nodeStatusWin->hide();
+  // a small window: no cell bigger than its LEDs fill
+  m_arranger->setContentAspect(m_nodeStatusWin, NodeStatus::kMinAspect, NodeStatus::kMaxAspect);
+  connect(nodeStatus, &NodeStatus::rackRequested, this, [this](const QString &id)
+  {
+    if (id.isEmpty())
+    {
+      rack()->show();
+      rack()->raise();
+      rack()->activateWindow();
+    }
+    else
+      rack()->showInsert(id);
+  });
+  // its window menu (Hide view) also without title bar
+  nodeStatus->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(nodeStatus, &QWidget::customContextMenuRequested, this, [this, nodeStatus](const QPoint &pos)
+  {
+    windowMenu(m_nodeStatusWin, nodeStatus->mapToGlobal(pos));
+  });
+  connect(nodeStatus, &NodeStatus::switched, this,
+          [this](const QString &id, bool on) { RackWindow::storeOn(m_session, id, on); });
 
   // the files of a project, a folder; it stays open until another is
   m_basket = new BasketWidget(this);
@@ -1896,6 +1924,17 @@ QList<QAction *> MainWindow::createArrangeMenu()
                               "values small, a warning sign when one waits for an input. Drag them into the order "
                               "you read them in.</p></body></html>"));
   connect(rackAction, &QAction::triggered, this, [this] { rack()->show(); rack()->raise(); rack()->activateWindow(); });
+  m_nodeStatusAction = windowAction(m_nodeStatusWin, tr("Lo&gic status"), "", "",
+    tr("<html><head/><body><p><span style=\" font-weight:600;\">Logic status</span></p>"
+       "<p>A small window with a green LED for each calculated, simulated or integral value of the bench "
+       "(a click switches it on or off), how many are on and a warning count when some wait for an input. "
+       "It comes with the first of them; closed, it stays away until shown here again.</p></body></html>"));
+  m_nodeStatusAction->setObjectName("action_LogicStatus");
+  connect(m_nodeStatusAction, &QAction::triggered, this, [this](bool on) { m_nodeStatusClosed = !on; });
+  m_arrangeMenu->addAction(m_nodeStatusAction);
+  connect(m_session, &DeviceSession::opened, this, &MainWindow::updateNodeStatus);
+  connect(m_session, &DeviceSession::closed, this, &MainWindow::updateNodeStatus);
+  updateNodeStatus();
   m_arrangeMenu->addSeparator();
   QAction *loadWs = m_arrangeMenu->addAction(QIcon::fromTheme("document-open"), tr("L&oad bench..."));
   loadWs->setObjectName("action_LoadWorkspace");
@@ -2841,9 +2880,13 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
     }
   // minimizing the main window hides its children spontaneously; they are
   // not closed, so only explicit show/hide counts (isHidden() stays false)
+  // the logic status hidden by the user (not with the last node): it stays away
+  if (watched == m_nodeStatusWin && event->type() == QEvent::Hide && !event->spontaneous() && !m_restoring
+      && !m_nodeStatusAuto && m_nodeStatusWin->isHidden())
+    m_nodeStatusClosed = true;
   if ((event->type() == QEvent::Show || event->type() == QEvent::Hide) && !event->spontaneous())
     for (QAction *a : { m_displayAction, m_meterAction, m_readingsAction, m_poincareAction, m_histogramAction, m_heatmapAction, action_Graph,
-                        m_basketAction })
+                        m_basketAction, m_nodeStatusAction })
       if (a && a->property("window").value<QObject *>() == watched)
       {
         const bool visible = !static_cast<QWidget *>(watched)->isHidden();
@@ -4098,6 +4141,9 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
   m_rackOrder = get("Windows/rack-order", QString()).toString().split(' ', Qt::SkipEmptyParts);
   if (m_rack)
     m_rack->setOrder(m_rackOrder);
+  static_cast<NodeStatus *>(m_nodeStatusWin->widget())->setOrder(m_rackOrder);
+  m_nodeStatusClosed = get("Windows/logic-status-closed", false).toBool();
+  updateNodeStatus();
   if (get("Windows/rack-open", false).toBool())
   {
     const QStringList g = get("Windows/rack-geometry", QString()).toString().split(' ');
@@ -4210,7 +4256,7 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
     auto windows = [this]
     {
       return meterWindows() + poincareWindows() + xyWindows() + histogramWindows() + heatmapWindows() + graphWindows()
-             + QList<QMdiSubWindow *>{ m_readingsWin } + panelWindows();
+             + QList<QMdiSubWindow *>{ m_readingsWin, m_nodeStatusWin } + panelWindows();
     };
     QMap<QString, QString> geometry;
     for (QMdiSubWindow *w : windows())
@@ -4336,6 +4382,19 @@ void MainWindow::applyGraphState(GraphView *view, const WorkspaceGet &get,
   model->setValues(values);
 }
 
+void MainWindow::updateNodeStatus()
+{
+  const QList<MeterController *> ctls = m_session->controllers();
+  const bool nodes = std::any_of(ctls.cbegin(), ctls.cend(), [](const MeterController *c) { return c->isNode(); });
+  m_nodeStatusAction->setEnabled(nodes);
+  // without a node it is not there; with one it comes, unless closed by the user
+  const QScopedValueRollback<bool> auto_(m_nodeStatusAuto, true);
+  if (!nodes || m_nodeStatusClosed)
+    m_nodeStatusWin->hide();
+  else if (m_nodeStatusWin->isHidden())
+    m_nodeStatusAction->setChecked(true);
+}
+
 RackWindow *MainWindow::rack()
 {
   if (m_rack)
@@ -4349,7 +4408,11 @@ RackWindow *MainWindow::rack()
     if (keepRecordingOf(id, tr("Closing it discards its recording, which is not saved.")))
       m_session->close(id);
   });
-  connect(m_rack, &RackWindow::orderChanged, this, [this] { m_rackOrder = m_rack->order(); });
+  connect(m_rack, &RackWindow::orderChanged, this, [this]
+  {
+    m_rackOrder = m_rack->order();
+    static_cast<NodeStatus *>(m_nodeStatusWin->widget())->setOrder(m_rackOrder);
+  });
   return m_rack;
 }
 
@@ -4363,6 +4426,7 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
     set("Windows/rack-geometry", QString("%1 %2 %3 %4").arg(g.x()).arg(g.y()).arg(g.width()).arg(g.height()));
     set("Windows/rack-open", m_rack->isOpen());
   }
+  set("Windows/logic-status-closed", m_nodeStatusClosed);
   static const char *const modes[] = { "top", "left", "fixed", "free" };
   set("Windows/arrange", QString(modes[m_arranger->mode()]));
   set("Windows/layout", m_arranger->layoutText());
@@ -4370,7 +4434,7 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
   set("Windows/toolbar-hidden", m_toolbars->isChecked());
   set("Windows/design", Designs::name(Designs::current()));
   if (m_arranger->mode() == MdiArranger::Free)
-    for (QMdiSubWindow *w : meterWindows() + poincareWindows() + xyWindows() + histogramWindows() + heatmapWindows() + graphWindows() + QList<QMdiSubWindow *>{ m_readingsWin }
+    for (QMdiSubWindow *w : meterWindows() + poincareWindows() + xyWindows() + histogramWindows() + heatmapWindows() + graphWindows() + QList<QMdiSubWindow *>{ m_readingsWin, m_nodeStatusWin }
                             + panelWindows())
     {
       const QRect g = w->geometry();
@@ -5148,6 +5212,8 @@ void MainWindow::setDesign(int design)
   for (QMdiSubWindow *win : meterWindows())
     applyFrame(win->widget());
   applyFrame(m_readings, false);
+  if (m_nodeStatusWin)
+    applyFrame(m_nodeStatusWin->widget());
   for (QMdiSubWindow *win : std::as_const(m_panelWins))
     applyFrame(win->widget());
   const Designs::GraphColors g = Designs::graphColors(d);

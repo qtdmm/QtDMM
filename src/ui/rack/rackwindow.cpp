@@ -33,8 +33,19 @@ namespace
 {
 const char *const kInsertMime = "application/x-qtdmm-rack-insert";
 
-// the LED: green and lit when on, a dark green when off
-QIcon ledIcon(bool on)
+QString kindName(const QString &type)
+{
+  if (type == QLatin1String("formula"))
+    return RackWindow::tr("Formula");
+  if (type == QLatin1String("generator"))
+    return RackWindow::tr("Simulated");
+  if (type == QLatin1String("integral"))
+    return RackWindow::tr("Integral");
+  return type;
+}
+}
+
+QIcon RackWindow::ledIcon(bool on)
 {
   QPixmap pm(QSize(16, 16) * qApp->devicePixelRatio());
   pm.setDevicePixelRatio(qApp->devicePixelRatio());
@@ -48,18 +59,6 @@ QIcon ledIcon(bool on)
   p.setPen(QPen(QColor(20, 20, 20), 1));
   p.drawEllipse(QRectF(2, 2, 12, 12));
   return QIcon(pm);
-}
-
-QString kindName(const QString &type)
-{
-  if (type == QLatin1String("formula"))
-    return RackWindow::tr("Formula");
-  if (type == QLatin1String("generator"))
-    return RackWindow::tr("Simulated");
-  if (type == QLatin1String("integral"))
-    return RackWindow::tr("Integral");
-  return type;
-}
 }
 
 RackInsert::RackInsert(DeviceSession *session, MeterController *ctl, QWidget *parent) :
@@ -172,7 +171,7 @@ void RackInsert::refresh()
   if (!m_ctl || !runner)
     return;
   const bool on = runner->node()->isOn();
-  m_led->setIcon(ledIcon(on));
+  m_led->setIcon(RackWindow::ledIcon(on));
   m_name->setText(m_ctl->deviceName());
   m_name->setEnabled(on);
   const QString inputs = inputsText();
@@ -363,7 +362,7 @@ void RackWindow::rebuild()
     auto *insert = new RackInsert(m_session, ctl, m_list);
     connect(insert, &RackInsert::settingsRequested, this, &RackWindow::settingsRequested);
     connect(insert, &RackInsert::removeRequested, this, &RackWindow::removeRequested);
-    connect(insert, &RackInsert::switched, this, &RackWindow::storeOn);
+    connect(insert, &RackInsert::switched, this, [this](const QString &id, bool on) { storeOn(m_session, id, on); });
     m_listLayout->insertWidget(int(m_inserts.size()), insert);
     m_inserts << insert;
   }
@@ -463,9 +462,9 @@ void RackWindow::refresh()
     insert->refresh();
 }
 
-void RackWindow::storeOn(const QString &id, bool on)
+void RackWindow::storeOn(DeviceSession *session, const QString &id, bool on)
 {
-  DeviceLibrary *library = m_session->library();
+  DeviceLibrary *library = session->library();
   const std::optional<MyDevice> entry = library ? library->find(id) : std::nullopt;
   if (!entry || !entry->isNode())
     return;

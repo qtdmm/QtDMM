@@ -133,6 +133,17 @@ Drag them into the order you read them in. *+ Insert* adds a calculated,
 simulated or integral value. The bench keeps the rack's order, place and
 whether it is open; a value closed on the bench leaves the rack.
 
+### Logic status
+
+With the first calculated, simulated or integral value on the bench a small
+window **Logic** joins the displays: a green LED for each of them, in the
+rack's order (a click switches it on or off, its name and why it waits in
+the tooltip), how many are on, a **⚠** count when some wait for an input -
+a click shows the first of them in the rack - and a *Rack* button. Without
+such a value it is not there. Hidden (*Hide view* in its context menu) it
+stays away, also with the next bench start, until *Arrange* > *Logic status*
+shows it again.
+
 ## Entries from before
 
 The models **QtDMM / Simulated meter** (Virtual meter before 26.2) and
