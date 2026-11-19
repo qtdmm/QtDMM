@@ -49,6 +49,8 @@ private:
   void        deliver(const LogicNode::Values &values, qint64 t, qint64 wall);
   /// Starts or stops with the controller's wish.
   void        follow();
+  /// An input as the state names it: its device's name in My devices.
+  QString     inputName(const ValueRef &ref) const;
 
   DeviceSession   *m_session;
   MeterController *m_ctl;
