@@ -52,7 +52,6 @@
 #include "logic/integralnode.h"
 #include "service/noderunner.h"
 #include "ui/dialogs/integralnodedlg.h"
-#include "ui/rack/rackwindow.h"
 #include "logic/legacynodes.h"
 #include "ui/dialogs/generatornodedlg.h"
 #include "ui/dialogs/limitdlg.h"
@@ -1530,7 +1529,6 @@ void MainWindow::createSidebar()
     if (MeterController *ctl = openController(id))
       editLimits(ctl, false);
   });
-  connect(m_sidebar, &DeviceSidebar::rackRequested, this, [this](const QString &id) { rack()->showInsert(id); });
   connect(m_sidebar, &DeviceSidebar::nodeResetRequested, this, [this](const QString &id)
   {
     if (NodeRunner *runner = NodeRunner::of(m_session->controller("device:" + id)))
@@ -1888,15 +1886,6 @@ QList<QAction *> MainWindow::createArrangeMenu()
   m_arrangeMenu->addAction(m_arrangeFree);
   m_arrangeMenu->addSeparator();
   m_arrangeMenu->addAction(m_titleBars);
-  QAction *rackAction = m_arrangeMenu->addAction(tr("Rac&k..."));
-  rackAction->setObjectName("action_Rack");
-  rackAction->setShortcut(QKeySequence("Ctrl+Shift+R"));
-  rackAction->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">Rack</span></p>"
-                              "<p>A window beside the main window with the calculated, simulated and integral values "
-                              "of the bench, one below the other: switched on and off by their green LED, their "
-                              "values small, a warning sign when one waits for an input. Drag them into the order "
-                              "you read them in.</p></body></html>"));
-  connect(rackAction, &QAction::triggered, this, [this] { rack()->show(); rack()->raise(); rack()->activateWindow(); });
   m_arrangeMenu->addSeparator();
   QAction *loadWs = m_arrangeMenu->addAction(QIcon::fromTheme("document-open"), tr("L&oad bench..."));
   loadWs->setObjectName("action_LoadWorkspace");
@@ -4078,6 +4067,9 @@ void MainWindow::saveWindows()
       cfg->setString(key, value.toString());
   });
   cfg->setBool("Windows/user-sized", m_userSized);
+  // the rack of 27.1's first logic nodes is gone: their front panels took over
+  for (const char *key : { "Windows/rack-order", "Windows/rack-geometry", "Windows/rack-open" })
+    cfg->remove(key);
   // the front panels of devices no longer connected: their keys go
   // (an id may have '-' in it: those kept are compared whole)
   const QStringList open = cfg->getString("Windows/open-devices").split(' ', Qt::SkipEmptyParts);
@@ -4095,19 +4087,6 @@ void MainWindow::saveWindows()
 void MainWindow::applyWorkspace(const WorkspaceGet &get)
 {
   setDesign(Designs::fromName(get("Windows/design", QString("dark-metal")).toString()));
-  // the rack as the bench had it; made only when it was open
-  m_rackOrder = get("Windows/rack-order", QString()).toString().split(' ', Qt::SkipEmptyParts);
-  if (m_rack)
-    m_rack->setOrder(m_rackOrder);
-  if (get("Windows/rack-open", false).toBool())
-  {
-    const QStringList g = get("Windows/rack-geometry", QString()).toString().split(' ');
-    if (g.size() == 4)
-      rack()->setGeometry(g[0].toInt(), g[1].toInt(), g[2].toInt(), g[3].toInt());
-    rack()->show();
-  }
-  else if (m_rack)
-    m_rack->hide();
   m_restoring = true;
   const QString arrange = get("Windows/arrange", QString("left")).toString();
   const bool free = arrange == "free";
@@ -4337,33 +4316,8 @@ void MainWindow::applyGraphState(GraphView *view, const WorkspaceGet &get,
   model->setValues(values);
 }
 
-RackWindow *MainWindow::rack()
-{
-  if (m_rack)
-    return m_rack;
-  m_rack = new RackWindow(m_session, this);
-  m_rack->setOrder(m_rackOrder);
-  connect(m_rack, &RackWindow::settingsRequested, this, [this](const QString &id) { deviceSettings(id); });
-  connect(m_rack, &RackWindow::addRequested, this, [this](const QString &type) { addNode(type); });
-  connect(m_rack, &RackWindow::removeRequested, this, [this](const QString &id)
-  {
-    if (keepRecordingOf(id, tr("Closing it discards its recording, which is not saved.")))
-      m_session->close(id);
-  });
-  connect(m_rack, &RackWindow::orderChanged, this, [this] { m_rackOrder = m_rack->order(); });
-  return m_rack;
-}
-
 void MainWindow::storeWorkspace(const WorkspaceSet &set)
 {
-  // the rack: its order, place and whether it is open
-  set("Windows/rack-order", (m_rack ? m_rack->order() : m_rackOrder).join(' '));
-  if (m_rack)
-  {
-    const QRect g = m_rack->geometry();
-    set("Windows/rack-geometry", QString("%1 %2 %3 %4").arg(g.x()).arg(g.y()).arg(g.width()).arg(g.height()));
-    set("Windows/rack-open", m_rack->isOpen());
-  }
   static const char *const modes[] = { "top", "left", "fixed", "free" };
   set("Windows/arrange", QString(modes[m_arranger->mode()]));
   set("Windows/layout", m_arranger->layoutText());
@@ -5163,8 +5117,6 @@ void MainWindow::setDesign(int design)
   for (QMdiSubWindow *win : heatmapWindows())
     if (HeatmapView *view = heatmapViewOf(win))
       applyPlotColors(view->plot());
-  if (m_rack)
-    m_rack->applyDesign();
   for (QAction *a : m_designMenu->actions())
     a->setChecked(a->data().toInt() == design);
   // at once, so the settings dialog shows the design of the menu (and its
