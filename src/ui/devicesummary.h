@@ -18,6 +18,8 @@ public:
 
   /// Shows the device @p settings describe, called @p name.
   void        show(const DeviceSettings *settings, const QString &name);
+  /// Shows a logic node called @p name, of @p model ("QtDMM Formula").
+  void        showNode(const QString &name, const QString &model);
   /// How it is reached: "/dev/ttyUSB0, 19200 7O1", "USB-HID /dev/hidraw3",
   /// "Bluetooth LE, AA:BB:..." (never a key), "simulated in QtDMM".
   static QString connection(const DeviceSettings *settings);

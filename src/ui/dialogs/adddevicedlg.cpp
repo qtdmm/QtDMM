@@ -11,6 +11,9 @@
 #include "ui/devicesettings.h"
 #include "ui/devicesummary.h"
 #include "ui/devicesymbol.h"
+#include "ui/dialogs/formulanodedlg.h"
+#include "ui/dialogs/generatornodedlg.h"
+#include "ui/dialogs/integralnodedlg.h"
 #include "ui/tilebutton.h"
 
 #ifdef QTDMM_WITH_BLE
@@ -99,9 +102,16 @@ AddDeviceDlg::AddDeviceDlg(DeviceLibrary *library, QWidget *parent)
   m_pages = new QStackedWidget(this);
   top->addWidget(m_pages, 1);
 
-  // page 1: one tile per kind of connection; a click goes on
-  auto *connection = new QWidget(m_pages);
-  auto *tiles = new QGridLayout(connection);
+  // page 1: one tile per kind of connection, a device or a calculated value
+  // on a tab each; a click goes on
+  m_kinds = new QTabWidget(m_pages);
+  m_kinds->setObjectName("ui_kinds");
+  auto *devicesTab = new QWidget(m_kinds);
+  auto *nodesTab = new QWidget(m_kinds);
+  auto *tiles = new QGridLayout(devicesTab);
+  auto *nodeTiles = new QGridLayout(nodesTab);
+  m_kinds->addTab(devicesTab, tr("&Device"));
+  m_kinds->addTab(nodesTab, tr("Calculated / &generator"));
   const struct { Connection id; const char *icon; QString text; QString toolTip; } kinds[] = {
     { Cable,     "drive-removable-media-usb",    tr("&Cable") + '\n' + tr("UT61E, UT803, TFA ..."),
       tr("A meter on a USB cable, a USB-serial adapter or a serial port") },
@@ -119,13 +129,20 @@ AddDeviceDlg::AddDeviceDlg(DeviceLibrary *library, QWidget *parent)
       tr("A value summed up over time, e.g. the energy in Wh from a power in W") },
   };
   int column = 0;
+  int nodeColumn = 0;
   for (const auto &kind : kinds)
   {
     QToolButton *button = tile(kind.icon, kind.text, kind.toolTip);
     button->setObjectName(QString("ui_connection%1").arg(int(kind.id)));
     const Connection id = kind.id;
     connect(button, &QToolButton::clicked, this, [this, id] { chooseConnection(id); });
-    tiles->addWidget(button, column / 3, column % 3);
+    if (isNode(id))
+    {
+      nodeTiles->addWidget(button, nodeColumn / 3, nodeColumn % 3);
+      ++nodeColumn;
+      continue;
+    }
+    tiles->addWidget(button, column / 2, column % 2);
     ++column;
     if (id == Bluetooth)
     {
@@ -142,7 +159,15 @@ AddDeviceDlg::AddDeviceDlg(DeviceLibrary *library, QWidget *parent)
   connect(adapter, &QBluetoothLocalDevice::hostModeStateChanged, this, &AddDeviceDlg::updateBluetoothTile);
 #endif
   tiles->setRowStretch(2, 1);
-  m_pages->addWidget(connection);
+  tiles->setColumnStretch(2, 1);
+  nodeTiles->setRowStretch(1, 1);
+  nodeTiles->setColumnStretch(3, 1);
+  m_pages->addWidget(m_kinds);
+  connect(m_kinds, &QTabWidget::currentChanged, this, [this]
+  {
+    if (page() == ConnectionPage)
+      showPage(ConnectionPage);
+  });
 
   // page 2: the search for the chosen connection, every port found, and
   // the port field
@@ -273,6 +298,12 @@ AddDeviceDlg::AddDeviceDlg(DeviceLibrary *library, QWidget *parent)
   targets->addStretch();
   m_pages->addWidget(target);
 
+  // page 5: a logic node's settings (its NodeEditor), then page 4
+  m_nodePage = new QWidget(m_pages);
+  auto *nodeLayout = new QVBoxLayout(m_nodePage);
+  nodeLayout->setContentsMargins(0, 0, 0, 0);
+  m_pages->addWidget(m_nodePage);
+
   auto *buttons = new QDialogButtonBox(this);
   m_back = buttons->addButton(tr("< &Back"), QDialogButtonBox::ActionRole);
   m_next = buttons->addButton(tr("&Next >"), QDialogButtonBox::ActionRole);
@@ -319,7 +350,7 @@ bool AddDeviceDlg::offers(Connection connection, const DmmDecoder::DMMInfo &info
     case Sigrok:    return sigrok;
     case Simulated:
     case Calculated:
-    case Integral: return false;   // logic nodes, in their own dialogs
+    case Integral: return false;   // logic nodes, on the node page
     case Cable:
     case Network:   return !bluetooth && !sigrok;   // the bridge passes a cable on
   }
@@ -331,15 +362,48 @@ bool AddDeviceDlg::hasPortPage(Connection connection)
   return connection == Cable || connection == Bluetooth || connection == Network;
 }
 
+bool AddDeviceDlg::isNode(Connection connection)
+{
+  return connection == Simulated || connection == Calculated || connection == Integral;
+}
+
 void AddDeviceDlg::chooseConnection(Connection connection)
 {
   m_connection = connection;
-  // a calculated or simulated value has a dialog of its own (MainWindow::addNode())
-  if (connection == Calculated || connection == Simulated || connection == Integral)
+  // a logic node: its settings on a page of their own, a new editor each time
+  if (isNode(connection))
   {
-    accept();
+    m_kinds->setCurrentIndex(1);
+    delete m_editor;
+    m_editor = m_makeEditor ? m_makeEditor(connection) : nullptr;
+    if (!m_editor)
+    {
+      if (connection == Simulated)
+      {
+        auto *e = new GeneratorNodeEditor;
+        e->load(tr("Simulated"), GeneratorNode());
+        m_editor = e;
+      }
+      else if (connection == Integral)
+      {
+        auto *e = new IntegralNodeEditor;
+        e->load(QString(), IntegralNode());
+        m_editor = e;
+      }
+      else
+      {
+        auto *e = new FormulaNodeEditor;
+        e->load(tr("Calculated"), FormulaNode());
+        m_editor = e;
+      }
+    }
+    m_editor->setParent(m_nodePage);
+    m_nodePage->layout()->addWidget(m_editor);
+    connect(m_editor, &NodeEditor::validChanged, this, &AddDeviceDlg::updateButtons);
+    showPage(NodePage);
     return;
   }
+  m_kinds->setCurrentIndex(0);
   const bool manual = connection == Cable || connection == Network;
   m_settings->setModelFilter([connection](const DmmDecoder::DMMInfo &info) { return offers(connection, info); }, manual);
   QVariantMap keys;
@@ -672,23 +736,31 @@ bool AddDeviceDlg::canGoNext() const
     const int row = chosenCandidate();
     return !m_port->text().trimmed().isEmpty() && (row < 0 || m_found[row].problem.isEmpty());
   }
+  if (page() == NodePage)
+    return m_editor && m_editor->valid();
   return page() == DevicePage && m_settings->isComplete() && !m_name->text().trimmed().isEmpty();
 }
 
 QVariantMap AddDeviceDlg::keys() const
 {
+  if (isNode(m_connection) && m_editor)
+    return { { "DMM/model", m_editor->model() }, { "Node/json", m_editor->logicNode()->toJsonText() } };
   return m_settings->keys();
 }
 
 QString AddDeviceDlg::name() const
 {
+  if (isNode(m_connection) && m_editor)
+    return m_editor->name().trimmed();
   return m_name->text().trimmed();
 }
 
 void AddDeviceDlg::back()
 {
   if (page() == TargetPage)
-    showPage(DevicePage);
+    showPage(isNode(m_connection) ? NodePage : DevicePage);
+  else if (page() == NodePage)
+    showPage(ConnectionPage);
   else if (page() == DevicePage && hasPortPage(m_connection))
     showPage(PortPage);
   else if (page() == DevicePage || page() == PortPage)
@@ -717,10 +789,17 @@ void AddDeviceDlg::showPage(Page page)
   m_pages->setCurrentIndex(page);
   switch (page)
   {
-    case ConnectionPage: m_title->setText(tr("How is the meter connected?")); break;
+    case ConnectionPage:
+      m_title->setText(m_kinds->currentIndex() == 0 ? tr("How is the meter connected?") : tr("What is to be calculated?"));
+      break;
     case PortPage:       m_title->setText(tr("Where is it connected?")); break;
     case DevicePage:     m_title->setText(tr("Which meter is it?")); break;
     case TargetPage:     m_title->setText(tr("Connect it now?")); break;
+    case NodePage:
+      m_title->setText(m_connection == Simulated ? tr("Which values to simulate?")
+                       : m_connection == Integral ? tr("Which value to integrate?")
+                                                  : tr("What to calculate?"));
+      break;
   }
   if (page == TargetPage)
     updateDeviceInfo();
@@ -734,7 +813,7 @@ void AddDeviceDlg::showPage(Page page)
 void AddDeviceDlg::updateButtons()
 {
   m_back->setEnabled(page() != ConnectionPage);
-  m_next->setVisible(page() == PortPage || page() == DevicePage);
+  m_next->setVisible(page() == PortPage || page() == DevicePage || page() == NodePage);
   m_next->setEnabled(canGoNext());
 }
 
@@ -754,7 +833,10 @@ void AddDeviceDlg::suggestName()
 
 void AddDeviceDlg::updateDeviceInfo()
 {
-  m_summary->show(m_settings, m_name->text().trimmed());
+  if (isNode(m_connection) && m_editor)
+    m_summary->showNode(name(), m_editor->model());
+  else
+    m_summary->show(m_settings, m_name->text().trimmed());
 }
 
 void AddDeviceDlg::finish(Target target)

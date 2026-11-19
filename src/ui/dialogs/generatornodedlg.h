@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
 
-#include <QDialog>
 #include <QElapsedTimer>
 #include <QList>
 #include <QTimer>
 #include <memory>
 
 #include "logic/generatornode.h"
+#include "ui/dialogs/nodeeditor.h"
 
 class QComboBox;
 class QGridLayout;
@@ -24,17 +24,19 @@ class QToolButton;
 /// name, unit, AC/DC and a shape - min, max, period and noise - or a
 /// formula over t and the values above it (y1 ...). Each value shows
 /// where it is now; a formula that does not parse keeps OK off.
-class GeneratorNodeDlg : public QDialog
+class GeneratorNodeEditor : public NodeEditor
 {
   Q_OBJECT
 public:
-  explicit GeneratorNodeDlg(QWidget *parent = nullptr);
+  explicit GeneratorNodeEditor(QWidget *parent = nullptr);
 
   /// Fills in @p name and @p node; one without values gets a sine.
   void        load(const QString &name, const GeneratorNode &node);
-  QString     name() const;
+  QString     name() const override;
   /// The generator as set, its on/off as loaded.
   std::unique_ptr<GeneratorNode> node() const;
+  std::unique_ptr<LogicNode> logicNode() const override;
+  QString     model() const override { return QStringLiteral("QtDMM Generator"); }
 
 private:
   struct Row
@@ -66,11 +68,22 @@ private:
   QGridLayout *m_grid;
   QPushButton *m_add;
   QLabel      *m_status;
-  QPushButton *m_ok = nullptr;
   QList<Row>   m_rows;
   bool         m_on = true;
   int          m_maxAgeMs = 3000;
   QTimer       m_live;
   QElapsedTimer m_since;   ///< t of the results shown
   std::unique_ptr<GeneratorNode> m_preview;   ///< computes the results shown
+};
+
+/// GeneratorNodeEditor in a dialog of its own.
+class GeneratorNodeDlg : public NodeDlg
+{
+  Q_OBJECT
+public:
+  explicit GeneratorNodeDlg(QWidget *parent = nullptr);
+  GeneratorNodeEditor *generatorEditor() const { return static_cast<GeneratorNodeEditor *>(editor()); }
+  void        load(const QString &name, const GeneratorNode &node) { generatorEditor()->load(name, node); }
+  QString     name() const { return generatorEditor()->name(); }
+  std::unique_ptr<GeneratorNode> node() const { return generatorEditor()->node(); }
 };

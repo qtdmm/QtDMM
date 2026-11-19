@@ -6,7 +6,6 @@
 
 #include <QCheckBox>
 #include <QComboBox>
-#include <QDialogButtonBox>
 #include <QDoubleSpinBox>
 #include <QFormLayout>
 #include <QHBoxLayout>
@@ -29,12 +28,12 @@ std::optional<double> number(const QString &text)
 }
 }
 
-IntegralNodeDlg::IntegralNodeDlg(QWidget *parent) :
-  QDialog(parent)
+IntegralNodeEditor::IntegralNodeEditor(QWidget *parent) :
+  NodeEditor(parent)
 {
-  setObjectName("ui_integralNodeDlg");
-  setWindowTitle(tr("Integral"));
+  setObjectName("ui_integralNodeEditor");
   auto *top = new QVBoxLayout(this);
+  top->setContentsMargins(0, 0, 0, 0);
   auto *form = new QFormLayout;
   top->addLayout(form);
   m_name = new QLineEdit(this);
@@ -93,19 +92,14 @@ IntegralNodeDlg::IntegralNodeDlg(QWidget *parent) :
   m_status->setWordWrap(true);
   top->addWidget(m_status);
   top->addStretch(1);
-  auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
-  top->addWidget(buttons);
-  m_ok = buttons->button(QDialogButtonBox::Ok);
-  connect(buttons, &QDialogButtonBox::accepted, this, &QDialog::accept);
-  connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
 
   connect(m_input, &SourceList::valueChanged, this, [this] { propose(); validate(); });
   connect(m_unit, &QComboBox::currentTextChanged, this, [this] { if (!m_proposing) m_unitChosen = true; });
   connect(m_name, &QLineEdit::textEdited, this, [this] { m_nameChosen = true; });
-  connect(m_name, &QLineEdit::textChanged, this, &IntegralNodeDlg::validate);
+  connect(m_name, &QLineEdit::textChanged, this, &IntegralNodeEditor::validate);
   connect(m_thresholdOn, &QCheckBox::toggled, m_threshold, &QWidget::setEnabled);
-  connect(m_thresholdOn, &QCheckBox::toggled, this, &IntegralNodeDlg::validate);
-  connect(m_threshold, &QLineEdit::textChanged, this, &IntegralNodeDlg::validate);
+  connect(m_thresholdOn, &QCheckBox::toggled, this, &IntegralNodeEditor::validate);
+  connect(m_threshold, &QLineEdit::textChanged, this, &IntegralNodeEditor::validate);
   connect(m_zero, &QPushButton::clicked, this, [this]
   {
     if (m_reset)
@@ -113,16 +107,15 @@ IntegralNodeDlg::IntegralNodeDlg(QWidget *parent) :
     updateState();
   });
   m_live.setInterval(1000);
-  connect(&m_live, &QTimer::timeout, this, &IntegralNodeDlg::updateState);
-  resize(480, 300);
+  connect(&m_live, &QTimer::timeout, this, &IntegralNodeEditor::updateState);
 }
 
-void IntegralNodeDlg::setSources(const QList<SourceList::Source> &sources)
+void IntegralNodeEditor::setSources(const QList<SourceList::Source> &sources)
 {
   m_input->setSources(sources);
 }
 
-void IntegralNodeDlg::setState(std::function<std::optional<Reading>()> current, std::function<void()> reset)
+void IntegralNodeEditor::setState(std::function<std::optional<Reading>()> current, std::function<void()> reset)
 {
   m_current = std::move(current);
   m_reset = std::move(reset);
@@ -133,7 +126,7 @@ void IntegralNodeDlg::setState(std::function<std::optional<Reading>()> current, 
     m_live.start();
 }
 
-void IntegralNodeDlg::load(const QString &name, const IntegralNode &node)
+void IntegralNodeEditor::load(const QString &name, const IntegralNode &node)
 {
   m_on = node.isOn();
   m_maxAge->setValue(node.maxAgeMs() / 1000.0);
@@ -163,12 +156,12 @@ void IntegralNodeDlg::load(const QString &name, const IntegralNode &node)
   validate();
 }
 
-QString IntegralNodeDlg::name() const
+QString IntegralNodeEditor::name() const
 {
   return m_name->text().simplified();
 }
 
-std::unique_ptr<IntegralNode> IntegralNodeDlg::node() const
+std::unique_ptr<IntegralNode> IntegralNodeEditor::node() const
 {
   auto node = std::make_unique<IntegralNode>();
   node->setInputs({ m_input->value() });
@@ -181,7 +174,7 @@ std::unique_ptr<IntegralNode> IntegralNodeDlg::node() const
   return node;
 }
 
-void IntegralNodeDlg::propose()
+void IntegralNodeEditor::propose()
 {
   const QString base = LogicNode::canonicalUnit(m_input->unitOf(m_input->value()));
   const QString unit = IntegralNode::integratedUnit(base);
@@ -202,7 +195,7 @@ void IntegralNodeDlg::propose()
     m_name->setText(base == QLatin1String("W") ? tr("Energy") : base == QLatin1String("A") ? tr("Charge") : tr("Integral"));
 }
 
-void IntegralNodeDlg::validate()
+void IntegralNodeEditor::validate()
 {
   QStringList problems;
   if (name().isEmpty())
@@ -212,11 +205,10 @@ void IntegralNodeDlg::validate()
   if (m_thresholdOn->isChecked() && !number(m_threshold->text()))
     problems << tr("The threshold is no number.");
   m_status->setText(problems.join("<br>"));
-  if (m_ok)
-    m_ok->setEnabled(problems.isEmpty());
+  setValid(problems.isEmpty());
 }
 
-void IntegralNodeDlg::updateState()
+void IntegralNodeEditor::updateState()
 {
   if (!m_current)
     return;
@@ -229,4 +221,16 @@ void IntegralNodeDlg::updateState()
   QString prefix;
   const double scaled = SiPrefix::scale(r->value, r->baseUnit, &prefix);
   m_now->setText(tr("Now: %1 %2").arg(QLocale().toString(scaled, 'g', 6), SiPrefix::displayText(prefix + r->baseUnit)));
+}
+
+std::unique_ptr<LogicNode> IntegralNodeEditor::logicNode() const
+{
+  return node();
+}
+
+IntegralNodeDlg::IntegralNodeDlg(QWidget *parent) :
+  NodeDlg(new IntegralNodeEditor, tr("Integral"), parent)
+{
+  setObjectName("ui_integralNodeDlg");
+  resize(480, 300);
 }

@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
 
-#include <QDialog>
 #include <QList>
 #include <QTimer>
 #include <functional>
@@ -12,6 +11,7 @@
 #include "core/reading.h"
 #include "core/valueref.h"
 #include "logic/formulanode.h"
+#include "ui/dialogs/nodeeditor.h"
 #include "ui/sourcelist.h"
 
 class QButtonGroup;
@@ -32,14 +32,14 @@ class QToolButton;
 /// each output shows its result with the inputs as they are now. A formula
 /// that does not parse, a variable that is no input and inputs that close a
 /// loop keep OK off and say why.
-class FormulaNodeDlg : public QDialog
+class FormulaNodeEditor : public NodeEditor
 {
   Q_OBJECT
 public:
   /// A device one may take as an input, with its values.
   using Choice = SourceList::Source;
 
-  explicit FormulaNodeDlg(QWidget *parent = nullptr);
+  explicit FormulaNodeEditor(QWidget *parent = nullptr);
 
   /// The values to choose from, in that order.
   void        setChoices(const QList<Choice> &choices);
@@ -50,9 +50,11 @@ public:
 
   /// Fills in @p name and @p node; a new node: one input, one output.
   void        load(const QString &name, const FormulaNode &node);
-  QString     name() const;
+  QString     name() const override;
   /// The node as set, its on/off as loaded.
   std::unique_ptr<FormulaNode> node() const;
+  std::unique_ptr<LogicNode> logicNode() const override;
+  QString     model() const override { return QStringLiteral("QtDMM Formula"); }
 
 private:
   struct OutputRow
@@ -90,7 +92,6 @@ private:
   QPushButton    *m_addOutput;
   QDoubleSpinBox *m_maxAge;
   QLabel         *m_status;
-  QPushButton    *m_ok = nullptr;
   QList<OutputRow> m_outputs;
   bool             m_on = true;
   int              m_periodMs = 0;
@@ -98,4 +99,24 @@ private:
   QTimer           m_live;
   std::function<std::optional<Reading>(const ValueRef &)> m_current;
   std::function<bool(const QList<ValueRef> &)> m_makesLoop;
+};
+
+/// FormulaNodeEditor in a dialog of its own (Info and settings of a
+/// calculated value).
+class FormulaNodeDlg : public NodeDlg
+{
+  Q_OBJECT
+public:
+  using Choice = FormulaNodeEditor::Choice;
+
+  explicit FormulaNodeDlg(QWidget *parent = nullptr);
+  FormulaNodeEditor *formulaEditor() const { return static_cast<FormulaNodeEditor *>(editor()); }
+  void        setChoices(const QList<Choice> &choices) { formulaEditor()->setChoices(choices); }
+  void        setCurrent(std::function<std::optional<Reading>(const ValueRef &ref)> current)
+  { formulaEditor()->setCurrent(std::move(current)); }
+  void        setLoopCheck(std::function<bool(const QList<ValueRef> &inputs)> makesLoop)
+  { formulaEditor()->setLoopCheck(std::move(makesLoop)); }
+  void        load(const QString &name, const FormulaNode &node) { formulaEditor()->load(name, node); }
+  QString     name() const { return formulaEditor()->name(); }
+  std::unique_ptr<FormulaNode> node() const { return formulaEditor()->node(); }
 };

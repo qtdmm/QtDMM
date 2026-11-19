@@ -65,14 +65,38 @@ int main(int argc, char **argv)
     dlg.back();
     check(dlg.page() == AddDeviceDlg::ConnectionPage, "back to page 1");
 
-    // simulated and calculated values: logic nodes, set up in their own
-    // dialogs (MainWindow::addNode()); the assistant ends at once
-    for (AddDeviceDlg::Connection c : { AddDeviceDlg::Simulated, AddDeviceDlg::Calculated })
+    // simulated, calculated and integral values: logic nodes on the second
+    // tab of page 1, their settings on the node page, then page 4
+    check(dlg.kindTabs()->count() == 2 && dlg.kindTabs()->currentIndex() == 0, "page 1: two tabs, a device first");
+    check(dlg.kindTabs()->widget(1)->findChild<QToolButton *>("ui_connection" + QString::number(AddDeviceDlg::Integral))
+            && dlg.kindTabs()->widget(0)->findChild<QToolButton *>("ui_connection" + QString::number(AddDeviceDlg::Cable)),
+          "the node tiles on the second tab, the devices' on the first");
+    for (AddDeviceDlg::Connection c : { AddDeviceDlg::Simulated, AddDeviceDlg::Calculated, AddDeviceDlg::Integral })
     {
       AddDeviceDlg node(&library);
       node.setDiscoverers([](AddDeviceDlg::Connection) { return QList<Discoverer *>(); });
       node.chooseConnection(c);
-      check(node.result() == QDialog::Accepted && node.connection() == c, "simulated / calculated: the assistant ends at once");
+      check(node.result() != QDialog::Accepted && node.page() == AddDeviceDlg::NodePage && node.nodeEditor()
+              && node.kindTabs()->currentIndex() == 1,
+            "a node: its settings on the node page");
+      check(node.canGoNext() == (c == AddDeviceDlg::Simulated), "Next only when complete (a generator is at once)");
+      if (c != AddDeviceDlg::Simulated)
+      {
+        node.back();
+        check(node.page() == AddDeviceDlg::ConnectionPage && node.kindTabs()->currentIndex() == 1,
+              "back: page 1 on the node tab");
+        continue;
+      }
+      node.next();
+      check(node.page() == AddDeviceDlg::TargetPage, "Next: page 4");
+      check(node.keys().value("DMM/model").toString() == "QtDMM Generator"
+              && node.keys().value("Node/json").toString().contains("generator") && node.name() == "Simulated",
+            "its keys: model and Node/json, its name: " + node.name());
+      node.back();
+      check(node.page() == AddDeviceDlg::NodePage, "back from page 4: the node page");
+      node.next();
+      node.findChild<QToolButton *>("ui_saveOnly")->click();
+      check(node.result() == QDialog::Accepted && node.target() == AddDeviceDlg::SaveOnly, "Save only: done");
     }
   }
 

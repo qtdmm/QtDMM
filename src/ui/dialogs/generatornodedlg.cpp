@@ -5,7 +5,6 @@
 #include <cmath>
 
 #include <QComboBox>
-#include <QDialogButtonBox>
 #include <QFormLayout>
 #include <QGridLayout>
 #include <QGroupBox>
@@ -27,12 +26,12 @@ namespace
 const char *const kUnits[] = { "V", "mV", "A", "mA", "W", "Ohm", "Hz", "°C", "%", "" };
 }
 
-GeneratorNodeDlg::GeneratorNodeDlg(QWidget *parent) :
-  QDialog(parent)
+GeneratorNodeEditor::GeneratorNodeEditor(QWidget *parent) :
+  NodeEditor(parent)
 {
-  setObjectName("ui_generatorNodeDlg");
-  setWindowTitle(tr("Simulated values"));
+  setObjectName("ui_generatorNodeEditor");
   auto *top = new QVBoxLayout(this);
+  top->setContentsMargins(0, 0, 0, 0);
   auto *form = new QFormLayout;
   top->addLayout(form);
   m_name = new QLineEdit(this);
@@ -76,21 +75,15 @@ GeneratorNodeDlg::GeneratorNodeDlg(QWidget *parent) :
   m_status->setWordWrap(true);
   top->addWidget(m_status);
   top->addStretch(1);
-  auto *bb = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
-  top->addWidget(bb);
-  m_ok = bb->button(QDialogButtonBox::Ok);
-  connect(bb, &QDialogButtonBox::accepted, this, &QDialog::accept);
-  connect(bb, &QDialogButtonBox::rejected, this, &QDialog::reject);
-  connect(m_name, &QLineEdit::textChanged, this, &GeneratorNodeDlg::validate);
+  connect(m_name, &QLineEdit::textChanged, this, &GeneratorNodeEditor::validate);
 
   m_live.setInterval(250);
-  connect(&m_live, &QTimer::timeout, this, &GeneratorNodeDlg::updateResults);
+  connect(&m_live, &QTimer::timeout, this, &GeneratorNodeEditor::updateResults);
   m_live.start();
   m_since.start();
-  resize(760, 360);
 }
 
-void GeneratorNodeDlg::load(const QString &name, const GeneratorNode &node)
+void GeneratorNodeEditor::load(const QString &name, const GeneratorNode &node)
 {
   m_name->setText(name);
   m_on = node.isOn();
@@ -107,12 +100,12 @@ void GeneratorNodeDlg::load(const QString &name, const GeneratorNode &node)
   validate();
 }
 
-QString GeneratorNodeDlg::name() const
+QString GeneratorNodeEditor::name() const
 {
   return m_name->text().simplified();
 }
 
-QList<GeneratorNode::Wave> GeneratorNodeDlg::waves() const
+QList<GeneratorNode::Wave> GeneratorNodeEditor::waves() const
 {
   QList<GeneratorNode::Wave> out;
   for (const Row &r : m_rows)
@@ -132,7 +125,7 @@ QList<GeneratorNode::Wave> GeneratorNodeDlg::waves() const
   return out;
 }
 
-std::unique_ptr<GeneratorNode> GeneratorNodeDlg::node() const
+std::unique_ptr<GeneratorNode> GeneratorNodeEditor::node() const
 {
   auto node = std::make_unique<GeneratorNode>();
   node->setPeriodMs(m_clock->value());
@@ -142,7 +135,7 @@ std::unique_ptr<GeneratorNode> GeneratorNodeDlg::node() const
   return node;
 }
 
-void GeneratorNodeDlg::addRow(const GeneratorNode::Wave &wave)
+void GeneratorNodeEditor::addRow(const GeneratorNode::Wave &wave)
 {
   if (m_rows.size() >= kMaxValues)
     return;
@@ -215,8 +208,8 @@ void GeneratorNodeDlg::addRow(const GeneratorNode::Wave &wave)
     validate();
   });
   for (QLineEdit *e : { r.min, r.max, r.period, r.noise, r.formula, r.name })
-    connect(e, &QLineEdit::textChanged, this, &GeneratorNodeDlg::validate);
-  connect(r.unit, &QComboBox::currentTextChanged, this, &GeneratorNodeDlg::updateResults);
+    connect(e, &QLineEdit::textChanged, this, &GeneratorNodeEditor::validate);
+  connect(r.unit, &QComboBox::currentTextChanged, this, &GeneratorNodeEditor::updateResults);
   connect(r.remove, &QToolButton::clicked, this, [this, remove = r.remove]
   {
     for (int i = 0; i < m_rows.size(); ++i)
@@ -229,7 +222,7 @@ void GeneratorNodeDlg::addRow(const GeneratorNode::Wave &wave)
   relayout();
 }
 
-void GeneratorNodeDlg::removeRow(int index)
+void GeneratorNodeEditor::removeRow(int index)
 {
   if (index < 0 || index >= m_rows.size() || m_rows.size() <= 1)
     return;
@@ -249,7 +242,7 @@ void GeneratorNodeDlg::removeRow(int index)
   validate();
 }
 
-void GeneratorNodeDlg::relayout()
+void GeneratorNodeEditor::relayout()
 {
   for (int i = 0; i < m_rows.size(); ++i)
   {
@@ -263,7 +256,7 @@ void GeneratorNodeDlg::relayout()
   m_add->setEnabled(m_rows.size() < kMaxValues);
 }
 
-void GeneratorNodeDlg::validate()
+void GeneratorNodeEditor::validate()
 {
   QStringList problems;
   if (name().isEmpty())
@@ -285,8 +278,7 @@ void GeneratorNodeDlg::validate()
                                     : tr("%1: %2").arg(FormulaNode::outputName(i), error));
   }
   m_status->setText(problems.join("<br>"));
-  if (m_ok)
-    m_ok->setEnabled(problems.isEmpty());
+  setValid(problems.isEmpty());
   // the results from a generator as it is set now, on the dialog's clock
   m_preview = node();
   LogicNode::Context start;
@@ -294,7 +286,7 @@ void GeneratorNodeDlg::validate()
   updateResults();
 }
 
-void GeneratorNodeDlg::updateResults()
+void GeneratorNodeEditor::updateResults()
 {
   if (!m_preview)
     return;
@@ -316,4 +308,16 @@ void GeneratorNodeDlg::updateResults()
     m_rows[i].result->setText(QString("= %1 %2").arg(QLocale().toString(scaled, 'g', 5),
                                                       SiPrefix::displayText(prefix + unit.baseUnit)).trimmed());
   }
+}
+
+std::unique_ptr<LogicNode> GeneratorNodeEditor::logicNode() const
+{
+  return node();
+}
+
+GeneratorNodeDlg::GeneratorNodeDlg(QWidget *parent) :
+  NodeDlg(new GeneratorNodeEditor, tr("Simulated values"), parent)
+{
+  setObjectName("ui_generatorNodeDlg");
+  resize(760, 360);
 }

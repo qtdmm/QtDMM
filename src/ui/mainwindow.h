@@ -41,6 +41,7 @@
 #include "ui/devicesidebar.h"
 #include "ui/valuemenu.h"
 
+class NodeEditor;
 class LabPlotLive;
 class InstanceWidget;
 class DeviceSession;
@@ -378,18 +379,21 @@ protected:
   /// "Connected: x" for the assistant's cards.
   QMap<QString, QString> placesInUse() const;
   /// The assistant "Add device": the device into My devices, connected
-  /// unless "Save only".
-  void        addDevice();
-  /// A logic node of @p type ("formula", "generator") into My devices, set
-  /// up in its dialog (the assistant's tiles "Calculated", "Simulated"),
-  /// and connected.
+  /// unless "Save only". @p start: an AddDeviceDlg::Connection to begin
+  /// with (a calculated value's settings), -1 page 1; @p input: a new
+  /// integral's value.
+  void        addDevice(int start = -1, const ValueRef &input = ValueRef(0));
+  /// The assistant at the settings of a new logic node of @p type
+  /// ("formula", "generator", "integral"; "Integrate..." of a value).
   void        addNode(const QString &type, const ValueRef &input = ValueRef(0));
-  /// The dialog of a node's entry (FormulaNodeDlg, GeneratorNodeDlg; one of
-  /// before too, LegacyNodes): its keys as set, none when cancelled; @p name
-  /// the new name on the way out. @p newType: the kind of a new one; @p
-  /// input: a new integral's value ("Integrate..." of a value's menu).
-  std::optional<QVariantMap> editNode(const QString &id, const QVariantMap &keys, QString *name,
-                                      const QString &newType = QString(), const ValueRef &input = ValueRef(0));
+  /// The settings of a logic node of @p type for the entry @p id (empty: a
+  /// new one) as stored (@p stored, null: a new one), with what it may take.
+  NodeEditor *makeNodeEditor(const QString &type, const QString &id, const LogicNode *stored,
+                             const QString &name, const ValueRef &input = ValueRef(0));
+  /// The dialog of a node's entry (its NodeEditor; one of before too,
+  /// LegacyNodes): its keys as set, none when cancelled; @p name the new
+  /// name on the way out.
+  std::optional<QVariantMap> editNode(const QString &id, const QVariantMap &keys, QString *name);
   /// The node of an entry's @p keys (Node/json, or one of before), null for
   /// a device; why not in @p why.
   std::unique_ptr<LogicNode> nodeOf(const QVariantMap &keys, QString *why = nullptr) const;

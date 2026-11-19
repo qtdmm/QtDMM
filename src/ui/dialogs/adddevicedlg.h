@@ -13,19 +13,26 @@
 class DeviceLibrary;
 class DeviceSettings;
 class DeviceSummary;
+class NodeEditor;
 class QLabel;
 class QLineEdit;
 class QListWidget;
 class QProgressBar;
 class QPushButton;
 class QStackedWidget;
+class QTabWidget;
 class QToolButton;
 
 /// The assistant "Add device": how the meter is connected (page 1), where
 /// (page 2: a passive search for that connection, every port found, the
 /// recognised ones first, or typed in), which meter it is with its settings
 /// and a name (page 3), and whether it is connected at once or only kept
-/// (page 4). sigrok and simulated meters have no page 2.
+/// (page 4). sigrok meters have no page 2.
+///
+/// Page 1 has two tabs: a device, and a calculated, simulated or integral
+/// value (a logic node). Such a one has its settings (NodeEditor, made by
+/// setNodeEditors()) on a page of their own instead of pages 2 and 3, and
+/// page 4 after it.
 /// The caller keeps the result in My devices - a find that already is one
 /// of them (knownDevice()) changes that entry instead.
 class AddDeviceDlg : public QDialog
@@ -33,10 +40,9 @@ class AddDeviceDlg : public QDialog
   Q_OBJECT
 public:
   /// Simulated, Calculated, Integral: a generator, a formula over values or
-  /// an integral of one (logic nodes), set up in their own dialogs - the assistant ends at once
-  /// (connection()).
+  /// an integral of one (logic nodes), set up on the NodePage.
   enum Connection { Cable, Bluetooth, Network, Sigrok, Simulated, Calculated, Integral };
-  enum Page { ConnectionPage, PortPage, DevicePage, TargetPage };
+  enum Page { ConnectionPage, PortPage, DevicePage, TargetPage, NodePage };
   /// Page 4: into My devices and connected at once, or into My devices only.
   enum Target { NoTarget, Connect, SaveOnly };
 
@@ -62,8 +68,17 @@ public:
   /// for the tests): the Bluetooth tile is off then and its tooltip says why.
   void        setBluetoothCheck(std::function<QString()> check);
 
+  /// The settings of a logic node of @p kind (Simulated, Calculated,
+  /// Integral), filled in for a new one; without: plain editors.
+  void        setNodeEditors(std::function<NodeEditor *(Connection kind)> make) { m_makeEditor = std::move(make); }
   /// Page 1: the connection; goes on to the next page.
   void        chooseConnection(Connection connection);
+  /// Whether @p connection is a logic node (Simulated, Calculated, Integral).
+  static bool isNode(Connection connection);
+  /// The node page's editor, null for a device.
+  NodeEditor *nodeEditor() const { return m_editor; }
+  /// Page 1's tabs: 0 a device, 1 a calculated value.
+  QTabWidget *kindTabs() const { return m_kinds; }
   Connection  connection() const { return m_connection; }
   Page        page() const;
   /// Whether "Next" may be pressed now.
@@ -84,7 +99,8 @@ public:
   /// unchanged on page 3); empty for a new device.
   QString     knownDevice() const;
 
-  /// The device's meter keys, as DeviceSettings::keys() gives them.
+  /// The device's meter keys, as DeviceSettings::keys() gives them; a
+  /// logic node's model and Node/json.
   QVariantMap keys() const;
   QString     name() const;
   /// Where the device goes; set by the button on page 4.
@@ -125,6 +141,10 @@ private:
   DeviceLibrary  *m_library = nullptr;
   DeviceSettings *m_settings = nullptr;
   QStackedWidget *m_pages = nullptr;
+  QTabWidget     *m_kinds = nullptr;
+  QWidget        *m_nodePage = nullptr;
+  NodeEditor     *m_editor = nullptr;   ///< on m_nodePage, for a logic node
+  std::function<NodeEditor *(Connection)> m_makeEditor;
   QLabel         *m_title = nullptr;
   QLineEdit      *m_name = nullptr;
   QToolButton    *m_connect = nullptr;
