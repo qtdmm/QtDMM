@@ -306,25 +306,19 @@ void AddDeviceDlg::setSigrokExe(const QString &exe)
   m_settings->setSigrokExe(exe);
 }
 
-void AddDeviceDlg::setCalcInputs(const CalcDevice::Inputs &inputs)
-{
-  m_settings->setCalcInputs(inputs);
-}
-
 bool AddDeviceDlg::offers(Connection connection, const DmmDecoder::DMMInfo &info)
 {
   const ProtocolInfo *protocol = protocolInfo(info.protocol);
   const bool bluetooth = info.baud == 0 && protocol && QLatin1String(protocol->transport) == QLatin1String("Bluetooth LE");
   const bool sigrok = info.protocol == FrameFormat::Sigrok && !info.sigrokDriver.isEmpty();
-  const bool simulated = info.vendor == QLatin1String("QtDMM");
   switch (connection)
   {
     case Bluetooth: return bluetooth;
     case Sigrok:    return sigrok;
-    case Simulated: return simulated;
-    case Calculated: return false;   // their own dialogs
+    case Simulated:
+    case Calculated: return false;   // logic nodes, in their own dialogs
     case Cable:
-    case Network:   return !bluetooth && !sigrok && !simulated;   // the bridge passes a cable on
+    case Network:   return !bluetooth && !sigrok;   // the bridge passes a cable on
   }
   return false;
 }

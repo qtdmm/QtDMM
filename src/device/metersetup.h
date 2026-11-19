@@ -23,11 +23,11 @@ struct MeterSetup
   /// and sigrokExe filled in.
   DmmDecoder::DMMInfo info;
   /// The port string for MeterConnection::setDevice(): "/dev/ttyUSB0",
-  /// "ble <address> <key> <fields>", "calc ...", "SIGROK <driver>:conn=...".
+  /// "ble <address> <key> <fields>", "SIGROK <driver>:conn=...".
   QString device;
   FrameFormat::DataFormat format = FrameFormat::Invalid;
   /// How many values the meter has (DMMInfo::valueCount(), the chosen
-  /// Victron fields, the simulated meter's values).
+  /// Victron fields).
   int     valueCount = 1;
   bool    knownModel = false;   ///< a model of the table, not manual settings
 
@@ -44,9 +44,4 @@ struct MeterSetup
   static bool isSigrok(const DmmDecoder::DMMInfo &info) { return info.protocol == FrameFormat::Sigrok && !info.sigrokDriver.isEmpty(); }
   static bool isGatt(const DmmDecoder::DMMInfo &info);
   static bool isBluetooth(const DmmDecoder::DMMInfo &info);
-  static bool isCalculated(const DmmDecoder::DMMInfo &info) { return info.vendor == "QtDMM" && info.model == "Calculated value"; }
-  static bool isVirtual(const DmmDecoder::DMMInfo &info) { return info.vendor == "QtDMM" && info.model == "Simulated meter"; }
-
-  /// The simulated meter's second to fourth value before one is set: unit and formula.
-  static const char *const kVirtualDefaults[3][2];
 };

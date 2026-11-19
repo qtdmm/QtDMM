@@ -29,7 +29,6 @@
 #include "device/meterconnection.h"
 #include "device/transports/hidserial.h"
 #include "device/transports/hidholtek.h"
-#include "device/transports/calc.h"
 #ifdef QTDMM_WITH_BLE
 #include "device/transports/ble.h"
 #include "device/transports/blegatt.h"
@@ -141,16 +140,11 @@ void MeterConnection::setDevice(const QString &device)
   // "ble <address> <key>" likewise
   // "hid 0xvvvv:0xpppp <path>": the USB ids find the cable again when the
   // path has changed (HidPath)
-  if (m_portType == Transport::PortType::Calc || m_portType == Transport::PortType::Ble
+  if (m_portType == Transport::PortType::Ble
       || m_portType == Transport::PortType::Hid || m_portType == Transport::PortType::HidHoltek)
     m_device = device.section(' ', 1).trimmed();
   else
     m_device = deviceList.last();
-}
-
-void MeterConnection::setCalcInputs(CalcDevice::Inputs inputs)
-{
-  m_portHandler->setCalcInputs(std::move(inputs));
 }
 
 void MeterConnection::initDecoder( FrameFormat::DataFormat df)
@@ -229,11 +223,11 @@ bool MeterConnection::openPort()
 
   if (m_portHandler->port() && !m_portHandler->port()->open(QIODevice::ReadWrite))
   {
-    if (m_portType == Transport::PortType::Calc || m_portType == Transport::PortType::RFC2217
+    if (m_portType == Transport::PortType::RFC2217
         || m_portType == Transport::PortType::HidHoltek || m_portType == Transport::PortType::Ble || m_portType == Transport::PortType::BleGatt
         || m_portType == Transport::PortType::Hid)
     {
-      // the formula did not parse / the address or key is malformed; the device says where
+      // the address or key is malformed, the server refused; the device says why
       m_error = m_portHandler->port()->errorString();
       Q_EMIT error(m_error);
       m_portHandler->close();
@@ -268,16 +262,6 @@ bool MeterConnection::openPort()
     }
   }
   QIODevice *port = m_portHandler->port();
-  if (auto *calc = dynamic_cast<CalcDevice *>(port))
-  {
-    // which input meter is missing or silent; shown in the status bar
-    // instead of "Connected" until all inputs deliver
-    connect(calc, &CalcDevice::status, this, [this](const QString &message)
-    {
-      if (m_state == LinkState::Connected || m_state == LinkState::Connecting)
-        setState(m_state, message.isEmpty() ? connectedMessage() : message);
-    });
-  }
   // the port devices tell when they are gone: socket closed or refused,
   // USB cable unplugged, sigrok-cli exited, serial device vanished
   if (auto *rfc = dynamic_cast<RFC2217SerialDevice *>(port))
@@ -395,9 +379,6 @@ QString MeterConnection::deviceName() const
 
 QString MeterConnection::connectedMessage() const
 {
-  // the formula is long and says little: what kind of source it is
-  if (m_portType == Transport::PortType::Calc)
-    return m_dmmInfo.model == QLatin1String("Simulated meter") ? tr("Simulated") : tr("Calculated");
   // the way in the status bar, the port in its tooltip (the second line)
   QString way;
   switch (m_portType)
@@ -526,16 +507,11 @@ void MeterConnection::readEventSLOT(const QByteArray &data, int id, qint64 t, qi
     Q_EMIT response(*r);
     for (const DmmDecoder::DmmChannel &c : r->channels)
       Q_EMIT value(c.dval, c.val, c.unit, c.special, r->range, r->hold, r->showBar, c.id);
-    // a calculated value's text comes from CalcDevice::status (which input
-    // is missing); only the state is ours
-    if (m_portType == Transport::PortType::Calc)
-      setState(LinkState::Connected, m_error);
-    else
-      setState(LinkState::Connected, !r->error.isEmpty() ? QString("%1 %2").arg(r->error, deviceName())
-                                     : !m_otherModels.isEmpty()
-                                       ? tr("%1 sends the data of a %2: choose that model in its settings")
-                                           .arg(deviceName(), m_otherModels.join(QLatin1String(" / ")))
-                                       : connectedMessage());
+    setState(LinkState::Connected, !r->error.isEmpty() ? QString("%1 %2").arg(r->error, deviceName())
+                                   : !m_otherModels.isEmpty()
+                                     ? tr("%1 sends the data of a %2: choose that model in its settings")
+                                         .arg(deviceName(), m_otherModels.join(QLatin1String(" / ")))
+                                     : connectedMessage());
   }
   else if (m_decoder->getType() == FrameFormat::RawCapture)
     // no value by design: the bytes are only for the capture window

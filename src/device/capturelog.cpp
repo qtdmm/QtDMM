@@ -159,8 +159,6 @@ QString CaptureLog::connectionName(Transport::PortType type)
     return "sigrok-cli";
   case Transport::PortType::RFC2217:
     return "RFC 2217";
-  case Transport::PortType::Calc:
-    return "calculated";
   case Transport::PortType::Ble:
   case Transport::PortType::BleGatt:
     return "Bluetooth LE";

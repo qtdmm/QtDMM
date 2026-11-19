@@ -29,9 +29,11 @@ int main(int argc, char **argv)
   for (const DmmDecoder::DMMInfo &info : DmmDecoder::getDeviceConfigurations())
   {
     int kinds = 0;
-    for (AddDeviceDlg::Connection c : { AddDeviceDlg::Cable, AddDeviceDlg::Bluetooth, AddDeviceDlg::Sigrok, AddDeviceDlg::Simulated })
+    for (AddDeviceDlg::Connection c : { AddDeviceDlg::Cable, AddDeviceDlg::Bluetooth, AddDeviceDlg::Sigrok })
       kinds += AddDeviceDlg::offers(c, info) ? 1 : 0;
     check(kinds == 1, "one connection for " + info.name);
+    check(!AddDeviceDlg::offers(AddDeviceDlg::Simulated, info) && !AddDeviceDlg::offers(AddDeviceDlg::Calculated, info),
+          "no model is simulated or calculated (logic nodes): " + info.name);
     check(AddDeviceDlg::offers(AddDeviceDlg::Network, info) == AddDeviceDlg::offers(AddDeviceDlg::Cable, info),
           "network offers the cable meters: " + info.name);
   }
@@ -47,7 +49,6 @@ int main(int argc, char **argv)
   check(offered(AddDeviceDlg::Bluetooth, "Uni-Trend UT61E+ (UT-D07B Bluetooth) *"), "UT61E+ with UT-D07B is Bluetooth");
   check(offered(AddDeviceDlg::Cable, "Uni-Trend UT61E+"), "UT61E+ with its cable is a cable meter");
   check(offered(AddDeviceDlg::Sigrok, "Keysight 34465A (sigrok) *"), "34465A is sigrok");
-  check(offered(AddDeviceDlg::Simulated, "QtDMM Calculated value"), "calculated value is simulated");
 
   // 2. page order: sigrok and simulated go from page 1 straight to page 3
   {

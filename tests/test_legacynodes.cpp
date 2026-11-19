@@ -3,7 +3,7 @@
 //
 // Entries of before read as logic nodes (PR 2, LegacyNodes): a simulated
 // meter is a generator that gives what the old CalcDevice computed from
-// MeterSetup's device string, at the same t; a calculated value a formula
+// the device string MeterSetup built (rebuilt here as it was), at the same t; a calculated value a formula
 // whose inputs are the devices it names; one naming a device not there,
 // or with a formula that does not parse, is refused.
 
@@ -11,7 +11,6 @@
 #include <cmath>
 
 #include "core/calcexpr.h"
-#include "device/metersetup.h"
 #include "logic/formulanode.h"
 #include "logic/generatornode.h"
 #include "logic/legacynodes.h"
@@ -35,6 +34,29 @@ QList<double> oldValues(const QString &device, double t)
     out << (e ? e->eval(vars).value_or(NAN) : NAN);
   }
   return out;
+}
+
+// the device string MeterSetup built for a simulated meter, before 2b:
+// value 1 its waveform, values 2-4 their formulas, after ';'
+QString oldDevice(const QVariantMap &keys)
+{
+  const char *const defaults[3][2] = { { "A", "0.5 + 0.2 * sin(2 * pi * t / 13)" }, { "W", "v1 * v2" },
+                                       { "°C", "21 + 2 * sin(2 * pi * t / 300)" } };
+  auto key = [&keys](const QString &k, const QString &d) { return keys.contains(k) ? keys.value(k).toString() : d; };
+  const int wave = keys.value("DMM/virtual-waveform", 2).toInt();
+  const QString first = wave == CalcExpr::Custom
+                          ? key("DMM/virtual-formula", QString())
+                          : CalcExpr::waveformFormula(static_cast<CalcExpr::Waveform>(wave), key("DMM/virtual-min", "0"),
+                                                      key("DMM/virtual-max", "10"), key("DMM/virtual-period", "20"),
+                                                      key("DMM/virtual-noise", "0"));
+  QString device = QString("calc %1/%2 %3").arg(key("DMM/virtual-unit", "V"), key("DMM/virtual-coupling", "DC"), first);
+  for (int i = 0; i < keys.value("DMM/virtual-values", 1).toInt() - 1; ++i)
+  {
+    const QString n = QString::number(i + 2);
+    device += QString("; %1/%2 %3").arg(key("DMM/virtual-unit" + n, defaults[i][0]), key("DMM/virtual-coupling" + n, "DC"),
+                                        key("DMM/virtual-formula" + n, defaults[i][1]));
+  }
+  return device;
 }
 
 LogicNode::Values at(LogicNode &node, qint64 ms, const QList<std::optional<Reading>> &inputs = {})
@@ -75,7 +97,7 @@ int main(int argc, char **argv)
     check(waves.size() == 3 && waves[0].shape == CalcExpr::Triangle && waves[0].coupling == "AC" && waves[1].unit == "A"
             && waves[1].shape == CalcExpr::Custom && waves[2].formula == "y1 * y2 + t" && waves[2].unit == "W",
           "its waves: triangle AC, value 2 the default in A, value 3 over y1, y2");
-    const QString device = MeterSetup::fromKeys(keys).device;
+    const QString device = oldDevice(keys);
     for (const qint64 ms : { 0, 1300, 7700, 61000 })
     {
       const LogicNode::Values now = at(*gen, ms);

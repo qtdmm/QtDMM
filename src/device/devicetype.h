@@ -32,7 +32,7 @@ enum Type
   BatteryMonitor,
   SolarCharger,
   Inverter,
-  Virtual,         ///< QtDMM's own: Simulated meter, Calculated value
+  Virtual,         ///< QtDMM's own: generators and formulas (logic nodes)
   Generic          ///< not one model: any sigrok SCPI meter, bare DTM0660 boards
 };
 

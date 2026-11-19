@@ -6,7 +6,6 @@
       "name": "Generic / unknown",
       "match": [
         "Generic",
-        "QtDMM",
         "sigrok"
       ],
       "colors": {

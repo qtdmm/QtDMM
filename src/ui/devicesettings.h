@@ -32,7 +32,6 @@ class QGroupBox;
 #include "device/frameformat.h"
 #include "core/sampletypes.h"
 #include "device/dmmdecoder.h"
-#include "device/transports/calc.h"
 #include <QTimer>
 #include <array>
 #include <functional>
@@ -40,8 +39,9 @@ class QGroupBox;
 
 /// The settings of one meter: vendor/model choice (from the registered
 /// DmmDecoder::DMMInfo entries), port and the serial parameters, which
-/// become editable in manual mode, or the group of a Bluetooth, sigrok,
-/// virtual or calculated meter. Descriptions can be saved to and loaded
+/// become editable in manual mode, or the group of a Bluetooth or sigrok
+/// meter (simulated and calculated values are logic nodes with dialogs of
+/// their own). Descriptions can be saved to and loaded
 /// from .cfg files.
 ///
 /// The widget works on a map of meter keys (Settings::isMeterKey()), not on
@@ -104,13 +104,8 @@ public:
   /// Selects the protocol combo entry for @p df.
   void           selectFormat(FrameFormat::DataFormat df);
   QString        dmmName() const;
-  /// The port entry as typed or chosen, e.g. "/dev/ttyUSB0" or "HID 0x1a86:0xe008 ...";
-  /// for a calculated value "calc <unit> <formula>".
+  /// The port entry as typed or chosen, e.g. "/dev/ttyUSB0" or "HID 0x1a86:0xe008 ...".
   QString        device() const;
-  /// True while the model "QtDMM / Calculated value" is chosen.
-  bool           isCalculated() const;
-  /// True while the model "QtDMM / Simulated meter" is chosen.
-  bool           isVirtual() const;
   /// Victron over Bluetooth LE: the Bluetooth group replaces the port.
   bool           isBluetooth() const;
   bool           isGatt() const;
@@ -119,9 +114,6 @@ public:
   /// The names the meter gave its values 1..4 (empty: none yet), shown
   /// beside the unit choice.
   void           setValueNames(const QStringList &names);
-  /// The readings of the meters open here (DeviceSession::calcInputs()),
-  /// shown as a hint below the formula.
-  void           setCalcInputs(const CalcDevice::Inputs &inputs);
 
 Q_SIGNALS:
   /// A field was edited or another model chosen.
@@ -140,13 +132,6 @@ protected Q_SLOTS:
   /// Turns a group box into a section: no frame, its title a bold label
   /// above it that comes and goes with it.
   void           sectionTitle(QGroupBox *group);
-  /// Re-parses the formula and refreshes the hint (variables, live values, errors).
-  void           updateCalcHint();
-  /// Rebuilds the virtual meter's formula from the waveform fields.
-  void           updateVirtualFormula();
-  /// The rows of the simulated meter's values 2-4: those chosen shown, a
-  /// formula that does not parse red.
-  void           updateVirtualValues();
   /// Validates address and key, explains what is missing.
   void           updateBleHint();
   /// Fills the main/second/third/fourth value combos with the fields of the
@@ -173,11 +158,9 @@ protected:
   /// One entry of the model list, with the kind of instrument as its tooltip.
   void addModelItem(const DmmDecoder::DMMInfo &cfg);
   void enterManualMode();
-  /// Shows the formula group instead of the port/protocol groups, or back.
-  void updateCalcMode();
-
-  CalcDevice::Inputs m_inputs;
-  QTimer m_calcHintTimer;
+  /// Shows the groups of the model's way of connecting: port and line
+  /// settings, Bluetooth, sigrok, a microcontroller's units.
+  void updateConnectionMode();
 
 private:
   /// The keys of the last load(): the Victron value choice falls back on
@@ -191,16 +174,6 @@ private:
   bool           m_portParameters = false;   ///< showPortParameters()
   QStringListModel *m_completerNames = nullptr;   ///< what the model field completes
   QString        m_sigrokExe = QStringLiteral("sigrok-cli");
-  /// The simulated meter's values 2-4 (values 1 is the waveform above).
-  struct VirtualValue
-  {
-    QLabel    *label = nullptr;
-    QLineEdit *unit = nullptr;
-    QComboBox *coupling = nullptr;
-    QLineEdit *formula = nullptr;
-  };
-  QSpinBox      *m_virtualValues = nullptr;   ///< how many values the simulated meter has
-  std::array<VirtualValue, 3> m_virtualRows;
   /// A microcontroller's unit per value (DMMInfo::unitsChoosable()).
   QGroupBox     *m_unitsGroup = nullptr;
   std::array<QLabel *, kMaxValues> m_unitLabels {};

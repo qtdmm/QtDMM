@@ -13,7 +13,6 @@
 
 #include "core/valueref.h"
 #include "logic/logicnode.h"
-#include "device/transports/calc.h"
 #include "recording/recordingstore.h"
 
 class DeviceLibrary;
@@ -118,11 +117,8 @@ public:
   /// The meter of @p value; nullptr for an empty source or while that meter
   /// is not open.
   MeterController *controller(const ValueRef &value) const;
-  /// What a calculated value of this process reads (CalcDevice): the main
-  /// value of each meter here by its name in My devices, as a variable
-  /// ("UT61E Bench": ut61e_bench).
-  CalcDevice::Inputs calcInputs() const;
-  /// The variable of a meter named @p name in a formula: lower case,
+  /// The variable of a meter named @p name in a calculated value of
+  /// before (LegacyNodes; "UT61E Bench": ut61e_bench): lower case,
   /// other characters than letters, digits and '_' as '_', a '_' before a
   /// leading digit.
   static QString variableName(const QString &name);

@@ -7,12 +7,19 @@
 
 #include "core/calcexpr.h"
 #include "core/sampletypes.h"
-#include "device/metersetup.h"
 #include "logic/formulanode.h"
 #include "logic/generatornode.h"
 
 namespace
 {
+// the simulated meter's second to fourth value before one was set: unit and
+// formula (MeterSetup of before)
+const char *const kVirtualDefaults[3][2] = {
+  { "A", "0.5 + 0.2 * sin(2 * pi * t / 13)" },
+  { "W", "v1 * v2" },
+  { "°C", "21 + 2 * sin(2 * pi * t / 300)" },
+};
+
 QString model(const QVariantMap &keys)
 {
   return keys.value("DMM/model").toString();
@@ -80,10 +87,10 @@ std::unique_ptr<LogicNode> LegacyNodes::fromKeys(const QVariantMap &keys,
     {
       const QString n = QString::number(i + 2);
       GeneratorNode::Wave w;
-      w.unit = key(keys, "DMM/virtual-unit" + n, MeterSetup::kVirtualDefaults[i][0]).trimmed();
+      w.unit = key(keys, "DMM/virtual-unit" + n, kVirtualDefaults[i][0]).trimmed();
       w.coupling = key(keys, "DMM/virtual-coupling" + n, "DC");
       w.shape = CalcExpr::Custom;
-      w.formula = earlierAsY(key(keys, "DMM/virtual-formula" + n, MeterSetup::kVirtualDefaults[i][1]).trimmed());
+      w.formula = earlierAsY(key(keys, "DMM/virtual-formula" + n, kVirtualDefaults[i][1]).trimmed());
       waves << w;
     }
     auto node = std::make_unique<GeneratorNode>();
@@ -91,7 +98,7 @@ std::unique_ptr<LogicNode> LegacyNodes::fromKeys(const QVariantMap &keys,
     return node;
   }
 
-  // "<unit>[/<coupling>] <formula>", several separated by ';' (CalcDevice)
+  // "<unit>[/<coupling>] <formula>", several separated by ';' (the CalcDevice of before)
   const QString device = key(keys, "DMM/calc-unit", "W").trimmed() + ' ' + keys.value("DMM/calc-expression").toString().trimmed();
   QList<FormulaNode::Formula> formulas;
   for (const QString &part : device.split(';'))

@@ -147,8 +147,6 @@ const Exception kExceptions[] = {
   { "Victron", "SmartSolar MPPT", SolarCharger },
   { "Victron", "BlueSolar MPPT", SolarCharger },
   { "Victron", "Phoenix Inverter Smart", Inverter },
-  { "QtDMM", "Simulated meter", Virtual },
-  { "QtDMM", "Calculated value", Virtual },
 };
 
 QString key(const QString &vendor, QString model)

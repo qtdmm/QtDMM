@@ -90,7 +90,7 @@ bool DecoderAscii::decodeSigrok(QString str)
   if (list.size()<2)
     return false;
   // the channel: P1 the main value, P2 ... the meter's others (a sigrok
-  // meter with several channels, CalcDevice with several values), each in
+  // meter with several channels), each in
   // a line of its own; past kMaxValues none of them
   static const QRegularExpression channel("^P(\\d+):$");
   const QRegularExpressionMatch ch = channel.match(list[0]);
@@ -119,8 +119,7 @@ bool DecoderAscii::decodeSigrok(QString str)
   else if (m_result.main().unit == QStringLiteral("°F"))
     m_result.main().unit = QStringLiteral("dF");
 
-  // all fields: CalcDevice puts the coupling where sigrok has the channel
-  // ("DC 6 W AUTO"), and no unit or value is spelled like a flag
+  // all fields: no unit or value is spelled like a flag
   m_result.range = "MANU";
   for(auto const& item : list)
   {
