@@ -69,6 +69,10 @@ int main(int argc, char **argv)
     check(SiPrefix::split(whole).prefix.isEmpty() && SiPrefix::split(whole).baseUnit == whole,
           QString("%1 stays whole").arg(whole));
   check(SiPrefix::split("mV").prefix == "m" && SiPrefix::split("kOhm").baseUnit == "Ohm", "mV, kOhm split");
+  // an integral of a unit of its own over hours stays whole: ppmh is no pico "pmh"
+  check(SiPrefix::split("ppmh").prefix.isEmpty() && SiPrefix::split("ppmh").baseUnit == "ppmh"
+          && !SiPrefix::takesPrefix("ppmh") && SiPrefix::split("kWh").prefix == "k" && SiPrefix::split("mAh").baseUnit == "Ah",
+        "ppmh whole, kWh and mAh with their prefixes");
 
   // ... and take no prefix, nor do °C/°F, % and no unit: 1200 ppm, not 1.2 kppm
   for (const char *plain : { "ppm", "%RH", "m/s", "dBA", "cosphi", "%", "C", "dF", "°C", "" })

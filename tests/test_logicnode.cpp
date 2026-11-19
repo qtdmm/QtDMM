@@ -372,6 +372,24 @@ int main(int argc, char **argv)
     again.setUnit("Wh");
     again.setState(n.state());
     check(qAbs(again.sum() - n.sum()) < 1e-12, "the sum carried over");
+    // ppm over hours: ppmh, no pico (the TFA's CO2)
+    {
+      IntegralNode co2;
+      co2.setInputs(refs({ "device:t" }));
+      co2.setUnit(IntegralNode::integratedUnit("ppm"));
+      LogicNode::Context ctx;
+      Reading r;
+      r.baseUnit = "ppm";
+      r.value = 3600;
+      r.msecs = 1;
+      ctx.inputs << std::optional(r);
+      co2.evaluate(ctx);
+      ctx.t = r.t = 1000;
+      ctx.inputs[0] = r;
+      const double v = co2.evaluate(ctx).value(0).value_or(NAN);
+      check(co2.unit() == "ppmh" && co2.problem().isEmpty() && qAbs(v - 1) < 1e-9,
+            QString("3600 ppm for 1 s: 1 ppmh, no unit problem: %1 %2").arg(v).arg(co2.problem()));
+    }
     check(IntegralNode::integratedUnit("W") == "Wh" && IntegralNode::integratedUnit("A") == "Ah"
             && IntegralNode::integratedUnit("lx") == "lxh" && IntegralNode::integratedUnit("") == "h",
           "units: Wh, Ah, lxh, h");
