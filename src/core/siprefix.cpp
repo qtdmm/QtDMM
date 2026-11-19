@@ -59,9 +59,15 @@ const QStringList &wholeUnits()
   return kWhole;
 }
 
+// a unit of its own, also one times hours of an integral ("ppmh", "%RHh")
+static bool isWhole(const QString &unit)
+{
+  return wholeUnits().contains(unit) || (unit.size() > 1 && unit.endsWith('h') && wholeUnits().contains(unit.chopped(1)));
+}
+
 Split split(const QString &unit)
 {
-  if (wholeUnits().contains(unit))
+  if (isWhole(unit))
     return {QString(), unit};
   if (unit.size() > 1 && isPrefix(unit.left(1)))
     return {unit.left(1), unit.mid(1)};
@@ -99,7 +105,7 @@ bool takesPrefix(const QString &baseUnit)
 {
   // "C" and "dF" are the decoders' °C and °F
   return !baseUnit.isEmpty() && !baseUnit.startsWith(QChar(0x00b0)) && baseUnit != QLatin1String("%")
-         && baseUnit != QLatin1String("C") && baseUnit != QLatin1String("dF") && !wholeUnits().contains(baseUnit);
+         && baseUnit != QLatin1String("C") && baseUnit != QLatin1String("dF") && !isWhole(baseUnit);
 }
 
 double scale(double value, const QString &baseUnit, QString *prefixOut)
