@@ -281,6 +281,18 @@ MeterController *DeviceSession::open(const QString &id, const QVariantMap &keys,
       *error = "-221,Settings conflict; open already: " + name;
     return nullptr;
   }
+  // a logic node of My devices: opened as a node
+  if (keys.contains(QStringLiteral("Node/json")))
+  {
+    std::unique_ptr<LogicNode> node = LogicNode::fromJsonText(keys.value(QStringLiteral("Node/json")).toString());
+    if (!node)
+    {
+      if (error)
+        *error = "-221,Settings conflict; unknown kind of calculated value: " + name;
+      return nullptr;
+    }
+    return openNode(id, name, std::move(node), error);
+  }
   const MeterSetup setup = MeterSetup::fromKeys(keys, m_sigrokExe);
   auto *ctl = new MeterController(this, m_host);
   ctl->setModel(setup.knownModel ? setup.info.name : QStringLiteral("Manual"));

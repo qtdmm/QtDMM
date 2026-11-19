@@ -1,0 +1,114 @@
+// Copyright (c) 2026 The QtDMM developers
+// SPDX-License-Identifier: GPL-3.0-or-later
+#pragma once
+
+#include <QDialog>
+#include <QList>
+#include <QTimer>
+#include <functional>
+#include <memory>
+#include <optional>
+
+#include "core/reading.h"
+#include "core/valueref.h"
+#include "logic/formulanode.h"
+
+class QButtonGroup;
+class QComboBox;
+class QDoubleSpinBox;
+class QGridLayout;
+class QLabel;
+class QLineEdit;
+class QPushButton;
+class QRadioButton;
+class QToolButton;
+
+/// The settings of a formula node (FormulaNode): its name, its inputs
+/// v1..vn - any value of My devices, also of one not connected, which the
+/// node then waits for -, which of them leads, up to kMaxValues outputs
+/// with name, formula and unit, and the maximum age of an input. The unit
+/// is proposed from the inputs' units (V * A -> W) until one is chosen;
+/// each output shows its result with the inputs as they are now. A formula
+/// that does not parse, a variable that is no input and inputs that close a
+/// loop keep OK off and say why.
+class FormulaNodeDlg : public QDialog
+{
+  Q_OBJECT
+public:
+  /// A value one may take as an input.
+  struct Choice
+  {
+    ValueRef ref;
+    QString  text;   ///< "UT61E: Voltage", "Victron: value 2"
+    QString  unit;   ///< its base unit when known ("V"), for the proposal
+  };
+
+  explicit FormulaNodeDlg(QWidget *parent = nullptr);
+
+  /// The values to choose from, in that order.
+  void        setChoices(const QList<Choice> &choices);
+  /// The current reading of a value, for the results shown; none: none.
+  void        setCurrent(std::function<std::optional<Reading>(const ValueRef &ref)> current);
+  /// Whether these inputs would close a loop (editing a node others take).
+  void        setLoopCheck(std::function<bool(const QList<ValueRef> &inputs)> makesLoop);
+
+  /// Fills in @p name and @p node; a new node: one input, one output.
+  void        load(const QString &name, const FormulaNode &node);
+  QString     name() const;
+  /// The node as set, its on/off as loaded.
+  std::unique_ptr<FormulaNode> node() const;
+
+private:
+  struct InputRow
+  {
+    QLabel      *label;
+    QComboBox   *value;
+    QRadioButton *lead;
+    QToolButton *remove;
+  };
+  struct OutputRow
+  {
+    QLabel      *label;
+    QLineEdit   *name;
+    QLineEdit   *formula;
+    QComboBox   *unit;
+    QLabel      *result;
+    QToolButton *remove;
+    bool         unitChosen = false;   ///< no more proposals once the unit was chosen
+  };
+
+  void        addInput(const ValueRef &ref);
+  void        addOutput(const FormulaNode::Formula &formula, bool unitChosen);
+  void        removeInput(int index);
+  void        removeOutput(int index);
+  /// The rows anew in their grids, after one came or went.
+  void        relayout();
+  QList<ValueRef> inputs() const;
+  QList<FormulaNode::Formula> formulas() const;
+  /// The units of v1.. and y1.. for the proposal.
+  QMap<QString, QString> units() const;
+  void        propose(int output);
+  /// Checks everything: the reason in the status line, OK on or off.
+  void        validate();
+  /// The results with the current readings.
+  void        updateResults();
+
+  QLineEdit      *m_name;
+  QGridLayout    *m_inputGrid;
+  QGridLayout    *m_outputGrid;
+  QButtonGroup   *m_leading;
+  QPushButton    *m_addInput;
+  QPushButton    *m_addOutput;
+  QDoubleSpinBox *m_maxAge;
+  QLabel         *m_status;
+  QPushButton    *m_ok = nullptr;
+  QList<InputRow>  m_inputs;
+  QList<OutputRow> m_outputs;
+  QList<Choice>    m_choices;
+  bool             m_on = true;
+  int              m_periodMs = 0;
+  bool             m_proposing = false;
+  QTimer           m_live;
+  std::function<std::optional<Reading>(const ValueRef &)> m_current;
+  std::function<bool(const QList<ValueRef> &)> m_makesLoop;
+};

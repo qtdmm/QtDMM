@@ -21,6 +21,9 @@ struct MyDevice
   QString     limitTest;  ///< its PASS/FAIL test (LimitTest::toJsonText()), empty when none was set
 
   QString model() const { return keys.value("DMM/model").toString(); }
+  /// A logic node (a formula ...), not a meter: its keys are the model and
+  /// the node as JSON, Node/json (LogicNode::toJsonText()).
+  bool    isNode() const { return keys.contains(QStringLiteral("Node/json")); }
   /// Where it is connected, for a menu: the port, the Bluetooth address, the formula.
   QString where() const;
 };
@@ -80,7 +83,8 @@ public:
   /// needs - the line settings for a serial port, an HID cable or the
   /// network, key and values for a Victron device, conn and options for
   /// sigrok, the signal of the virtual meter, unit and formula of a
-  /// calculated value. A Bluetooth meter that QtDMM connects to (GATT) needs
+  /// calculated value. A logic node keeps its model and Node/json only.
+  /// A Bluetooth meter that QtDMM connects to (GATT) needs
   /// its address only.
   static QVariantMap entryKeys(const QVariantMap &keys);
   /// Whether an entry of some meter can keep @p key (entryKeys() for any way

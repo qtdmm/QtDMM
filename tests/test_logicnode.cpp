@@ -5,12 +5,15 @@
 // DeviceSession (MeterController Kind::Node, NodeRunner): triggered by its
 // leading input at that input's time, inputs missing or too old, off is the
 // bypass, loops refused, recorded and served like a device. The node types
-// here are made for the test; formula, integral and generator come later.
+// here are made for the test; the formula node (PR 1b) is tested at the
+// end; integral and generator come later.
 
 #include <QCoreApplication>
 #include <QTemporaryDir>
 
+#include "core/devicelibrary.h"
 #include "core/reading.h"
+#include "logic/formulanode.h"
 #include "logic/logicnode.h"
 #include "recording/recordingstore.h"
 #include "service/devicesession.h"
@@ -191,6 +194,64 @@ int main(int argc, char **argv)
   check(waitFor([&] { return p->recorder()->count() >= 3 && u->recorder()->count() >= 3; }, 3000),
         QString("recorded: %1 readings of the node").arg(p->recorder()->count()));
   session.stopRecording();
+
+  // 10. the formula node: its own checks and units
+  {
+    QMap<QString, QString> units { { "v1", "V" }, { "v2", "A" }, { "v3", "C" }, { "v4", "C" }, { "y1", "mW" } };
+    auto unit = [&units](const char *f) { return FormulaNode::suggestUnit(f, units).value_or("?"); };
+    check(unit("v1 * v2") == "W" && unit("v1 / v2") == "Ohm" && unit("v2 / v1") == "S" && unit("y1 / v1") == "A"
+            && unit("(v1 + 2*v1) * v2 / 1k") == "W" && unit("1 / v1 * v1") == "",
+          "units: V*A W, V/A Ohm, A/V S, W/V A, a number none: " + unit("v1 * v2") + unit("v1 / v2") + unit("y1 / v1"));
+    check(unit("v3 - v4") == "C" && unit("(v3 + v4) / 2") == "C", "a sum of °C is °C: " + unit("v3 - v4"));
+    check(unit("sin(v1)") == "?" && unit("v1 + v2") == "?" && unit("v1 + 1") == "?" && unit("v3 * v4") == "?"
+            && unit("v1 * rand()") == "?",
+          "no unit for sin(V), V + A, V + 1, °C², rand()");
+    check(FormulaNode::check("v1 * v2", 0, 2).isEmpty() && FormulaNode::check("y1 / v1", 1, 1).isEmpty(), "known variables");
+    int pos = -1;
+    check(!FormulaNode::check("v1 * v3", 0, 2, &pos).isEmpty() && pos == 5, "v3 of two inputs: unknown, at 5");
+    check(!FormulaNode::check("y1", 0, 2).isEmpty() && !FormulaNode::check("v1 *", 0, 2).isEmpty(),
+          "y1 in the first output, a formula cut short");
+  }
+
+  // 11. a formula as an entry of My devices: P = U * I and P in mW from y1
+  {
+    FormulaNode f;
+    f.setInputs(refs({ "device:u", "device:i" }));
+    f.setFormulas({ { "Power", "W", "v1 * v2" }, { QString(), "mW", "y1" }, { "Broken", "V", "v1 +" } });
+    QVariantMap keys { { "DMM/model", "QtDMM Formula" }, { "Node/json", f.toJsonText() }, { "Port settings/baud", 9600 } };
+    const QVariantMap entry = DeviceLibrary::entryKeys(keys);
+    check(entry.size() == 2 && entry.contains("Node/json"), "an entry keeps its model and Node/json");
+    MyDevice device;
+    device.keys = entry;
+    check(device.isNode() && device.where() == "v1 * v2; y1; v1 +", "where: its formulas: " + device.where());
+
+    MeterController *w = session.open("w", entry, "Power W", &error);
+    check(w && w->isNode() && w->valueCount() == 3 && w->sourceInfo().model == "formula", "opened as a node: " + error);
+    if (!w)
+      return 1;
+    QMap<int, Reading> last;
+    QObject::connect(w, &MeterController::reading, [&last](const Reading &r) { last[r.id] = r; });
+    check(waitFor([&] { return last.size() == 3 && last[0].quality == Quality::Valid; }, 3000), "three outputs come");
+    // the inputs are counters: v1 the leading one at its reading, v2 its last
+    const Reading p0 = last[0];
+    check(p0.name == "Power" && p0.baseUnit == "W" && p0.value > 0, QString("Power in W: %1").arg(p0.value));
+    check(last[1].baseUnit == "W" && qAbs(last[1].value - p0.value) < 1e-9 * qMax(1.0, p0.value),
+          QString("y1 in mW is the same power: %1 %2").arg(last[1].value).arg(p0.value));
+    check(last[2].quality == Quality::NoValue, "a formula that does not parse: no value");
+
+    // the input it multiplies by closed: a gap
+    session.close("i");
+    last.clear();
+    check(waitFor([&] { return last.contains(0) && last[0].quality == Quality::NoValue; }, 3000), "v2 closed: a gap");
+    // off: a gap
+    i = session.openNode("i", "Counter I", std::make_unique<Counter>(40), &error);
+    NodeRunner::of(w)->setOn(false);
+    last.clear();
+    check(waitFor([&] { return last.contains(0); }, 3000) && last[0].quality == Quality::NoValue, "off: a gap");
+
+    QVariantMap unknown { { "DMM/model", "QtDMM Formula" }, { "Node/json", "{\"type\":\"none\"}" } };
+    check(!session.open("x", unknown, "X", &error) && error.contains("unknown"), "an unknown kind does not open: " + error);
+  }
 
   return failed == 0 ? 0 : 1;
 }

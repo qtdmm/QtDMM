@@ -6,6 +6,7 @@
 #include <QList>
 #include <QString>
 #include <functional>
+#include <memory>
 #include <optional>
 
 #include "core/reading.h"
@@ -93,6 +94,13 @@ public:
   /// Reads toJson(): the common form, then setParameters().
   void        fromJson(const QJsonObject &o);
   /// @}
+
+  /// A node of @p type ("formula"), with defaults; null for a type unknown.
+  static std::unique_ptr<LogicNode> create(const QString &type);
+  /// A node as toJson() stored it, as compact JSON text (an entry's
+  /// Node/json); null when it does not read or its type is unknown.
+  static std::unique_ptr<LogicNode> fromJsonText(const QString &text);
+  QString     toJsonText() const;
 
   /// Would a node with @p source taking @p inputs close a loop? @p inputsOf
   /// gives the inputs of any other node's source (empty for a device). A

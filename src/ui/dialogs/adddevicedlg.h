@@ -33,7 +33,9 @@ class AddDeviceDlg : public QDialog
 {
   Q_OBJECT
 public:
-  enum Connection { Cable, Bluetooth, Network, Sigrok, Simulated };
+  /// Calculated: a formula over values (a logic node), set up in its own
+  /// dialog - the assistant ends at once (connection()).
+  enum Connection { Cable, Bluetooth, Network, Sigrok, Simulated, Calculated };
   enum Page { ConnectionPage, PortPage, DevicePage, TargetPage };
   /// Page 4: into My devices and connected at once, or into My devices only.
   enum Target { NoTarget, Connect, SaveOnly };
