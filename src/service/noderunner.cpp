@@ -6,6 +6,7 @@
 
 #include <QDateTime>
 
+#include "core/devicelibrary.h"
 #include "core/siprefix.h"
 #include "service/devicesession.h"
 #include "service/metercontroller.h"
@@ -27,6 +28,20 @@ QString shown(double value, const QString &baseUnit, int counts, QString *prefix
     decimals--;
   return QString::number(scaled, 'f', decimals);
 }
+
+// a number in a unit chosen with its prefix ("mWh"), as many decimals as
+// @p counts allow for it
+QString fixed(double value, int counts)
+{
+  int digits = 0;
+  for (int c = qMax(1, counts); c > 0; c /= 10)
+    digits++;
+  digits = qBound(3, digits, 9);
+  int decimals = digits - 1;
+  for (double a = std::fabs(value); a >= 10 && decimals > 0; a /= 10)
+    decimals--;
+  return QString::number(value, 'f', decimals);
+}
 }
 
 NodeRunner::NodeRunner(DeviceSession *session, MeterController *ctl, std::unique_ptr<LogicNode> node)
@@ -43,6 +58,17 @@ NodeRunner::NodeRunner(DeviceSession *session, MeterController *ctl, std::unique
 }
 
 NodeRunner::~NodeRunner() = default;
+
+QString NodeRunner::inputName(const ValueRef &ref) const
+{
+  // the entry's name in My devices ("Load I"), with the value for a node of
+  // single values; the source when it is not there
+  QString name = ref.source;
+  if (const DeviceLibrary *library = m_session->library(); library && ref.source.startsWith(QLatin1String("device:")))
+    if (const std::optional<MyDevice> d = library->find(ref.source.mid(7)))
+      name = d->name;
+  return m_node->takesDevices() || ref.id == 0 ? name : tr("%1, value %2").arg(name).arg(ref.id + 1);
+}
 
 NodeRunner *NodeRunner::of(const MeterController *ctl)
 {
@@ -99,7 +125,7 @@ void NodeRunner::bind()
     {
       m_last[i].reset();
       m_values[i].clear();
-      missing << (devices ? ref.source : ref.toString());
+      missing << inputName(ref);
       continue;
     }
     m_links << connect(from, &MeterController::reading, this, [this, i, ref, devices](const Reading &r)
@@ -168,7 +194,7 @@ void NodeRunner::compute(qint64 t, qint64 wall)
     else
     {
       ctx.inputs << std::nullopt;
-      old << (devices ? inputs[i].source : inputs[i].toString());
+      old << inputName(inputs[i]);
     }
   }
   const LogicNode::Values values = m_node->isOn() ? m_node->evaluate(ctx) : m_node->bypass(ctx);
@@ -204,12 +230,13 @@ void NodeRunner::deliver(const LogicNode::Values &values, qint64 t, qint64 wall)
     if (v && std::isfinite(*v))
     {
       // the node's number is in its unit as given ("mA": 12 is 12 mA);
-      // shown as an autoranging meter would
+      // a unit with a prefix is shown in it, one without as an
+      // autoranging meter would
       const SiPrefix::Split unit = SiPrefix::split(outUnit);
       c.dval = *v * SiPrefix::factor(unit.prefix);
       QString prefix;
-      c.val = shown(c.dval, unit.baseUnit, counts, &prefix);
-      c.unit = prefix + unit.baseUnit;
+      c.val = unit.prefix.isEmpty() ? shown(c.dval, unit.baseUnit, counts, &prefix) : fixed(*v, counts);
+      c.unit = (unit.prefix.isEmpty() ? prefix : unit.prefix) + unit.baseUnit;
     }
     else
     {

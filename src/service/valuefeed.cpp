@@ -90,7 +90,11 @@ void ValueFeed::updateTexts()
   if (m_ctl)
   {
     caption = m_ctl->deviceName();
-    if (!m_heard)
+    // a calculated value says why it has none: the input it waits for, a
+    // unit that does not fit - also after it had values
+    if (m_ctl->isNode() && m_ctl->linkState() == MeterConnection::LinkState::Timeout && !m_ctl->errorString().isEmpty())
+      notice = m_ctl->errorString();
+    else if (!m_heard)
       switch (m_ctl->linkState())
       {
         case MeterConnection::LinkState::Closed:     notice = tr("Not connected"); break;

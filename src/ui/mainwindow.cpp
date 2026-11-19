@@ -1407,8 +1407,9 @@ void MainWindow::applyLcdLook(FrontPanel *panel)
   if (ctl)
   {
     const DmmDecoder::DMMInfo &info = ctl->sourceInfo();
-    // the controller's count: the Simulated meter's values are not the model's
-    lcd->setDisplayMode(info.display, gui->showMinMax(), gui->showBar(), ctl->valueCount());
+    // the controller's count: a node's values are not a model's; a sum or a
+    // formula has no range for a bar
+    lcd->setDisplayMode(info.display, gui->showMinMax(), gui->showBar() && !ctl->isNode(), ctl->valueCount());
     lcd->setLook(LcdWidget::lookOf(DeviceType::of(info)));
   }
 }

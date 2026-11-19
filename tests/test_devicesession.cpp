@@ -192,6 +192,8 @@ int main(int argc, char **argv)
     QObject::connect(&session, &DeviceSession::error, &session, [&replaced](const QString &text) { replaced = text; });
     lead->start();
     check(replaced.isEmpty(), "saved: no message at the next start: " + replaced);
+    // a reading in it, so it is one not saved (the meter here ticks every 250 ms)
+    check(waitFor([&] { return mine->count() > 0; }, 4000), "a reading recorded");
     lead->stop();
     lead->start();
     check(mine->isRunning() && replaced.contains("Bench sim"), "not saved: replaced, said so: " + replaced);

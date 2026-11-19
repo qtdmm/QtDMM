@@ -22,6 +22,7 @@
 #include "service/devicesession.h"
 #include "service/metercontroller.h"
 #include "service/noderunner.h"
+#include "service/valuefeed.h"
 #include "service/scpiserver.h"
 #include "service/servicehost.h"
 #include "testutil.h"
@@ -163,6 +164,12 @@ int main(int argc, char **argv)
   check(powers.last().quality == Quality::NoValue, "without the second input: no value");
   check(p->linkState() == MeterConnection::LinkState::Timeout && p->errorString().contains("device:i"),
         "waiting for device:i: " + p->errorString());
+  {
+    // the display says so, not just "No data"
+    ValueFeed feed(&session);
+    feed.setValue(ValueRef(0, "device:p"));
+    check(feed.notice().contains("device:i"), "the display's notice: " + feed.notice());
+  }
 
   // ... and when it opens again, it is taken at once
   i = session.openNode("i", "Counter I", std::make_unique<Counter>(40), &error);
@@ -239,6 +246,7 @@ int main(int argc, char **argv)
     // the inputs are counters: v1 the leading one at its reading, v2 its last
     const Reading p0 = last[0];
     check(p0.name == "Power" && p0.baseUnit == "W" && p0.value > 0, QString("Power in W: %1").arg(p0.value));
+    check(last[1].unit == "mW", "a unit chosen with its prefix is shown in it: " + last[1].unit);
     check(last[1].baseUnit == "W" && qAbs(last[1].value - p0.value) < 1e-9 * qMax(1.0, p0.value),
           QString("y1 in mW is the same power: %1 %2").arg(last.value(1).value).arg(p0.value));
     check(last[2].quality == Quality::NoValue, "a formula that does not parse: no value");

@@ -78,7 +78,12 @@ QVariantMap DeviceLibrary::entryKeys(const QVariantMap &keys)
   const QString device = keys.value("Port settings/device").toString();
   const QString model = keys.value("DMM/model").toString();
   const QString byModel = g_modelTransport ? g_modelTransport(model) : QString();
-  const QString type = byModel.isEmpty() ? deviceType(device) : byModel;
+  QString type = byModel.isEmpty() ? deviceType(device) : byModel;
+  // a simulated or calculated meter of before (a logic node when opened,
+  // LegacyNodes) whose port line was lost: its model tells, so its keys stay
+  if (model == QLatin1String("QtDMM Simulated meter") || model == QLatin1String("QtDMM Virtual meter")
+      || model == QLatin1String("QtDMM Calculated value"))
+    type = QStringLiteral("calc");
   if (type == QLatin1String("ble"))
     wanted << kBleKeys;
   else if (type == QLatin1String("blegatt"))
