@@ -46,6 +46,7 @@
 #include "ui/valuemenu.h"
 #include "ui/tilebutton.h"
 #include "ui/dialogs/adddevicedlg.h"
+#include "device/metersetup.h"
 #include "logic/formulanode.h"
 #include "logic/generatornode.h"
 #include "logic/legacynodes.h"
@@ -2147,8 +2148,10 @@ QList<FormulaNodeDlg::Choice> MainWindow::formulaChoices(const QString &id) cons
     // calculated one: its outputs as set
     std::unique_ptr<LogicNode> node = nodeOf(device.keys);
     const QList<LogicNode::Output> outputs = node ? node->outputs() : QList<LogicNode::Output>();
+    // DMM/number-of-values is the frames per reading, not the values: the
+    // model's count (MeterSetup), as when it is connected
     const int count = ctl ? ctl->valueCount() : node ? int(outputs.size())
-                                                     : qBound(1, device.keys.value("DMM/number-of-values", 1).toInt(), kMaxValues);
+                                                     : qBound(1, MeterSetup::fromKeys(device.keys).valueCount, kMaxValues);
     for (int i = 0; i < count && i < kMaxValues; ++i)
     {
       FormulaNodeDlg::Choice c;
