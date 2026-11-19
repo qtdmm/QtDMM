@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "logic/logicnode.h"
 #include "logic/formulanode.h"
+#include "logic/generatornode.h"
 
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -62,6 +63,8 @@ std::unique_ptr<LogicNode> LogicNode::create(const QString &type)
 {
   if (type == QLatin1String(FormulaNode::kType))
     return std::make_unique<FormulaNode>();
+  if (type == QLatin1String(GeneratorNode::kType))
+    return std::make_unique<GeneratorNode>();
   return nullptr;
 }
 
@@ -77,4 +80,15 @@ std::unique_ptr<LogicNode> LogicNode::fromJsonText(const QString &text)
 QString LogicNode::toJsonText() const
 {
   return QString::fromUtf8(QJsonDocument(toJson()).toJson(QJsonDocument::Compact));
+}
+
+QString LogicNode::canonicalUnit(const QString &unit)
+{
+  QString u = unit.trimmed();
+  u.replace(QStringLiteral("Ω"), QStringLiteral("Ohm"));
+  if (u == QStringLiteral("°C"))
+    return QStringLiteral("C");
+  if (u == QStringLiteral("°F"))
+    return QStringLiteral("dF");
+  return u;
 }

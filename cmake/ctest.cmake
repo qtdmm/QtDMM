@@ -81,6 +81,7 @@ if (BUILD_TESTING)
 	## logic nodes: the common form, a node as a source of the session (triggered, inputs missing or old, bypass, loops)
 	qtdmm_add_test(logic_node test_logicnode tests/test_logicnode.cpp)
 	qtdmm_add_test(formula_node_dialog test_formulanodedlg tests/test_formulanodedlg.cpp)
+	qtdmm_add_test(legacy_nodes test_legacynodes tests/test_legacynodes.cpp)
 
 	## the program itself, offscreen: a meter in the window and two with --also, read over SCPI TCP
 	## (Unix only: the console and the end of a GUI process on Windows)

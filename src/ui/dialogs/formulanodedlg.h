@@ -75,6 +75,7 @@ private:
     QLabel      *result;
     QToolButton *remove;
     bool         unitChosen = false;   ///< no more proposals once the unit was chosen
+    QString      coupling;             ///< kept as loaded (no field for it)
   };
 
   void        addInput(const ValueRef &ref);

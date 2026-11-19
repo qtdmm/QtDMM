@@ -167,12 +167,14 @@ void NodeRunner::deliver(const LogicNode::Values &values, qint64 t, qint64 wall)
     DmmDecoder::DmmChannel c;
     c.id = i;
     c.name = out.name;
+    c.special = out.coupling;
+    const QString outUnit = LogicNode::canonicalUnit(out.unit);
     const std::optional<double> v = values.value(i);
     if (v && std::isfinite(*v))
     {
       // the node's number is in its unit as given ("mA": 12 is 12 mA);
       // shown as an autoranging meter would
-      const SiPrefix::Split unit = SiPrefix::split(out.unit);
+      const SiPrefix::Split unit = SiPrefix::split(outUnit);
       c.dval = *v * SiPrefix::factor(unit.prefix);
       QString prefix;
       c.val = shown(c.dval, unit.baseUnit, counts, &prefix);
@@ -183,7 +185,7 @@ void NodeRunner::deliver(const LogicNode::Values &values, qint64 t, qint64 wall)
       // no value: a gap, not the last one
       c.noValue = true;
       c.val = QStringLiteral("----");
-      c.unit = out.unit;
+      c.unit = outUnit;
     }
     response.channels << c;
   }

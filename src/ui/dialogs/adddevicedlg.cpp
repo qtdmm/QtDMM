@@ -111,8 +111,8 @@ AddDeviceDlg::AddDeviceDlg(DeviceLibrary *library, QWidget *parent)
       tr("A meter at another computer, through qtdmm-bridge or another RFC 2217 server") },
     { Sigrok,    "qtdmm-sigrok",                 tr("sig&rok") + '\n' + tr("Bench meters"),
       tr("A bench meter read through sigrok-cli") },
-    { Simulated, "code-function",                tr("&Simulated / calculated") + '\n' + tr("To try out, formulas"),
-      tr("A simulated meter to try QtDMM, or a value calculated from the readings of other windows") },
+    { Simulated, "code-function",                tr("&Simulated") + '\n' + tr("To try out, test signals"),
+      tr("Simulated values to try QtDMM without a meter: sine, square, noise or a formula over time") },
     { Calculated, "code-function",               tr("C&alculated") + '\n' + tr("Formula over values"),
       tr("Values calculated from those of your devices, e.g. power from voltage and current") },
   };
@@ -322,7 +322,7 @@ bool AddDeviceDlg::offers(Connection connection, const DmmDecoder::DMMInfo &info
     case Bluetooth: return bluetooth;
     case Sigrok:    return sigrok;
     case Simulated: return simulated;
-    case Calculated: return false;   // its own dialog
+    case Calculated: return false;   // their own dialogs
     case Cable:
     case Network:   return !bluetooth && !sigrok && !simulated;   // the bridge passes a cable on
   }
@@ -337,8 +337,8 @@ bool AddDeviceDlg::hasPortPage(Connection connection)
 void AddDeviceDlg::chooseConnection(Connection connection)
 {
   m_connection = connection;
-  // a calculated value has a dialog of its own (MainWindow::addFormula())
-  if (connection == Calculated)
+  // a calculated or simulated value has a dialog of its own (MainWindow::addNode())
+  if (connection == Calculated || connection == Simulated)
   {
     accept();
     return;
@@ -346,9 +346,7 @@ void AddDeviceDlg::chooseConnection(Connection connection)
   const bool manual = connection == Cable || connection == Network;
   m_settings->setModelFilter([connection](const DmmDecoder::DMMInfo &info) { return offers(connection, info); }, manual);
   QVariantMap keys;
-  if (connection == Simulated)
-    keys.insert("DMM/model", "QtDMM Simulated meter");
-  else if (!manual && !m_settings->models().isEmpty())
+  if (!manual && !m_settings->models().isEmpty())
     keys.insert("DMM/model", m_settings->models().first());
   m_settings->load(keys);
   m_name->clear();

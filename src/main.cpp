@@ -28,6 +28,7 @@
 #include "ui/mainwindow.h"
 #include "ui/mnemoniccheck.h"
 #include "ui/dialogs/formulanodedlg.h"
+#include "ui/dialogs/generatornodedlg.h"
 #include "ui/dialogs/adddevicedlg.h"
 #include "core/applog.h"
 #include "core/settings.h"
@@ -200,6 +201,8 @@ int main(int argc, char **argv)
     addDevice->chooseConnection(AddDeviceDlg::Cable);
     auto *formula = new FormulaNodeDlg(&mainWin);
     formula->load(QStringLiteral("Power"), FormulaNode());
+    auto *generator = new GeneratorNodeDlg(&mainWin);
+    generator->load(QStringLiteral("Test"), GeneratorNode());
     QTimer::singleShot(0, &mainWin, [&mainWin]
     {
       const QStringList conflicts = MnemonicCheck::run(&mainWin);

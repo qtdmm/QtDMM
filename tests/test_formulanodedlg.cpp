@@ -4,11 +4,13 @@
 // The dialog of a formula node (PR 1b): a new one, the unit proposed from
 // the inputs and taken away again, a wrong formula keeps OK off, removing
 // an input renames the variables after it, a loop is refused, and what it
-// gives back.
+// gives back. Then the generator's dialog (PR 2): a sine to start with, a
+// formula over the values above, removing one renames, the clock.
 
 #include <QtWidgets>
 
 #include "ui/dialogs/formulanodedlg.h"
+#include "ui/dialogs/generatornodedlg.h"
 #include "testutil.h"
 
 int main(int argc, char **argv)
@@ -95,6 +97,47 @@ int main(int argc, char **argv)
   again.setChoices(choices);
   again.load(dlg.name(), *node);
   check(again.node()->toJsonText() == node->toJsonText() && again.name() == "Power", "loaded again: the same");
+
+  // the generator's dialog
+  {
+    GeneratorNodeDlg gen;
+    gen.load("Simulated", GeneratorNode());
+    auto *genOk = gen.findChild<QDialogButtonBox *>()->button(QDialogButtonBox::Ok);
+    auto *shape1 = gen.findChild<QComboBox *>("ui_generatorShape1");
+    check(shape1 && shape1->currentData().toInt() == CalcExpr::Sine && genOk->isEnabled(), "a new one: a sine, OK on");
+    QApplication::processEvents();
+    check(gen.findChild<QLabel *>("ui_generatorResult1")->text().contains("V"), "where it is now: "
+          + gen.findChild<QLabel *>("ui_generatorResult1")->text());
+    gen.findChild<QPushButton *>("ui_generatorAdd")->click();
+    auto *f2 = gen.findChild<QLineEdit *>("ui_generatorFormula2");
+    check(f2 && gen.findChild<QComboBox *>("ui_generatorShape2")->currentData().toInt() == CalcExpr::Custom,
+          "a value added: a formula");
+    f2->setText("y2 + 1");
+    check(!genOk->isEnabled(), "y2 in value 2: OK off");
+    f2->setText("y1 * 2");
+    check(genOk->isEnabled(), "y1 * 2: OK on");
+    gen.findChild<QPushButton *>("ui_generatorAdd")->click();
+    gen.findChild<QLineEdit *>("ui_generatorFormula3")->setText("y2 + t");
+    gen.findChild<QComboBox *>("ui_generatorUnit3")->setCurrentText("°C");
+    gen.findChild<QSpinBox *>("ui_generatorClock")->setValue(500);
+    // value 1 removed: y2 of value 3 is y1 now; value 2's y1 is unknown
+    QList<QToolButton *> removes;
+    for (QToolButton *b : gen.findChildren<QToolButton *>())
+      if (b->toolTip() == GeneratorNodeDlg::tr("Remove this value"))
+        removes << b;
+    if (!removes.isEmpty())
+      removes.first()->click();
+    check(gen.findChild<QLineEdit *>("ui_generatorFormula3")->text() == "y1 + t" && !genOk->isEnabled(),
+          "value 1 removed: y2 is y1 now, y1 in the first: OK off");
+    f2->setText("2 * t");
+    const std::unique_ptr<GeneratorNode> n = gen.node();
+    check(genOk->isEnabled() && n->periodMs() == 500 && n->waves().size() == 2 && n->waves()[0].formula == "2 * t"
+            && n->waves()[1].unit == "°C" && n->outputs()[1].unit == "°C",
+          "the generator: " + n->toJsonText());
+    GeneratorNodeDlg again;
+    again.load(gen.name(), *n);
+    check(again.node()->toJsonText() == n->toJsonText(), "loaded again: the same");
+  }
 
   return failed == 0 ? 0 : 1;
 }

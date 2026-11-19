@@ -42,6 +42,7 @@ public:
     QString    name;   ///< shown in the views; empty: named by what it measures
     QString    unit;   ///< with prefix as the decoders spell it ("W", "mA", "Ohm"); empty: none
     OutputKind kind = OutputKind::Value;
+    QString    coupling;   ///< "DC", "AC" or empty, shown as a meter shows it
   };
   /// The inputs as they are when the node computes: the reading of each
   /// input, or none when it has none or one older than maxAgeMs().
@@ -94,6 +95,10 @@ public:
   /// Reads toJson(): the common form, then setParameters().
   void        fromJson(const QJsonObject &o);
   /// @}
+
+  /// @p unit as the decoders spell it: "°C" C, "°F" dF, "Ω" Ohm (with
+  /// its prefix: "kΩ" kOhm); others as they are.
+  static QString canonicalUnit(const QString &unit);
 
   /// A node of @p type ("formula"), with defaults; null for a type unknown.
   static std::unique_ptr<LogicNode> create(const QString &type);
