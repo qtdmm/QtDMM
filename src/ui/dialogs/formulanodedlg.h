@@ -12,6 +12,7 @@
 #include "core/reading.h"
 #include "core/valueref.h"
 #include "logic/formulanode.h"
+#include "ui/sourcelist.h"
 
 class QButtonGroup;
 class QComboBox;
@@ -36,14 +37,7 @@ class FormulaNodeDlg : public QDialog
   Q_OBJECT
 public:
   /// A device one may take as an input, with its values.
-  struct Choice
-  {
-    QString     source;   ///< "device:<id>"
-    QString     text;     ///< its name
-    QStringList values;   ///< what each value is ("Voltage DC (V)", "value 2"), one per value
-    QStringList units;    ///< their base units when known ("V"), for the proposal
-    bool        connected = true;   ///< false: listed grey, "(not connected)"
-  };
+  using Choice = SourceList::Source;
 
   explicit FormulaNodeDlg(QWidget *parent = nullptr);
 
@@ -61,14 +55,6 @@ public:
   std::unique_ptr<FormulaNode> node() const;
 
 private:
-  struct InputRow
-  {
-    QLabel      *label;
-    QComboBox   *value;    ///< the device
-    QLabel      *values;   ///< its variables: "v1 = Voltage · v1.2 = Current"
-    QRadioButton *lead;
-    QToolButton *remove;
-  };
   struct OutputRow
   {
     QLabel      *label;
@@ -81,14 +67,13 @@ private:
     QString      coupling;             ///< kept as loaded (no field for it)
   };
 
-  void        addInput(const QString &source);
-  /// The variables of input @p index under its device.
-  void        showValues(int index);
   void        addOutput(const FormulaNode::Formula &formula, bool unitChosen);
-  void        removeInput(int index);
   void        removeOutput(int index);
   /// The rows anew in their grids, after one came or went.
   void        relayout();
+  /// The inputs ticked anew (SourceList::inputsChanged): the formulas'
+  /// variables follow their places.
+  void        followInputs(const QList<int> &from);
   QList<ValueRef> inputs() const;
   QList<FormulaNode::Formula> formulas() const;
   /// The units of v1.. and y1.. for the proposal.
@@ -100,17 +85,13 @@ private:
   void        updateResults();
 
   QLineEdit      *m_name;
-  QGridLayout    *m_inputGrid;
+  SourceList     *m_sources;
   QGridLayout    *m_outputGrid;
-  QButtonGroup   *m_leading;
-  QPushButton    *m_addInput;
   QPushButton    *m_addOutput;
   QDoubleSpinBox *m_maxAge;
   QLabel         *m_status;
   QPushButton    *m_ok = nullptr;
-  QList<InputRow>  m_inputs;
   QList<OutputRow> m_outputs;
-  QList<Choice>    m_choices;
   bool             m_on = true;
   int              m_periodMs = 0;
   bool             m_proposing = false;

@@ -2166,13 +2166,14 @@ QList<FormulaNodeDlg::Choice> MainWindow::formulaChoices(const QString &id) cons
       continue;
     FormulaNodeDlg::Choice c;
     c.source = "device:" + device.id;
-    c.text = device.name;
+    c.name = device.name;
     const MeterController *ctl = m_session->controller(c.source);
     c.connected = ctl != nullptr;
     // not connected: its values by number, units unknown; a calculated
     // one: its outputs as set. DMM/number-of-values is the frames per
     // reading, not the values: the model's count (MeterSetup)
     std::unique_ptr<LogicNode> node = nodeOf(device.keys);
+    c.node = node != nullptr;
     const QList<LogicNode::Output> outputs = node ? node->outputs() : QList<LogicNode::Output>();
     const int count = ctl ? ctl->valueCount() : node ? int(outputs.size())
                                                      : qBound(1, MeterSetup::fromKeys(device.keys).valueCount, kMaxValues);
@@ -2211,12 +2212,7 @@ std::optional<QVariantMap> MainWindow::editNode(const QString &id, const QVarian
   if (type == QLatin1String(IntegralNode::kType))
   {
     IntegralNodeDlg dlg(this);
-    QList<IntegralNodeDlg::Choice> choices;
-    for (const FormulaNodeDlg::Choice &device : formulaChoices(id))
-      for (int i = 0; i < device.values.size(); ++i)
-        choices << IntegralNodeDlg::Choice { ValueRef(i, device.source), tr("%1: %2").arg(device.text, device.values[i]),
-                                             device.units.value(i), device.connected };
-    dlg.setChoices(choices);
+    dlg.setSources(formulaChoices(id));
     // one open: where it is now, and setting it to 0
     if (!id.isEmpty())
       if (MeterController *ctl = m_session->controller("device:" + id); NodeRunner::of(ctl))

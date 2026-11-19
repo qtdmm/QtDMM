@@ -11,6 +11,7 @@
 #include "core/reading.h"
 #include "core/valueref.h"
 #include "logic/integralnode.h"
+#include "ui/sourcelist.h"
 
 class QCheckBox;
 class QComboBox;
@@ -29,18 +30,10 @@ class IntegralNodeDlg : public QDialog
 {
   Q_OBJECT
 public:
-  /// A value one may integrate.
-  struct Choice
-  {
-    ValueRef ref;
-    QString  text;   ///< "Supply: Power"
-    QString  unit;   ///< its base unit when known ("W")
-    bool     connected = true;   ///< false: listed grey, "(not connected)"
-  };
-
   explicit IntegralNodeDlg(QWidget *parent = nullptr);
 
-  void        setChoices(const QList<Choice> &choices);
+  /// The entries of My devices whose values may be integrated.
+  void        setSources(const QList<SourceList::Source> &sources);
   /// The integral's own reading now (an integral open), and what sets it
   /// to 0; none: no "where it is now".
   void        setState(std::function<std::optional<Reading>()> current, std::function<void()> reset);
@@ -58,7 +51,7 @@ private:
   void        updateState();
 
   QLineEdit      *m_name;
-  QComboBox      *m_input;
+  SourceList     *m_input;
   QComboBox      *m_unit;
   QDoubleSpinBox *m_maxAge;
   QCheckBox      *m_onRecording;
@@ -69,7 +62,6 @@ private:
   QPushButton    *m_zero;
   QLabel         *m_status;
   QPushButton    *m_ok = nullptr;
-  QList<Choice>   m_choices;
   bool            m_unitChosen = false;
   bool            m_nameChosen = false;
   bool            m_proposing = false;

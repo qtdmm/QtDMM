@@ -1,10 +1,10 @@
 // Copyright (c) 2026 The QtDMM developers
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// The dialog of a formula node (PR 1b): a new one, devices as inputs with
-// their values v1, v1.2 ..., the unit proposed from the inputs and taken
-// away again, a wrong formula keeps OK off, removing an input renames the
-// variables after it, a loop is refused, and what it
+// The dialog of a formula node (PR 1b): a new one, devices ticked as inputs
+// (SourceList) with their values v1, v1.2 ..., the unit proposed from the
+// inputs and taken away again, a wrong formula keeps OK off, moving an input
+// renames its variables, another leads, a loop greyed out, and what it
 // gives back. Then the generator's dialog (PR 2): a sine to start with, a
 // formula over the values above, removing one renames, the clock. And the
 // integral's (PR 3): unit and name from the value, the threshold, its state.
@@ -14,6 +14,7 @@
 #include "ui/dialogs/formulanodedlg.h"
 #include "ui/dialogs/generatornodedlg.h"
 #include "ui/dialogs/integralnodedlg.h"
+#include "ui/sourcelist.h"
 #include "testutil.h"
 
 int main(int argc, char **argv)
@@ -22,10 +23,12 @@ int main(int argc, char **argv)
     qputenv("QT_QPA_PLATFORM", "offscreen");
   QApplication app(argc, argv);
 
-  // two devices: a supply with its voltage, a load with current and a second value
+  // three devices: a supply with its voltage, a load with current and a
+  // second value, a probe not connected
   const QList<FormulaNodeDlg::Choice> choices {
     { "device:u", "Supply", { "Voltage" }, { "V" } },
     { "device:i", "Load", { "Current", "value 2" }, { "A", QString() } },
+    { "device:w", "Probe", { "Voltage", "value 2" }, { "V", QString() }, false },
   };
   FormulaNodeDlg dlg;
   dlg.setChoices(choices);
@@ -43,15 +46,23 @@ int main(int argc, char **argv)
   auto *formula = dlg.findChild<QLineEdit *>("ui_formula1");
   auto *unit = dlg.findChild<QComboBox *>("ui_formulaUnit1");
   auto *result = dlg.findChild<QLabel *>("ui_formulaResult1");
-  check(formula && unit && result && !ok->isEnabled(), "a new one: one value, no formula, OK off");
+  auto *sources = dlg.findChild<SourceList *>("ui_formulaSources");
+  auto *tree = dlg.findChild<QTreeWidget *>("ui_sourceTree");
+  auto *list = dlg.findChild<QListWidget *>("ui_sourceInputs");
+  check(formula && unit && result && sources && tree && list && !ok->isEnabled() && sources->inputs().isEmpty(),
+        "a new one: no input, no formula, OK off");
+  check(tree->topLevelItemCount() == 3 && tree->topLevelItem(2)->text(0).contains("not connected"),
+        "all of My devices, one not connected said so: " + tree->topLevelItem(2)->text(0));
 
-  // a second input: the load, its values listed under it
-  dlg.findChild<QPushButton *>("ui_formulaAddInput")->click();
-  auto *input2 = dlg.findChild<QComboBox *>("ui_formulaInput2");
-  check(input2 != nullptr, "a second input");
-  input2->setCurrentIndex(1);
-  const QString listed = dlg.findChild<QLabel *>("ui_formulaValues2")->text();
-  check(listed.contains("v2 = Current") && listed.contains("v2.2 = value 2"), "its values: " + listed);
+  // ticked: the supply, then the load - v1, v2; the load's values named under it
+  tree->topLevelItem(0)->setCheckState(0, Qt::Checked);
+  tree->topLevelItem(1)->setCheckState(0, Qt::Checked);
+  check(sources->inputs() == QStringList({ "device:u", "device:i" }) && list->count() == 2
+          && list->item(0)->text().startsWith("v1") && list->item(0)->text().contains("leads"),
+        "ticked: v1 Supply (leads), v2 Load");
+  check(tree->topLevelItem(1)->child(0)->text(0).startsWith("v2 Current") && tree->topLevelItem(1)->child(1)->text(0).startsWith("v2.2 value 2")
+          && !(tree->topLevelItem(1)->child(0)->flags() & Qt::ItemIsUserCheckable),
+        "its values under it, named, not to tick: " + tree->topLevelItem(1)->child(1)->text(0));
   formula->setText("v1");
   check(unit->currentText() == "V", "v1 alone: V proposed, " + unit->currentText());
   formula->setText("v1 * v2");
@@ -75,23 +86,33 @@ int main(int argc, char **argv)
   formula->setText("v2.5");
   check(!ok->isEnabled(), "v2.5: no fifth value");
 
-  // a third input, used with its second value, then v2 removed: v3 becomes v2
-  dlg.findChild<QPushButton *>("ui_formulaAddInput")->click();
-  dlg.findChild<QComboBox *>("ui_formulaInput3")->setCurrentIndex(1);
+  // the probe ticked as v3, used; moved up to v2: the formula follows
+  tree->topLevelItem(2)->setCheckState(0, Qt::Checked);
   formula->setText("v1 * v3.2 + v3");
   check(ok->isEnabled(), "v3 an input now");
-  QList<QToolButton *> removes;
-  for (QToolButton *b : dlg.findChildren<QToolButton *>())
-    if (b->toolTip() == FormulaNodeDlg::tr("Remove this input"))
-      removes << b;
-  check(removes.size() == 3, "three inputs to remove");
-  if (removes.size() == 3)
-    removes[1]->click();
-  check(formula->text() == "v1 * v2.2 + v2", "v2 removed, v3 is v2 now: " + formula->text());
+  sources->moveInput(2, 1);
+  check(sources->inputs() == QStringList({ "device:u", "device:w", "device:i" }) && formula->text() == "v1 * v2.2 + v2",
+        "the probe moved to v2, the formula follows: " + formula->text());
+  // the load unticked: its v3 is unknown now
+  formula->setText("v1 * v2 + v3");
+  tree->topLevelItem(1)->setCheckState(0, Qt::Checked);   // as it is
+  tree->topLevelItem(1)->setCheckState(0, Qt::Unchecked);
+  check(sources->inputs() == QStringList({ "device:u", "device:w" }) && !ok->isEnabled(), "the load unticked: v3 unknown");
+  // another leads
+  list->setCurrentRow(1);
+  dlg.findChild<QPushButton *>("ui_sourceLead")->click();
+  check(sources->leading() == 1 && list->item(1)->text().contains("leads"), "v2 leads now");
 
-  // a loop
-  dlg.setLoopCheck([](const QList<ValueRef> &inputs) { return inputs.size() > 1 && inputs[1].source == "device:i"; });
-  check(!ok->isEnabled(), "inputs that close a loop: OK off");
+  // a loop: that source greyed out, the inputs refused
+  dlg.setLoopCheck([](const QList<ValueRef> &inputs)
+  {
+    for (const ValueRef &r : inputs)
+      if (r.source == "device:i")
+        return true;
+    return false;
+  });
+  check(!(tree->topLevelItem(1)->flags() & Qt::ItemIsEnabled) && !tree->topLevelItem(1)->toolTip(0).isEmpty(),
+        "the load would close a loop: greyed out, why: " + tree->topLevelItem(1)->toolTip(0));
   dlg.setLoopCheck({});
 
   // what it gives back
@@ -99,9 +120,10 @@ int main(int argc, char **argv)
   dlg.findChild<QLineEdit *>("ui_formulaName1")->setText("P");
   formula->setText("v1 * v2");
   const std::unique_ptr<FormulaNode> node = dlg.node();
-  check(dlg.name() == "Power" && node->inputs().size() == 2 && node->inputs()[1].toString() == "0@device:i"
-          && node->formulas().size() == 1 && node->formulas()[0] == FormulaNode::Formula { "P", "mW", "v1 * v2" }
-          && node->maxAgeMs() == 3000 && node->parameters()["deviceInputs"].toBool(),
+  check(dlg.name() == "Power" && node->inputs().size() == 2 && node->inputs()[1].toString() == "0@device:w"
+          && node->leadingInput() == 1 && node->formulas().size() == 1
+          && node->formulas()[0] == FormulaNode::Formula { "P", "mW", "v1 * v2" } && node->maxAgeMs() == 3000
+          && node->parameters()["deviceInputs"].toBool(),
         "the node: " + node->toJsonText());
 
   // loaded again: as it was
@@ -109,15 +131,6 @@ int main(int argc, char **argv)
   again.setChoices(choices);
   again.load(dlg.name(), *node);
   check(again.node()->toJsonText() == node->toJsonText() && again.name() == "Power", "loaded again: the same");
-
-  // a device not connected: listed, grey, said so
-  {
-    FormulaNodeDlg off;
-    off.setChoices({ { "device:x", "Bench PSU", { "value 1" }, { QString() }, false } });
-    off.load("Calculated", FormulaNode());
-    check(off.findChild<QComboBox *>("ui_formulaInput1")->currentText().contains("not connected"),
-          "a device not connected: " + off.findChild<QComboBox *>("ui_formulaInput1")->currentText());
-  }
 
   // the generator's dialog
   {
@@ -160,23 +173,35 @@ int main(int argc, char **argv)
     check(again.node()->toJsonText() == n->toJsonText(), "loaded again: the same");
   }
 
-  // the integral's dialog
+  // the integral's dialog: one value of a device, chosen in the tree
   {
+    const QList<SourceList::Source> loads {
+      { "device:p", "Load", { "Power", "Current" }, { "W", "A" } },
+      { "device:x", "Sensor", { "value 1" }, { QString() } },
+    };
+    auto pick = [](QWidget &dlg, int device, int value)
+    {
+      auto *t = dlg.findChild<QTreeWidget *>("ui_sourceTree");
+      t->setCurrentItem(t->topLevelItem(device)->child(value));
+    };
     IntegralNodeDlg in;
-    in.setChoices({ { ValueRef(0, "device:p"), "Load: Power", "W" }, { ValueRef(1, "device:p"), "Load: Current", "A" },
-                    { ValueRef(0, "device:x"), "Sensor: value 1", QString() } });
+    in.setSources(loads);
     in.load("Calculated", IntegralNode());
     auto *inOk = in.findChild<QDialogButtonBox *>()->button(QDialogButtonBox::Ok);
     auto *unitBox = in.findChild<QComboBox *>("ui_integralUnit");
+    check(!inOk->isEnabled(), "a new one: no value yet, OK off");
+    check(!(in.findChild<QTreeWidget *>("ui_sourceTree")->topLevelItem(0)->flags() & Qt::ItemIsSelectable),
+          "a device itself is no value to choose");
+    pick(in, 0, 0);
     check(unitBox->currentText() == "Wh" && in.name() == "Energy" && inOk->isEnabled(),
           "a power: Wh, named Energy: " + unitBox->currentText() + " " + in.name());
     check(in.findChild<QLabel *>("ui_integralThresholdUnit")->text() == "W", "the threshold in W, said beside it");
     check(!in.findChild<QPushButton *>("ui_integralZero")->isVisibleTo(&in), "a new one: no state, no Set to 0");
-    in.findChild<QComboBox *>("ui_integralInput")->setCurrentIndex(1);
+    pick(in, 0, 1);
     check(unitBox->currentText() == "Ah" && in.name() == "Charge"
             && in.findChild<QLabel *>("ui_integralThresholdUnit")->text() == "A", "a current: Ah, named Charge, threshold in A");
     unitBox->setCurrentText("mAh");
-    in.findChild<QComboBox *>("ui_integralInput")->setCurrentIndex(2);
+    pick(in, 1, 0);
     check(unitBox->currentText() == "mAh" && in.name() == "Integral", "a unit chosen stays; an unknown value: Integral");
     in.findChild<QCheckBox *>("ui_integralThresholdOn")->setChecked(true);
     in.findChild<QLineEdit *>("ui_integralThreshold")->setText("abc");
@@ -187,20 +212,22 @@ int main(int argc, char **argv)
     const std::unique_ptr<IntegralNode> n = in.node();
     check(n->threshold() == 1500.0 && !n->resetsOnRecording() && n->unit() == "mAh" && n->inputs()[0].toString() == "0@device:x",
           "the integral: " + n->toJsonText());
-    // a new one with its value given (Integrate... of a value's menu): proposed
+    // a new one with its value given (Integrate... of a value's menu): chosen, proposed
     {
       IntegralNode given;
       given.setInputs({ ValueRef(1, "device:p") });
       IntegralNodeDlg menu;
-      menu.setChoices({ { ValueRef(0, "device:p"), "Load: Power", "W" }, { ValueRef(1, "device:p"), "Load: Current", "A" } });
+      menu.setSources(loads);
       menu.load("Calculated", given);
-      check(menu.name() == "Charge" && menu.findChild<QComboBox *>("ui_integralUnit")->currentText() == "Ah",
-            "Integrate... of a current: Charge in Ah: " + menu.name());
+      auto *t = menu.findChild<QTreeWidget *>("ui_sourceTree");
+      check(menu.name() == "Charge" && menu.findChild<QComboBox *>("ui_integralUnit")->currentText() == "Ah"
+              && t->currentItem() == t->topLevelItem(0)->child(1),
+            "Integrate... of a current: chosen, Charge in Ah: " + menu.name());
     }
     // an open one: where it is now, Set to 0
     IntegralNodeDlg open;
     bool zeroed = false;
-    open.setChoices({ { ValueRef(0, "device:p"), "Load: Power", "W" } });
+    open.setSources(loads);
     open.setState([]() -> std::optional<Reading>
                   {
                     Reading r;

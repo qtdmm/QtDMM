@@ -12,12 +12,15 @@ export, alarms and SCPI all work on it exactly as on a measured one.
 1. Put the meters into [My devices](my-devices.md).
 2. *Add device*, the tile **Calculated**. A dialog opens:
     - **Name** - how it is listed in My devices.
-    - **Inputs** - `v1`, `v2`, ... each one of your devices, also one that
-      is not connected yet (the calculated value then waits for it). Below
-      each input its values are listed: `v1` is the device's main value,
-      `v1.2`, `v1.3`, `v1.4` its other values (a TFA sensor: temperature,
-      humidity, CO₂). The input marked **leads** decides when a new
-      result is computed: whenever it brings a new reading.
+    - **Inputs** - tick your devices in the list on the left, also one
+      that is not connected yet (grey; the calculated value then waits for
+      it). Opened, a device shows its values with their names in the
+      formula: `v1` is the device's main value, `v1.2`, `v1.3`, `v1.4` its
+      other values (a TFA sensor: temperature, humidity, CO₂). The inputs
+      ticked are listed on the right as `v1`, `v2`, ...: drag them or move
+      them with the arrows into another order - the formulas follow - and
+      mark one with **Leads**: a new reading of it computes a new result.
+      A device that would close a loop is greyed out.
     - **Values** - up to four results, each with a name, a formula and a
       unit. A value may use the ones above it as `y1`, `y2`, `y3`. The unit
       is proposed from the inputs (V times A gives W) until you choose one.
@@ -85,7 +88,7 @@ The energy a load took, the charge into a battery, the light a plant got:
 value (a right click on it in the sidebar or a view). It sums up one value
 over time:
 
-- **Value** - any value of your devices.
+- **Value** - open a device in the list and choose one of its values.
 - **Unit** - the value's unit times hours: W gives **Wh**, A **Ah**, lx
   **lxh**, any other its unit with an `h`. A prefix may be chosen: `kWh`,
   `mAh`.
