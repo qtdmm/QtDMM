@@ -40,7 +40,7 @@ IntegralNodeDlg::IntegralNodeDlg(QWidget *parent) :
   m_name = new QLineEdit(this);
   m_name->setObjectName("ui_integralName");
   form->addRow(tr("&Name:"), m_name);
-  m_input = new QComboBox(this);
+  m_input = new SourceList(SourceList::Value, this);
   m_input->setObjectName("ui_integralInput");
   m_input->setToolTip(tr("The value summed up over time; each new reading of it adds the area since the one before"));
   form->addRow(tr("&Value:"), m_input);
@@ -99,7 +99,7 @@ IntegralNodeDlg::IntegralNodeDlg(QWidget *parent) :
   connect(buttons, &QDialogButtonBox::accepted, this, &QDialog::accept);
   connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
 
-  connect(m_input, &QComboBox::currentIndexChanged, this, [this] { propose(); validate(); });
+  connect(m_input, &SourceList::valueChanged, this, [this] { propose(); validate(); });
   connect(m_unit, &QComboBox::currentTextChanged, this, [this] { if (!m_proposing) m_unitChosen = true; });
   connect(m_name, &QLineEdit::textEdited, this, [this] { m_nameChosen = true; });
   connect(m_name, &QLineEdit::textChanged, this, &IntegralNodeDlg::validate);
@@ -117,18 +117,9 @@ IntegralNodeDlg::IntegralNodeDlg(QWidget *parent) :
   resize(480, 300);
 }
 
-void IntegralNodeDlg::setChoices(const QList<Choice> &choices)
+void IntegralNodeDlg::setSources(const QList<SourceList::Source> &sources)
 {
-  m_choices = choices;
-  const QSignalBlocker block(m_input);
-  m_input->clear();
-  for (const Choice &c : choices)
-  {
-    m_input->addItem(c.connected ? c.text : tr("%1 (not connected)").arg(c.text), c.ref.toString());
-    if (!c.connected)
-      m_input->setItemData(m_input->count() - 1, m_input->palette().color(QPalette::Disabled, QPalette::Text),
-                           Qt::ForegroundRole);
-  }
+  m_input->setSources(sources);
 }
 
 void IntegralNodeDlg::setState(std::function<std::optional<Reading>()> current, std::function<void()> reset)
@@ -154,16 +145,8 @@ void IntegralNodeDlg::load(const QString &name, const IntegralNode &node)
   const bool known = !node.inputs().isEmpty();
   if (known)
   {
-    const ValueRef ref = node.inputs().first();
-    int at = m_input->findData(ref.toString());
-    if (at < 0)
-    {
-      // gone from My devices: kept, and said so
-      m_input->addItem(tr("%1 (not in My devices)").arg(ref.toString()), ref.toString());
-      at = m_input->count() - 1;
-    }
     const QSignalBlocker block(m_input);
-    m_input->setCurrentIndex(at);
+    m_input->setValue(node.inputs().first());
   }
   // a stored one (it has its name) keeps its name and unit; a new one, also
   // with its value given ("Integrate..."), is proposed them
@@ -188,7 +171,7 @@ QString IntegralNodeDlg::name() const
 std::unique_ptr<IntegralNode> IntegralNodeDlg::node() const
 {
   auto node = std::make_unique<IntegralNode>();
-  node->setInputs({ ValueRef::fromString(m_input->currentData().toString()) });
+  node->setInputs({ m_input->value() });
   node->setMaxAgeMs(int(std::lround(m_maxAge->value() * 1000)));
   node->setOn(m_on);
   node->setName(name());
@@ -200,8 +183,7 @@ std::unique_ptr<IntegralNode> IntegralNodeDlg::node() const
 
 void IntegralNodeDlg::propose()
 {
-  const int i = m_input->currentIndex();
-  const QString base = i >= 0 && i < m_choices.size() ? LogicNode::canonicalUnit(m_choices[i].unit) : QString();
+  const QString base = LogicNode::canonicalUnit(m_input->unitOf(m_input->value()));
   const QString unit = IntegralNode::integratedUnit(base);
   // the threshold is in the value's base unit: said beside it
   m_thresholdUnit->setText(SiPrefix::displayText(base));
@@ -225,8 +207,8 @@ void IntegralNodeDlg::validate()
   QStringList problems;
   if (name().isEmpty())
     problems << tr("The name is missing.");
-  if (m_input->currentIndex() < 0)
-    problems << tr("No value to integrate: add a device to My devices first.");
+  if (m_input->value().source.isEmpty())
+    problems << tr("Choose the value to integrate: open a device in the list.");
   if (m_thresholdOn->isChecked() && !number(m_threshold->text()))
     problems << tr("The threshold is no number.");
   m_status->setText(problems.join("<br>"));
