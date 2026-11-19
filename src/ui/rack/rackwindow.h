@@ -78,6 +78,9 @@ public:
   /// Shows the rack with the insert of @p id in view, lit up a moment.
   void        showInsert(const QString &id);
   QList<RackInsert *> inserts() const;
+  /// Its background in the bench's design: the brushed metal the front
+  /// panels stand on (Silver its gradient, others the area's colour).
+  void        applyDesign();
   /// Open as the user left it: shown, and not closed by them - hidden
   /// with the main window when QtDMM ends it stays open (the bench's).
   bool        isOpen() const { return m_open; }

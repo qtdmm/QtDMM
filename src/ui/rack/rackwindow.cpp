@@ -25,6 +25,7 @@
 #include "service/devicesession.h"
 #include "service/metercontroller.h"
 #include "service/noderunner.h"
+#include "ui/designs.h"
 #include "ui/frameclock.h"
 #include "ui/panelframe.h"
 
@@ -254,7 +255,14 @@ RackWindow::RackWindow(DeviceSession *session, QWidget *parent) :
   auto *scroll = new QScrollArea(this);
   scroll->setWidgetResizable(true);
   scroll->setFrameShape(QFrame::NoFrame);
+  // the window's design through the list: no backgrounds of their own
+  scroll->setStyleSheet("QScrollArea { background: transparent }");
+  scroll->viewport()->setAutoFillBackground(false);
+  scroll->viewport()->setStyleSheet("background: transparent");
   m_list = new QWidget(scroll);
+  m_list->setObjectName("ui_rackList");
+  m_list->setAutoFillBackground(false);
+  m_list->setStyleSheet("QWidget#ui_rackList { background: transparent }");
   m_listLayout = new QVBoxLayout(m_list);
   m_listLayout->setSpacing(6);
   m_empty = new QLabel(tr("No calculated values on this bench yet. \"+ Insert\" adds one."), m_list);
@@ -292,7 +300,23 @@ RackWindow::RackWindow(DeviceSession *session, QWidget *parent) :
       refresh();
   });
   resize(420, 360);
+  applyDesign();
   rebuild();
+}
+
+void RackWindow::applyDesign()
+{
+  // the metal the front panels stand on (Silver its gradient); a design
+  // without one: the area's colour
+  QBrush back = Designs::frameBrush(Designs::current());
+  if (back.style() == Qt::NoBrush)
+    back = Designs::areaBrush(Designs::current());
+  QPalette pal = palette();
+  pal.setBrush(QPalette::Window, back);
+  setPalette(pal);
+  setAutoFillBackground(true);
+  Designs::fitTexture(this, back.style() == Qt::TexturePattern);
+  update();
 }
 
 QStringList RackWindow::order() const
