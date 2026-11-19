@@ -5162,6 +5162,8 @@ void MainWindow::setDesign(int design)
   for (QMdiSubWindow *win : heatmapWindows())
     if (HeatmapView *view = heatmapViewOf(win))
       applyPlotColors(view->plot());
+  if (m_rack)
+    m_rack->applyDesign();
   for (QAction *a : m_designMenu->actions())
     a->setChecked(a->data().toInt() == design);
   // at once, so the settings dialog shows the design of the menu (and its
