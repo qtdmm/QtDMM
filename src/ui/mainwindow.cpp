@@ -2142,29 +2142,26 @@ QList<FormulaNodeDlg::Choice> MainWindow::formulaChoices(const QString &id) cons
   {
     if (device.id == id)
       continue;
-    const QString source = "device:" + device.id;
-    const MeterController *ctl = m_session->controller(source);
-    // a device not connected: its values by number, units unknown; a
-    // calculated one: its outputs as set
+    FormulaNodeDlg::Choice c;
+    c.source = "device:" + device.id;
+    c.text = device.name;
+    const MeterController *ctl = m_session->controller(c.source);
+    // not connected: its values by number, units unknown; a calculated
+    // one: its outputs as set. DMM/number-of-values is the frames per
+    // reading, not the values: the model's count (MeterSetup)
     std::unique_ptr<LogicNode> node = nodeOf(device.keys);
     const QList<LogicNode::Output> outputs = node ? node->outputs() : QList<LogicNode::Output>();
-    // DMM/number-of-values is the frames per reading, not the values: the
-    // model's count (MeterSetup), as when it is connected
     const int count = ctl ? ctl->valueCount() : node ? int(outputs.size())
                                                      : qBound(1, MeterSetup::fromKeys(device.keys).valueCount, kMaxValues);
     for (int i = 0; i < count && i < kMaxValues; ++i)
     {
-      FormulaNodeDlg::Choice c;
-      c.ref = ValueRef(i, source);
       QString value = ctl ? ctl->valueName(i) : QString();
       if (value.isEmpty() && node)
         value = outputs[i].name;
-      if (value.isEmpty())
-        value = count == 1 ? QString() : tr("value %1").arg(i + 1);
-      c.text = value.isEmpty() ? device.name : tr("%1: %2").arg(device.name, value);
-      c.unit = ctl ? ctl->lastReading(i).baseUnit : node ? SiPrefix::split(outputs[i].unit).baseUnit : QString();
-      out << c;
+      c.values << (value.isEmpty() ? tr("value %1").arg(i + 1) : value);
+      c.units << (ctl ? ctl->lastReading(i).baseUnit : node ? SiPrefix::split(outputs[i].unit).baseUnit : QString());
     }
+    out << c;
   }
   return out;
 }

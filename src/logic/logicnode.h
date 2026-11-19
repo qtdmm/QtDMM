@@ -4,6 +4,7 @@
 
 #include <QJsonObject>
 #include <QList>
+#include <QMap>
 #include <QString>
 #include <functional>
 #include <memory>
@@ -49,6 +50,9 @@ public:
   struct Context
   {
     QList<std::optional<Reading>> inputs;
+    /// For a node that takes devices (takesDevices()): each input's values
+    /// by id (0 the main one), those young enough; inputs has the main one.
+    QList<QMap<int, Reading>> values;
     qint64 t = 0;      ///< the time of the computation on the core clock (Sample::now()): the leading input's, or the clock's
     qint64 wall = 0;   ///< the same as ms since the epoch
   };
@@ -64,6 +68,11 @@ public:
   virtual QList<Output> outputs() const = 0;
   /// Computes the outputs from @p ctx; may change the node's state.
   virtual Values evaluate(const Context &ctx) = 0;
+  /// Whether an input is a whole device (a formula's v1, v1.2 ...): the
+  /// runner then gives all its values (Context::values) and computes when
+  /// the leading device's main value comes, after the others of that
+  /// frame. Otherwise an input is one value (ValueRef).
+  virtual bool takesDevices() const { return false; }
   /// What it gives while switched off: by default nothing (a gap).
   virtual Values bypass(const Context &ctx) { Q_UNUSED(ctx); return {}; }
   /// Clears its state (an integral back to 0); nothing by default.

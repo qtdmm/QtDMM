@@ -13,7 +13,8 @@
 /// associative, unary minus binds weaker than ^ so -2^2 is -4),
 /// parentheses, numbers in decimal or exponent form with an optional SI
 /// suffix ("1.5k", "22u", "4.7n"), variables (identifiers, in QtDMM the
-/// names of the open meters), the constant pi and the functions sqrt, abs,
+/// names of the open meters; one may carry a value number, "v1.2", a whole
+/// name of its own), the constant pi and the functions sqrt, abs,
 /// log10, sin, cos, exp, floor, min(a,b), max(a,b) and rand() (uniform in
 /// [0, 1), new value per evaluation). Names are case-sensitive.
 ///

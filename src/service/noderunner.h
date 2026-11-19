@@ -53,7 +53,8 @@ private:
   DeviceSession   *m_session;
   MeterController *m_ctl;
   std::unique_ptr<LogicNode> m_node;
-  QList<std::optional<Reading>> m_last;   ///< per input
+  QList<std::optional<Reading>> m_last;   ///< per input (a device's main value)
+  QList<QMap<int, Reading>> m_values;     ///< per input, by id, when the node takes devices
   QList<QMetaObject::Connection> m_links;
   QTimer           m_clock;
   bool             m_running = false;

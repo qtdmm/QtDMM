@@ -58,9 +58,24 @@ LogicNode::Values FormulaNode::evaluate(const Context &ctx)
   if (!m_start)
     m_start = ctx.t;
   vars.insert(QStringLiteral("t"), (ctx.t - *m_start) / 1000.0);
-  for (int i = 0; i < ctx.inputs.size(); ++i)
-    if (const std::optional<Reading> &r = ctx.inputs[i]; r && !r->noNumber() && std::isfinite(r->value))
-      vars.insert(inputName(i), r->value);
+  auto take = [&vars](const QString &name, const Reading &r)
+  {
+    if (!r.noNumber() && std::isfinite(r.value))
+      vars.insert(name, r.value);
+  };
+  // the devices' values; v1.1 is v1
+  for (int i = 0; i < ctx.values.size(); ++i)
+    for (auto it = ctx.values[i].cbegin(); it != ctx.values[i].cend(); ++it)
+    {
+      take(inputName(i, it.key()), it.value());
+      if (it.key() == 0)
+        take(inputName(i) + ".1", it.value());
+    }
+  // without them (a runner of single values): the inputs as v1, v2 ...
+  if (ctx.values.isEmpty())
+    for (int i = 0; i < ctx.inputs.size(); ++i)
+      if (ctx.inputs[i])
+        take(inputName(i), *ctx.inputs[i]);
   Values out;
   for (int i = 0; i < m_formulas.size(); ++i)
   {
@@ -84,18 +99,76 @@ QJsonObject FormulaNode::parameters() const
       o["coupling"] = f.coupling;
     out.append(o);
   }
-  return { { "outputs", out } };
+  // the inputs are devices (a node of before: values)
+  return { { "outputs", out }, { "deviceInputs", true } };
 }
 
 void FormulaNode::setParameters(const QJsonObject &p)
 {
+  // a node of before: inputs one value each, its formulas over the devices now
+  const QStringList renamed = p["deviceInputs"].toBool() ? QStringList() : takeValueInputs(p);
   QList<Formula> formulas;
-  for (const QJsonValue &v : p["outputs"].toArray())
+  const QJsonArray outputs = p["outputs"].toArray();
+  for (int i = 0; i < outputs.size(); ++i)
   {
-    const QJsonObject o = v.toObject();
-    formulas << Formula { o["name"].toString(), o["unit"].toString(), o["formula"].toString(), o["coupling"].toString() };
+    const QJsonObject o = outputs[i].toObject();
+    formulas << Formula { o["name"].toString(), o["unit"].toString(), renamed.value(i, o["formula"].toString()),
+                          o["coupling"].toString() };
   }
   setFormulas(formulas);
+}
+
+QStringList FormulaNode::takeValueInputs(const QJsonObject &p)
+{
+  // one value per input ("1@device:i") -> one device per input, the value
+  // a variable of it; v2 of "1@device:i" is v1.2 when device:i is input 1
+  const QList<ValueRef> before = inputs();
+  QList<ValueRef> devices;
+  QStringList targets;
+  for (const ValueRef &r : before)
+  {
+    int at = -1;
+    for (int d = 0; d < devices.size() && at < 0; ++d)
+      if (devices[d].source == r.source)
+        at = d;
+    if (at < 0)
+    {
+      at = int(devices.size());
+      devices << ValueRef(0, r.source);
+    }
+    targets << inputName(at, r.id);
+  }
+  const int leading = leadingInput();
+  setInputs(devices);
+  if (leading >= 0 && leading < targets.size())
+  {
+    // the device of the value that led
+    const ValueRef led = before[leading];
+    for (int d = 0; d < devices.size(); ++d)
+      if (devices[d].source == led.source)
+        setLeadingInput(d);
+  }
+  QStringList renamed;
+  for (const QJsonValue &v : p["outputs"].toArray())
+  {
+    QString text = v.toObject()["formula"].toString();
+    // through names of their own, so v1 -> v2 and v2 -> v1 do not meet
+    for (int i = 0; i < targets.size(); ++i)
+      text = CalcExpr::renameVariable(text, inputName(i), QStringLiteral("_input%1_").arg(i));
+    for (int i = 0; i < targets.size(); ++i)
+      text = CalcExpr::renameVariable(text, QStringLiteral("_input%1_").arg(i), targets[i]);
+    renamed << text;
+  }
+  return renamed;
+}
+
+QString FormulaNode::renameInput(const QString &text, int from, int to)
+{
+  QString out = CalcExpr::renameVariable(text, inputName(from), inputName(to));
+  out = CalcExpr::renameVariable(out, inputName(from) + ".1", inputName(to) + ".1");
+  for (int v = 1; v < kMaxValues; ++v)
+    out = CalcExpr::renameVariable(out, inputName(from, v), inputName(to, v));
+  return out;
 }
 
 QString FormulaNode::check(const QString &text, int index, int inputs, int *pos)
@@ -108,7 +181,11 @@ QString FormulaNode::check(const QString &text, int index, int inputs, int *pos)
   {
     bool known = name == QLatin1String("t");
     for (int i = 0; i < inputs && !known; ++i)
-      known = name == inputName(i);
+    {
+      known = name == inputName(i) || name == inputName(i) + ".1";
+      for (int v = 1; v < kMaxValues && !known; ++v)
+        known = name == inputName(i, v);
+    }
     for (int i = 0; i < index && !known; ++i)
       known = name == outputName(i);
     if (!known)

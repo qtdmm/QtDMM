@@ -112,6 +112,18 @@ struct CalcExpr::Parser
 
   static bool isNameStart(QChar c) { return c.isLetter() || c == '_'; }
   static bool isNameChar(QChar c) { return c.isLetterOrNumber() || c == '_'; }
+  /// After a name at @p pos: past ".<digits>", a value of it ("v1.2");
+  /// @p pos when none follows.
+  static int valueNumber(const QString &text, int pos)
+  {
+    if (pos + 1 < text.size() && text[pos] == '.' && text[pos + 1].isDigit())
+    {
+      pos += 2;
+      while (pos < text.size() && text[pos].isDigit())
+        pos++;
+    }
+    return pos;
+  }
 
   int atom()
   {
@@ -179,6 +191,7 @@ struct CalcExpr::Parser
     const int start = pos;
     while (pos < s.size() && isNameChar(s[pos]))
       pos++;
+    pos = valueNumber(s, pos);
     const QString id = s.mid(start, pos - start);
 
     if (!accept('('))
@@ -253,6 +266,7 @@ QString CalcExpr::renameVariable(const QString &text, const QString &from, const
       const int start = pos;
       while (pos < text.size() && Parser::isNameChar(text[pos]))
         ++pos;
+      pos = Parser::valueNumber(text, pos);
       const QString name = text.mid(start, pos - start);
       int next = pos;
       while (next < text.size() && text[next].isSpace())
