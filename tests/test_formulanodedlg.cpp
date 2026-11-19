@@ -9,6 +9,7 @@
 // formula over the values above, removing one renames, the clock. And the
 // integral's (PR 3): unit and name from the value, the threshold, its state.
 
+#include <QSignalSpy>
 #include <QtWidgets>
 
 #include "ui/dialogs/formulanodedlg.h"
@@ -60,6 +61,13 @@ int main(int argc, char **argv)
   check(sources->inputs() == QStringList({ "device:u", "device:i" }) && list->count() == 2
           && list->item(0)->text().startsWith("v1") && list->item(0)->text().contains("leads"),
         "ticked: v1 Supply (leads), v2 Load");
+  // the list's view hears of the rows (the model's signals not blocked), or it shows none
+  {
+    QSignalSpy inserted(list->model(), &QAbstractItemModel::rowsInserted);
+    tree->topLevelItem(1)->setCheckState(0, Qt::Unchecked);
+    tree->topLevelItem(1)->setCheckState(0, Qt::Checked);
+    check(!inserted.isEmpty() && list->count() == 2, "the inputs' list tells its view of its rows");
+  }
   check(tree->topLevelItem(1)->child(0)->text(0).startsWith("v2 Current") && tree->topLevelItem(1)->child(1)->text(0).startsWith("v2.2 value 2")
           && !(tree->topLevelItem(1)->child(0)->flags() & Qt::ItemIsUserCheckable),
         "its values under it, named, not to tick: " + tree->topLevelItem(1)->child(1)->text(0));
