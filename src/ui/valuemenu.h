@@ -53,6 +53,8 @@ public:
     std::function<QList<std::pair<QString, GraphModel *>>()> graphs;
     std::function<void(const GraphModel *)> showGraph;
     std::function<void(const ValueRef &)> newGraph;
+    /// A new integral of the value (IntegralNode; none: no entry).
+    std::function<void(const ValueRef &)> integrate;
   };
 
   /// Fills @p menu for @p value of an open meter.

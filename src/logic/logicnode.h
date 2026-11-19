@@ -77,6 +77,9 @@ public:
   virtual Values bypass(const Context &ctx) { Q_UNUSED(ctx); return {}; }
   /// Clears its state (an integral back to 0); nothing by default.
   virtual void reset() {}
+  /// Whether the start of a recording clears its state (reset()): an
+  /// integral counts from the recording's start.
+  virtual bool resetsOnRecording() const { return false; }
   /// Its own parameters (formula, unit, ...), stored with the entry; the
   /// common ones (inputs, leading, max age, period, on) are the runner's.
   virtual QJsonObject parameters() const { return {}; }

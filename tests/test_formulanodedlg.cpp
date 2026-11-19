@@ -6,12 +6,14 @@
 // away again, a wrong formula keeps OK off, removing an input renames the
 // variables after it, a loop is refused, and what it
 // gives back. Then the generator's dialog (PR 2): a sine to start with, a
-// formula over the values above, removing one renames, the clock.
+// formula over the values above, removing one renames, the clock. And the
+// integral's (PR 3): unit and name from the value, the threshold, its state.
 
 #include <QtWidgets>
 
 #include "ui/dialogs/formulanodedlg.h"
 #include "ui/dialogs/generatornodedlg.h"
+#include "ui/dialogs/integralnodedlg.h"
 #include "testutil.h"
 
 int main(int argc, char **argv)
@@ -147,6 +149,62 @@ int main(int argc, char **argv)
     GeneratorNodeDlg again;
     again.load(gen.name(), *n);
     check(again.node()->toJsonText() == n->toJsonText(), "loaded again: the same");
+  }
+
+  // the integral's dialog
+  {
+    IntegralNodeDlg in;
+    in.setChoices({ { ValueRef(0, "device:p"), "Load: Power", "W" }, { ValueRef(1, "device:p"), "Load: Current", "A" },
+                    { ValueRef(0, "device:x"), "Sensor: value 1", QString() } });
+    in.load("Calculated", IntegralNode());
+    auto *inOk = in.findChild<QDialogButtonBox *>()->button(QDialogButtonBox::Ok);
+    auto *unitBox = in.findChild<QComboBox *>("ui_integralUnit");
+    check(unitBox->currentText() == "Wh" && in.name() == "Energy" && inOk->isEnabled(),
+          "a power: Wh, named Energy: " + unitBox->currentText() + " " + in.name());
+    check(!in.findChild<QPushButton *>("ui_integralZero")->isVisibleTo(&in), "a new one: no state, no Set to 0");
+    in.findChild<QComboBox *>("ui_integralInput")->setCurrentIndex(1);
+    check(unitBox->currentText() == "Ah" && in.name() == "Charge", "a current: Ah, named Charge");
+    unitBox->setCurrentText("mAh");
+    in.findChild<QComboBox *>("ui_integralInput")->setCurrentIndex(2);
+    check(unitBox->currentText() == "mAh" && in.name() == "Integral", "a unit chosen stays; an unknown value: Integral");
+    in.findChild<QCheckBox *>("ui_integralThresholdOn")->setChecked(true);
+    in.findChild<QLineEdit *>("ui_integralThreshold")->setText("abc");
+    check(!inOk->isEnabled(), "a threshold that is no number: OK off");
+    in.findChild<QLineEdit *>("ui_integralThreshold")->setText("1.5k");
+    in.findChild<QCheckBox *>("ui_integralOnRecording")->setChecked(false);
+    check(inOk->isEnabled(), "1.5k: a number");
+    const std::unique_ptr<IntegralNode> n = in.node();
+    check(n->threshold() == 1500.0 && !n->resetsOnRecording() && n->unit() == "mAh" && n->inputs()[0].toString() == "0@device:x",
+          "the integral: " + n->toJsonText());
+    // a new one with its value given (Integrate... of a value's menu): proposed
+    {
+      IntegralNode given;
+      given.setInputs({ ValueRef(1, "device:p") });
+      IntegralNodeDlg menu;
+      menu.setChoices({ { ValueRef(0, "device:p"), "Load: Power", "W" }, { ValueRef(1, "device:p"), "Load: Current", "A" } });
+      menu.load("Calculated", given);
+      check(menu.name() == "Charge" && menu.findChild<QComboBox *>("ui_integralUnit")->currentText() == "Ah",
+            "Integrate... of a current: Charge in Ah: " + menu.name());
+    }
+    // an open one: where it is now, Set to 0
+    IntegralNodeDlg open;
+    bool zeroed = false;
+    open.setChoices({ { ValueRef(0, "device:p"), "Load: Power", "W" } });
+    open.setState([]() -> std::optional<Reading>
+                  {
+                    Reading r;
+                    r.msecs = 1;
+                    r.value = 1234.5;
+                    r.baseUnit = "Wh";
+                    return r;
+                  },
+                  [&zeroed] { zeroed = true; });
+    open.load("Energy", *n);
+    check(open.findChild<QLabel *>("ui_integralNow")->text().contains("1,2345") || open.findChild<QLabel *>("ui_integralNow")->text().contains("1.2345"),
+          "where it is now: " + open.findChild<QLabel *>("ui_integralNow")->text());
+    open.findChild<QPushButton *>("ui_integralZero")->click();
+    check(zeroed, "Set to 0");
+    check(open.node()->unit() == "mAh" && open.name() == "Energy", "a stored one keeps its name and unit");
   }
 
   return failed == 0 ? 0 : 1;

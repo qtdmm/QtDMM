@@ -91,6 +91,9 @@ public:
     std::function<QStringList()> keys;
     /// Presses @p key; false when it could not (the meter not connected).
     std::function<bool(const QString &key)> pressKey;
+    /// Clears a logic node's state (an integral back to 0,
+    /// QTDMM:NODE:RESet); false for a device.
+    std::function<bool()> resetNode;
     /// The PASS/FAIL limit test (CALCulate:LIMit), its verdict on the last
     /// reading of its value and the verdicts counted; setLimitTest() keeps
     /// it as the dialog does.

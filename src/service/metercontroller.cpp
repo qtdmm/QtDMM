@@ -1,6 +1,7 @@
 // Copyright (c) 2026 The QtDMM developers
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "service/metercontroller.h"
+#include "service/noderunner.h"
 
 #include <cmath>
 #include <limits>
@@ -844,6 +845,13 @@ void MeterController::installScpiSources()
   };
   s.keys = [this] { return m_dmm ? m_dmm->keys() : QStringList(); };
   s.pressKey = [this](const QString &key) { return pressKey(key); };
+  s.resetNode = [this]
+  {
+    NodeRunner *runner = NodeRunner::of(this);
+    if (runner)
+      runner->reset();
+    return runner != nullptr;
+  };
   s.limitTest = [this] { return m_limitTest; };
   s.setLimitTest = [this](const LimitTest &test) { setLimitTest(test); };
   s.verdict = [this] { return m_verdict; };

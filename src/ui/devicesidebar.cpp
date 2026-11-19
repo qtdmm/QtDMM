@@ -24,6 +24,7 @@
 #include "core/devicelibrary.h"
 #include "device/dmmdecoder.h"
 #include "device/metersetup.h"
+#include "logic/integralnode.h"
 #include "logic/legacynodes.h"
 #include "ui/devicesymbol.h"
 
@@ -801,6 +802,12 @@ void DeviceSidebar::openMenu(QTreeWidgetItem *item, const QPoint &pos)
   menu.addSeparator();
   // its frames with what it showed, for a report of what is read wrong
   QAction *capture = addCaptureAction(menu, id);
+  // an integral: back to 0 by hand
+  QAction *zero = nullptr;
+  if (const std::optional<MyDevice> d = m_library->find(id); d && d->isNode())
+    if (const std::unique_ptr<LogicNode> node = LogicNode::fromJsonText(d->keys.value("Node/json").toString());
+        node && node->type() == QLatin1String(IntegralNode::kType))
+      zero = menu.addAction(tr("Set integral to &0"));
   menu.addSeparator();
   QAction *close = menu.addAction(QIcon::fromTheme("window-close"), tr("&Remove from bench"));
   QAction *chosen = menu.exec(pos);
@@ -816,6 +823,8 @@ void DeviceSidebar::openMenu(QTreeWidgetItem *item, const QPoint &pos)
     Q_EMIT limitsRequested(id);
   else if (capture && chosen == capture)
     Q_EMIT captureRequested(id);
+  else if (zero && chosen == zero)
+    Q_EMIT nodeResetRequested(id);
   else if (chosen && chosen == close)
     Q_EMIT closeRequested(id);
 }

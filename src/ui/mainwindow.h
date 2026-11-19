@@ -383,12 +383,13 @@ protected:
   /// A logic node of @p type ("formula", "generator") into My devices, set
   /// up in its dialog (the assistant's tiles "Calculated", "Simulated"),
   /// and connected.
-  void        addNode(const QString &type);
+  void        addNode(const QString &type, const ValueRef &input = ValueRef(0));
   /// The dialog of a node's entry (FormulaNodeDlg, GeneratorNodeDlg; one of
   /// before too, LegacyNodes): its keys as set, none when cancelled; @p name
-  /// the new name on the way out. @p newType: the kind of a new one.
+  /// the new name on the way out. @p newType: the kind of a new one; @p
+  /// input: a new integral's value ("Integrate..." of a value's menu).
   std::optional<QVariantMap> editNode(const QString &id, const QVariantMap &keys, QString *name,
-                                      const QString &newType = QString());
+                                      const QString &newType = QString(), const ValueRef &input = ValueRef(0));
   /// The node of an entry's @p keys (Node/json, or one of before), null for
   /// a device; why not in @p why.
   std::unique_ptr<LogicNode> nodeOf(const QVariantMap &keys, QString *why = nullptr) const;

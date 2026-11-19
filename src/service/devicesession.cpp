@@ -151,6 +151,11 @@ void DeviceSession::followLead(int state)
   {
     m_running = first;
     m_scope = std::exchange(m_nextScope, std::nullopt);
+    // an integral counts from the recording's start
+    for (MeterController *ctl : controllers())
+      if (NodeRunner *runner = NodeRunner::of(ctl); runner && runner->node()->resetsOnRecording()
+                                                     && (ctl == first || inScope(ctl)))
+        runner->reset();
     // its start stays where it is, also when its first reading comes later:
     // the others record on it. Alone it begins with its first reading
     if (std::any_of(others.cbegin(), others.cend(), [this](const MeterController *ctl) { return inScope(ctl); }))
