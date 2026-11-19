@@ -110,6 +110,15 @@ int main(int argc, char **argv)
   again.load(dlg.name(), *node);
   check(again.node()->toJsonText() == node->toJsonText() && again.name() == "Power", "loaded again: the same");
 
+  // a device not connected: listed, grey, said so
+  {
+    FormulaNodeDlg off;
+    off.setChoices({ { "device:x", "Bench PSU", { "value 1" }, { QString() }, false } });
+    off.load("Calculated", FormulaNode());
+    check(off.findChild<QComboBox *>("ui_formulaInput1")->currentText().contains("not connected"),
+          "a device not connected: " + off.findChild<QComboBox *>("ui_formulaInput1")->currentText());
+  }
+
   // the generator's dialog
   {
     GeneratorNodeDlg gen;

@@ -123,7 +123,12 @@ void IntegralNodeDlg::setChoices(const QList<Choice> &choices)
   const QSignalBlocker block(m_input);
   m_input->clear();
   for (const Choice &c : choices)
-    m_input->addItem(c.text, c.ref.toString());
+  {
+    m_input->addItem(c.connected ? c.text : tr("%1 (not connected)").arg(c.text), c.ref.toString());
+    if (!c.connected)
+      m_input->setItemData(m_input->count() - 1, m_input->palette().color(QPalette::Disabled, QPalette::Text),
+                           Qt::ForegroundRole);
+  }
 }
 
 void IntegralNodeDlg::setState(std::function<std::optional<Reading>()> current, std::function<void()> reset)

@@ -35,6 +35,7 @@ public:
     ValueRef ref;
     QString  text;   ///< "Supply: Power"
     QString  unit;   ///< its base unit when known ("W")
+    bool     connected = true;   ///< false: listed grey, "(not connected)"
   };
 
   explicit IntegralNodeDlg(QWidget *parent = nullptr);
