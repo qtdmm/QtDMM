@@ -40,7 +40,7 @@ prefix: 12 V times 0.5 mA is `6.00 mW`.
   and `u^2/r` is what you expect.
 - Numbers may have an exponent or an SI suffix: `1e-3`, `1.5k`, `22u`, `4.7n`;
   `pi` is a constant.
-- Functions: `sqrt(x)`, `abs(x)`, `log10(x)`, `sin(x)`, `cos(x)`, `exp(x)`,
+- Functions: `sqrt(x)`, `abs(x)`, `log10(x)`, `ln(x)`, `sin(x)`, `cos(x)`, `exp(x)`,
   `floor(x)`, `min(a, b)`, `max(a, b)` and `rand()` (a new value in [0, 1)
   every time).
 - Variables are the meters connected in this QtDMM, by their names in My

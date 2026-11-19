@@ -14,6 +14,7 @@
 #include "core/devicelibrary.h"
 #include "core/reading.h"
 #include "logic/formulanode.h"
+#include "logic/generatornode.h"
 #include "logic/logicnode.h"
 #include "recording/recordingstore.h"
 #include "service/devicesession.h"
@@ -230,13 +231,14 @@ int main(int argc, char **argv)
     if (!w)
       return 1;
     QMap<int, Reading> last;
-    QObject::connect(w, &MeterController::reading, [&last](const Reading &r) { last[r.id] = r; });
+    QObject block;   // the connection ends with this block, as last does
+    QObject::connect(w, &MeterController::reading, &block, [&last](const Reading &r) { last[r.id] = r; });
     check(waitFor([&] { return last.size() == 3 && last[0].quality == Quality::Valid; }, 3000), "three outputs come");
     // the inputs are counters: v1 the leading one at its reading, v2 its last
     const Reading p0 = last[0];
     check(p0.name == "Power" && p0.baseUnit == "W" && p0.value > 0, QString("Power in W: %1").arg(p0.value));
     check(last[1].baseUnit == "W" && qAbs(last[1].value - p0.value) < 1e-9 * qMax(1.0, p0.value),
-          QString("y1 in mW is the same power: %1 %2").arg(last[1].value).arg(p0.value));
+          QString("y1 in mW is the same power: %1 %2").arg(last.value(1).value).arg(p0.value));
     check(last[2].quality == Quality::NoValue, "a formula that does not parse: no value");
 
     // the input it multiplies by closed: a gap
@@ -251,6 +253,46 @@ int main(int argc, char **argv)
 
     QVariantMap unknown { { "DMM/model", "QtDMM Formula" }, { "Node/json", "{\"type\":\"none\"}" } };
     check(!session.open("x", unknown, "X", &error) && error.contains("unknown"), "an unknown kind does not open: " + error);
+  }
+
+  // 12. a device of two values as one input: v1 its main value, v1.2 the second
+  {
+    auto gen = std::make_unique<GeneratorNode>();
+    GeneratorNode::Wave volts;
+    volts.shape = CalcExpr::Constant;
+    volts.max = "3";
+    GeneratorNode::Wave amps = volts;
+    amps.unit = "A";
+    amps.max = "5";
+    gen->setWaves({ volts, amps });
+    gen->setPeriodMs(40);
+    MeterController *g = session.openNode("g", "Two values", std::move(gen), &error);
+    auto q = std::make_unique<FormulaNode>();
+    q->setInputs(refs({ "device:g" }));
+    q->setFormulas({ { "P", "W", "v1 * v1.2" }, { QString(), "A", "v1.2 - v1.1" } });
+    MeterController *qc = session.openNode("q", "P of two", std::move(q), &error);
+    check(g && qc, "a device of two values and a formula over both: " + error);
+    QMap<int, Reading> got;
+    QObject block;   // the connection ends with this block, as got does
+    if (qc)
+      QObject::connect(qc, &MeterController::reading, &block, [&got](const Reading &r) { got[r.id] = r; });
+    // first the wait: the message's arguments may be evaluated before it
+    // (gcc), and must not make up entries
+    const bool came = waitFor([&] { return got.size() == 2 && got.value(0).quality == Quality::Valid; }, 3000);
+    check(came && qAbs(got.value(0).value - 15) < 1e-9 && qAbs(got.value(1).value - 2) < 1e-9,
+          QString("3 V * 5 A, 5 - 3: %1 %2").arg(got.value(0).value).arg(got.value(1).value));
+  }
+
+  // 13. a formula node stored with one value per input (1b) is read with devices
+  {
+    const char *before = R"({"type":"formula","inputs":["0@device:u","1@device:i","0@device:i"],"leading":1,
+      "parameters":{"outputs":[{"name":"P","unit":"W","formula":"v1 * v2 + v3"},{"unit":"V","formula":"y1 / v2"}]}})";
+    std::unique_ptr<LogicNode> n = LogicNode::fromJsonText(QString::fromLatin1(before));
+    auto *f = dynamic_cast<FormulaNode *>(n.get());
+    check(f && f->inputs().size() == 2 && f->inputs()[0].source == "device:u" && f->inputs()[1].source == "device:i"
+            && f->leadingInput() == 1 && f->formulas().value(0).text == "v1 * v2.2 + v2" && f->formulas().value(1).text == "y1 / v2.2",
+          "its inputs the devices, v2 of the second value v2.2: " + (f ? f->toJsonText() : QString()));
+    check(f && f->parameters()["deviceInputs"].toBool(), "stored again with devices");
   }
 
   return failed == 0 ? 0 : 1;

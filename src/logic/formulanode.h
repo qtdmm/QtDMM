@@ -13,10 +13,13 @@
 /// (CalcExpr) over any values (concept §8, PR 1b): power from a voltage and
 /// a current meter ("v1 * v2"), a difference, a mean.
 ///
-/// - **Variables:** the inputs are v1..vn, in SI base units as the readings
-///   carry them (12.3 mV is 0.0123); an output may use the ones before it as
-///   y1, y2, y3; t is the seconds since the node started (reset() starts
-///   it anew).
+/// - **Variables:** the inputs are devices (takesDevices()): v1..vn their
+///   main values, v1.2 .. v1.4 their other values (v1.1 is v1), in SI base
+///   units as the readings carry them (12.3 mV is 0.0123); an output may
+///   use the ones before it as y1, y2, y3; t is the seconds since the node
+///   started (reset() starts it anew). A node stored before the inputs
+///   were devices (one value each, "1@device:x") is read so: its inputs
+///   become their devices, v2 of a second value v1.2.
 /// - **Units:** a formula's result is in the base unit of its output's unit;
 ///   an output in "mW" shows 0.0123 as 12.3 mW. suggestUnit() proposes one
 ///   from the units of the inputs (V * A -> W).
@@ -43,6 +46,7 @@ public:
   QList<Output> outputs() const override;
   Values  evaluate(const Context &ctx) override;
   void    reset() override { m_start.reset(); }
+  bool    takesDevices() const override { return true; }
   QJsonObject parameters() const override;
   void    setParameters(const QJsonObject &p) override;
 
@@ -50,8 +54,14 @@ public:
   /// Up to kMaxValues; those that do not parse give no value.
   void    setFormulas(const QList<Formula> &formulas);
 
-  /// The variable of input @p index (0-based): "v1" ...
-  static QString inputName(int index) { return QStringLiteral("v%1").arg(index + 1); }
+  /// The variable of input @p index (0-based): "v1" ...; with @p value
+  /// (0-based, 0 the main one) above 0 that value of it: "v1.2" ...
+  static QString inputName(int index, int value = 0)
+  {
+    return value > 0 ? QStringLiteral("v%1.%2").arg(index + 1).arg(value + 1) : QStringLiteral("v%1").arg(index + 1);
+  }
+  /// @p text with input @p from's variables (v2, v2.1 .. v2.4) as input @p to's.
+  static QString renameInput(const QString &text, int from, int to);
   /// The variable of output @p index (0-based): "y1" ...
   static QString outputName(int index) { return QStringLiteral("y%1").arg(index + 1); }
 
@@ -68,6 +78,10 @@ public:
   static std::optional<QString> suggestUnit(const QString &text, const QMap<QString, QString> &units);
 
 private:
+  /// A node of before (inputs one value each): its inputs as devices; the
+  /// formulas of @p p renamed to them.
+  QStringList takeValueInputs(const QJsonObject &p);
+
   QList<Formula> m_formulas;
   QList<std::optional<CalcExpr>> m_exprs;
   std::optional<qint64> m_start;   ///< the core clock at the first computation, for t

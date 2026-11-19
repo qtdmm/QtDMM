@@ -63,7 +63,7 @@ FormulaNodeDlg::FormulaNodeDlg(QWidget *parent) :
   top->addWidget(inputBox);
   connect(m_addInput, &QPushButton::clicked, this, [this]
   {
-    addInput(m_choices.isEmpty() ? ValueRef(0) : m_choices.first().ref);
+    addInput(m_choices.isEmpty() ? QString() : m_choices.first().source);
     m_inputs.last().value->setFocus();
     validate();
   });
@@ -72,8 +72,8 @@ FormulaNodeDlg::FormulaNodeDlg(QWidget *parent) :
   // the outputs: y1 ... each name, formula, unit and its result now
   auto *outputBox = new QGroupBox(tr("Values"), this);
   auto *outputLayout = new QVBoxLayout(outputBox);
-  outputLayout->addWidget(new QLabel(tr("Formulas over the inputs v1, v2 ... in their base units (V, A, Ohm); "
-                                        "a value may use the ones above it as y1, y2 ..."), outputBox));
+  outputLayout->addWidget(new QLabel(tr("Formulas over the inputs' values (v1, v1.2 ... as listed under each) in their base units "
+                                        "(V, A, Ohm); a value may use the ones above it as y1, y2 ..."), outputBox));
   m_outputGrid = new QGridLayout;
   m_outputGrid->setColumnStretch(2, 1);
   outputLayout->addLayout(m_outputGrid);
@@ -143,11 +143,13 @@ void FormulaNodeDlg::load(const QString &name, const FormulaNode &node)
   m_on = node.isOn();
   m_periodMs = node.periodMs();
   m_maxAge->setValue(node.maxAgeMs() / 1000.0);
-  QList<ValueRef> in = node.inputs();
+  QStringList in;
+  for (const ValueRef &ref : node.inputs())
+    in << ref.source;
   if (in.isEmpty())
-    in << (m_choices.isEmpty() ? ValueRef(0) : m_choices.first().ref);
-  for (const ValueRef &ref : std::as_const(in))
-    addInput(ref);
+    in << (m_choices.isEmpty() ? QString() : m_choices.first().source);
+  for (const QString &source : std::as_const(in))
+    addInput(source);
   if (QAbstractButton *lead = m_leading->button(qMax(0, node.leadingInput())))
     lead->setChecked(true);
   QList<FormulaNode::Formula> formulas = node.formulas();
@@ -174,7 +176,7 @@ QList<ValueRef> FormulaNodeDlg::inputs() const
 {
   QList<ValueRef> out;
   for (const InputRow &row : m_inputs)
-    out << ValueRef::fromString(row.value->currentData().toString());
+    out << ValueRef(0, row.value->currentData().toString());
   return out;
 }
 
@@ -199,7 +201,7 @@ std::unique_ptr<FormulaNode> FormulaNodeDlg::node() const
   return node;
 }
 
-void FormulaNodeDlg::addInput(const ValueRef &ref)
+void FormulaNodeDlg::addInput(const QString &source)
 {
   if (m_inputs.size() >= kMaxInputs)
     return;
@@ -209,15 +211,21 @@ void FormulaNodeDlg::addInput(const ValueRef &ref)
   row.value = new QComboBox(this);
   row.value->setObjectName(QString("ui_formulaInput%1").arg(index + 1));
   for (const Choice &c : std::as_const(m_choices))
-    row.value->addItem(c.text, c.ref.toString());
-  int at = row.value->findData(ref.toString());
+    row.value->addItem(c.text, c.source);
+  int at = row.value->findData(source);
   if (at < 0)
   {
     // gone from My devices: kept, and said so
-    row.value->addItem(tr("%1 (not in My devices)").arg(ref.toString()), ref.toString());
+    row.value->addItem(tr("%1 (not in My devices)").arg(source), source);
     at = row.value->count() - 1;
   }
   row.value->setCurrentIndex(at);
+  row.values = new QLabel(this);
+  row.values->setWordWrap(true);
+  row.values->setObjectName(QString("ui_formulaValues%1").arg(index + 1));
+  QFont small = row.values->font();
+  small.setPointSizeF(small.pointSizeF() * 0.9);
+  row.values->setFont(small);
   row.lead = new QRadioButton(tr("leads"), this);
   row.lead->setToolTip(tr("A new reading of this input computes the values"));
   m_leading->addButton(row.lead, index);
@@ -227,8 +235,12 @@ void FormulaNodeDlg::addInput(const ValueRef &ref)
   row.remove->setText(QStringLiteral("−"));
   row.remove->setToolTip(tr("Remove this input"));
   m_inputs << row;
-  connect(row.value, &QComboBox::currentIndexChanged, this, [this]
+  showValues(index);
+  connect(row.value, &QComboBox::currentIndexChanged, this, [this, combo = row.value]
   {
+    for (int i = 0; i < m_inputs.size(); ++i)
+      if (m_inputs[i].value == combo)
+        showValues(i);
     // a unit not chosen yet follows the input
     for (int i = 0; i < m_outputs.size(); ++i)
       propose(i);
@@ -245,6 +257,19 @@ void FormulaNodeDlg::addInput(const ValueRef &ref)
       }
   });
   relayout();
+}
+
+void FormulaNodeDlg::showValues(int index)
+{
+  if (index < 0 || index >= m_inputs.size())
+    return;
+  const QString source = m_inputs[index].value->currentData().toString();
+  QStringList parts;
+  for (const Choice &c : std::as_const(m_choices))
+    if (c.source == source)
+      for (int v = 0; v < c.values.size(); ++v)
+        parts << QString("%1 = %2").arg(FormulaNode::inputName(index, v), c.values[v]);
+  m_inputs[index].values->setText(parts.join(QStringLiteral("  ·  ")));
 }
 
 void FormulaNodeDlg::addOutput(const FormulaNode::Formula &formula, bool unitChosen)
@@ -319,15 +344,14 @@ void FormulaNodeDlg::removeInput(int index)
   const bool led = m_inputs[index].lead->isChecked();
   const InputRow row = m_inputs.takeAt(index);
   m_leading->removeButton(row.lead);
-  for (QWidget *w : { static_cast<QWidget *>(row.label), static_cast<QWidget *>(row.value),
-                      static_cast<QWidget *>(row.lead), static_cast<QWidget *>(row.remove) })
+  for (QWidget *w : std::initializer_list<QWidget *> { row.label, row.value, row.values, row.lead, row.remove })
     w->deleteLater();
   // the inputs after it move up: v3 becomes v2, in the formulas too
   for (OutputRow &out : m_outputs)
   {
     QString text = out.formula->text();
     for (int i = index + 1; i <= m_inputs.size(); ++i)
-      text = CalcExpr::renameVariable(text, FormulaNode::inputName(i), FormulaNode::inputName(i - 1));
+      text = FormulaNode::renameInput(text, i, i - 1);
     const QSignalBlocker block(out.formula);
     out.formula->setText(text);
   }
@@ -368,10 +392,12 @@ void FormulaNodeDlg::relayout()
   {
     const InputRow &row = m_inputs[i];
     row.label->setText(FormulaNode::inputName(i));
-    m_inputGrid->addWidget(row.label, i, 0);
-    m_inputGrid->addWidget(row.value, i, 1);
-    m_inputGrid->addWidget(row.lead, i, 2);
-    m_inputGrid->addWidget(row.remove, i, 3);
+    m_inputGrid->addWidget(row.label, 2 * i, 0);
+    m_inputGrid->addWidget(row.value, 2 * i, 1);
+    m_inputGrid->addWidget(row.lead, 2 * i, 2);
+    m_inputGrid->addWidget(row.remove, 2 * i, 3);
+    m_inputGrid->addWidget(row.values, 2 * i + 1, 1, 1, 3);
+    showValues(i);
     row.remove->setEnabled(m_inputs.size() > 1);
   }
   for (int i = 0; i < m_outputs.size(); ++i)
@@ -395,10 +421,15 @@ QMap<QString, QString> FormulaNodeDlg::units() const
   QMap<QString, QString> out;
   for (int i = 0; i < m_inputs.size(); ++i)
   {
-    const QString ref = m_inputs[i].value->currentData().toString();
+    const QString source = m_inputs[i].value->currentData().toString();
     for (const Choice &c : m_choices)
-      if (c.ref.toString() == ref)
-        out.insert(FormulaNode::inputName(i), c.unit);
+      if (c.source == source)
+        for (int v = 0; v < c.units.size(); ++v)
+        {
+          out.insert(FormulaNode::inputName(i, v), c.units[v]);
+          if (v == 0)
+            out.insert(FormulaNode::inputName(i) + ".1", c.units[v]);
+        }
   }
   for (int i = 0; i < m_outputs.size(); ++i)
     out.insert(FormulaNode::outputName(i), m_outputs[i].unit->currentText().trimmed());
@@ -454,7 +485,15 @@ void FormulaNodeDlg::updateResults()
   const std::unique_ptr<FormulaNode> n = node();
   LogicNode::Context ctx;
   for (const ValueRef &ref : n->inputs())
-    ctx.inputs << (m_current ? m_current(ref) : std::nullopt);
+  {
+    // each value of the device as it is now
+    QMap<int, Reading> now;
+    for (int v = 0; v < kMaxValues && m_current; ++v)
+      if (const std::optional<Reading> r = m_current(ValueRef(v, ref.source)))
+        now.insert(v, *r);
+    ctx.values << now;
+    ctx.inputs << (now.contains(0) ? std::optional(now[0]) : std::nullopt);
+  }
   const LogicNode::Values values = n->evaluate(ctx);
   for (int i = 0; i < m_outputs.size(); ++i)
   {

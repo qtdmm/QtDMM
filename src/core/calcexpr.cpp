@@ -112,6 +112,18 @@ struct CalcExpr::Parser
 
   static bool isNameStart(QChar c) { return c.isLetter() || c == '_'; }
   static bool isNameChar(QChar c) { return c.isLetterOrNumber() || c == '_'; }
+  /// After a name at @p pos: past ".<digits>", a value of it ("v1.2");
+  /// @p pos when none follows.
+  static int valueNumber(const QString &text, int pos)
+  {
+    if (pos + 1 < text.size() && text[pos] == '.' && text[pos + 1].isDigit())
+    {
+      pos += 2;
+      while (pos < text.size() && text[pos].isDigit())
+        pos++;
+    }
+    return pos;
+  }
 
   int atom()
   {
@@ -179,6 +191,7 @@ struct CalcExpr::Parser
     const int start = pos;
     while (pos < s.size() && isNameChar(s[pos]))
       pos++;
+    pos = valueNumber(s, pos);
     const QString id = s.mid(start, pos - start);
 
     if (!accept('('))
@@ -200,6 +213,7 @@ struct CalcExpr::Parser
     if (id == "sqrt")       op = Op::Sqrt;
     else if (id == "abs")   op = Op::Abs;
     else if (id == "log10") op = Op::Log10;
+    else if (id == "ln")    op = Op::Ln;
     else if (id == "sin")   op = Op::Sin;
     else if (id == "cos")   op = Op::Cos;
     else if (id == "exp")   op = Op::Exp;
@@ -253,6 +267,7 @@ QString CalcExpr::renameVariable(const QString &text, const QString &from, const
       const int start = pos;
       while (pos < text.size() && Parser::isNameChar(text[pos]))
         ++pos;
+      pos = Parser::valueNumber(text, pos);
       const QString name = text.mid(start, pos - start);
       int next = pos;
       while (next < text.size() && text[next].isSpace())
@@ -358,6 +373,7 @@ double CalcExpr::evalNode(int idx, const QMap<QString, double> &values, bool &ok
     case Op::Sqrt:  return std::sqrt(A());
     case Op::Abs:   return std::fabs(A());
     case Op::Log10: return std::log10(A());
+    case Op::Ln:    return std::log(A());
     case Op::Sin:   return std::sin(A());
     case Op::Cos:   return std::cos(A());
     case Op::Exp:   return std::exp(A());

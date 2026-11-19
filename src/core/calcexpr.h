@@ -13,8 +13,9 @@
 /// associative, unary minus binds weaker than ^ so -2^2 is -4),
 /// parentheses, numbers in decimal or exponent form with an optional SI
 /// suffix ("1.5k", "22u", "4.7n"), variables (identifiers, in QtDMM the
-/// names of the open meters), the constant pi and the functions sqrt, abs,
-/// log10, sin, cos, exp, floor, min(a,b), max(a,b) and rand() (uniform in
+/// names of the open meters; one may carry a value number, "v1.2", a whole
+/// name of its own), the constant pi and the functions sqrt, abs,
+/// log10, ln, sin, cos, exp, floor, min(a,b), max(a,b) and rand() (uniform in
 /// [0, 1), new value per evaluation). Names are case-sensitive.
 ///
 /// parse() reports the first error with its position; eval() yields nothing
@@ -49,7 +50,7 @@ public:
                                  const QString &period, const QString &noise);
 
 private:
-  enum class Op { Num, Var, Neg, Add, Sub, Mul, Div, Pow, Sqrt, Abs, Log10, Sin, Cos, Exp, Floor, Min, Max, Rand };
+  enum class Op { Num, Var, Neg, Add, Sub, Mul, Div, Pow, Sqrt, Abs, Log10, Ln, Sin, Cos, Exp, Floor, Min, Max, Rand };
   struct Node
   {
     Op op;

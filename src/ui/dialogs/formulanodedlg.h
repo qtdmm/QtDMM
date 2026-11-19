@@ -24,8 +24,8 @@ class QRadioButton;
 class QToolButton;
 
 /// The settings of a formula node (FormulaNode): its name, its inputs
-/// v1..vn - any value of My devices, also of one not connected, which the
-/// node then waits for -, which of them leads, up to kMaxValues outputs
+/// v1..vn - any device of My devices, also one not connected, which the
+/// node then waits for; its values are v1, v1.2 ... -, which of them leads, up to kMaxValues outputs
 /// with name, formula and unit, and the maximum age of an input. The unit
 /// is proposed from the inputs' units (V * A -> W) until one is chosen;
 /// each output shows its result with the inputs as they are now. A formula
@@ -35,19 +35,20 @@ class FormulaNodeDlg : public QDialog
 {
   Q_OBJECT
 public:
-  /// A value one may take as an input.
+  /// A device one may take as an input, with its values.
   struct Choice
   {
-    ValueRef ref;
-    QString  text;   ///< "UT61E: Voltage", "Victron: value 2"
-    QString  unit;   ///< its base unit when known ("V"), for the proposal
+    QString     source;   ///< "device:<id>"
+    QString     text;     ///< its name
+    QStringList values;   ///< what each value is ("Voltage DC (V)", "value 2"), one per value
+    QStringList units;    ///< their base units when known ("V"), for the proposal
   };
 
   explicit FormulaNodeDlg(QWidget *parent = nullptr);
 
   /// The values to choose from, in that order.
   void        setChoices(const QList<Choice> &choices);
-  /// The current reading of a value, for the results shown; none: none.
+  /// The current reading of a device's value, for the results shown; none: none.
   void        setCurrent(std::function<std::optional<Reading>(const ValueRef &ref)> current);
   /// Whether these inputs would close a loop (editing a node others take).
   void        setLoopCheck(std::function<bool(const QList<ValueRef> &inputs)> makesLoop);
@@ -62,7 +63,8 @@ private:
   struct InputRow
   {
     QLabel      *label;
-    QComboBox   *value;
+    QComboBox   *value;    ///< the device
+    QLabel      *values;   ///< its variables: "v1 = Voltage · v1.2 = Current"
     QRadioButton *lead;
     QToolButton *remove;
   };
@@ -78,7 +80,9 @@ private:
     QString      coupling;             ///< kept as loaded (no field for it)
   };
 
-  void        addInput(const ValueRef &ref);
+  void        addInput(const QString &source);
+  /// The variables of input @p index under its device.
+  void        showValues(int index);
   void        addOutput(const FormulaNode::Formula &formula, bool unitChosen);
   void        removeInput(int index);
   void        removeOutput(int index);

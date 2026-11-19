@@ -88,6 +88,8 @@ void NodeRunner::bind()
   m_links.clear();
   const QList<ValueRef> inputs = m_node->inputs();
   m_last.resize(inputs.size());
+  m_values.resize(inputs.size());
+  const bool devices = m_node->takesDevices();
   QStringList missing;
   for (int i = 0; i < inputs.size(); ++i)
   {
@@ -96,12 +98,13 @@ void NodeRunner::bind()
     if (!from)
     {
       m_last[i].reset();
-      missing << ref.toString();
+      m_values[i].clear();
+      missing << (devices ? ref.source : ref.toString());
       continue;
     }
-    m_links << connect(from, &MeterController::reading, this, [this, i, ref](const Reading &r)
+    m_links << connect(from, &MeterController::reading, this, [this, i, ref, devices](const Reading &r)
     {
-      if (ref.matches(r))
+      if (devices ? r.source == ref.source : ref.matches(r))
         onReading(i, r);
     });
   }
@@ -117,10 +120,23 @@ void NodeRunner::onReading(int input, const Reading &r)
 {
   if (input < 0 || input >= m_last.size())
     return;
-  m_last[input] = r;
   // the leading input triggers, at its time; a node on a clock computes on that
-  if (input == m_node->leadingInput() && m_node->periodMs() == 0)
-    compute(r.t, r.msecs);
+  const bool leads = input == m_node->leadingInput() && m_node->periodMs() == 0;
+  if (!m_node->takesDevices())
+  {
+    m_last[input] = r;
+    if (leads)
+      compute(r.t, r.msecs);
+    return;
+  }
+  // a device: all its values; its main value triggers, once the others of
+  // its frame are in (they come right after it, in the same delivery)
+  m_values[input][r.id] = r;
+  if (r.id != 0)
+    return;
+  m_last[input] = r;
+  if (leads)
+    QTimer::singleShot(0, this, [this, t = r.t, wall = r.msecs] { compute(t, wall); });
 }
 
 void NodeRunner::compute(qint64 t, qint64 wall)
@@ -131,9 +147,20 @@ void NodeRunner::compute(qint64 t, qint64 wall)
   ctx.t = t;
   ctx.wall = wall;
   const QList<ValueRef> inputs = m_node->inputs();
+  const bool devices = m_node->takesDevices();
   QStringList old;
   for (int i = 0; i < inputs.size(); ++i)
   {
+    if (devices)
+    {
+      // each value of the device, if young enough
+      QMap<int, Reading> young;
+      const QMap<int, Reading> all = m_values.value(i);
+      for (auto it = all.cbegin(); it != all.cend(); ++it)
+        if (t - it->t <= m_node->maxAgeMs())
+          young.insert(it.key(), it.value());
+      ctx.values << young;
+    }
     const std::optional<Reading> &r = m_last.value(i);
     // the others' last reading, if young enough beside this moment
     if (r && t - r->t <= m_node->maxAgeMs())
@@ -141,7 +168,7 @@ void NodeRunner::compute(qint64 t, qint64 wall)
     else
     {
       ctx.inputs << std::nullopt;
-      old << inputs[i].toString();
+      old << (devices ? inputs[i].source : inputs[i].toString());
     }
   }
   if (old.isEmpty())

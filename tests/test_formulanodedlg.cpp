@@ -1,9 +1,10 @@
 // Copyright (c) 2026 The QtDMM developers
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// The dialog of a formula node (PR 1b): a new one, the unit proposed from
-// the inputs and taken away again, a wrong formula keeps OK off, removing
-// an input renames the variables after it, a loop is refused, and what it
+// The dialog of a formula node (PR 1b): a new one, devices as inputs with
+// their values v1, v1.2 ..., the unit proposed from the inputs and taken
+// away again, a wrong formula keeps OK off, removing an input renames the
+// variables after it, a loop is refused, and what it
 // gives back. Then the generator's dialog (PR 2): a sine to start with, a
 // formula over the values above, removing one renames, the clock.
 
@@ -19,18 +20,20 @@ int main(int argc, char **argv)
     qputenv("QT_QPA_PLATFORM", "offscreen");
   QApplication app(argc, argv);
 
+  // two devices: a supply with its voltage, a load with current and a second value
   const QList<FormulaNodeDlg::Choice> choices {
-    { ValueRef(0, "device:u"), "Supply: Voltage", "V" },
-    { ValueRef(0, "device:i"), "Load: Current", "A" },
-    { ValueRef(1, "device:i"), "Load: value 2", QString() },
+    { "device:u", "Supply", { "Voltage" }, { "V" } },
+    { "device:i", "Load", { "Current", "value 2" }, { "A", QString() } },
   };
   FormulaNodeDlg dlg;
   dlg.setChoices(choices);
   dlg.setCurrent([](const ValueRef &ref) -> std::optional<Reading>
   {
+    if (ref.source == "device:u" && ref.id > 0)
+      return std::nullopt;
     Reading r;
     r.msecs = 1;
-    r.value = ref.source == "device:u" ? 12.0 : 0.5;
+    r.value = ref.source == "device:u" ? 12.0 : ref.id == 0 ? 0.5 : 2.0;
     return r;
   });
   dlg.load("Calculated", FormulaNode());
@@ -40,11 +43,13 @@ int main(int argc, char **argv)
   auto *result = dlg.findChild<QLabel *>("ui_formulaResult1");
   check(formula && unit && result && !ok->isEnabled(), "a new one: one value, no formula, OK off");
 
-  // a second input: the current, then v1 * v2 in W
+  // a second input: the load, its values listed under it
   dlg.findChild<QPushButton *>("ui_formulaAddInput")->click();
   auto *input2 = dlg.findChild<QComboBox *>("ui_formulaInput2");
   check(input2 != nullptr, "a second input");
   input2->setCurrentIndex(1);
+  const QString listed = dlg.findChild<QLabel *>("ui_formulaValues2")->text();
+  check(listed.contains("v2 = Current") && listed.contains("v2.2 = value 2"), "its values: " + listed);
   formula->setText("v1");
   check(unit->currentText() == "V", "v1 alone: V proposed, " + unit->currentText());
   formula->setText("v1 * v2");
@@ -52,6 +57,8 @@ int main(int argc, char **argv)
   check(result->text().contains("6") && result->text().contains("W"), "its result now: " + result->text());
   formula->setText("v1 * v1");
   check(unit->currentText().isEmpty(), "V * V: the proposal taken away: " + unit->currentText());
+  formula->setText("v1 * v2.1 * v2.2");
+  check(ok->isEnabled() && result->text().contains("12"), "v2.1 is v2, v2.2 its second value: " + result->text());
 
   // a unit chosen stays
   formula->setText("v1 * v2");
@@ -59,15 +66,17 @@ int main(int argc, char **argv)
   formula->setText("v1 * v2 * 2");
   check(unit->currentText() == "mW", "a unit chosen stays: " + unit->currentText());
 
-  // a variable that is no input
+  // a variable that is no input, a value beyond four
   formula->setText("v1 * v3");
   check(!ok->isEnabled() && dlg.findChild<QLabel *>("ui_formulaStatus")->text().contains("v3"),
         "v3 unknown: OK off, said so");
+  formula->setText("v2.5");
+  check(!ok->isEnabled(), "v2.5: no fifth value");
 
-  // a third input, v3 used, then v2 removed: v3 becomes v2
+  // a third input, used with its second value, then v2 removed: v3 becomes v2
   dlg.findChild<QPushButton *>("ui_formulaAddInput")->click();
-  dlg.findChild<QComboBox *>("ui_formulaInput3")->setCurrentIndex(2);
-  formula->setText("v1 * v3");
+  dlg.findChild<QComboBox *>("ui_formulaInput3")->setCurrentIndex(1);
+  formula->setText("v1 * v3.2 + v3");
   check(ok->isEnabled(), "v3 an input now");
   QList<QToolButton *> removes;
   for (QToolButton *b : dlg.findChildren<QToolButton *>())
@@ -76,20 +85,21 @@ int main(int argc, char **argv)
   check(removes.size() == 3, "three inputs to remove");
   if (removes.size() == 3)
     removes[1]->click();
-  check(formula->text() == "v1 * v2", "v2 removed, v3 is v2 now: " + formula->text());
+  check(formula->text() == "v1 * v2.2 + v2", "v2 removed, v3 is v2 now: " + formula->text());
 
   // a loop
-  dlg.setLoopCheck([](const QList<ValueRef> &inputs) { return inputs.size() > 1 && inputs[1].id == 1; });
+  dlg.setLoopCheck([](const QList<ValueRef> &inputs) { return inputs.size() > 1 && inputs[1].source == "device:i"; });
   check(!ok->isEnabled(), "inputs that close a loop: OK off");
   dlg.setLoopCheck({});
 
   // what it gives back
   dlg.findChild<QLineEdit *>("ui_formulaName")->setText("Power");
   dlg.findChild<QLineEdit *>("ui_formulaName1")->setText("P");
+  formula->setText("v1 * v2");
   const std::unique_ptr<FormulaNode> node = dlg.node();
-  check(dlg.name() == "Power" && node->inputs().size() == 2 && node->inputs()[1].toString() == "1@device:i"
+  check(dlg.name() == "Power" && node->inputs().size() == 2 && node->inputs()[1].toString() == "0@device:i"
           && node->formulas().size() == 1 && node->formulas()[0] == FormulaNode::Formula { "P", "mW", "v1 * v2" }
-          && node->maxAgeMs() == 3000,
+          && node->maxAgeMs() == 3000 && node->parameters()["deviceInputs"].toBool(),
         "the node: " + node->toJsonText());
 
   // loaded again: as it was
