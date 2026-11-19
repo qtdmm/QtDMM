@@ -213,6 +213,7 @@ struct CalcExpr::Parser
     if (id == "sqrt")       op = Op::Sqrt;
     else if (id == "abs")   op = Op::Abs;
     else if (id == "log10") op = Op::Log10;
+    else if (id == "ln")    op = Op::Ln;
     else if (id == "sin")   op = Op::Sin;
     else if (id == "cos")   op = Op::Cos;
     else if (id == "exp")   op = Op::Exp;
@@ -372,6 +373,7 @@ double CalcExpr::evalNode(int idx, const QMap<QString, double> &values, bool &ok
     case Op::Sqrt:  return std::sqrt(A());
     case Op::Abs:   return std::fabs(A());
     case Op::Log10: return std::log10(A());
+    case Op::Ln:    return std::log(A());
     case Op::Sin:   return std::sin(A());
     case Op::Cos:   return std::cos(A());
     case Op::Exp:   return std::exp(A());

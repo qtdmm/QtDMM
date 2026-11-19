@@ -84,6 +84,13 @@ int main(int argc, char **argv)
   expectValue("sqrt(u*3)", 6, vars);
   expectValue("abs(-u)", 12, vars);
   expectValue("log10(1000)", 3);
+  expectValue("ln(exp(2))", 2);
+  // the dew point (Magnus) of 20 °C at 50 %RH, as a formula over a TFA's values
+  {
+    const double gamma = 17.62 * 20 / (243.12 + 20) + std::log(0.5);
+    expectValue("243.12*((17.62*v1.2)/(243.12+v1.2)+ln(v1.3/100))/((17.62*243.12)/(243.12+v1.2)-ln(v1.3/100))",
+                243.12 * gamma / (17.62 - gamma), { { "v1.2", 20 }, { "v1.3", 50 } });
+  }
   expectValue("min(u, i)", 0.5, vars);
   expectValue("max(u, i*100)", 50, vars);
   expectValue("sqrt(abs(-16))", 4);
