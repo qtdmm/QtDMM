@@ -40,7 +40,7 @@ QList<LogicNode::Output> FormulaNode::outputs() const
 {
   QList<Output> out;
   for (const Formula &f : m_formulas)
-    out << Output { f.name, f.unit };
+    out << Output { f.name, f.unit, OutputKind::Value, f.coupling };
   return out;
 }
 
@@ -55,6 +55,9 @@ void FormulaNode::setFormulas(const QList<Formula> &formulas)
 LogicNode::Values FormulaNode::evaluate(const Context &ctx)
 {
   QMap<QString, double> vars;
+  if (!m_start)
+    m_start = ctx.t;
+  vars.insert(QStringLiteral("t"), (ctx.t - *m_start) / 1000.0);
   for (int i = 0; i < ctx.inputs.size(); ++i)
     if (const std::optional<Reading> &r = ctx.inputs[i]; r && !r->noNumber() && std::isfinite(r->value))
       vars.insert(inputName(i), r->value);
@@ -75,7 +78,12 @@ QJsonObject FormulaNode::parameters() const
 {
   QJsonArray out;
   for (const Formula &f : m_formulas)
-    out.append(QJsonObject { { "name", f.name }, { "unit", f.unit }, { "formula", f.text } });
+  {
+    QJsonObject o { { "name", f.name }, { "unit", f.unit }, { "formula", f.text } };
+    if (!f.coupling.isEmpty())
+      o["coupling"] = f.coupling;
+    out.append(o);
+  }
   return { { "outputs", out } };
 }
 
@@ -85,7 +93,7 @@ void FormulaNode::setParameters(const QJsonObject &p)
   for (const QJsonValue &v : p["outputs"].toArray())
   {
     const QJsonObject o = v.toObject();
-    formulas << Formula { o["name"].toString(), o["unit"].toString(), o["formula"].toString() };
+    formulas << Formula { o["name"].toString(), o["unit"].toString(), o["formula"].toString(), o["coupling"].toString() };
   }
   setFormulas(formulas);
 }
@@ -98,7 +106,7 @@ QString FormulaNode::check(const QString &text, int index, int inputs, int *pos)
     return error;
   for (const QString &name : expr->variables())
   {
-    bool known = false;
+    bool known = name == QLatin1String("t");
     for (int i = 0; i < inputs && !known; ++i)
       known = name == inputName(i);
     for (int i = 0; i < index && !known; ++i)
@@ -113,8 +121,13 @@ QString FormulaNode::check(const QString &text, int index, int inputs, int *pos)
   return QString();
 }
 
-std::optional<QString> FormulaNode::suggestUnit(const QString &text, const QMap<QString, QString> &units)
+std::optional<QString> FormulaNode::suggestUnit(const QString &text, const QMap<QString, QString> &given)
 {
+  QMap<QString, QString> units = given;
+  if (!units.contains(QStringLiteral("t")))
+    units.insert(QStringLiteral("t"), QStringLiteral("s"));
+  for (auto it = units.begin(); it != units.end(); ++it)
+    it.value() = LogicNode::canonicalUnit(it.value());
   const std::optional<CalcExpr> expr = CalcExpr::parse(text);
   if (!expr || text.contains(QLatin1String("rand")))
     return std::nullopt;

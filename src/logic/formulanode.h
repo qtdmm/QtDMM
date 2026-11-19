@@ -15,7 +15,8 @@
 ///
 /// - **Variables:** the inputs are v1..vn, in SI base units as the readings
 ///   carry them (12.3 mV is 0.0123); an output may use the ones before it as
-///   y1, y2, y3.
+///   y1, y2, y3; t is the seconds since the node started (reset() starts
+///   it anew).
 /// - **Units:** a formula's result is in the base unit of its output's unit;
 ///   an output in "mW" shows 0.0123 as 12.3 mW. suggestUnit() proposes one
 ///   from the units of the inputs (V * A -> W).
@@ -32,6 +33,7 @@ public:
     QString name;
     QString unit;
     QString text;
+    QString coupling;   ///< "AC", "DC" or empty (taken over from an old calculated value)
     bool    operator==(const Formula &o) const = default;
   };
 
@@ -40,6 +42,7 @@ public:
   QString type() const override { return QString::fromLatin1(kType); }
   QList<Output> outputs() const override;
   Values  evaluate(const Context &ctx) override;
+  void    reset() override { m_start.reset(); }
   QJsonObject parameters() const override;
   void    setParameters(const QJsonObject &p) override;
 
@@ -54,11 +57,11 @@ public:
 
   /// What is wrong with output @p index's formula @p text among @p inputs
   /// inputs: it does not parse (with @p pos the 0-based offset), or uses a
-  /// variable that is no input and no earlier output. Empty when fine.
+  /// variable that is no input, no earlier output and not t. Empty when fine.
   static QString check(const QString &text, int index, int inputs, int *pos = nullptr);
 
   /// The unit output @p index's formula @p text gives from the base units of
-  /// its variables (@p units: "v1" -> "V", "y1" -> "W"), when it tells one:
+  /// its variables (@p units: "v1" -> "V", "y1" -> "W"; t is in s), when it tells one:
   /// products and quotients of V, A, s, W, Ohm, Hz, S, J, C and sums of one
   /// unit ("v1 + v2" in °C is °C). Empty string: no unit (a pure number);
   /// none: it does not tell (sin(v1), a mix).
@@ -67,4 +70,5 @@ public:
 private:
   QList<Formula> m_formulas;
   QList<std::optional<CalcExpr>> m_exprs;
+  std::optional<qint64> m_start;   ///< the core clock at the first computation, for t
 };

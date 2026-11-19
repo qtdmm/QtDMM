@@ -380,12 +380,18 @@ protected:
   /// The assistant "Add device": the device into My devices, connected
   /// unless "Save only".
   void        addDevice();
-  /// A calculated value (FormulaNode) into My devices, set up in its dialog
-  /// (the assistant's tile "Calculated"), and connected.
-  void        addFormula();
-  /// The dialog of a calculated value's entry: its keys as set, none when
-  /// cancelled; @p name new name on the way out.
-  std::optional<QVariantMap> editFormula(const QString &id, const QVariantMap &keys, QString *name);
+  /// A logic node of @p type ("formula", "generator") into My devices, set
+  /// up in its dialog (the assistant's tiles "Calculated", "Simulated"),
+  /// and connected.
+  void        addNode(const QString &type);
+  /// The dialog of a node's entry (FormulaNodeDlg, GeneratorNodeDlg; one of
+  /// before too, LegacyNodes): its keys as set, none when cancelled; @p name
+  /// the new name on the way out. @p newType: the kind of a new one.
+  std::optional<QVariantMap> editNode(const QString &id, const QVariantMap &keys, QString *name,
+                                      const QString &newType = QString());
+  /// The node of an entry's @p keys (Node/json, or one of before), null for
+  /// a device; why not in @p why.
+  std::unique_ptr<LogicNode> nodeOf(const QVariantMap &keys, QString *why = nullptr) const;
   /// The values of My devices a formula may take (all but the entry @p id).
   QList<FormulaNodeDlg::Choice> formulaChoices(const QString &id) const;
   /// The entry @p id of My devices takes @p keys; a device connected takes

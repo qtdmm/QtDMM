@@ -183,7 +183,7 @@ QList<FormulaNode::Formula> FormulaNodeDlg::formulas() const
   QList<FormulaNode::Formula> out;
   for (const OutputRow &row : m_outputs)
     out << FormulaNode::Formula { row.name->text().simplified(), row.unit->currentText().trimmed(),
-                                  row.formula->text().trimmed() };
+                                  row.formula->text().trimmed(), row.coupling };
   return out;
 }
 
@@ -275,6 +275,7 @@ void FormulaNodeDlg::addOutput(const FormulaNode::Formula &formula, bool unitCho
   row.remove->setText(QStringLiteral("−"));
   row.remove->setToolTip(tr("Remove this value"));
   row.unitChosen = unitChosen;
+  row.coupling = formula.coupling;
   m_outputs << row;
   connect(row.formula, &QLineEdit::textChanged, this, [this, edit = row.formula]
   {

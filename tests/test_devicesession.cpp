@@ -118,10 +118,13 @@ int main(int argc, char **argv)
         "variable names");
   check(ask("INST:CAT?") == "\"WINDOW_METER\",\"BENCH_SIM\",\"POWER\"", "three meters: " + ask("INST:CAT?"));
   // one that does not connect: the SCPI error in English
-  const QString broken = lib.add("Broken", {{"DMM/model", "QtDMM Calculated value"}, {"Port settings/device", "calc W"},
-                                            {"DMM/calc-unit", "W"}, {"DMM/calc-expression", ""}});
+  const QString broken = lib.add("Broken", {{"DMM/model", "UNI-T UT61E"}, {"Port settings/device", "/dev/qtdmm-test-nosuch"}});
   QString why;
   check(!session.open(broken, &why) && why == "-240,Hardware error; Broken: does not connect", "does not connect: " + why);
+  // a calculated value of before whose formula does not parse: refused, as it was
+  const QString badFormula = lib.add("Bad formula", {{"DMM/model", "QtDMM Calculated value"}, {"Port settings/device", "calc W"},
+                                                     {"DMM/calc-unit", "W"}, {"DMM/calc-expression", ""}});
+  check(!session.open(badFormula, &why) && why.startsWith("-221,") && why.contains("Formula error"), "a formula error: " + why);
   ask("QTDMM:DEV:OPEN \"nosuch\"");
   check(ask("SYST:ERR?").startsWith("-224,"), "QTDMM:DEV:OPEN of an unknown id");
   // a second of the same name is POWER_2, and stays so when the first closes

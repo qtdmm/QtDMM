@@ -126,6 +126,9 @@ public:
   /// other characters than letters, digits and '_' as '_', a '_' before a
   /// leading digit.
   static QString variableName(const QString &name);
+  /// The source ("device:<id>") of the entry of My devices whose
+  /// variableName() is @p name; empty for none.
+  QString     sourceOfVariable(const QString &name) const;
 
   /// The entries of "My devices", for QTDMM:DEVice:CATalog?.
   DeviceLibrary *library() const { return m_library; }

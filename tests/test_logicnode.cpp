@@ -118,7 +118,7 @@ int main(int argc, char **argv)
   check(lastU.source == "device:u" && lastU.baseUnit == "V" && lastU.name == "count" && u->isWanted()
           && u->linkState() == MeterConnection::LinkState::Connected,
         QString("its readings: %1 %2 from %3").arg(lastU.value).arg(lastU.baseUnit, lastU.source));
-  check(u->sourceInfo().vendor == "QtDMM" && u->sourceInfo().model == "counter" && u->valueCount() == 1, "its model: QtDMM counter");
+  check(u->sourceInfo().vendor == "QtDMM" && u->sourceInfo().model == "Counter" && u->valueCount() == 1, "its model: QtDMM Counter");
 
   // 4. two inputs, the first leads: computed at its readings, at its time
   MeterController *i = session.openNode("i", "Counter I", std::make_unique<Counter>(40), &error);
@@ -226,7 +226,7 @@ int main(int argc, char **argv)
     check(device.isNode() && device.where() == "v1 * v2; y1; v1 +", "where: its formulas: " + device.where());
 
     MeterController *w = session.open("w", entry, "Power W", &error);
-    check(w && w->isNode() && w->valueCount() == 3 && w->sourceInfo().model == "formula", "opened as a node: " + error);
+    check(w && w->isNode() && w->valueCount() == 3 && w->sourceInfo().model == "Formula", "opened as a node: " + error);
     if (!w)
       return 1;
     QMap<int, Reading> last;

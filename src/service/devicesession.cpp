@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "service/devicesession.h"
+#include "logic/legacynodes.h"
 #include "service/noderunner.h"
 
 #include <QDateTime>
@@ -241,6 +242,16 @@ QString DeviceSession::variableName(const QString &name)
   return !out.isEmpty() && out[0].isDigit() ? '_' + out : out;
 }
 
+QString DeviceSession::sourceOfVariable(const QString &name) const
+{
+  if (!m_library)
+    return QString();
+  for (const MyDevice &d : m_library->list())
+    if (variableName(d.name) == name)
+      return "device:" + d.id;
+  return QString();
+}
+
 CalcDevice::Inputs DeviceSession::calcInputs() const
 {
   // a calculated meter may outlive the session by a deleteLater()
@@ -281,7 +292,8 @@ MeterController *DeviceSession::open(const QString &id, const QVariantMap &keys,
       *error = "-221,Settings conflict; open already: " + name;
     return nullptr;
   }
-  // a logic node of My devices: opened as a node
+  // a logic node of My devices: opened as a node; a simulated meter or a
+  // calculated value of before as one too (LegacyNodes)
   if (keys.contains(QStringLiteral("Node/json")))
   {
     std::unique_ptr<LogicNode> node = LogicNode::fromJsonText(keys.value(QStringLiteral("Node/json")).toString());
@@ -289,6 +301,18 @@ MeterController *DeviceSession::open(const QString &id, const QVariantMap &keys,
     {
       if (error)
         *error = "-221,Settings conflict; unknown kind of calculated value: " + name;
+      return nullptr;
+    }
+    return openNode(id, name, std::move(node), error);
+  }
+  if (LegacyNodes::isLegacy(keys))
+  {
+    QString why;
+    std::unique_ptr<LogicNode> node = LegacyNodes::fromKeys(keys, [this](const QString &var) { return sourceOfVariable(var); }, &why);
+    if (!node)
+    {
+      if (error)
+        *error = "-221,Settings conflict; " + why + ": " + name;
       return nullptr;
     }
     return openNode(id, name, std::move(node), error);
@@ -322,7 +346,7 @@ MeterController *DeviceSession::openNode(const QString &id, const QString &name,
   // a node's "model": QtDMM and its kind, as many values as outputs
   DmmDecoder::DMMInfo info;
   info.vendor = QStringLiteral("QtDMM");
-  info.model = node->type();
+  info.model = node->type().left(1).toUpper() + node->type().mid(1);   // "Formula", "Generator"
   info.name = info.vendor + ' ' + info.model;
   info.channels = qBound(1, int(node->outputs().size()), kMaxValues);
   info.display = 60000;

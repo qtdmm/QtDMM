@@ -47,6 +47,9 @@
 #include "ui/tilebutton.h"
 #include "ui/dialogs/adddevicedlg.h"
 #include "logic/formulanode.h"
+#include "logic/generatornode.h"
+#include "logic/legacynodes.h"
+#include "ui/dialogs/generatornodedlg.h"
 #include "ui/dialogs/limitdlg.h"
 #include "device/transport.h"
 #include "device/transports/serial.h"
@@ -2103,9 +2106,9 @@ void MainWindow::addDevice()
   dlg.setPlacesInUse(placesInUse());
   if (dlg.exec() != QDialog::Accepted)
     return;
-  if (dlg.connection() == AddDeviceDlg::Calculated)
+  if (dlg.connection() == AddDeviceDlg::Calculated || dlg.connection() == AddDeviceDlg::Simulated)
   {
-    addFormula();
+    addNode(dlg.connection() == AddDeviceDlg::Simulated ? GeneratorNode::kType : FormulaNode::kType);
     return;
   }
   QVariantMap keys = dlg.keys();
@@ -2142,8 +2145,7 @@ QList<FormulaNodeDlg::Choice> MainWindow::formulaChoices(const QString &id) cons
     const MeterController *ctl = m_session->controller(source);
     // a device not connected: its values by number, units unknown; a
     // calculated one: its outputs as set
-    std::unique_ptr<LogicNode> node = device.isNode() ? LogicNode::fromJsonText(device.keys.value("Node/json").toString())
-                                                      : nullptr;
+    std::unique_ptr<LogicNode> node = nodeOf(device.keys);
     const QList<LogicNode::Output> outputs = node ? node->outputs() : QList<LogicNode::Output>();
     const int count = ctl ? ctl->valueCount() : node ? int(outputs.size())
                                                      : qBound(1, device.keys.value("DMM/number-of-values", 1).toInt(), kMaxValues);
@@ -2164,8 +2166,35 @@ QList<FormulaNodeDlg::Choice> MainWindow::formulaChoices(const QString &id) cons
   return out;
 }
 
-std::optional<QVariantMap> MainWindow::editFormula(const QString &id, const QVariantMap &keys, QString *name)
+std::unique_ptr<LogicNode> MainWindow::nodeOf(const QVariantMap &keys, QString *why) const
 {
+  if (keys.contains("Node/json"))
+    return LogicNode::fromJsonText(keys.value("Node/json").toString());
+  if (LegacyNodes::isLegacy(keys))
+    return LegacyNodes::fromKeys(keys, [this](const QString &v) { return m_session->sourceOfVariable(v); }, why);
+  return nullptr;
+}
+
+std::optional<QVariantMap> MainWindow::editNode(const QString &id, const QVariantMap &keys, QString *name, const QString &newType)
+{
+  QString why;
+  std::unique_ptr<LogicNode> stored = nodeOf(keys, &why);
+  // a calculated value of before naming a device no longer there: set up anew
+  if (!stored && LegacyNodes::isLegacy(keys))
+    QMessageBox::warning(this, *name, tr("%1\nSet up its formula anew.").arg(why));
+  const QString type = stored ? stored->type() : newType.isEmpty() ? QString::fromLatin1(FormulaNode::kType) : newType;
+
+  if (type == QLatin1String(GeneratorNode::kType))
+  {
+    GeneratorNodeDlg dlg(this);
+    const auto *generator = dynamic_cast<const GeneratorNode *>(stored.get());
+    dlg.load(*name, generator ? *generator : GeneratorNode());
+    if (dlg.exec() != QDialog::Accepted)
+      return std::nullopt;
+    *name = dlg.name();
+    return QVariantMap { { "DMM/model", QStringLiteral("QtDMM Generator") }, { "Node/json", dlg.node()->toJsonText() } };
+  }
+
   FormulaNodeDlg dlg(this);
   dlg.setChoices(formulaChoices(id));
   dlg.setCurrent([this](const ValueRef &ref) -> std::optional<Reading>
@@ -2176,7 +2205,6 @@ std::optional<QVariantMap> MainWindow::editFormula(const QString &id, const QVar
     const Reading r = ctl->lastReading(ref.id);
     return r.msecs > 0 ? std::optional(r) : std::nullopt;
   });
-  std::unique_ptr<LogicNode> stored = LogicNode::fromJsonText(keys.value("Node/json").toString());
   const auto *formula = dynamic_cast<const FormulaNode *>(stored.get());
   dlg.load(*name, formula ? *formula : FormulaNode());
   // the inputs of the calculated values of My devices, for loops
@@ -2188,9 +2216,7 @@ std::optional<QVariantMap> MainWindow::editFormula(const QString &id, const QVar
       return LogicNode::makesLoop(source, inputs, [this](const QString &s) -> QList<ValueRef>
       {
         const std::optional<MyDevice> d = m_wid->devices()->find(s.mid(int(qstrlen("device:"))));
-        if (!d || !d->isNode())
-          return {};
-        const std::unique_ptr<LogicNode> n = LogicNode::fromJsonText(d->keys.value("Node/json").toString());
+        const std::unique_ptr<LogicNode> n = d ? nodeOf(d->keys) : nullptr;
         return n ? n->inputs() : QList<ValueRef>();
       });
     });
@@ -2201,10 +2227,10 @@ std::optional<QVariantMap> MainWindow::editFormula(const QString &id, const QVar
   return QVariantMap { { "DMM/model", QStringLiteral("QtDMM Formula") }, { "Node/json", dlg.node()->toJsonText() } };
 }
 
-void MainWindow::addFormula()
+void MainWindow::addNode(const QString &type)
 {
-  QString name = tr("Calculated");
-  const std::optional<QVariantMap> keys = editFormula(QString(), {}, &name);
+  QString name = type == QLatin1String(GeneratorNode::kType) ? tr("Simulated") : tr("Calculated");
+  const std::optional<QVariantMap> keys = editNode(QString(), {}, &name, type);
   if (!keys)
     return;
   const int before = int(m_wid->devices()->list().size());
@@ -3763,11 +3789,11 @@ void MainWindow::deviceSettings(const QString &id, bool settingsTab)
   const std::optional<MyDevice> device = m_wid->devices()->find(id);
   if (!device)
     return;
-  // a calculated value: its formulas, no meter settings
-  if (device->isNode())
+  // a calculated or simulated value (also one of before): its node, no meter settings
+  if (device->isNode() || LegacyNodes::isLegacy(device->keys))
   {
     QString name = device->name;
-    const std::optional<QVariantMap> keys = editFormula(id, device->keys, &name);
+    const std::optional<QVariantMap> keys = editNode(id, device->keys, &name);
     if (!keys)
       return;
     if (name != device->name)
