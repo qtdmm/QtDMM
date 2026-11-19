@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "service/devicesession.h"
+#include "service/noderunner.h"
 
 #include <QDateTime>
 
@@ -282,18 +283,61 @@ MeterController *DeviceSession::open(const QString &id, const QVariantMap &keys,
   }
   const MeterSetup setup = MeterSetup::fromKeys(keys, m_sigrokExe);
   auto *ctl = new MeterController(this, m_host);
-  ctl->setInstanceId(m_instanceId);
-  ctl->setDevice(id, name);
   ctl->setModel(setup.knownModel ? setup.info.name : QStringLiteral("Manual"));
   ctl->setValueCount(setup.valueCount);
-  ctl->setFollowsWindow(true);
   ctl->configure(setup);
   ctl->dmm()->setCalcInputs(calcInputs());
+  return adopt(ctl, id, name, error, waitForDevice);
+}
+
+MeterController *DeviceSession::openNode(const QString &id, const QString &name, std::unique_ptr<LogicNode> node,
+                                         QString *error)
+{
+  const QString source = "device:" + id;
+  if (controller(source))
+  {
+    if (error)
+      *error = "-221,Settings conflict; open already: " + name;
+    return nullptr;
+  }
+  if (!node || LogicNode::makesLoop(source, node->inputs(), [this](const QString &s) { return nodeInputs(s); }))
+  {
+    if (error)
+      *error = "-221,Settings conflict; its inputs close a loop: " + name;
+    return nullptr;
+  }
+  auto *ctl = new MeterController(this, m_host, MeterController::Kind::Node);
+  // a node's "model": QtDMM and its kind, as many values as outputs
+  DmmDecoder::DMMInfo info;
+  info.vendor = QStringLiteral("QtDMM");
+  info.model = node->type();
+  info.name = info.vendor + ' ' + info.model;
+  info.channels = qBound(1, int(node->outputs().size()), kMaxValues);
+  info.display = 60000;
+  ctl->setNodeInfo(info);
+  ctl->setModel(info.name);
+  ctl->setValueCount(info.channels);
+  new NodeRunner(this, ctl, std::move(node));
+  return adopt(ctl, id, name, error, false);
+}
+
+QList<ValueRef> DeviceSession::nodeInputs(const QString &source) const
+{
+  const NodeRunner *runner = NodeRunner::of(controller(source));
+  return runner ? runner->node()->inputs() : QList<ValueRef>();
+}
+
+MeterController *DeviceSession::adopt(MeterController *ctl, const QString &id, const QString &name, QString *error,
+                                      bool waitForDevice)
+{
+  ctl->setInstanceId(m_instanceId);
+  ctl->setDevice(id, name);
+  ctl->setFollowsWindow(true);
   // its messages to the status bar: a lost connection, a recording stopped
   connect(ctl, &MeterController::error, this, [this, ctl](const QString &text)
   {
     // a connection's message is in the log with its state
-    if (text != ctl->dmm()->errorString())
+    if (text != ctl->errorString())
       AppLog::error(ctl->deviceName(), text);
     Q_EMIT this->error(tr("%1: %2").arg(ctl->deviceName(), text));
   });
@@ -302,7 +346,7 @@ MeterController *DeviceSession::open(const QString &id, const QVariantMap &keys,
     AppLog::info(ctl->deviceName(), text);
     Q_EMIT info(tr("%1: %2").arg(ctl->deviceName(), text));
   });
-  connect(ctl->dmm(), &MeterConnection::linkStateChanged, this, [ctl](MeterConnection::LinkState state, const QString &detail)
+  connect(ctl, &MeterController::linkStateChanged, this, [ctl](MeterConnection::LinkState state, const QString &detail)
   {
     using State = MeterConnection::LinkState;
     AppLog::instance()->add(state == State::Error ? AppLog::Error : state == State::Timeout ? AppLog::Warning : AppLog::Info,
@@ -319,7 +363,7 @@ MeterController *DeviceSession::open(const QString &id, const QVariantMap &keys,
     // SCPI in English, the reason in the status bar in the user's language
     if (error)
       *error = "-240,Hardware error; " + name + ": does not connect";
-    Q_EMIT this->error(tr("%1: %2").arg(name, ctl->dmm()->errorString()));
+    Q_EMIT this->error(tr("%1: %2").arg(name, ctl->errorString()));
     if (!waitForDevice)
     {
       delete ctl;

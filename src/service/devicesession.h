@@ -8,9 +8,11 @@
 #include <QString>
 #include <QStringList>
 #include <QVariantMap>
+#include <memory>
 #include <optional>
 
 #include "core/valueref.h"
+#include "logic/logicnode.h"
 #include "device/transports/calc.h"
 #include "recording/recordingstore.h"
 
@@ -67,6 +69,13 @@ public:
   /// The same with the entry's keys and name given.
   MeterController *open(const QString &id, const QVariantMap &keys, const QString &name, QString *error = nullptr,
                         bool waitForDevice = false);
+  /// Opens the logic node @p node as the entry @p id: a source like a
+  /// device ("device:<id>"), running at once (NodeRunner). Null and why in
+  /// @p error when it is open already or its inputs close a loop.
+  MeterController *openNode(const QString &id, const QString &name, std::unique_ptr<LogicNode> node,
+                            QString *error = nullptr);
+  /// The inputs of the node open as @p source; none for a device.
+  QList<ValueRef> nodeInputs(const QString &source) const;
   /// Closes a meter open() opened; false (and why) for one not open.
   bool        close(const QString &id, QString *error = nullptr);
 
@@ -135,6 +144,10 @@ Q_SIGNALS:
   void        info(const QString &text);
 
 private:
+  /// The rest of open() for a device or a node: its name, its messages,
+  /// its rules, connected, one of the session's.
+  MeterController *adopt(MeterController *ctl, const QString &id, const QString &name, QString *error,
+                         bool waitForDevice);
   void        installScpi();
   /// The rules of the entry @p id on @p ctl, and its changes back into the entry.
   void        applyRules(MeterController *ctl, const QString &id);

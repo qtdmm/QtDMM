@@ -1,0 +1,196 @@
+// Copyright (c) 2026 The QtDMM developers
+// SPDX-License-Identifier: GPL-3.0-or-later
+//
+// Logic nodes (PR 1a): the common form (LogicNode), a node as a source of a
+// DeviceSession (MeterController Kind::Node, NodeRunner): triggered by its
+// leading input at that input's time, inputs missing or too old, off is the
+// bypass, loops refused, recorded and served like a device. The node types
+// here are made for the test; formula, integral and generator come later.
+
+#include <QCoreApplication>
+#include <QTemporaryDir>
+
+#include "core/reading.h"
+#include "logic/logicnode.h"
+#include "recording/recordingstore.h"
+#include "service/devicesession.h"
+#include "service/metercontroller.h"
+#include "service/noderunner.h"
+#include "service/scpiserver.h"
+#include "service/servicehost.h"
+#include "testutil.h"
+
+namespace
+{
+// no input, on a clock: 1, 2, 3 ... V
+class Counter : public LogicNode
+{
+public:
+  explicit Counter(int periodMs) { setPeriodMs(periodMs); }
+  QString type() const override { return "counter"; }
+  QList<Output> outputs() const override { return { { "count", "V" } }; }
+  Values evaluate(const Context &) override { return { double(++m_n) }; }
+  void reset() override { m_n = 0; }
+  int m_n = 0;
+};
+
+// two inputs: their product in W, a gap without both; off: nothing
+class Product : public LogicNode
+{
+public:
+  QString type() const override { return "product"; }
+  QList<Output> outputs() const override { return { { QString(), "W" } }; }
+  Values evaluate(const Context &ctx) override
+  {
+    if (ctx.inputs.size() < 2 || !ctx.inputs[0] || !ctx.inputs[1])
+      return { std::nullopt };
+    return { ctx.inputs[0]->value * ctx.inputs[1]->value };
+  }
+};
+
+// one input: twice it; off: the input as it is (a filter's bypass)
+class Twice : public LogicNode
+{
+public:
+  QString type() const override { return "twice"; }
+  QList<Output> outputs() const override { return { { QString(), "V" } }; }
+  Values evaluate(const Context &ctx) override { return { ctx.inputs.value(0) ? std::optional(ctx.inputs[0]->value * 2) : std::nullopt }; }
+  Values bypass(const Context &ctx) override { return { ctx.inputs.value(0) ? std::optional(ctx.inputs[0]->value) : std::nullopt }; }
+  QJsonObject parameters() const override { return { { "factor", 2 } }; }
+};
+
+QList<ValueRef> refs(std::initializer_list<const char *> sources)
+{
+  QList<ValueRef> out;
+  for (const char *s : sources)
+    out << ValueRef(0, QString::fromLatin1(s));
+  return out;
+}
+}
+
+int main(int argc, char **argv)
+{
+  QCoreApplication app(argc, argv);
+
+  // 1. loops: a node may not take its own values, nor close a ring
+  {
+    const QMap<QString, QList<ValueRef>> nodes { { "device:b", refs({ "device:c" }) }, { "device:c", refs({ "device:a" }) } };
+    auto inputsOf = [&nodes](const QString &s) { return nodes.value(s); };
+    check(LogicNode::makesLoop("device:a", refs({ "device:a" }), inputsOf), "its own value: a loop");
+    check(LogicNode::makesLoop("device:a", refs({ "device:b" }), inputsOf), "a -> b -> c -> a: a loop");
+    check(!LogicNode::makesLoop("device:x", refs({ "device:b", "device:m" }), inputsOf), "x -> b -> c -> a: no loop");
+  }
+
+  // 2. the common form as stored, and back
+  {
+    Twice t;
+    t.setInputs(refs({ "device:u", "device:i" }));
+    t.setLeadingInput(1);
+    t.setMaxAgeMs(1500);
+    t.setOn(false);
+    const QJsonObject o = t.toJson();
+    Twice back;
+    back.fromJson(o);
+    check(o["type"] == "twice" && o["parameters"].toObject()["factor"] == 2, "type and parameters stored");
+    check(back.inputs().size() == 2 && back.inputs()[1].toString() == "0@device:i" && back.leadingInput() == 1
+            && back.maxAgeMs() == 1500 && !back.isOn() && back.periodMs() == 0,
+          "inputs, leading, max age, off read back");
+  }
+
+  QTemporaryDir dir;
+  DeviceSession session;
+  session.setInstanceId("test");
+  session.setConfigDir(dir.path());
+  auto ask = [&](const char *line) { return QString::fromLatin1(session.host()->scpi()->process(line)).trimmed(); };
+
+  // 3. a node without inputs on a clock: a source of readings like a device
+  QString error;
+  MeterController *u = session.openNode("u", "Counter U", std::make_unique<Counter>(40), &error);
+  check(u && error.isEmpty() && u->isNode() && !u->dmm(), "the counter opens as a node: " + error);
+  if (!u)
+    return 1;
+  Reading lastU;
+  QObject::connect(u, &MeterController::reading, [&lastU](const Reading &r) { if (r.id == 0) lastU = r; });
+  check(waitFor([&] { return lastU.value >= 2; }, 3000), "the counter counts");
+  check(lastU.source == "device:u" && lastU.baseUnit == "V" && lastU.name == "count" && u->isWanted()
+          && u->linkState() == MeterConnection::LinkState::Connected,
+        QString("its readings: %1 %2 from %3").arg(lastU.value).arg(lastU.baseUnit, lastU.source));
+  check(u->sourceInfo().vendor == "QtDMM" && u->sourceInfo().model == "counter" && u->valueCount() == 1, "its model: QtDMM counter");
+
+  // 4. two inputs, the first leads: computed at its readings, at its time
+  MeterController *i = session.openNode("i", "Counter I", std::make_unique<Counter>(40), &error);
+  auto product = std::make_unique<Product>();
+  product->setInputs(refs({ "device:u", "device:i" }));
+  MeterController *p = session.openNode("p", "Power", std::move(product), &error);
+  check(i && p, "two more nodes: " + error);
+  if (!i || !p)
+    return 1;
+  QList<Reading> powers;
+  // lastU's connection is older than the node's: it has the reading first
+  const Reading &leading = lastU;
+  bool sameTime = true;
+  QObject::connect(p, &MeterController::reading, [&](const Reading &r)
+  {
+    powers << r;
+    // computed right at the leading input's reading, with its time
+    sameTime = sameTime && r.t == leading.t && r.msecs == leading.msecs;
+  });
+  check(waitFor([&] { return powers.size() >= 5; }, 3000), "the product comes");
+  check(sameTime, "each at the time of the leading input's reading");
+  const Reading lastP = powers.last();
+  check(lastP.baseUnit == "W" && lastP.quality == Quality::Valid && lastP.value > 0 && lastP.source == "device:p",
+        QString("a power in W: %1 %2").arg(lastP.value).arg(lastP.baseUnit));
+  check(ask("INST:CAT?").contains("\"POWER\""), "on the SCPI server like a device: " + ask("INST:CAT?"));
+  check(session.nodeInputs("device:p").size() == 2 && session.nodeInputs("device:u").isEmpty(), "the session knows its inputs");
+
+  // 5. a loop is refused: a node taking the product's value as the product's input
+  {
+    auto loop = std::make_unique<Twice>();
+    loop->setInputs(refs({ "device:loop" }));
+    check(!session.openNode("loop", "Loop", std::move(loop), &error) && error.contains("loop"), "its own value refused: " + error);
+  }
+
+  // 6. an input closed: no value (a gap), and the node says which it waits for
+  session.close("i");
+  powers.clear();
+  check(waitFor([&] { return powers.size() >= 2; }, 3000), "still computed at the leading input");
+  check(powers.last().quality == Quality::NoValue, "without the second input: no value");
+  check(p->linkState() == MeterConnection::LinkState::Timeout && p->errorString().contains("device:i"),
+        "waiting for device:i: " + p->errorString());
+
+  // ... and when it opens again, it is taken at once
+  i = session.openNode("i", "Counter I", std::make_unique<Counter>(40), &error);
+  powers.clear();
+  check(waitFor([&] { return !powers.isEmpty() && powers.last().quality == Quality::Valid; }, 3000), "a value again");
+  check(p->linkState() == MeterConnection::LinkState::Connected, "running again");
+
+  // 7. off is the bypass: the product gives nothing, a filter its input
+  NodeRunner::of(p)->setOn(false);
+  powers.clear();
+  check(waitFor([&] { return powers.size() >= 2; }, 3000) && powers.last().quality == Quality::NoValue, "the product off: a gap");
+  auto twice = std::make_unique<Twice>();
+  twice->setInputs(refs({ "device:u" }));
+  MeterController *t = session.openNode("t", "Twice", std::move(twice), &error);
+  Reading lastT;
+  QObject::connect(t, &MeterController::reading, [&lastT](const Reading &r) { lastT = r; });
+  check(waitFor([&] { return lastT.msecs > 0; }, 3000) && qAbs(lastT.value - 2 * leading.value) < 1e-9, "on: twice the input");
+  NodeRunner::of(t)->setOn(false);
+  lastT = Reading();
+  check(waitFor([&] { return lastT.msecs > 0; }, 3000) && qAbs(lastT.value - leading.value) < 1e-9, "off: the input passed on");
+
+  // 8. a node stopped computes nothing
+  p->connectMeter(false);
+  powers.clear();
+  waitFor([] { return false; }, 200);
+  check(powers.isEmpty() && !p->isWanted() && p->linkState() == MeterConnection::LinkState::Closed, "stopped: no readings");
+  p->connectMeter(true);
+  check(waitFor([&] { return !powers.isEmpty(); }, 3000), "started again");
+
+  // 9. recorded like a device: a recording of the session takes it
+  session.startRecording();
+  check(waitFor([&] { return p->recorder()->count() >= 3 && u->recorder()->count() >= 3; }, 3000),
+        QString("recorded: %1 readings of the node").arg(p->recorder()->count()));
+  session.stopRecording();
+
+  return failed == 0 ? 0 : 1;
+}

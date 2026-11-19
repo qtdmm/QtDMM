@@ -110,7 +110,7 @@ void FrontPanel::attach(MeterController *ctl)
   showVerdict(ctl ? ctl->limitTest().value.id : 0, ctl ? ctl->verdict() : LimitTest::NoVerdict, std::nan(""));
   if (ctl)
   {
-    m_link = connect(ctl->dmm(), &MeterConnection::linkStateChanged, this, &FrontPanel::updateConnected);
+    m_link = connect(ctl, &MeterController::linkStateChanged, this, &FrontPanel::updateConnected);
     m_rules << connect(ctl, &MeterController::alertColorChanged, this, [this](const QColor &color)
     {
       m_alertColor = color;
@@ -178,9 +178,10 @@ void FrontPanel::showAlert()
 void FrontPanel::updateKeys()
 {
   const bool before = keysShown();
-  m_keysSupported = m_ctl && ControlBar::supported(m_ctl->dmm()->dmmInfo());
-  if (m_ctl)
-    m_controls->setProtocol(m_ctl->dmm()->format(), m_ctl->dmm()->dmmInfo().model);
+  // a logic node has no keys
+  m_keysSupported = m_ctl && m_ctl->dmm() && ControlBar::supported(m_ctl->sourceInfo());
+  if (m_ctl && m_ctl->dmm())
+    m_controls->setProtocol(m_ctl->dmm()->format(), m_ctl->sourceInfo().model);
   m_fold->setVisible(m_keysSupported);
   m_controls->setVisible(keysShown());
   updateConnected();
@@ -190,7 +191,7 @@ void FrontPanel::updateKeys()
 
 void FrontPanel::updateConnected()
 {
-  m_controls->setConnected(m_ctl && m_ctl->dmm()->isWanted());
+  m_controls->setConnected(m_ctl && m_ctl->isWanted());
 }
 
 void FrontPanel::setFolded(bool folded)

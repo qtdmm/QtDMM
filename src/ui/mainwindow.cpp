@@ -676,7 +676,7 @@ void MainWindow::createViews()
     // a microcontroller's values all, as the Arduino IDE's plotter shows
     // them [E 18.11.]: a board sends them to be plotted
     QList<ValueRef> plotted { ValueRef(0, ctl->source()) };
-    if (ctl->dmm() && DeviceType::ofProtocol(ctl->dmm()->dmmInfo().protocol) == DeviceType::Microcontroller)
+    if (DeviceType::ofProtocol(ctl->sourceInfo().protocol) == DeviceType::Microcontroller)
       for (int id = 1; id < kMaxValues; ++id)   // they come with its lines; one never sent is not drawn
         plotted << ValueRef(id, ctl->source());
     for (GraphView *view : std::as_const(m_graphViews))
@@ -1398,7 +1398,7 @@ void MainWindow::applyLcdLook(FrontPanel *panel)
   lcd->setLcdVariant(static_cast<LcdWidget::LcdVariant>(variant));
   if (ctl)
   {
-    const DmmDecoder::DMMInfo &info = ctl->dmm()->dmmInfo();
+    const DmmDecoder::DMMInfo &info = ctl->sourceInfo();
     // the controller's count: the Simulated meter's values are not the model's
     lcd->setDisplayMode(info.display, gui->showMinMax(), gui->showBar(), ctl->valueCount());
     lcd->setLook(LcdWidget::lookOf(DeviceType::of(info)));
@@ -1525,12 +1525,12 @@ void MainWindow::createSidebar()
     if (!openController(id))
       openBeside(id);
     MeterController *ctl = openController(id);
-    if (!ctl)
+    if (!ctl || !ctl->dmm())   // a logic node has no frames
       return;
     QPointer<CaptureDlg> &dlg = m_captureDlgs[id];
     if (!dlg)
     {
-      const QString name = ctl->deviceName().isEmpty() ? ctl->dmm()->dmmInfo().name : ctl->deviceName();
+      const QString name = ctl->deviceName().isEmpty() ? ctl->sourceInfo().name : ctl->deviceName();
       dlg = new CaptureDlg(ctl->dmm(), name, m_wid->settings(), this);
     }
     dlg->show();
@@ -3527,7 +3527,7 @@ void MainWindow::updateOpenDevices()
   // pressed while a device of the bench is connected (also by SCPI, its menu)
   bool any = false;
   for (const MeterController *ctl : m_session->controllers())
-    any = any || ctl->dmm()->isWanted();
+    any = any || ctl->isWanted();
   action_Connect->setChecked(any);
   action_Connect->setEnabled(!m_session->controllers().isEmpty());
   action_Reset->setEnabled(!m_session->controllers().isEmpty());
@@ -3540,10 +3540,10 @@ void MainWindow::updateOpenDevices()
     DeviceSidebar::OpenDevice row;
     row.id = ctl->deviceId();
     row.name = ctl->deviceName();
-    row.connected = ctl->dmm()->isWanted();
+    row.connected = ctl->isWanted();
     // the dot green while readings come in; why none come is on the front panel
     const Reading &r = ctl->lastReading();
-    row.active = row.connected && ctl->dmm()->shortState().isEmpty() && r.msecs > 0 && now - r.msecs < 3000;
+    row.active = row.connected && ctl->shortState().isEmpty() && r.msecs > 0 && now - r.msecs < 3000;
     // its values, with what the graph shows
     for (int value = 0; value < ctl->valueCount(); ++value)
       row.values << otherValueRow(ctl, value);
@@ -3686,12 +3686,12 @@ void MainWindow::deviceSettings(const QString &id, bool settingsTab)
   dlg.setReading([this, id]() -> std::optional<Reading>
   {
     const MeterController *ctl = m_session->controller("device:" + id);
-    if (!ctl || !ctl->dmm())
+    if (!ctl)
       return std::nullopt;
     return ctl->lastReading();
   });
   // the names of a connected microcontroller's values, beside their units
-  if (const MeterController *ctl = m_session->controller("device:" + id); ctl && ctl->dmm())
+  if (const MeterController *ctl = m_session->controller("device:" + id))
   {
     QStringList names;
     for (int i = 0; i < kMaxValues; ++i)
@@ -3761,7 +3761,7 @@ QString MainWindow::deviceStatus(const QString &id) const
   QString state;
   const Reading last = ctl->lastReading();
   const qint64 ago = last.msecs > 0 ? (QDateTime::currentMSecsSinceEpoch() - last.msecs) / 1000 : -1;
-  switch (ctl->dmm()->linkState())
+  switch (ctl->linkState())
   {
     case MeterConnection::LinkState::Closed:     state = tr("Not connected."); break;
     case MeterConnection::LinkState::Connecting: state = tr("Connecting ..."); break;
@@ -3808,7 +3808,7 @@ void MainWindow::openBeside(const QString &id, bool waitForDevice)
     return;
   }
   QString error;
-  if (const MeterController *ctl = m_session->open(id, &error, waitForDevice); ctl && !ctl->dmm()->isOpen())
+  if (const MeterController *ctl = m_session->open(id, &error, waitForDevice); ctl && ctl->dmm() && !ctl->dmm()->isOpen())
     statusBar()->showMessage(tr("%1: waiting for the device").arg(device->name), 4000);
   else if (ctl)
     statusBar()->showMessage(tr("%1 connected").arg(device->name), 4000);

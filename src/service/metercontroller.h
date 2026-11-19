@@ -23,7 +23,8 @@
 #include "recording/recordingstore.h"
 #include "service/servicehost.h"
 
-class MeterConnection;
+#include "device/meterconnection.h"
+
 struct MeterSetup;
 class QProcess;
 class ScpiDevice;
@@ -31,6 +32,11 @@ class ScpiDevice;
 /// The meter session without any user interface: the connection (MeterConnection), the
 /// min/max memory, the alarms, its part in the SCPI server (ScpiDevice in a ServiceHost),
 /// and the alarms' programs.
+///
+/// It is a source of readings: a device (its connection makes them) or a
+/// logic node (Kind::Node: NodeRunner delivers them, deliver(); no
+/// connection, dmm() is null). What a view asks of the source - wanted,
+/// its state, its message, its kind - it asks here, not of the connection.
 ///
 /// Views (LCD, analog meter, graph, readings table) and the window hang off
 /// its signals; none of them talks to another. Whatever needs a question to
@@ -42,11 +48,37 @@ class MeterController : public QObject
 public:
   /// The meter takes part in the network services of @p host (MainWindow's);
   /// without one it keeps services of its own.
-  explicit MeterController(QObject *parent = nullptr, ServiceHost *host = nullptr);
+  /// What makes its readings: a device's connection or a logic node.
+  enum class Kind { Device, Node };
+  explicit MeterController(QObject *parent = nullptr, ServiceHost *host = nullptr, Kind kind = Kind::Device);
   ~MeterController() override;
 
   /// The connection; the settings page configures its port and protocol.
+  /// Null for a logic node.
   MeterConnection        *dmm() const { return m_dmm; }
+
+  /// @name The source, device or logic node
+  /// @{
+  bool        isNode() const { return m_dmm == nullptr; }
+  /// Connected or connecting (a device), running (a node): connectMeter(true).
+  bool        isWanted() const;
+  /// Where it stands: a device's link; a node is Connected while it runs and
+  /// its inputs are there, Timeout while one is missing or too old (why: errorString()).
+  MeterConnection::LinkState linkState() const;
+  /// Its last message: the connection's, or why a node waits.
+  QString     errorString() const;
+  /// A short word for the state (MeterConnection::shortState()); empty when fine.
+  QString     shortState() const;
+  /// The model: the connection's; a node's from setNodeInfo().
+  const DmmDecoder::DMMInfo &sourceInfo() const;
+  /// A node's model: vendor "QtDMM", model its kind, channels its outputs.
+  void        setNodeInfo(const DmmDecoder::DMMInfo &info);
+  /// A node's state and why (NodeRunner): linkStateChanged() on a change.
+  void        setNodeState(MeterConnection::LinkState state, const QString &detail = QString());
+  /// A node's readings, as a decoder's frame would bring them (the leading
+  /// input's time in received/receivedWall).
+  void        deliver(const DmmDecoder::DmmResponse &response) { responseSLOT(response); }
+  /// @}
   /// The recorder: the readings feed it from here on, views (the graph)
   /// show it. SCPI learns when it starts or stops.
   RecordingStore *recorder() const { return m_recorder; }
@@ -212,6 +244,9 @@ Q_SIGNALS:
   void        staleChanged(bool stale);
   /// For the status bar's connection field (MeterConnection messages, alarms, SCPI errors).
   void        error(const QString &);
+  /// The source's state changed (linkState()), with the text why: the
+  /// connection's, or a node's.
+  void        linkStateChanged(MeterConnection::LinkState state, const QString &detail);
   /// For the status bar's info field.
   void        info(const QString &);
 
@@ -281,7 +316,11 @@ private:
   void        installScpiSources();
   void        timerEvent(QTimerEvent *) override;
 
-  MeterConnection                *m_dmm;
+  MeterConnection                *m_dmm;   ///< null for a node
+  DmmDecoder::DMMInfo             m_nodeInfo;
+  MeterConnection::LinkState      m_nodeState = MeterConnection::LinkState::Closed;
+  QString                         m_nodeError;
+  bool                            m_nodeWanted = false;
   AlarmManager       *m_alarms;
   RecordingStore     *m_recorder;
   ReadingAdapter      m_adapter;
