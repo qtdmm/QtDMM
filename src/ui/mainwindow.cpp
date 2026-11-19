@@ -746,6 +746,7 @@ void MainWindow::addPanel(MeterController *ctl)
   QMdiSubWindow *win = addView(panel, ctl->deviceName(), MdiArranger::Instrument, "panel-" + id);
   m_panelWins.insert(ctl->source(), win);
   connect(panel, &FrontPanel::foldToggled, this, [this] { updateControls(); });
+  connect(panel, &FrontPanel::settingsRequested, this, [this](const QString &id) { deviceSettings(id); });
   connect(panel, &FrontPanel::keysChanged, this, [this] { updateControls(); });
   connect(panel, &FrontPanel::keyFailed, this, [this, panel]
   {

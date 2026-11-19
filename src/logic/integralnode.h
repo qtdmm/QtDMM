@@ -37,6 +37,11 @@ public:
   QJsonObject state() const override;
   void    setState(const QJsonObject &s) override;
   QString problem() const override { return m_problem; }
+  /// "0" sets it to 0, "HOLD" keeps the sum (off).
+  QList<Control> controls() const override;
+  bool    checked(const QString &id) const override;
+  void    press(const QString &id) override;
+  bool    holds() const override { return true; }
   QJsonObject parameters() const override;
   void    setParameters(const QJsonObject &p) override;
 

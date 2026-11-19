@@ -5,6 +5,8 @@
 #include <cmath>
 
 #include <QDateTime>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 #include "core/devicelibrary.h"
 #include "core/siprefix.h"
@@ -84,6 +86,24 @@ void NodeRunner::setOn(bool on)
 void NodeRunner::reset()
 {
   m_node->reset();
+}
+
+void NodeRunner::press(const QString &id)
+{
+  const bool wasOn = m_node->isOn();
+  m_node->press(id);
+  // HOLD with the entry: the next start holds too
+  DeviceLibrary *library = m_session->library();
+  if (m_node->isOn() != wasOn && library)
+    if (const std::optional<MyDevice> entry = library->find(m_ctl->deviceId()); entry && entry->isNode())
+    {
+      QJsonObject json = QJsonDocument::fromJson(entry->keys.value("Node/json").toString().toUtf8()).object();
+      json["on"] = m_node->isOn();
+      QVariantMap keys = entry->keys;
+      keys.insert("Node/json", QString::fromUtf8(QJsonDocument(json).toJson(QJsonDocument::Compact)));
+      library->update(m_ctl->deviceId(), keys);
+    }
+  Q_EMIT controlsChanged();
 }
 
 void NodeRunner::follow()

@@ -56,6 +56,17 @@ public:
     qint64 t = 0;      ///< the time of the computation on the core clock (Sample::now()): the leading input's, or the clock's
     qint64 wall = 0;   ///< the same as ms since the epoch
   };
+  /// An element on its front panel (NodeBar): a key pressed by a click, a
+  /// switch that stays in or out (checked()), or an LED that shows a state
+  /// (checked(): lit). Ids are the node's own ("zero", "hold").
+  struct Control
+  {
+    enum class Kind { Key, Switch, Led };
+    QString id;
+    QString text;
+    QString toolTip;
+    Kind    kind = Kind::Key;
+  };
   /// The outputs of one computation: a number for each, or none (a gap);
   /// fewer than outputs(): the rest none.
   using Values = QList<std::optional<double>>;
@@ -87,6 +98,16 @@ public:
   /// What is wrong with the last computation besides old inputs (a reading
   /// in another unit than the integral's); the runner shows it as its state.
   virtual QString problem() const { return {}; }
+  /// The keys, switches and LEDs of its front panel, left to right; none
+  /// by default (a formula: its panel has the status LED and the gear only).
+  virtual QList<Control> controls() const { return {}; }
+  /// A switch in, an LED lit.
+  virtual bool checked(const QString &id) const { Q_UNUSED(id); return false; }
+  /// A key or switch of controls() clicked.
+  virtual void press(const QString &id) { Q_UNUSED(id); }
+  /// Whether off (isOn() false) is a state of its own, kept with the entry
+  /// (an integral's HOLD); for the others off is no more than disconnected.
+  virtual bool holds() const { return false; }
   /// Its own parameters (formula, unit, ...), stored with the entry; the
   /// common ones (inputs, leading, max age, period, on) are the runner's.
   virtual QJsonObject parameters() const { return {}; }
@@ -106,7 +127,7 @@ public:
   /// A clock instead of the leading input (a generator): 0 = none.
   int         periodMs() const { return m_periodMs; }
   void        setPeriodMs(int ms) { m_periodMs = qMax(0, ms); }
-  /// On (computes) or off (bypass()); the green LED of its face.
+  /// On (computes) or off (bypass()): an integral's HOLD (holds()).
   bool        isOn() const { return m_on; }
   void        setOn(bool on) { m_on = on; }
   /// The common form and the node's parameters as one object, as stored.

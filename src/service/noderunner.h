@@ -39,6 +39,13 @@ public:
   void        setOn(bool on);
   /// Clears its state (LogicNode::reset()).
   void        reset();
+  /// A key or switch of its front panel (LogicNode::press()); a switch's
+  /// state that holds (HOLD) is kept in its entry of My devices.
+  void        press(const QString &id);
+
+Q_SIGNALS:
+  /// A key or switch was pressed: the panel shows the states anew.
+  void        controlsChanged();
 
 private:
   /// The inputs' sources again: after one opened or closed, or a start.

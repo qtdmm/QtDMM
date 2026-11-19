@@ -13,12 +13,16 @@
 class ControlBar;
 class DeviceSession;
 class FoldButton;
+class NodeBar;
+class QToolButton;
 class LcdWidget;
 class MeterController;
 class ValueFeed;
 
 /// One meter's front: its LCD, the keys below it (ControlBar, for meters
-/// QtDMM can press keys of) and the fold button in the LCD's corner.
+/// QtDMM can press keys of; NodeBar for a logic node: its status LED and
+/// its own keys), the fold button and the gear for its settings in the
+/// LCD's corner.
 ///
 /// The panel shows the meter of value() (ValueFeed): its readings, min/max
 /// and staleness on the LCD, its key states on the keys; a click on a key
@@ -65,6 +69,8 @@ Q_SIGNALS:
   void        keysChanged();
   /// A key did not reach the meter (not connected yet).
   void        keyFailed();
+  /// The gear: the settings of the meter shown (its id in My devices).
+  void        settingsRequested(const QString &id);
 
 protected:
   /// Keeps the fold button in the LCD's top right corner.
@@ -87,6 +93,12 @@ private:
   LcdWidget  *m_display;
   ControlBar *m_controls;
   FoldButton *m_fold;
+  NodeBar    *m_nodeBar;
+  QToolButton *m_gear;
+  /// The bar under the LCD now: the meter's keys or the node's.
+  QWidget    *bar() const;
+  /// The fold button and the gear in the LCD's top right corner.
+  void        placeCorner();
   bool        m_keysSupported = false;
   bool        m_secondariesChosen = false;
   QPointer<MeterController> m_ctl;

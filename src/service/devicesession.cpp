@@ -327,6 +327,11 @@ MeterController *DeviceSession::openNode(const QString &id, const QString &name,
       *error = "-221,Settings conflict; its inputs close a loop: " + name;
     return nullptr;
   }
+  // off is a state of its own only where it holds (an integral's HOLD); a
+  // formula switched off before 27.1's front panels opens disconnected
+  const bool disconnected = !node->isOn() && !node->holds();
+  if (disconnected)
+    node->setOn(true);
   auto *ctl = new MeterController(this, m_host, MeterController::Kind::Node);
   // a node's "model": QtDMM and its kind, as many values as outputs
   DmmDecoder::DMMInfo info;
@@ -339,7 +344,10 @@ MeterController *DeviceSession::openNode(const QString &id, const QString &name,
   ctl->setModel(info.name);
   ctl->setValueCount(info.channels);
   new NodeRunner(this, ctl, std::move(node));
-  return adopt(ctl, id, name, error, false);
+  MeterController *opened = adopt(ctl, id, name, error, false);
+  if (opened && disconnected)
+    opened->connectMeter(false);
+  return opened;
 }
 
 QList<ValueRef> DeviceSession::nodeInputs(const QString &source) const

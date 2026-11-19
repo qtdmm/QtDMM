@@ -104,3 +104,25 @@ void IntegralNode::setParameters(const QJsonObject &p)
   m_resetOnRecording = p["resetOnRecording"].toBool(true);
   m_threshold = p.contains("threshold") ? std::optional(p["threshold"].toDouble()) : std::nullopt;
 }
+
+QList<LogicNode::Control> IntegralNode::controls() const
+{
+  return { { QStringLiteral("zero"), QStringLiteral("0"),
+             QCoreApplication::translate("IntegralNode", "Set the integral to 0"), Control::Kind::Key },
+           { QStringLiteral("hold"), QStringLiteral("HOLD"),
+             QCoreApplication::translate("IntegralNode", "Hold: the sum stays as it is, nothing is added"),
+             Control::Kind::Switch } };
+}
+
+bool IntegralNode::checked(const QString &id) const
+{
+  return id == QLatin1String("hold") && !isOn();
+}
+
+void IntegralNode::press(const QString &id)
+{
+  if (id == QLatin1String("zero"))
+    reset();
+  else if (id == QLatin1String("hold"))
+    setOn(!isOn());
+}
