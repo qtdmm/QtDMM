@@ -130,24 +130,6 @@ V instead of W*.
 Each new reading of the value adds the trapezoid since the one before: the
 mean of both times the time between them.
 
-## The rack
-
-*Arrange* > *Rack...* (Ctrl+Shift+R), or *Show in the rack* in the context
-menu of a calculated value in the sidebar, opens a window beside the main
-window with the calculated, simulated and integral values open on the
-bench, one below the other:
-
-- the **green LED** switches one on or off (off: a formula gives no
-  value, an integral holds its sum); it stays so in My devices;
-- its name, kind and inputs, its values small;
-- a **warning sign** when it waits for an input or something does not fit
-  - why in its tooltip;
-- the **gear** opens its dialog; an integral has a **0** button.
-
-Drag them into the order you read them in. *+ Insert* adds a calculated,
-simulated or integral value. The bench keeps the rack's order, place and
-whether it is open; a value closed on the bench leaves the rack.
-
 ## Entries from before
 
 The models **QtDMM / Simulated meter** (Virtual meter before 26.2) and

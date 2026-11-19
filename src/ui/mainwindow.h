@@ -45,7 +45,6 @@ class LabPlotLive;
 class InstanceWidget;
 class DeviceSession;
 class WorkspaceFile;
-class RackWindow;
 class MeterController;
 class RecordingStore;
 class LcdWidget;
@@ -418,13 +417,6 @@ protected:
   bool        m_startDisplay = true;   ///< Display/show of the start layout (auto-save off)
   QMenu      *m_arrangeMenu;
   QMenu      *m_recentMenu = nullptr;   ///< Arrange > Recent workspaces
-  /// The rack of logic nodes (Arrange > Rack...), made when first shown.
-  RackWindow *m_rack = nullptr;
-  /// The rack, made now if not yet.
-  RackWindow *rack();
-  /// The rack's order, place and whether it was open, of the bench being
-  /// applied: taken when the rack is made.
-  QStringList m_rackOrder;
   QMenu      *m_designMenu;
   bool        m_restoring = false;   ///< restoreWindows() is setting the actions
   QStringList m_openingPending;   ///< openPending(): the meters still to come, a view's among them waits
