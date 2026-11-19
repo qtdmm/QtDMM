@@ -8,7 +8,6 @@
 
 HeatmapPlot::HeatmapPlot(QWidget *parent) : QcpGraphCommon(parent, tr("No heatmap data yet"))
 {
-  setMinimumSize(260, 180);   // room for the colour scale
   m_plot->plotLayout()->insertColumn(1);
   m_map = new QCPColorMap(m_plot->xAxis, m_plot->yAxis);
   m_map->setInterpolate(false);
@@ -42,8 +41,9 @@ void HeatmapPlot::fixScaleWidth()
   m_scale->setSizeConstraintRect(QCPLayoutElement::scrOuterRect);
   m_scale->setMinimumSize(width, 0);
   m_scale->setMaximumSize(width, QWIDGETSIZE_MAX);
-  // the plot's least width beside it: room for the y axis and a few cells
-  setMinimumWidth(width + 4 * QFontMetrics(font()).height() + labels.horizontalAdvance(QStringLiteral("-888.8k")) + 40);
+  // the plot's least width beside it, as an XY diagram's
+  const int line = QFontMetrics(font()).height();
+  setMinimumWidth(qMax(300, 20 * line) + width);
 }
 
 void HeatmapPlot::setTheme(const PlotTheme &theme)

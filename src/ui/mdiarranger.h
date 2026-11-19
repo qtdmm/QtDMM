@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
 
+#include <functional>
+
 #include <QList>
 #include <QObject>
 #include <QPointer>
@@ -130,10 +132,13 @@ public:
   /// coordinates); @p left: the instruments on the left instead of on top.
   static Node ruleTree(const QRect &area, const QList<Role> &roles, bool left, int headerHeight,
                        int tableMinWidth = 260, const QList<Fit> &fits = {}, int graphMinWidth = 0);
+  /// The least a cell may get along an orientation (minExtent()).
+  using MinOf = std::function<int(const Node &node, Qt::Orientation orient)>;
   /// Lays @p node out in @p area: the rect of each leaf (indexed by leaf)
-  /// and, if wanted, the dividers.
+  /// and, if wanted, the dividers. With @p minOf no cell below its least
+  /// size: the others give way, or the cells go beyond the area.
   static void applyTree(const Node &node, const QRect &area, QList<QRect> &rects,
-                        std::vector<Divider> *dividers = nullptr);
+                        std::vector<Divider> *dividers = nullptr, const MinOf &minOf = {});
   /// The rects the automatic mode gives the windows with @p roles.
   static QList<QRect> layout(const QRect &area, const QList<Role> &roles, int headerHeight,
                              int tableMinWidth = 260, bool left = false, const QList<Fit> &fits = {},
