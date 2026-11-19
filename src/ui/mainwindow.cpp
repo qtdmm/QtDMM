@@ -2103,7 +2103,6 @@ void MainWindow::addDevice()
   AddDeviceDlg dlg(m_wid->devices(), this);
   dlg.setPorts(Transport::availablePorts() + m_wid->settings()->customPorts());
   dlg.setSigrokExe(m_wid->settings()->getString("Port settings/sigrok_exe", "sigrok-cli"));
-  dlg.setCalcInputs(m_session->calcInputs());
   dlg.setPlacesInUse(placesInUse());
   if (dlg.exec() != QDialog::Accepted)
     return;
@@ -3805,7 +3804,6 @@ void MainWindow::deviceSettings(const QString &id, bool settingsTab)
   DeviceSettingsDlg dlg(device->name, this);
   dlg.settings()->setPorts(Transport::availablePorts() + m_wid->settings()->customPorts());
   dlg.settings()->setSigrokExe(m_wid->settings()->getString("Port settings/sigrok_exe", "sigrok-cli"));
-  dlg.settings()->setCalcInputs(m_session->calcInputs());
   dlg.load(device->keys);
   dlg.setStatus([this, id] { return deviceStatus(id); });
   dlg.setFrameSource([this, id]

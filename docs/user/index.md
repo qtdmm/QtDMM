@@ -37,8 +37,8 @@ side, one window each, and can be combined into calculated values.
 - [Your own board](microcontroller.md) — an Arduino, ESP32 or Pico sending
   its values as text lines (Serial Plotter, Teleplot).
 - [Calculated values](calculated-values.md) — power from a voltage and a
-  current meter: formulas over the readings of the open devices; the
-  simulated meter for demos without hardware.
+  current meter: formulas over the values of your devices; simulated
+  values for demos without hardware.
 - [Bench meters through sigrok-cli](bench-meters.md) — Keysight, Agilent, HP
   and Siglent SCPI meters over USB-TMC, LAN or serial, with sigrok-cli doing
   the talking.

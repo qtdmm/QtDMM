@@ -83,15 +83,6 @@ int main(int argc, char **argv)
         "cable meter: no Bluetooth string as its port");
 
   // 4. the kinds of meter without a port
-  check(MeterSetup::fromKeys({{"DMM/model", "QtDMM Calculated value"}, {"DMM/calc-unit", "W"}, {"DMM/calc-expression", "u * i"}}).device
-          == "calc W u * i",
-        "calculated value");
-  {
-    const MeterSetup s = MeterSetup::fromKeys({{"DMM/model", "QtDMM Simulated meter"}, {"DMM/virtual-waveform", 7},
-                                               {"DMM/virtual-formula", "1 + t"}, {"DMM/virtual-values", 2}});
-    check(s.device == QString("calc V/DC 1 + t; A/DC %1").arg(MeterSetup::kVirtualDefaults[0][1]) && s.valueCount == 2,
-          "simulated meter: " + s.device);
-  }
   {
     const MeterSetup s = MeterSetup::fromKeys({{"DMM/model", "Victron SmartShunt"}, {"Port settings/ble-address", "AA:BB:CC:DD:EE:FF"},
                                                {"Port settings/ble-key", "0011 2233"}});

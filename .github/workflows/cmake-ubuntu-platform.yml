@@ -31,12 +31,15 @@ jobs:
         cache: true
 
     # the xcb libraries are what Qt's xcb platform plugin needs; linuxdeploy
-    # refuses a plugin whose libraries are missing
+    # refuses a plugin whose libraries are missing. libpipewire: Qt Multimedia
+    # loads it at run time (dlopen, not bundled), without it every test says
+    # "Couldn't load pipewire-0.3 library" (t64: its name since Ubuntu 24.04)
     - name: Install dependencies
       run: |
         sudo apt update
         sudo apt install -y --no-install-recommends \
           libhidapi-dev \
+          libpipewire-0.3-0t64 \
           libhidapi-hidraw0 \
           libgl-dev \
           ninja-build \

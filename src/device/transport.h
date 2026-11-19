@@ -3,7 +3,7 @@
 #include <QIODevice>
 
 #include "device/dmmdecoder.h"
-#include "device/transports/calc.h"
+#include "device/dmmdecoder.h"
 
 /// Owns the QIODevice a meter is talked to through and hides which kind it is.
 ///
@@ -11,21 +11,19 @@
 /// (SerialDevice), a USB HID cable (HIDSerialDevice), a Holtek HID sensor
 /// (HidHoltekDevice), a serial port shared
 /// over the network (RFC2217SerialDevice), sigrok-cli as a data source
-/// (SigrokDevice) and a formula over other meters' readings
-/// (CalcDevice). MeterConnection only ever sees the QIODevice returned by port().
+/// (SigrokDevice) and Bluetooth LE. MeterConnection only ever sees the QIODevice
+/// returned by port().
 class Transport : public QObject
 {
     Q_OBJECT
 public:
     /// The kinds of port; the settings file stores them by name (str2portType()).
-    enum class PortType { None, Serial, Hid, HidHoltek, Sigrok, RFC2217, Calc, Ble, BleGatt };
+    enum class PortType { None, Serial, Hid, HidHoltek, Sigrok, RFC2217, Ble, BleGatt };
 
     explicit Transport(QObject *parent = nullptr) : QObject(parent) {}
     /// Creates the device object for @p type (closing any previous one). The
     /// port is not opened yet; call port()->open() and then init().
     bool create(const DmmDecoder::DMMInfo &spec, PortType type, QString device);
-    /// Where a CalcDevice reads its inputs from.
-    void setCalcInputs(CalcDevice::Inputs inputs) { m_calcInputs = std::move(inputs); }
     /// Closes and deletes the current device, if any.
     void close();
 
@@ -42,11 +40,10 @@ public:
     bool        init();
     bool        isOpen() const { return m_port != nullptr && m_port->isOpen(); };
 
-    /// "serial", "hid", "hidholtek", "sigrok", "rfc2217", "calc" or "ble" (case-insensitive) to PortType.
+    /// "serial", "hid", "hidholtek", "sigrok", "rfc2217" or "ble" (case-insensitive) to PortType.
     static PortType str2portType(const QString str);
 private:
     QIODevice *m_port   = nullptr;
     PortType   m_type   = PortType::None;
     QString    m_device;
-    CalcDevice::Inputs m_calcInputs;
 };

@@ -562,10 +562,8 @@ QJsonObject MeterController::recordingInfo() const
     o["name"] = m_deviceName;
   if (!m_model.isEmpty())
     o["model"] = m_model;
-  // not of the Simulated meter or a calculated value: how they run inside
-  // QtDMM is no protocol of a meter
-  const DmmDecoder::DMMInfo &info = this->sourceInfo();
-  if (m_dmm && m_dmm->format() != FrameFormat::Invalid && !MeterSetup::isVirtual(info) && !MeterSetup::isCalculated(info))
+  // a logic node has no dmm(), no protocol
+  if (m_dmm && m_dmm->format() != FrameFormat::Invalid)
     o["protocol"] = FrameFormat::toString(m_dmm->format());
   QJsonArray values;
   auto value = [this, &values](int id, const QString &unit)

@@ -135,10 +135,6 @@ if (BUILD_TESTING)
 	## the formula evaluator of calculated instances
 	qtdmm_add_test(calc_expression test_calc tests/test_calc.cpp)
 
-	## the calculated-value source: formula over the other instances' readings,
-	## checked through the real ASCII decoder
-	qtdmm_add_test(calc_device test_calc_device tests/test_calc_device.cpp)
-
 	## HID cable chips: report layouts and chip detection, no hardware needed
 	qtdmm_add_test(hid_cable test_hid tests/test_hid.cpp "${TEST_DATA}/hid_cables.json")
 

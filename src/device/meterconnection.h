@@ -111,8 +111,6 @@ public:
   /// --debug: dump every frame as hex to stdout, a line with time and name.
   void    setConsoleLogging(bool on) { m_consoleLogging = on; }
   void    setConsoleName(const QString &name) { m_consoleName = name; }
-  /// The inputs of a calculated value (PortType::Calc, CalcDevice).
-  void    setCalcInputs(CalcDevice::Inputs inputs);
   /// How the meter is reached (setDevice()).
   Transport::PortType portType() const { return m_portType; }
 

@@ -90,36 +90,10 @@ int main(int argc, char **argv)
   check(w.findChild<QGroupBox *>("ui_protocol")->title().isEmpty() && w.findChild<QLabel *>("ui_protocol_title"),
         "sections: the title above the group");
 
-  // 4. calculated value: the formula group, no port, no Advanced
-  w.load({{"DMM/model", "QtDMM Calculated value"}, {"DMM/calc-unit", "W"}, {"DMM/calc-expression", "u * i"}});
-  check(w.isCalculated(), "calc: model");
-  check(w.device() == "calc W u * i", "calc: device " + w.device());
-  check(shown(w, "ui_calcGroup") && !shown(w, "ButtonGroup11") && !shown(w, "ui_advancedBox")
-          && shown(w, "ui_calcGroup_title"), "calc: formula group only");
-
-  // 5. virtual meter: its own group, the formula from the waveform
-  w.load({{"DMM/model", "QtDMM Virtual meter"}, {"DMM/virtual-waveform", 0}, {"DMM/virtual-min", "5"},
-          {"DMM/virtual-unit", "V"}, {"DMM/virtual-coupling", "DC"}});
-  check(w.isVirtual() && shown(w, "ui_virtualGroup") && !shown(w, "ui_advancedBox"), "virtual: group");
-  check(w.device().startsWith("calc V/DC "), "virtual: device " + w.device());
-  check(w.keys().value("DMM/virtual-min") == "5", "virtual: min");
-  check(w.keys().value("Port settings/device").toString().startsWith("calc "),
-        "virtual: the formula as its device, not a port: " + w.keys().value("Port settings/device").toString());
-  check(w.valueCount() == 1 && !w.device().contains(';') && !shown(w, "ui_virtualFormula2"),
-        "virtual: one value at first, no rows for more");
-  // more values: a row each, filled in as the device string's values after ';'
-  w.load({{"DMM/model", "QtDMM Simulated meter"}, {"DMM/virtual-waveform", 0}, {"DMM/virtual-values", 3}});
-  check(w.valueCount() == 3 && shown(w, "ui_virtualFormula2") && shown(w, "ui_virtualFormula3")
-          && !shown(w, "ui_virtualFormula4"), "virtual: three values, rows 2 and 3");
-  check(w.device().endsWith("; A/DC 0.5 + 0.2 * sin(2 * pi * t / 13); W/DC v1 * v2"),
-        "virtual: values 2 and 3 as preset: " + w.device());
-  check(w.keys().value("DMM/virtual-values") == 3 && w.keys().value("DMM/virtual-unit4") == "°C", "virtual: keys");
-  w.findChild<QLineEdit *>("ui_virtualFormula3")->setText("v1 *");
-  check(!w.isComplete(), "virtual: a broken formula of value 3 is not complete");
-  w.findChild<QLineEdit *>("ui_virtualFormula3")->setText("v1 * v2");
-  check(w.isComplete(), "virtual: complete again");
-  w.findChild<QSpinBox *>("ui_virtualValues")->setValue(1);
-  check(w.valueCount() == 1 && !w.device().contains(';'), "virtual: back to one value");
+  // 4. simulated and calculated values are logic nodes with dialogs of their
+  // own (GeneratorNodeDlg, FormulaNodeDlg): no models of QtDMM here
+  check(!w.findChild<QComboBox *>("ui_vendor") || w.findChild<QComboBox *>("ui_vendor")->findText("QtDMM") < 0,
+        "no vendor QtDMM among the meters");
 
   // 6. Victron: the Bluetooth group instead of the port, the key only here
   w.load({{"DMM/model", "Victron SmartShunt"}, {"Port settings/device", "ble AA:BB:CC:DD:EE:FF"},

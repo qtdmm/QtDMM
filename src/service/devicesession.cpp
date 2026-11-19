@@ -252,25 +252,6 @@ QString DeviceSession::sourceOfVariable(const QString &name) const
   return QString();
 }
 
-CalcDevice::Inputs DeviceSession::calcInputs() const
-{
-  // a calculated meter may outlive the session by a deleteLater()
-  return [self = QPointer<const DeviceSession>(this)]
-  {
-    QMap<QString, CalcDevice::Input> out;
-    if (!self)
-      return out;
-    for (const MeterController *ctl : self->controllers())
-    {
-      const Reading &r = ctl->lastReading();
-      if (ctl->deviceName().isEmpty() || r.msecs == 0)
-        continue;
-      out.insert(variableName(ctl->deviceName()), { r.value, r.baseUnit, r.msecs, !r.hold && !r.overload && !r.noNumber() });
-    }
-    return out;
-  };
-}
-
 MeterController *DeviceSession::open(const QString &id, QString *error, bool waitForDevice)
 {
   const std::optional<MyDevice> entry = m_library ? m_library->find(id) : std::nullopt;
@@ -322,7 +303,6 @@ MeterController *DeviceSession::open(const QString &id, const QVariantMap &keys,
   ctl->setModel(setup.knownModel ? setup.info.name : QStringLiteral("Manual"));
   ctl->setValueCount(setup.valueCount);
   ctl->configure(setup);
-  ctl->dmm()->setCalcInputs(calcInputs());
   return adopt(ctl, id, name, error, waitForDevice);
 }
 

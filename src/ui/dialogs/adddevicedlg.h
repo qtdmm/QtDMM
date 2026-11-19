@@ -9,7 +9,6 @@
 
 #include "device/discovery/discovery.h"
 #include "device/dmmdecoder.h"
-#include "device/transports/calc.h"
 
 class DeviceLibrary;
 class DeviceSettings;
@@ -47,8 +46,6 @@ public:
   /// The ports for the port field (Transport::availablePorts() and the custom ports).
   void        setPorts(const QStringList &ports);
   void        setSigrokExe(const QString &exe);
-  /// The readings of the meters open here, for the formula of a calculated value.
-  void        setCalcInputs(const CalcDevice::Inputs &inputs);
   /// Places (DeviceLibrary::place()) the open devices use, with what a
   /// find at that place says ("In use here").
   void        setPlacesInUse(const QMap<QString, QString> &places) { m_inUse = places; }

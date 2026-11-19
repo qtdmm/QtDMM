@@ -176,8 +176,7 @@ QStringList MnemonicCheck::run(QWidget *mainWindow)
     QWidget *serialBox = window->findChild<QWidget *>("ui_serialBox");
     if (QWidget *box = window->findChild<QWidget *>("ui_advancedBox"))
       box->show();
-    const QMap<QString, QWidget *> ports { { "serial", serial }, { "calc", window->findChild<QWidget *>("ui_calcGroup") },
-                                           { "virtual", window->findChild<QWidget *>("ui_virtualGroup") },
+    const QMap<QString, QWidget *> ports { { "serial", serial },
                                            { "ble", window->findChild<QWidget *>("ui_bleGroup") },
                                            { "sigrok", window->findChild<QWidget *>("ui_sigrokGroup") } };
     for (auto port = ports.cbegin(); port != ports.cend(); ++port)
@@ -190,7 +189,7 @@ QStringList MnemonicCheck::run(QWidget *mainWindow)
       if (serialBox)
         serialBox->setVisible(port.value() == serial);
       if (protocol)
-        protocol->setVisible(port.key() != "calc" && port.key() != "virtual");
+        protocol->show();
       checkWindow(window, " [" + port.key() + "]", out);
     }
   }

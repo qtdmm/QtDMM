@@ -108,12 +108,9 @@ int main(int argc, char **argv)
     QObject::connect(power, &MeterController::reading, [&value](const Reading &r) { value = r.value; });
     check(waitFor([&] { return qAbs(value - 3.0) < 1e-9; }, 4000), QString("bench_sim * 2 = 3: %1").arg(value));
   }
-  // the meters of the process only, by their names
-  {
-    const QMap<QString, CalcDevice::Input> in = session.calcInputs()();
-    check(in.contains("bench_sim") && qAbs(in.value("bench_sim").value - 1.5) < 1e-9 && !in.contains("test"),
-          QString("the meters of the process: bench_sim %1").arg(in.value("bench_sim").value));
-  }
+  // a calculated value of before names the entries of My devices
+  check(session.sourceOfVariable("bench_sim") == "device:" + sim && session.sourceOfVariable("nosuch").isEmpty(),
+        "the variable of an entry: " + session.sourceOfVariable("bench_sim"));
   check(DeviceSession::variableName("UT61E Bench") == "ut61e_bench" && DeviceSession::variableName("34465A") == "_34465a",
         "variable names");
   check(ask("INST:CAT?") == "\"WINDOW_METER\",\"BENCH_SIM\",\"POWER\"", "three meters: " + ask("INST:CAT?"));

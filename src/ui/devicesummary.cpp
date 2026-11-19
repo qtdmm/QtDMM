@@ -37,13 +37,9 @@ DeviceSummary::DeviceSummary(QWidget *parent) : QWidget(parent)
 
 QString DeviceSummary::connection(const DeviceSettings *settings)
 {
-  // how it is reached: a Bluetooth address, QtDMM itself, or the port with
-  // its serial parameters
+  // how it is reached: a Bluetooth address, sigrok, or the port with its
+  // serial parameters
   const QString device = settings->device();
-  if (settings->isVirtual())
-    return tr("simulated in QtDMM");
-  if (settings->isCalculated())
-    return tr("calculated in QtDMM: %1").arg(device.section(' ', 1));
   if (settings->isBluetooth())
     // the address only: a Victron device string carries its key after it
     return tr("Bluetooth LE, %1").arg(device.section(' ', 1, 1));
@@ -81,9 +77,7 @@ void DeviceSummary::show(const DeviceSettings *settings, const QString &name)
     { tr("Name"), name },
     { tr("Model"), model },
     { tr("Type"), manual ? QStringLiteral("-") : DeviceType::displayName(type) },
-    // QtDMM's own meters run on the sigrok line format inside; that says nothing to the user
-    { tr("Protocol"), settings->isVirtual() || settings->isCalculated() ? QStringLiteral("-")
-                                                                         : FrameFormat::toString(settings->format()) },
+    { tr("Protocol"), FrameFormat::toString(settings->format()) },
     { tr("Connection"), connection(settings) },
   };
   QString html = "<table cellspacing=\"0\" cellpadding=\"2\">";

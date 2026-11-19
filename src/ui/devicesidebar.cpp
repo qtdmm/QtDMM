@@ -24,6 +24,7 @@
 #include "core/devicelibrary.h"
 #include "device/dmmdecoder.h"
 #include "device/metersetup.h"
+#include "logic/legacynodes.h"
 #include "ui/devicesymbol.h"
 
 namespace
@@ -163,8 +164,8 @@ public:
 QPixmap symbolOf(const MyDevice &d, qreal dpr)
 {
   const QSize box(kSymbolSize, kSymbolSize);
-  // a calculated value (logic node): QtDMM's own, as the old one
-  if (d.isNode())
+  // a calculated or simulated value (logic node, also one of before): QtDMM's own
+  if (d.isNode() || LegacyNodes::isLegacy(d.keys))
     return DeviceSymbol::pixmap(QStringLiteral("QtDMM"), DeviceType::Virtual, box, dpr, DeviceSymbol::Design::Flat);
   for (const DmmDecoder::DMMInfo &info : DmmDecoder::getDeviceConfigurations())
     if (DmmDecoder::sameModel(d.model(), info.name))
@@ -764,8 +765,8 @@ void DeviceSidebar::keyPressEvent(QKeyEvent *event)
 
 QAction *DeviceSidebar::addCaptureAction(QMenu &menu, const QString &id) const
 {
-  // a calculated value has no frames
-  if (const std::optional<MyDevice> d = m_library->find(id); d && d->isNode())
+  // a calculated or simulated value has no frames
+  if (const std::optional<MyDevice> d = m_library->find(id); d && (d->isNode() || LegacyNodes::isLegacy(d->keys)))
     return nullptr;
   QAction *capture = menu.addAction(tr("&Capture..."));
   // a meter whose protocol QtDMM does not know: the capture is all it is for
