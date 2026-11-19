@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include "ui/dialogs/formulanodedlg.h"
 #include <QPointer>
 #include <functional>
 #include <optional>
@@ -379,6 +380,17 @@ protected:
   /// The assistant "Add device": the device into My devices, connected
   /// unless "Save only".
   void        addDevice();
+  /// A calculated value (FormulaNode) into My devices, set up in its dialog
+  /// (the assistant's tile "Calculated"), and connected.
+  void        addFormula();
+  /// The dialog of a calculated value's entry: its keys as set, none when
+  /// cancelled; @p name new name on the way out.
+  std::optional<QVariantMap> editFormula(const QString &id, const QVariantMap &keys, QString *name);
+  /// The values of My devices a formula may take (all but the entry @p id).
+  QList<FormulaNodeDlg::Choice> formulaChoices(const QString &id) const;
+  /// The entry @p id of My devices takes @p keys; a device connected takes
+  /// them at once (connected anew, its panel as it was).
+  void        applyEntryKeys(const QString &id, const QVariantMap &keys);
   /// The empty start: without a meter connected (or about to be) the window
   /// shows the big button "Add device", and "Connect from My devices" when
   /// it has entries, over the area instead of the views.

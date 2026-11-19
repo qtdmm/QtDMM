@@ -46,6 +46,7 @@
 #include "ui/valuemenu.h"
 #include "ui/tilebutton.h"
 #include "ui/dialogs/adddevicedlg.h"
+#include "logic/formulanode.h"
 #include "ui/dialogs/limitdlg.h"
 #include "device/transport.h"
 #include "device/transports/serial.h"
@@ -2102,6 +2103,11 @@ void MainWindow::addDevice()
   dlg.setPlacesInUse(placesInUse());
   if (dlg.exec() != QDialog::Accepted)
     return;
+  if (dlg.connection() == AddDeviceDlg::Calculated)
+  {
+    addFormula();
+    return;
+  }
   QVariantMap keys = dlg.keys();
   keys.insert("Port settings/device", SerialDevice::stableDevice(keys.value("Port settings/device").toString()));
   const int before = int(m_wid->devices()->list().size());
@@ -2118,6 +2124,92 @@ void MainWindow::addDevice()
   if (dlg.target() == AddDeviceDlg::Connect)
     openBeside(id);
   // the second device: from now on there is a choice
+  if (DeviceSidebar::opensAfterAdd(before, int(m_wid->devices()->list().size())))
+  {
+    showSidebar(true);
+    m_wid->settings()->setBool("Windows/sidebar", true);
+  }
+}
+
+QList<FormulaNodeDlg::Choice> MainWindow::formulaChoices(const QString &id) const
+{
+  QList<FormulaNodeDlg::Choice> out;
+  for (const MyDevice &device : m_wid->devices()->list())
+  {
+    if (device.id == id)
+      continue;
+    const QString source = "device:" + device.id;
+    const MeterController *ctl = m_session->controller(source);
+    // a device not connected: its values by number, units unknown; a
+    // calculated one: its outputs as set
+    std::unique_ptr<LogicNode> node = device.isNode() ? LogicNode::fromJsonText(device.keys.value("Node/json").toString())
+                                                      : nullptr;
+    const QList<LogicNode::Output> outputs = node ? node->outputs() : QList<LogicNode::Output>();
+    const int count = ctl ? ctl->valueCount() : node ? int(outputs.size())
+                                                     : qBound(1, device.keys.value("DMM/number-of-values", 1).toInt(), kMaxValues);
+    for (int i = 0; i < count && i < kMaxValues; ++i)
+    {
+      FormulaNodeDlg::Choice c;
+      c.ref = ValueRef(i, source);
+      QString value = ctl ? ctl->valueName(i) : QString();
+      if (value.isEmpty() && node)
+        value = outputs[i].name;
+      if (value.isEmpty())
+        value = count == 1 ? QString() : tr("value %1").arg(i + 1);
+      c.text = value.isEmpty() ? device.name : tr("%1: %2").arg(device.name, value);
+      c.unit = ctl ? ctl->lastReading(i).baseUnit : node ? SiPrefix::split(outputs[i].unit).baseUnit : QString();
+      out << c;
+    }
+  }
+  return out;
+}
+
+std::optional<QVariantMap> MainWindow::editFormula(const QString &id, const QVariantMap &keys, QString *name)
+{
+  FormulaNodeDlg dlg(this);
+  dlg.setChoices(formulaChoices(id));
+  dlg.setCurrent([this](const ValueRef &ref) -> std::optional<Reading>
+  {
+    const MeterController *ctl = m_session->controller(ref.source);
+    if (!ctl)
+      return std::nullopt;
+    const Reading r = ctl->lastReading(ref.id);
+    return r.msecs > 0 ? std::optional(r) : std::nullopt;
+  });
+  std::unique_ptr<LogicNode> stored = LogicNode::fromJsonText(keys.value("Node/json").toString());
+  const auto *formula = dynamic_cast<const FormulaNode *>(stored.get());
+  dlg.load(*name, formula ? *formula : FormulaNode());
+  // the inputs of the calculated values of My devices, for loops
+  if (!id.isEmpty())
+  {
+    const QString source = "device:" + id;
+    dlg.setLoopCheck([this, source](const QList<ValueRef> &inputs)
+    {
+      return LogicNode::makesLoop(source, inputs, [this](const QString &s) -> QList<ValueRef>
+      {
+        const std::optional<MyDevice> d = m_wid->devices()->find(s.mid(int(qstrlen("device:"))));
+        if (!d || !d->isNode())
+          return {};
+        const std::unique_ptr<LogicNode> n = LogicNode::fromJsonText(d->keys.value("Node/json").toString());
+        return n ? n->inputs() : QList<ValueRef>();
+      });
+    });
+  }
+  if (dlg.exec() != QDialog::Accepted)
+    return std::nullopt;
+  *name = dlg.name();
+  return QVariantMap { { "DMM/model", QStringLiteral("QtDMM Formula") }, { "Node/json", dlg.node()->toJsonText() } };
+}
+
+void MainWindow::addFormula()
+{
+  QString name = tr("Calculated");
+  const std::optional<QVariantMap> keys = editFormula(QString(), {}, &name);
+  if (!keys)
+    return;
+  const int before = int(m_wid->devices()->list().size());
+  const QString id = m_wid->devices()->add(m_wid->devices()->uniqueName(name), *keys);
+  openBeside(id);
   if (DeviceSidebar::opensAfterAdd(before, int(m_wid->devices()->list().size())))
   {
     showSidebar(true);
@@ -3671,6 +3763,19 @@ void MainWindow::deviceSettings(const QString &id, bool settingsTab)
   const std::optional<MyDevice> device = m_wid->devices()->find(id);
   if (!device)
     return;
+  // a calculated value: its formulas, no meter settings
+  if (device->isNode())
+  {
+    QString name = device->name;
+    const std::optional<QVariantMap> keys = editFormula(id, device->keys, &name);
+    if (!keys)
+      return;
+    if (name != device->name)
+      m_wid->devices()->rename(id, m_wid->devices()->uniqueName(name));
+    if (*keys != device->keys)
+      applyEntryKeys(id, *keys);
+    return;
+  }
   DeviceSettingsDlg dlg(device->name, this);
   dlg.settings()->setPorts(Transport::availablePorts() + m_wid->settings()->customPorts());
   dlg.settings()->setSigrokExe(m_wid->settings()->getString("Port settings/sigrok_exe", "sigrok-cli"));
@@ -3716,6 +3821,11 @@ void MainWindow::deviceSettings(const QString &id, bool settingsTab)
   keys.insert("Port settings/device", SerialDevice::stableDevice(keys.value("Port settings/device").toString()));
   if (DeviceLibrary::entryKeys(keys) == device->keys)
     return;   // nothing changed: the meter stays connected, the recording too
+  applyEntryKeys(id, keys);
+}
+
+void MainWindow::applyEntryKeys(const QString &id, const QVariantMap &keys)
+{
   m_wid->devices()->update(id, keys);
   // a device connected takes them at once: connected anew, its panel stays
   // as it was; its recording not saved: only when asked, else next time

@@ -2,6 +2,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "core/devicelibrary.h"
 
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -38,6 +42,8 @@ const QStringList kSerialKeys { "Port settings/baud", "Port settings/bits", "Por
                                 "Port settings/stop-bits", "DMM/rts", "DMM/dtr", "DMM/external-setup",
                                 "DMM/unit-1", "DMM/unit-2", "DMM/unit-3", "DMM/unit-4" };   // the units: microcontroller only
 const QLatin1String kVirtualPrefix("DMM/virtual-");
+// a logic node: its model and the node as JSON (LogicNode::toJsonText())
+const QLatin1String kNodeKey("Node/json");
 
 // "SERIAL /dev/ttyUSB0" -> "serial"; a port without type is a serial port
 QString deviceType(const QString &device)
@@ -66,6 +72,8 @@ void DeviceLibrary::setModelTransport(std::function<QString(const QString &)> tr
 
 QVariantMap DeviceLibrary::entryKeys(const QVariantMap &keys)
 {
+  if (keys.contains(kNodeKey))
+    return { { "DMM/model", keys.value("DMM/model") }, { kNodeKey, keys.value(kNodeKey) } };
   QStringList wanted = kBaseKeys;
   const QString device = keys.value("Port settings/device").toString();
   const QString model = keys.value("DMM/model").toString();
@@ -99,7 +107,7 @@ QVariantMap DeviceLibrary::entryKeys(const QVariantMap &keys)
 bool DeviceLibrary::isEntryKey(const QString &key)
 {
   return kBaseKeys.contains(key) || kBleKeys.contains(key) || kSigrokKeys.contains(key) || kCalcKeys.contains(key)
-         || kSerialKeys.contains(key) || key.startsWith(kVirtualPrefix);
+         || kSerialKeys.contains(key) || key.startsWith(kVirtualPrefix) || key == kNodeKey;
 }
 
 QString DeviceLibrary::place(const QVariantMap &keys)
@@ -175,6 +183,15 @@ void DeviceLibrary::tidy()
 
 QString MyDevice::where() const
 {
+  // a node: its formulas
+  if (keys.contains(kNodeKey))
+  {
+    QStringList formulas;
+    const QJsonObject node = QJsonDocument::fromJson(keys.value(kNodeKey).toString().toUtf8()).object();
+    for (const QJsonValue &v : node["parameters"].toObject()["outputs"].toArray())
+      formulas << v.toObject()["formula"].toString();
+    return formulas.join("; ");
+  }
   const QString device = keys.value("Port settings/device").toString();
   const QString type = device.section(' ', 0, 0).toUpper();
   if (type == QLatin1String("BLE"))

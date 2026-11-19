@@ -1,8 +1,10 @@
 // Copyright (c) 2026 The QtDMM developers
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "logic/logicnode.h"
+#include "logic/formulanode.h"
 
 #include <QJsonArray>
+#include <QJsonDocument>
 #include <QSet>
 
 QJsonObject LogicNode::toJson() const
@@ -54,4 +56,25 @@ bool LogicNode::makesLoop(const QString &source, const QList<ValueRef> &inputs,
       todo << r.source;
   }
   return false;
+}
+
+std::unique_ptr<LogicNode> LogicNode::create(const QString &type)
+{
+  if (type == QLatin1String(FormulaNode::kType))
+    return std::make_unique<FormulaNode>();
+  return nullptr;
+}
+
+std::unique_ptr<LogicNode> LogicNode::fromJsonText(const QString &text)
+{
+  const QJsonObject o = QJsonDocument::fromJson(text.toUtf8()).object();
+  std::unique_ptr<LogicNode> node = create(o["type"].toString());
+  if (node)
+    node->fromJson(o);
+  return node;
+}
+
+QString LogicNode::toJsonText() const
+{
+  return QString::fromUtf8(QJsonDocument(toJson()).toJson(QJsonDocument::Compact));
 }

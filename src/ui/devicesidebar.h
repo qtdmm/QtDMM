@@ -214,6 +214,7 @@ private:
   void        openMenu(QTreeWidgetItem *item, const QPoint &pos);
   /// "Capture..." in @p menu for device @p id, bold for a meter QtDMM does
   /// not know (FrameFormat::RawCapture).
+  /// Null for a calculated value: it has no frames.
   QAction    *addCaptureAction(QMenu &menu, const QString &id) const;
   void        serviceMenu(QTreeWidgetItem *item, const QPoint &pos);
   void        workspaceMenu(QTreeWidgetItem *item, const QPoint &pos);

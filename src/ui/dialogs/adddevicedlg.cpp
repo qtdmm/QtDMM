@@ -113,6 +113,8 @@ AddDeviceDlg::AddDeviceDlg(DeviceLibrary *library, QWidget *parent)
       tr("A bench meter read through sigrok-cli") },
     { Simulated, "code-function",                tr("&Simulated / calculated") + '\n' + tr("To try out, formulas"),
       tr("A simulated meter to try QtDMM, or a value calculated from the readings of other windows") },
+    { Calculated, "code-function",               tr("C&alculated") + '\n' + tr("Formula over values"),
+      tr("Values calculated from those of your devices, e.g. power from voltage and current") },
   };
   int column = 0;
   for (const auto &kind : kinds)
@@ -320,6 +322,7 @@ bool AddDeviceDlg::offers(Connection connection, const DmmDecoder::DMMInfo &info
     case Bluetooth: return bluetooth;
     case Sigrok:    return sigrok;
     case Simulated: return simulated;
+    case Calculated: return false;   // its own dialog
     case Cable:
     case Network:   return !bluetooth && !sigrok && !simulated;   // the bridge passes a cable on
   }
@@ -334,6 +337,12 @@ bool AddDeviceDlg::hasPortPage(Connection connection)
 void AddDeviceDlg::chooseConnection(Connection connection)
 {
   m_connection = connection;
+  // a calculated value has a dialog of its own (MainWindow::addFormula())
+  if (connection == Calculated)
+  {
+    accept();
+    return;
+  }
   const bool manual = connection == Cable || connection == Network;
   m_settings->setModelFilter([connection](const DmmDecoder::DMMInfo &info) { return offers(connection, info); }, manual);
   QVariantMap keys;

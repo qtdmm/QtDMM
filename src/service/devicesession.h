@@ -66,7 +66,8 @@ public:
   /// plugged in yet, MeterConnection::open()); the reason in @p error all the
   /// same.
   MeterController *open(const QString &id, QString *error = nullptr, bool waitForDevice = false);
-  /// The same with the entry's keys and name given.
+  /// The same with the entry's keys and name given. An entry of a logic
+  /// node (Node/json, MyDevice::isNode()) opens as one (openNode()).
   MeterController *open(const QString &id, const QVariantMap &keys, const QString &name, QString *error = nullptr,
                         bool waitForDevice = false);
   /// Opens the logic node @p node as the entry @p id: a source like a

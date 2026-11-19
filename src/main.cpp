@@ -27,6 +27,7 @@
 
 #include "ui/mainwindow.h"
 #include "ui/mnemoniccheck.h"
+#include "ui/dialogs/formulanodedlg.h"
 #include "ui/dialogs/adddevicedlg.h"
 #include "core/applog.h"
 #include "core/settings.h"
@@ -197,6 +198,8 @@ int main(int argc, char **argv)
     auto *addDevice = new AddDeviceDlg(nullptr, &mainWin);
     addDevice->setDiscoverers([](AddDeviceDlg::Connection) { return QList<Discoverer *>(); });
     addDevice->chooseConnection(AddDeviceDlg::Cable);
+    auto *formula = new FormulaNodeDlg(&mainWin);
+    formula->load(QStringLiteral("Power"), FormulaNode());
     QTimer::singleShot(0, &mainWin, [&mainWin]
     {
       const QStringList conflicts = MnemonicCheck::run(&mainWin);

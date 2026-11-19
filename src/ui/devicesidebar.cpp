@@ -163,6 +163,9 @@ public:
 QPixmap symbolOf(const MyDevice &d, qreal dpr)
 {
   const QSize box(kSymbolSize, kSymbolSize);
+  // a calculated value (logic node): QtDMM's own, as the old one
+  if (d.isNode())
+    return DeviceSymbol::pixmap(QStringLiteral("QtDMM"), DeviceType::Virtual, box, dpr, DeviceSymbol::Design::Flat);
   for (const DmmDecoder::DMMInfo &info : DmmDecoder::getDeviceConfigurations())
     if (DmmDecoder::sameModel(d.model(), info.name))
       return DeviceSymbol::pixmap(info.vendor, DeviceType::of(info), box, dpr, DeviceSymbol::Design::Flat);
@@ -761,6 +764,9 @@ void DeviceSidebar::keyPressEvent(QKeyEvent *event)
 
 QAction *DeviceSidebar::addCaptureAction(QMenu &menu, const QString &id) const
 {
+  // a calculated value has no frames
+  if (const std::optional<MyDevice> d = m_library->find(id); d && d->isNode())
+    return nullptr;
   QAction *capture = menu.addAction(tr("&Capture..."));
   // a meter whose protocol QtDMM does not know: the capture is all it is for
   if (const std::optional<MyDevice> d = m_library->find(id);
@@ -807,7 +813,7 @@ void DeviceSidebar::openMenu(QTreeWidgetItem *item, const QPoint &pos)
     Q_EMIT alarmsRequested(id);
   else if (chosen == limits)
     Q_EMIT limitsRequested(id);
-  else if (chosen == capture)
+  else if (capture && chosen == capture)
     Q_EMIT captureRequested(id);
   else if (chosen && chosen == close)
     Q_EMIT closeRequested(id);
@@ -875,7 +881,7 @@ void DeviceSidebar::contextMenuEvent(QContextMenuEvent *event)
   }
   else if (chosen == beside)
     Q_EMIT openBesideRequested(id);
-  else if (chosen == capture)
+  else if (capture && chosen == capture)
     Q_EMIT captureRequested(id);
   else if (chosen == remove
            && QMessageBox::question(this, tr("Remove device"), tr("Remove \"%1\" from My devices?").arg(d->name))
