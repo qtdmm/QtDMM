@@ -876,6 +876,28 @@ int MdiArranger::tableMinWidth(const QList<int> &visible) const
   return w;
 }
 
+int MdiArranger::minExtent(const Node &node, Qt::Orientation orient) const
+{
+  const bool vert = orient == Qt::Vertical;
+  if (node.isLeaf())
+  {
+    if (node.leaf < 0 || node.leaf >= m_order.size() || !m_order[node.leaf])
+      return 0;
+    const QSize min = m_order[node.leaf]->minimumSizeHint().expandedTo(m_order[node.leaf]->minimumSize());
+    return vert ? min.height() : min.width();
+  }
+  // along the split: all of them and the gaps; across it: the largest
+  int sum = 0;
+  int most = 0;
+  for (const Node &kid : node.kids)
+  {
+    const int m = minExtent(kid, orient);
+    sum += m;
+    most = qMax(most, m);
+  }
+  return node.orient == orient ? sum + kGap * int(node.kids.size() - 1) : most;
+}
+
 int MdiArranger::graphMinWidth(const QList<int> &visible) const
 {
   int w = 0;
@@ -1125,8 +1147,11 @@ bool MdiArranger::dividerEvent(QObject *watched, QEvent *event)
         const double delta = double(vert ? p.y() - m_divLast.y() : p.x() - m_divLast.x()) / m_divDrag.avail;
         double &a = n->ratios[size_t(m_divDrag.index)];
         double &b = n->ratios[size_t(m_divDrag.index) + 1];
-        const double minR = 4.0 * QFontMetrics(m_area->font()).height() / m_divDrag.avail;
-        const double d = qBound(qMin(0.0, minR - a), delta, qMax(0.0, b - minR));
+        // neither side below its windows' minimum (nor below a few lines)
+        const int lines = 4 * QFontMetrics(m_area->font()).height();
+        const double minA = double(qMax(lines, minExtent(n->kids[size_t(m_divDrag.index)], m_divDrag.orient))) / m_divDrag.avail;
+        const double minB = double(qMax(lines, minExtent(n->kids[size_t(m_divDrag.index) + 1], m_divDrag.orient))) / m_divDrag.avail;
+        const double d = qBound(qMin(0.0, minA - a), delta, qMax(0.0, b - minB));
         a += d;
         b -= d;
         m_divLast = p;

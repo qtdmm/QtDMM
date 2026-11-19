@@ -180,6 +180,10 @@ private:
   int tableMinWidth(const QList<int> &visible) const;
   /// The widest minimum of the graphs shown (their row of buttons), 0 without one.
   int graphMinWidth(const QList<int> &visible) const;
+  /// The least a cell may get along @p orient: its windows' minimum sizes
+  /// (a heatmap's colour scale, a graph's buttons), side by side summed with
+  /// the gaps, one above the other the largest.
+  int minExtent(const Node &node, Qt::Orientation orient) const;
   QRect cellArea() const;
   Node *nodeAt(const std::vector<int> &path);
   // drag to swap
