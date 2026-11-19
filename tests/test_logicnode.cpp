@@ -238,7 +238,7 @@ int main(int argc, char **argv)
     const Reading p0 = last[0];
     check(p0.name == "Power" && p0.baseUnit == "W" && p0.value > 0, QString("Power in W: %1").arg(p0.value));
     check(last[1].baseUnit == "W" && qAbs(last[1].value - p0.value) < 1e-9 * qMax(1.0, p0.value),
-          QString("y1 in mW is the same power: %1 %2").arg(last[1].value).arg(p0.value));
+          QString("y1 in mW is the same power: %1 %2").arg(last.value(1).value).arg(p0.value));
     check(last[2].quality == Quality::NoValue, "a formula that does not parse: no value");
 
     // the input it multiplies by closed: a gap
@@ -276,9 +276,11 @@ int main(int argc, char **argv)
     QObject block;   // the connection ends with this block, as got does
     if (qc)
       QObject::connect(qc, &MeterController::reading, &block, [&got](const Reading &r) { got[r.id] = r; });
-    check(waitFor([&] { return got.size() == 2 && got[0].quality == Quality::Valid; }, 3000)
-            && qAbs(got[0].value - 15) < 1e-9 && qAbs(got[1].value - 2) < 1e-9,
-          QString("3 V * 5 A, 5 - 3: %1 %2").arg(got[0].value).arg(got[1].value));
+    // first the wait: the message's arguments may be evaluated before it
+    // (gcc), and must not make up entries
+    const bool came = waitFor([&] { return got.size() == 2 && got.value(0).quality == Quality::Valid; }, 3000);
+    check(came && qAbs(got.value(0).value - 15) < 1e-9 && qAbs(got.value(1).value - 2) < 1e-9,
+          QString("3 V * 5 A, 5 - 3: %1 %2").arg(got.value(0).value).arg(got.value(1).value));
   }
 
   // 13. a formula node stored with one value per input (1b) is read with devices
