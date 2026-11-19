@@ -151,6 +151,10 @@ void ValueMenu::fill(QMenu *menu, const Target &target, const ValueRef &value)
     if (on)
       show(View::Table, ref.source);
   });
+  // a calculated value from it: its integral (energy from a power)
+  if (target.integrate)
+    QObject::connect(menu->addAction(tr("&Integrate...")), &QAction::triggered, menu,
+                     [add = target.integrate, ref] { add(ref); });
   // the rules on it, kept with its meter
   if (target.addAlarm || target.editLimits)
     menu->addSeparator();

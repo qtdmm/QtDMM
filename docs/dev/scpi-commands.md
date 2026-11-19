@@ -114,6 +114,7 @@ The range is `AUTO`, `MANUAL` or the meter's own range text.
 | `CALCulate:LIMit:CLEar` | resets the PASS/FAIL count (`MeterController::resetLimitCount()`) |
 | `QTDMM:ALARm:ACKnowledge` | acknowledges the raised alarms |
 | `QTDMM:MARK "text"` | a mark at the newest reading, graph and readings table; `SCPI` without text |
+| `QTDMM:NODE:RESet` | a calculated value's state back to 0 (an integral, `NodeRunner::reset()`); `-241` for a device |
 | `QTDMM:KEY "hold"` | presses a key of the meter (`DmmDecoder::keyNames()` the decoder supports); `-241` for a meter without keys, `-224` for a key it lacks, `-240` when not sent |
 
 There is no lock: every client that reaches the port may use these. The

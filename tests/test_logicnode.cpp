@@ -9,12 +9,14 @@
 // end; integral and generator come later.
 
 #include <QCoreApplication>
+#include <cmath>
 #include <QTemporaryDir>
 
 #include "core/devicelibrary.h"
 #include "core/reading.h"
 #include "logic/formulanode.h"
 #include "logic/generatornode.h"
+#include "logic/integralnode.h"
 #include "logic/logicnode.h"
 #include "recording/recordingstore.h"
 #include "service/devicesession.h"
@@ -293,6 +295,122 @@ int main(int argc, char **argv)
             && f->leadingInput() == 1 && f->formulas().value(0).text == "v1 * v2.2 + v2" && f->formulas().value(1).text == "y1 / v2.2",
           "its inputs the devices, v2 of the second value v2.2: " + (f ? f->toJsonText() : QString()));
     check(f && f->parameters()["deviceInputs"].toBool(), "stored again with devices");
+  }
+
+  // 14. the integral: trapezoids in hours, gaps, threshold, off, units
+  {
+    IntegralNode n;
+    n.setInputs(refs({ "device:w" }));
+    n.setMaxAgeMs(10000);
+    n.setUnit("Wh");
+    auto at = [&n](qint64 ms, std::optional<double> v, const QString &unit = QStringLiteral("W"))
+    {
+      LogicNode::Context ctx;
+      ctx.t = ms;
+      Reading r;
+      r.t = ms;
+      r.msecs = ms + 1;
+      r.baseUnit = unit;
+      if (v)
+        r.value = *v;
+      else
+        r.quality = Quality::NoValue;
+      ctx.inputs << std::optional(r);
+      return n.isOn() ? n.evaluate(ctx).value(0).value_or(NAN) : n.bypass(ctx).value(0).value_or(NAN);
+    };
+    at(0, 3600);
+    double w = 0;
+    for (int s = 1; s <= 9; ++s)
+      w = at(s * 1000, 3600);
+    check(qAbs(w - 9) < 1e-9, QString("3600 W for 9 s: 9 Wh: %1").arg(w));
+    w = at(10000, 7200);
+    check(qAbs(w - 10.5) < 1e-9, QString("a trapezoid 3600 -> 7200 W over 1 s: +1.5 Wh: %1").arg(w));
+    w = at(40000, 7200);
+    check(qAbs(w - 10.5) < 1e-9, QString("30 s later, beyond the maximum age: a gap, nothing added: %1").arg(w));
+    at(41000, std::nullopt);
+    w = at(42000, 7200);
+    check(qAbs(w - 10.5) < 1e-9, QString("a reading without a number: a gap again: %1").arg(w));
+    n.setOn(false);
+    at(43000, 7200);
+    n.setOn(true);
+    w = at(50000, 7200);
+    check(qAbs(w - 10.5) < 1e-9, QString("off: held, the time off not added: %1").arg(w));
+    w = at(51000, 7200);
+    check(qAbs(w - 12.5) < 1e-9, QString("on again: +2 Wh: %1").arg(w));
+    n.setUnit("kWh");
+    check(qAbs(at(51000, 7200) - 0.0125) < 1e-12, "in kWh: the sum in thousands");
+    n.setUnit("Wh");
+    // the threshold: rising above it starts at 0, staying above does not
+    n.setThreshold(100.0);
+    at(52000, 50);
+    w = at(53000, 3600);
+    check(qAbs(w) < 1e-9, QString("rising above 100 W: from 0: %1").arg(w));
+    w = at(54000, 3600);
+    check(qAbs(w - 1) < 1e-9, QString("above it: counting: %1").arg(w));
+    n.reset();
+    w = at(55000, 3600);
+    check(qAbs(w) < 1e-9, "reset by hand: 0");
+    // the meter switched from W to V: no volts in the Wh, a gap, said so
+    w = at(56000, 3600);
+    check(qAbs(w - 1) < 1e-9 && n.problem().isEmpty(), "1 Wh, no problem");
+    w = at(57000, 12, "V");
+    check(qAbs(w - 1) < 1e-9 && n.problem().contains("V"), "a reading in V: nothing added, said so: " + n.problem());
+    w = at(58000, 3600);
+    check(qAbs(w - 1) < 1e-9 && n.problem().isEmpty(), "W again: no trapezoid across the V");
+    w = at(59000, 3600);
+    check(qAbs(w - 2) < 1e-9, "and on: 2 Wh");
+    // the state, carried over when it is opened anew
+    IntegralNode again;
+    again.setUnit("Wh");
+    again.setState(n.state());
+    check(qAbs(again.sum() - n.sum()) < 1e-12, "the sum carried over");
+    check(IntegralNode::integratedUnit("W") == "Wh" && IntegralNode::integratedUnit("A") == "Ah"
+            && IntegralNode::integratedUnit("lx") == "lxh" && IntegralNode::integratedUnit("") == "h",
+          "units: Wh, Ah, lxh, h");
+    // as stored, and back
+    IntegralNode back;
+    back.fromJson(n.toJson());
+    check(back.unit() == "Wh" && back.threshold() == 100.0 && back.resetsOnRecording() && back.inputs()[0].source == "device:w",
+          "stored: " + n.toJsonText());
+  }
+
+  // 15. an integral of a generator in the session: it grows, a recording's
+  // start sets it to 0, so does QTDMM:NODE:RESet
+  {
+    auto gen = std::make_unique<GeneratorNode>();
+    GeneratorNode::Wave watts;
+    watts.shape = CalcExpr::Constant;
+    watts.unit = "W";
+    watts.max = "3600000";   // 1 Wh each ms: fast enough to see
+    gen->setWaves({ watts });
+    gen->setPeriodMs(20);
+    session.openNode("pw", "Power", std::move(gen), &error);
+    auto in = std::make_unique<IntegralNode>();
+    in->setInputs({ ValueRef(0, "device:pw") });
+    in->setName("Energy");
+    MeterController *e = session.openNode("e", "Energy", std::move(in), &error);
+    check(e != nullptr, "an integral opens: " + error);
+    Reading last;
+    QObject block;
+    if (e)
+      QObject::connect(e, &MeterController::reading, &block, [&last](const Reading &r) { last = r; });
+    const bool grew = waitFor([&] { return last.value > 200; }, 3000);
+    check(grew && last.baseUnit == "Wh" && last.name == "Energy", QString("it grows: %1 %2").arg(last.value).arg(last.baseUnit));
+    const double before = last.value;
+    session.startRecording();
+    last = Reading();
+    waitFor([&] { return last.msecs > 0; }, 1000);
+    check(last.msecs > 0 && last.value < before, QString("a recording starts: from 0: %1 < %2").arg(last.value).arg(before));
+    session.stopRecording();
+    waitFor([&] { return last.value > 200; }, 3000);
+    ask("INST:SEL ENERGY");
+    ask("QTDMM:NODE:RES");
+    last = Reading();
+    waitFor([&] { return last.msecs > 0; }, 1000);
+    check(last.value < 200 && ask("SYST:ERR?").contains("No error"), QString("QTDMM:NODE:RESet: from 0: %1").arg(last.value));
+    ask("INST:SEL COUNTER_U");
+    ask("QTDMM:NODE:RES");
+    check(ask("SYST:ERR?").contains("No error"), "a counter is a node too: no error");
   }
 
   return failed == 0 ? 0 : 1;

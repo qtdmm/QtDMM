@@ -49,6 +49,9 @@
 #include "device/metersetup.h"
 #include "logic/formulanode.h"
 #include "logic/generatornode.h"
+#include "logic/integralnode.h"
+#include "service/noderunner.h"
+#include "ui/dialogs/integralnodedlg.h"
 #include "logic/legacynodes.h"
 #include "ui/dialogs/generatornodedlg.h"
 #include "ui/dialogs/limitdlg.h"
@@ -1524,6 +1527,11 @@ void MainWindow::createSidebar()
     if (MeterController *ctl = openController(id))
       editLimits(ctl, false);
   });
+  connect(m_sidebar, &DeviceSidebar::nodeResetRequested, this, [this](const QString &id)
+  {
+    if (NodeRunner *runner = NodeRunner::of(m_session->controller("device:" + id)))
+      runner->reset();
+  });
   connect(m_sidebar, &DeviceSidebar::captureRequested, this, [this, openController](const QString &id)
   {
     // from My devices: connected first, beside the others
@@ -2106,9 +2114,12 @@ void MainWindow::addDevice()
   dlg.setPlacesInUse(placesInUse());
   if (dlg.exec() != QDialog::Accepted)
     return;
-  if (dlg.connection() == AddDeviceDlg::Calculated || dlg.connection() == AddDeviceDlg::Simulated)
+  if (dlg.connection() == AddDeviceDlg::Calculated || dlg.connection() == AddDeviceDlg::Simulated
+      || dlg.connection() == AddDeviceDlg::Integral)
   {
-    addNode(dlg.connection() == AddDeviceDlg::Simulated ? GeneratorNode::kType : FormulaNode::kType);
+    addNode(dlg.connection() == AddDeviceDlg::Simulated ? GeneratorNode::kType
+            : dlg.connection() == AddDeviceDlg::Integral ? IntegralNode::kType
+                                                          : FormulaNode::kType);
     return;
   }
   QVariantMap keys = dlg.keys();
@@ -2174,7 +2185,8 @@ std::unique_ptr<LogicNode> MainWindow::nodeOf(const QVariantMap &keys, QString *
   return nullptr;
 }
 
-std::optional<QVariantMap> MainWindow::editNode(const QString &id, const QVariantMap &keys, QString *name, const QString &newType)
+std::optional<QVariantMap> MainWindow::editNode(const QString &id, const QVariantMap &keys, QString *name, const QString &newType,
+                                                const ValueRef &input)
 {
   QString why;
   std::unique_ptr<LogicNode> stored = nodeOf(keys, &why);
@@ -2182,6 +2194,39 @@ std::optional<QVariantMap> MainWindow::editNode(const QString &id, const QVarian
   if (!stored && LegacyNodes::isLegacy(keys))
     QMessageBox::warning(this, *name, tr("%1\nSet up its formula anew.").arg(why));
   const QString type = stored ? stored->type() : newType.isEmpty() ? QString::fromLatin1(FormulaNode::kType) : newType;
+
+  if (type == QLatin1String(IntegralNode::kType))
+  {
+    IntegralNodeDlg dlg(this);
+    QList<IntegralNodeDlg::Choice> choices;
+    for (const FormulaNodeDlg::Choice &device : formulaChoices(id))
+      for (int i = 0; i < device.values.size(); ++i)
+        choices << IntegralNodeDlg::Choice { ValueRef(i, device.source), tr("%1: %2").arg(device.text, device.values[i]),
+                                             device.units.value(i) };
+    dlg.setChoices(choices);
+    // one open: where it is now, and setting it to 0
+    if (!id.isEmpty())
+      if (MeterController *ctl = m_session->controller("device:" + id); NodeRunner::of(ctl))
+        dlg.setState([this, id]() -> std::optional<Reading>
+                     {
+                       const MeterController *c = m_session->controller("device:" + id);
+                       return c && c->lastReading().msecs > 0 ? std::optional(c->lastReading()) : std::nullopt;
+                     },
+                     [this, id]
+                     {
+                       if (NodeRunner *runner = NodeRunner::of(m_session->controller("device:" + id)))
+                         runner->reset();
+                     });
+    const auto *integral = dynamic_cast<const IntegralNode *>(stored.get());
+    IntegralNode fresh;
+    if (!input.source.isEmpty())
+      fresh.setInputs({ input });
+    dlg.load(*name, integral ? *integral : fresh);
+    if (dlg.exec() != QDialog::Accepted)
+      return std::nullopt;
+    *name = dlg.name();
+    return QVariantMap { { "DMM/model", QStringLiteral("QtDMM Integral") }, { "Node/json", dlg.node()->toJsonText() } };
+  }
 
   if (type == QLatin1String(GeneratorNode::kType))
   {
@@ -2226,10 +2271,10 @@ std::optional<QVariantMap> MainWindow::editNode(const QString &id, const QVarian
   return QVariantMap { { "DMM/model", QStringLiteral("QtDMM Formula") }, { "Node/json", dlg.node()->toJsonText() } };
 }
 
-void MainWindow::addNode(const QString &type)
+void MainWindow::addNode(const QString &type, const ValueRef &input)
 {
   QString name = type == QLatin1String(GeneratorNode::kType) ? tr("Simulated") : tr("Calculated");
-  const std::optional<QVariantMap> keys = editNode(QString(), {}, &name, type);
+  const std::optional<QVariantMap> keys = editNode(QString(), {}, &name, type, input);
   if (!keys)
     return;
   const int before = int(m_wid->devices()->list().size());
@@ -3733,6 +3778,7 @@ void MainWindow::fillValueMenu(QMenu *menu, const ValueRef &value)
   target.newHistogram = [this](const ValueRef &v) { newView(Added::Histogram, v); };
   target.newHeatmap = [this](const ValueRef &v) { newView(Added::Heatmap, v); };
   target.newGraph = [this](const ValueRef &v) { newView(Added::Graph, v); };
+  target.integrate = [this](const ValueRef &v) { addNode(IntegralNode::kType, v); };
   target.graphs = [this]
   {
     QList<std::pair<QString, GraphModel *>> graphs;
@@ -3874,8 +3920,30 @@ void MainWindow::applyEntryKeys(const QString &id, const QVariantMap &keys)
         state.lcdVariant = m_panelLcd.value(ctl->source());
       m_panelStates.insert(id, state);
     }
+    // a calculated value keeps its state (an integral its sum) when its
+    // inputs stay: only its settings changed
+    QJsonObject nodeState;
+    QList<ValueRef> nodeInputs;
+    QString nodeType;
+    if (const NodeRunner *runner = NodeRunner::of(ctl))
+    {
+      nodeState = runner->node()->state();
+      nodeInputs = runner->node()->inputs();
+      nodeType = runner->node()->type();
+    }
     m_session->close(id);
     openBeside(id);
+    if (NodeRunner *runner = NodeRunner::of(m_session->controller("device:" + id));
+        runner && !nodeState.isEmpty() && runner->node()->type() == nodeType)
+    {
+      QStringList before, after;
+      for (const ValueRef &r : std::as_const(nodeInputs))
+        before << r.toString();
+      for (const ValueRef &r : runner->node()->inputs())
+        after << r.toString();
+      if (before == after)
+        runner->node()->setState(nodeState);
+    }
   }
 }
 

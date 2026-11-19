@@ -727,6 +727,18 @@ QString ScpiServer::handleQtdmm(const Command &cmd, bool &isQuery)
     return {};
   }
 
+  // QTDMM:NODE:RESet: a logic node's state back to 0 (an integral)
+  if (matches(sub, "NODE") && depth == 3)
+  {
+    if (!matches(leaf, "RESet"))
+      return refuse(isQuery, -113, "Undefined header");
+    if (!commandOnly(cmd, isQuery))
+      return {};
+    if (!dev().m_sources.resetNode || !dev().m_sources.resetNode())
+      return refuse(isQuery, -241, "Hardware missing; no calculated value");
+    return {};
+  }
+
   // QTDMM:CHANnel:CATalog? - <n>,"<port>","<unit>" for each channel of
   // READ? (@<n>); empty strings before its first reading
   if (matches(sub, "CHANnel") && depth == 3)

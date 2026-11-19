@@ -115,6 +115,8 @@ AddDeviceDlg::AddDeviceDlg(DeviceLibrary *library, QWidget *parent)
       tr("Simulated values to try QtDMM without a meter: sine, square, noise or a formula over time") },
     { Calculated, "code-function",               tr("C&alculated") + '\n' + tr("Formula over values"),
       tr("Values calculated from those of your devices, e.g. power from voltage and current") },
+    { Integral, "code-function",                 tr("&Integral") + '\n' + tr("Energy, charge"),
+      tr("A value summed up over time, e.g. the energy in Wh from a power in W") },
   };
   int column = 0;
   for (const auto &kind : kinds)
@@ -316,7 +318,8 @@ bool AddDeviceDlg::offers(Connection connection, const DmmDecoder::DMMInfo &info
     case Bluetooth: return bluetooth;
     case Sigrok:    return sigrok;
     case Simulated:
-    case Calculated: return false;   // logic nodes, in their own dialogs
+    case Calculated:
+    case Integral: return false;   // logic nodes, in their own dialogs
     case Cable:
     case Network:   return !bluetooth && !sigrok;   // the bridge passes a cable on
   }
@@ -332,7 +335,7 @@ void AddDeviceDlg::chooseConnection(Connection connection)
 {
   m_connection = connection;
   // a calculated or simulated value has a dialog of its own (MainWindow::addNode())
-  if (connection == Calculated || connection == Simulated)
+  if (connection == Calculated || connection == Simulated || connection == Integral)
   {
     accept();
     return;

@@ -78,6 +78,40 @@ default), each with:
 
 Each value shows where it is right now.
 
+## Integral
+
+The energy a load took, the charge into a battery, the light a plant got:
+*Add device*, the tile **Integral**, or *Integrate...* in the menu of a
+value (a right click on it in the sidebar or a view). It sums up one value
+over time:
+
+- **Value** - any value of your devices.
+- **Unit** - the value's unit times hours: W gives **Wh**, A **Ah**, lx
+  **lxh**, any other its unit with an `h`. A prefix may be chosen: `kWh`,
+  `mAh`.
+- **Gap after** - two readings further apart than this, or one without a
+  number (OL, ----), are a gap: the sum pauses over it and goes on after.
+- **Start at 0 when a recording starts** - on by default: the recording
+  shows the energy since its start.
+- **Start at 0 when the value rises above** a threshold - e.g. from the
+  moment a load is switched on. Staying above it does not start it again;
+  a value that wavers around the threshold starts it at each rise, so put
+  the threshold clearly between off and on. It is in the value's base
+  unit, shown beside the field: 0.5 A for 500 mA.
+
+*Set integral to 0* in its context menu in the sidebar, the button *Set to
+0* in its dialog and SCPI `QTDMM:NODE:RESet` start it at 0 by hand. After a
+restart of QtDMM it starts at 0; changed settings keep the sum as long as
+the value stays the same. Switched off it keeps its sum and adds nothing
+until it is on again.
+
+A reading in another unit than the sum's - the meter switched from W to
+V - adds nothing: the sum pauses, and its status says *Unit does not fit:
+V instead of W*.
+
+Each new reading of the value adds the trapezoid since the one before: the
+mean of both times the time between them.
+
 ## Entries from before
 
 The models **QtDMM / Simulated meter** (Virtual meter before 26.2) and
