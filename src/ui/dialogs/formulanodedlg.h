@@ -42,6 +42,7 @@ public:
     QString     text;     ///< its name
     QStringList values;   ///< what each value is ("Voltage DC (V)", "value 2"), one per value
     QStringList units;    ///< their base units when known ("V"), for the proposal
+    bool        connected = true;   ///< false: listed grey, "(not connected)"
   };
 
   explicit FormulaNodeDlg(QWidget *parent = nullptr);

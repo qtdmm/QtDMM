@@ -82,6 +82,7 @@ if (BUILD_TESTING)
 	qtdmm_add_test(logic_node test_logicnode tests/test_logicnode.cpp)
 	qtdmm_add_test(formula_node_dialog test_formulanodedlg tests/test_formulanodedlg.cpp)
 	qtdmm_add_test(legacy_nodes test_legacynodes tests/test_legacynodes.cpp)
+	qtdmm_add_test(rack test_rack tests/test_rack.cpp)
 
 	## the program itself, offscreen: a meter in the window and two with --also, read over SCPI TCP
 	## (Unix only: the console and the end of a GUI process on Windows)

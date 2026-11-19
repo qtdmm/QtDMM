@@ -172,6 +172,8 @@ Q_SIGNALS:
   void        captureRequested(const QString &id);
   /// "Set integral to 0" of an open integral (a logic node's state).
   void        nodeResetRequested(const QString &id);
+  /// "Show in the rack" of an open logic node.
+  void        rackRequested(const QString &id);
   /// The row "+ Add device..." at the end of My devices.
   void        addDeviceRequested();
   /// The settings of the services (Settings, SCPI server).

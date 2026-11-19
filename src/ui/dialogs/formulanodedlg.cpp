@@ -211,7 +211,13 @@ void FormulaNodeDlg::addInput(const QString &source)
   row.value = new QComboBox(this);
   row.value->setObjectName(QString("ui_formulaInput%1").arg(index + 1));
   for (const Choice &c : std::as_const(m_choices))
-    row.value->addItem(c.text, c.source);
+  {
+    // one not connected: there, grey, the node waits for it
+    row.value->addItem(c.connected ? c.text : tr("%1 (not connected)").arg(c.text), c.source);
+    if (!c.connected)
+      row.value->setItemData(row.value->count() - 1, row.value->palette().color(QPalette::Disabled, QPalette::Text),
+                             Qt::ForegroundRole);
+  }
   int at = row.value->findData(source);
   if (at < 0)
   {
