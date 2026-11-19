@@ -63,6 +63,7 @@ private:
   QCheckBox      *m_onRecording;
   QCheckBox      *m_thresholdOn;
   QLineEdit      *m_threshold;
+  QLabel         *m_thresholdUnit;   ///< the value's base unit: the threshold is in it
   QLabel         *m_now;
   QPushButton    *m_zero;
   QLabel         *m_status;

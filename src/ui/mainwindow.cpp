@@ -3920,8 +3920,30 @@ void MainWindow::applyEntryKeys(const QString &id, const QVariantMap &keys)
         state.lcdVariant = m_panelLcd.value(ctl->source());
       m_panelStates.insert(id, state);
     }
+    // a calculated value keeps its state (an integral its sum) when its
+    // inputs stay: only its settings changed
+    QJsonObject nodeState;
+    QList<ValueRef> nodeInputs;
+    QString nodeType;
+    if (const NodeRunner *runner = NodeRunner::of(ctl))
+    {
+      nodeState = runner->node()->state();
+      nodeInputs = runner->node()->inputs();
+      nodeType = runner->node()->type();
+    }
     m_session->close(id);
     openBeside(id);
+    if (NodeRunner *runner = NodeRunner::of(m_session->controller("device:" + id));
+        runner && !nodeState.isEmpty() && runner->node()->type() == nodeType)
+    {
+      QStringList before, after;
+      for (const ValueRef &r : std::as_const(nodeInputs))
+        before << r.toString();
+      for (const ValueRef &r : runner->node()->inputs())
+        after << r.toString();
+      if (before == after)
+        runner->node()->setState(nodeState);
+    }
   }
 }
 

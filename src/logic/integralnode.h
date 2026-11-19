@@ -15,7 +15,9 @@
 ///   times hours. A reading without a number, or one further from the one
 ///   before than the maximum age, adds nothing: the sum pauses over a gap.
 /// - **Unit:** derived from the input's (integratedUnit()), with a prefix
-///   if wanted (kWh); the output is the sum in it.
+///   if wanted (kWh); the output is the sum in it. A reading in another
+///   base unit than the sum's (the meter switched from W to V) is a gap,
+///   and problem() says so.
 /// - **Reset:** by hand (reset()), at the start of a recording when
 ///   resetsOnRecording(), and when the input rises above a threshold (from
 ///   below it): the sum starts at 0 there. After a restart it starts at 0.
@@ -32,6 +34,9 @@ public:
   Values  bypass(const Context &ctx) override;
   void    reset() override;
   bool    resetsOnRecording() const override { return m_resetOnRecording; }
+  QJsonObject state() const override;
+  void    setState(const QJsonObject &s) override;
+  QString problem() const override { return m_problem; }
   QJsonObject parameters() const override;
   void    setParameters(const QJsonObject &p) override;
 
@@ -65,4 +70,8 @@ private:
   std::optional<std::pair<double, qint64>> m_last;
   /// Whether the input was below the threshold at its last number.
   std::optional<bool> m_below;
+  /// The input's base unit the sum is in: from the output's unit (Wh: W),
+  /// else the first reading's after a reset.
+  QString m_inputUnit;
+  QString m_problem;
 };

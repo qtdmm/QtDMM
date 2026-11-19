@@ -94,12 +94,20 @@ over time:
 - **Start at 0 when a recording starts** - on by default: the recording
   shows the energy since its start.
 - **Start at 0 when the value rises above** a threshold - e.g. from the
-  moment a load is switched on. Staying above it does not start it again.
+  moment a load is switched on. Staying above it does not start it again;
+  a value that wavers around the threshold starts it at each rise, so put
+  the threshold clearly between off and on. It is in the value's base
+  unit, shown beside the field: 0.5 A for 500 mA.
 
 *Set integral to 0* in its context menu in the sidebar, the button *Set to
 0* in its dialog and SCPI `QTDMM:NODE:RESet` start it at 0 by hand. After a
-restart of QtDMM it starts at 0. Switched off it keeps its sum and adds
-nothing until it is on again.
+restart of QtDMM it starts at 0; changed settings keep the sum as long as
+the value stays the same. Switched off it keeps its sum and adds nothing
+until it is on again.
+
+A reading in another unit than the sum's - the meter switched from W to
+V - adds nothing: the sum pauses, and its status says *Unit does not fit:
+V instead of W*.
 
 Each new reading of the value adds the trapezoid since the one before: the
 mean of both times the time between them.

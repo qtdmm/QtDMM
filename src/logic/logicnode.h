@@ -80,6 +80,13 @@ public:
   /// Whether the start of a recording clears its state (reset()): an
   /// integral counts from the recording's start.
   virtual bool resetsOnRecording() const { return false; }
+  /// Its state (an integral's sum), to carry over when the node is opened
+  /// anew with changed settings and the same inputs; empty: none.
+  virtual QJsonObject state() const { return {}; }
+  virtual void setState(const QJsonObject &s) { Q_UNUSED(s); }
+  /// What is wrong with the last computation besides old inputs (a reading
+  /// in another unit than the integral's); the runner shows it as its state.
+  virtual QString problem() const { return {}; }
   /// Its own parameters (formula, unit, ...), stored with the entry; the
   /// common ones (inputs, leading, max age, period, on) are the runner's.
   virtual QJsonObject parameters() const { return {}; }

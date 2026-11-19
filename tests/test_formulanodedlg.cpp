@@ -161,9 +161,11 @@ int main(int argc, char **argv)
     auto *unitBox = in.findChild<QComboBox *>("ui_integralUnit");
     check(unitBox->currentText() == "Wh" && in.name() == "Energy" && inOk->isEnabled(),
           "a power: Wh, named Energy: " + unitBox->currentText() + " " + in.name());
+    check(in.findChild<QLabel *>("ui_integralThresholdUnit")->text() == "W", "the threshold in W, said beside it");
     check(!in.findChild<QPushButton *>("ui_integralZero")->isVisibleTo(&in), "a new one: no state, no Set to 0");
     in.findChild<QComboBox *>("ui_integralInput")->setCurrentIndex(1);
-    check(unitBox->currentText() == "Ah" && in.name() == "Charge", "a current: Ah, named Charge");
+    check(unitBox->currentText() == "Ah" && in.name() == "Charge"
+            && in.findChild<QLabel *>("ui_integralThresholdUnit")->text() == "A", "a current: Ah, named Charge, threshold in A");
     unitBox->setCurrentText("mAh");
     in.findChild<QComboBox *>("ui_integralInput")->setCurrentIndex(2);
     check(unitBox->currentText() == "mAh" && in.name() == "Integral", "a unit chosen stays; an unknown value: Integral");

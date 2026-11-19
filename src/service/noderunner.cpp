@@ -171,11 +171,15 @@ void NodeRunner::compute(qint64 t, qint64 wall)
       old << (devices ? inputs[i].source : inputs[i].toString());
     }
   }
-  if (old.isEmpty())
-    m_ctl->setNodeState(MeterConnection::LinkState::Connected);
-  else
+  const LogicNode::Values values = m_node->isOn() ? m_node->evaluate(ctx) : m_node->bypass(ctx);
+  // what is wrong: an input old, else what the node says (a unit that does not fit)
+  if (!old.isEmpty())
     m_ctl->setNodeState(MeterConnection::LinkState::Timeout, tr("No current value: %1").arg(old.join(", ")));
-  deliver(m_node->isOn() ? m_node->evaluate(ctx) : m_node->bypass(ctx), t, wall);
+  else if (const QString problem = m_node->problem(); !problem.isEmpty())
+    m_ctl->setNodeState(MeterConnection::LinkState::Timeout, problem);
+  else
+    m_ctl->setNodeState(MeterConnection::LinkState::Connected);
+  deliver(values, t, wall);
 }
 
 void NodeRunner::deliver(const LogicNode::Values &values, qint64 t, qint64 wall)

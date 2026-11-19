@@ -303,13 +303,14 @@ int main(int argc, char **argv)
     n.setInputs(refs({ "device:w" }));
     n.setMaxAgeMs(10000);
     n.setUnit("Wh");
-    auto at = [&n](qint64 ms, std::optional<double> v)
+    auto at = [&n](qint64 ms, std::optional<double> v, const QString &unit = QStringLiteral("W"))
     {
       LogicNode::Context ctx;
       ctx.t = ms;
       Reading r;
       r.t = ms;
       r.msecs = ms + 1;
+      r.baseUnit = unit;
       if (v)
         r.value = *v;
       else
@@ -349,6 +350,20 @@ int main(int argc, char **argv)
     n.reset();
     w = at(55000, 3600);
     check(qAbs(w) < 1e-9, "reset by hand: 0");
+    // the meter switched from W to V: no volts in the Wh, a gap, said so
+    w = at(56000, 3600);
+    check(qAbs(w - 1) < 1e-9 && n.problem().isEmpty(), "1 Wh, no problem");
+    w = at(57000, 12, "V");
+    check(qAbs(w - 1) < 1e-9 && n.problem().contains("V"), "a reading in V: nothing added, said so: " + n.problem());
+    w = at(58000, 3600);
+    check(qAbs(w - 1) < 1e-9 && n.problem().isEmpty(), "W again: no trapezoid across the V");
+    w = at(59000, 3600);
+    check(qAbs(w - 2) < 1e-9, "and on: 2 Wh");
+    // the state, carried over when it is opened anew
+    IntegralNode again;
+    again.setUnit("Wh");
+    again.setState(n.state());
+    check(qAbs(again.sum() - n.sum()) < 1e-12, "the sum carried over");
     check(IntegralNode::integratedUnit("W") == "Wh" && IntegralNode::integratedUnit("A") == "Ah"
             && IntegralNode::integratedUnit("lx") == "lxh" && IntegralNode::integratedUnit("") == "h",
           "units: Wh, Ah, lxh, h");

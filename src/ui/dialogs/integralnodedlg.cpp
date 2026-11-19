@@ -66,10 +66,13 @@ IntegralNodeDlg::IntegralNodeDlg(QWidget *parent) :
   m_threshold = new QLineEdit(this);
   m_threshold->setObjectName("ui_integralThreshold");
   m_threshold->setPlaceholderText(tr("e.g. 0.5"));
-  m_threshold->setToolTip(tr("In the value's base unit (V, A, W); e.g. a load switched on"));
+  m_threshold->setToolTip(tr("In the value's base unit (V, A, W, not mA): 0.5 for 500 mA; e.g. a load switched on"));
   m_threshold->setMaximumWidth(120);
+  m_thresholdUnit = new QLabel(this);
+  m_thresholdUnit->setObjectName("ui_integralThresholdUnit");
   thresholdRow->addWidget(m_thresholdOn);
   thresholdRow->addWidget(m_threshold);
+  thresholdRow->addWidget(m_thresholdUnit);
   thresholdRow->addStretch(1);
   top->addLayout(thresholdRow);
 
@@ -195,6 +198,8 @@ void IntegralNodeDlg::propose()
   const int i = m_input->currentIndex();
   const QString base = i >= 0 && i < m_choices.size() ? LogicNode::canonicalUnit(m_choices[i].unit) : QString();
   const QString unit = IntegralNode::integratedUnit(base);
+  // the threshold is in the value's base unit: said beside it
+  m_thresholdUnit->setText(SiPrefix::displayText(base));
   m_proposing = true;
   // a value whose unit is not known yet (its device not connected): the
   // unit as it is

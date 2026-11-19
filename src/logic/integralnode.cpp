@@ -4,6 +4,8 @@
 
 #include <cmath>
 
+#include <QCoreApplication>
+
 #include "core/siprefix.h"
 
 namespace
@@ -28,6 +30,20 @@ LogicNode::Values IntegralNode::evaluate(const Context &ctx)
     m_last.reset();
     return { m_sum / factor };
   }
+  // the sum's unit: Wh sums W; a reading in V (the meter switched) adds
+  // nothing, a gap
+  const QString base = SiPrefix::split(m_unit).baseUnit;
+  const QString expected = base.endsWith('h') ? base.chopped(1) : m_inputUnit;
+  if (!expected.isEmpty() && canonicalUnit(r->baseUnit) != canonicalUnit(expected))
+  {
+    m_last.reset();
+    m_problem = QCoreApplication::translate("IntegralNode", "Unit does not fit: %1 instead of %2")
+                  .arg(SiPrefix::displayText(r->baseUnit), SiPrefix::displayText(expected));
+    return { m_sum / factor };
+  }
+  m_problem.clear();
+  if (m_inputUnit.isEmpty())
+    m_inputUnit = r->baseUnit;
   const double v = r->value;
   // rising above the threshold: from 0 again
   if (m_threshold)
@@ -59,6 +75,18 @@ void IntegralNode::reset()
   m_sum = 0;
   m_last.reset();
   m_below.reset();
+  m_inputUnit.clear();
+}
+
+QJsonObject IntegralNode::state() const
+{
+  return { { "sum", m_sum }, { "inputUnit", m_inputUnit } };
+}
+
+void IntegralNode::setState(const QJsonObject &s)
+{
+  m_sum = s["sum"].toDouble();
+  m_inputUnit = s["inputUnit"].toString();
 }
 
 QJsonObject IntegralNode::parameters() const
