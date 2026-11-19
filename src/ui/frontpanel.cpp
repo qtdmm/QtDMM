@@ -4,6 +4,7 @@
 
 #include <QEvent>
 #include <QTimer>
+#include <QToolButton>
 #include <QVBoxLayout>
 
 #include <cmath>
@@ -13,6 +14,7 @@
 #include "service/metercontroller.h"
 #include "service/valuefeed.h"
 #include "ui/controlbar.h"
+#include "ui/nodebar.h"
 #include "ui/views/lcdwidget.h"
 
 FrontPanel::FrontPanel(DeviceSession *session, QWidget *parent)
@@ -21,6 +23,8 @@ FrontPanel::FrontPanel(DeviceSession *session, QWidget *parent)
   , m_display(new LcdWidget(this))
   , m_controls(new ControlBar(this))
   , m_fold(new FoldButton(m_display))
+  , m_nodeBar(new NodeBar(this))
+  , m_gear(new QToolButton(m_display))
   , m_blinkTimer(new QTimer(this))
 {
   auto *layout = new QVBoxLayout(this);
@@ -28,8 +32,25 @@ FrontPanel::FrontPanel(DeviceSession *session, QWidget *parent)
   layout->setSpacing(4);
   layout->addWidget(m_display, 1);
   layout->addWidget(m_controls);
+  layout->addWidget(m_nodeBar);
   m_fold->hide();
   m_controls->hide();
+  m_nodeBar->hide();
+  // the gear in the corner, muted on the LCD until hovered
+  m_gear->setObjectName("ui_panelGear");
+  m_gear->setAutoRaise(true);
+  m_gear->setIcon(QIcon::fromTheme("configure"));
+  m_gear->setIconSize(QSize(14, 14));
+  m_gear->setFixedSize(20, 20);
+  m_gear->setToolTip(tr("Info and settings"));
+  m_gear->setStyleSheet("QToolButton { background: transparent; border: none; }"
+                        " QToolButton:hover { background: rgba(255, 255, 255, 60); border-radius: 3px; }");
+  m_gear->hide();
+  connect(m_gear, &QToolButton::clicked, this, [this]
+  {
+    if (m_ctl)
+      Q_EMIT settingsRequested(m_ctl->deviceId());
+  });
   m_display->installEventFilter(this);
 
   connect(m_feed, &ValueFeed::reading, m_display, &LcdWidget::showReading);
@@ -178,12 +199,17 @@ void FrontPanel::showAlert()
 void FrontPanel::updateKeys()
 {
   const bool before = keysShown();
-  // a logic node has no keys
-  m_keysSupported = m_ctl && m_ctl->dmm() && ControlBar::supported(m_ctl->sourceInfo());
+  // a meter with keys QtDMM can press, or a logic node with its bar
+  const bool node = m_ctl && m_ctl->isNode();
+  m_keysSupported = node || (m_ctl && m_ctl->dmm() && ControlBar::supported(m_ctl->sourceInfo()));
   if (m_ctl && m_ctl->dmm())
     m_controls->setProtocol(m_ctl->dmm()->format(), m_ctl->sourceInfo().model);
+  m_nodeBar->setController(node ? m_ctl.data() : nullptr);
   m_fold->setVisible(m_keysSupported);
-  m_controls->setVisible(keysShown());
+  m_gear->setVisible(m_ctl);
+  placeCorner();
+  m_controls->setVisible(keysShown() && !node);
+  m_nodeBar->setVisible(keysShown() && node);
   updateConnected();
   if (keysShown() != before)
     Q_EMIT keysChanged();
@@ -198,7 +224,9 @@ void FrontPanel::setFolded(bool folded)
 {
   const bool before = keysShown();
   m_fold->setFolded(folded);
-  m_controls->setVisible(keysShown());
+  const bool node = m_ctl && m_ctl->isNode();
+  m_controls->setVisible(keysShown() && !node);
+  m_nodeBar->setVisible(keysShown() && node);
   if (keysShown() != before)
     Q_EMIT keysChanged();
 }
@@ -215,12 +243,25 @@ bool FrontPanel::keysShown() const
 
 int FrontPanel::keysHeight() const
 {
-  return keysShown() ? m_controls->sizeHint().height() + 4 : 0;
+  return keysShown() ? bar()->sizeHint().height() + 4 : 0;
+}
+
+QWidget *FrontPanel::bar() const
+{
+  return m_ctl && m_ctl->isNode() ? static_cast<QWidget *>(m_nodeBar) : m_controls;
 }
 
 bool FrontPanel::eventFilter(QObject *watched, QEvent *event)
 {
   if (watched == m_display && event->type() == QEvent::Resize)
-    m_fold->move(m_display->width() - m_fold->width() - 6, 6);
+    placeCorner();
   return QWidget::eventFilter(watched, event);
+}
+
+void FrontPanel::placeCorner()
+{
+  m_fold->move(m_display->width() - m_fold->width() - 6, 6);
+  // the gear left of the fold button, in its place when there is none
+  const int right = m_fold->isVisibleTo(this) ? m_fold->x() - 2 : m_display->width() - 6;
+  m_gear->move(right - m_gear->width(), 4);
 }

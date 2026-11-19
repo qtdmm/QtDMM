@@ -33,6 +33,20 @@ export, alarms and SCPI all work on it exactly as on a measured one.
 *Info and settings* in its context menu in the sidebar opens the same
 dialog again.
 
+## On the front panel
+
+A calculated, simulated or integral value has a front panel like a meter:
+its values on the LCD, and below it, where a meter has its keys:
+
+- the **status LED**: green while it computes, yellow while it waits for
+  an input (why in its tooltip) or is held, dark while disconnected;
+- its own keys: an integral has **0** and **HOLD**.
+
+The **gear** in the top right corner of every front panel, of a meter too,
+opens *Info and settings*. Connect and disconnect start and stop a
+calculated value as they do a meter. The triangle beside the gear folds
+the keys away.
+
 Values are combined in their base units (volts, amperes, ohms), whatever
 range the meters happen to be in. A result is in the base unit of the
 unit you give it, and shown with a fitting prefix: 12 V times 0.5 mA is
@@ -102,11 +116,12 @@ over time:
   the threshold clearly between off and on. It is in the value's base
   unit, shown beside the field: 0.5 A for 500 mA.
 
-*Set integral to 0* in its context menu in the sidebar, the button *Set to
-0* in its dialog and SCPI `QTDMM:NODE:RESet` start it at 0 by hand. After a
-restart of QtDMM it starts at 0; changed settings keep the sum as long as
-the value stays the same. Switched off it keeps its sum and adds nothing
-until it is on again.
+The key **0** on its front panel, *Set integral to 0* in its context menu
+in the sidebar, the button *Set to 0* in its dialog and SCPI
+`QTDMM:NODE:RESet` start it at 0 by hand. After a restart of QtDMM it
+starts at 0; changed settings keep the sum as long as the value stays the
+same. **HOLD** on its front panel keeps its sum and adds nothing until it
+is pressed again; it stays held with the next start.
 
 A reading in another unit than the sum's - the meter switched from W to
 V - adds nothing: the sum pauses, and its status says *Unit does not fit:
