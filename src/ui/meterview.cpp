@@ -56,7 +56,7 @@ void MeterView::setLook(const Look &look)
   m_meter->setScaleMode(look.scaleMode);
   // the scale of the meter that has the value
   if (const MeterController *ctl = m_feed->controller())
-    m_meter->setDisplayCounts(ctl->dmm()->dmmInfo().display);
+    m_meter->setDisplayCounts(ctl->sourceInfo().display);
   showAlertColor();
 }
 
@@ -65,7 +65,7 @@ void MeterView::follow(const MeterController *ctl)
   m_meter->reset();
   m_meter->clearMinMax();
   if (ctl)
-    m_meter->setDisplayCounts(ctl->dmm()->dmmInfo().display);
+    m_meter->setDisplayCounts(ctl->sourceInfo().display);
   disconnect(m_alertLink);
   disconnect(m_limitLink);
   if (ctl)

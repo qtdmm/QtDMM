@@ -25,9 +25,9 @@
 
 
 
-MeterController::MeterController(QObject *parent, ServiceHost *host)
+MeterController::MeterController(QObject *parent, ServiceHost *host, Kind kind)
   : QObject(parent)
-  , m_dmm(new MeterConnection(this))
+  , m_dmm(kind == Kind::Device ? new MeterConnection(this) : nullptr)
   , m_alarms(new AlarmManager(this))
   , m_recorder(new RecordingStore(this))
   , m_scpiDevice(new ScpiDevice(this))
@@ -39,17 +39,21 @@ MeterController::MeterController(QObject *parent, ServiceHost *host)
   connect(m_host, &ServiceHost::statusChanged, this, &MeterController::scpiStatusChanged);
   connect(m_host, &ServiceHost::error, this, &MeterController::error);
   updateScpiName();
-  connect(m_dmm, &MeterConnection::response, this, &MeterController::responseSLOT);
-  connect(m_dmm, &MeterConnection::error, this, &MeterController::error);
   // SCPI's "connected" (INPut?, STAT:QUES? bit 2) is the link itself: lost
   // and reconnecting (a Bluetooth meter switched off) is not connected
-  connect(m_dmm, &MeterConnection::linkStateChanged, this, [this](MeterConnection::LinkState state)
+  connect(this, &MeterController::linkStateChanged, this, [this](MeterConnection::LinkState state)
   {
     m_scpiDevice->setConnected(state == MeterConnection::LinkState::Connected);
     // the gap the recorder stands in is one of a lost connection, not of a silent meter
     if (state == MeterConnection::LinkState::Error && !m_reopenAfter)
       m_recorder->setGapCause(SampleFlag::GapLost);
   });
+  if (m_dmm)
+  {
+    connect(m_dmm, &MeterConnection::response, this, &MeterController::responseSLOT);
+    connect(m_dmm, &MeterConnection::error, this, &MeterController::error);
+    connect(m_dmm, &MeterConnection::linkStateChanged, this, &MeterController::linkStateChanged);
+  }
 
   // the recorder keeps every reading of the main value, and a gap where it
   // went stale
@@ -62,7 +66,7 @@ MeterController::MeterController(QObject *parent, ServiceHost *host)
   connect(this, &MeterController::staleChanged, m_recorder, [this](bool stale)
   {
     const quint32 cause = m_reopenAfter ? SampleFlag::GapPause
-                          : m_dmm->linkState() == MeterConnection::LinkState::Error ? SampleFlag::GapLost : 0u;
+                          : linkState() == MeterConnection::LinkState::Error ? SampleFlag::GapLost : 0u;
     m_recorder->setStale(stale, cause);
   });
   connect(m_recorder, &RecordingStore::runningChanged, this, &MeterController::setRecording);
@@ -118,12 +122,12 @@ MeterController::MeterController(QObject *parent, ServiceHost *host)
   connect(m_scpiDevice, &ScpiDevice::connectRequested, this, [this](bool on)
   {
     // INPut OFF also ends a connection that is lost and being reopened
-    if (on == m_connectPending.value_or(m_dmm->isWanted()))
+    if (on == m_connectPending.value_or(isWanted()))
       return;
     m_connectPending = on;
     QMetaObject::invokeMethod(this, [this, on]
     {
-      if (on != m_dmm->isWanted())
+      if (on != isWanted())
         Q_EMIT connectRequested(on);   // may show a dialog: pending until it returns
       if (m_connectPending == on)
         m_connectPending.reset();
@@ -159,7 +163,8 @@ MeterController::~MeterController() = default;
 void MeterController::setModel(const QString &model)
 {
   m_model = model;
-  m_dmm->setName(model);
+  if (m_dmm)
+    m_dmm->setName(model);
   m_scpiDevice->setModel(model);
 }
 
@@ -189,6 +194,8 @@ void MeterController::resetLimitCount()
 
 void MeterController::configure(const MeterSetup &setup)
 {
+  if (!m_dmm)
+    return;
   m_dmm->setDmmInfo(setup.info);
   m_dmm->setDevice(setup.device);
   m_dmm->setFormat(setup.format);
@@ -200,13 +207,20 @@ bool MeterController::connectMeter(bool on, bool waitForDevice)
 {
   bool ok = true;
   m_stale.reset();   // a new connection has its own rhythm
-  if (on)
+  if (!m_dmm)
+  {
+    // a node runs or stops; NodeRunner follows linkStateChanged()
+    m_nodeWanted = on;
+    setNodeState(on ? MeterConnection::LinkState::Connecting : MeterConnection::LinkState::Closed);
+  }
+  else if (on)
     ok = m_dmm->open(waitForDevice);
   else
     m_dmm->close();
+  const bool open = m_dmm ? m_dmm->isOpen() : m_nodeWanted;
   // a "no readings" alarm watches a connected meter, so its clock starts here
-  m_alarms->setConnected(m_dmm->isOpen(), QDateTime::currentMSecsSinceEpoch());
-  if (!m_dmm->isOpen() && m_verdict != LimitTest::NoVerdict)
+  m_alarms->setConnected(open, QDateTime::currentMSecsSinceEpoch());
+  if (!open && m_verdict != LimitTest::NoVerdict)
   {
     m_verdict = LimitTest::NoVerdict;
     Q_EMIT limitJudged(m_limitTest.value.id, m_verdict, std::nan(""));
@@ -214,9 +228,56 @@ bool MeterController::connectMeter(bool on, bool waitForDevice)
   return ok;
 }
 
+bool MeterController::isWanted() const
+{
+  return m_dmm ? m_dmm->isWanted() : m_nodeWanted;
+}
+
+MeterConnection::LinkState MeterController::linkState() const
+{
+  return m_dmm ? m_dmm->linkState() : m_nodeState;
+}
+
+QString MeterController::errorString() const
+{
+  return m_dmm ? m_dmm->errorString() : m_nodeError;
+}
+
+QString MeterController::shortState() const
+{
+  if (m_dmm)
+    return m_dmm->shortState();
+  // a node: "off" while stopped, "waiting" while an input is missing
+  switch (m_nodeState)
+  {
+    case MeterConnection::LinkState::Closed: return tr("off");
+    case MeterConnection::LinkState::Timeout: return tr("waiting");
+    default: return QString();
+  }
+}
+
+const DmmDecoder::DMMInfo &MeterController::sourceInfo() const
+{
+  return m_dmm ? m_dmm->dmmInfo() : m_nodeInfo;
+}
+
+void MeterController::setNodeInfo(const DmmDecoder::DMMInfo &info)
+{
+  m_nodeInfo = info;
+}
+
+void MeterController::setNodeState(MeterConnection::LinkState state, const QString &detail)
+{
+  if (m_dmm || (state == m_nodeState && detail == m_nodeError))
+    return;
+  m_nodeState = state;
+  m_nodeError = detail;
+  Q_EMIT linkStateChanged(state, detail);
+}
+
 bool MeterController::pressKey(const QString &key)
 {
-  return m_dmm->sendKey(key);
+  return m_dmm && m_dmm->sendKey(key);
 }
 
 void MeterController::setRecording(bool on)
@@ -242,7 +303,7 @@ void MeterController::timerEvent(QTimerEvent *)
 void MeterController::responseSLOT(const DmmDecoder::DmmResponse &response)
 {
   // the one place the decoders' strings are read is ReadingAdapter
-  m_adapter.setFormat(m_dmm->format());
+  m_adapter.setFormat(m_dmm ? m_dmm->format() : FrameFormat::Invalid);
   const qint64 now = QDateTime::currentMSecsSinceEpoch();
   const QString from = source();
   for (const PortSample &ps : m_adapter.adapt(response, now))
@@ -264,7 +325,8 @@ void MeterController::setDevice(const QString &id, const QString &name)
   m_deviceId = id;
   const bool renamed = name != m_deviceName;
   m_deviceName = name;
-  m_dmm->setConsoleName(name);
+  if (m_dmm)
+    m_dmm->setConsoleName(name);
   updateScpiName();
   if (renamed)
     Q_EMIT deviceNameChanged(name);
@@ -502,8 +564,8 @@ QJsonObject MeterController::recordingInfo() const
     o["model"] = m_model;
   // not of the Simulated meter or a calculated value: how they run inside
   // QtDMM is no protocol of a meter
-  const DmmDecoder::DMMInfo &info = m_dmm->dmmInfo();
-  if (m_dmm->format() != FrameFormat::Invalid && !MeterSetup::isVirtual(info) && !MeterSetup::isCalculated(info))
+  const DmmDecoder::DMMInfo &info = this->sourceInfo();
+  if (m_dmm && m_dmm->format() != FrameFormat::Invalid && !MeterSetup::isVirtual(info) && !MeterSetup::isCalculated(info))
     o["protocol"] = FrameFormat::toString(m_dmm->format());
   QJsonArray values;
   auto value = [this, &values](int id, const QString &unit)
@@ -557,7 +619,7 @@ QString MeterController::valueName(int id) const
 int MeterController::valueCount() const
 {
   const int seen = m_lastReadings.isEmpty() ? 0 : m_lastReadings.lastKey() + 1;
-  return qBound(1, qMax(seen, qMax(m_valueCount, m_dmm->dmmInfo().valueCount())), kMaxValues);
+  return qBound(1, qMax(seen, qMax(m_valueCount, sourceInfo().valueCount())), kMaxValues);
 }
 
 void MeterController::setValueCount(int count)
@@ -654,7 +716,7 @@ void MeterController::onAlarmRaised(int index, const Alarm &alarm, double value)
         QTimer::singleShot(0, this, [this, title, program, args]
         {
           m_externalPending = false;
-          m_reopenAfter = m_dmm->isOpen();
+          m_reopenAfter = m_dmm && m_dmm->isOpen();
           if (m_reopenAfter)
           {
             // the recording goes on: no readings while the program runs
@@ -782,7 +844,7 @@ void MeterController::installScpiSources()
       alarms.append({ list[i].name, ScpiServer::AlarmState::Level(m_alarms->state(i)) });
     return alarms;
   };
-  s.keys = [this] { return m_dmm->keys(); };
+  s.keys = [this] { return m_dmm ? m_dmm->keys() : QStringList(); };
   s.pressKey = [this](const QString &key) { return pressKey(key); };
   s.limitTest = [this] { return m_limitTest; };
   s.setLimitTest = [this](const LimitTest &test) { setLimitTest(test); };

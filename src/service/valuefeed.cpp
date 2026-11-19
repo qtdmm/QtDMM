@@ -55,7 +55,7 @@ void ValueFeed::attach()
     });
     m_links << connect(ctl, &MeterController::deviceNameChanged, this, &ValueFeed::updateTexts);
     // a new connection: nothing heard of it yet; a silent meter keeps its value
-    m_links << connect(ctl->dmm(), &MeterConnection::linkStateChanged, this, [this](MeterConnection::LinkState state)
+    m_links << connect(ctl, &MeterController::linkStateChanged, this, [this](MeterConnection::LinkState state)
     {
       if (state == MeterConnection::LinkState::Connecting)
         m_heard = false;
@@ -80,7 +80,7 @@ void ValueFeed::attach()
 bool ValueFeed::hasValueNow() const
 {
   return m_ctl && m_ctl->lastReading(m_value.id).msecs > 0
-         && m_ctl->dmm()->linkState() == MeterConnection::LinkState::Connected;
+         && m_ctl->linkState() == MeterConnection::LinkState::Connected;
 }
 
 void ValueFeed::updateTexts()
@@ -91,7 +91,7 @@ void ValueFeed::updateTexts()
   {
     caption = m_ctl->deviceName();
     if (!m_heard)
-      switch (m_ctl->dmm()->linkState())
+      switch (m_ctl->linkState())
       {
         case MeterConnection::LinkState::Closed:     notice = tr("Not connected"); break;
         case MeterConnection::LinkState::Connecting: notice = tr("Connecting ..."); break;
@@ -100,7 +100,7 @@ void ValueFeed::updateTexts()
         // frames arrive, but not of this value yet - or never, from a meter
         // QtDMM does not know: its bytes are only for the capture window
         case MeterConnection::LinkState::Connected:
-          notice = m_ctl->dmm()->format() == FrameFormat::RawCapture ? tr("Capture only") : tr("Waiting for data");
+          notice = m_ctl->dmm() && m_ctl->dmm()->format() == FrameFormat::RawCapture ? tr("Capture only") : tr("Waiting for data");
           break;
       }
   }

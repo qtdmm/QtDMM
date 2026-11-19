@@ -183,7 +183,8 @@ void InstanceWidget::setConsoleLogging(bool on, const QStringList &only)
 
 void InstanceWidget::applyConsoleLogging(MeterController *ctl) const
 {
-  ctl->dmm()->setConsoleLogging(m_consoleLogging && (m_consoleOnly.isEmpty() || m_consoleOnly.contains(ctl->deviceId())));
+  if (ctl->dmm())   // a logic node has no frames to log
+    ctl->dmm()->setConsoleLogging(m_consoleLogging && (m_consoleOnly.isEmpty() || m_consoleOnly.contains(ctl->deviceId())));
 }
 
 MeterView *InstanceWidget::addMeter(AnalogMeter *meter)
