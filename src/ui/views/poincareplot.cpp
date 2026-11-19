@@ -22,7 +22,9 @@ PoincarePlot::PoincarePlot(QWidget *parent) :
   GraphCommon(parent)
 {
   setMouseTracking(true);
-  setMinimumSize(160, 160);
+  // square, no stamp (lines of text: it grows with the font)
+  const int side = qMax(240, 14 * QFontMetrics(font()).height());
+  setMinimumSize(side, side);
   // new readings are drawn on the FrameClock's next tick, not each one at
   // once; with the clock off on a timer of its own, at most 20 a second
   m_repaint.setSingleShot(true);

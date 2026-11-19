@@ -8,7 +8,6 @@
 
 HeatmapPlot::HeatmapPlot(QWidget *parent) : QcpGraphCommon(parent, tr("No heatmap data yet"))
 {
-  setMinimumSize(260, 180);   // room for the colour scale
   m_plot->plotLayout()->insertColumn(1);
   m_map = new QCPColorMap(m_plot->xAxis, m_plot->yAxis);
   m_map->setInterpolate(false);
@@ -24,14 +23,34 @@ HeatmapPlot::HeatmapPlot(QWidget *parent) : QcpGraphCommon(parent, tr("No heatma
   m_plot->axisRect()->setMarginGroup(QCP::msTop | QCP::msBottom, margins);
   m_scale->axis()->axisRect()->setMarginGroup(QCP::msTop | QCP::msBottom, margins);
 
+  fixScaleWidth();
   applyGradient();
   refreshPlot();
+}
+
+void HeatmapPlot::fixScaleWidth()
+{
+  // the scale as wide as its bar, ticks, labels and title need, whatever
+  // the window's width: QCP shares a narrow window's width out between the
+  // plot and the scale and squeezes the scale; so the plot gives way
+  const QFontMetrics labels(m_scale->axis()->tickLabelFont());
+  const QFontMetrics title(m_scale->axis()->labelFont());
+  const int width = m_scale->barWidth() + m_scale->axis()->tickLengthOut() + m_scale->axis()->tickLabelPadding()
+                    + labels.horizontalAdvance(QStringLiteral("-888.8k")) + m_scale->axis()->labelPadding()
+                    + title.height() + 12;
+  m_scale->setSizeConstraintRect(QCPLayoutElement::scrOuterRect);
+  m_scale->setMinimumSize(width, 0);
+  m_scale->setMaximumSize(width, QWIDGETSIZE_MAX);
+  // the plot's least width beside it, as an XY diagram's
+  const int line = QFontMetrics(font()).height();
+  setMinimumWidth(qMax(300, 20 * line) + width);
 }
 
 void HeatmapPlot::setTheme(const PlotTheme &theme)
 {
   QcpGraphCommon::setTheme(theme);
   theme.applyTo(m_plot, { m_scale->axis() });
+  fixScaleWidth();
   m_plot->replot(QCustomPlot::rpQueuedReplot);
 }
 

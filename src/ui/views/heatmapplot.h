@@ -40,6 +40,10 @@ private:
   void    clearSamples() override;
   QString crosshairText(double x, double y) const override;
   void    applyGradient();
+  /// The colour scale's width fixed to what it needs (fonts of the theme),
+  /// and the plot's least width with it: a narrow window narrows the plot,
+  /// not the scale.
+  void    fixScaleWidth();
 
   QCPColorMap       *m_map = nullptr;
   QCPColorScale     *m_scale = nullptr;

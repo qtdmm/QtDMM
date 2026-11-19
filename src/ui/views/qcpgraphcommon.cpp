@@ -6,7 +6,11 @@
 
 QcpGraphCommon::QcpGraphCommon(QWidget *parent, const QString &noData) : QcpPlotBase(parent)
 {
-  setMinimumSize(220, 180);
+  // no stamp: room for the axes with their labels and titles, the title
+  // above, and a plot one can read - in lines of text, so it grows with
+  // the font (and the screen's scale)
+  const int line = QFontMetrics(font()).height();
+  setMinimumSize(qMax(300, 20 * line), qMax(220, 13 * line));
 
   m_plot->plotLayout()->insertRow(0);
   m_titleElement = new QCPTextElement(m_plot, QString(), font());

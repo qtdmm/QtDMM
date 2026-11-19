@@ -322,6 +322,36 @@ static void testDerive()
   check(r[3].bottom() == 699 && r[3].width() == 1000, "add at edge: a new row at the bottom");
 }
 
+// no cell below its windows' minimum: the others give way; when they
+// cannot, the cells go beyond the area (it scrolls)
+static void testMinimum()
+{
+  using Node = MdiArranger::Node;
+  Node row;
+  row.orient = Qt::Horizontal;
+  for (int i = 0; i < 3; ++i)
+  {
+    Node leaf;
+    leaf.leaf = i;
+    row.kids.push_back(leaf);
+  }
+  row.ratios = { 0.6, 0.2, 0.2 };
+  // leaf 1 needs 300 of 1000: from the others' room above their 100
+  auto mins = [](int need) { return [need](const Node &n, Qt::Orientation) { return n.leaf == 1 ? need : 100; }; };
+  QList<QRect> r;
+  MdiArranger::applyTree(row, QRect(0, 0, 1000, 400), r, nullptr, mins(300));
+  check(r[1].width() >= 300 && r[0].width() >= 100 && r[2].width() >= 100 && r[2].right() <= 999,
+        QString("leaf 1 its 300 (%1), the others give way within the area (end %2)").arg(r[1].width()).arg(r[2].right()));
+  check(r[0].width() > r[2].width(), "the larger one gives more but stays larger");
+  // more than there is: each its least, beyond the area
+  MdiArranger::applyTree(row, QRect(0, 0, 400, 400), r, nullptr, mins(300));
+  check(r[0].width() == 100 && r[1].width() == 300 && r[2].width() == 100 && r[2].right() > 399,
+        QString("too little room: each its least, the last ends at %1").arg(r[2].right()));
+  // without minimums: the ratios as before
+  MdiArranger::applyTree(row, QRect(0, 0, 1000, 400), r);
+  check(r[1].width() < 300, "no minimums: the ratios");
+}
+
 static void testArranged()
 {
   QMdiArea area;
@@ -714,6 +744,7 @@ int main(int argc, char **argv)
   testFit();
   testText();
   testDerive();
+  testMinimum();
   testArranged();
   testNewGraph();
   if (failed)
