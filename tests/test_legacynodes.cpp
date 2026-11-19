@@ -50,7 +50,9 @@ QString oldDevice(const QVariantMap &keys)
                                                       key("DMM/virtual-max", "10"), key("DMM/virtual-period", "20"),
                                                       key("DMM/virtual-noise", "0"));
   QString device = QString("calc %1/%2 %3").arg(key("DMM/virtual-unit", "V"), key("DMM/virtual-coupling", "DC"), first);
-  for (int i = 0; i < keys.value("DMM/virtual-values", 1).toInt() - 1; ++i)
+  // 1 to 4 values, as MeterSetup took them: the defaults hold values 2-4
+  const int values = qBound(1, keys.value("DMM/virtual-values", 1).toInt(), kMaxValues);
+  for (int i = 0; i < values - 1; ++i)
   {
     const QString n = QString::number(i + 2);
     device += QString("; %1/%2 %3").arg(key("DMM/virtual-unit" + n, defaults[i][0]), key("DMM/virtual-coupling" + n, "DC"),
