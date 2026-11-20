@@ -146,6 +146,8 @@ protected:
   void                  setState(LinkState state, const QString &message);
   /// Creates and opens the port; the common part of open() and a reconnect.
   bool                  openPort();
+  /// m_error of a failed openPort() as error(), unless it is the one of the try before.
+  void                  openFailed();
   /// Drops the port without touching m_wanted.
   void                  closePort();
   /// The port device reports that it is gone (socket closed, USB unplugged).
@@ -161,6 +163,7 @@ protected:
   int                   m_timeoutMs = 3000;
   int                   m_reconnectSeconds = 5;
   int                   m_secondsInError = 0;
+  QString               m_openError;            ///< the last failed openPort()'s m_error, said once
   QElapsedTimer         m_lastFrame;            ///< since the last complete frame (or open)
   /// The models whose data the meter sends when its frames name others than
   /// the one it was set up as (DmmDecoder::tellsModel()), checked with the
