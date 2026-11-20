@@ -73,8 +73,9 @@ public:
 
 Q_SIGNALS:
   /// The inputs changed: @p from gives for each input now the place it had
-  /// before, -1 for a new one (the formulas follow: v3 is v2 now).
-  void        inputsChanged(const QList<int> &from);
+  /// before, -1 for a new one (the formulas follow: v3 is v2 now);
+  /// @p former the number of inputs before.
+  void        inputsChanged(const QList<int> &from, int former);
   void        valueChanged(const ValueRef &value);
 
 private:

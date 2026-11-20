@@ -150,12 +150,18 @@ int main(int argc, char **argv)
     auto *f1 = moves.findChild<QLineEdit *>("ui_formula1");
     check(!movesOk->isEnabled() && moves.findChild<QLabel *>("ui_formulaStatus")->text().contains("Simulated"),
           "no input: OK off, said what to do");
+    // R20-07: typed before its inputs are ticked, it stays
+    f1->setText("v1 * v2 + v3");
     for (int i = 0; i < 3; ++i)
       movesTree->topLevelItem(i)->setCheckState(0, Qt::Checked);
-    f1->setText("v1 * v2 + v3");
+    check(f1->text() == "v1 * v2 + v3" && movesOk->isEnabled(), "typed first, then ticked: as typed, " + f1->text());
     movesTree->topLevelItem(0)->setCheckState(0, Qt::Unchecked);
     check(f1->text() == "removed_v1 * v1 + v2" && !movesOk->isEnabled(),
           "the first input unticked: not the second in its place, OK off: " + f1->text());
+    // the last unticked: at once removed, not only at the next tick
+    movesTree->topLevelItem(2)->setCheckState(0, Qt::Unchecked);
+    check(f1->text() == "removed_v1 * v1 + removed_v2", "the last unticked: removed at once, " + f1->text());
+    movesTree->topLevelItem(2)->setCheckState(0, Qt::Checked);
     f1->setText("v1 * v2");
     moves.findChild<QPushButton *>("ui_formulaAddOutput")->click();
     moves.findChild<QPushButton *>("ui_formulaAddOutput")->click();
