@@ -13,8 +13,8 @@
 class ControlBar;
 class DeviceSession;
 class FoldButton;
+class PanelGear;
 class NodeBar;
-class QToolButton;
 class LcdWidget;
 class MeterController;
 class ValueFeed;
@@ -22,7 +22,7 @@ class ValueFeed;
 /// One meter's front: its LCD, the keys below it (ControlBar, for meters
 /// QtDMM can press keys of; NodeBar for a logic node: its status LED and
 /// its own keys), the fold button and the gear for its settings in the
-/// LCD's corner.
+/// LCD's name plate (the gear) and under the keys (the handle).
 ///
 /// The panel shows the meter of value() (ValueFeed): its readings, min/max
 /// and staleness on the LCD, its key states on the keys; a click on a key
@@ -94,10 +94,10 @@ private:
   ControlBar *m_controls;
   FoldButton *m_fold;
   NodeBar    *m_nodeBar;
-  QToolButton *m_gear;
+  PanelGear  *m_gear;
   /// The bar under the LCD now: the meter's keys or the node's.
   QWidget    *bar() const;
-  /// The fold button and the gear in the LCD's top right corner.
+  /// The gear at the right end of the LCD's name plate.
   void        placeCorner();
   bool        m_keysSupported = false;
   bool        m_secondariesChosen = false;

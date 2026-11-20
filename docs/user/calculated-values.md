@@ -44,10 +44,10 @@ its values on the LCD, and below it, where a meter has its keys:
   an input (why in its tooltip) or is held, dark while disconnected;
 - its own keys: an integral has **0** and **HOLD**.
 
-The **gear** in the top right corner of every front panel, of a meter too,
-opens *Info and settings*. Connect and disconnect start and stop a
-calculated value as they do a meter. The triangle beside the gear folds
-the keys away.
+The **gear** at the right end of the name above every front panel, of a
+meter too, opens *Info and settings*. Connect and disconnect start and
+stop a calculated value as they do a meter. The small handle at the lower
+edge folds the keys away and back.
 
 Values are combined in their base units (volts, amperes, ohms), whatever
 range the meters happen to be in. A result is in the base unit of the

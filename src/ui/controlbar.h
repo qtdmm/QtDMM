@@ -78,8 +78,9 @@ private:
   void relayout();
 };
 
-/// The small fold button in the top right corner of the display that hides
-/// and shows the ControlBar: ▾ open, ▸ folded; muted until hovered.
+/// The handle under a front panel's keys that hides and shows them
+/// (ControlBar, NodeBar): a small tab at the panel's lower edge, a double
+/// chevron up while open, down while folded; muted until hovered.
 class FoldButton : public QWidget
 {
   Q_OBJECT
@@ -99,5 +100,31 @@ protected:
 
 private:
   bool m_folded = false;
+  bool m_hover = false;
+};
+
+/// The gear on a front panel's name plate (LcdWidget::plateBand()), drawn
+/// like its lettering: the model's colour, the manufacturer's when hovered.
+/// A click: clicked().
+class PanelGear : public QWidget
+{
+  Q_OBJECT
+public:
+  explicit PanelGear(QWidget *parent);
+  /// The colours: at rest and hovered.
+  void setInk(const QColor &rest, const QColor &hover);
+
+Q_SIGNALS:
+  void clicked();
+
+protected:
+  void paintEvent(QPaintEvent *) override;
+  void enterEvent(QEnterEvent *) override;
+  void leaveEvent(QEvent *) override;
+  void mouseReleaseEvent(QMouseEvent *) override;
+
+private:
+  QColor m_rest = Qt::gray;
+  QColor m_hoverInk = Qt::white;
   bool m_hover = false;
 };

@@ -1042,11 +1042,33 @@ void LcdWidget::renderStatic()
   c.faceGlow = m_face.lighter(112);
   PanelFrame::paint(p, l.bezel, c, l.face.center(), l.face.width() * 0.6, !m_caption.isEmpty());
   if (!m_caption.isEmpty())
-    PanelFrame::paintPlate(p, l.bezel, m_caption, c);
+    PanelFrame::paintPlate(p, l.bezel, m_caption, c, m_plateReserve);
 
   PanelFrame::clipToFace(p, l.face);
   drawBar(p, l, true);
   m_staticDirty = false;
+}
+
+void LcdWidget::setPlateReserve(double px)
+{
+  if (qFuzzyCompare(px + 1, m_plateReserve + 1))
+    return;
+  m_plateReserve = px;
+  m_staticDirty = true;
+  update();
+}
+
+QRectF LcdWidget::plateBand() const
+{
+  return m_caption.isEmpty() ? QRectF() : PanelFrame::plateBand(layout().bezel);
+}
+
+QColor LcdWidget::plateInk(bool strong) const
+{
+  PanelFrame::Colors c;
+  c.bezelLight = kBezelLight;
+  c.bezelDark = kBezelDark;
+  return PanelFrame::plateInk(c, strong);
 }
 
 void LcdWidget::setCaption(const QString &caption)
