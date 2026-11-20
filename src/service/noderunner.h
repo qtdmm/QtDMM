@@ -56,6 +56,10 @@ private:
   void        deliver(const LogicNode::Values &values, qint64 t, qint64 wall);
   /// Starts or stops with the controller's wish.
   void        follow();
+  /// Before a computation, or when an input stops: what it waits for - an
+  /// input not open, or one open but not delivering (and why: "Waiting for
+  /// Calculated: Input not open: Simulated").
+  void        showWaiting();
   /// An input as the state names it: its device's name in My devices.
   QString     inputName(const ValueRef &ref) const;
 

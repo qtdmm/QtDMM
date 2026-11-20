@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <title>QtDMM calculated value</title>
+  <defs>
+    <linearGradient id="block" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7ec3f2"/><stop offset="1" stop-color="#1f6fb2"/>
+    </linearGradient>
+  </defs>
+  <!-- a calculated value: two inputs into a block, one result out, f(x) on it -->
+  <g stroke-linecap="round" stroke-width="3.2" fill="none">
+    <path d="M3 17h12M3 31h12" stroke="#e8890c"/>
+    <path d="M33 24h12" stroke="#2f9e44"/>
+  </g>
+  <circle cx="3.5" cy="17" r="2.6" fill="#f5a623" stroke="#9a5a06"/>
+  <circle cx="3.5" cy="31" r="2.6" fill="#f5a623" stroke="#9a5a06"/>
+  <circle cx="44.5" cy="24" r="2.6" fill="#51cf66" stroke="#1f6b2c"/>
+  <rect x="13" y="8" width="22" height="32" rx="4" fill="url(#block)" stroke="#164f80" stroke-width="1.2"/>
+  <rect x="15" y="10" width="18" height="6" rx="2" fill="#fff" opacity="0.3"/>
+  <g fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round">
+    <!-- f -->
+    <path d="M23 16.5 C21.5 15.6 20 16.4 20 18.4 V31"/>
+    <path d="M17.5 22.5h5"/>
+    <!-- x -->
+    <path d="M24.5 23.5l5 7M29.5 23.5l-5 7"/>
+  </g>
+</svg>

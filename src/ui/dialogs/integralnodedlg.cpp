@@ -94,7 +94,12 @@ IntegralNodeEditor::IntegralNodeEditor(QWidget *parent) :
   top->addStretch(1);
 
   connect(m_input, &SourceList::valueChanged, this, [this] { propose(); validate(); });
-  connect(m_unit, &QComboBox::currentTextChanged, this, [this] { if (!m_proposing) m_unitChosen = true; });
+  connect(m_unit, &QComboBox::currentTextChanged, this, [this]
+  {
+    if (!m_proposing)
+      m_unitChosen = true;
+    validate();
+  });
   connect(m_name, &QLineEdit::textEdited, this, [this] { m_nameChosen = true; });
   connect(m_name, &QLineEdit::textChanged, this, &IntegralNodeEditor::validate);
   connect(m_thresholdOn, &QCheckBox::toggled, m_threshold, &QWidget::setEnabled);
@@ -147,7 +152,9 @@ void IntegralNodeEditor::load(const QString &name, const IntegralNode &node)
   m_unitChosen = stored;
   m_nameChosen = stored;
   m_proposing = true;
-  m_unit->setCurrentText(node.unit());
+  // a new one: no unit until its value gives one (IntegralNode's default
+  // Wh would stand there before a value is chosen)
+  m_unit->setCurrentText(stored ? node.unit() : QString());
   m_proposing = false;
   m_name->setText(name);
   propose();
@@ -202,6 +209,8 @@ void IntegralNodeEditor::validate()
     problems << tr("The name is missing.");
   if (m_input->value().source.isEmpty())
     problems << tr("Choose the value to integrate: open a device in the list.");
+  else if (m_unit->currentText().trimmed().isEmpty())
+    problems << tr("The unit is missing: it follows from the value once its device is connected, or type one (Wh, Ah).");
   if (m_thresholdOn->isChecked() && !number(m_threshold->text()))
     problems << tr("The threshold is no number.");
   m_status->setText(problems.join("<br>"));

@@ -179,6 +179,29 @@ int main(int argc, char **argv)
     GeneratorNodeDlg again;
     again.load(gen.name(), *n);
     check(again.node()->toJsonText() == n->toJsonText(), "loaded again: the same");
+    // a stored one (the gear of its front panel): its results go on live
+    auto *result = again.findChild<QLabel *>("ui_generatorResult1");
+    QApplication::processEvents();
+    const QString before = result->text();
+    QElapsedTimer wait;
+    wait.start();
+    while (wait.elapsed() < 700)
+      QApplication::processEvents(QEventLoop::AllEvents, 50);
+    check(result->text() != before, "a stored one's results go on: " + before + " -> " + result->text());
+    // the same with the assistant's sine, stored as JSON and read back
+    GeneratorNodeDlg fresh;
+    fresh.load("Simulated", GeneratorNode());
+    const std::unique_ptr<LogicNode> sine = LogicNode::fromJsonText(fresh.node()->toJsonText());
+    GeneratorNodeDlg storedSine;
+    storedSine.load("Simulated", *dynamic_cast<const GeneratorNode *>(sine.get()));
+    auto *sineResult = storedSine.findChild<QLabel *>("ui_generatorResult1");
+    QApplication::processEvents();
+    const QString sineBefore = sineResult->text();
+    wait.restart();
+    while (wait.elapsed() < 700)
+      QApplication::processEvents(QEventLoop::AllEvents, 50);
+    check(sineResult->text() != sineBefore, "a stored sine goes on: " + sineBefore + " -> " + sineResult->text()
+          + " " + sine->toJsonText());
   }
 
   // the integral's dialog: one value of a device, chosen in the tree
@@ -198,6 +221,7 @@ int main(int argc, char **argv)
     auto *inOk = in.findChild<QDialogButtonBox *>()->button(QDialogButtonBox::Ok);
     auto *unitBox = in.findChild<QComboBox *>("ui_integralUnit");
     check(!inOk->isEnabled(), "a new one: no value yet, OK off");
+    check(unitBox->currentText().isEmpty(), "a new one: no unit before its value gives one: " + unitBox->currentText());
     check(!(in.findChild<QTreeWidget *>("ui_sourceTree")->topLevelItem(0)->flags() & Qt::ItemIsSelectable),
           "a device itself is no value to choose");
     pick(in, 0, 0);

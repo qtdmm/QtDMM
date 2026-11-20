@@ -103,107 +103,117 @@
         <translation>&amp;Obliczany</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="169"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="171"/>
         <source>Search a&amp;gain</source>
         <translation>Szukaj &amp;ponownie</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="188"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="190"/>
         <source>How to &amp;fix...</source>
         <translation>Jak &amp;naprawić...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="199"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="201"/>
         <source>How to fix</source>
         <translation>Jak naprawić</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="207"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="209"/>
         <source>Po&amp;rt:</source>
         <translation>P&amp;ort:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="237"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="239"/>
         <source>The name in My devices</source>
         <translation>Nazwa w Moich urządzeniach</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="238"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="240"/>
         <source>Na&amp;me:</source>
         <translation>N&amp;azwa:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="449"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="311"/>
+        <source>&lt;p&gt;Computes up to four values from the readings of your devices with formulas of your own: a power from a voltage and a current, a resistance, a dew point.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Inputs:&lt;/b&gt; one or more devices, each with all its values (&lt;tt&gt;v1&lt;/tt&gt;, &lt;tt&gt;v1.2&lt;/tt&gt; ...).&lt;/p&gt;&lt;p&gt;&lt;b&gt;Example:&lt;/b&gt; &lt;tt&gt;v1*v2&lt;/tt&gt; in W - a supply&apos;s voltage times a load&apos;s current is the power the load takes.&lt;/p&gt;</source>
+        <translation>&lt;p&gt;Oblicza do czterech wartości z odczytów twoich urządzeń według własnych wzorów: moc z napięcia i prądu, rezystancję, punkt rosy.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Wejścia:&lt;/b&gt; jedno lub więcej urządzeń, każde ze wszystkimi swoimi wartościami (&lt;tt&gt;v1&lt;/tt&gt;, &lt;tt&gt;v1.2&lt;/tt&gt; …).&lt;/p&gt;&lt;p&gt;&lt;b&gt;Przykład:&lt;/b&gt; &lt;tt&gt;v1*v2&lt;/tt&gt; w W – napięcie zasilacza razy prąd obciążenia to moc pobierana przez obciążenie.&lt;/p&gt;</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="451"/>
         <source>Simulated</source>
         <translation>Symulowane</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="461"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="463"/>
         <source>Calculated</source>
         <translation>Obliczane</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="511"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="513"/>
         <source>Bluetooth cannot be used: %1</source>
         <translation>Bluetooth jest niedostępny: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="634"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="636"/>
         <source>Listening to the meter: its first reading tells which model it is ...</source>
         <translation>Nasłuch miernika: jego pierwszy odczyt mówi, jaki to model ...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="642"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="644"/>
         <source>No reading came, so the model is not known: choose it on the next page.</source>
         <translation>Nie przyszedł żaden odczyt, model nie jest znany: wybierz go na następnej stronie.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="653"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="655"/>
         <source>Its first reading says: %1.</source>
         <translation>Jego pierwszy odczyt mówi: %1.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="653"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="655"/>
         <source> or </source>
         <translation> lub </translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="717"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="719"/>
         <source>The search failed (%1). Or type the address.</source>
         <translation>Wyszukiwanie nie powiodło się (%1). Lub wpisz adres.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="915"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="841"/>
+        <source>Nothing found for &quot;%1&quot;.</source>
+        <translation>Nic nie znaleziono dla „%1”.</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="920"/>
         <source>What is to be calculated?</source>
         <translation>Co ma być obliczane?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="918"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="923"/>
         <source>Connect it now?</source>
         <translation>Połączyć teraz?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="920"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="925"/>
         <source>Which values to simulate?</source>
         <translation>Jakie wartości symulować?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="921"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="926"/>
         <source>Which value to integrate?</source>
         <translation>Jaką wartość całkować?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="922"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="927"/>
         <source>What to calculate?</source>
         <translation>Co obliczać?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="953"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="958"/>
         <source>Simulated meter</source>
         <translation>Urządzenie symulowane</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="365"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="367"/>
         <source>&lt; &amp;Back</source>
         <translation>&lt; &amp;Wstecz</translation>
     </message>
@@ -238,133 +248,128 @@
         <translation>Wartości obliczane z wartości twoich urządzeń: wzór, całka …</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="272"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="274"/>
         <source>&amp;Connect</source>
         <translation>&amp;Połącz</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="272"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="274"/>
         <source>into My devices and connect at once</source>
         <translation>do Moich urządzeń i od razu połącz</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="273"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="275"/>
         <source>Keeps it in My devices and reads it at once: with a front panel, recorded, in formulas and over SCPI</source>
         <translation>Zachowuje je w Moich urządzeniach i od razu odczytuje: z panelem, nagrywane, we wzorach i przez SCPI</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="277"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="279"/>
         <source>&amp;Save only</source>
         <translation>&amp;Tylko zapisz</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="277"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="279"/>
         <source>into My devices, without connecting</source>
         <translation>do Moich urządzeń, bez łączenia</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="278"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="280"/>
         <source>Keeps it in My devices; Connect in its context menu reads it later</source>
         <translation>Zachowuje je w Moich urządzeniach; Połącz w menu kontekstowym odczyta je później</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="308"/>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="314"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="310"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="316"/>
         <source>Calculate</source>
         <translation>Obliczenia</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="308"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="310"/>
         <source>Formula</source>
         <translation>Wzór</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="309"/>
-        <source>&lt;p&gt;Computes up to four values from the readings of your devices with formulas of your own: a power from a voltage and a current, a resistance, a dew point.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Inputs:&lt;/b&gt; one or more devices, each with all its values (&lt;tt&gt;v1&lt;/tt&gt;, &lt;tt&gt;v1.2&lt;/tt&gt; ...).&lt;/p&gt;&lt;p&gt;&lt;b&gt;Example:&lt;/b&gt; &lt;tt&gt;v1 * v2&lt;/tt&gt; in W - a supply&apos;s voltage times a load&apos;s current is the power the load takes.&lt;/p&gt;</source>
-        <translation>&lt;p&gt;Oblicza do czterech wartości z odczytów twoich urządzeń według własnych wzorów: moc z napięcia i prądu, rezystancję, punkt rosy.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Wejścia:&lt;/b&gt; jedno lub więcej urządzeń, każde ze wszystkimi swoimi wartościami (&lt;tt&gt;v1&lt;/tt&gt;, &lt;tt&gt;v1.2&lt;/tt&gt; …).&lt;/p&gt;&lt;p&gt;&lt;b&gt;Przykład:&lt;/b&gt; &lt;tt&gt;v1 * v2&lt;/tt&gt; w W – napięcie zasilacza razy prąd obciążenia to moc pobierana przez obciążenie.&lt;/p&gt;</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="314"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="316"/>
         <source>Integral</source>
         <translation>Całka</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="315"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="317"/>
         <source>&lt;p&gt;Sums one value up over time, from a start you choose: when a recording starts, when the value rises above a threshold, or by hand.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Input:&lt;/b&gt; one value of one device.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Example:&lt;/b&gt; a load&apos;s power in W gives the energy it took in Wh, a battery&apos;s current in A the charge in Ah.&lt;/p&gt;</source>
         <translation>&lt;p&gt;Sumuje jedną wartość w czasie, od wybranego przez ciebie początku: gdy zaczyna się nagrywanie, gdy wartość przekroczy próg, lub ręcznie.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Wejście:&lt;/b&gt; jedna wartość jednego urządzenia.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Przykład:&lt;/b&gt; moc obciążenia w W daje pobraną energię w Wh, prąd akumulatora w A ładunek w Ah.&lt;/p&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="366"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="368"/>
         <source>&amp;Next &gt;</source>
         <translation>&amp;Dalej &gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="485"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="487"/>
         <source>Bluetooth address, e.g. AA:BB:CC:DD:EE:FF</source>
         <translation>Adres Bluetooth, np. AA:BB:CC:DD:EE:FF</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="486"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="488"/>
         <source>host:port, e.g. 192.168.1.20:4711</source>
         <translation>host:port, np. 192.168.1.20:4711</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="487"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="489"/>
         <source>e.g. /dev/ttyUSB0 or COM3</source>
         <translation>np. /dev/ttyUSB0 lub COM3</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="581"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="583"/>
         <source>Already in My devices: %1</source>
         <translation>Już w Moich urządzeniach: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="710"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="712"/>
         <source>This is &quot;%1&quot; of My devices: the next page changes it, no second entry.</source>
         <translation>To „%1” z Moich urządzeń: następna strona zmienia ten wpis, bez drugiego.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="715"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="717"/>
         <source>Searching ...</source>
         <translation>Szukanie ...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="720"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="722"/>
         <source>Nothing found. Is the meter&apos;s Bluetooth on and no other program connected to it? Or type its address.</source>
         <translation>Nic nie znaleziono. Czy Bluetooth miernika jest włączony i żaden inny program nie jest z nim połączony? Albo wpisz jego adres.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="723"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="725"/>
         <source>No bridge found. Is qtdmm-bridge running with --mdns in this network? Or type host:port of the bridge or another RFC 2217 server.</source>
         <translation>Nie znaleziono mostka. Czy qtdmm-bridge działa z --mdns w tej sieci? Albo wpisz host:port mostka lub innego serwera RFC 2217.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="725"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="727"/>
         <source>Nothing found. Is the meter switched on and its cable plugged in? Or type the port.</source>
         <translation>Nic nie znaleziono. Czy miernik jest włączony, a kabel podłączony? Albo wpisz port.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="727"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="729"/>
         <source>Choose where the meter is, or type the port.</source>
         <translation>Wybierz, gdzie jest miernik, albo wpisz port.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="913"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="918"/>
         <source>How is the meter connected?</source>
         <translation>Jak podłączony jest miernik?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="916"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="921"/>
         <source>Where is it connected?</source>
         <translation>Gdzie jest podłączony?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="917"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="922"/>
         <source>Which meter is it?</source>
         <translation>Jaki to miernik?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="952"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="957"/>
         <source>Meter</source>
         <translation>Miernik</translation>
     </message>
@@ -1699,285 +1704,285 @@
 <context>
     <name>ControlBar</name>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="54"/>
+        <location filename="../../src/ui/controlbar.cpp" line="53"/>
         <source>SELECT</source>
         <translation>SELECT</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="54"/>
+        <location filename="../../src/ui/controlbar.cpp" line="53"/>
         <source>The meter&apos;s SELECT key (the orange one): the next function on this switch position</source>
         <translation>Klawisz SELECT miernika (pomarańczowy): następna funkcja w tej pozycji przełącznika</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="55"/>
+        <location filename="../../src/ui/controlbar.cpp" line="54"/>
         <source>Hz/%</source>
         <translation>Hz/%</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="55"/>
+        <location filename="../../src/ui/controlbar.cpp" line="54"/>
         <source>Frequency and duty cycle</source>
         <translation>Częstotliwość i współczynnik wypełnienia</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="57"/>
+        <location filename="../../src/ui/controlbar.cpp" line="56"/>
         <source>RANGE</source>
         <translation>RANGE</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="57"/>
+        <location filename="../../src/ui/controlbar.cpp" line="56"/>
         <source>The next range (switches to manual ranging)</source>
         <translation>Następny zakres (przełącza na ręczny wybór zakresu)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="50"/>
-        <location filename="../../src/ui/controlbar.cpp" line="58"/>
+        <location filename="../../src/ui/controlbar.cpp" line="49"/>
+        <location filename="../../src/ui/controlbar.cpp" line="57"/>
         <source>AUTO</source>
         <translation>AUTO</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="58"/>
+        <location filename="../../src/ui/controlbar.cpp" line="57"/>
         <source>Automatic ranging</source>
         <translation>Automatyczny wybór zakresu</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="73"/>
+        <location filename="../../src/ui/controlbar.cpp" line="72"/>
         <source>HOLD</source>
         <translation>HOLD</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="73"/>
+        <location filename="../../src/ui/controlbar.cpp" line="72"/>
         <source>Freeze the display</source>
         <translation>Zatrzymaj odczyt na wyświetlaczu</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="59"/>
+        <location filename="../../src/ui/controlbar.cpp" line="58"/>
         <source>REL</source>
         <translation>REL</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="45"/>
+        <location filename="../../src/ui/controlbar.cpp" line="44"/>
         <source>V~</source>
         <translation>V~</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="45"/>
+        <location filename="../../src/ui/controlbar.cpp" line="44"/>
         <source>The V key (red): AC V, AC V LPF and DC V in turn</source>
         <translation>Klawisz V (czerwony): kolejno AC V, AC V LPF i DC V</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="44"/>
+        <location filename="../../src/ui/controlbar.cpp" line="43"/>
         <source>A~</source>
         <translation>A~</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="44"/>
+        <location filename="../../src/ui/controlbar.cpp" line="43"/>
         <source>The A key (yellow): AC A and AC A LPF in turn; held, inrush current</source>
         <translation>Klawisz A (żółty): kolejno AC A i AC A LPF; przytrzymany: prąd rozruchowy</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="46"/>
+        <location filename="../../src/ui/controlbar.cpp" line="45"/>
         <source>Ω</source>
         <translation>Ω</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="46"/>
+        <location filename="../../src/ui/controlbar.cpp" line="45"/>
         <source>The Ω key (blue): resistance, continuity, capacitance and temperature in turn</source>
         <translation>Klawisz Ω (niebieski): kolejno rezystancja, ciągłość, pojemność i temperatura</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="47"/>
-        <location filename="../../src/ui/controlbar.cpp" line="200"/>
+        <location filename="../../src/ui/controlbar.cpp" line="46"/>
+        <location filename="../../src/ui/controlbar.cpp" line="199"/>
         <source>NCV/PEAK</source>
         <translation>NCV/PEAK</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="47"/>
-        <location filename="../../src/ui/controlbar.cpp" line="201"/>
+        <location filename="../../src/ui/controlbar.cpp" line="46"/>
+        <location filename="../../src/ui/controlbar.cpp" line="200"/>
         <source>Non-contact voltage; held, peak capture (AC V and AC A)</source>
         <translation>Bezdotykowy wykrywacz napięcia; przytrzymany: wartość szczytowa (AC V i AC A)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="50"/>
+        <location filename="../../src/ui/controlbar.cpp" line="49"/>
         <source>Automatic function: the meter picks V, Ω or A by itself</source>
         <translation>Funkcja automatyczna: miernik sam wybiera V, Ω lub A</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="51"/>
+        <location filename="../../src/ui/controlbar.cpp" line="50"/>
         <source>CAP</source>
         <translation>CAP</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="51"/>
+        <location filename="../../src/ui/controlbar.cpp" line="50"/>
         <source>Capacitance</source>
         <translation>Pojemność</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="52"/>
+        <location filename="../../src/ui/controlbar.cpp" line="51"/>
         <source>Diode</source>
         <translation>Diode</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="52"/>
+        <location filename="../../src/ui/controlbar.cpp" line="51"/>
         <source>Diode and continuity</source>
         <translation>Dioda i ciągłość</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="53"/>
+        <location filename="../../src/ui/controlbar.cpp" line="52"/>
         <source>Hz</source>
         <translation>Hz</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="53"/>
+        <location filename="../../src/ui/controlbar.cpp" line="52"/>
         <source>Frequency</source>
         <translation>Częstotliwość</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="56"/>
+        <location filename="../../src/ui/controlbar.cpp" line="55"/>
         <source>LPF</source>
         <translation>LPF</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="56"/>
+        <location filename="../../src/ui/controlbar.cpp" line="55"/>
         <source>Low-pass filter: AC voltage of a motor drive without its switching noise</source>
         <translation>Filtr dolnoprzepustowy: napięcie przemienne falownika bez zakłóceń przełączania</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="59"/>
+        <location filename="../../src/ui/controlbar.cpp" line="58"/>
         <source>Relative reading: the current value becomes zero</source>
         <translation>Pomiar względny: bieżąca wartość staje się zerem</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="60"/>
+        <location filename="../../src/ui/controlbar.cpp" line="59"/>
         <source>ZERO</source>
         <translation>ZERO</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="60"/>
+        <location filename="../../src/ui/controlbar.cpp" line="59"/>
         <source>Zero the capacitance reading, with the leads open</source>
         <translation>Zerowanie odczytu pojemności przy rozwartych przewodach</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="61"/>
+        <location filename="../../src/ui/controlbar.cpp" line="60"/>
         <source>MIN/MAX</source>
         <translation>MIN/MAX</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="61"/>
+        <location filename="../../src/ui/controlbar.cpp" line="60"/>
         <source>The meter&apos;s own minimum and maximum</source>
         <translation>Minimum i maksimum zapamiętane przez miernik</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="62"/>
+        <location filename="../../src/ui/controlbar.cpp" line="61"/>
         <source>PEAK</source>
         <translation>PEAK</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="62"/>
+        <location filename="../../src/ui/controlbar.cpp" line="61"/>
         <source>Peak minimum and maximum</source>
         <translation>Szczytowe minimum i maksimum</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="63"/>
+        <location filename="../../src/ui/controlbar.cpp" line="62"/>
         <source>INRUSH</source>
         <translation>INRUSH</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="63"/>
+        <location filename="../../src/ui/controlbar.cpp" line="62"/>
         <source>Inrush current: the peak when a motor starts</source>
         <translation>Prąd rozruchowy: szczyt przy rozruchu silnika</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="65"/>
+        <location filename="../../src/ui/controlbar.cpp" line="64"/>
         <source>MAX</source>
         <translation>MAX</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="65"/>
+        <location filename="../../src/ui/controlbar.cpp" line="64"/>
         <source>The meter shows its maximum</source>
         <translation>Miernik pokazuje swoje maksimum</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="66"/>
+        <location filename="../../src/ui/controlbar.cpp" line="65"/>
         <source>MIN</source>
         <translation>MIN</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="66"/>
+        <location filename="../../src/ui/controlbar.cpp" line="65"/>
         <source>The meter shows its minimum</source>
         <translation>Miernik pokazuje swoje minimum</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="67"/>
+        <location filename="../../src/ui/controlbar.cpp" line="66"/>
         <source>AVG</source>
         <translation>AVG</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="67"/>
+        <location filename="../../src/ui/controlbar.cpp" line="66"/>
         <source>The meter shows its average</source>
         <translation>Miernik pokazuje swoją średnią</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="68"/>
+        <location filename="../../src/ui/controlbar.cpp" line="67"/>
         <source>UNIT</source>
         <translation>UNIT</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="68"/>
+        <location filename="../../src/ui/controlbar.cpp" line="67"/>
         <source>The next unit of the main value (lx/fc, dBA/dBC, %RH/%, m/s ... mph)</source>
         <translation>Następna jednostka wartości głównej (lx/fc, dBA/dBC, %RH/%, m/s ... mph)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="69"/>
+        <location filename="../../src/ui/controlbar.cpp" line="68"/>
         <source>°C/°F</source>
         <translation>°C/°F</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="69"/>
+        <location filename="../../src/ui/controlbar.cpp" line="68"/>
         <source>The unit of the temperature</source>
         <translation>Jednostka temperatury</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="70"/>
+        <location filename="../../src/ui/controlbar.cpp" line="69"/>
         <source>FAST/SLOW</source>
         <translation>FAST/SLOW</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="70"/>
+        <location filename="../../src/ui/controlbar.cpp" line="69"/>
         <source>Fast or slow time weighting</source>
         <translation>Szybka lub wolna stała czasowa</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="72"/>
+        <location filename="../../src/ui/controlbar.cpp" line="71"/>
         <source>LIGHT</source>
         <translation>LIGHT</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="72"/>
+        <location filename="../../src/ui/controlbar.cpp" line="71"/>
         <source>The display backlight</source>
         <translation>Podświetlenie wyświetlacza</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="74"/>
+        <location filename="../../src/ui/controlbar.cpp" line="73"/>
         <source>A-HOLD</source>
         <translation>A-HOLD</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="74"/>
+        <location filename="../../src/ui/controlbar.cpp" line="73"/>
         <source>Auto hold: the display freezes once the reading is steady</source>
         <translation>Auto hold: wyświetlacz zatrzymuje się, gdy odczyt jest stabilny</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="95"/>
+        <location filename="../../src/ui/controlbar.cpp" line="94"/>
         <source>Hold the key to leave it, as on the meter.</source>
         <translation>Przytrzymaj klawisz, aby wyjść, jak na mierniku.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="200"/>
+        <location filename="../../src/ui/controlbar.cpp" line="199"/>
         <source>NCV</source>
         <translation>NCV</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="201"/>
+        <location filename="../../src/ui/controlbar.cpp" line="200"/>
         <source>Non-contact voltage</source>
         <translation>Napięcie bezdotykowe</translation>
     </message>
@@ -2953,12 +2958,12 @@ a potem wyloguj się i zaloguj ponownie.</translation>
 <context>
     <name>FoldButton</name>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="337"/>
+        <location filename="../../src/ui/controlbar.cpp" line="336"/>
         <source>Show controls</source>
         <translation>Pokaż przyciski</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="337"/>
+        <location filename="../../src/ui/controlbar.cpp" line="336"/>
         <source>Hide controls</source>
         <translation>Ukryj przyciski</translation>
     </message>
@@ -2974,7 +2979,7 @@ a potem wyloguj się i zaloguj ponownie.</translation>
 <context>
     <name>FormulaNodeDlg</name>
     <message>
-        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="420"/>
+        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="424"/>
         <source>Calculated value</source>
         <translation>Wartość obliczana</translation>
     </message>
@@ -3002,87 +3007,87 @@ a potem wyloguj się i zaloguj ponownie.</translation>
         <translation>Obliczane przy każdym nowym odczycie wejścia wiodącego; pozostałe dają swój ostatni.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="60"/>
+        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="62"/>
         <source>Values</source>
         <translation>Wartości</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="62"/>
+        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="64"/>
         <source>Formulas over the inputs&apos; values (v1, v1.2 ... as named in the list) in their base units (V, A, Ohm); a value may use the ones above it as y1, y2 ...</source>
         <translation>Wzory na wartościach wejść (v1, v1.2 ... jak nazwane na liście) w ich jednostkach podstawowych (V, A, Ohm); wartość może używać tych powyżej jako y1, y2 ...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="67"/>
+        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="71"/>
         <source>Add &amp;value</source>
         <translation>Dodaj w&amp;artość</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="89"/>
+        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="93"/>
         <source>An input whose last reading is older than this has no value: the result has a gap</source>
         <translation>Wejście, którego ostatni odczyt jest starszy, nie ma wartości: wynik ma przerwę</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="90"/>
+        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="94"/>
         <source>&amp;Maximum age of an input:</source>
         <translation>&amp;Maksymalny wiek wejścia:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="122"/>
+        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="126"/>
         <source>It takes the values of this calculated value, directly or through others: a loop.</source>
         <translation>Bierze wartości tej wartości obliczanej, bezpośrednio lub przez inne: pętla.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="196"/>
+        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="200"/>
         <source>Name</source>
         <translation>Nazwa</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="200"/>
+        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="204"/>
         <source>e.g. v1 * v2</source>
         <translation>np. v1 * v2</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="200"/>
+        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="204"/>
         <source>e.g. y1 / 1000</source>
         <translation>np. y1 / 1000</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="207"/>
+        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="211"/>
         <source>The unit of the result, with a prefix when it is not in the base unit (mW: 0.012 W is 12 mW)</source>
         <translation>Jednostka wyniku, z przedrostkiem, gdy nie jest w jednostce podstawowej (mW: 0,012 W to 12 mW)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="213"/>
+        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="217"/>
         <source>Remove this value</source>
         <translation>Usuń tę wartość</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="359"/>
+        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="363"/>
         <source>The name is missing.</source>
         <translation>Brak nazwy.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="364"/>
+        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="368"/>
         <source>no formula</source>
         <translation>brak wzoru</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="369"/>
+        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="373"/>
         <source>%1: %2 (at %3)</source>
         <translation>%1: %2 (pozycja %3)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="370"/>
+        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="374"/>
         <source>%1: %2</source>
         <translation>%1: %2</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="373"/>
+        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="377"/>
         <source>At most %1 inputs.</source>
         <translation>Najwyżej %1 wejść.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="375"/>
+        <location filename="../../src/ui/dialogs/formulanodedlg.cpp" line="379"/>
         <source>An input takes the values of this calculated value, directly or through others: a loop.</source>
         <translation>Wejście bierze wartości tej wartości obliczanej, bezpośrednio lub przez inne: pętla.</translation>
     </message>
@@ -3236,7 +3241,7 @@ a potem wyloguj się i zaloguj ponownie.</translation>
 <context>
     <name>GeneratorNodeDlg</name>
     <message>
-        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="319"/>
+        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="324"/>
         <source>Simulated values</source>
         <translation>Wartości symulowane</translation>
     </message>
@@ -3274,122 +3279,122 @@ a potem wyloguj się i zaloguj ponownie.</translation>
         <translation>Kształt między min a max z okresem w s albo wzór na t (sekundy od startu) i wartościach powyżej jako y1, y2 ...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="57"/>
+        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="59"/>
         <source>Add &amp;value</source>
         <translation>Dodaj w&amp;artość</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="148"/>
+        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="150"/>
         <source>Name</source>
         <translation>Nazwa</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="164"/>
+        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="166"/>
         <source>Constant</source>
         <translation>Stała</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="164"/>
+        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="166"/>
         <source>Random</source>
         <translation>Losowy</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="164"/>
+        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="166"/>
         <source>Sine</source>
         <translation>Sinus</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="164"/>
+        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="166"/>
         <source>Triangle</source>
         <translation>Trójkąt</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="164"/>
+        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="166"/>
         <source>Square</source>
         <translation>Prostokąt</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="165"/>
+        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="167"/>
         <source>Sawtooth</source>
         <translation>Piła</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="165"/>
+        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="167"/>
         <source>Discharge</source>
         <translation>Rozładowanie</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="165"/>
+        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="167"/>
         <source>Formula</source>
         <translation>Wzór</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="185"/>
+        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="187"/>
         <source>min</source>
         <translation>min</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="185"/>
+        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="187"/>
         <source>The lowest value</source>
         <translation>Najniższa wartość</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="186"/>
+        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="188"/>
         <source>max</source>
         <translation>max</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="186"/>
+        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="188"/>
         <source>The highest value (the value of a constant)</source>
         <translation>Najwyższa wartość (wartość stałej)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="187"/>
+        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="189"/>
         <source>period</source>
         <translation>okres</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="187"/>
+        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="189"/>
         <source>The period in s; the time constant of a discharge</source>
         <translation>Okres w s; stała czasowa rozładowania</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="188"/>
+        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="190"/>
         <source>noise</source>
         <translation>szum</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="188"/>
+        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="190"/>
         <source>Noise added, peak to peak; 0: none</source>
         <translation>Dodany szum, międzyszczytowo; 0: brak</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="193"/>
+        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="195"/>
         <source>e.g. 12 + 0.1 * sin(2 * pi * t / 5)</source>
         <translation>np. 12 + 0.1 * sin(2 * pi * t / 5)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="201"/>
+        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="203"/>
         <source>Remove this value</source>
         <translation>Usuń tę wartość</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="263"/>
+        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="268"/>
         <source>The name is missing.</source>
         <translation>Brak nazwy.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="269"/>
+        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="274"/>
         <source>no formula</source>
         <translation>brak wzoru</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="277"/>
+        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="282"/>
         <source>%1: %2 (at %3)</source>
         <translation>%1: %2 (pozycja %3)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="278"/>
+        <location filename="../../src/ui/dialogs/generatornodedlg.cpp" line="283"/>
         <source>%1: %2</source>
         <translation>%1: %2</translation>
     </message>
@@ -4725,7 +4730,7 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
 <context>
     <name>IntegralNodeDlg</name>
     <message>
-        <location filename="../../src/ui/dialogs/integralnodedlg.cpp" line="232"/>
+        <location filename="../../src/ui/dialogs/integralnodedlg.cpp" line="241"/>
         <source>Integral</source>
         <translation>Całka</translation>
     </message>
@@ -4793,42 +4798,47 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
         <translation>Ustaw &amp;0</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/integralnodedlg.cpp" line="195"/>
+        <location filename="../../src/ui/dialogs/integralnodedlg.cpp" line="202"/>
         <source>Energy</source>
         <translation>Energia</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/integralnodedlg.cpp" line="195"/>
+        <location filename="../../src/ui/dialogs/integralnodedlg.cpp" line="202"/>
         <source>Charge</source>
         <translation>Ładunek</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/integralnodedlg.cpp" line="195"/>
+        <location filename="../../src/ui/dialogs/integralnodedlg.cpp" line="202"/>
         <source>Integral</source>
         <translation>Całka</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/integralnodedlg.cpp" line="202"/>
+        <location filename="../../src/ui/dialogs/integralnodedlg.cpp" line="209"/>
         <source>The name is missing.</source>
         <translation>Brak nazwy.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/integralnodedlg.cpp" line="204"/>
+        <location filename="../../src/ui/dialogs/integralnodedlg.cpp" line="211"/>
         <source>Choose the value to integrate: open a device in the list.</source>
         <translation>Wybierz wartość do całkowania: rozwiń urządzenie na liście.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/integralnodedlg.cpp" line="206"/>
+        <location filename="../../src/ui/dialogs/integralnodedlg.cpp" line="213"/>
+        <source>The unit is missing: it follows from the value once its device is connected, or type one (Wh, Ah).</source>
+        <translation>Brak jednostki: wynika z wartości, gdy tylko jej urządzenie zostanie połączone, albo wpisz ją (Wh, Ah).</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/integralnodedlg.cpp" line="215"/>
         <source>The threshold is no number.</source>
         <translation>Próg nie jest liczbą.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/integralnodedlg.cpp" line="218"/>
+        <location filename="../../src/ui/dialogs/integralnodedlg.cpp" line="227"/>
         <source>Now: —</source>
         <translation>Teraz: —</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/integralnodedlg.cpp" line="223"/>
+        <location filename="../../src/ui/dialogs/integralnodedlg.cpp" line="232"/>
         <source>Now: %1 %2</source>
         <translation>Teraz: %1 %2</translation>
     </message>
@@ -6766,22 +6776,22 @@ Czy multimetr jest podłączony i włączony?</translation>
 <context>
     <name>NodeBar</name>
     <message>
-        <location filename="../../src/ui/nodebar.cpp" line="111"/>
+        <location filename="../../src/ui/nodebar.cpp" line="115"/>
         <source>Disconnected: it computes nothing</source>
         <translation>Rozłączony: nic nie oblicza</translation>
     </message>
     <message>
-        <location filename="../../src/ui/nodebar.cpp" line="121"/>
+        <location filename="../../src/ui/nodebar.cpp" line="125"/>
         <source>Waiting for its first computation</source>
         <translation>Czeka na pierwsze obliczenie</translation>
     </message>
     <message>
-        <location filename="../../src/ui/nodebar.cpp" line="126"/>
+        <location filename="../../src/ui/nodebar.cpp" line="130"/>
         <source>Held: the value stays as it is</source>
         <translation>Zatrzymany: wartość pozostaje bez zmian</translation>
     </message>
     <message>
-        <location filename="../../src/ui/nodebar.cpp" line="131"/>
+        <location filename="../../src/ui/nodebar.cpp" line="135"/>
         <source>Computing</source>
         <translation>Oblicza</translation>
     </message>
@@ -6794,12 +6804,22 @@ Czy multimetr jest podłączony i włączony?</translation>
         <translation>%1, wartość %2</translation>
     </message>
     <message>
-        <location filename="../../src/service/noderunner.cpp" line="160"/>
+        <location filename="../../src/service/noderunner.cpp" line="177"/>
+        <source>%1: %2</source>
+        <translation>%1: %2</translation>
+    </message>
+    <message>
+        <location filename="../../src/service/noderunner.cpp" line="180"/>
         <source>Input not open: %1</source>
         <translation>Wejście nie jest otwarte: %1</translation>
     </message>
     <message>
-        <location filename="../../src/service/noderunner.cpp" line="223"/>
+        <location filename="../../src/service/noderunner.cpp" line="182"/>
+        <source>Waiting for %1</source>
+        <translation>Czeka na %1</translation>
+    </message>
+    <message>
+        <location filename="../../src/service/noderunner.cpp" line="245"/>
         <source>No current value: %1</source>
         <translation>Brak bieżącej wartości: %1</translation>
     </message>
@@ -6878,7 +6898,7 @@ Czy multimetr jest podłączony i włączony?</translation>
 <context>
     <name>PanelGear</name>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="396"/>
+        <location filename="../../src/ui/controlbar.cpp" line="395"/>
         <source>Info and settings</source>
         <translation>Informacje i ustawienia</translation>
     </message>

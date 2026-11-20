@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 22 22">
+  <style id="current-color-scheme" type="text/css">.ColorScheme-Text { color:#eff0f1; } .ColorScheme-Highlight { color:#3daee9; }</style>
+  <!-- a calculated value: a block with two inputs and one output, f(x) on it -->
+  <g class="ColorScheme-Text" fill="none" stroke="currentColor" stroke-linecap="round">
+    <rect x="6.5" y="4.5" width="9" height="13" rx="1.5"/>
+    <path d="M1.5 8.5h5M1.5 13.5h5M15.5 11h5"/>
+  </g>
+  <g class="ColorScheme-Highlight" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round">
+    <!-- f -->
+    <path d="M10.8 7.8 C10 7.4 9.4 7.8 9.4 8.8 V14.2"/>
+    <path d="M8.4 10.3h2.4"/>
+    <!-- x -->
+    <path d="M11.6 11l2.2 3M13.8 11l-2.2 3"/>
+  </g>
+</svg>

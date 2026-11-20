@@ -37,6 +37,10 @@ public:
   /// Shows the keys the meter @p model has, read by the decoder of @p format
   /// (DmmDecoder::hasKey()).
   void setProtocol(FrameFormat::DataFormat format, const QString &model);
+  /// A key in a colour of its own (a style sheet): darker while pressed or
+  /// on, faded while off. HOLD is blue, as on the meters (and a node's HOLD).
+  static QString keyColour(const QColor &face, const QColor &text);
+  static QColor  holdColour() { return QColor(0x3c, 0x9a, 0xff); }
   /// Holding MIN/MAX or PEAK this long leaves it (ms).
   static constexpr int kLongPressMs = 700;
 

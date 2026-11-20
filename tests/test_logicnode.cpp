@@ -437,6 +437,31 @@ int main(int argc, char **argv)
     ask("INST:SEL COUNTER_U");
     ask("QTDMM:NODE:RES");
     check(ask("SYST:ERR?").contains("No error"), "a counter is a node too: no error");
+
+    // HOLD: its readings carry the H of the display
+    if (e)
+    {
+      NodeRunner::of(e)->press("hold");
+      last = Reading();
+      waitFor([&] { return last.msecs > 0; }, 1000);
+      check(last.msecs > 0 && last.hold, "held: its readings have HOLD");
+      NodeRunner::of(e)->press("hold");
+      last = Reading();
+      waitFor([&] { return last.msecs > 0; }, 1000);
+      check(last.msecs > 0 && !last.hold, "HOLD again: computing, no HOLD");
+    }
+
+    // an input open but waiting itself: said with its reason, not just "connecting"
+    auto waits = std::make_unique<Twice>();
+    waits->setInputs(refs({ "device:gone" }));
+    session.openNode("w2", "Waits", std::move(waits), &error);
+    auto chained = std::make_unique<IntegralNode>();
+    chained->setInputs({ ValueRef(0, "device:w2") });
+    chained->setName("Chained");
+    MeterController *e2 = session.openNode("e2", "Chained", std::move(chained), &error);
+    check(e2 && e2->linkState() == MeterConnection::LinkState::Timeout && e2->errorString().contains("device:w2")
+            && e2->errorString().contains("device:gone"),
+          "waiting for an input that waits: " + (e2 ? e2->errorString() : error));
   }
 
   return failed == 0 ? 0 : 1;
