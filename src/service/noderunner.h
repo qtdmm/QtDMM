@@ -60,6 +60,8 @@ private:
   /// input not open, or one open but not delivering (and why: "Waiting for
   /// Calculated: Input not open: Simulated").
   void        showWaiting();
+  /// Whether @p source is one of the node's inputs.
+  bool        takes(const QString &source) const;
   /// An input as the state names it: its device's name in My devices.
   QString     inputName(const ValueRef &ref) const;
 

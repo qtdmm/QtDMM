@@ -262,13 +262,11 @@ void FormulaNodeEditor::removeOutput(int index)
                       static_cast<QWidget *>(row.formula), static_cast<QWidget *>(row.unit),
                       static_cast<QWidget *>(row.result), static_cast<QWidget *>(row.remove) })
     w->deleteLater();
+  // the values after it move up; one that used it says so
   for (int j = index; j < m_outputs.size(); ++j)
   {
-    QString text = m_outputs[j].formula->text();
-    for (int i = index + 1; i <= m_outputs.size(); ++i)
-      text = CalcExpr::renameVariable(text, FormulaNode::outputName(i), FormulaNode::outputName(i - 1));
     const QSignalBlocker block(m_outputs[j].formula);
-    m_outputs[j].formula->setText(text);
+    m_outputs[j].formula->setText(FormulaNode::followRemovedOutput(m_outputs[j].formula->text(), index, int(m_outputs.size()) + 1));
   }
   relayout();
   validate();
@@ -277,18 +275,11 @@ void FormulaNodeEditor::removeOutput(int index)
 
 void FormulaNodeEditor::followInputs(const QList<int> &from)
 {
-  // the formulas follow the inputs' new places: through names of their own,
-  // so v1 -> v2 and v2 -> v1 do not meet; an input gone keeps its name (an
-  // error there)
+  // the formulas follow the inputs' new places; an input gone gets a name
+  // no formula knows (an error there, not the input moved into its place)
   for (OutputRow &out : m_outputs)
   {
-    QString text = out.formula->text();
-    for (int i = 0; i < from.size(); ++i)
-      if (from[i] >= 0 && from[i] != i)
-        text = FormulaNode::renameInput(text, from[i], 100 + i);
-    for (int i = 0; i < from.size(); ++i)
-      if (from[i] >= 0 && from[i] != i)
-        text = FormulaNode::renameInput(text, 100 + i, i);
+    const QString text = FormulaNode::followInputs(out.formula->text(), from);
     if (text != out.formula->text())
     {
       const QSignalBlocker block(out.formula);
@@ -373,6 +364,9 @@ void FormulaNodeEditor::validate()
       problems << (pos >= 0 ? tr("%1: %2 (at %3)").arg(FormulaNode::outputName(i), error).arg(pos + 1)
                             : tr("%1: %2").arg(FormulaNode::outputName(i), error));
   }
+  // with no input and no clock of its own it never computes
+  if (m_sources->inputs().isEmpty() && m_periodMs <= 0)
+    problems << tr("Tick a device as input; values over t alone: Simulated.");
   if (m_sources->inputs().size() > kMaxInputs)
     problems << tr("At most %1 inputs.").arg(kMaxInputs);
   if (m_makesLoop && m_makesLoop(inputs()))

@@ -140,6 +140,39 @@ int main(int argc, char **argv)
   again.load(dlg.name(), *node);
   check(again.node()->toJsonText() == node->toJsonText() && again.name() == "Power", "loaded again: the same");
 
+  // R20-01/02: an input or value gone is no other one moved up into its place
+  {
+    FormulaNodeDlg moves;
+    moves.setChoices(choices);
+    moves.load("Calculated", FormulaNode());
+    auto *movesOk = moves.findChild<QDialogButtonBox *>()->button(QDialogButtonBox::Ok);
+    auto *movesTree = moves.findChild<QTreeWidget *>("ui_sourceTree");
+    auto *f1 = moves.findChild<QLineEdit *>("ui_formula1");
+    check(!movesOk->isEnabled() && moves.findChild<QLabel *>("ui_formulaStatus")->text().contains("Simulated"),
+          "no input: OK off, said what to do");
+    for (int i = 0; i < 3; ++i)
+      movesTree->topLevelItem(i)->setCheckState(0, Qt::Checked);
+    f1->setText("v1 * v2 + v3");
+    movesTree->topLevelItem(0)->setCheckState(0, Qt::Unchecked);
+    check(f1->text() == "removed_v1 * v1 + v2" && !movesOk->isEnabled(),
+          "the first input unticked: not the second in its place, OK off: " + f1->text());
+    f1->setText("v1 * v2");
+    moves.findChild<QPushButton *>("ui_formulaAddOutput")->click();
+    moves.findChild<QPushButton *>("ui_formulaAddOutput")->click();
+    moves.findChild<QLineEdit *>("ui_formula2")->setText("v1 * 2");
+    moves.findChild<QLineEdit *>("ui_formula3")->setText("y1 + y2");
+    check(movesOk->isEnabled(), "three values: OK on");
+    QList<QToolButton *> removes;
+    for (QToolButton *b : moves.findChildren<QToolButton *>())
+      if (b->toolTip() == FormulaNodeEditor::tr("Remove this value"))
+        removes << b;
+    check(!removes.isEmpty(), "value 1 can be removed");
+    if (!removes.isEmpty())
+      removes.first()->click();
+    check(moves.findChild<QLineEdit *>("ui_formula3")->text() == "removed_y1 + y1" && !movesOk->isEnabled(),
+          "value 1 removed: not value 2 in its place, OK off: " + moves.findChild<QLineEdit *>("ui_formula3")->text());
+  }
+
   // the generator's dialog
   {
     GeneratorNodeDlg gen;
@@ -244,6 +277,19 @@ int main(int argc, char **argv)
     const std::unique_ptr<IntegralNode> n = in.node();
     check(n->threshold() == 1500.0 && !n->resetsOnRecording() && n->unit() == "mAh" && n->inputs()[0].toString() == "0@device:x",
           "the integral: " + n->toJsonText());
+    // R20-04: a value that takes this integral's values is a loop
+    in.integralEditor()->setLoopCheck([](const QList<ValueRef> &inputs)
+    {
+      return !inputs.isEmpty() && inputs.first().source == "device:p";
+    });
+    check(!(in.findChild<QTreeWidget *>("ui_sourceTree")->topLevelItem(0)->child(0)->flags() & Qt::ItemIsSelectable),
+          "a value that would close a loop: not to choose");
+    in.integralEditor()->setLoopCheck({});
+    // a unit without h: said, still OK
+    unitBox->setCurrentText("J");
+    check(inOk->isEnabled() && in.findChild<QLabel *>("ui_integralStatus")->text().contains("no h"),
+          "a unit without h: a note, OK on: " + in.findChild<QLabel *>("ui_integralStatus")->text());
+    unitBox->setCurrentText("mAh");
     // a new one with its value given (Integrate... of a value's menu): chosen, proposed
     {
       IntegralNode given;

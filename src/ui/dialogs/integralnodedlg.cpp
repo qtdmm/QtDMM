@@ -120,6 +120,19 @@ void IntegralNodeEditor::setSources(const QList<SourceList::Source> &sources)
   m_input->setSources(sources);
 }
 
+void IntegralNodeEditor::setLoopCheck(std::function<bool(const QList<ValueRef> &)> makesLoop)
+{
+  m_makesLoop = std::move(makesLoop);
+  // one that would close a loop is greyed out in the list
+  m_input->setBlocked([this](const QString &source)
+  {
+    return m_makesLoop && m_makesLoop({ ValueRef(0, source) })
+             ? tr("It takes the values of this integral, directly or through others: a loop.")
+             : QString();
+  });
+  validate();
+}
+
 void IntegralNodeEditor::setState(std::function<std::optional<Reading>()> current, std::function<void()> reset)
 {
   m_current = std::move(current);
@@ -211,9 +224,16 @@ void IntegralNodeEditor::validate()
     problems << tr("Choose the value to integrate: open a device in the list.");
   else if (m_unit->currentText().trimmed().isEmpty())
     problems << tr("The unit is missing: it follows from the value once its device is connected, or type one (Wh, Ah).");
+  if (m_makesLoop && !m_input->value().source.isEmpty() && m_makesLoop({ m_input->value() }))
+    problems << tr("The value takes the values of this integral, directly or through others: a loop.");
   if (m_thresholdOn->isChecked() && !number(m_threshold->text()))
     problems << tr("The threshold is no number.");
-  m_status->setText(problems.join("<br>"));
+  // a note only: the sum is over hours, a unit without h (J, Ws) is off by 3600
+  QStringList shown = problems;
+  const QString unit = LogicNode::canonicalUnit(m_unit->currentText().trimmed());
+  if (!unit.isEmpty() && !unit.endsWith('h'))
+    shown << tr("Note: the sum is in the value's unit times hours; %1 has no h (for J take Wh times 3600 by a formula).").arg(unit);
+  m_status->setText(shown.join("<br>"));
   setValid(problems.isEmpty());
 }
 

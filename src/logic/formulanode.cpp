@@ -164,10 +164,51 @@ QStringList FormulaNode::takeValueInputs(const QJsonObject &p)
 
 QString FormulaNode::renameInput(const QString &text, int from, int to)
 {
-  QString out = CalcExpr::renameVariable(text, inputName(from), inputName(to));
-  out = CalcExpr::renameVariable(out, inputName(from) + ".1", inputName(to) + ".1");
-  for (int v = 1; v < kMaxValues; ++v)
-    out = CalcExpr::renameVariable(out, inputName(from, v), inputName(to, v));
+  return renameInput(text, from, inputName(to));
+}
+
+namespace
+{
+// @p text with the variables of @p from (v2, v2.1 .. v2.4) as those of @p to
+QString renameBase(const QString &text, const QString &from, const QString &to)
+{
+  QString out = CalcExpr::renameVariable(text, from, to);
+  for (int v = 0; v < kMaxValues; ++v)
+    out = CalcExpr::renameVariable(out, from + QStringLiteral(".%1").arg(v + 1), to + QStringLiteral(".%1").arg(v + 1));
+  return out;
+}
+}
+
+QString FormulaNode::renameInput(const QString &text, int from, const QString &base)
+{
+  return renameBase(text, inputName(from), base);
+}
+
+QString FormulaNode::followInputs(const QString &text, const QList<int> &from)
+{
+  // the former inputs: those that stay, and below the highest of them or the
+  // new count the ones gone (one gone above both keeps its name, already
+  // unknown)
+  int former = int(from.size());
+  for (int f : from)
+    former = qMax(former, f + 1);
+  // through names of their own, so v1 -> v2 and v2 -> v1 do not meet
+  QString out = text;
+  for (int k = 0; k < former; ++k)
+    out = renameInput(out, k, QStringLiteral("_input%1_").arg(k));
+  for (int k = 0; k < former; ++k)
+  {
+    const int to = int(from.indexOf(k));
+    out = renameBase(out, QStringLiteral("_input%1_").arg(k), to >= 0 ? inputName(to) : QStringLiteral("removed_") + inputName(k));
+  }
+  return out;
+}
+
+QString FormulaNode::followRemovedOutput(const QString &text, int removed, int count)
+{
+  QString out = CalcExpr::renameVariable(text, outputName(removed), QStringLiteral("removed_") + outputName(removed));
+  for (int i = removed + 1; i < count; ++i)
+    out = CalcExpr::renameVariable(out, outputName(i), outputName(i - 1));
   return out;
 }
 

@@ -231,14 +231,12 @@ void GeneratorNodeEditor::removeRow(int index)
   const Row r = m_rows.takeAt(index);
   for (QWidget *w : std::initializer_list<QWidget *> { r.label, r.name, r.unit, r.coupling, r.shape, r.how, r.result, r.remove })
     w->deleteLater();
-  // the values after it move up: y3 becomes y2 in the formulas
+  // the values after it move up: y3 becomes y2 in the formulas; one that
+  // used it says so
   for (int j = index; j < m_rows.size(); ++j)
   {
-    QString text = m_rows[j].formula->text();
-    for (int i = index + 1; i <= m_rows.size(); ++i)
-      text = CalcExpr::renameVariable(text, FormulaNode::outputName(i), FormulaNode::outputName(i - 1));
     const QSignalBlocker block(m_rows[j].formula);
-    m_rows[j].formula->setText(text);
+    m_rows[j].formula->setText(FormulaNode::followRemovedOutput(m_rows[j].formula->text(), index, int(m_rows.size()) + 1));
   }
   relayout();
   validate();

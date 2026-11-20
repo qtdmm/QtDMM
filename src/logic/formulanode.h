@@ -62,6 +62,17 @@ public:
   }
   /// @p text with input @p from's variables (v2, v2.1 .. v2.4) as input @p to's.
   static QString renameInput(const QString &text, int from, int to);
+  /// renameInput() to the variables of @p base ("removed_v1", "removed_v1.2" ...).
+  static QString renameInput(const QString &text, int from, const QString &base);
+  /// @p text after the inputs changed: input i is the former input @p from[i]
+  /// (-1: a new one). A former input no longer there gets a name no formula
+  /// knows ("removed_v1"), so its use is an error and not the input that
+  /// moved up into its place.
+  static QString followInputs(const QString &text, const QList<int> &from);
+  /// @p text after output @p removed of @p count outputs was removed: the ones
+  /// after it move up (y3 becomes y2), the removed one gets a name no formula
+  /// knows ("removed_y1").
+  static QString followRemovedOutput(const QString &text, int removed, int count);
   /// The variable of output @p index (0-based): "y1" ...
   static QString outputName(int index) { return QStringLiteral("y%1").arg(index + 1); }
 

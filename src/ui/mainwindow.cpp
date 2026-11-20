@@ -2220,6 +2220,8 @@ NodeEditor *MainWindow::makeNodeEditor(const QString &type, const QString &id, c
     if (!input.source.isEmpty())
       fresh.setInputs({ input });
     editor->load(name, integral ? *integral : fresh);
+    if (!id.isEmpty())
+      editor->setLoopCheck(loopCheck(id));
     return editor;
   }
 
@@ -2245,19 +2247,23 @@ NodeEditor *MainWindow::makeNodeEditor(const QString &type, const QString &id, c
   editor->load(name, formula ? *formula : FormulaNode());
   // the inputs of the calculated values of My devices, for loops
   if (!id.isEmpty())
-  {
-    const QString source = "device:" + id;
-    editor->setLoopCheck([this, source](const QList<ValueRef> &inputs)
-    {
-      return LogicNode::makesLoop(source, inputs, [this](const QString &s) -> QList<ValueRef>
-      {
-        const std::optional<MyDevice> d = m_wid->devices()->find(s.mid(int(qstrlen("device:"))));
-        const std::unique_ptr<LogicNode> n = d ? nodeOf(d->keys) : nullptr;
-        return n ? n->inputs() : QList<ValueRef>();
-      });
-    });
-  }
+    editor->setLoopCheck(loopCheck(id));
   return editor;
+}
+
+std::function<bool(const QList<ValueRef> &)> MainWindow::loopCheck(const QString &id) const
+{
+  // the inputs of the calculated values of My devices
+  const QString source = "device:" + id;
+  return [this, source](const QList<ValueRef> &inputs)
+  {
+    return LogicNode::makesLoop(source, inputs, [this](const QString &s) -> QList<ValueRef>
+    {
+      const std::optional<MyDevice> d = m_wid->devices()->find(s.mid(int(qstrlen("device:"))));
+      const std::unique_ptr<LogicNode> n = d ? nodeOf(d->keys) : nullptr;
+      return n ? n->inputs() : QList<ValueRef>();
+    });
+  };
 }
 
 std::optional<QVariantMap> MainWindow::editNode(const QString &id, const QVariantMap &keys, QString *name)

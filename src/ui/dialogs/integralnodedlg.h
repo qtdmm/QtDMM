@@ -34,6 +34,9 @@ public:
 
   /// The entries of My devices whose values may be integrated.
   void        setSources(const QList<SourceList::Source> &sources);
+  /// @p makesLoop says whether taking these inputs closes a loop through
+  /// this one: such devices are greyed out, and choosing one is an error.
+  void        setLoopCheck(std::function<bool(const QList<ValueRef> &inputs)> makesLoop);
   /// The integral's own reading now (an integral open), and what sets it
   /// to 0; none: no "where it is now".
   void        setState(std::function<std::optional<Reading>()> current, std::function<void()> reset);
@@ -67,6 +70,7 @@ private:
   bool            m_nameChosen = false;
   bool            m_proposing = false;
   bool            m_on = true;
+  std::function<bool(const QList<ValueRef> &)> m_makesLoop;
   QTimer          m_live;
   std::function<std::optional<Reading>()> m_current;
   std::function<void()> m_reset;

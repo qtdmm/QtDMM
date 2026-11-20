@@ -154,6 +154,9 @@ display shows dashes, the graph a gap, and the status says which input it
 waits for. The other values go on.
 
 A result is computed at the time of the leading input's reading, with the
-others' last readings. *Record* records the open devices together, on one
+others' last readings. An input that is itself calculated from the leading
+device may not have taken that reading yet: the result then uses its value
+of the reading before, one step late (which one depends on the order the
+devices were opened in). *Record* records the open devices together, on one
 time base (see [The recorder](recorder.md)); every CSV export carries
 timestamps.
