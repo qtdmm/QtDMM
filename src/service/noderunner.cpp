@@ -181,8 +181,13 @@ void NodeRunner::showWaiting()
     if (!from)
       missing << inputName(ref);
     else if (from->linkState() != MeterConnection::LinkState::Connected)
-      waiting << (from->errorString().isEmpty() ? inputName(ref)
-                                                : tr("%1: %2").arg(inputName(ref), from->errorString()));
+    {
+      // a meter's reason is long (its port, the system's error, a hint):
+      // in its own panel and log; here its state in a word. A node's is the
+      // chain of what it waits for.
+      const QString why = from->isNode() ? from->errorString() : from->shortState();
+      waiting << (why.isEmpty() ? inputName(ref) : tr("%1: %2").arg(inputName(ref), why));
+    }
   }
   if (!missing.isEmpty())
     m_ctl->setNodeState(MeterConnection::LinkState::Timeout, tr("Input not open: %1").arg(missing.join(", ")));
