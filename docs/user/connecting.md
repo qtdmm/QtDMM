@@ -211,8 +211,8 @@ have the keys of OWON's app: SELECT, RANGE, Hz/%, REL, MIN/MAX, LIGHT and
 HOLD, as each model has them; the CM2100B SELECT, ZERO, LIGHT and HOLD
 ([Bluetooth](bluetooth.md#owon)).
 
-The small triangle in the display's top right corner,
-or **Hide controls** in its right-click menu, folds the row away.
+The small handle at the panel's lower edge, or **Hide controls** in its
+right-click menu, folds the row away; the handle brings it back.
 
 ## Window layout
 

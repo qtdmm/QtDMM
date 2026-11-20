@@ -1693,285 +1693,285 @@
 <context>
     <name>ControlBar</name>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="51"/>
+        <location filename="../../src/ui/controlbar.cpp" line="54"/>
         <source>SELECT</source>
         <translation>SELECT</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="51"/>
+        <location filename="../../src/ui/controlbar.cpp" line="54"/>
         <source>The meter&apos;s SELECT key (the orange one): the next function on this switch position</source>
         <translation>Die SELECT-Taste des Messgeräts (die orange): die nächste Funktion dieser Schalterstellung</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="52"/>
+        <location filename="../../src/ui/controlbar.cpp" line="55"/>
         <source>Hz/%</source>
         <translation>Hz/%</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="52"/>
+        <location filename="../../src/ui/controlbar.cpp" line="55"/>
         <source>Frequency and duty cycle</source>
         <translation>Frequenz und Tastverhältnis</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="54"/>
+        <location filename="../../src/ui/controlbar.cpp" line="57"/>
         <source>RANGE</source>
         <translation>RANGE</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="54"/>
+        <location filename="../../src/ui/controlbar.cpp" line="57"/>
         <source>The next range (switches to manual ranging)</source>
         <translation>Der nächste Messbereich (schaltet auf manuelle Bereichswahl)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="47"/>
-        <location filename="../../src/ui/controlbar.cpp" line="55"/>
+        <location filename="../../src/ui/controlbar.cpp" line="50"/>
+        <location filename="../../src/ui/controlbar.cpp" line="58"/>
         <source>AUTO</source>
         <translation>AUTO</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="55"/>
+        <location filename="../../src/ui/controlbar.cpp" line="58"/>
         <source>Automatic ranging</source>
         <translation>Automatische Bereichswahl</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="70"/>
+        <location filename="../../src/ui/controlbar.cpp" line="73"/>
         <source>HOLD</source>
         <translation>HOLD</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="70"/>
+        <location filename="../../src/ui/controlbar.cpp" line="73"/>
         <source>Freeze the display</source>
         <translation>Anzeige einfrieren</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="56"/>
+        <location filename="../../src/ui/controlbar.cpp" line="59"/>
         <source>REL</source>
         <translation>REL</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="42"/>
+        <location filename="../../src/ui/controlbar.cpp" line="45"/>
         <source>V~</source>
         <translation>V~</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="42"/>
+        <location filename="../../src/ui/controlbar.cpp" line="45"/>
         <source>The V key (red): AC V, AC V LPF and DC V in turn</source>
         <translation>Die V-Taste (rot): AC V, AC V LPF und DC V nacheinander</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="41"/>
+        <location filename="../../src/ui/controlbar.cpp" line="44"/>
         <source>A~</source>
         <translation>A~</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="41"/>
+        <location filename="../../src/ui/controlbar.cpp" line="44"/>
         <source>The A key (yellow): AC A and AC A LPF in turn; held, inrush current</source>
         <translation>Die A-Taste (gelb): AC A und AC A LPF nacheinander; gehalten: Einschaltstrom</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="43"/>
+        <location filename="../../src/ui/controlbar.cpp" line="46"/>
         <source>Ω</source>
         <translation>Ω</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="43"/>
+        <location filename="../../src/ui/controlbar.cpp" line="46"/>
         <source>The Ω key (blue): resistance, continuity, capacitance and temperature in turn</source>
         <translation>Die Ω-Taste (blau): Widerstand, Durchgang, Kapazität und Temperatur nacheinander</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="44"/>
-        <location filename="../../src/ui/controlbar.cpp" line="197"/>
+        <location filename="../../src/ui/controlbar.cpp" line="47"/>
+        <location filename="../../src/ui/controlbar.cpp" line="200"/>
         <source>NCV/PEAK</source>
         <translation>NCV/PEAK</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="44"/>
-        <location filename="../../src/ui/controlbar.cpp" line="198"/>
+        <location filename="../../src/ui/controlbar.cpp" line="47"/>
+        <location filename="../../src/ui/controlbar.cpp" line="201"/>
         <source>Non-contact voltage; held, peak capture (AC V and AC A)</source>
         <translation>Berührungslose Spannungsprüfung; gehalten: Spitzenwert (AC V und AC A)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="47"/>
+        <location filename="../../src/ui/controlbar.cpp" line="50"/>
         <source>Automatic function: the meter picks V, Ω or A by itself</source>
         <translation>Automatische Funktion: das Messgerät wählt V, Ω oder A selbst</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="48"/>
+        <location filename="../../src/ui/controlbar.cpp" line="51"/>
         <source>CAP</source>
         <translation>CAP</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="48"/>
+        <location filename="../../src/ui/controlbar.cpp" line="51"/>
         <source>Capacitance</source>
         <translation>Kapazität</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="49"/>
+        <location filename="../../src/ui/controlbar.cpp" line="52"/>
         <source>Diode</source>
         <translation>Diode</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="49"/>
+        <location filename="../../src/ui/controlbar.cpp" line="52"/>
         <source>Diode and continuity</source>
         <translation>Diode und Durchgang</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="50"/>
+        <location filename="../../src/ui/controlbar.cpp" line="53"/>
         <source>Hz</source>
         <translation>Hz</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="50"/>
+        <location filename="../../src/ui/controlbar.cpp" line="53"/>
         <source>Frequency</source>
         <translation>Frequenz</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="53"/>
+        <location filename="../../src/ui/controlbar.cpp" line="56"/>
         <source>LPF</source>
         <translation>LPF</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="53"/>
+        <location filename="../../src/ui/controlbar.cpp" line="56"/>
         <source>Low-pass filter: AC voltage of a motor drive without its switching noise</source>
         <translation>Tiefpassfilter: Wechselspannung eines Frequenzumrichters ohne dessen Schaltstörungen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="56"/>
+        <location filename="../../src/ui/controlbar.cpp" line="59"/>
         <source>Relative reading: the current value becomes zero</source>
         <translation>Relativmessung: der aktuelle Wert wird zu null</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="57"/>
+        <location filename="../../src/ui/controlbar.cpp" line="60"/>
         <source>ZERO</source>
         <translation>ZERO</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="57"/>
+        <location filename="../../src/ui/controlbar.cpp" line="60"/>
         <source>Zero the capacitance reading, with the leads open</source>
         <translation>Kapazitätsanzeige auf null setzen, bei offenen Messleitungen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="58"/>
+        <location filename="../../src/ui/controlbar.cpp" line="61"/>
         <source>MIN/MAX</source>
         <translation>MIN/MAX</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="58"/>
+        <location filename="../../src/ui/controlbar.cpp" line="61"/>
         <source>The meter&apos;s own minimum and maximum</source>
         <translation>Minimum und Maximum des Messgeräts</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="59"/>
+        <location filename="../../src/ui/controlbar.cpp" line="62"/>
         <source>PEAK</source>
         <translation>PEAK</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="59"/>
+        <location filename="../../src/ui/controlbar.cpp" line="62"/>
         <source>Peak minimum and maximum</source>
         <translation>Spitzenwerte Minimum und Maximum</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="60"/>
+        <location filename="../../src/ui/controlbar.cpp" line="63"/>
         <source>INRUSH</source>
         <translation>INRUSH</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="60"/>
+        <location filename="../../src/ui/controlbar.cpp" line="63"/>
         <source>Inrush current: the peak when a motor starts</source>
         <translation>Einschaltstrom: die Spitze beim Anlaufen eines Motors</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="62"/>
+        <location filename="../../src/ui/controlbar.cpp" line="65"/>
         <source>MAX</source>
         <translation>MAX</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="62"/>
+        <location filename="../../src/ui/controlbar.cpp" line="65"/>
         <source>The meter shows its maximum</source>
         <translation>Das Messgerät zeigt sein Maximum</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="63"/>
+        <location filename="../../src/ui/controlbar.cpp" line="66"/>
         <source>MIN</source>
         <translation>MIN</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="63"/>
+        <location filename="../../src/ui/controlbar.cpp" line="66"/>
         <source>The meter shows its minimum</source>
         <translation>Das Messgerät zeigt sein Minimum</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="64"/>
+        <location filename="../../src/ui/controlbar.cpp" line="67"/>
         <source>AVG</source>
         <translation>AVG</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="64"/>
+        <location filename="../../src/ui/controlbar.cpp" line="67"/>
         <source>The meter shows its average</source>
         <translation>Das Messgerät zeigt seinen Mittelwert</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="65"/>
+        <location filename="../../src/ui/controlbar.cpp" line="68"/>
         <source>UNIT</source>
         <translation>UNIT</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="65"/>
+        <location filename="../../src/ui/controlbar.cpp" line="68"/>
         <source>The next unit of the main value (lx/fc, dBA/dBC, %RH/%, m/s ... mph)</source>
         <translation>Die nächste Einheit des Hauptwerts (lx/fc, dBA/dBC, %RH/%, m/s ... mph)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="66"/>
+        <location filename="../../src/ui/controlbar.cpp" line="69"/>
         <source>°C/°F</source>
         <translation>°C/°F</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="66"/>
+        <location filename="../../src/ui/controlbar.cpp" line="69"/>
         <source>The unit of the temperature</source>
         <translation>Die Einheit der Temperatur</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="67"/>
+        <location filename="../../src/ui/controlbar.cpp" line="70"/>
         <source>FAST/SLOW</source>
         <translation>FAST/SLOW</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="67"/>
+        <location filename="../../src/ui/controlbar.cpp" line="70"/>
         <source>Fast or slow time weighting</source>
         <translation>Schnelle oder langsame Zeitbewertung</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="69"/>
+        <location filename="../../src/ui/controlbar.cpp" line="72"/>
         <source>LIGHT</source>
         <translation>LIGHT</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="69"/>
+        <location filename="../../src/ui/controlbar.cpp" line="72"/>
         <source>The display backlight</source>
         <translation>Die Hintergrundbeleuchtung der Anzeige</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="71"/>
+        <location filename="../../src/ui/controlbar.cpp" line="74"/>
         <source>A-HOLD</source>
         <translation>A-HOLD</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="71"/>
+        <location filename="../../src/ui/controlbar.cpp" line="74"/>
         <source>Auto hold: the display freezes once the reading is steady</source>
         <translation>Auto-Hold: die Anzeige bleibt stehen, sobald der Wert stabil ist</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="92"/>
+        <location filename="../../src/ui/controlbar.cpp" line="95"/>
         <source>Hold the key to leave it, as on the meter.</source>
         <translation>Zum Verlassen die Taste gedrückt halten, wie am Messgerät.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="197"/>
+        <location filename="../../src/ui/controlbar.cpp" line="200"/>
         <source>NCV</source>
         <translation>NCV</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="198"/>
+        <location filename="../../src/ui/controlbar.cpp" line="201"/>
         <source>Non-contact voltage</source>
         <translation>Berührungslose Spannungsprüfung</translation>
     </message>
@@ -2947,12 +2947,12 @@ und melden Sie sich danach ab und wieder an.</translation>
 <context>
     <name>FoldButton</name>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="334"/>
+        <location filename="../../src/ui/controlbar.cpp" line="337"/>
         <source>Show controls</source>
         <translation>Bedienleiste zeigen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/controlbar.cpp" line="334"/>
+        <location filename="../../src/ui/controlbar.cpp" line="337"/>
         <source>Hide controls</source>
         <translation>Bedienleiste ausblenden</translation>
     </message>
@@ -3084,17 +3084,12 @@ und melden Sie sich danach ab und wieder an.</translation>
 <context>
     <name>FrontPanel</name>
     <message>
-        <location filename="../../src/ui/frontpanel.cpp" line="45"/>
-        <source>Info and settings</source>
-        <translation>Info und Einstellungen</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/frontpanel.cpp" line="179"/>
+        <location filename="../../src/ui/frontpanel.cpp" line="173"/>
         <source>PASS %1 · FAIL %2 (%3 %)</source>
         <translation>PASS %1 · FAIL %2 (%3 %)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/frontpanel.cpp" line="180"/>
+        <location filename="../../src/ui/frontpanel.cpp" line="174"/>
         <source>Readings judged since the limits were set or min/max was reset: %1 too high, %2 too low</source>
         <translation>Seit dem Setzen der Grenzen oder dem Zurücksetzen von Min/Max beurteilte Messwerte: %1 zu hoch, %2 zu niedrig</translation>
     </message>
@@ -6868,6 +6863,14 @@ Ist das DMM angeschlossen und eingeschaltet?</translation>
         <location filename="../../src/device/decoders/owon_ble.cpp" line="375"/>
         <source>Live</source>
         <translation>Live</translation>
+    </message>
+</context>
+<context>
+    <name>PanelGear</name>
+    <message>
+        <location filename="../../src/ui/controlbar.cpp" line="396"/>
+        <source>Info and settings</source>
+        <translation>Info und Einstellungen</translation>
     </message>
 </context>
 <context>

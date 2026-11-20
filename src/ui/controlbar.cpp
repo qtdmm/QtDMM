@@ -2,10 +2,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "ui/controlbar.h"
 
+#include <cmath>
+
 #include <QFrame>
 #include <QHBoxLayout>
 #include <QMouseEvent>
 #include <QPainter>
+#include <QPainterPath>
 #include <QElapsedTimer>
 #include <QToolButton>
 
@@ -323,7 +326,7 @@ void ControlBar::relayout()
 FoldButton::FoldButton(QWidget *parent) :
   QWidget(parent)
 {
-  setFixedSize(20, 20);
+  setFixedSize(44, 12);
   setCursor(Qt::PointingHandCursor);
   setFolded(false);
 }
@@ -339,16 +342,29 @@ void FoldButton::paintEvent(QPaintEvent *)
 {
   QPainter p(this);
   p.setRenderHint(QPainter::Antialiasing);
+  // a tab darker than the metal around it, rounded at the top
+  const QRectF r = QRectF(rect()).adjusted(0.5, 0.5, -0.5, 0);
+  QPainterPath tab;
+  tab.moveTo(r.bottomLeft());
+  tab.lineTo(r.left(), r.top() + 5);
+  tab.quadTo(r.topLeft(), r.topLeft() + QPointF(5, 0));
+  tab.lineTo(r.right() - 5, r.top());
+  tab.quadTo(r.topRight(), r.topRight() + QPointF(0, 5));
+  tab.lineTo(r.bottomRight());
   p.setPen(Qt::NoPen);
-  p.setBrush(palette().color(m_hover ? QPalette::WindowText : QPalette::Mid));
-  // ▾ open, ▸ folded
-  const QPointF c = rect().center();
-  QPolygonF tri;
-  if (m_folded)
-    tri << c + QPointF(-3, -5) << c + QPointF(4, 0) << c + QPointF(-3, 5);
-  else
-    tri << c + QPointF(-5, -3) << c + QPointF(5, -3) << c + QPointF(0, 4);
-  p.drawPolygon(tri);
+  p.setBrush(QColor(0, 0, 0, m_hover ? 110 : 70));
+  p.drawPath(tab);
+  // ︽ open (folds up), ︾ folded (unfolds down)
+  p.setPen(QPen(palette().color(m_hover ? QPalette::WindowText : QPalette::Mid), 1.4, Qt::SolidLine, Qt::RoundCap,
+                Qt::RoundJoin));
+  p.setBrush(Qt::NoBrush);
+  const QPointF c = r.center() + QPointF(0, 0.5);
+  const double dir = m_folded ? 1 : -1;
+  for (double dy : { -2.0, 2.0 })
+  {
+    const QPointF m = c + QPointF(0, dy);
+    p.drawPolyline(QPolygonF({ m + QPointF(-4, -1.5 * dir), m + QPointF(0, 1.5 * dir), m + QPointF(4, -1.5 * dir) }));
+  }
 }
 
 void FoldButton::enterEvent(QEnterEvent *)
@@ -369,4 +385,66 @@ void FoldButton::mousePressEvent(QMouseEvent *event)
     return;
   setFolded(!m_folded);
   Q_EMIT toggled(m_folded);
+}
+
+PanelGear::PanelGear(QWidget *parent) :
+  QWidget(parent)
+{
+  setObjectName("ui_panelGear");
+  setFixedSize(16, 16);
+  setCursor(Qt::PointingHandCursor);
+  setToolTip(tr("Info and settings"));
+}
+
+void PanelGear::setInk(const QColor &rest, const QColor &hover)
+{
+  m_rest = rest;
+  m_hoverInk = hover;
+  update();
+}
+
+void PanelGear::paintEvent(QPaintEvent *)
+{
+  QPainter p(this);
+  p.setRenderHint(QPainter::Antialiasing);
+  // eight teeth around a ring, the hole in the middle left open
+  const QPointF c = QRectF(rect()).center();
+  const double outer = qMin(width(), height()) * 0.47;
+  const double inner = outer * 0.72;
+  QPainterPath gear;
+  constexpr int kTeeth = 8;
+  for (int i = 0; i < kTeeth * 4; ++i)
+  {
+    const double a = (i - 0.5) * M_PI / (kTeeth * 2);
+    const double rad = (i % 4 < 2) ? outer : inner;
+    const QPointF pt = c + QPointF(std::cos(a) * rad, std::sin(a) * rad);
+    if (i == 0)
+      gear.moveTo(pt);
+    else
+      gear.lineTo(pt);
+  }
+  gear.closeSubpath();
+  gear.addEllipse(c, outer * 0.33, outer * 0.33);
+  gear.setFillRule(Qt::OddEvenFill);
+  p.setPen(Qt::NoPen);
+  p.setBrush(m_hover ? m_hoverInk : m_rest);
+  p.drawPath(gear);
+}
+
+void PanelGear::enterEvent(QEnterEvent *)
+{
+  m_hover = true;
+  update();
+}
+
+void PanelGear::leaveEvent(QEvent *)
+{
+  m_hover = false;
+  update();
+}
+
+void PanelGear::mouseReleaseEvent(QMouseEvent *event)
+{
+  if (event->button() == Qt::LeftButton && rect().contains(event->position().toPoint()))
+    Q_EMIT clicked();
 }

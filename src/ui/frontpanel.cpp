@@ -4,7 +4,6 @@
 
 #include <QEvent>
 #include <QTimer>
-#include <QToolButton>
 #include <QVBoxLayout>
 
 #include <cmath>
@@ -22,9 +21,9 @@ FrontPanel::FrontPanel(DeviceSession *session, QWidget *parent)
   , m_feed(new ValueFeed(session, this))
   , m_display(new LcdWidget(this))
   , m_controls(new ControlBar(this))
-  , m_fold(new FoldButton(m_display))
+  , m_fold(new FoldButton(this))
   , m_nodeBar(new NodeBar(this))
-  , m_gear(new QToolButton(m_display))
+  , m_gear(new PanelGear(m_display))
   , m_blinkTimer(new QTimer(this))
 {
   auto *layout = new QVBoxLayout(this);
@@ -33,20 +32,15 @@ FrontPanel::FrontPanel(DeviceSession *session, QWidget *parent)
   layout->addWidget(m_display, 1);
   layout->addWidget(m_controls);
   layout->addWidget(m_nodeBar);
+  // the handle under the keys, in the middle of the lower edge
+  layout->addWidget(m_fold, 0, Qt::AlignHCenter);
   m_fold->hide();
   m_controls->hide();
   m_nodeBar->hide();
-  // the gear in the corner, muted on the LCD until hovered
-  m_gear->setObjectName("ui_panelGear");
-  m_gear->setAutoRaise(true);
-  m_gear->setIcon(QIcon::fromTheme("configure"));
-  m_gear->setIconSize(QSize(14, 14));
-  m_gear->setFixedSize(20, 20);
-  m_gear->setToolTip(tr("Info and settings"));
-  m_gear->setStyleSheet("QToolButton { background: transparent; border: none; }"
-                        " QToolButton:hover { background: rgba(255, 255, 255, 60); border-radius: 3px; }");
+  // the gear on the name plate, in the lettering's colours
+  m_gear->setInk(m_display->plateInk(false), m_display->plateInk(true));
   m_gear->hide();
-  connect(m_gear, &QToolButton::clicked, this, [this]
+  connect(m_gear, &PanelGear::clicked, this, [this]
   {
     if (m_ctl)
       Q_EMIT settingsRequested(m_ctl->deviceId());
@@ -243,7 +237,8 @@ bool FrontPanel::keysShown() const
 
 int FrontPanel::keysHeight() const
 {
-  return keysShown() ? bar()->sizeHint().height() + 4 : 0;
+  // the keys while shown, the handle under them while there are any
+  return (keysShown() ? bar()->sizeHint().height() + 4 : 0) + (m_keysSupported ? m_fold->height() + 4 : 0);
 }
 
 QWidget *FrontPanel::bar() const
@@ -260,8 +255,16 @@ bool FrontPanel::eventFilter(QObject *watched, QEvent *event)
 
 void FrontPanel::placeCorner()
 {
-  m_fold->move(m_display->width() - m_fold->width() - 6, 6);
-  // the gear left of the fold button, in its place when there is none
-  const int right = m_fold->isVisibleTo(this) ? m_fold->x() - 2 : m_display->width() - 6;
-  m_gear->move(right - m_gear->width(), 4);
+  // at the right end of the name plate, as high as its letters; the name
+  // keeps clear of it
+  const QRectF band = m_display->plateBand();
+  if (band.isEmpty())
+  {
+    m_gear->hide();
+    return;
+  }
+  const int size = qBound(10, int(band.height() * 0.8), 18);
+  m_gear->setFixedSize(size, size);
+  m_gear->move(int(band.right() - size), int(band.center().y() - size / 2.0));
+  m_display->setPlateReserve(size + 6);
 }

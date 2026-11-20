@@ -161,6 +161,12 @@ public:
   /// The device's name on the bezel above the face, like the model name on
   /// an instrument; empty: none, the face takes the room.
   void setCaption(const QString &caption);
+  /// Pixels kept free at the right end of the name (for a button there).
+  void setPlateReserve(double px);
+  /// Where the name is written (widget coordinates); empty without one.
+  QRectF plateBand() const;
+  /// The colour of the name's lettering: the manufacturer's (@p strong) or the model's.
+  QColor plateInk(bool strong) const;
   /// Words in place of the number while there is none ("Waiting for data",
   /// ValueFeed::notice()); empty: the number.
   void setNotice(const QString &notice);
@@ -263,6 +269,7 @@ private:
   bool m_auto = false;
   bool m_stale = false;
   QString m_caption;   ///< setCaption()
+  double  m_plateReserve = 0;   ///< setPlateReserve()
   QString m_notice;    ///< setNotice()
   bool m_limitOn = false;
   LimitTest::Verdict m_verdict = LimitTest::NoVerdict;

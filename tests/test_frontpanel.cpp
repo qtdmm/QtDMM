@@ -19,6 +19,7 @@
 #include "service/devicesession.h"
 #include "service/metercontroller.h"
 #include "service/noderunner.h"
+#include "ui/controlbar.h"
 #include "ui/frontpanel.h"
 #include "ui/nodebar.h"
 #include "ui/views/lcdwidget.h"
@@ -63,14 +64,21 @@ int main(int argc, char **argv)
         "computing: the LED green");
   check(!panel.findChild<QToolButton *>("ui_nodeControl_hold"), "a generator: no HOLD");
   QSignalSpy settings(&panel, &FrontPanel::settingsRequested);
-  auto *gear = panel.findChild<QToolButton *>("ui_panelGear");
-  check(gear && gear->isVisibleTo(&panel), "the gear on the panel");
-  gear->click();
+  auto *gear = panel.findChild<PanelGear *>("ui_panelGear");
+  const QRectF plate = panel.display()->plateBand();
+  check(gear && gear->isVisibleTo(&panel) && plate.contains(QRectF(gear->geometry()).center()),
+        "the gear on the name plate");
+  Q_EMIT gear->clicked();
   check(settings.size() == 1 && settings.first().first().toString() == sim, "the gear asks for its settings");
   const qsizetype changes = keys.size();
+  const int open = panel.keysHeight();
+  auto *handle = panel.findChild<FoldButton *>();
+  check(handle && handle->isVisibleTo(&panel) && handle->geometry().top() > panel.display()->geometry().bottom(),
+        "the handle under the keys");
   panel.setFolded(true);
-  check(panel.isFolded() && !bar->isVisibleTo(&panel) && panel.keysHeight() == 0 && keys.size() == changes + 1,
-        "folded: the bar gone");
+  check(panel.isFolded() && !bar->isVisibleTo(&panel) && panel.keysHeight() > 0 && panel.keysHeight() < open
+          && handle->isVisibleTo(&panel) && keys.size() == changes + 1,
+        "folded: the bar gone, the handle left");
   panel.setFolded(false);
   ctl->connectMeter(false);
   bar->refresh();
