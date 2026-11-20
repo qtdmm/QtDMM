@@ -277,6 +277,19 @@ int main(int argc, char **argv)
     const std::unique_ptr<IntegralNode> n = in.node();
     check(n->threshold() == 1500.0 && !n->resetsOnRecording() && n->unit() == "mAh" && n->inputs()[0].toString() == "0@device:x",
           "the integral: " + n->toJsonText());
+    // R20-04: a value that takes this integral's values is a loop
+    in.integralEditor()->setLoopCheck([](const QList<ValueRef> &inputs)
+    {
+      return !inputs.isEmpty() && inputs.first().source == "device:p";
+    });
+    check(!(in.findChild<QTreeWidget *>("ui_sourceTree")->topLevelItem(0)->child(0)->flags() & Qt::ItemIsSelectable),
+          "a value that would close a loop: not to choose");
+    in.integralEditor()->setLoopCheck({});
+    // a unit without h: said, still OK
+    unitBox->setCurrentText("J");
+    check(inOk->isEnabled() && in.findChild<QLabel *>("ui_integralStatus")->text().contains("no h"),
+          "a unit without h: a note, OK on: " + in.findChild<QLabel *>("ui_integralStatus")->text());
+    unitBox->setCurrentText("mAh");
     // a new one with its value given (Integrate... of a value's menu): chosen, proposed
     {
       IntegralNode given;

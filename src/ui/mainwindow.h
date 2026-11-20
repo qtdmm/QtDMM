@@ -390,6 +390,9 @@ protected:
   /// new one) as stored (@p stored, null: a new one), with what it may take.
   NodeEditor *makeNodeEditor(const QString &type, const QString &id, const LogicNode *stored,
                              const QString &name, const ValueRef &input = ValueRef(0));
+  /// Whether inputs taken by the node of entry @p id close a loop through
+  /// the calculated values of My devices.
+  std::function<bool(const QList<ValueRef> &)> loopCheck(const QString &id) const;
   /// The dialog of a node's entry (its NodeEditor; one of before too,
   /// LegacyNodes): its keys as set, none when cancelled; @p name the new
   /// name on the way out.
