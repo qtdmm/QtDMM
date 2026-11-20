@@ -10,7 +10,8 @@ export, alarms and SCPI all work on it exactly as on a measured one.
 ## Setting it up
 
 1. Put the meters into [My devices](my-devices.md).
-2. *Add device*, the tile **Calculated**. A dialog opens:
+2. *Add device*, the tab **Calculated / generator**, the tile
+   **Calculated**. Its settings follow:
     - **Name** - how it is listed in My devices.
     - **Inputs** - tick your devices in the list on the left, also one
       that is not connected yet (grey; the calculated value then waits for
@@ -25,13 +26,14 @@ export, alarms and SCPI all work on it exactly as on a measured one.
       unit. A value may use the ones above it as `y1`, `y2`, `y3`. The unit
       is proposed from the inputs (V times A gives W) until you choose one.
       Each value shows its result with the readings of right now; a formula
-      that does not parse keeps OK off and says where.
+      that does not parse keeps *Next* off and says where.
     - **Maximum age of an input** - a reading older than this counts as
       none (3 s by default).
-3. *OK*: it is added to My devices and connected.
+3. *Next*: the last page shows it as set up; **Connect** adds it to My
+   devices and connects it, **Save only** adds it without connecting.
 
-*Info and settings* in its context menu in the sidebar opens the same
-dialog again.
+*Info and settings* in its context menu in the sidebar, or the gear on its
+front panel, opens its settings again.
 
 ## On the front panel
 
@@ -80,7 +82,8 @@ Examples:
 ## Simulated values
 
 For trying QtDMM without a multimeter, for demonstrations or for feeding a
-known signal into a calculation: *Add device*, the tile **Simulated**. It
+known signal into a calculation: *Add device*, the tab **Calculated /
+generator**, the tile **Simulated**. It
 has no inputs and makes up to four values on a clock (every 250 ms by
 default), each with:
 
@@ -98,8 +101,9 @@ Each value shows where it is right now.
 ## Integral
 
 The energy a load took, the charge into a battery, the light a plant got:
-*Add device*, the tile **Integral**, or *Integrate...* in the menu of a
-value (a right click on it in the sidebar or a view). It sums up one value
+*Add device*, the tab **Calculated / generator**, the tile **Integral**, or
+*Integrate...* in the menu of a value (a right click on it in the sidebar
+or a view: the assistant starts at its settings). It sums up one value
 over time:
 
 - **Value** - open a device in the list and choose one of its values.

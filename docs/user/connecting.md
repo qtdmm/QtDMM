@@ -8,9 +8,11 @@ by step and keeps it in [My devices](my-devices.md). A window without a
 meter - the first start - shows nothing but a big **Add device** button.
 
 1. **How is it connected?** *Cable* (USB cable of the meter, USB-serial
-   adapter, serial port), *Bluetooth*, *Network*, *sigrok* or *Simulated /
-   calculated* - the simulated meter, a signal of its own to try QtDMM without
-   hardware, or a value calculated from other windows.
+   adapter, serial port), *Bluetooth*, *Network* or *sigrok*. The second
+   tab, *Calculated / generator*, has *Simulated* - a signal of its own to
+   try QtDMM without hardware -, *Calculated* - a value calculated from
+   your devices - and *Integral*; their settings follow on one page, then
+   step 4 (see [Calculated values](calculated-values.md)).
 2. **Where?** For a cable, Bluetooth or the network QtDMM looks right away,
    only there, and lists every port it finds, the recognised meters first. A USB cable
    names the meter family it belongs to (UT-D04: the serial UNI-T meters,
@@ -34,7 +36,7 @@ meter - the first start - shows nothing but a big **Add device** button.
    once, *Save only* keeps it in My devices without connecting - *Connect*
    in its context menu reads it later (see [My devices](my-devices.md)).
 
-sigrok and *Simulated / calculated* skip step 2.
+sigrok skips step 2.
 
 ## Choosing the device by hand
 

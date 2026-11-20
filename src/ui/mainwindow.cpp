@@ -366,7 +366,7 @@ void MainWindow::createViews()
   // a value or an entry of My devices dragged out of the sidebar
   m_mdi->viewport()->setAcceptDrops(true);
   m_mdi->viewport()->installEventFilter(this);
-  connect(addButton, &QToolButton::clicked, this, &MainWindow::addDevice);
+  connect(addButton, &QToolButton::clicked, this, [this] { addDevice(); });
 
   // the alarms of every open meter: sounds, popups, one banner
   m_alarmService = new AlarmService(m_session, this, this);
@@ -1571,7 +1571,7 @@ void MainWindow::createSidebar()
   });
   connect(m_session, &DeviceSession::opened, this, &MainWindow::updateOpenDevices);
   connect(m_session, &DeviceSession::closed, this, &MainWindow::updateOpenDevices);
-  connect(m_sidebar, &DeviceSidebar::addDeviceRequested, this, &MainWindow::addDevice);
+  connect(m_sidebar, &DeviceSidebar::addDeviceRequested, this, [this] { addDevice(); });
   connect(m_sidebar, &DeviceSidebar::serviceSettingsRequested, m_wid, &InstanceWidget::configScpiSLOT);
   connect(m_sidebar, &DeviceSidebar::workspaceRequested, this, &MainWindow::loadWorkspaceFile);
   connect(m_sidebar, &DeviceSidebar::newBenchRequested, this, [this] { saveWorkspace(true); });
@@ -1603,7 +1603,7 @@ void MainWindow::fillViewToolbar()
   m_addDeviceAction->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">Add device</span></p>"
                                      "<p>Step by step: how the meter is connected, which one it is, and whether it "
                                      "goes into this window or a new one. It is kept in My devices.</p></body></html>"));
-  connect(m_addDeviceAction, &QAction::triggered, this, &MainWindow::addDevice);
+  connect(m_addDeviceAction, &QAction::triggered, this, [this] { addDevice(); });
   toolBarDMM->insertAction(m_sidebarAction, m_addDeviceAction);
 
   // the project, second: the arrow makes one, opens one, takes one of the
@@ -2108,29 +2108,35 @@ void MainWindow::placeEmptyStart()
   m_emptyStart->setGeometry(r);
 }
 
-void MainWindow::addDevice()
+void MainWindow::addDevice(int start, const ValueRef &input)
 {
   AddDeviceDlg dlg(m_wid->devices(), this);
   dlg.setPorts(Transport::availablePorts() + m_wid->settings()->customPorts());
   dlg.setSigrokExe(m_wid->settings()->getString("Port settings/sigrok_exe", "sigrok-cli"));
   dlg.setPlacesInUse(placesInUse());
+  // a calculated value's settings, filled in for a new one
+  dlg.setNodeEditors([this, input](AddDeviceDlg::Connection kind)
+  {
+    if (kind == AddDeviceDlg::Simulated)
+      return makeNodeEditor(GeneratorNode::kType, QString(), nullptr, tr("Simulated"));
+    if (kind == AddDeviceDlg::Integral)
+      return makeNodeEditor(IntegralNode::kType, QString(), nullptr, QString(), input);
+    return makeNodeEditor(FormulaNode::kType, QString(), nullptr, tr("Calculated"));
+  });
+  // straight to a calculated value's settings ("Integrate..." of a value)
+  if (start >= 0)
+    dlg.chooseConnection(static_cast<AddDeviceDlg::Connection>(start));
   if (dlg.exec() != QDialog::Accepted)
     return;
-  if (dlg.connection() == AddDeviceDlg::Calculated || dlg.connection() == AddDeviceDlg::Simulated
-      || dlg.connection() == AddDeviceDlg::Integral)
-  {
-    addNode(dlg.connection() == AddDeviceDlg::Simulated ? GeneratorNode::kType
-            : dlg.connection() == AddDeviceDlg::Integral ? IntegralNode::kType
-                                                          : FormulaNode::kType);
-    return;
-  }
+  const bool node = AddDeviceDlg::isNode(dlg.connection());
   QVariantMap keys = dlg.keys();
-  keys.insert("Port settings/device", SerialDevice::stableDevice(keys.value("Port settings/device").toString()));
+  if (!node)
+    keys.insert("Port settings/device", SerialDevice::stableDevice(keys.value("Port settings/device").toString()));
   const int before = int(m_wid->devices()->list().size());
   // a find that is one of My devices changes that entry: no second one
   QString id = dlg.knownDevice();
   if (id.isEmpty())
-    id = m_wid->devices()->add(dlg.name(), keys);
+    id = m_wid->devices()->add(node ? m_wid->devices()->uniqueName(dlg.name()) : dlg.name(), keys);
   else
   {
     m_wid->devices()->update(id, keys);
@@ -2189,58 +2195,45 @@ std::unique_ptr<LogicNode> MainWindow::nodeOf(const QVariantMap &keys, QString *
   return nullptr;
 }
 
-std::optional<QVariantMap> MainWindow::editNode(const QString &id, const QVariantMap &keys, QString *name, const QString &newType,
-                                                const ValueRef &input)
+NodeEditor *MainWindow::makeNodeEditor(const QString &type, const QString &id, const LogicNode *stored,
+                                       const QString &name, const ValueRef &input)
 {
-  QString why;
-  std::unique_ptr<LogicNode> stored = nodeOf(keys, &why);
-  // a calculated value of before naming a device no longer there: set up anew
-  if (!stored && LegacyNodes::isLegacy(keys))
-    QMessageBox::warning(this, *name, tr("%1\nSet up its formula anew.").arg(why));
-  const QString type = stored ? stored->type() : newType.isEmpty() ? QString::fromLatin1(FormulaNode::kType) : newType;
-
   if (type == QLatin1String(IntegralNode::kType))
   {
-    IntegralNodeDlg dlg(this);
-    dlg.setSources(formulaChoices(id));
+    auto *editor = new IntegralNodeEditor;
+    editor->setSources(formulaChoices(id));
     // one open: where it is now, and setting it to 0
     if (!id.isEmpty())
       if (MeterController *ctl = m_session->controller("device:" + id); NodeRunner::of(ctl))
-        dlg.setState([this, id]() -> std::optional<Reading>
-                     {
-                       const MeterController *c = m_session->controller("device:" + id);
-                       return c && c->lastReading().msecs > 0 ? std::optional(c->lastReading()) : std::nullopt;
-                     },
-                     [this, id]
-                     {
-                       if (NodeRunner *runner = NodeRunner::of(m_session->controller("device:" + id)))
-                         runner->reset();
-                     });
-    const auto *integral = dynamic_cast<const IntegralNode *>(stored.get());
+        editor->setState([this, id]() -> std::optional<Reading>
+                         {
+                           const MeterController *c = m_session->controller("device:" + id);
+                           return c && c->lastReading().msecs > 0 ? std::optional(c->lastReading()) : std::nullopt;
+                         },
+                         [this, id]
+                         {
+                           if (NodeRunner *runner = NodeRunner::of(m_session->controller("device:" + id)))
+                             runner->reset();
+                         });
+    const auto *integral = dynamic_cast<const IntegralNode *>(stored);
     IntegralNode fresh;
     if (!input.source.isEmpty())
       fresh.setInputs({ input });
-    dlg.load(*name, integral ? *integral : fresh);
-    if (dlg.exec() != QDialog::Accepted)
-      return std::nullopt;
-    *name = dlg.name();
-    return QVariantMap { { "DMM/model", QStringLiteral("QtDMM Integral") }, { "Node/json", dlg.node()->toJsonText() } };
+    editor->load(name, integral ? *integral : fresh);
+    return editor;
   }
 
   if (type == QLatin1String(GeneratorNode::kType))
   {
-    GeneratorNodeDlg dlg(this);
-    const auto *generator = dynamic_cast<const GeneratorNode *>(stored.get());
-    dlg.load(*name, generator ? *generator : GeneratorNode());
-    if (dlg.exec() != QDialog::Accepted)
-      return std::nullopt;
-    *name = dlg.name();
-    return QVariantMap { { "DMM/model", QStringLiteral("QtDMM Generator") }, { "Node/json", dlg.node()->toJsonText() } };
+    auto *editor = new GeneratorNodeEditor;
+    const auto *generator = dynamic_cast<const GeneratorNode *>(stored);
+    editor->load(name, generator ? *generator : GeneratorNode());
+    return editor;
   }
 
-  FormulaNodeDlg dlg(this);
-  dlg.setChoices(formulaChoices(id));
-  dlg.setCurrent([this](const ValueRef &ref) -> std::optional<Reading>
+  auto *editor = new FormulaNodeEditor;
+  editor->setChoices(formulaChoices(id));
+  editor->setCurrent([this](const ValueRef &ref) -> std::optional<Reading>
   {
     const MeterController *ctl = m_session->controller(ref.source);
     if (!ctl)
@@ -2248,13 +2241,13 @@ std::optional<QVariantMap> MainWindow::editNode(const QString &id, const QVarian
     const Reading r = ctl->lastReading(ref.id);
     return r.msecs > 0 ? std::optional(r) : std::nullopt;
   });
-  const auto *formula = dynamic_cast<const FormulaNode *>(stored.get());
-  dlg.load(*name, formula ? *formula : FormulaNode());
+  const auto *formula = dynamic_cast<const FormulaNode *>(stored);
+  editor->load(name, formula ? *formula : FormulaNode());
   // the inputs of the calculated values of My devices, for loops
   if (!id.isEmpty())
   {
     const QString source = "device:" + id;
-    dlg.setLoopCheck([this, source](const QList<ValueRef> &inputs)
+    editor->setLoopCheck([this, source](const QList<ValueRef> &inputs)
     {
       return LogicNode::makesLoop(source, inputs, [this](const QString &s) -> QList<ValueRef>
       {
@@ -2264,26 +2257,34 @@ std::optional<QVariantMap> MainWindow::editNode(const QString &id, const QVarian
       });
     });
   }
+  return editor;
+}
+
+std::optional<QVariantMap> MainWindow::editNode(const QString &id, const QVariantMap &keys, QString *name)
+{
+  QString why;
+  std::unique_ptr<LogicNode> stored = nodeOf(keys, &why);
+  // a calculated value of before naming a device no longer there: set up anew
+  if (!stored && LegacyNodes::isLegacy(keys))
+    QMessageBox::warning(this, *name, tr("%1\nSet up its formula anew.").arg(why));
+  const QString type = stored ? stored->type() : QString::fromLatin1(FormulaNode::kType);
+  const QString title = type == QLatin1String(IntegralNode::kType) ? tr("Integral")
+                        : type == QLatin1String(GeneratorNode::kType) ? tr("Simulated values")
+                                                                       : tr("Calculated value");
+  NodeDlg dlg(makeNodeEditor(type, id, stored.get(), *name), title, this);
+  dlg.resize(type == QLatin1String(GeneratorNode::kType) ? QSize(760, 360) : QSize(640, 480));
   if (dlg.exec() != QDialog::Accepted)
     return std::nullopt;
-  *name = dlg.name();
-  return QVariantMap { { "DMM/model", QStringLiteral("QtDMM Formula") }, { "Node/json", dlg.node()->toJsonText() } };
+  *name = dlg.editor()->name();
+  return QVariantMap { { "DMM/model", dlg.editor()->model() }, { "Node/json", dlg.editor()->logicNode()->toJsonText() } };
 }
 
 void MainWindow::addNode(const QString &type, const ValueRef &input)
 {
-  QString name = type == QLatin1String(GeneratorNode::kType) ? tr("Simulated") : tr("Calculated");
-  const std::optional<QVariantMap> keys = editNode(QString(), {}, &name, type, input);
-  if (!keys)
-    return;
-  const int before = int(m_wid->devices()->list().size());
-  const QString id = m_wid->devices()->add(m_wid->devices()->uniqueName(name), *keys);
-  openBeside(id);
-  if (DeviceSidebar::opensAfterAdd(before, int(m_wid->devices()->list().size())))
-  {
-    showSidebar(true);
-    m_wid->settings()->setBool("Windows/sidebar", true);
-  }
+  addDevice(type == QLatin1String(GeneratorNode::kType) ? AddDeviceDlg::Simulated
+            : type == QLatin1String(IntegralNode::kType) ? AddDeviceDlg::Integral
+                                                          : AddDeviceDlg::Calculated,
+            input);
 }
 
 QMap<QString, const MeterController *> MainWindow::placeOwners() const

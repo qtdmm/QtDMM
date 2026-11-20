@@ -61,6 +61,21 @@ QString DeviceSummary::connection(const DeviceSettings *settings)
   return text;
 }
 
+void DeviceSummary::showNode(const QString &name, const QString &model)
+{
+  m_symbol->setPixmap(DeviceSymbol::pixmap(QStringLiteral("QtDMM"), DeviceType::Virtual, kSymbolSize, devicePixelRatioF()));
+  const QList<std::pair<QString, QString>> rows = {
+    { tr("Name"), name },
+    { tr("Model"), model },
+    { tr("Type"), DeviceType::displayName(DeviceType::Virtual) },
+    { tr("Connection"), tr("computed in QtDMM") },
+  };
+  QString html = "<table cellspacing=\"0\" cellpadding=\"2\">";
+  for (const auto &[label, value] : rows)
+    html += QString("<tr><td><b>%1</b>&nbsp;&nbsp;</td><td>%2</td></tr>").arg(label.toHtmlEscaped(), value.toHtmlEscaped());
+  m_info->setText(html + "</table>");
+}
+
 void DeviceSummary::show(const DeviceSettings *settings, const QString &name)
 {
   const DmmDecoder::DMMInfo info = settings->dmmInfo();

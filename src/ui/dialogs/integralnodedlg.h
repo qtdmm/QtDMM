@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
 
-#include <QDialog>
 #include <QTimer>
 #include <functional>
 #include <memory>
@@ -11,6 +10,7 @@
 #include "core/reading.h"
 #include "core/valueref.h"
 #include "logic/integralnode.h"
+#include "ui/dialogs/nodeeditor.h"
 #include "ui/sourcelist.h"
 
 class QCheckBox;
@@ -26,11 +26,11 @@ class QPushButton;
 /// reading, and when it starts at 0 again: at the start of a recording,
 /// when the value rises above a threshold. An integral open shows where it
 /// is now, with a button to set it to 0.
-class IntegralNodeDlg : public QDialog
+class IntegralNodeEditor : public NodeEditor
 {
   Q_OBJECT
 public:
-  explicit IntegralNodeDlg(QWidget *parent = nullptr);
+  explicit IntegralNodeEditor(QWidget *parent = nullptr);
 
   /// The entries of My devices whose values may be integrated.
   void        setSources(const QList<SourceList::Source> &sources);
@@ -41,8 +41,10 @@ public:
   /// Fills in @p name and @p node; a new one: @p node without input takes
   /// the first choice.
   void        load(const QString &name, const IntegralNode &node);
-  QString     name() const;
+  QString     name() const override;
   std::unique_ptr<IntegralNode> node() const;
+  std::unique_ptr<LogicNode> logicNode() const override;
+  QString     model() const override { return QStringLiteral("QtDMM Integral"); }
 
 private:
   /// The unit and name proposed from the value chosen, unless chosen.
@@ -61,7 +63,6 @@ private:
   QLabel         *m_now;
   QPushButton    *m_zero;
   QLabel         *m_status;
-  QPushButton    *m_ok = nullptr;
   bool            m_unitChosen = false;
   bool            m_nameChosen = false;
   bool            m_proposing = false;
@@ -69,4 +70,19 @@ private:
   QTimer          m_live;
   std::function<std::optional<Reading>()> m_current;
   std::function<void()> m_reset;
+};
+
+/// IntegralNodeEditor in a dialog of its own.
+class IntegralNodeDlg : public NodeDlg
+{
+  Q_OBJECT
+public:
+  explicit IntegralNodeDlg(QWidget *parent = nullptr);
+  IntegralNodeEditor *integralEditor() const { return static_cast<IntegralNodeEditor *>(editor()); }
+  void        setSources(const QList<SourceList::Source> &sources) { integralEditor()->setSources(sources); }
+  void        setState(std::function<std::optional<Reading>()> current, std::function<void()> reset)
+  { integralEditor()->setState(std::move(current), std::move(reset)); }
+  void        load(const QString &name, const IntegralNode &node) { integralEditor()->load(name, node); }
+  QString     name() const { return integralEditor()->name(); }
+  std::unique_ptr<IntegralNode> node() const { return integralEditor()->node(); }
 };

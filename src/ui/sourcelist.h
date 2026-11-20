@@ -95,5 +95,6 @@ private:
   int           m_leading = 0;
   ValueRef      m_value = ValueRef(0);
   bool          m_filling = false;
+  bool          m_updating = false;   ///< updateList() fills the list: no drop
   std::function<QString(const QString &)> m_blocked;
 };

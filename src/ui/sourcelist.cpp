@@ -8,6 +8,7 @@
 #include <QLabel>
 #include <QListWidget>
 #include <QPushButton>
+#include <QScopedValueRollback>
 #include <QTreeWidget>
 #include <QVBoxLayout>
 
@@ -69,6 +70,8 @@ SourceList::SourceList(Mode mode, QWidget *parent) :
     // a drop in the list: its new order
     connect(m_list->model(), &QAbstractItemModel::rowsMoved, this, [this]
     {
+      if (m_updating)
+        return;
       QStringList order;
       for (int i = 0; i < m_list->count(); ++i)
         order << m_list->item(i)->data(kSource).toString();
@@ -193,7 +196,8 @@ void SourceList::updateList()
 {
   if (!m_list)
     return;
-  const QSignalBlocker block(m_list->model());
+  // not by blocking the model's signals: the view would miss the new rows
+  const QScopedValueRollback<bool> updating(m_updating, true);
   const int current = m_list->currentRow();
   m_list->clear();
   for (int i = 0; i < m_inputs.size(); ++i)

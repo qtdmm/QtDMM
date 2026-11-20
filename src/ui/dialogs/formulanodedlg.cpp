@@ -6,7 +6,6 @@
 
 #include <QButtonGroup>
 #include <QComboBox>
-#include <QDialogButtonBox>
 #include <QDoubleSpinBox>
 #include <QFormLayout>
 #include <QGridLayout>
@@ -33,12 +32,12 @@ constexpr int kMaxInputs = 8;
 const char *const kUnits[] = { "", "V", "mV", "A", "mA", "W", "mW", "kW", "Ohm", "kOhm", "S", "Hz", "s", "J", "C", "%" };
 }
 
-FormulaNodeDlg::FormulaNodeDlg(QWidget *parent) :
-  QDialog(parent)
+FormulaNodeEditor::FormulaNodeEditor(QWidget *parent) :
+  NodeEditor(parent)
 {
-  setObjectName("ui_formulaNodeDlg");
-  setWindowTitle(tr("Calculated value"));
+  setObjectName("ui_formulaNodeEditor");
   auto *top = new QVBoxLayout(this);
+  top->setContentsMargins(0, 0, 0, 0);
   auto *form = new QFormLayout;
   top->addLayout(form);
   m_name = new QLineEdit(this);
@@ -55,7 +54,7 @@ FormulaNodeDlg::FormulaNodeDlg(QWidget *parent) :
   m_sources->setObjectName("ui_formulaSources");
   inputLayout->addWidget(m_sources);
   top->addWidget(inputBox);
-  connect(m_sources, &SourceList::inputsChanged, this, &FormulaNodeDlg::followInputs);
+  connect(m_sources, &SourceList::inputsChanged, this, &FormulaNodeEditor::followInputs);
 
   // the outputs: y1 ... each name, formula, unit and its result now
   auto *outputBox = new QGroupBox(tr("Values"), this);
@@ -95,31 +94,25 @@ FormulaNodeDlg::FormulaNodeDlg(QWidget *parent) :
   m_status->setWordWrap(true);
   top->addWidget(m_status);
   top->addStretch(1);
-  auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
-  top->addWidget(buttons);
-  m_ok = buttons->button(QDialogButtonBox::Ok);
-  connect(buttons, &QDialogButtonBox::accepted, this, &QDialog::accept);
-  connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
-  connect(m_name, &QLineEdit::textChanged, this, &FormulaNodeDlg::validate);
+  connect(m_name, &QLineEdit::textChanged, this, &FormulaNodeEditor::validate);
 
   m_live.setInterval(1000);
-  connect(&m_live, &QTimer::timeout, this, &FormulaNodeDlg::updateResults);
+  connect(&m_live, &QTimer::timeout, this, &FormulaNodeEditor::updateResults);
   m_live.start();
-  resize(640, 480);
 }
 
-void FormulaNodeDlg::setChoices(const QList<Choice> &choices)
+void FormulaNodeEditor::setChoices(const QList<Choice> &choices)
 {
   m_sources->setSources(choices);
 }
 
-void FormulaNodeDlg::setCurrent(std::function<std::optional<Reading>(const ValueRef &)> current)
+void FormulaNodeEditor::setCurrent(std::function<std::optional<Reading>(const ValueRef &)> current)
 {
   m_current = std::move(current);
   updateResults();
 }
 
-void FormulaNodeDlg::setLoopCheck(std::function<bool(const QList<ValueRef> &)> makesLoop)
+void FormulaNodeEditor::setLoopCheck(std::function<bool(const QList<ValueRef> &)> makesLoop)
 {
   m_makesLoop = std::move(makesLoop);
   // one that would close a loop is greyed out in the list
@@ -132,7 +125,7 @@ void FormulaNodeDlg::setLoopCheck(std::function<bool(const QList<ValueRef> &)> m
   validate();
 }
 
-void FormulaNodeDlg::load(const QString &name, const FormulaNode &node)
+void FormulaNodeEditor::load(const QString &name, const FormulaNode &node)
 {
   m_name->setText(name);
   m_on = node.isOn();
@@ -157,12 +150,12 @@ void FormulaNodeDlg::load(const QString &name, const FormulaNode &node)
   updateResults();
 }
 
-QString FormulaNodeDlg::name() const
+QString FormulaNodeEditor::name() const
 {
   return m_name->text().simplified();
 }
 
-QList<ValueRef> FormulaNodeDlg::inputs() const
+QList<ValueRef> FormulaNodeEditor::inputs() const
 {
   QList<ValueRef> out;
   for (const QString &source : m_sources->inputs())
@@ -170,7 +163,7 @@ QList<ValueRef> FormulaNodeDlg::inputs() const
   return out;
 }
 
-QList<FormulaNode::Formula> FormulaNodeDlg::formulas() const
+QList<FormulaNode::Formula> FormulaNodeEditor::formulas() const
 {
   QList<FormulaNode::Formula> out;
   for (const OutputRow &row : m_outputs)
@@ -179,7 +172,7 @@ QList<FormulaNode::Formula> FormulaNodeDlg::formulas() const
   return out;
 }
 
-std::unique_ptr<FormulaNode> FormulaNodeDlg::node() const
+std::unique_ptr<FormulaNode> FormulaNodeEditor::node() const
 {
   auto node = std::make_unique<FormulaNode>();
   node->setInputs(inputs());
@@ -191,7 +184,7 @@ std::unique_ptr<FormulaNode> FormulaNodeDlg::node() const
   return node;
 }
 
-void FormulaNodeDlg::addOutput(const FormulaNode::Formula &formula, bool unitChosen)
+void FormulaNodeEditor::addOutput(const FormulaNode::Formula &formula, bool unitChosen)
 {
   if (m_outputs.size() >= kMaxValues)
     return;
@@ -243,7 +236,7 @@ void FormulaNodeDlg::addOutput(const FormulaNode::Formula &formula, bool unitCho
       }
     updateResults();
   });
-  connect(row.name, &QLineEdit::textChanged, this, &FormulaNodeDlg::validate);
+  connect(row.name, &QLineEdit::textChanged, this, &FormulaNodeEditor::validate);
   connect(row.remove, &QToolButton::clicked, this, [this, remove = row.remove]
   {
     for (int i = 0; i < m_outputs.size(); ++i)
@@ -256,7 +249,7 @@ void FormulaNodeDlg::addOutput(const FormulaNode::Formula &formula, bool unitCho
   relayout();
 }
 
-void FormulaNodeDlg::removeOutput(int index)
+void FormulaNodeEditor::removeOutput(int index)
 {
   if (index < 0 || index >= m_outputs.size() || m_outputs.size() <= 1)
     return;
@@ -278,7 +271,7 @@ void FormulaNodeDlg::removeOutput(int index)
   updateResults();
 }
 
-void FormulaNodeDlg::followInputs(const QList<int> &from)
+void FormulaNodeEditor::followInputs(const QList<int> &from)
 {
   // the formulas follow the inputs' new places: through names of their own,
   // so v1 -> v2 and v2 -> v1 do not meet; an input gone keeps its name (an
@@ -304,7 +297,7 @@ void FormulaNodeDlg::followInputs(const QList<int> &from)
   updateResults();
 }
 
-void FormulaNodeDlg::relayout()
+void FormulaNodeEditor::relayout()
 {
   for (int i = 0; i < m_outputs.size(); ++i)
   {
@@ -321,7 +314,7 @@ void FormulaNodeDlg::relayout()
   m_addOutput->setEnabled(m_outputs.size() < kMaxValues);
 }
 
-QMap<QString, QString> FormulaNodeDlg::units() const
+QMap<QString, QString> FormulaNodeEditor::units() const
 {
   QMap<QString, QString> out;
   const QStringList in = m_sources->inputs();
@@ -341,7 +334,7 @@ QMap<QString, QString> FormulaNodeDlg::units() const
   return out;
 }
 
-void FormulaNodeDlg::propose(int output)
+void FormulaNodeEditor::propose(int output)
 {
   if (output < 0 || output >= m_outputs.size() || m_outputs[output].unitChosen)
     return;
@@ -359,7 +352,7 @@ void FormulaNodeDlg::propose(int output)
     propose(j);
 }
 
-void FormulaNodeDlg::validate()
+void FormulaNodeEditor::validate()
 {
   QStringList problems;
   if (name().isEmpty())
@@ -381,11 +374,10 @@ void FormulaNodeDlg::validate()
   if (m_makesLoop && m_makesLoop(inputs()))
     problems << tr("An input takes the values of this calculated value, directly or through others: a loop.");
   m_status->setText(problems.join("<br>"));
-  if (m_ok)
-    m_ok->setEnabled(problems.isEmpty());
+  setValid(problems.isEmpty());
 }
 
-void FormulaNodeDlg::updateResults()
+void FormulaNodeEditor::updateResults()
 {
   if (m_outputs.isEmpty())
     return;
@@ -417,4 +409,16 @@ void FormulaNodeDlg::updateResults()
     const QString number = QLocale().toString(scaled, 'g', 5);
     m_outputs[i].result->setText(QString("= %1 %2").arg(number, SiPrefix::displayText(prefix + unit.baseUnit)).trimmed());
   }
+}
+
+std::unique_ptr<LogicNode> FormulaNodeEditor::logicNode() const
+{
+  return node();
+}
+
+FormulaNodeDlg::FormulaNodeDlg(QWidget *parent) :
+  NodeDlg(new FormulaNodeEditor, tr("Calculated value"), parent)
+{
+  setObjectName("ui_formulaNodeDlg");
+  resize(640, 480);
 }
