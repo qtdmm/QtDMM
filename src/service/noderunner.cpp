@@ -192,9 +192,9 @@ void NodeRunner::showWaiting()
     else if (from->linkState() != MeterConnection::LinkState::Connected)
     {
       // a meter's reason is long (its port, the system's error, a hint):
-      // in its own panel and log; here its state in a word. A node's is the
-      // chain of what it waits for.
-      const QString why = from->isNode() ? from->errorString() : from->shortState();
+      // in its own panel and log; here its state in a word. A node's is
+      // its own chain: in its bar's tooltip, here just its name.
+      const QString why = from->isNode() ? QString() : from->shortState();
       waiting << (why.isEmpty() ? inputName(ref) : tr("%1: %2").arg(inputName(ref), why));
     }
   }

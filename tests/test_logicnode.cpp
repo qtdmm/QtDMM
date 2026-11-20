@@ -517,7 +517,8 @@ int main(int argc, char **argv)
       check(last.msecs > 0 && !last.hold, "HOLD again: computing, no HOLD");
     }
 
-    // an input open but waiting itself: said with its reason, not just "connecting"
+    // an input open but waiting itself: said by its name, not just "connecting";
+    // its own reason stays with it (the display would cut a whole chain)
     auto waits = std::make_unique<Twice>();
     waits->setInputs(refs({ "device:gone" }));
     session.openNode("w2", "Waits", std::move(waits), &error);
@@ -526,7 +527,7 @@ int main(int argc, char **argv)
     chained->setName("Chained");
     MeterController *e2 = session.openNode("e2", "Chained", std::move(chained), &error);
     check(e2 && e2->linkState() == MeterConnection::LinkState::Timeout && e2->errorString().contains("device:w2")
-            && e2->errorString().contains("device:gone"),
+            && !e2->errorString().contains("device:gone"),
           "waiting for an input that waits: " + (e2 ? e2->errorString() : error));
   }
 
