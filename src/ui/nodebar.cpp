@@ -84,9 +84,16 @@ void NodeBar::setController(MeterController *ctl)
       b->setText(c.text);
       b->setToolButtonStyle(Qt::ToolButtonTextOnly);
       b->setCheckable(c.kind == LogicNode::Control::Kind::Switch);
-      // a switch (HOLD) in the colour of a meter's HOLD: darker while on
-      if (b->isCheckable())
-        b->setStyleSheet(ControlBar::keyColour(ControlBar::holdColour(), Qt::white));
+      // all keys alike and neutral; a switch (HOLD) while on in the blue of
+      // a meter's HOLD, pressed in - off must not look lit
+      const QColor on = ControlBar::holdColour();
+      b->setStyleSheet(QString("QToolButton { background: palette(button); color: palette(button-text);"
+                               " border: 1px solid palette(mid); border-radius: 3px; padding: 2px 6px; }"
+                               " QToolButton:hover { border-color: palette(highlight); }"
+                               " QToolButton:pressed { background: palette(mid); }"
+                               " QToolButton:checked { background: %1; color: white; border: 1px solid %2;"
+                               " border-top-color: %3; padding: 3px 6px 1px 6px; }")
+                         .arg(on.name(), on.darker(150).name(), on.darker(220).name()));
       connect(b, &QToolButton::clicked, this, [this, id = c.id]
       {
         if (NodeRunner *r = NodeRunner::of(m_ctl))
