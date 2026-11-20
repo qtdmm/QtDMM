@@ -37,6 +37,10 @@ NAMES = [
     "view-sidetree",
     # the toolbar (26.2): export/import, clear the graph, reset min/max
     "document-export", "document-import", "draw-eraser", "edit-clear-history",
+    # the keyboard settings page
+    "input-keyboard",
+    # the project list: folders and file types
+    "application-pdf", "folder", "image-x-generic", "text-csv", "text-x-generic", "x-office-spreadsheet",
 ]
 # Oxygen has these under another name (chosen by eye, paket_26_2 §1a)
 OXYGEN_ALIAS = {
