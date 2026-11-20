@@ -15,7 +15,8 @@ HidHoltekDevice::HidHoltekDevice(const DmmDecoder::DMMInfo & /*info*/, const QSt
   {
     m_openError = tr("%1 is gone, and several sensors with its USB ids are plugged in: choose the port in the "
                      "device settings.").arg(pathForEntry(device));
-    qWarning() << "HID:" << m_openError;
+    // said by the connection's state, once; not at each retry
+    qCDebug(lcHid) << m_openError;
     return;
   }
   const QString path = where.path;
@@ -29,7 +30,8 @@ HidHoltekDevice::HidHoltekDevice(const DmmDecoder::DMMInfo & /*info*/, const QSt
     m_openError += tr("\nNo permission? The sensor needs a udev rule for USB ID %1:%2.")
                        .arg(VendorId, 4, 16, QLatin1Char('0')).arg(ProductId, 4, 16, QLatin1Char('0'));
 #endif
-    qWarning() << "HID:" << m_openError;
+    // said by the connection's state, once; not at each retry
+    qCDebug(lcHid) << m_openError;
     return;
   }
   qCDebug(lcHid) << "opened" << path << "(Holtek sensor)";
@@ -40,7 +42,8 @@ HidHoltekDevice::HidHoltekDevice(const DmmDecoder::DMMInfo & /*info*/, const QSt
   if (hid_send_feature_report(m_handle, init, sizeof(init)) < 0)
   {
     m_openError = tr("Cannot initialise the sensor: %1").arg(QString::fromWCharArray(hid_error(m_handle)));
-    qWarning() << "HID:" << m_openError;
+    // said by the connection's state, once; not at each retry
+    qCDebug(lcHid) << m_openError;
     hid_close(m_handle);
     m_handle = nullptr;
     return;

@@ -194,6 +194,8 @@ QStringList MeterConnection::keys() const
 bool MeterConnection::open(bool waitForDevice)
 {
   m_wanted = true;
+  // asked anew: its problem said again
+  m_openError.clear();
   if (openPort())
     return true;
   if (!waitForDevice || m_reconnectSeconds <= 0)
@@ -210,6 +212,16 @@ bool MeterConnection::open(bool waitForDevice)
   return false;
 }
 
+void MeterConnection::openFailed()
+{
+  // a retry that fails as the one before says nothing new: the state still
+  // says it, the log has it once
+  if (m_error == m_openError)
+    return;
+  m_openError = m_error;
+  Q_EMIT error(m_error);
+}
+
 bool MeterConnection::openPort()
 {
   if (!m_portHandler->create(m_dmmInfo, m_portType, m_device))
@@ -217,7 +229,7 @@ bool MeterConnection::openPort()
     const bool bluetooth = m_portType == Transport::PortType::Ble || m_portType == Transport::PortType::BleGatt;
     m_error = bluetooth ? tr("This QtDMM was built without Bluetooth support.")
                         : tr("Error creating port %1.").arg(deviceName());
-    Q_EMIT error(m_error);
+    openFailed();
     return false;
   }
 
@@ -229,7 +241,7 @@ bool MeterConnection::openPort()
     {
       // the address or key is malformed, the server refused; the device says why
       m_error = m_portHandler->port()->errorString();
-      Q_EMIT error(m_error);
+      openFailed();
       m_portHandler->close();
       return false;
     }
@@ -237,7 +249,9 @@ bool MeterConnection::openPort()
     {
       case QSerialPort::PermissionError:
         m_error = permissionHint();
-        QMessageBox::critical(nullptr, tr("Missing Permission"), m_error);
+        // once, not again at each retry
+        if (m_error != m_openError)
+          QMessageBox::critical(nullptr, tr("Missing Permission"), m_error);
         break;
       case QSerialPort::DeviceNotFoundError:
         m_error = tr("No such device %1.").arg(deviceName());
@@ -246,7 +260,7 @@ bool MeterConnection::openPort()
         m_error = tr("Error opening %1.\nDMM connected and switched on?").arg(deviceName());
         break;
     }
-    Q_EMIT error(m_error);
+    openFailed();
     m_portHandler->close();
     return false;
   }
@@ -256,7 +270,7 @@ bool MeterConnection::openPort()
     if (!m_portHandler->init())
     {
       m_error = tr("Error configuring serial port %1.").arg(deviceName());
-      Q_EMIT error(m_error);
+      openFailed();
       m_portHandler->close();
       return false;
     }
@@ -296,6 +310,7 @@ bool MeterConnection::openPort()
         portLost(serial, serial->errorString());
     });
 
+  m_openError.clear();
   m_readerThread->setHandle(port);
   m_lastFrame.start();
   m_secondsInError = 0;
@@ -442,8 +457,15 @@ void MeterConnection::timerEvent(QTimerEvent *)
     if (m_reconnectSeconds > 0 && m_secondsInError >= m_reconnectSeconds)
     {
       m_secondsInError = 0;
+      // openPort() leaves its reason in m_error: the state's message before
+      // it, to tell a retry that fails as before (nothing new to say)
+      const QString before = m_error;
       if (!openPort())
-        setState(LinkState::Error, m_error + "\n" + tr("Retrying every %1 s.").arg(m_reconnectSeconds));
+      {
+        const QString text = m_error + "\n" + tr("Retrying every %1 s.").arg(m_reconnectSeconds);
+        m_error = before;
+        setState(LinkState::Error, text);
+      }
     }
     return;
   }

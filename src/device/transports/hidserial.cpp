@@ -173,7 +173,8 @@ HIDSerialDevice::HIDSerialDevice(const DmmDecoder::DMMInfo &info, QString device
   {
     m_openError = tr("%1 is gone, and several cables with its USB ids are plugged in: choose the port in the "
                      "device settings.").arg(pathForEntry(device));
-    qWarning() << "HID:" << m_openError;
+    // said by the connection's state, once; not at each retry
+    qCDebug(lcHid) << m_openError;
     return;
   }
   const QString path = where.path;
@@ -196,7 +197,8 @@ HIDSerialDevice::HIDSerialDevice(const DmmDecoder::DMMInfo &info, QString device
 #ifdef Q_OS_LINUX
     m_openError += tr("\nCable plugged in? No permission? The cable needs the udev rule of QtDMM.");
 #endif
-    qWarning() << "HID:" << m_openError;
+    // said by the connection's state, once; not at each retry
+    qCDebug(lcHid) << m_openError;
     return;
   }
   qCDebug(lcHid) << "opened" << path

@@ -145,6 +145,21 @@ int main(int argc, char **argv)
   check(!bad.open(), "open() fails for an address without port");
   check(bad.errorString().contains("host:port"), "malformed address text: " + bad.errorString());
 
+  // --- 6b. waited for, retried: its problem said once, not at each retry ---
+  {
+    MeterConnection waiting(nullptr);
+    waiting.setDmmInfo(info);
+    waiting.setFormat(FrameFormat::Sigrok);
+    waiting.setReconnectInterval(1);
+    waiting.setDevice("RFC2217 nonsense");
+    int errors = 0;
+    QObject::connect(&waiting, &MeterConnection::error, [&errors] { ++errors; });
+    check(!waiting.open(true), "waited for: not open yet");
+    waitFor([] { return false; }, 2600);
+    check(errors == 2, QString("retried twice: the open error once, the state once, %1 errors").arg(errors));
+    waiting.close();
+  }
+
   // --- 7. polled, variable-length protocol (Fluke QM) end to end ---
   // The reader must send the decoder's poll request and cut the answer -
   // CMD_ACK line plus reading line, arriving in pieces - into one frame.
