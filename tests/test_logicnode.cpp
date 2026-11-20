@@ -176,6 +176,16 @@ int main(int argc, char **argv)
   powers.clear();
   check(waitFor([&] { return !powers.isEmpty() && powers.last().quality == Quality::Valid; }, 3000), "a value again");
   check(p->linkState() == MeterConnection::LinkState::Connected, "running again");
+  // R20-06: another device opened and closed: no input of it, it keeps running
+  {
+    int states = 0;
+    const QMetaObject::Connection counting = QObject::connect(p, &MeterController::linkStateChanged, [&states] { ++states; });
+    session.openNode("other", "Other", std::make_unique<Counter>(40), &error);
+    session.close("other");
+    QObject::disconnect(counting);
+    check(states == 0 && p->linkState() == MeterConnection::LinkState::Connected,
+          QString("another device opened and closed: still running, %1 state changes").arg(states));
+  }
 
   // 7. off is the bypass: the product gives nothing, a filter its input
   NodeRunner::of(p)->setOn(false);

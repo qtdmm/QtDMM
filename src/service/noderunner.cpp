@@ -53,8 +53,16 @@ NodeRunner::NodeRunner(DeviceSession *session, MeterController *ctl, std::unique
   m_clock.setTimerType(Qt::PreciseTimer);
   connect(&m_clock, &QTimer::timeout, this, [this] { compute(Sample::now(), QDateTime::currentMSecsSinceEpoch()); });
   // sources come and go: an input opened later is taken then
-  connect(m_session, &DeviceSession::opened, this, [this] { if (m_running) bind(); });
-  connect(m_session, &DeviceSession::closed, this, [this] { if (m_running) bind(); });
+  connect(m_session, &DeviceSession::opened, this, [this](const MeterController *ctl)
+  {
+    if (m_running && ctl && takes(ctl->source()))
+      bind();
+  });
+  connect(m_session, &DeviceSession::closed, this, [this](const QString &source)
+  {
+    if (m_running && takes(source))
+      bind();
+  });
   connect(m_ctl, &MeterController::linkStateChanged, this, &NodeRunner::follow);
   follow();
 }
@@ -180,8 +188,16 @@ void NodeRunner::showWaiting()
     m_ctl->setNodeState(MeterConnection::LinkState::Timeout, tr("Input not open: %1").arg(missing.join(", ")));
   else if (!waiting.isEmpty())
     m_ctl->setNodeState(MeterConnection::LinkState::Timeout, tr("Waiting for %1").arg(waiting.join("; ")));
-  else
+  else if (m_ctl->linkState() != MeterConnection::LinkState::Connected)
     m_ctl->setNodeState(MeterConnection::LinkState::Connecting);
+}
+
+bool NodeRunner::takes(const QString &source) const
+{
+  for (const ValueRef &ref : m_node->inputs())
+    if (ref.source == source)
+      return true;
+  return false;
 }
 
 void NodeRunner::onReading(int input, const Reading &r)
