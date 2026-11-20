@@ -40,7 +40,7 @@ public:
     QStringList values;   ///< what each value is ("Voltage DC (V)")
     QStringList units;    ///< their base units when known
     bool        connected = true;
-    bool        node = false;   ///< a logic node (QtDMM's picture)
+    QString     icon;     ///< its symbol (a logic node's kind); empty: a meter's
   };
 
   explicit SourceList(Mode mode, QWidget *parent = nullptr);

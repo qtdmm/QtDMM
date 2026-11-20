@@ -119,15 +119,15 @@ void SourceList::fill()
   QList<Source> all = m_sources;
   for (const QString &in : std::as_const(m_inputs))
     if (!known.contains(in))
-      all << Source { in, tr("%1 (not in My devices)").arg(in), {}, {}, false, false };
+      all << Source { in, tr("%1 (not in My devices)").arg(in), {}, {}, false, {} };
   if (m_mode == Value && !m_value.source.isEmpty() && !known.contains(m_value.source))
-    all << Source { m_value.source, tr("%1 (not in My devices)").arg(m_value.source), {}, {}, false, false };
+    all << Source { m_value.source, tr("%1 (not in My devices)").arg(m_value.source), {}, {}, false, {} };
   for (const Source &s : std::as_const(all))
   {
     auto *top = new QTreeWidgetItem(m_tree);
     top->setText(0, s.connected ? s.name : tr("%1 (not connected)").arg(s.name));
     top->setData(0, kSource, s.source);
-    top->setIcon(0, QIcon::fromTheme(s.node ? "code-function" : "qtdmm-display"));
+    top->setIcon(0, QIcon::fromTheme(s.icon.isEmpty() ? QStringLiteral("qtdmm-display") : s.icon));
     if (!s.connected)
       top->setForeground(0, grey);
     const QString blocked = m_blocked ? m_blocked(s.source) : QString();
