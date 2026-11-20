@@ -137,7 +137,7 @@ AddDeviceDlg::AddDeviceDlg(DeviceLibrary *library, QWidget *parent)
     button->setObjectName(QString("ui_connection%1").arg(int(kind.id)));
     const Connection id = kind.id;
     connect(button, &QToolButton::clicked, this, [this, id] { chooseConnection(id); });
-    tiles->addWidget(button, column / 3, column % 3);
+    tiles->addWidget(button, 1 + column / 3, 1 + column % 3);   // centred: stretch around
     ++column;
     if (id == Bluetooth)
     {
@@ -153,8 +153,10 @@ AddDeviceDlg::AddDeviceDlg(DeviceLibrary *library, QWidget *parent)
   auto *adapter = new QBluetoothLocalDevice(this);
   connect(adapter, &QBluetoothLocalDevice::hostModeStateChanged, this, &AddDeviceDlg::updateBluetoothTile);
 #endif
-  tiles->setRowStretch(2, 1);
-  tiles->setColumnStretch(3, 1);
+  tiles->setRowStretch(0, 1);
+  tiles->setRowStretch(3, 1);
+  tiles->setColumnStretch(0, 1);
+  tiles->setColumnStretch(4, 1);
   m_pages->addWidget(connections);
 
   // page 2: the search for the chosen connection, every port found, and
