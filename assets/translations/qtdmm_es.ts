@@ -38,327 +38,333 @@
         <translation>Añadir dispositivo</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="113"/>
-        <source>&amp;Device</source>
-        <translation>&amp;Dispositivo</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="114"/>
-        <source>Calculated / &amp;generator</source>
-        <translation>Calculado / &amp;generador</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="116"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="120"/>
         <source>&amp;Cable</source>
         <translation>&amp;Cable</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="116"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="120"/>
         <source>UT61E, UT803, TFA ...</source>
         <translation>UT61E, UT803, TFA ...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="117"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="121"/>
         <source>A meter on a USB cable, a USB-serial adapter or a serial port</source>
         <translation>Un multímetro en un cable USB, un adaptador USB-serie o un puerto serie</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="118"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="122"/>
         <source>UT60BT, Victron</source>
         <translation>UT60BT, Victron</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="118"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="122"/>
         <source>Bl&amp;uetooth</source>
         <translation>Bl&amp;uetooth</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="119"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="123"/>
         <source>A meter or a Victron device over Bluetooth LE</source>
         <translation>Un multímetro o un dispositivo Victron por Bluetooth LE</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="120"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="124"/>
         <source>qtdmm-bridge</source>
         <translation>qtdmm-bridge</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="120"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="124"/>
         <source>Net&amp;work</source>
         <translation>&amp;Red</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="121"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="125"/>
         <source>A meter at another computer, through qtdmm-bridge or another RFC 2217 server</source>
         <translation>Un multímetro en otro ordenador, a través de qtdmm-bridge u otro servidor RFC 2217</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="122"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="126"/>
         <source>sig&amp;rok</source>
         <translation>sigr&amp;ok</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="122"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="126"/>
         <source>Bench meters</source>
         <translation>Equipos de banco</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="123"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="127"/>
         <source>A bench meter read through sigrok-cli</source>
         <translation>Un multímetro de banco leído con sigrok-cli</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="126"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="130"/>
         <source>C&amp;alculated</source>
         <translation>Ca&amp;lculado</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="126"/>
-        <source>Formula over values</source>
-        <translation>Fórmula sobre valores</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="127"/>
-        <source>Values calculated from those of your devices, e.g. power from voltage and current</source>
-        <translation>Valores calculados a partir de los de tus dispositivos, p. ej. potencia a partir de tensión y corriente</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="128"/>
-        <source>&amp;Integral</source>
-        <translation>&amp;Integral</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="128"/>
-        <source>Energy, charge</source>
-        <translation>Energía, carga</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="129"/>
-        <source>A value summed up over time, e.g. the energy in Wh from a power in W</source>
-        <translation>Un valor sumado en el tiempo, p. ej. la energía en Wh a partir de una potencia en W</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="181"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="169"/>
         <source>Search a&amp;gain</source>
         <translation>Buscar de &amp;nuevo</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="200"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="188"/>
         <source>How to &amp;fix...</source>
         <translation>Cómo s&amp;olucionar...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="211"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="199"/>
         <source>How to fix</source>
         <translation>Cómo solucionar</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="219"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="207"/>
         <source>Po&amp;rt:</source>
         <translation>&amp;Puerto:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="249"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="237"/>
         <source>The name in My devices</source>
         <translation>El nombre en Mis dispositivos</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="250"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="238"/>
         <source>Na&amp;me:</source>
         <translation>No&amp;mbre:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="384"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="449"/>
         <source>Simulated</source>
         <translation>Simulado</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="396"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="461"/>
         <source>Calculated</source>
         <translation>Calculado</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="447"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="511"/>
         <source>Bluetooth cannot be used: %1</source>
         <translation>No se puede usar Bluetooth: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="570"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="634"/>
         <source>Listening to the meter: its first reading tells which model it is ...</source>
         <translation>Escuchando el multímetro: su primera lectura dice qué modelo es ...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="578"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="642"/>
         <source>No reading came, so the model is not known: choose it on the next page.</source>
         <translation>No llegó ninguna lectura, el modelo no se conoce: elíjalo en la página siguiente.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="589"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="653"/>
         <source>Its first reading says: %1.</source>
         <translation>Su primera lectura dice: %1.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="589"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="653"/>
         <source> or </source>
         <translation> o </translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="653"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="717"/>
         <source>The search failed (%1). Or type the address.</source>
         <translation>La búsqueda ha fallado (%1). O escriba la dirección.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="793"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="915"/>
         <source>What is to be calculated?</source>
         <translation>¿Qué se va a calcular?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="797"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="918"/>
         <source>Connect it now?</source>
         <translation>¿Conectarlo ahora?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="799"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="920"/>
         <source>Which values to simulate?</source>
         <translation>¿Qué valores simular?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="800"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="921"/>
         <source>Which value to integrate?</source>
         <translation>¿Qué valor integrar?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="801"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="922"/>
         <source>What to calculate?</source>
         <translation>¿Qué calcular?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="829"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="953"/>
         <source>Simulated meter</source>
         <translation>Dispositivo simulado</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="308"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="365"/>
         <source>&lt; &amp;Back</source>
         <translation>&lt; &amp;Atrás</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="124"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="105"/>
+        <source>Search</source>
+        <translation>Buscar</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="128"/>
         <source>&amp;Simulated</source>
         <translation>&amp;Simulado</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="124"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="128"/>
         <source>To try out, test signals</source>
         <translation>Para probar, señales de prueba</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="125"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="129"/>
         <source>Simulated values to try QtDMM without a meter: sine, square, noise or a formula over time</source>
         <translation>Valores simulados para probar QtDMM sin multímetro: seno, cuadrada, ruido o una fórmula en el tiempo</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="284"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="130"/>
+        <source>Formula, integral ...</source>
+        <translation>Fórmula, integral …</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="131"/>
+        <source>Values calculated from those of your devices: a formula, an integral ...</source>
+        <translation>Valores calculados a partir de los de tus dispositivos: una fórmula, una integral …</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="272"/>
         <source>&amp;Connect</source>
         <translation>&amp;Conectar</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="284"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="272"/>
         <source>into My devices and connect at once</source>
         <translation>en Mis aparatos y conectar ya</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="285"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="273"/>
         <source>Keeps it in My devices and reads it at once: with a front panel, recorded, in formulas and over SCPI</source>
         <translation>Lo guarda en Mis aparatos y lo lee ya: con panel frontal, grabado, en fórmulas y por SCPI</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="289"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="277"/>
         <source>&amp;Save only</source>
         <translation>&amp;Solo guardar</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="289"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="277"/>
         <source>into My devices, without connecting</source>
         <translation>en Mis aparatos, sin conectar</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="290"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="278"/>
         <source>Keeps it in My devices; Connect in its context menu reads it later</source>
         <translation>Lo guarda en Mis aparatos; Conectar en su menú contextual lo lee más tarde</translation>
     </message>
     <message>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="308"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="314"/>
+        <source>Calculate</source>
+        <translation>Calcular</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="308"/>
+        <source>Formula</source>
+        <translation>Fórmula</translation>
+    </message>
+    <message>
         <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="309"/>
+        <source>&lt;p&gt;Computes up to four values from the readings of your devices with formulas of your own: a power from a voltage and a current, a resistance, a dew point.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Inputs:&lt;/b&gt; one or more devices, each with all its values (&lt;tt&gt;v1&lt;/tt&gt;, &lt;tt&gt;v1.2&lt;/tt&gt; ...).&lt;/p&gt;&lt;p&gt;&lt;b&gt;Example:&lt;/b&gt; &lt;tt&gt;v1 * v2&lt;/tt&gt; in W - a supply&apos;s voltage times a load&apos;s current is the power the load takes.&lt;/p&gt;</source>
+        <translation>&lt;p&gt;Calcula hasta cuatro valores a partir de las lecturas de tus dispositivos con fórmulas propias: una potencia a partir de una tensión y una corriente, una resistencia, un punto de rocío.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Entradas:&lt;/b&gt; uno o varios dispositivos, cada uno con todos sus valores (&lt;tt&gt;v1&lt;/tt&gt;, &lt;tt&gt;v1.2&lt;/tt&gt; …).&lt;/p&gt;&lt;p&gt;&lt;b&gt;Ejemplo:&lt;/b&gt; &lt;tt&gt;v1 * v2&lt;/tt&gt; en W: la tensión de una fuente por la corriente de una carga es la potencia que toma la carga.&lt;/p&gt;</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="314"/>
+        <source>Integral</source>
+        <translation>Integral</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="315"/>
+        <source>&lt;p&gt;Sums one value up over time, from a start you choose: when a recording starts, when the value rises above a threshold, or by hand.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Input:&lt;/b&gt; one value of one device.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Example:&lt;/b&gt; a load&apos;s power in W gives the energy it took in Wh, a battery&apos;s current in A the charge in Ah.&lt;/p&gt;</source>
+        <translation>&lt;p&gt;Suma un valor a lo largo del tiempo, desde un inicio que eliges: al empezar una grabación, cuando el valor sube por encima de un umbral, o a mano.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Entrada:&lt;/b&gt; un valor de un dispositivo.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Ejemplo:&lt;/b&gt; la potencia de una carga en W da la energía que tomó en Wh, la corriente de una batería en A la carga en Ah.&lt;/p&gt;</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="366"/>
         <source>&amp;Next &gt;</source>
         <translation>Si&amp;guiente &gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="421"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="485"/>
         <source>Bluetooth address, e.g. AA:BB:CC:DD:EE:FF</source>
         <translation>Dirección Bluetooth, p. ej. AA:BB:CC:DD:EE:FF</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="422"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="486"/>
         <source>host:port, e.g. 192.168.1.20:4711</source>
         <translation>equipo:puerto, p. ej. 192.168.1.20:4711</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="423"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="487"/>
         <source>e.g. /dev/ttyUSB0 or COM3</source>
         <translation>p. ej. /dev/ttyUSB0 o COM3</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="517"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="581"/>
         <source>Already in My devices: %1</source>
         <translation>Ya en Mis dispositivos: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="646"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="710"/>
         <source>This is &quot;%1&quot; of My devices: the next page changes it, no second entry.</source>
         <translation>Es «%1» de Mis dispositivos: la página siguiente lo modifica, sin una segunda entrada.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="651"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="715"/>
         <source>Searching ...</source>
         <translation>Buscando ...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="656"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="720"/>
         <source>Nothing found. Is the meter&apos;s Bluetooth on and no other program connected to it? Or type its address.</source>
         <translation>No se encontró nada. ¿Está activado el Bluetooth del multímetro y ningún otro programa conectado a él? O escriba su dirección.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="659"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="723"/>
         <source>No bridge found. Is qtdmm-bridge running with --mdns in this network? Or type host:port of the bridge or another RFC 2217 server.</source>
         <translation>No se encontró ningún puente. ¿Está qtdmm-bridge ejecutándose con --mdns en esta red? O escriba equipo:puerto del puente o de otro servidor RFC 2217.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="661"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="725"/>
         <source>Nothing found. Is the meter switched on and its cable plugged in? Or type the port.</source>
         <translation>No se encontró nada. ¿Está encendido el multímetro y conectado su cable? O escriba el puerto.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="663"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="727"/>
         <source>Choose where the meter is, or type the port.</source>
         <translation>Elija dónde está el multímetro o escriba el puerto.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="793"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="913"/>
         <source>How is the meter connected?</source>
         <translation>¿Cómo está conectado el multímetro?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="795"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="916"/>
         <source>Where is it connected?</source>
         <translation>¿Dónde está conectado?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="796"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="917"/>
         <source>Which meter is it?</source>
         <translation>¿Qué multímetro es?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="828"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="952"/>
         <source>Meter</source>
         <translation>Multímetro</translation>
     </message>

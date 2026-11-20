@@ -65,28 +65,75 @@ int main(int argc, char **argv)
     dlg.back();
     check(dlg.page() == AddDeviceDlg::ConnectionPage, "back to page 1");
 
-    // simulated, calculated and integral values: logic nodes on the second
-    // tab of page 1, their settings on the node page, then page 4
-    check(dlg.kindTabs()->count() == 2 && dlg.kindTabs()->currentIndex() == 0, "page 1: two tabs, a device first");
-    check(dlg.kindTabs()->widget(1)->findChild<QToolButton *>("ui_connection" + QString::number(AddDeviceDlg::Integral))
-            && dlg.kindTabs()->widget(0)->findChild<QToolButton *>("ui_connection" + QString::number(AddDeviceDlg::Cable)),
-          "the node tiles on the second tab, the devices' on the first");
+    // page 1: six tiles, Simulated among the devices; Calculated goes on
+    // to the kinds of logic nodes with inputs, their settings on the node
+    // page, then page 4
+    for (AddDeviceDlg::Connection c : { AddDeviceDlg::Cable, AddDeviceDlg::Bluetooth, AddDeviceDlg::Network,
+                                        AddDeviceDlg::Sigrok, AddDeviceDlg::Simulated, AddDeviceDlg::NodeKinds })
+      check(dlg.findChild<QToolButton *>("ui_connection" + QString::number(c)), "page 1 has the tile " + QString::number(c));
+    check(!dlg.findChild<QToolButton *>("ui_connection" + QString::number(AddDeviceDlg::Integral))
+            && !dlg.findChild<QToolButton *>("ui_connection" + QString::number(AddDeviceDlg::Calculated)),
+          "no tile of its own for a formula or an integral");
+    {
+      AddDeviceDlg kinds(&library);
+      kinds.setDiscoverers([](AddDeviceDlg::Connection) { return QList<Discoverer *>(); });
+      auto *search = kinds.findChild<QLineEdit *>("ui_kindSearch");
+      check(search && search->isHidden(), "the search only on the kind page");
+      // with QTDMM_SHOT_DIR set, page 1 and the kind page as pictures
+      const QString shots = qEnvironmentVariable("QTDMM_SHOT_DIR");
+      if (!shots.isEmpty())
+      {
+        kinds.show();
+        QApplication::processEvents();
+        kinds.grab().save(shots + "/add_page1.png");
+      }
+      kinds.findChild<QToolButton *>("ui_connection" + QString::number(AddDeviceDlg::NodeKinds))->click();
+      if (!shots.isEmpty())
+      {
+        QApplication::processEvents();
+        kinds.grab().save(shots + "/add_kinds.png");
+      }
+      check(kinds.page() == AddDeviceDlg::KindPage && !search->isHidden(), "Calculated: the kind page with its search");
+      check(kinds.nodeKinds() == QList<AddDeviceDlg::Connection>({ AddDeviceDlg::Calculated, AddDeviceDlg::Integral }),
+            "the kinds: formula and integral, no generator");
+      check(kinds.markedKind() == AddDeviceDlg::Calculated && kinds.canGoNext(), "the first marked, Next on");
+      check(!kinds.findChild<QLabel *>("ui_kindAbout")->text().isEmpty(), "what it does beside the list");
+      kinds.searchKinds("energy");
+      check(kinds.nodeKinds() == QList<AddDeviceDlg::Connection>({ AddDeviceDlg::Integral })
+              && kinds.markedKind() == AddDeviceDlg::Integral,
+            "the search finds the integral by its text, the mark on it");
+      kinds.searchKinds("nothing like this");
+      check(kinds.nodeKinds().isEmpty() && !kinds.canGoNext(), "nothing found: no Next");
+      kinds.searchKinds(QString());
+      kinds.markKind(AddDeviceDlg::Integral);
+      auto *list = kinds.findChild<QTreeWidget *>("ui_kindList");
+      Q_EMIT list->itemDoubleClicked(list->currentItem(), 0);
+      check(kinds.page() == AddDeviceDlg::NodePage && kinds.connection() == AddDeviceDlg::Integral,
+            "a double click: the integral's settings");
+      kinds.back();
+      check(kinds.page() == AddDeviceDlg::KindPage && kinds.markedKind() == AddDeviceDlg::Integral,
+            "back: the kind page, the integral marked");
+      kinds.back();
+      check(kinds.page() == AddDeviceDlg::ConnectionPage && search->isHidden(), "back: page 1, no search");
+    }
     for (AddDeviceDlg::Connection c : { AddDeviceDlg::Simulated, AddDeviceDlg::Calculated, AddDeviceDlg::Integral })
     {
       AddDeviceDlg node(&library);
       node.setDiscoverers([](AddDeviceDlg::Connection) { return QList<Discoverer *>(); });
       node.chooseConnection(c);
-      check(node.result() != QDialog::Accepted && node.page() == AddDeviceDlg::NodePage && node.nodeEditor()
-              && node.kindTabs()->currentIndex() == 1,
+      check(node.result() != QDialog::Accepted && node.page() == AddDeviceDlg::NodePage && node.nodeEditor(),
             "a node: its settings on the node page");
       check(node.canGoNext() == (c == AddDeviceDlg::Simulated), "Next only when complete (a generator is at once)");
       if (c != AddDeviceDlg::Simulated)
       {
+        // straight to it ("Integrate..."): back to the kinds, it marked
         node.back();
-        check(node.page() == AddDeviceDlg::ConnectionPage && node.kindTabs()->currentIndex() == 1,
-              "back: page 1 on the node tab");
+        check(node.page() == AddDeviceDlg::KindPage && node.markedKind() == c, "back: the kind page, it marked");
         continue;
       }
+      node.back();
+      check(node.page() == AddDeviceDlg::ConnectionPage, "a generator: back to page 1");
+      node.chooseConnection(c);
       node.next();
       check(node.page() == AddDeviceDlg::TargetPage, "Next: page 4");
       check(node.keys().value("DMM/model").toString() == "QtDMM Generator"
