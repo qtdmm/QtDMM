@@ -140,6 +140,39 @@ int main(int argc, char **argv)
   again.load(dlg.name(), *node);
   check(again.node()->toJsonText() == node->toJsonText() && again.name() == "Power", "loaded again: the same");
 
+  // R20-01/02: an input or value gone is no other one moved up into its place
+  {
+    FormulaNodeDlg moves;
+    moves.setChoices(choices);
+    moves.load("Calculated", FormulaNode());
+    auto *movesOk = moves.findChild<QDialogButtonBox *>()->button(QDialogButtonBox::Ok);
+    auto *movesTree = moves.findChild<QTreeWidget *>("ui_sourceTree");
+    auto *f1 = moves.findChild<QLineEdit *>("ui_formula1");
+    check(!movesOk->isEnabled() && moves.findChild<QLabel *>("ui_formulaStatus")->text().contains("Simulated"),
+          "no input: OK off, said what to do");
+    for (int i = 0; i < 3; ++i)
+      movesTree->topLevelItem(i)->setCheckState(0, Qt::Checked);
+    f1->setText("v1 * v2 + v3");
+    movesTree->topLevelItem(0)->setCheckState(0, Qt::Unchecked);
+    check(f1->text() == "removed_v1 * v1 + v2" && !movesOk->isEnabled(),
+          "the first input unticked: not the second in its place, OK off: " + f1->text());
+    f1->setText("v1 * v2");
+    moves.findChild<QPushButton *>("ui_formulaAddOutput")->click();
+    moves.findChild<QPushButton *>("ui_formulaAddOutput")->click();
+    moves.findChild<QLineEdit *>("ui_formula2")->setText("v1 * 2");
+    moves.findChild<QLineEdit *>("ui_formula3")->setText("y1 + y2");
+    check(movesOk->isEnabled(), "three values: OK on");
+    QList<QToolButton *> removes;
+    for (QToolButton *b : moves.findChildren<QToolButton *>())
+      if (b->toolTip() == FormulaNodeEditor::tr("Remove this value"))
+        removes << b;
+    check(!removes.isEmpty(), "value 1 can be removed");
+    if (!removes.isEmpty())
+      removes.first()->click();
+    check(moves.findChild<QLineEdit *>("ui_formula3")->text() == "removed_y1 + y1" && !movesOk->isEnabled(),
+          "value 1 removed: not value 2 in its place, OK off: " + moves.findChild<QLineEdit *>("ui_formula3")->text());
+  }
+
   // the generator's dialog
   {
     GeneratorNodeDlg gen;
