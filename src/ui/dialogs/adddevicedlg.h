@@ -124,6 +124,10 @@ public Q_SLOTS:
   void        back();
   void        next();
 
+protected:
+  /// The search field of the KindPage: up and down move in the list, Enter is Next.
+  bool        eventFilter(QObject *watched, QEvent *event) override;
+
 private:
   QToolButton *tile(const QString &icon, const QString &text, const QString &toolTip);
   void        showPage(Page page);

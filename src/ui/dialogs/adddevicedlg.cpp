@@ -107,6 +107,7 @@ AddDeviceDlg::AddDeviceDlg(DeviceLibrary *library, QWidget *parent)
   m_kindSearch->setMaximumWidth(200);
   m_kindSearch->hide();
   connect(m_kindSearch, &QLineEdit::textChanged, this, &AddDeviceDlg::searchKinds);
+  m_kindSearch->installEventFilter(this);
   titleRow->addWidget(m_kindSearch);
   top->addLayout(titleRow);
   m_pages = new QStackedWidget(this);
@@ -862,6 +863,31 @@ bool AddDeviceDlg::canGoNext() const
   return page() == DevicePage && m_settings->isComplete() && !m_name->text().trimmed().isEmpty();
 }
 
+bool AddDeviceDlg::eventFilter(QObject *watched, QEvent *event)
+{
+  if (watched == m_kindSearch && event->type() == QEvent::KeyPress)
+  {
+    auto *key = static_cast<QKeyEvent *>(event);
+    switch (key->key())
+    {
+      case Qt::Key_Up:
+      case Qt::Key_Down:
+      case Qt::Key_PageUp:
+      case Qt::Key_PageDown:
+        QCoreApplication::sendEvent(m_kindList, event);
+        return true;
+      case Qt::Key_Return:
+      case Qt::Key_Enter:
+        if (m_next->isEnabled())
+          m_next->click();
+        return true;
+      default:
+        break;
+    }
+  }
+  return QDialog::eventFilter(watched, event);
+}
+
 QVariantMap AddDeviceDlg::keys() const
 {
   if (isNode(m_connection) && m_editor)
@@ -934,8 +960,9 @@ void AddDeviceDlg::showPage(Page page)
   if (page == PortPage)
     m_port->setFocus();
   m_kindSearch->setVisible(page == KindPage);
+  // typing filters at once; the arrows move in the list (eventFilter())
   if (page == KindPage)
-    m_kindList->setFocus();
+    m_kindSearch->setFocus();
   updateButtons();
 }
 

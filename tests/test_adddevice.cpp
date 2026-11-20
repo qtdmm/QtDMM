@@ -118,6 +118,28 @@ int main(int argc, char **argv)
       kinds.back();
       check(kinds.page() == AddDeviceDlg::ConnectionPage && search->isHidden(), "back: page 1, no search");
     }
+    // the kind page from the keyboard: typing goes into the search, the
+    // arrows move in the list, Enter goes on
+    {
+      AddDeviceDlg keys(&library);
+      keys.setDiscoverers([](AddDeviceDlg::Connection) { return QList<Discoverer *>(); });
+      keys.show();
+      QApplication::processEvents();
+      keys.findChild<QToolButton *>("ui_connection" + QString::number(AddDeviceDlg::NodeKinds))->click();
+      QApplication::processEvents();
+      auto *search = keys.findChild<QLineEdit *>("ui_kindSearch");
+      check(keys.focusWidget() == search, QString("the focus in the search: %1")
+                                            .arg(keys.focusWidget() ? keys.focusWidget()->objectName() : QString("none")));
+      QKeyEvent down(QEvent::KeyPress, Qt::Key_Down, Qt::NoModifier);
+      QCoreApplication::sendEvent(search, &down);
+      check(keys.markedKind() == AddDeviceDlg::Integral && search->text().isEmpty(), "down in the search: the integral marked");
+      QKeyEvent up(QEvent::KeyPress, Qt::Key_Up, Qt::NoModifier);
+      QCoreApplication::sendEvent(search, &up);
+      check(keys.markedKind() == AddDeviceDlg::Calculated, "up: the formula again");
+      QKeyEvent enter(QEvent::KeyPress, Qt::Key_Return, Qt::NoModifier);
+      QCoreApplication::sendEvent(search, &enter);
+      check(keys.page() == AddDeviceDlg::NodePage && keys.connection() == AddDeviceDlg::Calculated, "Enter: Next, the formula's settings");
+    }
     // one width for all pages: the node pages fit into the first's
     {
       AddDeviceDlg wide(&library);
