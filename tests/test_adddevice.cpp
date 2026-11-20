@@ -104,6 +104,8 @@ int main(int argc, char **argv)
             "the search finds the integral by its text, the mark on it");
       kinds.searchKinds("nothing like this");
       check(kinds.nodeKinds().isEmpty() && !kinds.canGoNext(), "nothing found: no Next");
+      check(kinds.findChild<QLabel *>("ui_kindAbout")->text().contains("nothing like this"),
+            "nothing found: said beside the list: " + kinds.findChild<QLabel *>("ui_kindAbout")->text());
       kinds.searchKinds(QString());
       kinds.markKind(AddDeviceDlg::Integral);
       auto *list = kinds.findChild<QTreeWidget *>("ui_kindList");
@@ -115,6 +117,21 @@ int main(int argc, char **argv)
             "back: the kind page, the integral marked");
       kinds.back();
       check(kinds.page() == AddDeviceDlg::ConnectionPage && search->isHidden(), "back: page 1, no search");
+    }
+    // one width for all pages: the node pages fit into the first's
+    {
+      AddDeviceDlg wide(&library);
+      wide.setDiscoverers([](AddDeviceDlg::Connection) { return QList<Discoverer *>(); });
+      wide.show();
+      QApplication::processEvents();
+      const int width = wide.width();
+      for (AddDeviceDlg::Connection c : { AddDeviceDlg::Simulated, AddDeviceDlg::Calculated, AddDeviceDlg::Integral })
+      {
+        wide.chooseConnection(c);
+        QApplication::processEvents();
+        check(wide.width() == width, QString("the width stays with %1: %2, not %3").arg(int(c)).arg(width).arg(wide.width()));
+        wide.back();
+      }
     }
     for (AddDeviceDlg::Connection c : { AddDeviceDlg::Simulated, AddDeviceDlg::Calculated, AddDeviceDlg::Integral })
     {

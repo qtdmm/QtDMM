@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <title>QtDMM simulated value</title>
+  <defs>
+    <linearGradient id="case" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8a8a8a"/><stop offset="1" stop-color="#3c3c3c"/>
+    </linearGradient>
+    <linearGradient id="screen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1d3b26"/><stop offset="1" stop-color="#0b1a10"/>
+    </linearGradient>
+  </defs>
+  <!-- a small oscilloscope: case, screen with a grid, a green sine -->
+  <rect x="3" y="7" width="42" height="34" rx="4" fill="url(#case)" stroke="#222" stroke-width="1"/>
+  <rect x="7" y="11" width="34" height="26" rx="2" fill="url(#screen)"/>
+  <g stroke="#3f6b4b" stroke-width="0.6">
+    <path d="M7 24h34M24 11v26M15.5 11v26M32.5 11v26M7 17.5h34M7 30.5h34"/>
+  </g>
+  <path d="M9 24 C12 13 16 13 19 24 S26 35 29 24 S36 13 39 21" fill="none" stroke="#5dff7a" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M9 24 C12 13 16 13 19 24 S26 35 29 24 S36 13 39 21" fill="none" stroke="#d8ffe0" stroke-width="0.8" stroke-linecap="round"/>
+  <rect x="5" y="8.5" width="38" height="2" rx="1" fill="#fff" opacity="0.25"/>
+</svg>

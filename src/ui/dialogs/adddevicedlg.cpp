@@ -125,9 +125,9 @@ AddDeviceDlg::AddDeviceDlg(DeviceLibrary *library, QWidget *parent)
       tr("A meter at another computer, through qtdmm-bridge or another RFC 2217 server") },
     { Sigrok,    "qtdmm-sigrok",                 tr("sig&rok") + '\n' + tr("Bench meters"),
       tr("A bench meter read through sigrok-cli") },
-    { Simulated, "code-function",                tr("&Simulated") + '\n' + tr("To try out, test signals"),
+    { Simulated, "qtdmm-simulated",              tr("&Simulated") + '\n' + tr("To try out, test signals"),
       tr("Simulated values to try QtDMM without a meter: sine, square, noise or a formula over time") },
-    { NodeKinds, "code-function",                tr("C&alculated") + '\n' + tr("Formula, integral ..."),
+    { NodeKinds, "qtdmm-calculated",             tr("C&alculated") + '\n' + tr("Formula, integral ..."),
       tr("Values calculated from those of your devices: a formula, an integral ...") },
   };
   int column = 0;
@@ -306,14 +306,14 @@ AddDeviceDlg::AddDeviceDlg(DeviceLibrary *library, QWidget *parent)
   m_kindList->setItemsExpandable(false);
   m_kindList->setIndentation(fontMetrics().height());
   m_kindList->setIconSize(QSize(24, 24));
-  const struct { Connection id; QString group; QString name; QString about; } nodeKinds[] = {
-    { Calculated, tr("Calculate"), tr("Formula"),
+  const struct { Connection id; const char *icon; QString group; QString name; QString about; } nodeKinds[] = {
+    { Calculated, "qtdmm-calculated", tr("Calculate"), tr("Formula"),
       tr("<p>Computes up to four values from the readings of your devices with formulas of your own: "
          "a power from a voltage and a current, a resistance, a dew point.</p>"
          "<p><b>Inputs:</b> one or more devices, each with all its values (<tt>v1</tt>, <tt>v1.2</tt> ...).</p>"
-         "<p><b>Example:</b> <tt>v1 * v2</tt> in W - a supply's voltage times a load's current is the "
+         "<p><b>Example:</b> <tt>v1*v2</tt> in W - a supply's voltage times a load's current is the "
          "power the load takes.</p>") },
-    { Integral, tr("Calculate"), tr("Integral"),
+    { Integral, "qtdmm-integration", tr("Calculate"), tr("Integral"),
       tr("<p>Sums one value up over time, from a start you choose: when a recording starts, when the value "
          "rises above a threshold, or by hand.</p>"
          "<p><b>Input:</b> one value of one device.</p>"
@@ -333,7 +333,7 @@ AddDeviceDlg::AddDeviceDlg(DeviceLibrary *library, QWidget *parent)
       group->setFont(0, font);
     }
     auto *item = new QTreeWidgetItem(group, { kind.name });
-    item->setIcon(0, QIcon::fromTheme("code-function"));
+    item->setIcon(0, QIcon::fromTheme(kind.icon));
     item->setData(0, Qt::UserRole, int(kind.id));
     item->setData(0, Qt::UserRole + 1, kind.about);
   }
@@ -836,7 +836,10 @@ void AddDeviceDlg::searchKinds(const QString &text)
   if (markedKind() == NodeKinds && !nodeKinds().isEmpty())
     markKind(nodeKinds().constFirst());
   else if (nodeKinds().isEmpty())
+  {
     m_kindList->setCurrentItem(nullptr);
+    m_kindAbout->setText(tr("Nothing found for \"%1\".").arg(wanted.toHtmlEscaped()));
+  }
   updateButtons();
 }
 
