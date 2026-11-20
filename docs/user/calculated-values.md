@@ -10,8 +10,10 @@ export, alarms and SCPI all work on it exactly as on a measured one.
 ## Setting it up
 
 1. Put the meters into [My devices](my-devices.md).
-2. *Add device*, the tab **Calculated / generator**, the tile
-   **Calculated**. Its settings follow:
+2. *Add device*, the tile **Calculated**, in its list **Formula** (a
+   double click or *Next*). The list says beside it what each kind does;
+   the search field above it finds one by its name or text. Its settings
+   follow:
     - **Name** - how it is listed in My devices.
     - **Inputs** - tick your devices in the list on the left, also one
       that is not connected yet (grey; the calculated value then waits for
@@ -82,8 +84,7 @@ Examples:
 ## Simulated values
 
 For trying QtDMM without a multimeter, for demonstrations or for feeding a
-known signal into a calculation: *Add device*, the tab **Calculated /
-generator**, the tile **Simulated**. It
+known signal into a calculation: *Add device*, the tile **Simulated**. It
 has no inputs and makes up to four values on a clock (every 250 ms by
 default), each with:
 
@@ -101,7 +102,7 @@ Each value shows where it is right now.
 ## Integral
 
 The energy a load took, the charge into a battery, the light a plant got:
-*Add device*, the tab **Calculated / generator**, the tile **Integral**, or
+*Add device*, the tile **Calculated**, in its list **Integral**, or
 *Integrate...* in the menu of a value (a right click on it in the sidebar
 or a view: the assistant starts at its settings). It sums up one value
 over time:

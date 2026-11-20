@@ -98,20 +98,24 @@ AddDeviceDlg::AddDeviceDlg(DeviceLibrary *library, QWidget *parent)
   bold.setBold(true);
   bold.setPointSizeF(bold.pointSizeF() * 1.2);
   m_title->setFont(bold);
-  top->addWidget(m_title);
+  auto *titleRow = new QHBoxLayout;
+  titleRow->addWidget(m_title, 1);
+  m_kindSearch = new QLineEdit(this);
+  m_kindSearch->setObjectName("ui_kindSearch");
+  m_kindSearch->setPlaceholderText(tr("Search"));
+  m_kindSearch->setClearButtonEnabled(true);
+  m_kindSearch->setMaximumWidth(200);
+  m_kindSearch->hide();
+  connect(m_kindSearch, &QLineEdit::textChanged, this, &AddDeviceDlg::searchKinds);
+  titleRow->addWidget(m_kindSearch);
+  top->addLayout(titleRow);
   m_pages = new QStackedWidget(this);
   top->addWidget(m_pages, 1);
 
-  // page 1: one tile per kind of connection, a device or a calculated value
-  // on a tab each; a click goes on
-  m_kinds = new QTabWidget(m_pages);
-  m_kinds->setObjectName("ui_kinds");
-  auto *devicesTab = new QWidget(m_kinds);
-  auto *nodesTab = new QWidget(m_kinds);
-  auto *tiles = new QGridLayout(devicesTab);
-  auto *nodeTiles = new QGridLayout(nodesTab);
-  m_kinds->addTab(devicesTab, tr("&Device"));
-  m_kinds->addTab(nodesTab, tr("Calculated / &generator"));
+  // page 1: one tile per kind of connection, a generator and the
+  // calculated values; a click goes on
+  auto *connections = new QWidget(m_pages);
+  auto *tiles = new QGridLayout(connections);
   const struct { Connection id; const char *icon; QString text; QString toolTip; } kinds[] = {
     { Cable,     "drive-removable-media-usb",    tr("&Cable") + '\n' + tr("UT61E, UT803, TFA ..."),
       tr("A meter on a USB cable, a USB-serial adapter or a serial port") },
@@ -123,26 +127,17 @@ AddDeviceDlg::AddDeviceDlg(DeviceLibrary *library, QWidget *parent)
       tr("A bench meter read through sigrok-cli") },
     { Simulated, "code-function",                tr("&Simulated") + '\n' + tr("To try out, test signals"),
       tr("Simulated values to try QtDMM without a meter: sine, square, noise or a formula over time") },
-    { Calculated, "code-function",               tr("C&alculated") + '\n' + tr("Formula over values"),
-      tr("Values calculated from those of your devices, e.g. power from voltage and current") },
-    { Integral, "code-function",                 tr("&Integral") + '\n' + tr("Energy, charge"),
-      tr("A value summed up over time, e.g. the energy in Wh from a power in W") },
+    { NodeKinds, "code-function",                tr("C&alculated") + '\n' + tr("Formula, integral ..."),
+      tr("Values calculated from those of your devices: a formula, an integral ...") },
   };
   int column = 0;
-  int nodeColumn = 0;
   for (const auto &kind : kinds)
   {
     QToolButton *button = tile(kind.icon, kind.text, kind.toolTip);
     button->setObjectName(QString("ui_connection%1").arg(int(kind.id)));
     const Connection id = kind.id;
     connect(button, &QToolButton::clicked, this, [this, id] { chooseConnection(id); });
-    if (isNode(id))
-    {
-      nodeTiles->addWidget(button, nodeColumn / 3, nodeColumn % 3);
-      ++nodeColumn;
-      continue;
-    }
-    tiles->addWidget(button, column / 2, column % 2);
+    tiles->addWidget(button, 1 + column / 3, 1 + column % 3);   // centred: stretch around
     ++column;
     if (id == Bluetooth)
     {
@@ -158,16 +153,11 @@ AddDeviceDlg::AddDeviceDlg(DeviceLibrary *library, QWidget *parent)
   auto *adapter = new QBluetoothLocalDevice(this);
   connect(adapter, &QBluetoothLocalDevice::hostModeStateChanged, this, &AddDeviceDlg::updateBluetoothTile);
 #endif
-  tiles->setRowStretch(2, 1);
-  tiles->setColumnStretch(2, 1);
-  nodeTiles->setRowStretch(1, 1);
-  nodeTiles->setColumnStretch(3, 1);
-  m_pages->addWidget(m_kinds);
-  connect(m_kinds, &QTabWidget::currentChanged, this, [this]
-  {
-    if (page() == ConnectionPage)
-      showPage(ConnectionPage);
-  });
+  tiles->setRowStretch(0, 1);
+  tiles->setRowStretch(3, 1);
+  tiles->setColumnStretch(0, 1);
+  tiles->setColumnStretch(4, 1);
+  m_pages->addWidget(connections);
 
   // page 2: the search for the chosen connection, every port found, and
   // the port field
@@ -304,6 +294,75 @@ AddDeviceDlg::AddDeviceDlg(DeviceLibrary *library, QWidget *parent)
   nodeLayout->setContentsMargins(0, 0, 0, 0);
   m_pages->addWidget(m_nodePage);
 
+  // page 6, after the tile Calculated: the logic nodes with inputs, in
+  // groups, what the one marked does beside them; a double click goes on
+  auto *kindPage = new QWidget(m_pages);
+  auto *kindLayout = new QHBoxLayout(kindPage);
+  kindLayout->setContentsMargins(0, 0, 0, 0);
+  m_kindList = new QTreeWidget(kindPage);
+  m_kindList->setObjectName("ui_kindList");
+  m_kindList->setHeaderHidden(true);
+  m_kindList->setRootIsDecorated(false);
+  m_kindList->setItemsExpandable(false);
+  m_kindList->setIndentation(fontMetrics().height());
+  m_kindList->setIconSize(QSize(24, 24));
+  const struct { Connection id; QString group; QString name; QString about; } nodeKinds[] = {
+    { Calculated, tr("Calculate"), tr("Formula"),
+      tr("<p>Computes up to four values from the readings of your devices with formulas of your own: "
+         "a power from a voltage and a current, a resistance, a dew point.</p>"
+         "<p><b>Inputs:</b> one or more devices, each with all its values (<tt>v1</tt>, <tt>v1.2</tt> ...).</p>"
+         "<p><b>Example:</b> <tt>v1 * v2</tt> in W - a supply's voltage times a load's current is the "
+         "power the load takes.</p>") },
+    { Integral, tr("Calculate"), tr("Integral"),
+      tr("<p>Sums one value up over time, from a start you choose: when a recording starts, when the value "
+         "rises above a threshold, or by hand.</p>"
+         "<p><b>Input:</b> one value of one device.</p>"
+         "<p><b>Example:</b> a load's power in W gives the energy it took in Wh, a battery's current in A "
+         "the charge in Ah.</p>") },
+  };
+  QHash<QString, QTreeWidgetItem *> groups;
+  for (const auto &kind : nodeKinds)
+  {
+    QTreeWidgetItem *&group = groups[kind.group];
+    if (!group)
+    {
+      group = new QTreeWidgetItem(m_kindList, { kind.group });
+      group->setFlags(Qt::ItemIsEnabled);
+      QFont font = m_kindList->font();
+      font.setBold(true);
+      group->setFont(0, font);
+    }
+    auto *item = new QTreeWidgetItem(group, { kind.name });
+    item->setIcon(0, QIcon::fromTheme("code-function"));
+    item->setData(0, Qt::UserRole, int(kind.id));
+    item->setData(0, Qt::UserRole + 1, kind.about);
+  }
+  m_kindList->expandAll();
+  kindLayout->addWidget(m_kindList, 2);
+  auto *aboutArea = new QScrollArea(kindPage);
+  aboutArea->setWidgetResizable(true);
+  m_kindAbout = new QLabel(aboutArea);
+  m_kindAbout->setObjectName("ui_kindAbout");
+  m_kindAbout->setWordWrap(true);
+  m_kindAbout->setTextFormat(Qt::RichText);
+  m_kindAbout->setAlignment(Qt::AlignLeft | Qt::AlignTop);
+  m_kindAbout->setMargin(fontMetrics().height() / 2);
+  aboutArea->setWidget(m_kindAbout);
+  kindLayout->addWidget(aboutArea, 3);
+  connect(m_kindList, &QTreeWidget::currentItemChanged, this, [this](QTreeWidgetItem *item)
+  {
+    m_kindAbout->setText(item && item->parent()
+                           ? "<h3>" + item->text(0).toHtmlEscaped() + "</h3>" + item->data(0, Qt::UserRole + 1).toString()
+                           : QString());
+    updateButtons();
+  });
+  connect(m_kindList, &QTreeWidget::itemDoubleClicked, this, [this](QTreeWidgetItem *item)
+  {
+    if (item->parent())
+      next();
+  });
+  m_pages->addWidget(kindPage);
+
   auto *buttons = new QDialogButtonBox(this);
   m_back = buttons->addButton(tr("< &Back"), QDialogButtonBox::ActionRole);
   m_next = buttons->addButton(tr("&Next >"), QDialogButtonBox::ActionRole);
@@ -350,7 +409,8 @@ bool AddDeviceDlg::offers(Connection connection, const DmmDecoder::DMMInfo &info
     case Sigrok:    return sigrok;
     case Simulated:
     case Calculated:
-    case Integral: return false;   // logic nodes, on the node page
+    case Integral:
+    case NodeKinds: return false;   // logic nodes, on the node page
     case Cable:
     case Network:   return !bluetooth && !sigrok;   // the bridge passes a cable on
   }
@@ -370,10 +430,17 @@ bool AddDeviceDlg::isNode(Connection connection)
 void AddDeviceDlg::chooseConnection(Connection connection)
 {
   m_connection = connection;
+  if (connection == NodeKinds)
+  {
+    if (markedKind() == NodeKinds && !nodeKinds().isEmpty())
+      markKind(nodeKinds().constFirst());
+    showPage(KindPage);
+    return;
+  }
   // a logic node: its settings on a page of their own, a new editor each time
   if (isNode(connection))
   {
-    m_kinds->setCurrentIndex(1);
+    markKind(connection);
     delete m_editor;
     m_editor = m_makeEditor ? m_makeEditor(connection) : nullptr;
     if (!m_editor)
@@ -403,7 +470,6 @@ void AddDeviceDlg::chooseConnection(Connection connection)
     showPage(NodePage);
     return;
   }
-  m_kinds->setCurrentIndex(0);
   const bool manual = connection == Cable || connection == Network;
   m_settings->setModelFilter([connection](const DmmDecoder::DMMInfo &info) { return offers(connection, info); }, manual);
   QVariantMap keys;
@@ -724,6 +790,56 @@ QString AddDeviceDlg::knownDevice() const
   return QString(entry->model()).remove(" *") == QString(model).remove(" *") ? entry->id : QString();
 }
 
+QList<AddDeviceDlg::Connection> AddDeviceDlg::nodeKinds() const
+{
+  QList<Connection> kinds;
+  for (QTreeWidgetItemIterator it(m_kindList, QTreeWidgetItemIterator::NotHidden); *it; ++it)
+    if ((*it)->parent())
+      kinds << static_cast<Connection>((*it)->data(0, Qt::UserRole).toInt());
+  return kinds;
+}
+
+AddDeviceDlg::Connection AddDeviceDlg::markedKind() const
+{
+  const QTreeWidgetItem *item = m_kindList->currentItem();
+  return item && item->parent() && !item->isHidden() ? static_cast<Connection>(item->data(0, Qt::UserRole).toInt())
+                                                     : NodeKinds;
+}
+
+void AddDeviceDlg::markKind(Connection kind)
+{
+  for (QTreeWidgetItemIterator it(m_kindList); *it; ++it)
+    if ((*it)->parent() && (*it)->data(0, Qt::UserRole).toInt() == int(kind))
+      m_kindList->setCurrentItem(*it);
+}
+
+void AddDeviceDlg::searchKinds(const QString &text)
+{
+  const QString wanted = text.trimmed();
+  for (int g = 0; g < m_kindList->topLevelItemCount(); ++g)
+  {
+    QTreeWidgetItem *group = m_kindList->topLevelItem(g);
+    bool any = false;
+    for (int i = 0; i < group->childCount(); ++i)
+    {
+      QTreeWidgetItem *item = group->child(i);
+      QTextDocument about;
+      about.setHtml(item->data(0, Qt::UserRole + 1).toString());
+      const bool shown = wanted.isEmpty() || item->text(0).contains(wanted, Qt::CaseInsensitive)
+                         || about.toPlainText().contains(wanted, Qt::CaseInsensitive);
+      item->setHidden(!shown);
+      any = any || shown;
+    }
+    group->setHidden(!any);
+  }
+  // the mark on a kind still shown
+  if (markedKind() == NodeKinds && !nodeKinds().isEmpty())
+    markKind(nodeKinds().constFirst());
+  else if (nodeKinds().isEmpty())
+    m_kindList->setCurrentItem(nullptr);
+  updateButtons();
+}
+
 AddDeviceDlg::Page AddDeviceDlg::page() const
 {
   return static_cast<Page>(m_pages->currentIndex());
@@ -738,6 +854,8 @@ bool AddDeviceDlg::canGoNext() const
   }
   if (page() == NodePage)
     return m_editor && m_editor->valid();
+  if (page() == KindPage)
+    return markedKind() != NodeKinds;
   return page() == DevicePage && m_settings->isComplete() && !m_name->text().trimmed().isEmpty();
 }
 
@@ -760,6 +878,8 @@ void AddDeviceDlg::back()
   if (page() == TargetPage)
     showPage(isNode(m_connection) ? NodePage : DevicePage);
   else if (page() == NodePage)
+    showPage(m_connection == Simulated ? ConnectionPage : KindPage);
+  else if (page() == KindPage)
     showPage(ConnectionPage);
   else if (page() == DevicePage && hasPortPage(m_connection))
     showPage(PortPage);
@@ -780,6 +900,8 @@ void AddDeviceDlg::next()
     takePort();
     showPage(DevicePage);
   }
+  else if (page() == KindPage)
+    chooseConnection(markedKind());
   else
     showPage(TargetPage);
 }
@@ -790,8 +912,9 @@ void AddDeviceDlg::showPage(Page page)
   switch (page)
   {
     case ConnectionPage:
-      m_title->setText(m_kinds->currentIndex() == 0 ? tr("How is the meter connected?") : tr("What is to be calculated?"));
+      m_title->setText(tr("How is the meter connected?"));
       break;
+    case KindPage:       m_title->setText(tr("What is to be calculated?")); break;
     case PortPage:       m_title->setText(tr("Where is it connected?")); break;
     case DevicePage:     m_title->setText(tr("Which meter is it?")); break;
     case TargetPage:     m_title->setText(tr("Connect it now?")); break;
@@ -807,13 +930,16 @@ void AddDeviceDlg::showPage(Page page)
     m_name->setFocus();
   if (page == PortPage)
     m_port->setFocus();
+  m_kindSearch->setVisible(page == KindPage);
+  if (page == KindPage)
+    m_kindList->setFocus();
   updateButtons();
 }
 
 void AddDeviceDlg::updateButtons()
 {
   m_back->setEnabled(page() != ConnectionPage);
-  m_next->setVisible(page() == PortPage || page() == DevicePage || page() == NodePage);
+  m_next->setVisible(page() == PortPage || page() == DevicePage || page() == NodePage || page() == KindPage);
   m_next->setEnabled(canGoNext());
 }
 

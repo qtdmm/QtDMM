@@ -20,8 +20,8 @@ class QListWidget;
 class QProgressBar;
 class QPushButton;
 class QStackedWidget;
-class QTabWidget;
 class QToolButton;
+class QTreeWidget;
 
 /// The assistant "Add device": how the meter is connected (page 1), where
 /// (page 2: a passive search for that connection, every port found, the
@@ -29,10 +29,11 @@ class QToolButton;
 /// and a name (page 3), and whether it is connected at once or only kept
 /// (page 4). sigrok meters have no page 2.
 ///
-/// Page 1 has two tabs: a device, and a calculated, simulated or integral
-/// value (a logic node). Such a one has its settings (NodeEditor, made by
-/// setNodeEditors()) on a page of their own instead of pages 2 and 3, and
-/// page 4 after it.
+/// Page 1 also has the tiles Simulated (a generator) and Calculated: the
+/// latter goes on to a list of the logic nodes with inputs (KindPage:
+/// formula, integral ..., grouped, with what each does and a search). A
+/// logic node has its settings (NodeEditor, made by setNodeEditors()) on a
+/// page of their own instead of pages 2 and 3, and page 4 after it.
 /// The caller keeps the result in My devices - a find that already is one
 /// of them (knownDevice()) changes that entry instead.
 class AddDeviceDlg : public QDialog
@@ -40,9 +41,10 @@ class AddDeviceDlg : public QDialog
   Q_OBJECT
 public:
   /// Simulated, Calculated, Integral: a generator, a formula over values or
-  /// an integral of one (logic nodes), set up on the NodePage.
-  enum Connection { Cable, Bluetooth, Network, Sigrok, Simulated, Calculated, Integral };
-  enum Page { ConnectionPage, PortPage, DevicePage, TargetPage, NodePage };
+  /// an integral of one (logic nodes), set up on the NodePage. NodeKinds:
+  /// the tile Calculated, the KindPage to choose one of the nodes with inputs.
+  enum Connection { Cable, Bluetooth, Network, Sigrok, Simulated, Calculated, Integral, NodeKinds };
+  enum Page { ConnectionPage, PortPage, DevicePage, TargetPage, NodePage, KindPage };
   /// Page 4: into My devices and connected at once, or into My devices only.
   enum Target { NoTarget, Connect, SaveOnly };
 
@@ -77,8 +79,14 @@ public:
   static bool isNode(Connection connection);
   /// The node page's editor, null for a device.
   NodeEditor *nodeEditor() const { return m_editor; }
-  /// Page 1's tabs: 0 a device, 1 a calculated value.
-  QTabWidget *kindTabs() const { return m_kinds; }
+  /// The KindPage: the kinds of logic nodes with inputs offered (by their
+  /// Connection), in their order, without the ones the search hides.
+  QList<Connection> nodeKinds() const;
+  /// The KindPage: the kind marked, NodeKinds for none.
+  Connection  markedKind() const;
+  void        markKind(Connection kind);
+  /// The KindPage's search: shows the kinds whose name or text has @p text.
+  void        searchKinds(const QString &text);
   Connection  connection() const { return m_connection; }
   Page        page() const;
   /// Whether "Next" may be pressed now.
@@ -141,7 +149,9 @@ private:
   DeviceLibrary  *m_library = nullptr;
   DeviceSettings *m_settings = nullptr;
   QStackedWidget *m_pages = nullptr;
-  QTabWidget     *m_kinds = nullptr;
+  QTreeWidget    *m_kindList = nullptr;   ///< the KindPage: groups, their kinds
+  QLabel         *m_kindAbout = nullptr;  ///< what the kind marked does
+  QLineEdit      *m_kindSearch = nullptr; ///< in the title row, on the KindPage only
   QWidget        *m_nodePage = nullptr;
   NodeEditor     *m_editor = nullptr;   ///< on m_nodePage, for a logic node
   std::function<NodeEditor *(Connection)> m_makeEditor;
