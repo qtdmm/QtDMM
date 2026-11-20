@@ -18,9 +18,9 @@ namespace
 {
 constexpr int kGap = 6;   // between groups and rows
 constexpr int kBottomMargin = 6;  // below the last row
+}
 
-// A key in a colour of its own: darker while pressed or on, faded while off
-QString keyColour(const QColor &face, const QColor &text)
+QString ControlBar::keyColour(const QColor &face, const QColor &text)
 {
   QColor faded = face;
   faded.setAlpha(90);
@@ -30,7 +30,6 @@ QString keyColour(const QColor &face, const QColor &text)
                  " QToolButton:disabled { background: %4; color: %5; }")
     .arg(face.name(), text.name(), face.darker(135).name(), faded.name(QColor::HexArgb),
          QColor(text.red(), text.green(), text.blue(), 120).name(QColor::HexArgb));
-}
 }
 
 ControlBar::ControlBar(QWidget *parent) :
@@ -134,7 +133,7 @@ ControlBar::ControlBar(QWidget *parent) :
       if (key == "select1" || key == "fn_a")
         b->setStyleSheet(keyColour(QColor(0xff, 0xc6, 0x1c), QColor(0x20, 0x20, 0x20)));
       else if (key == "hold" || key == "fn_ohm")
-        b->setStyleSheet(keyColour(QColor(0x3c, 0x9a, 0xff), Qt::white));
+        b->setStyleSheet(keyColour(holdColour(), Qt::white));
       else if (key == "fn_v")
         b->setStyleSheet(keyColour(QColor(0xe0, 0x3c, 0x31), Qt::white));
       if (key == "hold")

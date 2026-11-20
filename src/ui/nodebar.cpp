@@ -11,6 +11,7 @@
 #include "logic/logicnode.h"
 #include "service/metercontroller.h"
 #include "service/noderunner.h"
+#include "ui/controlbar.h"
 
 namespace
 {
@@ -83,6 +84,9 @@ void NodeBar::setController(MeterController *ctl)
       b->setText(c.text);
       b->setToolButtonStyle(Qt::ToolButtonTextOnly);
       b->setCheckable(c.kind == LogicNode::Control::Kind::Switch);
+      // a switch (HOLD) in the colour of a meter's HOLD: darker while on
+      if (b->isCheckable())
+        b->setStyleSheet(ControlBar::keyColour(ControlBar::holdColour(), Qt::white));
       connect(b, &QToolButton::clicked, this, [this, id = c.id]
       {
         if (NodeRunner *r = NodeRunner::of(m_ctl))

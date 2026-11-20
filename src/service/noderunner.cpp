@@ -136,7 +136,6 @@ void NodeRunner::bind()
   m_last.resize(inputs.size());
   m_values.resize(inputs.size());
   const bool devices = m_node->takesDevices();
-  QStringList missing;
   for (int i = 0; i < inputs.size(); ++i)
   {
     const ValueRef ref = inputs[i];
@@ -145,19 +144,42 @@ void NodeRunner::bind()
     {
       m_last[i].reset();
       m_values[i].clear();
-      missing << inputName(ref);
       continue;
     }
+    // an input that stops delivering (it waits itself): said here too
+    m_links << connect(from, &MeterController::linkStateChanged, this, [this, from]
+    {
+      if (from->linkState() != MeterConnection::LinkState::Connected)
+        showWaiting();
+    });
     m_links << connect(from, &MeterController::reading, this, [this, i, ref, devices](const Reading &r)
     {
       if (devices ? r.source == ref.source : ref.matches(r))
         onReading(i, r);
     });
   }
-  // waiting for an input that is not open; otherwise running, until the
-  // first computation tells more
+  showWaiting();
+}
+
+void NodeRunner::showWaiting()
+{
+  // an input not open; else one open but not delivering, with its reason;
+  // otherwise running, until the first computation tells more
+  QStringList missing;
+  QStringList waiting;
+  for (const ValueRef &ref : m_node->inputs())
+  {
+    const MeterController *from = ref.source == m_ctl->source() ? nullptr : m_session->controller(ref.source);
+    if (!from)
+      missing << inputName(ref);
+    else if (from->linkState() != MeterConnection::LinkState::Connected)
+      waiting << (from->errorString().isEmpty() ? inputName(ref)
+                                                : tr("%1: %2").arg(inputName(ref), from->errorString()));
+  }
   if (!missing.isEmpty())
     m_ctl->setNodeState(MeterConnection::LinkState::Timeout, tr("Input not open: %1").arg(missing.join(", ")));
+  else if (!waiting.isEmpty())
+    m_ctl->setNodeState(MeterConnection::LinkState::Timeout, tr("Waiting for %1").arg(waiting.join("; ")));
   else
     m_ctl->setNodeState(MeterConnection::LinkState::Connecting);
 }
@@ -235,6 +257,8 @@ void NodeRunner::deliver(const LogicNode::Values &values, qint64 t, qint64 wall)
   response.channels.clear();
   response.received = t;
   response.receivedWall = wall;
+  // held (an integral's HOLD): the H on the display, as on a meter
+  response.hold = m_node->holds() && !m_node->isOn();
   const int counts = m_ctl->sourceInfo().display > 0 ? m_ctl->sourceInfo().display : 60000;
   for (int i = 0; i < outputs.size() && i < kMaxValues; ++i)
   {
