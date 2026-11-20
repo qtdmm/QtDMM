@@ -338,6 +338,8 @@ public:
   /// The pen curve @p i is drawn with, and whether its readings have markers now.
   QPen        curvePen(int i) const;
   bool        curveMarkers(int i) const;
+  /// The pen it is drawn with now: solid where its points are too close for dashes.
+  QPen        drawnPen(int i) const;
   /// The colour of axis @p i's numbers: its curve's when it has one alone.
   QColor      axisColor(int i) const;
   /// The grid lines of axis @p i now (10 x 8 divisions: 9 across the plot).

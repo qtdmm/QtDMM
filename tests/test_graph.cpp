@@ -988,6 +988,7 @@ static void testGraphLook()
   graph.refreshNow();
   check(graph.curvePen(0).widthF() == 3 && graph.curvePen(1).widthF() == 2.25, "the width, the other curves three quarters of it");
   check(graph.curveMarkers(0) && graph.curveMarkers(2), "20 readings on 800 pixels: markers");
+  check(graph.drawnPen(1).style() == Qt::DashLine, "20 readings on 800 pixels: dashed as its pen");
   settings.lineMode = 0;
   graph.setLookSettings(settings);
   graph.refreshNow();
@@ -1003,6 +1004,11 @@ static void testGraphLook()
   }
   graph.refreshNow();
   check(!graph.curveMarkers(0), QString("%1 readings on the plot: no markers").arg(graph.drawnPoints(0).size()));
+  graph.setPatternedLines(true);
+  graph.refreshNow();
+  check(graph.curvePen(2).style() == Qt::CustomDashLine && graph.drawnPen(2).style() == Qt::SolidLine,
+        QString("%1 points closer than its dashes: drawn solid, the legend keeps the dashes").arg(graph.drawnPoints(2).size()));
+  graph.setPatternedLines(false);
 
   // the legend shows the pens
   check(!graph.legendText().isEmpty(), "the legend is there");

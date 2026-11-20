@@ -200,19 +200,31 @@ void GraphWidget::styleCurves()
   }
 }
 
+// One round of a pen's dashes in pixels: its pattern is in widths.
+static double dashLength(const QPen &pen)
+{
+  double sum = 0;
+  for (const qreal d : pen.dashPattern())
+    sum += d;
+  return sum * qMax(1.0, pen.widthF());
+}
+
 void GraphWidget::styleDensity(const Curve &curve, int shown)
 {
   const int width = qMax(1, m_plot->axisRect()->width());
   // more than a point per pixel: a band of strokes
   const bool dense = shown > width;
-  // a dashed line wider than a pixel is not smoothed either: that takes
-  // fifteen times as long, too long for a live picture
-  const bool dashed = curve.pen.style() != Qt::SolidLine && curve.pen.style() != Qt::NoPen && curve.pen.widthF() > 1;
-  curve.graph->setAntialiased(!dense && !dashed);
+  // dashes run along the line: between points closer than one round of the
+  // pattern they fall on the zigzag at random and crawl as the graph scrolls
+  // (moiré). There the line is solid, its colour tells it; dashed only where
+  // the points are far enough apart, and then few enough to smooth.
+  const bool patterned = curve.pen.style() != Qt::SolidLine && curve.pen.style() != Qt::NoPen;
+  const bool solid = patterned && shown > 1 && double(width) / (shown - 1) < dashLength(curve.pen);
+  curve.graph->setAntialiased(!dense);
   if (curve.pen.style() != Qt::NoPen)
   {
     QPen pen = curve.pen;
-    if (dense)
+    if (dense || solid)
       pen.setStyle(Qt::SolidLine);
     if (pen != curve.graph->pen())
       curve.graph->setPen(pen);
@@ -268,6 +280,11 @@ QPen GraphWidget::curvePen(int i) const
   if (i < 0 || i >= m_curves.size())
     return QPen(Qt::NoPen);
   return m_curves.at(i).pen;
+}
+
+QPen GraphWidget::drawnPen(int i) const
+{
+  return i >= 0 && i < m_curves.size() ? m_curves.at(i).graph->pen() : QPen(Qt::NoPen);
 }
 
 bool GraphWidget::curveMarkers(int i) const

@@ -439,7 +439,8 @@ A curve colour you chose yourself stays in every variant.
 of another device in a pattern of its own (long dashes, dash-dot-dot,
 sparse dots, long-short), so the curves are told apart without their
 colours; the meter's own values are dashed, dotted and dash-dotted anyway.
-The legend shows the patterns. It is off at first; whether it is on is kept
+Where the readings lie closer together than one round of a pattern, the
+curve is drawn solid: dashes on a dense line only flicker. The legend shows the patterns. It is off at first; whether it is on is kept
 with the window layout. The graph's
 right-click menu, **Display → Colour variant**, can choose other colours for this graph
 only; *As in the settings* goes back to the setting.
