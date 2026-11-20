@@ -48,8 +48,10 @@ FormulaNodeEditor::FormulaNodeEditor(QWidget *parent) :
   // the inputs: devices of My devices ticked, v1, v2 ... in their order; one leads
   auto *inputBox = new QGroupBox(tr("Inputs"), this);
   auto *inputLayout = new QVBoxLayout(inputBox);
-  inputLayout->addWidget(new QLabel(tr("Computed whenever the leading input brings a new reading; "
-                                       "the others give their last one."), inputBox));
+  auto *inputBoxHint = new QLabel(tr("Computed whenever the leading input brings a new reading; "
+                                    "the others give their last one."), inputBox);
+  inputBoxHint->setWordWrap(true);   // not the dialog's minimum width
+  inputLayout->addWidget(inputBoxHint);
   m_sources = new SourceList(SourceList::Devices, inputBox);
   m_sources->setObjectName("ui_formulaSources");
   inputLayout->addWidget(m_sources);
@@ -59,8 +61,10 @@ FormulaNodeEditor::FormulaNodeEditor(QWidget *parent) :
   // the outputs: y1 ... each name, formula, unit and its result now
   auto *outputBox = new QGroupBox(tr("Values"), this);
   auto *outputLayout = new QVBoxLayout(outputBox);
-  outputLayout->addWidget(new QLabel(tr("Formulas over the inputs' values (v1, v1.2 ... as named in the list) in their base units "
-                                        "(V, A, Ohm); a value may use the ones above it as y1, y2 ..."), outputBox));
+  auto *outputBoxHint = new QLabel(tr("Formulas over the inputs' values (v1, v1.2 ... as named in the list) in their base units "
+                                     "(V, A, Ohm); a value may use the ones above it as y1, y2 ..."), outputBox);
+  outputBoxHint->setWordWrap(true);   // not the dialog's minimum width
+  outputLayout->addWidget(outputBoxHint);
   m_outputGrid = new QGridLayout;
   m_outputGrid->setColumnStretch(2, 1);
   outputLayout->addLayout(m_outputGrid);

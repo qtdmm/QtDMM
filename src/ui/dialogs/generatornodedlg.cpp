@@ -49,8 +49,10 @@ GeneratorNodeEditor::GeneratorNodeEditor(QWidget *parent) :
 
   auto *box = new QGroupBox(tr("Values"), this);
   auto *boxLayout = new QVBoxLayout(box);
-  boxLayout->addWidget(new QLabel(tr("A shape between min and max with its period in s, or a formula over t (the "
-                                     "seconds since the start) and the values above it as y1, y2 ..."), box));
+  auto *boxHint = new QLabel(tr("A shape between min and max with its period in s, or a formula over t (the "
+                              "seconds since the start) and the values above it as y1, y2 ..."), box);
+  boxHint->setWordWrap(true);   // not the dialog's minimum width
+  boxLayout->addWidget(boxHint);
   m_grid = new QGridLayout;
   m_grid->setColumnStretch(5, 1);
   boxLayout->addLayout(m_grid);
@@ -248,9 +250,12 @@ void GeneratorNodeEditor::relayout()
   {
     const Row &r = m_rows[i];
     r.label->setText(FormulaNode::outputName(i));
+    // the shape's numbers (or its formula) on a line of their own below:
+    // in one line the row would be wider than the assistant
     int c = 0;
-    for (QWidget *w : std::initializer_list<QWidget *> { r.label, r.name, r.unit, r.coupling, r.shape, r.how, r.result, r.remove })
-      m_grid->addWidget(w, i, c++);
+    for (QWidget *w : std::initializer_list<QWidget *> { r.label, r.name, r.unit, r.coupling, r.shape, r.result, r.remove })
+      m_grid->addWidget(w, 2 * i, c++);
+    m_grid->addWidget(r.how, 2 * i + 1, 1, 1, 5);
     r.remove->setEnabled(m_rows.size() > 1);
   }
   m_add->setEnabled(m_rows.size() < kMaxValues);
