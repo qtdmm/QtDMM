@@ -53,6 +53,14 @@ private:
   void        onReading(int input, const Reading &r);
   /// Computes with the inputs as they are at @p t (core clock) / @p wall.
   void        compute(qint64 t, qint64 wall);
+  /// The leading device's frame at @p t: computed once the inputs computed
+  /// from that device (m_sameFrame) have their result of it, else kept
+  /// (m_pending) until they have, or until the next frame.
+  void        computeFrame(qint64 t, qint64 wall);
+  /// Whether all of m_sameFrame have a reading at @p t.
+  bool        frameComplete(qint64 t) const;
+  /// Whether node @p source takes @p device, directly or through others.
+  bool        dependsOn(const QString &source, const QString &device) const;
   void        deliver(const LogicNode::Values &values, qint64 t, qint64 wall);
   /// Starts or stops with the controller's wish.
   void        follow();
@@ -71,6 +79,8 @@ private:
   QList<std::optional<Reading>> m_last;   ///< per input (a device's main value)
   QList<QMap<int, Reading>> m_values;     ///< per input, by id, when the node takes devices
   QList<QMetaObject::Connection> m_links;
+  QList<int>       m_sameFrame;   ///< inputs that are nodes on the leading device (bind())
+  std::optional<std::pair<qint64, qint64>> m_pending;   ///< a frame waiting for them: t, wall
   QTimer           m_clock;
   bool             m_running = false;
 };

@@ -303,6 +303,62 @@ int main(int argc, char **argv)
           QString("3 V * 5 A, 5 - 3: %1 %2").arg(got.value(0).value).arg(got.value(1).value));
   }
 
+  // 12b. R20-03: a formula over a device and a node on that device computes
+  // with the node's result of the same frame, whatever order they opened in
+  for (const bool nodeFirst : { true, false })
+  {
+    auto ramp = [] {
+      auto gen = std::make_unique<GeneratorNode>();
+      GeneratorNode::Wave w;
+      w.shape = CalcExpr::Custom;
+      w.formula = "t";
+      gen->setWaves({ w });
+      gen->setPeriodMs(40);
+      return gen;
+    };
+    auto twice = [] {
+      auto f = std::make_unique<FormulaNode>();
+      f->setInputs(refs({ "device:sg" }));
+      f->setFormulas({ { "2t", "V", "v1 * 2" } });
+      return f;
+    };
+    auto diff = std::make_unique<FormulaNode>();
+    diff->setInputs(refs({ "device:sg", "device:sf" }));
+    diff->setFormulas({ { "d", "V", "v2 - v1 * 2" } });
+    session.openNode("sg", "Ramp", ramp(), &error);
+    MeterController *d = nullptr;
+    if (nodeFirst)
+    {
+      session.openNode("sf", "Twice", twice(), &error);
+      d = session.openNode("sd", "Diff", std::move(diff), &error);
+    }
+    else
+    {
+      d = session.openNode("sd", "Diff", std::move(diff), &error);
+      session.openNode("sf", "Twice", twice(), &error);
+    }
+    // the ramp opened again: both take it anew, in the order they opened
+    session.close("sg");
+    session.openNode("sg", "Ramp", ramp(), &error);
+    QList<double> ds;
+    QObject block;
+    if (d)
+      QObject::connect(d, &MeterController::reading, &block, [&ds](const Reading &r)
+      {
+        if (r.quality == Quality::Valid)
+          ds << r.value;
+      });
+    waitFor([&] { return ds.size() >= 10; }, 3000);
+    bool zero = ds.size() >= 10;
+    for (double v : std::as_const(ds))
+      zero = zero && qAbs(v) < 1e-9;
+    check(zero, QString("%1 first: v2 - 2*v1 is 0 in each of %2 frames, first %3")
+                  .arg(nodeFirst ? "the node" : "the formula").arg(ds.size()).arg(ds.value(0)));
+    session.close("sd");
+    session.close("sf");
+    session.close("sg");
+  }
+
   // 13. a formula node stored with one value per input (1b) is read with devices
   {
     const char *before = R"({"type":"formula","inputs":["0@device:u","1@device:i","0@device:i"],"leading":1,

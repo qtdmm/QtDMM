@@ -143,7 +143,16 @@ void NodeRunner::bind()
   const QList<ValueRef> inputs = m_node->inputs();
   m_last.resize(inputs.size());
   m_values.resize(inputs.size());
+  m_pending.reset();
   const bool devices = m_node->takesDevices();
+  // the inputs that are nodes computed from the leading device itself: their
+  // result of its frame is waited for, not taken from the frame before
+  m_sameFrame.clear();
+  const int lead = m_node->leadingInput();
+  if (devices && m_node->periodMs() == 0 && lead >= 0 && lead < inputs.size())
+    for (int i = 0; i < inputs.size(); ++i)
+      if (i != lead && dependsOn(inputs[i].source, inputs[lead].source))
+        m_sameFrame << i;
   for (int i = 0; i < inputs.size(); ++i)
   {
     const ValueRef ref = inputs[i];
@@ -225,7 +234,65 @@ void NodeRunner::onReading(int input, const Reading &r)
     return;
   m_last[input] = r;
   if (leads)
-    QTimer::singleShot(0, this, [this, t = r.t, wall = r.msecs] { compute(t, wall); });
+    QTimer::singleShot(0, this, [this, t = r.t, wall = r.msecs] { computeFrame(t, wall); });
+  else if (m_pending && r.t == m_pending->first && m_sameFrame.contains(input))
+    QTimer::singleShot(0, this, [this, t = r.t]
+    {
+      // its other values are in now too; the frame it was waited for
+      if (m_pending && m_pending->first == t && frameComplete(t))
+      {
+        const qint64 wall = m_pending->second;
+        m_pending.reset();
+        compute(t, wall);
+      }
+    });
+}
+
+void NodeRunner::computeFrame(qint64 t, qint64 wall)
+{
+  // a frame still waiting when the next comes: computed with what there is
+  if (m_pending && m_pending->first != t)
+  {
+    const auto [pt, pwall] = *m_pending;
+    m_pending.reset();
+    compute(pt, pwall);
+  }
+  if (frameComplete(t))
+  {
+    m_pending.reset();
+    compute(t, wall);
+  }
+  else
+    m_pending = std::pair(t, wall);
+}
+
+bool NodeRunner::frameComplete(qint64 t) const
+{
+  for (int i : m_sameFrame)
+    if (!m_last.value(i) || m_last.value(i)->t != t)
+      return false;
+  return true;
+}
+
+bool NodeRunner::dependsOn(const QString &source, const QString &device) const
+{
+  // through the nodes' inputs; a loop cannot be opened, the depth guards anyway
+  QStringList todo { source };
+  QStringList seen;
+  while (!todo.isEmpty() && seen.size() < 64)
+  {
+    const QString s = todo.takeFirst();
+    if (seen.contains(s))
+      continue;
+    seen << s;
+    for (const ValueRef &ref : m_session->nodeInputs(s))
+    {
+      if (ref.source == device)
+        return true;
+      todo << ref.source;
+    }
+  }
+  return false;
 }
 
 void NodeRunner::compute(qint64 t, qint64 wall)
