@@ -2169,7 +2169,11 @@ QList<FormulaNodeDlg::Choice> MainWindow::formulaChoices(const QString &id) cons
     // one: its outputs as set. DMM/number-of-values is the frames per
     // reading, not the values: the model's count (MeterSetup)
     std::unique_ptr<LogicNode> node = nodeOf(device.keys);
-    c.node = node != nullptr;
+    // a node by its kind, as on the tiles of Add device
+    if (node)
+      c.icon = node->type() == QLatin1String(IntegralNode::kType)    ? QStringLiteral("qtdmm-integration")
+               : node->type() == QLatin1String(GeneratorNode::kType) ? QStringLiteral("qtdmm-simulated")
+                                                                     : QStringLiteral("qtdmm-calculated");
     const QList<LogicNode::Output> outputs = node ? node->outputs() : QList<LogicNode::Output>();
     const int count = ctl ? ctl->valueCount() : node ? int(outputs.size())
                                                      : qBound(1, MeterSetup::fromKeys(device.keys).valueCount, kMaxValues);

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <title>QtDMM integral</title>
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#dfe6ee"/>
+    </linearGradient>
+    <linearGradient id="area" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffb84d"/><stop offset="1" stop-color="#e8890c"/>
+    </linearGradient>
+  </defs>
+  <!-- an integral: the area under a curve on a card, the sign beside it -->
+  <rect x="3" y="5" width="42" height="38" rx="4" fill="url(#paper)" stroke="#4a5a6a" stroke-width="1.2"/>
+  <path d="M19 37 V25 C24 15 29 13 33 18 S39 26 41 22 V37 Z" fill="url(#area)" stroke="#9a5a06" stroke-width="0.8"/>
+  <path d="M17 26 C24 14 29 12 33 18 S39 26 43 20" fill="none" stroke="#1f6fb2" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M17 38 H43" stroke="#4a5a6a" stroke-width="1.4" stroke-linecap="round"/>
+  <!-- the sign -->
+  <path d="M14 9.5 C11.5 8.5 10 10 10 13 V35 C10 38 8.5 39.5 6 38.5" fill="none" stroke="#164f80" stroke-width="2.6" stroke-linecap="round"/>
+</svg>
