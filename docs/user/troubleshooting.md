@@ -156,7 +156,8 @@ with their current values and the open devices. Remember that a name is
 written in lower case with `_` for other characters than letters and
 digits. *Formula
 error at position n* means the formula does not parse; the position is
-counted from 1.
+counted from 1. If it waits for another calculated value, that one's
+own reason is in the tooltip of its status LED.
 
 ## Readings look right on the meter but wrong in QtDMM
 
