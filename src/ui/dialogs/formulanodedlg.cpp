@@ -273,13 +273,13 @@ void FormulaNodeEditor::removeOutput(int index)
   updateResults();
 }
 
-void FormulaNodeEditor::followInputs(const QList<int> &from)
+void FormulaNodeEditor::followInputs(const QList<int> &from, int former)
 {
   // the formulas follow the inputs' new places; an input gone gets a name
   // no formula knows (an error there, not the input moved into its place)
   for (OutputRow &out : m_outputs)
   {
-    const QString text = FormulaNode::followInputs(out.formula->text(), from);
+    const QString text = FormulaNode::followInputs(out.formula->text(), from, former);
     if (text != out.formula->text())
     {
       const QSignalBlocker block(out.formula);

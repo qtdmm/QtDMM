@@ -184,14 +184,8 @@ QString FormulaNode::renameInput(const QString &text, int from, const QString &b
   return renameBase(text, inputName(from), base);
 }
 
-QString FormulaNode::followInputs(const QString &text, const QList<int> &from)
+QString FormulaNode::followInputs(const QString &text, const QList<int> &from, int former)
 {
-  // the former inputs: those that stay, and below the highest of them or the
-  // new count the ones gone (one gone above both keeps its name, already
-  // unknown)
-  int former = int(from.size());
-  for (int f : from)
-    former = qMax(former, f + 1);
   // through names of their own, so v1 -> v2 and v2 -> v1 do not meet
   QString out = text;
   for (int k = 0; k < former; ++k)

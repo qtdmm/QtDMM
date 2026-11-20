@@ -75,7 +75,7 @@ private:
   void        relayout();
   /// The inputs ticked anew (SourceList::inputsChanged): the formulas'
   /// variables follow their places.
-  void        followInputs(const QList<int> &from);
+  void        followInputs(const QList<int> &from, int former);
   QList<ValueRef> inputs() const;
   QList<FormulaNode::Formula> formulas() const;
   /// The units of v1.. and y1.. for the proposal.

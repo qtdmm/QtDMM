@@ -232,6 +232,7 @@ void SourceList::setInputs(const QStringList &sources, int leading)
 
 void SourceList::changeInputs(const QStringList &inputs, int leading)
 {
+  const int former = int(m_inputs.size());
   QList<int> from;
   for (const QString &s : inputs)
     from << int(m_inputs.indexOf(s));
@@ -239,7 +240,7 @@ void SourceList::changeInputs(const QStringList &inputs, int leading)
   m_leading = inputs.isEmpty() ? 0 : qBound(0, leading, int(inputs.size()) - 1);
   updateNames();
   updateList();
-  Q_EMIT inputsChanged(from);
+  Q_EMIT inputsChanged(from, former);
 }
 
 void SourceList::moveInput(int from, int to)
