@@ -22,6 +22,7 @@
 #include <QWidget>
 #include <QColor>
 #include <QPixmap>
+#include <QRectF>
 #include <QTimer>
 #include <limits>
 #include "core/reading.h"   // complete for moc: a slot takes it (GCC 16 -Wsfinae-incomplete)
@@ -167,6 +168,14 @@ public:
   /// zone, and never less than @p current (NaN: none yet), so the scale only
   /// grows while the readings stay in that unit.
   static double fullScaleWithoutRange(double value, double current);
+  /// The grown scale of a meter without a display count (@p fullScale NaN)
+  /// or whose count is too small for its values: NaN (none) while @p value
+  /// fits @p fullScale; else as fullScaleWithoutRange() with @p grown, until
+  /// the unit changes.
+  static double grownScale(double value, double fullScale, double grown);
+  /// Whether a scale label at @p box lies on the dial @p face, @p inset
+  /// inside its edge; one that does not is left out.
+  static bool labelFits(const QRectF &box, const QRectF &face, double inset);
   /// Distance of the labelled (major) ticks: a 1-2-5 value for about 5
   /// (unipolar) or 8 (bipolar) intervals, made coarser until neighbouring
   /// labels labelWidth px wide fit on an arc labelRadius px from the pivot.
@@ -228,7 +237,7 @@ private:
   double m_minBase = std::numeric_limits<double>::quiet_NaN();
   double m_maxBase = std::numeric_limits<double>::quiet_NaN();
   int m_decimals = 0;   ///< most decimals of a reading (not an overload) since reset()
-  double m_rangelessScale = std::numeric_limits<double>::quiet_NaN();   ///< grown scale of a temperature, NaN otherwise
+  double m_rangelessScale = std::numeric_limits<double>::quiet_NaN();   ///< grown scale of a temperature or of a value beyond the display count, NaN otherwise
   AnalogMeterStyle m_style = AnalogMeterStyle::dark();
   QColor m_alert;   ///< an alarm's colour over the dial, invalid when none
   int    m_limitId = -1;   ///< the limit test's value, -1 = none

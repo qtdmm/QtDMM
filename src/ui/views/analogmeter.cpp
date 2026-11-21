@@ -192,6 +192,15 @@ double AnalogMeter::fullScaleFromReading(const QString &value, int counts, const
   return fullScaleFromReading(value, counts);
 }
 
+double AnalogMeter::grownScale(double value, double fullScale, double grown)
+{
+  // a display count too small for the values: from the first value beyond
+  // it the scale follows the values; without a count (NaN) at once
+  if (std::isnan(grown) && !std::isnan(fullScale) && std::fabs(value) <= fullScale * 1.0001)
+    return grown;
+  return fullScaleWithoutRange(value, grown);
+}
+
 double AnalogMeter::fullScaleWithoutRange(double value, double current)
 {
   // the value stays left of the red zone, which starts at 90 % of full scale
@@ -429,6 +438,11 @@ QString AnalogMeter::formatLabel(double v)
   return s;
 }
 
+bool AnalogMeter::labelFits(const QRectF &box, const QRectF &face, double inset)
+{
+  return face.adjusted(inset, inset, -inset, -inset).contains(box);
+}
+
 double AnalogMeter::scaleStep(double fullScale, bool bipolar, double labelRadius, double labelWidth)
 {
   const double range = bipolar ? 2.0 * fullScale : fullScale;
@@ -551,15 +565,11 @@ void AnalogMeter::drawScale(QPainter &p, const Geometry &g) const
       const QPointF c0 = polar(g.pivot, R + g.fontPx * 1.0, a);
       const double w = fm.horizontalAdvance(label) + 4;
       const double h = fm.height();
-      // the end labels sit close to the bezel: keep them on the dial
-      QRectF box(c0.x() - w / 2, c0.y() - h / 2, w, h);
-      const double inset = g.fontPx * 0.3;
-      if (box.right() > g.face.right() - inset)
-        box.moveRight(g.face.right() - inset);
-      if (box.left() < g.face.left() + inset)
-        box.moveLeft(g.face.left() + inset);
-      if (box.top() < g.face.top() + inset)
-        box.moveTop(g.face.top() + inset);
+      // an end label that does not fit on the dial is left out: moved
+      // inwards it lay on the arc and the red zone ("5000" at 5000 ppm)
+      const QRectF box(c0.x() - w / 2, c0.y() - h / 2, w, h);
+      if (!labelFits(box, g.face, g.fontPx * 0.3))
+        continue;
       p.setPen(c);
       p.drawText(box, Qt::AlignCenter, label);
     }
@@ -906,9 +916,14 @@ void AnalogMeter::showReading(const Reading &r)
   }
   else
   {
-    m_rangelessScale = kNaN;
+    if (unit != m_unitText)
+      m_rangelessScale = kNaN;
     const double fs = fullScaleFromReading(val, m_counts, unit);
-    if (!std::isnan(fs))
+    if (!r.overload && !r.noNumber())
+      m_rangelessScale = grownScale(QString(val).remove(' ').toDouble(), fs, m_rangelessScale);
+    if (!std::isnan(m_rangelessScale))
+      setFullScale(std::isnan(fs) ? m_rangelessScale : qMax(fs, m_rangelessScale));
+    else if (!std::isnan(fs))
       setFullScale(fs);
   }
 

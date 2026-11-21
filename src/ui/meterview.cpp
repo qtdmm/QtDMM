@@ -4,6 +4,7 @@
 
 #include <QTimer>
 
+#include "device/devicetype.h"
 #include "device/meterconnection.h"
 #include "service/metercontroller.h"
 #include "service/valuefeed.h"
@@ -49,6 +50,29 @@ void MeterView::setStyle(int style)
   applyStyle();
 }
 
+namespace
+{
+// the display count the needle's scale takes; 0 for a device without
+// ranges (a generator, a formula, a Victron, a board's text lines): its
+// scale then follows the values, as a temperature's does
+int scaleCounts(const MeterController *ctl)
+{
+  if (ctl->isNode())
+    return 0;
+  const DmmDecoder::DMMInfo &info = ctl->sourceInfo();
+  switch (DeviceType::of(info))
+  {
+    case DeviceType::Microcontroller:
+    case DeviceType::BatteryMonitor:
+    case DeviceType::SolarCharger:
+    case DeviceType::Inverter:
+      return 0;
+    default:
+      return info.display;
+  }
+}
+}
+
 void MeterView::setLook(const Look &look)
 {
   m_look = look;
@@ -56,7 +80,7 @@ void MeterView::setLook(const Look &look)
   m_meter->setScaleMode(look.scaleMode);
   // the scale of the meter that has the value
   if (const MeterController *ctl = m_feed->controller())
-    m_meter->setDisplayCounts(ctl->sourceInfo().display);
+    m_meter->setDisplayCounts(scaleCounts(ctl));
   showAlertColor();
 }
 
@@ -65,7 +89,7 @@ void MeterView::follow(const MeterController *ctl)
   m_meter->reset();
   m_meter->clearMinMax();
   if (ctl)
-    m_meter->setDisplayCounts(ctl->sourceInfo().display);
+    m_meter->setDisplayCounts(scaleCounts(ctl));
   disconnect(m_alertLink);
   disconnect(m_limitLink);
   if (ctl)
