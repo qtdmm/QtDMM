@@ -100,6 +100,7 @@
 - **ES51962: the 4000 V range** — it was missing, its readings showed as overload.
 - **ES51962: overload compared the wrong bytes** — digits from the first byte on, not the second.
 - **dmm-tools sync (18.11.)** — what dmm-tools learned up to 17.11.: the UT61B+/D+/E+ and UT161 grey out HOLD in NCV, REL in continuity, diode, Hz, duty and NCV, and MIN/MAX there and in capacitance, where the meter ignores the key; a ZOTEK meter that sends another model's data says in the status bar which model to choose; the UT217A's AC A beside Hz in Hz/A is confirmed on a real meter with a clamped conductor (two more test frames); the OWON CMS061/UT217A and CMS101/UT217B show their manual's specifications in the *Data* tab.
+- **dmm-tools sync (21.11.)** — the UNI-T UT71A, UT71B and UT71C/D/E and the Voltcraft VC 920/940/960 show their manual's specifications in the *Data* tab; the other data sheets take dmm-tools' new wording. 23 frames captured on a real UT71D (over CH9325) are test vectors now: QtDMM already read them all as the meter showed, also the one frame that keeps the AC bit when the dial turns from AC mA to the 4–20 mA %.
 
 ### Platforms and build
 

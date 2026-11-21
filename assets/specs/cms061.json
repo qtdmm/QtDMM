@@ -1,5 +1,5 @@
 {
- "source": "dmm-tools 96b4d0d",
+ "source": "dmm-tools 766d4da",
  "device": "cms061",
  "models": [
   "OWON CMS061",
@@ -346,7 +346,7 @@
    "notes": [
     "Accuracy valid 5%–100% of range",
     "Allow for the test leads' own resistance and reactance",
-    "20.00mF: measuring duration should be over 30 seconds"
+    "20.00mF range: measurement takes >30s"
    ],
    "overload_protection": null,
    "page": 36,
@@ -438,7 +438,7 @@
    "input_impedance": null,
    "notes": [
     "Typical waveform: square or sine",
-    "Signal: 1Hz–20MHz, ≥ 1V rms"
+    "Input 1Hz–20MHz: ≥1V rms"
    ],
    "overload_protection": null,
    "page": 36,
