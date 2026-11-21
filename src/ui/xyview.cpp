@@ -77,8 +77,11 @@ void XYView::updateLegend()
       text = value.source;
     return QString("%1: %2").arg(axis, text.isEmpty() ? QStringLiteral("—") : text);
   };
-  m_plot->setTitle(QString("%1     %2").arg(label(tr("X"), m_xSource, m_xName, m_x),
-                                           label(tr("Y"), m_ySource, m_yName, m_y)));
+  // the short title for a narrow plot: the value names, without devices
+  const auto name = [](const QString &axis, const QString &name, const ValueRef &value)
+  { return QString("%1: %2").arg(axis, name.isEmpty() ? tr("Value %1").arg(value.id + 1) : name); };
+  m_plot->setTitles(QString("%1     %2").arg(label(tr("X"), m_xSource, m_xName, m_x), label(tr("Y"), m_ySource, m_yName, m_y)),
+                    QString("%1   %2").arg(name(tr("X"), m_xName, m_x), name(tr("Y"), m_yName, m_y)));
 }
 
 void XYView::feedX(const Reading &reading)

@@ -68,12 +68,13 @@ protected:
   /// The crosshair gone until the mouse moves again (a picture of the plot).
   void hideCrosshair();
 
+  bool eventFilter(QObject *watched, QEvent *event) override;
+
   QCustomPlot *m_plot = nullptr;
   QCPItemText *m_crossText = nullptr;
 
 private:
   static constexpr int kRefreshMs = 33;
-  bool eventFilter(QObject *watched, QEvent *event) override;
   void moveCrosshair(QMouseEvent *event);
 
   QTimer               m_refreshTimer;
