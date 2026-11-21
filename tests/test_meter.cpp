@@ -96,6 +96,17 @@ int main(int argc, char **argv)
 
   // --- a temperature has no range: the scale follows the values (1-2-5) ---
   const double none = std::numeric_limits<double>::quiet_NaN();
+
+  // --- a display count too small for the values (Victron "13.23" @1000 -> 10) ---
+  check(std::isnan(AnalogMeter::grownScale(3.856, 4.0, none)), "a value within the count: no grown scale");
+  check(near(AnalogMeter::grownScale(13.23, AnalogMeter::fullScaleFromReading("13.23", 1000), none), 20.0),
+        "13.23 V beyond 10: the scale grows to 20");
+  check(near(AnalogMeter::grownScale(5.1, 6.0, 20.0), 20.0), "once grown, it stays while the values fit the count again");
+  check(near(AnalogMeter::grownScale(13.23, none, none), 20.0), "no count (Victron, generator): the scale follows the values");
+  // --- a scale label off the dial is left out ---
+  const QRectF face(0, 0, 200, 100);
+  check(AnalogMeter::labelFits(QRectF(150, 20, 30, 12), face, 3), "a label on the dial");
+  check(!AnalogMeter::labelFits(QRectF(180, 20, 30, 12), face, 3), "an end label beyond the edge: left out");
   check(near(AnalogMeter::fullScaleWithoutRange(37.2, none), 50.0), "37.2 -> 50");
   check(near(AnalogMeter::fullScaleWithoutRange(46.0, none), 100.0), "46 would be in the red zone of 50 -> 100");
   check(near(AnalogMeter::fullScaleWithoutRange(5.0, none), 10.0), "small values: at least 10");
