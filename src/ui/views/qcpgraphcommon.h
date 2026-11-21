@@ -19,6 +19,10 @@ public:
 
   void setNoDataText(const QString &text);
   void setTitle(const QString &title) override;
+  /// The title, and a shorter one for a narrow plot (the value names
+  /// without their devices): the plot shows the longest that fits, else the
+  /// short one cut with "…", and the full one as the title's tooltip.
+  void setTitles(const QString &title, const QString &shortTitle);
   void setTheme(const PlotTheme &theme) override;
   void setHold(bool hold) override;
   void clear() final;
@@ -33,8 +37,14 @@ protected:
   virtual void clearSamples() = 0;
 
   void setNoDataVisible(bool visible);
+  void resizeEvent(QResizeEvent *event) override;
+  bool eventFilter(QObject *watched, QEvent *event) override;
 
 private:
+  /// The title that fits the plot's width now.
+  void fitTitle();
+
+  QString         m_shortTitle;
   QCPTextElement *m_titleElement = nullptr;
   QCPItemText    *m_noData = nullptr;
   QCPItemText    *m_holdItem = nullptr;

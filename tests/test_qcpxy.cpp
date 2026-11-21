@@ -77,6 +77,28 @@ int main(int argc, char **argv)
   const bool newest = waitFor([&] { return graph->data()->size() == 2000; }, 1000);
   check(newest, QString("the newest 2000 points: %1").arg(graph->data()->size()));
 
+  // a title too long for the plot: the short one, cut if need be (lengths
+  // from the font, whatever the test platform's is)
+  auto *titleElement = qobject_cast<QCPTextElement *>(plot->plotLayout()->element(0, 0));
+  xy.resize(600, 400);
+  QCoreApplication::processEvents();
+  const QFontMetrics fm(titleElement ? titleElement->font() : xy.font());
+  QString full = "X: TFA Dostmann AIRCO2NTROL Coach · Value 2";
+  while (fm.horizontalAdvance(full) <= xy.width())
+    full += " · TFA Dostmann AIRCO2NTROL Coach";
+  const QString shortTitle = "X: Value 2   Y: Value 3";
+  xy.setTitles(full, shortTitle);
+  check(titleElement && titleElement->text() == shortTitle && xy.title() == full,
+        "a narrow plot shows the short title: " + (titleElement ? titleElement->text() : QString()));
+  xy.resize(fm.horizontalAdvance(full) + 200, 400);
+  QCoreApplication::processEvents();
+  check(titleElement && titleElement->text() == full, "a wide one the full title");
+  xy.setTitles(full + " ", full);
+  QCoreApplication::processEvents();
+  xy.resize(600, 400);
+  QCoreApplication::processEvents();
+  check(titleElement && titleElement->text().endsWith(QChar(0x2026)), "a short title too long as well is cut with …");
+
   if (failed == 0)
     qInfo() << "All XY plot tests passed.";
   return failed == 0 ? 0 : 1;

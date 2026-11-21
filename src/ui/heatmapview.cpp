@@ -54,7 +54,9 @@ void HeatmapView::updateAxisUnits()
 void HeatmapView::updateLegend()
 {
   const char *axisName[3] = {"X", "Y", "Z"};
+  // the short title for a narrow plot: the value names, without devices
   QStringList parts;
+  QStringList shortParts;
   for (int a = 0; a < 3; ++a)
   {
     QString text = m_source[a];
@@ -64,8 +66,9 @@ void HeatmapView::updateLegend()
     if (text.isEmpty() && !m_ref[a].source.isEmpty())
       text = m_ref[a].source;
     parts << QString("%1: %2").arg(QLatin1String(axisName[a]), text.isEmpty() ? QStringLiteral("—") : text);
+    shortParts << QString("%1: %2").arg(QLatin1String(axisName[a]), valueName.isEmpty() ? QStringLiteral("—") : valueName);
   }
-  m_plot->setTitle(parts.join(QStringLiteral("     ")));
+  m_plot->setTitles(parts.join(QStringLiteral("     ")), shortParts.join(QStringLiteral("   ")));
 }
 
 void HeatmapView::feed(int axis, const Reading &reading)
