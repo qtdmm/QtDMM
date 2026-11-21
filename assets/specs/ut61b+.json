@@ -1,5 +1,5 @@
 {
- "source": "dmm-tools 96b4d0d",
+ "source": "dmm-tools 766d4da",
  "device": "ut61b+",
  "models": [
   "Uni-Trend UT61B+"
@@ -436,7 +436,7 @@
    "notes": [
     "Open circuit: residual ≤5 digits",
     "Accuracy valid 1%–100% of range",
-    ">5A: max 10s, rest ≥15 min"
+    ">5A: max. 10s, then rest ≥15min"
    ],
    "overload_protection": "Fuse 10A 240V",
    "page": 17,
@@ -539,7 +539,7 @@
     "Non-sine: add 4% (crest factor 1–2), 5% (2–2.5), 7% (2.5–3)",
     "Accuracy valid 40Hz–500Hz, 1%–100% of range (600.0µA: 5%–100%)",
     "Open circuit: residual ≤5 digits",
-    ">5A: max 10s, rest ≥15 min"
+    ">5A: max. 10s, then rest ≥15min"
    ],
    "overload_protection": "Fuse 10A 240V",
    "page": 18,

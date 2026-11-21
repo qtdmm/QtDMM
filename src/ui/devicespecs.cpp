@@ -66,10 +66,17 @@ Kind kindOf(const QString &heading)
     { "continuity", Quantity::Continuity }, { "on-off", Quantity::Continuity }, { "temperature", Quantity::Temperature },
     { "illuminance", Quantity::Illuminance }, { "wind speed", Quantity::WindSpeed }, { "transistor", Quantity::Gain },
     { "sound level", Quantity::SoundPressureLevel }, { "humidity", Quantity::RelativeHumidity },
+    { "capacity", Quantity::Capacitance }, { "power", Quantity::Power },
   };
   for (const auto &w : words)
     if (h.contains(QLatin1String(w.first)))
       k.quantities << w.second;
+  // a heading that names the unit only: "DC / V", "AC / A", "Ω" (VC 920)
+  static const QRegularExpression unitOnly(QStringLiteral("(?:^|/)\\s*(v|a|ω)\\s*$"));
+  const QRegularExpressionMatch u = unitOnly.match(h);
+  if (u.hasMatch())
+    k.quantities << (u.captured(1) == QLatin1String("v") ? Quantity::Voltage
+                     : u.captured(1) == QLatin1String("a") ? Quantity::Current : Quantity::Resistance);
   k.diode = h.contains(QLatin1String("diode"));
   if (h.contains(QLatin1String("ac+dc")))
     k.coupling = ACDC;

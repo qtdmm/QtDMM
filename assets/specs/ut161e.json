@@ -1,5 +1,5 @@
 {
- "source": "dmm-tools 96b4d0d",
+ "source": "dmm-tools 766d4da",
  "device": "ut161e",
  "models": [
   "Uni-Trend UT161E"
@@ -580,7 +580,7 @@
    "notes": [
     "Open circuit: residual ≤10 digits",
     "Accuracy valid 1%–100% of range",
-    ">5A: max 10s, rest ≥15 min"
+    ">5A: max. 10s, then rest ≥15min"
    ],
    "overload_protection": "Fuse 11A 1000V",
    "page": 17,
@@ -690,7 +690,7 @@
     "Non-sine: add 4% (crest factor 1–2), 5% (2–2.5), 7% (2.5–3)",
     "Accuracy valid 1%–100% of range (1kHz–10kHz: 10%–100%)",
     "Open circuit: residual ≤10 digits",
-    ">5A: max 10s, rest ≥15 min"
+    ">5A: max. 10s, then rest ≥15min"
    ],
    "overload_protection": "Fuse 11A 1000V",
    "page": 18,

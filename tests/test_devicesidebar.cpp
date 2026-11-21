@@ -218,12 +218,22 @@ int main(int argc, char **argv)
       check(at(reading(Quantity::Voltage, SampleFlag::DC | SampleFlag::Diode, std::nan("")), 12, 0), "diode");
       check(at(reading(Quantity::Current, SampleFlag::DC, std::nan("")), 4, -1), "DC A, no full scale: first table only");
       check(!DeviceSpecs::match(ut803, reading(Quantity::Unknown, 0, 1)).isValid(), "an unknown quantity: no mark");
+      // headings that name only the unit (VC 920/940/960: "DC / V", "AC / V", "Ω")
+      const QJsonObject vc940 = DeviceSpecs::find("Voltcraft", "VC 940");
+      auto vcAt = [&](const Reading &r, int table, int row)
+      {
+        const DeviceSpecs::Match m = DeviceSpecs::match(vc940, r);
+        return m.table == table && m.row == row;
+      };
+      check(vcAt(reading(Quantity::Voltage, SampleFlag::DC, 40), 1, 1) && vcAt(reading(Quantity::Voltage, SampleFlag::AC, 4), 2, 0)
+              && vcAt(reading(Quantity::Resistance, 0, 4e6), 10, 4), "VC 940: DC 40 V, AC 4 V, 4 MΩ by unit headings");
       const QString marked = DeviceSpecs::html(ut803, { 10, 0 }, QColor("#ffff00"));
       const int row = marked.indexOf("<tr style=\"background-color:#ffff00\"><td>600Ω");
       const int note = marked.indexOf("600Ω: accuracy");
       check(marked.contains("<a name=\"current\">") && row >= 0 && note > row
               && !marked.contains("<li>600Ω: accuracy"), "the 600Ω row marked, its note below it");
-      // every heading of the data files is known, but for these two
+      // every heading of the data files is known, but for these three (the
+      // VC 920's 4-20 mA loop % has no quantity of its own)
       QStringList unknown;
       for (const QString &name : QDir(":/specs").entryList({ "*.json" }))
       {
@@ -236,7 +246,7 @@ int main(int argc, char **argv)
         for (const QJsonValue &t : QJsonDocument::fromJson(f.readAll()).object().value("tables").toArray())
         {
           const QString heading = t.toObject().value("table").toString();
-          if (!DeviceSpecs::knowsHeading(heading) && heading != "Auto" && heading != "Wind Rating")
+          if (!DeviceSpecs::knowsHeading(heading) && heading != "Auto" && heading != "Wind Rating" && heading != "4-20 mA")
             unknown << name + ": " + heading;
         }
       }

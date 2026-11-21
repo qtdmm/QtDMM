@@ -33,6 +33,10 @@ MODELS = {
     "zt5b": ["ZOTEK ZT-5B", "ANENG V05B"],
     "cms061": ["OWON CMS061", "Uni-Trend UT217A"],
     "cms101": ["OWON CMS101", "Uni-Trend UT217B"],
+    "ut71a": ["Uni-Trend UT71A"],
+    "ut71b": ["Uni-Trend UT71B"],
+    "ut71cde": ["Uni-Trend UT71CDE"],
+    "vc920": ["Voltcraft VC 920", "Voltcraft VC 940", "Voltcraft VC 960"],
 }
 
 REPO = pathlib.Path(__file__).resolve().parent.parent

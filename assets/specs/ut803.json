@@ -1,5 +1,5 @@
 {
- "source": "dmm-tools 96b4d0d",
+ "source": "dmm-tools 766d4da",
  "device": "ut803",
  "models": [
   "Uni-Trend UT803"
@@ -7,7 +7,7 @@
  "model": "UNI-T UT803",
  "tables": [
   {
-   "input_impedance": "Around > 3000MΩ",
+   "input_impedance": "About > 3000MΩ",
    "notes": [],
    "overload_protection": "1000V",
    "page": 39,
@@ -26,7 +26,7 @@
    "table": "A. DC Voltage"
   },
   {
-   "input_impedance": "Around 10MΩ",
+   "input_impedance": "About 10MΩ",
    "notes": [],
    "overload_protection": "1000V",
    "page": 39,
@@ -75,7 +75,7 @@
    "table": "A. DC Voltage"
   },
   {
-   "input_impedance": "Around > 3000MΩ",
+   "input_impedance": "About > 3000MΩ",
    "notes": [
     "True RMS valid 10%–95% of range",
     "Crest factor 3.0 (1000V: 1.5)",
@@ -93,7 +93,7 @@
       },
       {
        "accuracy": "1%+5",
-       "freq_range": ">50kHZ–100kHz"
+       "freq_range": ">50kHz–100kHz"
       }
      ],
      "range": "600mV",
@@ -103,7 +103,7 @@
    "table": "B. AC Voltage"
   },
   {
-   "input_impedance": "Around 10MΩ",
+   "input_impedance": "About 10MΩ",
    "notes": [
     "True RMS valid 10%–95% of range",
     "Crest factor 3.0 (1000V: 1.5)",
@@ -187,7 +187,7 @@
   {
    "input_impedance": null,
    "notes": [
-    "≤5A range: continuous; >5A range: ≤10s at a time, ≥15min apart"
+    "≤5A range: continuous; >5A range: max. 10s, then rest ≥15min"
    ],
    "overload_protection": "Fuse 500mA 125V",
    "page": 42,
@@ -218,7 +218,7 @@
   {
    "input_impedance": null,
    "notes": [
-    "≤5A range: continuous; >5A range: ≤10s at a time, ≥15min apart"
+    "≤5A range: continuous; >5A range: max. 10s, then rest ≥15min"
    ],
    "overload_protection": "Fuse 500mA 125V",
    "page": 42,
@@ -249,7 +249,7 @@
   {
    "input_impedance": null,
    "notes": [
-    "≤5A range: continuous; >5A range: ≤10s at a time, ≥15min apart"
+    "≤5A range: continuous; >5A range: max. 10s, then rest ≥15min"
    ],
    "overload_protection": "Fuse 10A 250V",
    "page": 42,
@@ -273,7 +273,7 @@
     "True RMS valid 10%–95% of range; crest factor 3.0",
     "Shorted input: residual under ~30 digits, accuracy unaffected",
     "AC+DC: range accuracy + 1%",
-    "≤5A range: continuous; >5A range: ≤10s at a time, ≥15min apart"
+    "≤5A range: continuous; >5A range: max. 10s, then rest ≥15min"
    ],
    "overload_protection": "Fuse 500mA 125V",
    "page": 43,
@@ -315,7 +315,7 @@
     "True RMS valid 10%–95% of range; crest factor 3.0",
     "Shorted input: residual under ~30 digits, accuracy unaffected",
     "AC+DC: range accuracy + 1%",
-    "≤5A range: continuous; >5A range: ≤10s at a time, ≥15min apart"
+    "≤5A range: continuous; >5A range: max. 10s, then rest ≥15min"
    ],
    "overload_protection": "Fuse 500mA 125V",
    "page": 43,
@@ -357,7 +357,7 @@
     "True RMS valid 10%–95% of range; crest factor 3.0",
     "Shorted input: residual under ~30 digits, accuracy unaffected",
     "AC+DC: range accuracy + 1%",
-    "≤5A range: continuous; >5A range: ≤10s at a time, ≥15min apart"
+    "≤5A range: continuous; >5A range: max. 10s, then rest ≥15min"
    ],
    "overload_protection": "Fuse 10A 250V",
    "page": 43,
@@ -467,7 +467,7 @@
    "input_impedance": null,
    "notes": [
     "Open circuit ≈2.7V",
-    "Working current ≈1mA"
+    "Test current ≈1mA"
    ],
    "overload_protection": "250V rms",
    "page": 45,
@@ -567,7 +567,7 @@
     "Input 10Hz–1MHz: 150mV–30V rms",
     "Input >1MHz–10MHz: 300mV–30V rms",
     "Input >10MHz–50MHz: 600mV–30V rms",
-    "Input at zero DC level; >50MHz unspecified"
+    "Input at zero DC level; >50MHz not specified"
    ],
    "overload_protection": "250V rms",
    "page": 47,
