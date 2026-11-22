@@ -75,9 +75,16 @@ A clone needs its tags: `git fetch --tags`. The CI checkouts use `fetch-depth: 0
 5. Tag the merge commit on the release branch and push the tag:
 
    ```bash
-   git tag -a 26.1-rc1 -m "QtDMM 26.1-rc1"
-   git push upstream 26.1-rc1
+   git fetch upstream
+   git tag -a 26.1-rc1 -m "QtDMM 26.1-rc1" upstream/release/26.1
+   git push git@github.com:qtdmm/QtDMM.git 26.1-rc1
    ```
+
+   The tag must reach qtdmm/QtDMM itself: a tag on a fork starts no
+   Release workflow there. A clone whose `upstream` has its push URL
+   switched off (`DISABLE`, against pushing a branch there by mistake)
+   pushes the tag to the repository's URL directly, as above; a clone
+   that may push to `upstream` can write `git push upstream 26.1-rc1`.
 
 6. The **Release** workflow (`.github/workflows/release.yml`) builds the
    Linux AppImage and Flatpak bundle (`QtDMM-<tag>-x86_64.flatpak`,
