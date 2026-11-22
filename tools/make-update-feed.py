@@ -5,7 +5,7 @@
 site (https://qtdmm.github.io/QtDMM/latest.json), from GitHub's list of
 releases:
 
-    gh api repos/qtdmm/QtDMM/releases | tools/make-update-feed.py - site/latest.json
+    gh api repos/qtdmm/QtDMM/releases | tools/make-update-feed.py > site/latest.json
 
 "stable" is the newest release, "beta" the newest pre-release when it is
 newer than that (else null: a beta user is offered the final release). Each
@@ -84,16 +84,11 @@ def feed(releases):
     }
 
 
-def main(argv):
-    if len(argv) != 3:
-        sys.exit(f"usage: {argv[0]} <releases.json|-> <latest.json>")
-    source = sys.stdin if argv[1] == "-" else open(argv[1], encoding="utf-8")
-    with source:
-        releases = json.load(source)
-    with open(argv[2], "w", encoding="utf-8") as out:
-        json.dump(feed(releases), out, indent=1)
-        out.write("\n")
+def main():
+    # stdin to stdout: no file names to open (the shell does the redirection)
+    json.dump(feed(json.load(sys.stdin)), sys.stdout, indent=1)
+    sys.stdout.write("\n")
 
 
 if __name__ == "__main__":
-    main(sys.argv)
+    main()
