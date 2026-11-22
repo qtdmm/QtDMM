@@ -392,6 +392,10 @@ public:
   QString     markPhoto(int mark) const;
   QColor      markColor(int mark) const;
   int         markPixel(int mark) const;
+  /// The marks sharing the flag of @p mark (several where their lines fall
+  /// together, a series of photos; the first one has the flag); empty while
+  /// it is not shown.
+  QList<int>  markGroup(int mark) const;
   QRect       markFlagRect(int mark) const;
   QString     markFlagText(int mark) const;
   /// The flag of cursor @p which below the plot; empty while it has none.
@@ -583,6 +587,10 @@ private:
   int         draggedIndex() const;
   /// Ends the drag of a note: it stays (noteMoved()) or goes back (@p cancel).
   void        endMarkDrag(bool cancel);
+  /// The tooltip of the flag of @p mark: its note, or a line per mark of its group.
+  QString     flagTip(int mark) const;
+  /// A menu of the marks of one flag; the one chosen shows its photo or its note.
+  void        chooseMark(const QList<int> &group, const QPoint &globalPos);
   // graphwidget_input.cpp
   void        setupInput();
   void        mouseDoubleClicked(QMouseEvent *event);

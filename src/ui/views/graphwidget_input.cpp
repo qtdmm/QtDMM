@@ -81,12 +81,12 @@ void GraphWidget::mouseMoved(QMouseEvent *event)
                       : levelAt(event->pos()) != kNoLine ? Qt::SplitVCursor : Qt::ArrowCursor);
     // outside the plot the crosshair's clock time is no longer true: a flag's note, or nothing
     if (!m_plot->axisRect()->rect().contains(event->pos()))
-      m_plot->setToolTip(flag >= 0 ? markTip(flag) : QString());
+      m_plot->setToolTip(flag >= 0 ? flagTip(flag) : QString());
     if (flag != m_tipMark)
     {
       m_tipMark = flag;
       if (flag >= 0)
-        QToolTip::showText(event->globalPosition().toPoint(), markTip(flag), m_plot);
+        QToolTip::showText(event->globalPosition().toPoint(), flagTip(flag), m_plot);
       else
         QToolTip::hideText();
     }
@@ -136,12 +136,20 @@ void GraphWidget::mouseReleased(QMouseEvent *event)
   const Drag drag = m_drag;
   if (drag == Drag::Mark)
   {
-    // a click: its photo, or its note (a tooltip goes with the press)
-    if (const int mark = markOf(m_dragStore, draggedIndex()); !m_moved && mark >= 0 && !markPhoto(mark).isEmpty())
-      Q_EMIT photoClicked(markPhoto(mark));
-    else if (!m_moved && mark >= 0)
-      QToolTip::showText(event->globalPosition().toPoint(), markTip(mark), m_plot);
+    // a click: its photo, or its note (a tooltip goes with the press);
+    // on a flag of several marks the one asked for
+    const int mark = markOf(m_dragStore, draggedIndex());
+    const bool click = !m_moved && mark >= 0;
+    const QList<int> group = click && markFlagRect(mark).contains(event->pos()) ? markGroup(mark) : QList<int>();
+    const QString photo = markPhoto(mark);
+    const QString tip = click ? markTip(mark) : QString();
     endMarkDrag(false);
+    if (group.size() > 1)
+      chooseMark(group, event->globalPosition().toPoint());
+    else if (click && !photo.isEmpty())
+      Q_EMIT photoClicked(photo);
+    else if (click)
+      QToolTip::showText(event->globalPosition().toPoint(), tip, m_plot);
     return;
   }
   m_drag = Drag::None;
