@@ -1,0 +1,112 @@
+protocol: OpenOSC
+decoder: src/device/decoders/openosc.cpp
+devices: [ZOTEK ZT-703S OpenOSC]
+frames_per_reading: 1
+unit_map:                      # spec spelling -> what the decoder emits
+  "u": "µ"
+sources:
+  - "github.com/qtdmm/QtDMM/issues/603 (captures by the issue's author, ZOYI ZT-703S with OpenOSC 0.17.0, 22.11.2026)"
+  - "github.com/bve/OpenOSC (GPL-3.0): src/scpi/meter.cpp, include/openosc/measurement/dmm/function.hpp, include/openosc/data/status.hpp, src/measurement/dmm/ranges.cpp; wiki SCPI-Reference"
+
+# OpenOSC is a free firmware for the ZOYI ZT-703S (and ZT-706S, 66000 counts,
+# its own ranges: not covered here). Over USB it is a CDC serial port (and
+# USBTMC) that speaks SCPI; the baud rate is ignored, answers end with LF,
+# commands without "?" are not answered, nothing is sent unasked. USB works
+# in the DMM mode only (switching scope/DMM reconnects USB).
+#
+# QtDMM polls "SYST:DMM:RES?" LF; the answer has 11 fields:
+#   function,value,status,value2,quantity2,range,mode,hold,rel,sequence,time_us
+# function (function.hpp): 0 V DC, 1 V AC, 2 Ohm, 3 continuity, 4 diode,
+#   5 capacitance, 6 A DC, 7 A AC, 8 mV DC, 9 mV AC, 10 mA DC, 11 mA AC,
+#   12 temperature type K (always degrees C over SCPI), 13 unknown
+# value: SI base units, NAN unless status is 0
+# status (status.hpp): 0 OK, 6 overload, 14 no number on the display; the
+#   others (1 no data ... 13) are errors
+# value2/quantity2: a secondary value only after FUNC2 FREQ (quantity 5 Hz)
+# range: 1-based index into the range table of ranges.cpp (0 unknown);
+#   mode 1 auto, 0 manual, -1 unknown; hold, rel 1/0
+# The digits shown come from that table, {unit, decimals, full scale} (ZT703S):
+#   V DC 2.5/25/250/1000 V with 4/3/2/1 decimals, V AC the same up to 750 V,
+#   mV 25/250 mV 3/2, A 2.5/10 A 4/3, mA 25/250 mA 3/2,
+#   Ohm 250 (2), 2.5k (4), 25k (3), 250k (2), 2.5M (4), 25M (3), 250M (1),
+#   F 9.999n (3), 99.99n (2), 999.9n (1), 9.999u, 99.99u, 999.9u, 9.999m, 99.99m.
+#   Continuity, diode and temperature have none: shown with 1, 3 and 1 decimals.
+# HOLD freezes value, sequence and time; while HOLD is on the meter ignores a
+# change of function (matters once QtDMM sends keys).
+vectors:
+  - source_line: "0,4.2e-3,0,NAN,0,1,1,0,0,5301,1739400000"   # DC V, open leads
+    bytes: 30 2C 34 2E 32 65 2D 33 2C 30 2C 4E 41 4E 2C 30 2C 31 2C 31 2C 30 2C 30 2C 35 33 30 31 2C 31 37 33 39 34 30 30 30 30 30 0A
+    reading: {value: "0.0042", unit: "V", coupling: DC, range_mode: auto}
+    expect: {special: DC, val: "0.0042"}
+  - source_line: "1,0,0,NAN,0,1,1,0,0,5306,1741043000"   # AC V
+    bytes: 31 2C 30 2C 30 2C 4E 41 4E 2C 30 2C 31 2C 31 2C 30 2C 30 2C 35 33 30 36 2C 31 37 34 31 30 34 33 30 30 30 0A
+    reading: {value: "0.0000", unit: "V", coupling: AC, range_mode: auto}
+    expect: {special: AC, val: "0.0000"}
+  - source_line: "2,2.176e+3,0,NAN,0,3,1,0,0,14829,4861495000"   # a resistor, range 3 (25 kOhm)
+    bytes: 32 2C 32 2E 31 37 36 65 2B 33 2C 30 2C 4E 41 4E 2C 30 2C 33 2C 31 2C 30 2C 30 2C 31 34 38 32 39 2C 34 38 36 31 34 39 35 30 30 30 0A
+    reading: {value: "2.176", unit: "kOhm", function: resistance, range_mode: auto}
+    expect: {special: OH, val: "2.176"}
+  - source_line: "2,NAN,6,NAN,0,1,1,0,0,5315,1743984000"   # open leads: overload
+    bytes: 32 2C 4E 41 4E 2C 36 2C 4E 41 4E 2C 30 2C 31 2C 31 2C 30 2C 30 2C 35 33 31 35 2C 31 37 34 33 39 38 34 30 30 30 0A
+    reading: {value: "OL", unit: "Ohm", function: resistance, range_mode: auto}
+    expect: {special: OH, val: "OL"}
+  - source_line: "3,0,0,NAN,0,0,-1,0,0,14860,4871659000"   # continuity, probes shorted
+    bytes: 33 2C 30 2C 30 2C 4E 41 4E 2C 30 2C 30 2C 2D 31 2C 30 2C 30 2C 31 34 38 36 30 2C 34 38 37 31 36 35 39 30 30 30 0A
+    reading: {value: "0.0", unit: "Ohm", function: continuity}
+    expect: {special: BUZ, val: "0.0", range: ""}
+  - source_line: "3,NAN,14,NAN,0,0,-1,0,0,5318,1744967000"   # continuity, open: no number
+    bytes: 33 2C 4E 41 4E 2C 31 34 2C 4E 41 4E 2C 30 2C 30 2C 2D 31 2C 30 2C 30 2C 35 33 31 38 2C 31 37 34 34 39 36 37 30 30 30 0A
+    reading: {value: "----", unit: "Ohm", function: continuity, shown: none}
+    expect: {special: BUZ}
+  - source_line: "4,5.18e-1,0,NAN,0,0,-1,0,0,14922,4891969000"   # a diode
+    bytes: 34 2C 35 2E 31 38 65 2D 31 2C 30 2C 4E 41 4E 2C 30 2C 30 2C 2D 31 2C 30 2C 30 2C 31 34 39 32 32 2C 34 38 39 31 39 36 39 30 30 30 0A
+    reading: {value: "0.518", unit: "V", function: diode}
+    expect: {special: DI, val: "0.518"}
+  - source_line: "4,NAN,14,NAN,0,0,-1,0,0,5320,1745630000"   # diode, open: no number
+    bytes: 34 2C 4E 41 4E 2C 31 34 2C 4E 41 4E 2C 30 2C 30 2C 2D 31 2C 30 2C 30 2C 35 33 32 30 2C 31 37 34 35 36 33 30 30 30 30 0A
+    reading: {value: "----", unit: "V", function: diode, shown: none}
+    expect: {special: DI}
+  - source_line: "5,1.222e-7,0,NAN,0,3,1,0,0,14984,4912275000"   # a capacitor, range 3 (999.9 nF)
+    bytes: 35 2C 31 2E 32 32 32 65 2D 37 2C 30 2C 4E 41 4E 2C 30 2C 33 2C 31 2C 30 2C 30 2C 31 34 39 38 34 2C 34 39 31 32 32 37 35 30 30 30 0A
+    reading: {value: "122.2", unit: "nF", function: capacitance, range_mode: auto}
+    expect: {special: CA, val: "122.2"}
+  - source_line: "5,NAN,14,NAN,0,1,1,0,0,5322,1746281000"   # capacitance, open: no number
+    bytes: 35 2C 4E 41 4E 2C 31 34 2C 4E 41 4E 2C 30 2C 31 2C 31 2C 30 2C 30 2C 35 33 32 32 2C 31 37 34 36 32 38 31 30 30 30 0A
+    reading: {value: "----", unit: "nF", function: capacitance, range_mode: auto, shown: none}
+    expect: {special: CA}
+  - source_line: "6,-2e-4,0,NAN,0,1,1,0,0,5313,1743332000"   # A DC
+    bytes: 36 2C 2D 32 65 2D 34 2C 30 2C 4E 41 4E 2C 30 2C 31 2C 31 2C 30 2C 30 2C 35 33 31 33 2C 31 37 34 33 33 33 32 30 30 30 0A
+    reading: {value: "-0.0002", unit: "A", coupling: DC, range_mode: auto}
+    expect: {special: DC, val: "-0.0002"}
+  - source_line: "7,0,0,NAN,0,1,1,0,0,15194,4981411000"   # A AC, open
+    bytes: 37 2C 30 2C 30 2C 4E 41 4E 2C 30 2C 31 2C 31 2C 30 2C 30 2C 31 35 31 39 34 2C 34 39 38 31 34 31 31 30 30 30 0A
+    reading: {value: "0.0000", unit: "A", coupling: AC, range_mode: auto}
+    expect: {special: AC}
+  - source_line: "8,5.234e-2,0,NAN,0,2,1,0,0,15015,4922431000"   # mV DC, range 2 (250 mV)
+    bytes: 38 2C 35 2E 32 33 34 65 2D 32 2C 30 2C 4E 41 4E 2C 30 2C 32 2C 31 2C 30 2C 30 2C 31 35 30 31 35 2C 34 39 32 32 34 33 31 30 30 30 0A
+    reading: {value: "52.34", unit: "mV", coupling: DC, range_mode: auto}
+    expect: {special: DC, val: "52.34"}
+  - source_line: "9,1.4e-5,0,NAN,0,1,1,0,0,15071,4940783000"   # mV AC
+    bytes: 39 2C 31 2E 34 65 2D 35 2C 30 2C 4E 41 4E 2C 30 2C 31 2C 31 2C 30 2C 30 2C 31 35 30 37 31 2C 34 39 34 30 37 38 33 30 30 30 0A
+    reading: {value: "0.014", unit: "mV", coupling: AC, range_mode: auto}
+    expect: {special: AC, val: "0.014"}
+  - source_line: "10,-1e-6,0,NAN,0,1,1,0,0,15128,4959792000"   # mA DC, open
+    bytes: 31 30 2C 2D 31 65 2D 36 2C 30 2C 4E 41 4E 2C 30 2C 31 2C 31 2C 30 2C 30 2C 31 35 31 32 38 2C 34 39 35 39 37 39 32 30 30 30 0A
+    reading: {value: "-0.001", unit: "mA", coupling: DC, range_mode: auto}
+    expect: {special: DC, val: "-0.001"}
+  - source_line: "11,0,0,NAN,0,1,1,0,0,15155,4968633000"   # mA AC, open
+    bytes: 31 31 2C 30 2C 30 2C 4E 41 4E 2C 30 2C 31 2C 31 2C 30 2C 30 2C 31 35 31 35 35 2C 34 39 36 38 36 33 33 30 30 30 0A
+    reading: {value: "0.000", unit: "mA", coupling: AC, range_mode: auto}
+    expect: {special: AC, val: "0.000"}
+  - source_line: "12,2.51228227615e+1,0,NAN,0,0,-1,0,0,15285,5011222000"   # type K at room temperature
+    bytes: 31 32 2C 32 2E 35 31 32 32 38 32 32 37 36 31 35 65 2B 31 2C 30 2C 4E 41 4E 2C 30 2C 30 2C 2D 31 2C 30 2C 30 2C 31 35 32 38 35 2C 35 30 31 31 32 32 32 30 30 30 0A
+    reading: {value: "25.1", unit: "C", function: temperature}
+    expect: {special: TE, val: "25.1"}
+  - source_line: "0,3e-3,0,NAN,0,1,1,1,0,5327,1747919000"   # HOLD on
+    bytes: 30 2C 33 65 2D 33 2C 30 2C 4E 41 4E 2C 30 2C 31 2C 31 2C 31 2C 30 2C 35 33 32 37 2C 31 37 34 37 39 31 39 30 30 30 0A
+    reading: {value: "0.0030", unit: "V", coupling: DC, range_mode: auto, flags: [HOLD]}
+    expect: {special: DC, relative: false}
+  - source_line: "0,1.3e-3,0,NAN,0,1,1,0,1,5358,1758088000"   # REL on
+    bytes: 30 2C 31 2E 33 65 2D 33 2C 30 2C 4E 41 4E 2C 30 2C 31 2C 31 2C 30 2C 31 2C 35 33 35 38 2C 31 37 35 38 30 38 38 30 30 30 0A
+    reading: {value: "0.0013", unit: "V", coupling: DC, range_mode: auto}
+    expect: {special: DC, relative: true}

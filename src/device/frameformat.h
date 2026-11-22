@@ -99,6 +99,7 @@ public:
     UniTUT117C,
     UniTUT219PV,
     TextLines,
+    OpenOSC,
     EndOfList              // new stuff always before!
   };
 

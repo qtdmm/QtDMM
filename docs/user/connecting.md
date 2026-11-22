@@ -107,6 +107,22 @@ file, the udev rule and the SSH-tunnel setup; there is no authentication, so
 keep it on a trusted network. The whole setup, including running the bridge
 as a service, is on [Meters over the network](remote-bridge.md).
 
+### ZOYI ZT-703S with OpenOSC
+
+The ZT-703S sends nothing with its own firmware. With
+[OpenOSC](https://github.com/bve/OpenOSC), a free replacement firmware, it
+is a USB serial port (`/dev/ttyACM0`, `COM5`) that QtDMM asks for each
+reading (SCPI). Choose *ZOTEK ZT-703S OpenOSC* and that port; the baud rate
+does not matter.
+
+- The meter has to be in its multimeter mode: in scope mode its USB has no
+  multimeter, and switching between the two reconnects USB.
+- Connect it to a port of the computer, not through a hub, and with the
+  performance profile 200/100 (OpenOSC's USB needs it).
+- **The USB port is not isolated from the meter's inputs.** Do not measure
+  mains or anything not referenced to the computer's ground while the USB
+  cable is connected.
+
 ## Connecting
 
 Click **Connect** (F3) in the toolbar. QtDMM connects on its own at
