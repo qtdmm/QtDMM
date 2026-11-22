@@ -524,6 +524,10 @@ void MeterConnection::readEventSLOT(const QByteArray &data, int id, qint64 t, qi
       for (const QString &m : models)
         m_otherModels << QString(m).remove(QLatin1String(" *"));
   }
+  // the reading before once more (polled faster than the meter measures):
+  // nothing new, and no error
+  if (!r && m_decoder->repeated())
+    return;
   if (r)
   {
     Q_EMIT response(*r);

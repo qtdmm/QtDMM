@@ -98,6 +98,7 @@ std::optional<DmmDecoder::DmmResponse> DecoderOpenOSC::decode(const QByteArray &
 {
   m_result = {};
   m_result.main().id = id;
+  m_repeated = false;
 
   // the last line with the 11 fields
   QStringList fields;
@@ -112,7 +113,8 @@ std::optional<DmmDecoder::DmmResponse> DecoderOpenOSC::decode(const QByteArray &
   // polled faster than the meter measures: the same reading again. Not
   // while HOLD, which freezes seq too: the held display still counts
   const QString seq = fields[9].trimmed();
-  if (seq == m_lastSeq && fields[7].trimmed() != "1")
+  m_repeated = seq == m_lastSeq && fields[7].trimmed() != "1";
+  if (m_repeated)
     return std::nullopt;
   m_lastSeq = seq;
   bool ok = false;

@@ -273,8 +273,12 @@ int main(int argc, char **argv)
       };
       if (osc->pollInterval() >= 1000)
         bad("not polled faster than once a second");
-      if (!osc->decode("0,5.001,0,NAN,0,2,1,0,0,700,1000\n", 0) || osc->decode("0,5.001,0,NAN,0,2,1,0,0,700,1000\n", 0))
-        bad("the same seq again is not dropped");
+      if (!osc->decode("0,5.001,0,NAN,0,2,1,0,0,700,1000\n", 0) || osc->repeated())
+        bad("a new seq counts as repeated");
+      if (osc->decode("0,5.001,0,NAN,0,2,1,0,0,700,1000\n", 0) || !osc->repeated())
+        bad("the same seq again is not dropped as repeated (else the status says Error)");
+      if (osc->decode("garbage\n", 0) || osc->repeated())
+        bad("a line that is no reading counts as repeated");
       const auto next = osc->decode("0,5.002,0,NAN,0,2,1,0,0,701,1300\n", 0);
       if (!next || next->main().val != "5.002")
         bad("the next seq is not read");
