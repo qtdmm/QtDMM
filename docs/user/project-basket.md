@@ -127,7 +127,7 @@ double click. `project.json`, QtDMM's own file, is not listed.
 
 ## Exporting the project
 
-**Export project...** in the menu at the project's name packs the whole
+**Export project as file...** in the menu at the project's name packs the whole
 project into one ZIP file, to pass it on or to keep it. The file is
 offered next to the project, `<name>.zip`. Inside, everything lies in a
 folder with the project's name, so unpacking it gives the project back.
@@ -143,7 +143,7 @@ at most 4 GB.
 
 ## Importing a project
 
-**Import project...** (in the menu at the project's name, or as a button
+**Import project from file...** (in the menu at the project's name, or as a button
 while no project is open) unpacks a project ZIP into a new project in the
 folder for new projects and opens it. It is named like the folder in the
 ZIP, `Bench (2)` when that name is taken; a project that is there already

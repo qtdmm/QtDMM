@@ -884,16 +884,6 @@
         <translation>&amp;Description...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="124"/>
-        <source>E&amp;xport project...</source>
-        <translation>&amp;Exporter le projet...</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="126"/>
-        <source>&amp;Import project...</source>
-        <translation>&amp;Importer un projet...</translation>
-    </message>
-    <message>
         <location filename="../../src/ui/views/basketwidget.cpp" line="172"/>
         <location filename="../../src/ui/views/basketwidget.cpp" line="751"/>
         <source>&amp;Add...</source>
@@ -960,6 +950,16 @@
         <translation>&amp;Fermer le projet</translation>
     </message>
     <message>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="124"/>
+        <source>E&amp;xport project as file...</source>
+        <translation>&amp;Exporter le projet comme fichier...</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="126"/>
+        <source>&amp;Import project from file...</source>
+        <translation>&amp;Importer un projet depuis un fichier...</translation>
+    </message>
+    <message>
         <location filename="../../src/ui/views/basketwidget.cpp" line="132"/>
         <source>A project keeps its files in one folder: its benches, recordings, pictures, PDFs, LabPlot projects.</source>
         <translation>Un projet garde ses fichiers dans un dossier : ses bancs de mesure, enregistrements, images, PDF, projets LabPlot.</translation>
@@ -1010,11 +1010,6 @@
         <translation>impossible d&apos;écrire %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="455"/>
-        <source>Export project</source>
-        <translation>Exporter le projet</translation>
-    </message>
-    <message>
         <location filename="../../src/ui/views/basketwidget.cpp" line="457"/>
         <location filename="../../src/ui/views/basketwidget.cpp" line="568"/>
         <source>ZIP archives (*.zip)</source>
@@ -1050,11 +1045,6 @@
         <location filename="../../src/ui/views/basketwidget.cpp" line="540"/>
         <source>cannot make the folder %1</source>
         <translation>impossible de créer le dossier %1</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/views/basketwidget.cpp" line="567"/>
-        <source>Import project</source>
-        <translation>Importer un projet</translation>
     </message>
     <message>
         <location filename="../../src/ui/views/basketwidget.cpp" line="578"/>
@@ -1101,6 +1091,16 @@
         <location filename="../../src/ui/views/basketwidget.cpp" line="693"/>
         <source>No program opens %1</source>
         <translation>Aucun programme n&apos;ouvre %1</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="455"/>
+        <source>Export project as file</source>
+        <translation>Exporter le projet comme fichier</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/basketwidget.cpp" line="567"/>
+        <source>Import project from file</source>
+        <translation>Importer un projet depuis un fichier</translation>
     </message>
     <message>
         <location filename="../../src/ui/views/basketwidget.cpp" line="708"/>
