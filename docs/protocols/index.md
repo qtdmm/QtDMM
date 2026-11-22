@@ -12,7 +12,9 @@ regression tests.
   displayed at that moment, which makes them ground truth for tests.
 - `spec/` — one YAML file per protocol with curated test vectors derived from
   those sources. `tests/generate_fixtures.py` turns them into the fixtures under
-  `tests/data/decoder/` that `test_decoder` runs.
+  `tests/data/decoder/` that `test_decoder` runs. Run it after changing a
+  spec and commit the fixtures with it; the ctest `fixtures_generated`
+  (`--check`, needs PyYAML) fails while they differ.
 
 ## Decoders, devices and sources
 
@@ -30,6 +32,7 @@ regression tests.
 | `do3122.cpp` | `DO3122Continuous` | Duratool DO3122 | — (`duratool.pdf` is the meter's datasheet, no frame description; layout from the decoder) | synthetic |
 | `fluke_qm.cpp` | `FlukeQM` | Fluke 87-IV/89-IV/187/189 (9600 Bd) and 287/289 (115200 Bd) over the IR serial adapter (unconfirmed) | `fluke_18x_remote.pdf`, `fluke_28x_remote.pdf` (Fluke's Remote Interface Specifications; no capture) | yes, from the specifications' examples |
 | `fluke45.cpp` | `Fluke45` | Fluke 45 bench meter, RS-232 (unconfirmed) | `fluke_45_users_manual.pdf` (chapter 5; no capture) | yes, built from the manual's tables |
+| `openosc.cpp` | `OpenOSC` | ZOYI ZT-703S with the free OpenOSC firmware, SCPI over USB CDC (`SYST:DMM:RES?`; unconfirmed, to be tried by the issue's author) | — (captures in issue #603; OpenOSC sources `meter.cpp`, `function.hpp`, `status.hpp`, `ranges.cpp`) | yes, from the captures |
 | `keysight_u12xx.cpp` | `KeysightU12xx` | Agilent/Keysight U1231A–U1282A over the IR-USB cable (U1173A/B, 9600 8N1; unconfirmed) | — (answer formats from libsigrok's `agilent-dmm`, GPL) | synthetic |
 | `gdm703.cpp` | `GDM703Continuous` | Voltcraft GDM 703/704/705 (unconfirmed; chip WENS98A per the [sigrok IC list](https://sigrok.org/wiki/Multimeter_ICs)) | — (layout from Toussaint's CDMM, `ablage/CDMM`) | synthetic |
 | `dtm0660.cpp` | `DTM0660` | Generic DTM0660 (4000/6000/8000 count) | — (`dtm0660-brochure.pdf` has no serial frame; layout from the decoder, after libsigrok) | synthetic |

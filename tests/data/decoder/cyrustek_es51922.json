@@ -109,7 +109,8 @@
         "unit": "V",
         "range": "AUTO",
         "hold": false,
-        "port": "voltage.dc"
+        "port": "voltage.dc",
+        "lowBat": true
       }
     },
     {
