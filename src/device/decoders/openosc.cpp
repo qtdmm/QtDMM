@@ -7,10 +7,10 @@
 
 #include <cmath>
 
-// OpenOSC's multimeter (issue #603): tried by a user, not by us, so "*".
+// OpenOSC's multimeter (issue #603): confirmed on the meter by the issue's author.
 // USB CDC, the baud rate is ignored; 25000 counts.
 static const bool registered = []() {
-  DmmDecoder::addConfig({"ZOTEK", "ZT-703S OpenOSC *", "", 115200, FrameFormat::OpenOSC, 8, 1, 1, 0, 25000, 0, 0, 0});
+  DmmDecoder::addConfig({"ZOTEK", "ZT-703S OpenOSC", "", 115200, FrameFormat::OpenOSC, 8, 1, 1, 0, 25000, 0, 0, 0});
   return true;
 }();
 

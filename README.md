@@ -449,7 +449,7 @@ meter working, please report it on the
 | ZOTEK | ZT-5566SE ¹ | Bench multimeter | - | `ZotekBLE` | Bluetooth LE | - | 20000 |
 | ZOTEK | ZT-5B ¹ | Handheld multimeter | - | `ZotekBLE` | Bluetooth LE | - | 6000 |
 | ZOTEK | ZT-5BQ ¹ | Clamp meter | - | `ZotekBLE` | Bluetooth LE | - | 6000 |
-| ZOTEK | ZT-703S OpenOSC ¹ | Handheld multimeter | - | `OpenOSC` | 115200 8N1 | - | 25000 |
+| ZOTEK | ZT-703S OpenOSC | Handheld multimeter | - | `OpenOSC` | 115200 8N1 | - | 25000 |
 
 ¹ settings taken from the chip, not yet confirmed on hardware with QtDMM.
 
