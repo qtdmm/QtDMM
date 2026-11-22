@@ -192,6 +192,19 @@ double AnalogMeter::fullScaleFromReading(const QString &value, int counts, const
   return fullScaleFromReading(value, counts);
 }
 
+double AnalogMeter::grownFor(const QString &unit)
+{
+  // kept per unit while the base unit stays: a generator going from V to
+  // mV and back finds its V scale again; another base unit starts anew
+  const QString base = SiPrefix::split(unit).baseUnit;
+  if (base != m_grownBase)
+  {
+    m_grownByUnit.clear();
+    m_grownBase = base;
+  }
+  return m_grownByUnit.value(unit, kNaN);
+}
+
 double AnalogMeter::grownScale(double value, double fullScale, double grown)
 {
   // a display count too small for the values: from the first value beyond
@@ -312,6 +325,7 @@ void AnalogMeter::reset()
   m_markMax = kNaN;
   m_decimals = 0;
   m_rangelessScale = kNaN;
+  m_grownByUnit.clear();
   m_latched = false;
   updatePolarity();
   retarget();
@@ -892,6 +906,7 @@ void AnalogMeter::setValueId(int id)
     return;
   m_valueId = id;
   m_rangelessScale = kNaN;
+  m_grownByUnit.clear();
   m_staticDirty = true;   // the limit band belongs to one value
   clearMinMax();
 }
@@ -907,8 +922,7 @@ void AnalogMeter::showReading(const Reading &r)
   {
     // no range: the display count would give 5000 °C for "37.2" at 50000
     // counts, so the scale follows the values instead
-    if (unit != m_unitText)
-      m_rangelessScale = kNaN;
+    m_rangelessScale = grownFor(unit);
     if (!r.overload && !r.noNumber())
       m_rangelessScale = fullScaleWithoutRange(QString(val).remove(' ').toDouble(), m_rangelessScale);
     if (!std::isnan(m_rangelessScale))
@@ -916,8 +930,7 @@ void AnalogMeter::showReading(const Reading &r)
   }
   else
   {
-    if (unit != m_unitText)
-      m_rangelessScale = kNaN;
+    m_rangelessScale = grownFor(unit);
     const double fs = fullScaleFromReading(val, m_counts, unit);
     if (!r.overload && !r.noNumber())
       m_rangelessScale = grownScale(QString(val).remove(' ').toDouble(), fs, m_rangelessScale);
@@ -926,6 +939,9 @@ void AnalogMeter::showReading(const Reading &r)
     else if (!std::isnan(fs))
       setFullScale(fs);
   }
+
+  if (!std::isnan(m_rangelessScale))
+    m_grownByUnit.insert(unit, m_rangelessScale);
 
   // the unit as the digital display writes it ("kΩ", "°C")
   QString label = SiPrefix::displayText(unit);

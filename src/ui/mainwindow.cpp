@@ -2858,6 +2858,21 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
             storeDisplaySLOT();
         }
       }
+  // the front panels share the LCD key: on while one of them shows. Hidden
+  // one by one (their window menu), it stayed on, and its first click only
+  // switched it off - the panels seemed gone for good
+  if ((event->type() == QEvent::Show || event->type() == QEvent::Hide) && !event->spontaneous() && !m_restoring)
+    if (auto *win = qobject_cast<QMdiSubWindow *>(watched); win && panelWindows().contains(win))
+    {
+      const QList<QMdiSubWindow *> panels = panelWindows();
+      const bool anyShown = std::any_of(panels.cbegin(), panels.cend(), [](const QMdiSubWindow *w) { return !w->isHidden(); });
+      if (m_displayAction->isChecked() != anyShown)
+      {
+        QSignalBlocker block(m_displayAction);
+        m_displayAction->setChecked(anyShown);
+        storeDisplaySLOT();
+      }
+    }
   return QMainWindow::eventFilter(watched, event);
 }
 

@@ -21,6 +21,7 @@
 
 #include <QWidget>
 #include <QColor>
+#include <QHash>
 #include <QPixmap>
 #include <QRectF>
 #include <QTimer>
@@ -173,6 +174,9 @@ public:
   /// fits @p fullScale; else as fullScaleWithoutRange() with @p grown, until
   /// the unit changes.
   static double grownScale(double value, double fullScale, double grown);
+  /// The grown scale kept for @p unit, NaN for none; forgets them all when
+  /// the base unit changes.
+  double grownFor(const QString &unit);
   /// Whether a scale label at @p box lies on the dial @p face, @p inset
   /// inside its edge; one that does not is left out.
   static bool labelFits(const QRectF &box, const QRectF &face, double inset);
@@ -237,6 +241,8 @@ private:
   double m_minBase = std::numeric_limits<double>::quiet_NaN();
   double m_maxBase = std::numeric_limits<double>::quiet_NaN();
   int m_decimals = 0;   ///< most decimals of a reading (not an overload) since reset()
+  QHash<QString, double> m_grownByUnit;   ///< the grown scale per unit ("mV", "V") of one base unit
+  QString m_grownBase;                    ///< that base unit
   double m_rangelessScale = std::numeric_limits<double>::quiet_NaN();   ///< grown scale of a temperature or of a value beyond the display count, NaN otherwise
   AnalogMeterStyle m_style = AnalogMeterStyle::dark();
   QColor m_alert;   ///< an alarm's colour over the dial, invalid when none
