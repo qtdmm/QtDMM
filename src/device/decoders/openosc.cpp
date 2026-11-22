@@ -109,6 +109,12 @@ std::optional<DmmDecoder::DmmResponse> DecoderOpenOSC::decode(const QByteArray &
   }
   if (fields.isEmpty())
     return std::nullopt;
+  // polled faster than the meter measures: the same reading again. Not
+  // while HOLD, which freezes seq too: the held display still counts
+  const QString seq = fields[9].trimmed();
+  if (seq == m_lastSeq && fields[7].trimmed() != "1")
+    return std::nullopt;
+  m_lastSeq = seq;
   bool ok = false;
   const Function *fn = function(fields[0].toInt(&ok));
   if (!ok || !fn)

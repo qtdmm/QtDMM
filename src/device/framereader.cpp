@@ -72,6 +72,8 @@ void FrameReader::setHandle(QIODevice *handle)
 void FrameReader::setDecoder(std::shared_ptr<DmmDecoder> decoder)
 {
   m_decoder = decoder;
+  if (m_pollTimer)
+    m_pollTimer->setInterval(pollInterval());
   m_gapFrame.clear();
   if (m_gapTimer)
     m_gapTimer->stop();
@@ -127,17 +129,25 @@ void FrameReader::emitGapFrame()
 
 void FrameReader::start()
 {
-  QTimer *timer = new QTimer(this);
-  connect(timer, &QTimer::timeout, this, &FrameReader::timer);
-  timer->start(1000);
+  m_pollTimer = new QTimer(this);
+  connect(m_pollTimer, &QTimer::timeout, this, &FrameReader::timer);
+  m_pollTimer->start(pollInterval());
 }
+
+int FrameReader::pollInterval() const
+{
+  return m_decoder ? qBound(50, m_decoder->pollInterval(), 1000) : 1000;
+}
+
 void FrameReader::timer()
 {
-  if (m_readValue)
-  {
-    sendReadRequest();
+  if (!m_readValue)
+    return;
+  sendReadRequest();
+  // a meter polled faster than once a second is asked again as soon as it
+  // has answered (m_sendRequest); MeterConnection's second re-arms a lost one
+  if (pollInterval() >= 1000)
     m_readValue = false;
-  }
 }
 
 void FrameReader::startRead()

@@ -39,13 +39,15 @@ class QSerialPort;
 /// complete frame; if so the frame is emitted through readEvent() and the
 /// value id advances (meters that send several lines per reading, see
 /// setFramesPerReading()). For polled protocols (Metex14) a request is written to
-/// the port once per second (start(), startRead()).
+/// the port once per second (start(), startRead()), or at the decoder's
+/// DmmDecoder::pollInterval().
 class FrameReader : public QObject
 {
   Q_OBJECT
 public:
   FrameReader(QObject *receiver);
-  /// Starts the one-second timer that sends poll requests (see startRead()).
+  /// Starts the timer that sends poll requests (see startRead()), once a second
+  /// or at the decoder's DmmDecoder::pollInterval().
   void        start();
   /// Arms the next poll request; MeterConnection calls this from its own timer.
   void        startRead();
@@ -92,11 +94,13 @@ protected Q_SLOTS:
 private:
   QIODevice *m_port;
   QTimer    *m_gapTimer = nullptr;   ///< frameGapMs(): fires after the pause
+  QTimer    *m_pollTimer = nullptr;  ///< sends the poll requests (start())
   QByteArray m_gapFrame;             ///< frameGapMs(): the bytes since the last frame
   qint64     m_gapT = 0;             ///< frameGapMs(): Sample::now() of its first byte
   qint64     m_gapWall = 0;
   void       readByGap();
   void       emitGapFrame();
+  int        pollInterval() const;   ///< the decoder's, 50 ms to a second
 
 private Q_SLOTS:
   void timer();

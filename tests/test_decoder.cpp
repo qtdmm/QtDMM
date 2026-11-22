@@ -262,6 +262,25 @@ int main(int argc, char **argv)
       if (!max || max->main().unit != "dF" || max->main().val != "97.9" || !(max->channels[1].states & SampleFlag::Max))
         bad(qPrintable("MAX in F: got " + (max ? max->main().val + " " + max->main().unit : QString("none"))));
     }
+    // OpenOSC (issue #603): polled faster than it measures, a line with the
+    // seq of the one before is dropped, but not while HOLD freezes seq
+    {
+      auto osc = DmmDecoder::getInstance(FrameFormat::OpenOSC);
+      auto bad = [&](const char *what)
+      {
+        qWarning() << "OpenOSC:" << what;
+        ++problems;
+      };
+      if (osc->pollInterval() >= 1000)
+        bad("not polled faster than once a second");
+      if (!osc->decode("0,5.001,0,NAN,0,2,1,0,0,700,1000\n", 0) || osc->decode("0,5.001,0,NAN,0,2,1,0,0,700,1000\n", 0))
+        bad("the same seq again is not dropped");
+      const auto next = osc->decode("0,5.002,0,NAN,0,2,1,0,0,701,1300\n", 0);
+      if (!next || next->main().val != "5.002")
+        bad("the next seq is not read");
+      if (!osc->decode("0,5.002,0,NAN,0,2,1,1,0,701,1300\n", 0) || !osc->decode("0,5.002,0,NAN,0,2,1,1,0,701,1300\n", 0))
+        bad("a held reading (seq frozen) is dropped");
+    }
     // UT117C (synthetic frames, ut117c.md): the poll and the keys as the
     // app sends them, keys greyed out by function, NCV, µF and low
     // battery, both length conventions, a wrong sum

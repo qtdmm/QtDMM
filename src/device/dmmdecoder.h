@@ -165,6 +165,10 @@ public:
   /// Bytes to send to the meter to make it emit a frame; empty for meters
   /// that stream on their own. FrameReader writes it once per read cycle.
   virtual QByteArray pollRequest() const { return QByteArray(); }
+  /// How often pollRequest() is sent, in ms. Below a second the next request
+  /// goes out at this pace once the meter has answered (OpenOSC: 3 readings
+  /// a second); a lost answer is asked again after a second.
+  virtual int                        pollInterval() const { return 1000; }
   /// Bytes that press the meter's key @p key once (ControlBar's names,
   /// keyNames()); empty when the meter has no such key, cannot be
   /// remote-controlled or the key needs a reading first.
