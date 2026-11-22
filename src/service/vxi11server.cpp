@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "service/vxi11server.h"
 
+#include <QRandomGenerator>
 #include <QTcpSocket>
 
 namespace
@@ -133,27 +134,52 @@ bool Vxi11Server::start(const QHostAddress &address, RpcbindMode mode, quint16 c
     }
     else
     {
-      // a port the system picks for UDP first, then TCP on it: Windows keeps whole blocks of
-      // its dynamic ports for Hyper-V/WinNAT, often for UDP alone, and hands out free TCP
-      // ports in a row - a free TCP port and the next ones may all lie in such a UDP block
-      // ("The address is protected"); a UDP port it picks is never one of them
-      for (int attempt = 0;; ++attempt)
+      // TCP and UDP on one port, which Windows may refuse for either: it keeps whole blocks of
+      // its dynamic ports for Hyper-V/WinNAT, for TCP or UDP alone ("The address is protected"),
+      // and hands out free ports in a row, so the next ones often lie in the same block. First
+      // a port the system picks for UDP, then one it picks for TCP, then ports chosen at random
+      // all over the dynamic range, away from the block
+      QString why;
+      auto bindBoth = [&](quint16 port, bool udpFirst)
       {
-        if (!m_pmapUdp.bind(address, 0))
+        bool ok = false;
+        if (udpFirst)
         {
-          m_error = tr("UDP: %1").arg(m_pmapUdp.errorString());
-          stop();
-          return false;
+          if (!m_pmapUdp.bind(address, port))
+            why = tr("UDP: %1").arg(m_pmapUdp.errorString());
+          else if (!m_pmapTcp.listen(address, m_pmapUdp.port()))
+            why = tr("TCP port %1: %2").arg(m_pmapUdp.port()).arg(m_pmapTcp.errorString());
+          else
+            ok = true;
         }
-        if (m_pmapTcp.listen(address, m_pmapUdp.port()))
-          break;
-        if (attempt == 19)
+        else if (!m_pmapTcp.listen(address, port))
+          why = tr("TCP port %1: %2").arg(port).arg(m_pmapTcp.errorString());
+        else if (!m_pmapUdp.bind(address, m_pmapTcp.port()))
+          why = tr("UDP port %1: %2").arg(m_pmapTcp.port()).arg(m_pmapUdp.errorString());
+        else
+          ok = true;
+        if (!ok)
         {
-          m_error = tr("TCP port %1: %2").arg(m_pmapUdp.port()).arg(m_pmapTcp.errorString());
-          stop();
-          return false;
+          m_pmapTcp.close();
+          m_pmapUdp.close();
         }
-        m_pmapUdp.close();
+        return ok;
+      };
+      bool bound = false;
+      for (int attempt = 0; attempt < 60 && !bound; ++attempt)
+      {
+        if (attempt < 20)
+          bound = bindBoth(0, true);
+        else if (attempt < 40)
+          bound = bindBoth(0, false);
+        else
+          bound = bindBoth(quint16(QRandomGenerator::global()->bounded(49152, 65536)), true);
+      }
+      if (!bound)
+      {
+        m_error = why;
+        stop();
+        return false;
       }
     }
     m_pmapPort = m_pmapTcp.port();
