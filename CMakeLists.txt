@@ -380,7 +380,8 @@ add_executable(${PROJECT_NAME}
 )
 
 if(APPLE)
-	set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_BUNDLE_ICON_FILE qtdmm.icns)
+	set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_BUNDLE_ICON_FILE qtdmm.icns
+		MACOSX_BUNDLE_INFO_PLIST "${CMAKE_SOURCE_DIR}/assets/macos/Info.plist.in")
 endif()
 
 # paranoia options, force you to correct all compiler warnings

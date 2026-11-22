@@ -4,6 +4,7 @@
 
 #include "core/photostore.h"
 #include "service/photoserver.h"
+#include "ui/dialogs/photocamera.h"
 #include "ui/qrcodeimage.h"
 
 #include <QComboBox>
@@ -141,6 +142,14 @@ PhotoDlg::PhotoDlg(const QString &project, QWidget *parent) : QDialog(parent), m
   phoneText->addStretch();
   phoneLayout->addLayout(phoneText, 1);
   m_sources->addTab(phone, QIcon::fromTheme("smartphone"), tr("&Phone"));
+  m_phoneTab = phone;
+  // a camera of the computer, with Qt Multimedia
+  if (PhotoCamera::supported())
+  {
+    m_camera = new PhotoCamera(m_sources);
+    m_sources->addTab(m_camera, QIcon::fromTheme("camera-web"), tr("&Webcam"));
+    connect(m_camera, &PhotoCamera::photoTaken, this, [this](const QByteArray &jpeg) { addData(jpeg); });
+  }
   auto *fromFile = new QWidget(m_sources);
   auto *fileLayout = new QVBoxLayout(fromFile);
   auto *fileHint = new QLabel(tr("Add a picture from a file, or drop pictures onto this dialog."), fromFile);
@@ -160,6 +169,7 @@ PhotoDlg::PhotoDlg(const QString &project, QWidget *parent) : QDialog(parent), m
     m_address->addItem(QString("%1 (%2)").arg(a.address, a.card), a.address);
   connect(m_address, &QComboBox::currentIndexChanged, this, &PhotoDlg::updatePhone);
   connect(m_sources, &QTabWidget::currentChanged, this, &PhotoDlg::updatePhone);
+  connect(m_sources, &QTabWidget::currentChanged, this, &PhotoDlg::updateCamera);
   connect(m_server, &PhotoServer::visited, this, [this] { m_phoneState->setText(tr("The phone is connected.")); });
   connect(m_server, &PhotoServer::received, this, [this](const QByteArray &data) { addData(data); });
 
@@ -224,7 +234,7 @@ bool PhotoDlg::taken(const QString &path, const QDateTime &when, const QString &
 
 void PhotoDlg::updatePhone()
 {
-  const bool on = isVisible() && m_sources->currentIndex() == 0 && m_address->count() > 0;
+  const bool on = isVisible() && m_sources->currentWidget() == m_phoneTab && m_address->count() > 0;
   if (!on)
   {
     m_server->stop();
@@ -247,16 +257,24 @@ void PhotoDlg::updatePhone()
   m_phoneState->setText(tr("Waiting for the phone..."));
 }
 
+void PhotoDlg::updateCamera()
+{
+  if (m_camera)
+    m_camera->setActive(isVisible() && m_sources->currentWidget() == m_camera);
+}
+
 void PhotoDlg::showEvent(QShowEvent *event)
 {
   QDialog::showEvent(event);
   updatePhone();
+  updateCamera();
 }
 
 void PhotoDlg::hideEvent(QHideEvent *event)
 {
   QDialog::hideEvent(event);
   updatePhone();   // not visible any more: the server stops
+  updateCamera();  // and the camera
 }
 
 void PhotoDlg::chooseFiles()

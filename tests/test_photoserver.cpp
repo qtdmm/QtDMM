@@ -13,6 +13,7 @@
 #include <QTemporaryDir>
 
 #include "service/photoserver.h"
+#include "ui/dialogs/photocamera.h"
 #include "ui/dialogs/photodlg.h"
 #include "ui/qrcodeimage.h"
 #include "testutil.h"
@@ -151,6 +152,10 @@ int main(int argc, char **argv)
     dlg.findChild<QTabWidget *>("ui_photoSources")->setCurrentIndex(0);
     dlg.hide();
     check(!dlg.server()->isRunning(), "dialog hidden: the server stops");
+    // the webcam: a tab with Qt Multimedia, none without (not started here:
+    // the test must not open a real camera)
+    check((dlg.findChild<QWidget *>("ui_photoCamera") != nullptr) == PhotoCamera::supported(),
+          "dialog: the webcam's tab only with Qt Multimedia");
   }
 
   if (failed == 0)
