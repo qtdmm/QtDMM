@@ -260,6 +260,8 @@ if (BUILD_TESTING)
 
 	if (Python3_Interpreter_FOUND)
 		add_test(NAME docs_generated COMMAND ${Python3_EXECUTABLE} "${CMAKE_SOURCE_DIR}/tests/generate_docs.py" --check)
+		## latest.json for the update check, from GitHub's release list (tools/make-update-feed.py)
+		add_test(NAME update_feed COMMAND ${Python3_EXECUTABLE} "${CMAKE_SOURCE_DIR}/tests/test_update_feed.py")
 
 		## the network bridge (tools/qtdmm-bridge) has its own unittest suite, no pyserial needed
 		if (Python3_VERSION VERSION_GREATER_EQUAL 3.11)
