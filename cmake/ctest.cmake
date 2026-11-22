@@ -266,6 +266,15 @@ if (BUILD_TESTING)
 
 	if (Python3_Interpreter_FOUND)
 		add_test(NAME docs_generated COMMAND ${Python3_EXECUTABLE} "${CMAKE_SOURCE_DIR}/tests/generate_docs.py" --check)
+		## the decoder fixtures must match their protocol specs (tests/generate_fixtures.py,
+		## docs/protocols/spec/*.yaml): a spec changed without regenerating fails here.
+		## Needs PyYAML; where it is missing the test is left out
+		execute_process(COMMAND ${Python3_EXECUTABLE} -c "import yaml" RESULT_VARIABLE _qtdmm_no_yaml OUTPUT_QUIET ERROR_QUIET)
+		if (_qtdmm_no_yaml EQUAL 0)
+			add_test(NAME fixtures_generated COMMAND ${Python3_EXECUTABLE} "${CMAKE_SOURCE_DIR}/tests/generate_fixtures.py" --check)
+		else()
+			message(STATUS "PyYAML not found - test fixtures_generated left out")
+		endif()
 		## latest.json for the update check, from GitHub's release list (tools/make-update-feed.py)
 		add_test(NAME update_feed COMMAND ${Python3_EXECUTABLE} "${CMAKE_SOURCE_DIR}/tests/test_update_feed.py")
 

@@ -10,7 +10,20 @@
         "unit": "lx",
         "hold": false,
         "port": "illuminance",
-        "val": "523.4"
+        "val": "523.4",
+        "battery": "full"
+      }
+    },
+    {
+      "comment": "[ut382a.md (notes decompiled from UNI-T's iENV app: transport §1, frame §3, commands §4, received frames and modes §5)] '523.4 lx, battery 1 (synthetic)'",
+      "hex": "AA BB 10 01 00 01 44 02 D9 9A 00 00 00 00 00 00 00 03 30",
+      "expected": {
+        "dval": 523.4,
+        "unit": "lx",
+        "hold": false,
+        "port": "illuminance",
+        "val": "523.4",
+        "battery": "low"
       }
     },
     {
