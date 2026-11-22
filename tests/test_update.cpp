@@ -251,6 +251,52 @@ int main(int argc, char **argv)
   qunsetenv("APPIMAGE");
 #endif
 
+  // macOS: the new bundle takes the old one's name, the old one waits beside
+  // it until the next start; a failed swap leaves the old one in place
+  QTemporaryDir bundles;
+  auto writeFile = [](const QString &path, const QByteArray &data) {
+    QDir().mkpath(QFileInfo(path).path());
+    QFile f(path);
+    return f.open(QIODevice::WriteOnly) && f.write(data) == data.size();
+  };
+  auto readFile = [](const QString &path) {
+    QFile f(path);
+    return f.open(QIODevice::ReadOnly) ? f.readAll() : QByteArray();
+  };
+  const QString bundle = bundles.filePath("QtDMM.app");
+  check(writeFile(bundle + "/Contents/MacOS/qtdmm", "old")
+          && writeFile(bundles.filePath(".QtDMM.app.update/Contents/MacOS/qtdmm"), "new"),
+        "two bundles");
+  check(UpdateCheck::replaceBundle(bundles.filePath(".QtDMM.app.update"), bundle).isEmpty()
+          && readFile(bundle + "/Contents/MacOS/qtdmm") == "new"
+          && readFile(bundles.filePath(".QtDMM.app.old/Contents/MacOS/qtdmm")) == "old",
+        "the new bundle in place, the old one beside it");
+  UpdateCheck::removeOldBundle(bundle);
+  check(QDir(bundles.path()).entryList(QDir::Dirs | QDir::NoDotAndDotDot | QDir::Hidden) == QStringList{ "QtDMM.app" },
+        "the old one gone at the next start");
+  check(!UpdateCheck::replaceBundle(bundles.filePath(".missing"), bundle).isEmpty()
+          && readFile(bundle + "/Contents/MacOS/qtdmm") == "new",
+        "a failed swap: the bundle as it was");
+  check(UpdateCheck::bundlePath().isEmpty(), "the test is no bundle");
+  // the banner: downloaded and checked, a disk image that cannot be put in
+  // place (no bundle here, not mountable) opens in the Finder instead
+  bar.setInstallKind(UpdateCheck::Install::MacBundle);
+  feedWith(sha);
+  {
+    QJsonObject root = QJsonDocument::fromJson(readFile(web.filePath("latest.json"))).object();
+    QJsonObject stable = root["stable"].toObject();
+    QJsonObject files = stable["files"].toObject();
+    files["macos"] = files["appimage"];
+    stable["files"] = files;
+    root["stable"] = stable;
+    check(writeFile(web.filePath("latest.json"), QJsonDocument(root).toJson()), "the feed with a disk image");
+  }
+  bar.checkNow();
+  check(waitFor([&] { return buttons(bar).contains("Install"); }), "macOS: Install");
+  click(bar, "Install");
+  check(waitFor([&] { return buttons(bar).contains("Open disk image"); }, 5000),
+        "not in place: the disk image to open: " + bar.findChild<QLabel *>()->text());
+
   // the Flatpak: Install has the portal pull it, Restart now with no path
   // (FlatpakUpdate::restart() starts the latest version)
   if (FlatpakUpdate::supported())

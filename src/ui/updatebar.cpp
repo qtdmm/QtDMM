@@ -8,6 +8,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
+#include <QTimer>
 #include <QToolButton>
 
 #include "core/flatpakupdate.h"
@@ -51,6 +52,9 @@ bool UpdateBar::beta() const
 
 void UpdateBar::startupCheck()
 {
+  // what the last update on macOS left of the version before
+  if (m_kind == UpdateCheck::Install::MacBundle)
+    UpdateCheck::removeOldBundle(UpdateCheck::bundlePath());
   if (!UpdateCheck::enabled())
     return;
   if (m_settings->getString("Update/check").isEmpty())
@@ -109,7 +113,8 @@ void UpdateBar::offer(const UpdateRelease &release)
     buttons.append({ tr("Install"), [this, release] { updateFlatpak(release); } });
   else if (kind == UpdateCheck::Install::Flatpak)
     text += ' ' + tr("Your software centre or \"flatpak update\" installs it.");
-  else if ((kind == UpdateCheck::Install::WindowsInstaller || kind == UpdateCheck::Install::AppImage)
+  else if ((kind == UpdateCheck::Install::WindowsInstaller || kind == UpdateCheck::Install::AppImage
+            || kind == UpdateCheck::Install::MacBundle)
            && !file.url.isEmpty())
     buttons.append({ tr("Install"), [this, release, file] { download(release, file); } });
   else if (!file.url.isEmpty())
@@ -175,6 +180,11 @@ void UpdateBar::updateFlatpak(const UpdateRelease &release)
 
 void UpdateBar::downloaded(const UpdateRelease &release, const UpdateFile &file, const QString &path)
 {
+  if (m_kind == UpdateCheck::Install::MacBundle)
+  {
+    installDmg(release, path);
+    return;
+  }
   if (m_kind != UpdateCheck::Install::AppImage)
   {
     showMessage(tr("QtDMM %1 is downloaded and checked. QtDMM closes for the installation and starts "
@@ -195,6 +205,25 @@ void UpdateBar::downloaded(const UpdateRelease &release, const UpdateFile &file,
   showMessage(tr("QtDMM %1 is installed; it starts with the next start of QtDMM.").arg(release.version),
               { { tr("Restart now"), [this, target] { hide(); Q_EMIT restartReady(target); } },
                 { tr("Later"), [this] { hide(); } } });
+}
+
+void UpdateBar::installDmg(const UpdateRelease &release, const QString &dmg)
+{
+  // the bundle in place while QtDMM runs; a few seconds, the banner says so first
+  showMessage(tr("Installing QtDMM %1 ...").arg(release.version), {});
+  QTimer::singleShot(50, this, [this, release, dmg] {
+    const QString target = UpdateCheck::bundlePath();
+    const QString error = UpdateCheck::installDmg(dmg, target);
+    if (!error.isEmpty())
+    {
+      showMessage(tr("QtDMM %1 could not replace %2: %3").arg(release.version, QDir::toNativeSeparators(target), error),
+                  { { tr("Open disk image"), [dmg] { QDesktopServices::openUrl(QUrl::fromLocalFile(dmg)); } } });
+      return;
+    }
+    showMessage(tr("QtDMM %1 is installed; it starts with the next start of QtDMM.").arg(release.version),
+                { { tr("Restart now"), [this, target] { hide(); Q_EMIT restartReady(target); } },
+                  { tr("Later"), [this] { hide(); } } });
+  });
 }
 
 void UpdateBar::showMessage(const QString &text, const QList<Button> &buttons)

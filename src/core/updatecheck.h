@@ -88,6 +88,23 @@ public:
   /// AppImage set (APPIMAGE, APPDIR, ARGV0, OWD), in the folder it was started in.
   static bool restartAppImage(const QString &path);
 
+  /// The running macOS bundle (…/QtDMM.app); empty when not in one.
+  static QString bundlePath();
+  /// Installs the checked disk image @p dmg over the bundle @p target:
+  /// mounted out of sight (hdiutil), its .app copied next to @p target
+  /// (ditto, signature and attributes kept), then replaceBundle(). macOS
+  /// only. Empty on success, else what went wrong.
+  static QString installDmg(const QString &dmg, const QString &target);
+  /// Puts the bundle @p staged in place of @p target: @p target is renamed
+  /// to ".<name>.old" beside it (removed at the next start, removeOldBundle();
+  /// the running program may still read from it), @p staged takes its name.
+  /// Back as it was when the second step fails. Empty on success.
+  static QString replaceBundle(const QString &staged, const QString &target);
+  /// Removes what replaceBundle() left of an earlier version beside @p target.
+  static void removeOldBundle(const QString &target);
+  /// Starts the bundle @p path anew (open -n).
+  static bool restartBundle(const QString &path);
+
   /// The feed's address: QTDMM_UPDATE_URL, else the Pages site.
   static QUrl feedUrl();
 
