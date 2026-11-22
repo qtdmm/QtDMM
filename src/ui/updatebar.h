@@ -8,6 +8,8 @@
 
 #include "core/updatecheck.h"
 
+class UpdateDownload;
+
 class QHBoxLayout;
 class QLabel;
 class Settings;
@@ -20,6 +22,11 @@ class Settings;
 /// check at start, at most one a day).
 ///
 /// A pre-release (rc, dev) is offered pre-releases too, until its release.
+///
+/// The Windows installer is downloaded and checked here (UpdateDownload),
+/// with the progress in the banner; Install now hands it to the window
+/// (installReady()), which closes and starts it. Other kinds download in
+/// the browser.
 class UpdateBar : public QWidget
 {
   Q_OBJECT
@@ -33,6 +40,13 @@ public:
 
   /// Whether pre-releases are offered: Update/beta, or this is one.
   bool beta() const;
+  /// How this copy is installed (UpdateCheck::installKind(); tests set another).
+  void setInstallKind(UpdateCheck::Install kind) { m_kind = kind; }
+
+Q_SIGNALS:
+  /// The installer @p path is downloaded and checked, and the user wants it
+  /// now: close QtDMM and run it (UpdateCheck::runInstaller()).
+  void installReady(const QString &path);
 
 private:
   struct Button
@@ -45,9 +59,13 @@ private:
   void ask();
   void checked(const QByteArray &feed);
   void offer(const UpdateRelease &release);
+  /// Downloads the installer of @p release, the banner shows how far.
+  void download(const UpdateRelease &release, const UpdateFile &file);
 
   Settings *m_settings;
   UpdateCheck *m_check;
+  UpdateDownload *m_download;
+  UpdateCheck::Install m_kind;
   QLabel *m_text;
   QHBoxLayout *m_buttons;
   bool m_manual = false;   ///< the running check was asked for: answer it

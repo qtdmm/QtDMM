@@ -83,6 +83,19 @@ jobs:
     - name: Package
       run: cpack --config build/CPackConfig.cmake
 
+    # install silently, look at the layout the update relies on
+    # (UpdateCheck::installKind(): unins000.exe at the top, the program in
+    # bin\), uninstall again; without /QTDMMRESTART=1 nothing is started
+    - name: Check the installer
+      shell: pwsh
+      run: |
+        $setup = Get-ChildItem packages/*.exe | Select-Object -First 1
+        $dir = "$env:RUNNER_TEMP\qtdmm-install"
+        Start-Process $setup.FullName -ArgumentList '/VERYSILENT','/SP-','/SUPPRESSMSGBOXES','/NORESTART',"/DIR=$dir" -Wait
+        if (!(Test-Path "$dir\bin\qtdmm.exe")) { throw "the installer put no bin\qtdmm.exe" }
+        if (!(Test-Path "$dir\unins000.exe")) { throw "no unins000.exe at the top of the installation" }
+        Start-Process "$dir\unins000.exe" -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES' -Wait
+
     - name: Upload packages
       uses: actions/upload-artifact@v4
       with:

@@ -13,6 +13,12 @@
 
 #include <array>
 
+#ifdef Q_OS_WIN
+#include <qt_windows.h>
+#include <shellapi.h>
+#pragma comment(lib, "shell32.lib")
+#endif
+
 namespace
 {
 const char *const kFeedUrl = "https://qtdmm.github.io/QtDMM/latest.json";
@@ -130,6 +136,32 @@ std::optional<UpdateRelease> UpdateCheck::offer(const QByteArray &feed, const QS
       best = std::move(r);
   }
   return best;
+}
+
+QStringList UpdateCheck::installerArguments()
+{
+  return { "/SILENT", "/SP-", "/SUPPRESSMSGBOXES", "/NORESTART", "/CLOSEAPPLICATIONS", "/QTDMMRESTART=1" };
+}
+
+bool UpdateCheck::runInstaller(const QString &path)
+{
+#ifdef Q_OS_WIN
+  // ShellExecuteEx, not QProcess: the installer asks for administrator
+  // rights (UAC), which CreateProcess refuses
+  const std::wstring file = QDir::toNativeSeparators(path).toStdWString();
+  const std::wstring args = installerArguments().join(' ').toStdWString();
+  SHELLEXECUTEINFOW info = {};
+  info.cbSize = sizeof(info);
+  info.fMask = SEE_MASK_NOASYNC;
+  info.lpVerb = L"open";
+  info.lpFile = file.c_str();
+  info.lpParameters = args.c_str();
+  info.nShow = SW_SHOWNORMAL;
+  return ShellExecuteExW(&info);
+#else
+  Q_UNUSED(path)
+  return false;
+#endif
 }
 
 QUrl UpdateCheck::feedUrl()

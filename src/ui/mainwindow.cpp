@@ -268,6 +268,13 @@ MainWindow::MainWindow(QCommandLineParser &parser, QWidget *parent)
   QTimer::singleShot(1000, this, &MainWindow::openPending);
   // a new version: once a day, when allowed, after the start has settled
   connect(m_updateAction, &QAction::triggered, m_updateBar, &UpdateBar::checkNow);
+  // the Windows installer: QtDMM closes as at Quit (asking for unsaved
+  // data), then the installer replaces it and starts it again
+  connect(m_updateBar, &UpdateBar::installReady, this, [this](const QString &path) {
+    if (close() && !UpdateCheck::runInstaller(path))
+      QMessageBox::warning(nullptr, tr("Update"),
+                           tr("The installer could not be started: %1").arg(QDir::toNativeSeparators(path)));
+  });
   QTimer::singleShot(5000, m_updateBar, &UpdateBar::startupCheck);
   // --connect <id> (--also before 26.4): more of "My devices", after those of last time
   QTimer::singleShot(1000, this, [this, ids = parser.values("connect") + parser.values("also")]

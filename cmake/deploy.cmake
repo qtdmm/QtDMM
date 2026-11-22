@@ -28,6 +28,8 @@ if(WIN32)
 	set(CPACK_INNOSETUP_ICON_FILE "${CMAKE_SOURCE_DIR}/assets/windows/qtdmm.ico")
 	set(CPACK_INNOSETUP_INSTALL_ROOT "{autopf}")
 	set(CPACK_INNOSETUP_ALLOW_CUSTOM_DIRECTORY ON)
+	## the update from within QtDMM starts it again afterwards (/QTDMMRESTART=1)
+	set(CPACK_INNOSETUP_EXTRA_SCRIPTS "${CMAKE_SOURCE_DIR}/assets/windows/update_restart.iss")
 
 	qt_generate_deploy_app_script(
 		TARGET ${PROJECT_NAME}
