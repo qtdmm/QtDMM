@@ -207,8 +207,10 @@ int main(int argc, char **argv)
         "a wrong SHA256: failed, nothing left: " + bar.findChild<QLabel *>()->text());
   check(UpdateCheck::installerArguments().contains("/QTDMMRESTART=1"), "the installer starts QtDMM again");
 
+#ifndef Q_OS_WIN
   // the AppImage: downloaded, checked and put in place of $APPIMAGE at once,
-  // executable as before, nothing left beside it; Restart now hands it on
+  // executable as before, nothing left beside it; Restart now hands it on.
+  // Unix only: execute bits and a read-only folder, no AppImage elsewhere
   feedWith(sha);
   QTemporaryDir apps;
   const QString appImage = apps.filePath("QtDMM-26.4-x86_64.AppImage");
@@ -243,6 +245,7 @@ int main(int argc, char **argv)
         "read-only folder: " + bar.findChild<QLabel *>()->text());
   QFile::setPermissions(apps.path(), QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner);
   qunsetenv("APPIMAGE");
+#endif
 
   // the Flatpak: Install has the portal pull it, Restart now with no path
   // (FlatpakUpdate::restart() starts the latest version)
