@@ -5,13 +5,16 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QFile>
+#include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
+#include <QProcess>
 #include <QRegularExpression>
 
 #include <array>
+#include <filesystem>
 
 #ifdef Q_OS_WIN
 #include <qt_windows.h>
@@ -162,6 +165,42 @@ bool UpdateCheck::runInstaller(const QString &path)
   Q_UNUSED(path)
   return false;
 #endif
+}
+
+QString UpdateCheck::replaceAppImage(const QString &downloaded, const QString &target)
+{
+  const QFileInfo old(target);
+  if (!old.isFile())
+    return tr("%1 is no file").arg(target);
+  // next to it: the rename over it is then one step on the same file system
+  const QString part = old.dir().filePath("." + old.fileName() + ".update");
+  QFile::remove(part);
+  if (!QFile::copy(downloaded, part))
+    return tr("Cannot write into %1").arg(old.absolutePath());
+  QFile::setPermissions(part, old.permissions() | QFile::ExeOwner | QFile::ReadOwner | QFile::WriteOwner);
+  std::error_code error;
+  std::filesystem::rename(QFile::encodeName(part).toStdString(), QFile::encodeName(target).toStdString(), error);
+  if (error)
+  {
+    QFile::remove(part);
+    return QString::fromStdString(error.message());
+  }
+  QFile::remove(downloaded);
+  return {};
+}
+
+bool UpdateCheck::restartAppImage(const QString &path)
+{
+  QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+  const QString folder = env.value("OWD");
+  for (const char *name : { "APPIMAGE", "APPDIR", "ARGV0", "OWD" })
+    env.remove(name);
+  QProcess process;
+  process.setProgram(path);
+  process.setProcessEnvironment(env);
+  if (!folder.isEmpty())
+    process.setWorkingDirectory(folder);
+  return process.startDetached();
 }
 
 QUrl UpdateCheck::feedUrl()

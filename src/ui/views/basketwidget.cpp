@@ -121,9 +121,9 @@ BasketWidget::BasketWidget(QWidget *parent) :
   connect(m_closeAction, &QAction::triggered, this, [this] { setFolder(QString()); });
   m_describeAction = new QAction(tr("&Description..."), this);
   connect(m_describeAction, &QAction::triggered, this, &BasketWidget::describeSLOT);
-  m_exportAction = new QAction(tr("E&xport project..."), this);
+  m_exportAction = new QAction(tr("E&xport project as file..."), this);
   connect(m_exportAction, &QAction::triggered, this, &BasketWidget::exportSLOT);
-  m_importAction = new QAction(tr("&Import project..."), this);
+  m_importAction = new QAction(tr("&Import project from file..."), this);
   connect(m_importAction, &QAction::triggered, this, &BasketWidget::importSLOT);
 
   // no basket open: what it is and how to get one
@@ -452,7 +452,7 @@ void BasketWidget::exportSLOT()
     return;
   // next to the basket, not in it
   const QFileInfo folder(m_folder);
-  const QString zipFile = QFileDialog::getSaveFileName(this, tr("Export project"),
+  const QString zipFile = QFileDialog::getSaveFileName(this, tr("Export project as file"),
                                                        folder.absoluteDir().filePath(folder.fileName() + ".zip"),
                                                        tr("ZIP archives (*.zip)"));
   if (zipFile.isEmpty())
@@ -564,7 +564,7 @@ bool BasketWidget::importProject(const QString &zipFile, const QString &baseDir,
 
 void BasketWidget::importSLOT()
 {
-  const QString zipFile = QFileDialog::getOpenFileName(this, tr("Import project"), m_baseFolder,
+  const QString zipFile = QFileDialog::getOpenFileName(this, tr("Import project from file"), m_baseFolder,
                                                        tr("ZIP archives (*.zip)"));
   if (zipFile.isEmpty())
     return;

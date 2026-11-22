@@ -91,7 +91,9 @@ A clone needs its tags: `git fetch --tags`. The CI checkouts use `fetch-depth: 0
    `.github/workflows/flatpak.yml`), the Windows installer and ZIP and the
    universal macOS `.dmg`. It then creates a **draft** release with them and
    the source tarball `QtDMM-<tag>.tar.gz`, marked as a pre-release when the
-   tag has a suffix. If only the macOS or the Flatpak job fails, the draft
+   tag has a suffix. Next to the AppImage it puts its `.zsync`, which the
+   update information in every AppImage points to (AppImageUpdate, Gear
+   Lever: `gh-releases-zsync|qtdmm|QtDMM|latest|...`). If only the macOS or the Flatpak job fails, the draft
    is still made, without the `.dmg` or the `.flatpak`.
    If the release was made on GitHub's release page instead (which creates
    the tag), the workflow adds the files to it and leaves it as it is. Its

@@ -231,6 +231,9 @@ then
 	export EXTRA_QT_PLUGINS="svg"
 	export LDAI_OUTPUT=QtDMM.AppImage
 	export LDAI_NO_APPSTREAM=1
+	# where AppImageUpdate, Gear Lever and the like look for a new version:
+	# the newest release's .zsync (written by the Release workflow)
+	export LDAI_UPDATE_INFORMATION="gh-releases-zsync|qtdmm|QtDMM|latest|QtDMM-*x86_64.AppImage.zsync"
 	ARCH=x86_64 ./linuxdeploy-x86_64.AppImage --appdir AppDir --plugin qt --output appimage \
 		--desktop-file AppDir/usr/share/applications/io.github.qtdmm.qtdmm.desktop \
 		--icon-file AppDir/usr/share/icons/hicolor/scalable/apps/io.github.qtdmm.qtdmm.svg || exit 1

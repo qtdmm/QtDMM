@@ -89,6 +89,7 @@ static const char *kWorkspaceSuffix = "qtdmm-workspace";
 #include "core/alarm.h"
 #include "ui/alarmbar.h"
 #include "ui/updatebar.h"
+#include "core/flatpakupdate.h"
 #include "ui/alarmservice.h"
 #include "ui/mdiarranger.h"
 #include "service/metercontroller.h"
@@ -274,6 +275,12 @@ MainWindow::MainWindow(QCommandLineParser &parser, QWidget *parent)
     if (close() && !UpdateCheck::runInstaller(path))
       QMessageBox::warning(nullptr, tr("Update"),
                            tr("The installer could not be started: %1").arg(QDir::toNativeSeparators(path)));
+  });
+  // the AppImage replaced or the Flatpak updated: closes as at Quit, the new one starts
+  connect(m_updateBar, &UpdateBar::restartReady, this, [this](const QString &path) {
+    if (close() && !(path.isEmpty() ? FlatpakUpdate::restart() : UpdateCheck::restartAppImage(path)))
+      QMessageBox::warning(nullptr, tr("Update"),
+                           tr("QtDMM could not be started again: %1").arg(QDir::toNativeSeparators(path)));
   });
   QTimer::singleShot(5000, m_updateBar, &UpdateBar::startupCheck);
   // --connect <id> (--also before 26.4): more of "My devices", after those of last time
