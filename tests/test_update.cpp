@@ -157,7 +157,7 @@ int main(int argc, char **argv)
     const QJsonObject file{ { "url", QUrl::fromLocalFile(out.fileName()).toString() }, { "sha256", sha },
                             { "size", double(setup.size()) } };
     const QJsonObject stable{ { "version", "26.5" }, { "date", "2027-01-01" }, { "notes", "https://example.invalid/" },
-                              { "files", QJsonObject{ { "windows-installer", file } } } };
+                              { "files", QJsonObject{ { "windows-installer", file }, { "appimage", file } } } };
     QFile f(web.filePath("latest.json"));
     check(f.open(QIODevice::WriteOnly | QIODevice::Truncate), "the feed on the 'server'");
     f.write(QJsonDocument(QJsonObject{ { "format", 1 }, { "stable", stable }, { "beta", QJsonValue() } }).toJson());
@@ -189,6 +189,43 @@ int main(int argc, char **argv)
           && QDir(UpdateDownload::defaultFolder()).entryList(QDir::Files).isEmpty(),
         "a wrong SHA256: failed, nothing left: " + bar.findChild<QLabel *>()->text());
   check(UpdateCheck::installerArguments().contains("/QTDMMRESTART=1"), "the installer starts QtDMM again");
+
+  // the AppImage: downloaded, checked and put in place of $APPIMAGE at once,
+  // executable as before, nothing left beside it; Restart now hands it on
+  feedWith(sha);
+  QTemporaryDir apps;
+  const QString appImage = apps.filePath("QtDMM-26.4-x86_64.AppImage");
+  QFile old(appImage);
+  check(old.open(QIODevice::WriteOnly) && old.write("old") == 3, "the running AppImage");
+  old.close();
+  old.setPermissions(QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner | QFile::ReadGroup | QFile::ExeGroup);
+  qputenv("APPIMAGE", appImage.toUtf8());
+  bar.setInstallKind(UpdateCheck::Install::AppImage);
+  QString restart;
+  QObject::connect(&bar, &UpdateBar::restartReady, [&](const QString &path) { restart = path; });
+  bar.checkNow();
+  check(waitFor([&] { return buttons(bar).contains("Install"); }), "the AppImage: Install");
+  click(bar, "Install");
+  check(waitFor([&] { return buttons(bar).contains("Restart now"); }), "replaced: " + bar.findChild<QLabel *>()->text());
+  QFile replaced(appImage);
+  check(replaced.open(QIODevice::ReadOnly) && replaced.readAll() == setup
+          && (replaced.permissions() & QFile::ExeOwner) && (replaced.permissions() & QFile::ExeGroup),
+        "the new AppImage in place, executable as the old one");
+  replaced.close();
+  check(QDir(apps.path()).entryList(QDir::Files | QDir::Hidden) == QStringList{ "QtDMM-26.4-x86_64.AppImage" },
+        "nothing beside it: " + QDir(apps.path()).entryList(QDir::Files | QDir::Hidden).join(", "));
+  click(bar, "Restart now");
+  check(bar.isHidden() && restart == appImage, "Restart now: the same path");
+  // a folder QtDMM may not write into: says so, the browser download instead
+  QFile::setPermissions(apps.path(), QFile::ReadOwner | QFile::ExeOwner);
+  bar.checkNow();
+  waitFor([&] { return buttons(bar).contains("Install"); });
+  click(bar, "Install");
+  check(waitFor([&] { return buttons(bar).contains("Download"); })
+          && bar.findChild<QLabel *>()->text().contains("could not replace"),
+        "read-only folder: " + bar.findChild<QLabel *>()->text());
+  QFile::setPermissions(apps.path(), QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner);
+  qunsetenv("APPIMAGE");
 
   if (failed == 0)
     qInfo() << "All update tests passed.";

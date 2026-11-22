@@ -70,6 +70,12 @@ jobs:
         TAG: ${{ github.ref_name }}
       run: |
         mv dist/QtDMM.AppImage "dist/QtDMM-${TAG}-x86_64.AppImage"
+        # for AppImageUpdate and the like (the update information in the
+        # AppImage points at the newest release's .zsync): made here, under
+        # the file's final name, which the .zsync names
+        sudo apt-get update -q > /dev/null && sudo apt-get install -y -q zsync > /dev/null
+        (cd dist && zsyncmake -u "QtDMM-${TAG}-x86_64.AppImage" -o "QtDMM-${TAG}-x86_64.AppImage.zsync" \
+                     "QtDMM-${TAG}-x86_64.AppImage")
         if [ -f dist/QtDMM-macos-universal.dmg ]; then
           mv dist/QtDMM-macos-universal.dmg "dist/QtDMM-${TAG}-macos.dmg"
         else

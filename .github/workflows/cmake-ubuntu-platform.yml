@@ -87,6 +87,10 @@ jobs:
         # the RUNPATH resolves as squashfs-root/usr/bin/../lib/...
         grep -E -q 'libQt6Core\.so.* => .*/squashfs-root/' deps.txt || { echo "::error::Qt does not come from the AppImage"; exit 1; }
         if grep -E -q 'libc\.so.* => .*/squashfs-root/' deps.txt; then echo "::error::glibc bundled"; exit 1; fi
+        # the update information for AppImageUpdate and the like
+        ./packages/QtDMM.AppImage --appimage-updateinformation | tee updinfo.txt
+        grep -q '^gh-releases-zsync|qtdmm|QtDMM|latest|' updinfo.txt || { echo "::error::no update information in the AppImage"; exit 1; }
+        rm -f updinfo.txt
         rm -rf squashfs-root deps.txt
 
     - name: Test

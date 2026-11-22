@@ -4,6 +4,7 @@
 
 #include <QCoreApplication>
 #include <QDesktopServices>
+#include <QDir>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
@@ -104,7 +105,8 @@ void UpdateBar::offer(const UpdateRelease &release)
   const UpdateFile file = release.files.value(UpdateCheck::fileKind(kind));
   if (kind == UpdateCheck::Install::Flatpak)
     text += ' ' + tr("Your software centre or \"flatpak update\" installs it.");
-  else if (kind == UpdateCheck::Install::WindowsInstaller && !file.url.isEmpty())
+  else if ((kind == UpdateCheck::Install::WindowsInstaller || kind == UpdateCheck::Install::AppImage)
+           && !file.url.isEmpty())
     buttons.append({ tr("Install"), [this, release, file] { download(release, file); } });
   else if (!file.url.isEmpty())
     buttons.append({ tr("Download"), [url = file.url] { QDesktopServices::openUrl(url); } });
@@ -125,12 +127,8 @@ void UpdateBar::download(const UpdateRelease &release, const UpdateFile &file)
     const int percent = total > 0 ? int(received * 100 / total) : 0;
     m_text->setText(tr("Downloading QtDMM %1 ... %2 %").arg(version).arg(percent));
   });
-  connect(m_download, &UpdateDownload::finished, this, [this, version](const QString &path) {
-    showMessage(tr("QtDMM %1 is downloaded and checked. QtDMM closes for the installation and starts "
-                   "again when it is done.").arg(version),
-                { { tr("Install now"), [this, path] { hide(); Q_EMIT installReady(path); } },
-                  { tr("Later"), [this] { hide(); } } });
-  });
+  connect(m_download, &UpdateDownload::finished, this,
+          [this, release, file](const QString &path) { downloaded(release, file, path); });
   connect(m_download, &UpdateDownload::failed, this, [this, release, file](const QString &error) {
     showMessage(tr("The download failed: %1").arg(error),
                 { { tr("Try again"), [this, release, file] { download(release, file); } },
@@ -139,6 +137,30 @@ void UpdateBar::download(const UpdateRelease &release, const UpdateFile &file)
   showMessage(tr("Downloading QtDMM %1 ... %2 %").arg(version).arg(0),
               { { tr("Cancel"), [this] { m_download->cancel(); hide(); } } });
   m_download->start(file);
+}
+
+void UpdateBar::downloaded(const UpdateRelease &release, const UpdateFile &file, const QString &path)
+{
+  if (m_kind != UpdateCheck::Install::AppImage)
+  {
+    showMessage(tr("QtDMM %1 is downloaded and checked. QtDMM closes for the installation and starts "
+                   "again when it is done.").arg(release.version),
+                { { tr("Install now"), [this, path] { hide(); Q_EMIT installReady(path); } },
+                  { tr("Later"), [this] { hide(); } } });
+    return;
+  }
+  // the AppImage: in place at once, the running one goes on with the old file
+  const QString target = qEnvironmentVariable("APPIMAGE");
+  const QString error = UpdateCheck::replaceAppImage(path, target);
+  if (!error.isEmpty())
+  {
+    showMessage(tr("QtDMM %1 could not replace %2: %3").arg(release.version, QDir::toNativeSeparators(target), error),
+                { { tr("Download"), [url = file.url] { QDesktopServices::openUrl(url); } } });
+    return;
+  }
+  showMessage(tr("QtDMM %1 is installed; it starts with the next start of QtDMM.").arg(release.version),
+              { { tr("Restart now"), [this, target] { hide(); Q_EMIT restartReady(target); } },
+                { tr("Later"), [this] { hide(); } } });
 }
 
 void UpdateBar::showMessage(const QString &text, const QList<Button> &buttons)

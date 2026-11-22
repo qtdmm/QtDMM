@@ -23,10 +23,12 @@ class Settings;
 ///
 /// A pre-release (rc, dev) is offered pre-releases too, until its release.
 ///
-/// The Windows installer is downloaded and checked here (UpdateDownload),
-/// with the progress in the banner; Install now hands it to the window
-/// (installReady()), which closes and starts it. Other kinds download in
-/// the browser.
+/// The Windows installer and the AppImage are downloaded and checked here
+/// (UpdateDownload), with the progress in the banner. The installer: Install
+/// now hands it to the window (installReady()), which closes and starts it.
+/// The AppImage replaces $APPIMAGE at once (UpdateCheck::replaceAppImage());
+/// Restart now asks the window to close and start it (restartReady()).
+/// Other kinds download in the browser.
 class UpdateBar : public QWidget
 {
   Q_OBJECT
@@ -47,6 +49,9 @@ Q_SIGNALS:
   /// The installer @p path is downloaded and checked, and the user wants it
   /// now: close QtDMM and run it (UpdateCheck::runInstaller()).
   void installReady(const QString &path);
+  /// The AppImage @p path was replaced by the new version and the user wants
+  /// it now: close QtDMM and start it (UpdateCheck::restartAppImage()).
+  void restartReady(const QString &path);
 
 private:
   struct Button
@@ -61,6 +66,8 @@ private:
   void offer(const UpdateRelease &release);
   /// Downloads the installer of @p release, the banner shows how far.
   void download(const UpdateRelease &release, const UpdateFile &file);
+  /// The download @p path is checked: install or offer it.
+  void downloaded(const UpdateRelease &release, const UpdateFile &file, const QString &path);
 
   Settings *m_settings;
   UpdateCheck *m_check;

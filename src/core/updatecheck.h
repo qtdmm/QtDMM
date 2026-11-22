@@ -79,6 +79,15 @@ public:
   /// could not start, and on other systems.
   static bool runInstaller(const QString &path);
 
+  /// Puts the checked AppImage @p downloaded in place of @p target (the
+  /// running one, $APPIMAGE): copied next to it, made executable as it
+  /// was, then renamed over it in one step. The running program keeps its
+  /// old file until it ends. Empty on success, else what went wrong.
+  static QString replaceAppImage(const QString &downloaded, const QString &target);
+  /// Starts the AppImage @p path anew, without the environment the running
+  /// AppImage set (APPIMAGE, APPDIR, ARGV0, OWD), in the folder it was started in.
+  static bool restartAppImage(const QString &path);
+
   /// The feed's address: QTDMM_UPDATE_URL, else the Pages site.
   static QUrl feedUrl();
 
