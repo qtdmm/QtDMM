@@ -34,6 +34,7 @@ Type ofProtocol(FrameFormat::DataFormat protocol)
     case FrameFormat::BrymenBM82x:
     case FrameFormat::FlukeQM:
     case FrameFormat::UniTiDMM:
+    case FrameFormat::UniTUT117C:
     case FrameFormat::UniTUT61Plus:
     case FrameFormat::KeysightU12xx:
     case FrameFormat::AppaDmm:
@@ -47,6 +48,7 @@ Type ofProtocol(FrameFormat::DataFormat protocol)
     case FrameFormat::VoltcraftVC890:
     case FrameFormat::Eevblog121GW:
     case FrameFormat::BrymenBM78xBT:
+    case FrameFormat::RawCapture:   // not known yet: mostly a multimeter, and its capture gets the multimeter steps
       return HandheldDmm;
     case FrameFormat::Voltcraft15Continuous:
     case FrameFormat::Sigrok:
@@ -56,17 +58,26 @@ Type ofProtocol(FrameFormat::DataFormat protocol)
     case FrameFormat::UniTUT8803:
       return BenchDmm;
     case FrameFormat::UniTUT32x:
+    case FrameFormat::UniTUT320i:
+    case FrameFormat::UniTUT325F:
     case FrameFormat::MastechMS6514:
       return Thermometer;
     case FrameFormat::UniTUT382:
+    case FrameFormat::UniTUT381A:
+    case FrameFormat::UniTUT382A:
     case FrameFormat::BenetechGM1020:
       return Luxmeter;
     case FrameFormat::UniTUT202BT:
+    case FrameFormat::UniTUT219PV:
     case FrameFormat::VC820BLE:
       return ClampMeter;
     case FrameFormat::TfaAirControl:
     case FrameFormat::UniTiENV:   // UNI-T's environment meters; the luxmeter, sound level meter and anemometer below
       return Environment;
+    case FrameFormat::UniTUT372D:
+      return Tachometer;
+    case FrameFormat::TextLines:
+      return Microcontroller;
     case FrameFormat::VictronBLE:
       return BatteryMonitor;
     case FrameFormat::Invalid:
@@ -136,8 +147,6 @@ const Exception kExceptions[] = {
   { "Victron", "SmartSolar MPPT", SolarCharger },
   { "Victron", "BlueSolar MPPT", SolarCharger },
   { "Victron", "Phoenix Inverter Smart", Inverter },
-  { "QtDMM", "Simulated meter", Virtual },
-  { "QtDMM", "Calculated value", Virtual },
 };
 
 QString key(const QString &vendor, QString model)
@@ -171,7 +180,7 @@ QList<std::pair<QString, QString>> exceptions()
 QString id(Type type)
 {
   static const char *const ids[] = { "handheld_dmm", "bench_dmm", "clamp_meter", "thermometer", "luxmeter",
-                                     "environment", "sound_level", "anemometer", "battery_monitor",
+                                     "environment", "sound_level", "anemometer", "tachometer", "microcontroller", "battery_monitor",
                                      "solar_charger", "inverter", "virtual", "generic" };
   return QString::fromLatin1(ids[type]);
 }
@@ -188,6 +197,8 @@ QString displayName(Type type)
     case Environment:    return QCoreApplication::translate("DeviceType", "Air quality meter");
     case SoundLevel:     return QCoreApplication::translate("DeviceType", "Sound level meter");
     case Anemometer:     return QCoreApplication::translate("DeviceType", "Anemometer");
+    case Tachometer:     return QCoreApplication::translate("DeviceType", "Tachometer");
+    case Microcontroller: return QCoreApplication::translate("DeviceType", "Microcontroller");
     case BatteryMonitor: return QCoreApplication::translate("DeviceType", "Battery monitor");
     case SolarCharger:   return QCoreApplication::translate("DeviceType", "Solar charge controller");
     case Inverter:       return QCoreApplication::translate("DeviceType", "Inverter");

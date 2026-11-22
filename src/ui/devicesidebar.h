@@ -9,6 +9,8 @@
 #include "core/valueref.h"
 
 class DeviceLibrary;
+class QAction;
+class QMenu;
 
 /// The sidebar "Devices": the node "My devices" with the entries of the
 /// DeviceLibrary in their order: the cupboard, each with its picture. A click
@@ -50,6 +52,7 @@ public:
     bool    onPanel = false;   ///< on its device's front panel, big or small
     int     meters = 0;        ///< the needle meters showing it
     int     poincares = 0;     ///< the Poincaré plots showing it
+    int     histograms = 0;    ///< histograms showing it
     QStringList views;      ///< the windows showing it, for the marks' tooltip
   };
 
@@ -131,6 +134,12 @@ public:
   void        setCurrentWorkspace(const QString &name, const QString &tooltip = QString());
   /// The node "Workspaces".
   QTreeWidgetItem *workspacesNode() const { return m_workspaces; }
+  /// The open project: the node "Project: @p name" at the top with its
+  /// benches (@p benches: file and name, @p current the one in use in
+  /// bold) and "+ New bench..."; @p name empty: no project, no node.
+  void        setProject(const QString &name, const QList<Workspace> &benches, const QString &current);
+  /// The node of the project.
+  QTreeWidgetItem *projectNode() const { return m_project; }
   /// The context menu of the node: load and save a bench, as in Arrange.
   void        setWorkspaceActions(const QList<QAction *> &actions) { m_workspaceActions = actions; }
 
@@ -158,6 +167,11 @@ Q_SIGNALS:
   void        alarmsRequested(const QString &id);
   /// The PASS/FAIL test's limits of the open device @p id.
   void        limitsRequested(const QString &id);
+  /// The capture window of device @p id (CaptureDlg); one of My devices not
+  /// connected yet is connected first.
+  void        captureRequested(const QString &id);
+  /// "Set integral to 0" of an open integral (a logic node's state).
+  void        nodeResetRequested(const QString &id);
   /// The row "+ Add device..." at the end of My devices.
   void        addDeviceRequested();
   /// The settings of the services (Settings, SCPI server).
@@ -169,6 +183,8 @@ Q_SIGNALS:
   void        valueMenuRequested(const ValueRef &value, const QPoint &globalPos);
   /// Load the workspace file @p path.
   void        workspaceRequested(const QString &path);
+  /// "+ New bench..." of the project: save the set-up as a new bench in it.
+  void        newBenchRequested();
   /// Take @p path off the list of workspaces used last.
   void        removeWorkspaceRequested(const QString &path);
   /// Make @p path a favourite (@p on) or no more: its star, its menu.
@@ -198,12 +214,18 @@ private:
   /// The id of an open device's row, else empty.
   QString     openOf(const QTreeWidgetItem *item) const;
   void        openMenu(QTreeWidgetItem *item, const QPoint &pos);
+  /// "Capture..." in @p menu for device @p id, bold for a meter QtDMM does
+  /// not know (FrameFormat::RawCapture).
+  /// Null for a calculated value: it has no frames.
+  QAction    *addCaptureAction(QMenu &menu, const QString &id) const;
   void        serviceMenu(QTreeWidgetItem *item, const QPoint &pos);
   void        workspaceMenu(QTreeWidgetItem *item, const QPoint &pos);
   /// The file of a workspace row that is still there, else empty.
   QString     workspaceOf(const QTreeWidgetItem *item) const;
 
   DeviceLibrary   *m_library = nullptr;
+  QTreeWidgetItem *m_project = nullptr;
+  QTreeWidgetItem *m_newBenchItem = nullptr;
   QTreeWidgetItem *m_workspaces = nullptr;
   QTreeWidgetItem *m_devices = nullptr;
   QTreeWidgetItem *m_open = nullptr;

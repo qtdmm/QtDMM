@@ -3,6 +3,7 @@
 #include "ui/dialogs/sourcesdlg.h"
 
 #include <QDialogButtonBox>
+#include <QComboBox>
 #include <QHeaderView>
 #include <QLabel>
 #include <QTreeWidget>
@@ -38,7 +39,7 @@ SourcesDlg::SourcesDlg(const QString &view, bool several, const QList<Meter> &me
     top->setFlags(Qt::ItemIsEnabled);
     for (int id = 0; id < meter.values.size(); ++id)
     {
-      auto *item = new QTreeWidgetItem(top, { QString("%1  %2").arg(id + 1).arg(meter.values[id]) });
+      auto *item = new QTreeWidgetItem(top, { QStringLiteral("%1  %2").arg(id + 1).arg(meter.values[id]) });
       item->setData(0, kSource, meter.source);
       item->setData(0, kValue, id);
       item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsUserCheckable);
@@ -53,6 +54,50 @@ SourcesDlg::SourcesDlg(const QString &view, bool several, const QList<Meter> &me
   connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
   layout->addWidget(buttons);
   resize(360, 320);
+}
+
+SourcesDlg::SourcesDlg(const QString &view, const QList<Meter> &meters, const ValueRef &x, const ValueRef &y,
+                       QWidget *parent) :
+  SourcesDlg(view, true, meters, parent)
+{
+  setWindowTitle(tr("QtDMM: Sources - %1").arg(view));
+  if (QLabel *hint = findChild<QLabel *>())
+    hint->setText(tr("Choose one value for each axis:"));
+  m_tree->hide();
+  auto *layout = qobject_cast<QVBoxLayout *>(this->layout());
+  m_x = new QComboBox(this);
+  m_y = new QComboBox(this);
+  for (const Meter &meter : meters)
+    for (int id = 0; id < meter.values.size(); ++id)
+    {
+      const ValueRef value(id, meter.source);
+      const QString text = QString("%1 — %2").arg(meter.name, meter.values[id]);
+      m_x->addItem(text, value.toString());
+      m_y->addItem(text, value.toString());
+    }
+  layout->insertWidget(1, new QLabel(tr("X axis:"), this));
+  layout->insertWidget(2, m_x);
+  layout->insertWidget(3, new QLabel(tr("Y axis:"), this));
+  layout->insertWidget(4, m_y);
+  auto select = [](QComboBox *combo, const ValueRef &value)
+  {
+    for (int i = 0; i < combo->count(); ++i)
+      if (ValueRef::fromString(combo->itemData(i).toString()) == value)
+        combo->setCurrentIndex(i);
+  };
+  select(m_x, x);
+  select(m_y, y);
+  resize(420, 180);
+}
+
+ValueRef SourcesDlg::xValue() const
+{
+  return m_x ? ValueRef::fromString(m_x->currentData().toString()) : ValueRef();
+}
+
+ValueRef SourcesDlg::yValue() const
+{
+  return m_y ? ValueRef::fromString(m_y->currentData().toString()) : ValueRef();
 }
 
 void SourcesDlg::setChosen(const QList<ValueRef> &values)
@@ -97,4 +142,27 @@ void SourcesDlg::ticked(QTreeWidgetItem *item)
         top->child(v)->setCheckState(0, Qt::Unchecked);
   }
   m_filling = false;
+}
+
+
+SourcesDlg::SourcesDlg(const QString &view, const QList<Meter> &meters, const ValueRef &x, const ValueRef &y,
+                       const ValueRef &z, QWidget *parent) :
+  SourcesDlg(view, meters, x, y, parent)
+{
+  m_z = new QComboBox(this);
+  for (const Meter &meter : meters)
+    for (int id = 0; id < meter.values.size(); ++id)
+      m_z->addItem(QString("%1 — %2").arg(meter.name, meter.values[id]), ValueRef(id, meter.source).toString());
+  for (int i = 0; i < m_z->count(); ++i)
+    if (ValueRef::fromString(m_z->itemData(i).toString()) == z)
+      m_z->setCurrentIndex(i);
+  auto *layout = qobject_cast<QVBoxLayout *>(this->layout());
+  layout->addWidget(new QLabel(tr("Color (Z):"), this));
+  layout->addWidget(m_z);
+  resize(420, 220);
+}
+
+ValueRef SourcesDlg::zValue() const
+{
+  return m_z ? ValueRef::fromString(m_z->currentData().toString()) : ValueRef();
 }

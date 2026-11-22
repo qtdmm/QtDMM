@@ -3,12 +3,13 @@
 //
 // RecordingStore on its own: QCoreApplication only, no widgets. What it
 // records against a stream of readings over time (the grid export, the
-// integral, the triggers) is in test_recording_golden; this is the rest:
+// triggers) is in test_recording_golden; this is the rest:
 // the points and their quality, the limits, marks by time, load, gaps, one
 // function per recording and the readings series.
 #include <QCoreApplication>
 #include <QDebug>
 #include <QFile>
+#include <QJsonArray>
 #include <QSignalSpy>
 #include <QTemporaryDir>
 #include <cmath>
@@ -123,15 +124,12 @@ int main(int argc, char **argv)
     check(store.count() == 1 && store.extraCount() == 1, QString("other value: %1 series").arg(store.extraCount()));
     const RecordingSeries &hz = store.extra(0);
     check(hz.id == 1 && hz.unit == "Hz" && hz.port.quantity == Quantity::Frequency && hz.count() == 1
-            && hz.last().t == 10 && hz.last().value == 50 && hz.last().integral == 0,
+            && hz.last().t == 10 && hz.last().value == 50,
           QString("other value: id %1 unit %2 t %3").arg(hz.id).arg(hz.unit).arg(hz.count() ? hz.last().t : -1));
     check(began.count() == 1 && added.count() == 0, "other value: a series began");
     store.setReading(clock.at(500, other(1, 51, "51.00", "Hz")));
     check(store.extra(0).count() == 2 && added.count() == 1 && added.last().at(0).toInt() == 0,
           "other value: the next reading appended");
-    // its integral over time, as the main value's: 50 Hz for 0.24 s
-    check(std::abs(store.extra(0).last().integral - 12) < 1e-9,
-          QString("other value: integral %1, expected 12").arg(store.extra(0).last().integral));
     // its stats as the main value's: up to now, nothing before its first reading
     {
       const RecordingStore::Stats st = store.statsOf(store.extra(0), 0, 250);
@@ -237,18 +235,14 @@ int main(int argc, char **argv)
       store.setReading(clock.at(t + 10, other(1, 50, "50.00", "Hz")));
     }
     // the second display's frames end without an "off" (iDMM bit 7), the
-    // main value goes on: a gap at the stale limit; the integral counts the
-    // last value up to it, as for the main value, then stays
+    // main value goes on: a gap at the stale limit
     for (qint64 t = 2100; t <= 8000; t += 100)
       store.setReading(clock.at(t, reading(0.001, "1.000", "DC")));
     const RecordingSeries &hz = store.extra(0);
     check(store.extraCount() == 1 && hz.last().gap() && hz.last().quality == Quality::Stale && hz.last().t == 2010 + 3000,
           QString("silent value: last point t %1 gap %2").arg(hz.last().t).arg(hz.last().gap()));
-    const double integral = hz.at(hz.count() - 2).integral;
     store.setReading(clock.at(8010, other(1, 50, "50.00", "Hz")));
-    check(store.extraCount() == 1 && !store.extra(0).last().gap()
-            && std::abs(store.extra(0).last().integral - (integral + 50 * 3.0)) < 1e-9,
-          QString("silent value back: same series, integral %1 (was %2)").arg(store.extra(0).last().integral).arg(integral));
+    check(store.extraCount() == 1 && !store.extra(0).last().gap(), "silent value back: same series");
     // only one gap for the silence
     int gaps = 0;
     for (int i = 0; i < store.extra(0).count(); ++i)
@@ -665,6 +659,25 @@ int main(int argc, char **argv)
       g << QString::number(p.value);
     check(g.join(' ') == "1.5 1.54 2.5", "raw: grid of the import got " + g.join(' '));
 
+    // what a QtDMM recording says of its devices goes along when it is saved
+    // again, a new recording drops it; the writer's own keys are its own
+    if (rec)
+    {
+      Recording withInfo = *rec;
+      withInfo.meta = QJsonObject{ { "devices", QJsonArray{ QJsonObject{ { "model", "UNI-T UT61E" } } } },
+                                   { "written", "2020-01-01T00:00:00" } };
+      RecordingStore file;
+      file.load(withInfo);
+      const Recording again = file.toRecording(true);
+      check(again.meta.value("devices").toArray().first().toObject().value("model").toString() == "UNI-T UT61E"
+              && !again.meta.contains("written"),
+            "meta: the devices of a loaded file go along, not what the writer adds");
+      const Recording over = file.toRecording(true, {}, {}, {}, QJsonObject{ { "devices", QJsonArray() } });
+      check(over.meta.value("devices").toArray().isEmpty(), "meta: info given replaces the file's");
+      file.clear();
+      check(file.toRecording().meta.isEmpty(), "meta: a new recording has none of the file's");
+    }
+
     // an old export on its grid stays one: the gaps where they were
     const std::optional<Recording> legacy = RecordingFile::read(QString(argc > 1 ? argv[1] : "") + "/legacy_nan.txt", &err);
     check(legacy.has_value(), "legacy: read: " + err);
@@ -710,6 +723,102 @@ int main(int argc, char **argv)
     if (const auto rec = RecordingFile::read(raw, &err))
       back.load(*rec);
     check(back.count() == 3 && (back.series().at(1).flags & SampleFlag::LimitHigh), "limit: loaded with the verdicts");
+  }
+
+  // --- 5a1b. what the meter said about a reading (HOLD, REL, MAX) goes
+  //           into the file too, in a flags column of its own beside the
+  //           verdict, and comes back with the readings ---
+  {
+    RecordingStore store;
+    TestClock clock;
+    clock.attach(store);
+    store.setUnit("V");
+    store.setSampleTime(10);
+    store.start();
+    auto flagged = [](Reading r, quint32 flags) { r.flags |= flags; return r; };
+    store.setReading(clock.at(0, flagged(reading(5.0, "5.000", "DC"), SampleFlag::LimitPass)));
+    store.setReading(clock.at(400, flagged(reading(5.0, "5.000", "DC"), SampleFlag::LimitPass | SampleFlag::Hold)));
+    store.setReading(clock.at(900, flagged(reading(0.2, "0.200", "DC"), SampleFlag::Relative | SampleFlag::Max)));
+    clock.now = 2000;
+    store.stop();
+    QTemporaryDir dir;
+    const QString raw = dir.path() + "/flags_raw.csv";
+    QString err;
+    check(store.write(raw, &err, true), "flags: raw write: " + err);
+    QFile f(raw);
+    const QStringList lines = f.open(QIODevice::ReadOnly | QIODevice::Text) ? QString::fromUtf8(f.readAll()).split('\n') : QStringList();
+    check(lines.value(0).endsWith(";status;limit;flags") && lines.value(1).endsWith(";ok;PASS;") && lines.value(2).endsWith(";ok;PASS;HOLD")
+            && lines.value(3).endsWith(";ok;;MAX REL"),
+          "flags: raw rows: " + lines.join(" | "));
+    RecordingStore back;
+    if (const auto rec = RecordingFile::read(raw, &err))
+      back.load(*rec);
+    check(back.count() == 3 && back.series().at(0).flags == SampleFlag::LimitPass
+            && back.series().at(1).flags == (SampleFlag::LimitPass | SampleFlag::Hold)
+            && back.series().at(2).flags == (SampleFlag::Relative | SampleFlag::Max),
+          "flags: loaded with verdicts and states: " + err);
+    // on the grid a state in a step stays, as a FAIL does
+    const Recording grid = store.toRecording();
+    check(grid.limits.size() == 3 && (grid.limits[1] & SampleFlag::Hold) && (grid.limits[2] & SampleFlag::Relative),
+          "flags: on the grid, the states of a step stay");
+    // without a verdict: the flags column alone; a file without states has none
+    RecordingStore plain;
+    TestClock clock2;
+    clock2.attach(plain);
+    plain.setUnit("V");
+    plain.start();
+    plain.setReading(clock2.at(0, flagged(reading(1.0, "1.000", "DC"), SampleFlag::Hold)));
+    clock2.now = 1000;
+    plain.stop();
+    const QString only = dir.path() + "/flags_only.csv";
+    check(plain.write(only, &err, true), "flags: write without a verdict: " + err);
+    QFile g(only);
+    const QString head = g.open(QIODevice::ReadOnly | QIODevice::Text) ? QString::fromUtf8(g.readAll()).section('\n', 0, 0) : QString();
+    check(head.endsWith(";status;flags"), "flags: alone after the status: " + head);
+    RecordingStore back2;
+    if (const auto rec = RecordingFile::read(only, &err))
+      back2.load(*rec);
+    check(back2.count() == 1 && back2.series().at(0).flags == SampleFlag::Hold, "flags: loaded from the flags column alone: " + err);
+  }
+
+  // --- 5a1c. why a gap is one goes with it: the connection lost, the port
+  //           released on purpose; known later, the gap in hand gets it;
+  //           the file keeps it ---
+  {
+    RecordingStore store;
+    TestClock clock;
+    clock.attach(store);
+    store.setUnit("V");
+    store.start();
+    store.setReading(clock.at(0, reading(1.0, "1.000", "DC")));
+    clock.now = 1000;
+    store.setStale(true, SampleFlag::GapLost);
+    store.setReading(clock.at(2000, reading(1.0, "1.000", "DC")));
+    clock.now = 3000;
+    store.setStale(true);
+    store.setGapCause(SampleFlag::GapPause);
+    store.setReading(clock.at(4000, reading(1.0, "1.000", "DC")));
+    store.setGapCause(SampleFlag::GapLost);   // no gap in hand: nothing
+    clock.now = 5000;
+    store.stop();
+    const RecordingSeries &s = store.series();
+    check(s.count() == 5 && s.at(1).gap() && s.at(1).flags == SampleFlag::GapLost && s.at(3).gap()
+            && s.at(3).flags == SampleFlag::GapPause && !(s.at(4).flags & (SampleFlag::GapLost | SampleFlag::GapPause)),
+          QString("gap cause: lost and paused on their gaps, %1 points, flags %2 %3 %4").arg(s.count())
+            .arg(s.count() > 1 ? s.at(1).flags : 0).arg(s.count() > 3 ? s.at(3).flags : 0).arg(s.count() > 4 ? s.at(4).flags : 0));
+    QTemporaryDir dir;
+    const QString raw = dir.path() + "/gap_cause.csv";
+    QString err;
+    check(store.write(raw, &err, true), "gap cause: write: " + err);
+    QFile f(raw);
+    const QStringList lines = f.open(QIODevice::ReadOnly | QIODevice::Text) ? QString::fromUtf8(f.readAll()).split('\n') : QStringList();
+    check(lines.value(0).endsWith(";status;flags") && lines.value(2).endsWith(";gap;LOST") && lines.value(4).endsWith(";gap;PAUSE"),
+          "gap cause: in the file: " + lines.join(" | "));
+    RecordingStore back;
+    if (const auto rec = RecordingFile::read(raw, &err))
+      back.load(*rec);
+    check(back.count() == 5 && back.series().at(1).flags == SampleFlag::GapLost && back.series().at(3).flags == SampleFlag::GapPause,
+          "gap cause: loaded again: " + err);
   }
 
   // --- 5a2. the other values in the export: a column group each, on the
@@ -789,26 +898,8 @@ int main(int argc, char **argv)
           "extras grid: export, import, export the same\n" + fileText(grid2));
   }
 
-  // --- 5b. gaps and the integral: over time (V s) for the values above
-  //         the threshold; a gap adds nothing, the integral carries over
-  //         it; the start triggers compare with the last value there was ---
+  // --- 5b. gaps: the start triggers compare with the last value there was ---
   {
-    RecordingStore store;
-    TestClock clock;
-    clock.attach(store);
-    store.setIntegrationThreshold(0);
-    store.start();
-    store.setReading(clock.at(0, reading(2, "2.000", "DC")));
-    store.setReading(clock.at(1000, reading(4, "4.000", "DC")));
-    check(store.series().last().integral == 2, QString("integral: 2 V for 1 s, got %1").arg(store.series().last().integral));
-    store.setReading(clock.at(1500, reading(0, "OL", "DC")));
-    check(std::isnan(store.series().last().integral), "integral: a gap has none");
-    store.setReading(clock.at(3000, reading(6, "6.000", "DC")));
-    check(store.series().last().integral == 4, QString("integral: carried over the gap, 2 + 4 x 0.5, got %1")
-                                                  .arg(store.series().last().integral));
-    store.setReading(clock.at(4000, reading(-1, "-1.000", "DC")));
-    check(store.series().last().integral == 0, "integral: at or below the threshold it is 0");
-
     RecordingStore trig;
     TestClock tc;
     tc.attach(trig);
@@ -1038,6 +1129,24 @@ int main(int argc, char **argv)
       check(s.count == 1 && s.mean == -1 && s.covered == 1000, "stats past now: up to now; got " + text(s));
       s = st.stats(2500, 2500);
       check(s.count == 0 && s.covered == 0, "stats of no time: nothing; got " + text(s));
+      // σ weighted by time: 2 and 4 for 1 s, -1 for 2 s around the mean 1: √4.5
+      s = st.stats(0, 5000);
+      check(std::abs(s.sigma - std::sqrt(4.5)) < 1e-12, QString("stats: σ √4.5, got %1").arg(s.sigma));
+      s = st.stats(1500, 500);
+      check(std::abs(s.sigma - 1) < 1e-12, QString("stats: σ of 2 and 4 half each is 1, got %1").arg(s.sigma));
+    }
+    // a steady large value has no spread, not a rounding error's
+    {
+      RecordingStore st;
+      TestClock c;
+      c.attach(st);
+      st.setLiveWidth(120);
+      st.live();
+      for (int i = 0; i < 100; ++i)
+        st.setReading(c.at(i * 100, reading(1000.001, "1000.001", "DC")));
+      c.now = 10000;
+      const RecordingStore::Stats s = st.stats(0, 10000);
+      check(s.sigma == 0 && std::abs(s.mean - 1000.001) < 1e-9, QString("stats: steady 1000.001: σ 0, got %1").arg(s.sigma));
     }
 
     // stats of a loaded file: the last reading counts although nothing comes

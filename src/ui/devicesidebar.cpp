@@ -23,6 +23,9 @@
 
 #include "core/devicelibrary.h"
 #include "device/dmmdecoder.h"
+#include "device/metersetup.h"
+#include "logic/integralnode.h"
+#include "logic/legacynodes.h"
 #include "ui/devicesymbol.h"
 
 namespace
@@ -71,7 +74,7 @@ QIcon dot(const QColor &color, qreal dpr)
 
 // where a value is shown, as a legend: a stroke of its curve's colour
 // (not a dot, unlike the states before the names), then one symbol for each
-// kind of view: front panel, needle meter, Poincaré plot (the tooltip names
+// kind of view: front panel, needle meter, Poincaré plot, histogram (the tooltip names
 // the windows)
 QPixmap shownMarks(const DeviceSidebar::Value &value, qreal dpr)
 {
@@ -82,6 +85,8 @@ QPixmap shownMarks(const DeviceSidebar::Value &value, qreal dpr)
     views << QIcon::fromTheme("qtdmm-meter");
   if (value.poincares > 0)
     views << QIcon::fromTheme("qtdmm-poincare");
+  if (value.histograms > 0)
+    views << QIcon::fromTheme("qtdmm-histogram");
   const int marks = int(views.size()) + (value.color.isValid() ? 1 : 0);
   if (marks == 0)
     return QPixmap();
@@ -160,6 +165,9 @@ public:
 QPixmap symbolOf(const MyDevice &d, qreal dpr)
 {
   const QSize box(kSymbolSize, kSymbolSize);
+  // a calculated or simulated value (logic node, also one of before): QtDMM's own
+  if (d.isNode() || LegacyNodes::isLegacy(d.keys))
+    return DeviceSymbol::pixmap(QStringLiteral("QtDMM"), DeviceType::Virtual, box, dpr, DeviceSymbol::Design::Flat);
   for (const DmmDecoder::DMMInfo &info : DmmDecoder::getDeviceConfigurations())
     if (DmmDecoder::sameModel(d.model(), info.name))
       return DeviceSymbol::pixmap(info.vendor, DeviceType::of(info), box, dpr, DeviceSymbol::Design::Flat);
@@ -190,6 +198,16 @@ DeviceSidebar::DeviceSidebar(DeviceLibrary *library, QWidget *parent)
   // only the node takes entries: they cannot become children of each other
   invisibleRootItem()->setFlags(Qt::ItemIsEnabled);
   // folded at the start: one look away, not in the way of the devices
+  // the open project with its benches, at the top; hidden without one
+  m_project = new QTreeWidgetItem(this, { tr("Project") });
+  m_project->setFlags(Qt::ItemIsEnabled);
+  {
+    QFont boldFont = m_project->font(0);
+    boldFont.setBold(true);
+    m_project->setFont(0, boldFont);
+  }
+  m_project->setFirstColumnSpanned(true);
+  m_project->setHidden(true);
   m_workspaces = new QTreeWidgetItem(this, { tr("Recent benches") });
   m_workspaces->setFlags(Qt::ItemIsEnabled);
   QFont bold = m_workspaces->font(0);
@@ -226,6 +244,8 @@ DeviceSidebar::DeviceSidebar(DeviceLibrary *library, QWidget *parent)
       return;
     if (item == m_addItem)
       Q_EMIT addDeviceRequested();
+    else if (item == m_newBenchItem)
+      Q_EMIT newBenchRequested();
     else if (item->parent() == m_workspaces && column == kShown)
       Q_EMIT favoriteRequested(item->data(0, Qt::UserRole).toString(), !item->data(0, Qt::UserRole + 1).toBool());
     else if (column == kShown && !item->data(kShown, kMarks).isNull())
@@ -448,7 +468,7 @@ void DeviceSidebar::setServices(const QList<Service> &services)
 
 QString DeviceSidebar::workspaceOf(const QTreeWidgetItem *item) const
 {
-  if (!item || item->parent() != m_workspaces)
+  if (!item || (item->parent() != m_workspaces && item->parent() != m_project) || item == m_newBenchItem)
     return QString();
   const QString file = item->data(0, Qt::UserRole).toString();
   return QFileInfo::exists(file) ? file : QString();
@@ -481,6 +501,43 @@ void DeviceSidebar::setWorkspaces(const QList<Workspace> &workspaces)
     }
   }
   m_workspaces->setHidden(workspaces.isEmpty());
+  m_filling = false;
+}
+
+void DeviceSidebar::setProject(const QString &name, const QList<Workspace> &benches, const QString &current)
+{
+  m_filling = true;
+  qDeleteAll(m_project->takeChildren());
+  m_newBenchItem = nullptr;
+  m_project->setHidden(name.isEmpty());
+  if (name.isEmpty())
+  {
+    m_filling = false;
+    return;
+  }
+  m_project->setText(0, tr("Project: %1").arg(name));
+  m_project->setToolTip(0, tr("The benches of the open project: a double click loads one."));
+  for (const Workspace &ws : benches)
+  {
+    const QString shown = ws.name.isEmpty() ? QFileInfo(ws.file).completeBaseName() : ws.name;
+    auto *item = new QTreeWidgetItem(m_project, { shown });
+    item->setData(0, Qt::UserRole, ws.file);
+    item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+    item->setFirstColumnSpanned(true);
+    item->setToolTip(0, ws.tooltip.isEmpty() ? QDir::toNativeSeparators(ws.file) : ws.tooltip);
+    if (ws.file == current)
+    {
+      QFont f = item->font(0);
+      f.setBold(true);
+      item->setFont(0, f);
+    }
+  }
+  m_newBenchItem = new QTreeWidgetItem(m_project, { tr("+ New bench...") });
+  m_newBenchItem->setFlags(Qt::ItemIsEnabled);
+  m_newBenchItem->setFirstColumnSpanned(true);
+  m_newBenchItem->setForeground(0, palette().color(QPalette::Disabled, QPalette::WindowText));
+  m_newBenchItem->setToolTip(0, tr("Save the devices and windows as they are as a new bench of the project"));
+  m_project->setExpanded(true);
   m_filling = false;
 }
 
@@ -707,6 +764,23 @@ void DeviceSidebar::keyPressEvent(QKeyEvent *event)
   QTreeWidget::keyPressEvent(event);
 }
 
+QAction *DeviceSidebar::addCaptureAction(QMenu &menu, const QString &id) const
+{
+  // a calculated or simulated value has no frames
+  if (const std::optional<MyDevice> d = m_library->find(id); d && (d->isNode() || LegacyNodes::isLegacy(d->keys)))
+    return nullptr;
+  QAction *capture = menu.addAction(tr("&Capture..."));
+  // a meter whose protocol QtDMM does not know: the capture is all it is for
+  if (const std::optional<MyDevice> d = m_library->find(id);
+      d && MeterSetup::formatFromSetting(d->keys.value("DMM/data-format")) == FrameFormat::RawCapture)
+  {
+    QFont bold = capture->font();
+    bold.setBold(true);
+    capture->setFont(bold);
+  }
+  return capture;
+}
+
 void DeviceSidebar::openMenu(QTreeWidgetItem *item, const QPoint &pos)
 {
   const QString id = openOf(item);
@@ -726,6 +800,15 @@ void DeviceSidebar::openMenu(QTreeWidgetItem *item, const QPoint &pos)
   QAction *alarms = menu.addAction(tr("&Alarms..."));
   QAction *limits = menu.addAction(tr("Li&mits..."));
   menu.addSeparator();
+  // its frames with what it showed, for a report of what is read wrong
+  QAction *capture = addCaptureAction(menu, id);
+  // an integral back to 0 by hand
+  QAction *zero = nullptr;
+  if (const std::optional<MyDevice> d = m_library->find(id); d && d->isNode())
+    if (const std::unique_ptr<LogicNode> node = LogicNode::fromJsonText(d->keys.value("Node/json").toString());
+        node && node->type() == QLatin1String(IntegralNode::kType))
+      zero = menu.addAction(tr("Set integral to &0"));
+  menu.addSeparator();
   QAction *close = menu.addAction(QIcon::fromTheme("window-close"), tr("&Remove from bench"));
   QAction *chosen = menu.exec(pos);
   if (chosen && chosen == info)
@@ -738,6 +821,10 @@ void DeviceSidebar::openMenu(QTreeWidgetItem *item, const QPoint &pos)
     Q_EMIT alarmsRequested(id);
   else if (chosen == limits)
     Q_EMIT limitsRequested(id);
+  else if (capture && chosen == capture)
+    Q_EMIT captureRequested(id);
+  else if (zero && chosen == zero)
+    Q_EMIT nodeResetRequested(id);
   else if (chosen && chosen == close)
     Q_EMIT closeRequested(id);
 }
@@ -787,6 +874,9 @@ void DeviceSidebar::contextMenuEvent(QContextMenuEvent *event)
   beside->setToolTip(tr("Reads it with the other devices connected: recorded with them, in formulas and over SCPI"));
   beside->setEnabled(!isConnected(id));
   menu.addSeparator();
+  // its frames with what it showed; not connected yet, it is connected first
+  QAction *capture = addCaptureAction(menu, id);
+  menu.addSeparator();
   QAction *remove = menu.addAction(QIcon::fromTheme("list-remove"), tr("Re&move from My devices"));
   menu.setToolTipsVisible(true);
   QAction *chosen = menu.exec(event->globalPos());
@@ -801,6 +891,8 @@ void DeviceSidebar::contextMenuEvent(QContextMenuEvent *event)
   }
   else if (chosen == beside)
     Q_EMIT openBesideRequested(id);
+  else if (capture && chosen == capture)
+    Q_EMIT captureRequested(id);
   else if (chosen == remove
            && QMessageBox::question(this, tr("Remove device"), tr("Remove \"%1\" from My devices?").arg(d->name))
                 == QMessageBox::Yes)

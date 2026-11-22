@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "service/devicesession.h"
+#include "logic/legacynodes.h"
+#include "service/noderunner.h"
 
 #include <QDateTime>
 
@@ -149,6 +151,11 @@ void DeviceSession::followLead(int state)
   {
     m_running = first;
     m_scope = std::exchange(m_nextScope, std::nullopt);
+    // an integral counts from the recording's start
+    for (MeterController *ctl : controllers())
+      if (NodeRunner *runner = NodeRunner::of(ctl); runner && runner->node()->resetsOnRecording()
+                                                     && (ctl == first || inScope(ctl)))
+        runner->reset();
     // its start stays where it is, also when its first reading comes later:
     // the others record on it. Alone it begins with its first reading
     if (std::any_of(others.cbegin(), others.cend(), [this](const MeterController *ctl) { return inScope(ctl); }))
@@ -240,26 +247,17 @@ QString DeviceSession::variableName(const QString &name)
   return !out.isEmpty() && out[0].isDigit() ? '_' + out : out;
 }
 
-CalcDevice::Inputs DeviceSession::calcInputs() const
+QString DeviceSession::sourceOfVariable(const QString &name) const
 {
-  // a calculated meter may outlive the session by a deleteLater()
-  return [self = QPointer<const DeviceSession>(this)]
-  {
-    QMap<QString, CalcDevice::Input> out;
-    if (!self)
-      return out;
-    for (const MeterController *ctl : self->controllers())
-    {
-      const Reading &r = ctl->lastReading();
-      if (ctl->deviceName().isEmpty() || r.msecs == 0)
-        continue;
-      out.insert(variableName(ctl->deviceName()), { r.value, r.baseUnit, r.msecs, !r.hold && !r.overload && !r.noNumber() });
-    }
-    return out;
-  };
+  if (!m_library)
+    return QString();
+  for (const MyDevice &d : m_library->list())
+    if (variableName(d.name) == name)
+      return "device:" + d.id;
+  return QString();
 }
 
-MeterController *DeviceSession::open(const QString &id, QString *error)
+MeterController *DeviceSession::open(const QString &id, QString *error, bool waitForDevice)
 {
   const std::optional<MyDevice> entry = m_library ? m_library->find(id) : std::nullopt;
   if (!entry)
@@ -268,10 +266,11 @@ MeterController *DeviceSession::open(const QString &id, QString *error)
       *error = "-224,Illegal parameter value; no such device: " + id;
     return nullptr;
   }
-  return open(entry->id, entry->keys, entry->name, error);
+  return open(entry->id, entry->keys, entry->name, error, waitForDevice);
 }
 
-MeterController *DeviceSession::open(const QString &id, const QVariantMap &keys, const QString &name, QString *error)
+MeterController *DeviceSession::open(const QString &id, const QVariantMap &keys, const QString &name, QString *error,
+                                     bool waitForDevice)
 {
   if (controller("device:" + id))
   {
@@ -279,20 +278,95 @@ MeterController *DeviceSession::open(const QString &id, const QVariantMap &keys,
       *error = "-221,Settings conflict; open already: " + name;
     return nullptr;
   }
+  // a logic node of My devices: opened as a node; a simulated meter or a
+  // calculated value of before as one too (LegacyNodes)
+  if (keys.contains(QStringLiteral("Node/json")))
+  {
+    std::unique_ptr<LogicNode> node = LogicNode::fromJsonText(keys.value(QStringLiteral("Node/json")).toString());
+    if (!node)
+    {
+      if (error)
+        *error = "-221,Settings conflict; unknown kind of calculated value: " + name;
+      return nullptr;
+    }
+    return openNode(id, name, std::move(node), error);
+  }
+  if (LegacyNodes::isLegacy(keys))
+  {
+    QString why;
+    std::unique_ptr<LogicNode> node = LegacyNodes::fromKeys(keys, [this](const QString &var) { return sourceOfVariable(var); }, &why);
+    if (!node)
+    {
+      if (error)
+        *error = "-221,Settings conflict; " + why + ": " + name;
+      return nullptr;
+    }
+    return openNode(id, name, std::move(node), error);
+  }
   const MeterSetup setup = MeterSetup::fromKeys(keys, m_sigrokExe);
   auto *ctl = new MeterController(this, m_host);
-  ctl->setInstanceId(m_instanceId);
-  ctl->setDevice(id, name);
   ctl->setModel(setup.knownModel ? setup.info.name : QStringLiteral("Manual"));
   ctl->setValueCount(setup.valueCount);
-  ctl->setFollowsWindow(true);
   ctl->configure(setup);
-  ctl->dmm()->setCalcInputs(calcInputs());
+  return adopt(ctl, id, name, error, waitForDevice);
+}
+
+MeterController *DeviceSession::openNode(const QString &id, const QString &name, std::unique_ptr<LogicNode> node,
+                                         QString *error)
+{
+  const QString source = "device:" + id;
+  if (controller(source))
+  {
+    if (error)
+      *error = "-221,Settings conflict; open already: " + name;
+    return nullptr;
+  }
+  if (!node || LogicNode::makesLoop(source, node->inputs(), [this](const QString &s) { return nodeInputs(s); }))
+  {
+    if (error)
+      *error = "-221,Settings conflict; its inputs close a loop: " + name;
+    return nullptr;
+  }
+  // off is a state of its own only where it holds (an integral's HOLD); a
+  // formula switched off before 27.1's front panels opens disconnected
+  const bool disconnected = !node->isOn() && !node->holds();
+  if (disconnected)
+    node->setOn(true);
+  auto *ctl = new MeterController(this, m_host, MeterController::Kind::Node);
+  // a node's "model": QtDMM and its kind, as many values as outputs
+  DmmDecoder::DMMInfo info;
+  info.vendor = QStringLiteral("QtDMM");
+  info.model = node->type().left(1).toUpper() + node->type().mid(1);   // "Formula", "Generator"
+  info.name = info.vendor + ' ' + info.model;
+  info.channels = qBound(1, int(node->outputs().size()), kMaxValues);
+  info.display = 60000;
+  ctl->setNodeInfo(info);
+  ctl->setModel(info.name);
+  ctl->setValueCount(info.channels);
+  new NodeRunner(this, ctl, std::move(node));
+  MeterController *opened = adopt(ctl, id, name, error, false);
+  if (opened && disconnected)
+    opened->connectMeter(false);
+  return opened;
+}
+
+QList<ValueRef> DeviceSession::nodeInputs(const QString &source) const
+{
+  const NodeRunner *runner = NodeRunner::of(controller(source));
+  return runner ? runner->node()->inputs() : QList<ValueRef>();
+}
+
+MeterController *DeviceSession::adopt(MeterController *ctl, const QString &id, const QString &name, QString *error,
+                                      bool waitForDevice)
+{
+  ctl->setInstanceId(m_instanceId);
+  ctl->setDevice(id, name);
+  ctl->setFollowsWindow(true);
   // its messages to the status bar: a lost connection, a recording stopped
   connect(ctl, &MeterController::error, this, [this, ctl](const QString &text)
   {
     // a connection's message is in the log with its state
-    if (text != ctl->dmm()->errorString())
+    if (text != ctl->errorString())
       AppLog::error(ctl->deviceName(), text);
     Q_EMIT this->error(tr("%1: %2").arg(ctl->deviceName(), text));
   });
@@ -301,7 +375,7 @@ MeterController *DeviceSession::open(const QString &id, const QVariantMap &keys,
     AppLog::info(ctl->deviceName(), text);
     Q_EMIT info(tr("%1: %2").arg(ctl->deviceName(), text));
   });
-  connect(ctl->dmm(), &MeterConnection::linkStateChanged, this, [ctl](MeterConnection::LinkState state, const QString &detail)
+  connect(ctl, &MeterController::linkStateChanged, this, [ctl](MeterConnection::LinkState state, const QString &detail)
   {
     using State = MeterConnection::LinkState;
     AppLog::instance()->add(state == State::Error ? AppLog::Error : state == State::Timeout ? AppLog::Warning : AppLog::Info,
@@ -313,14 +387,18 @@ MeterController *DeviceSession::open(const QString &id, const QVariantMap &keys,
   // an alarm's program with "Disconnect first" has the port for a while
   connect(ctl, &MeterController::portReleased, ctl, [ctl](bool released) { ctl->connectMeter(!released); });
   applyRules(ctl, id);
-  if (!ctl->connectMeter(true))
+  if (!ctl->connectMeter(true, waitForDevice))
   {
     // SCPI in English, the reason in the status bar in the user's language
     if (error)
       *error = "-240,Hardware error; " + name + ": does not connect";
-    Q_EMIT this->error(tr("%1: %2").arg(name, ctl->dmm()->errorString()));
-    delete ctl;
-    return nullptr;
+    Q_EMIT this->error(tr("%1: %2").arg(name, ctl->errorString()));
+    if (!waitForDevice)
+    {
+      delete ctl;
+      return nullptr;
+    }
+    // it stays, not connected, and connects when the device comes
   }
   MeterController *leading = lead();   // before it is one of them
   m_opened << ctl;

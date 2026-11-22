@@ -242,6 +242,8 @@ QString ScpiServer::unit(const QString &baseUnit)
     return QStringLiteral("F");
   if (baseUnit == QStringLiteral("Ω"))
     return QStringLiteral("Ohm");
+  if (baseUnit == QStringLiteral("lx·h"))
+    return QStringLiteral("lx*h");
   return baseUnit;
 }
 
@@ -555,6 +557,32 @@ QString ScpiServer::unquote(const QString &arg)
   return s;
 }
 
+// "a","b,c" -> a, b,c: the arguments split at the commas outside quotes,
+// each unquoted
+QStringList ScpiServer::quotedArgs(const QString &args)
+{
+  QStringList out;
+  QString part;
+  QChar quote;
+  for (const QChar c : args)
+  {
+    if (quote.isNull() && (c == '"' || c == '\''))
+      quote = c;
+    else if (c == quote)
+      quote = QChar();   // a doubled quote closes and opens again: unquote() keeps one
+    else if (quote.isNull() && c == ',')
+    {
+      out << unquote(part);
+      part.clear();
+      continue;
+    }
+    part += c;
+  }
+  if (!part.trimmed().isEmpty() || !out.isEmpty())
+    out << unquote(part);
+  return out;
+}
+
 namespace
 {
 QString quoted(const QString &s)
@@ -658,13 +686,14 @@ QString ScpiServer::handleQtdmm(const Command &cmd, bool &isQuery)
     return refuse(isQuery, -113, "Undefined header");
   }
 
-  // QTDMM:MARK "text": a mark at the newest reading
+  // QTDMM:MARK "title"[,"text"]: a note at the newest reading
   if (matches(sub, "MARK") && depth == 2)
   {
     if (commandOnly(cmd, isQuery))
     {
-      const QString text = unquote(cmd.args);
-      Q_EMIT dev().markRequested(text.isEmpty() ? QStringLiteral("SCPI") : text);
+      const QStringList args = quotedArgs(cmd.args);
+      const QString title = args.value(0);
+      Q_EMIT dev().markRequested(title.isEmpty() ? QStringLiteral("SCPI") : title, args.value(1));
     }
     return {};
   }
@@ -695,6 +724,18 @@ QString ScpiServer::handleQtdmm(const Command &cmd, bool &isQuery)
       return refuse(isQuery, -224, "Illegal parameter value");
     if (!dev().m_sources.pressKey || !dev().m_sources.pressKey(key))
       return refuse(isQuery, -240, "Hardware error; the key was not sent");
+    return {};
+  }
+
+  // QTDMM:NODE:RESet: a logic node's state back to 0 (an integral)
+  if (matches(sub, "NODE") && depth == 3)
+  {
+    if (!matches(leaf, "RESet"))
+      return refuse(isQuery, -113, "Undefined header");
+    if (!commandOnly(cmd, isQuery))
+      return {};
+    if (!dev().m_sources.resetNode || !dev().m_sources.resetNode())
+      return refuse(isQuery, -241, "Hardware missing; no calculated value");
     return {};
   }
 

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
 
+#include "core/battery.h"
 #include <QCoreApplication>
 #include <QElapsedTimer>
 #include <QHash>
@@ -76,7 +77,11 @@ enum class Quantity : quint16
   StateOfCharge,        ///< % of a battery (Victron)
   TimeToGo,             ///< remaining time of a battery (Victron)
   CarbonDioxide,        ///< ppm (TFA AirControl)
-  Illuminance           ///< lx or fc (luxmeters; libsigrok has no such quantity)
+  Illuminance,          ///< lx or fc (luxmeters; libsigrok has no such quantity)
+  LinearSpeed,          ///< m/min, in/min, ft/min (a tachometer's measuring wheel)
+  Length,               ///< m, in, ft (dito)
+  LightExposure,        ///< lx·h (a luxmeter's integral)
+  LuminousIntensity     ///< cd (a luxmeter from lux and distance)
 };
 
 /// State and mode of a value, a bit mask after libsigrok's sr_mqflag, plus
@@ -106,6 +111,11 @@ enum : quint32
   Limit     = LimitPass | LimitHigh | LimitLow,
   LowBattery = 1u << 28,   ///< QtDMM
   Peak       = 1u << 29,   ///< QtDMM
+  GapLost    = 1u << 30,   ///< QtDMM, on a gap: the connection was lost (not just a silent meter)
+  GapPause   = 1u << 31,   ///< QtDMM, on a gap: the port was released on purpose (an alarm's program had it)
+  /// What the meter said about a value beyond its number, and why a gap is
+  /// one: a recording keeps them with each reading.
+  State      = Hold | Max | Min | Relative | Avg | Peak | GapLost | GapPause,
 
   /// The flags that tell two ports of a meter apart (V DC and V AC are two
   /// ports); the others describe a state of the value.
@@ -173,6 +183,10 @@ inline const Entry *table(int *count)
     { Quantity::TimeToGo,            "time_to_go",           QT_TRANSLATE_NOOP("Quantity", "Time to go") },
     { Quantity::CarbonDioxide,       "carbon_dioxide",       QT_TRANSLATE_NOOP("Quantity", "Carbon dioxide") },
     { Quantity::Illuminance,         "illuminance",          QT_TRANSLATE_NOOP("Quantity", "Illuminance") },
+    { Quantity::LinearSpeed,         "linear_speed",         QT_TRANSLATE_NOOP("Quantity", "Linear speed") },
+    { Quantity::Length,              "length",               QT_TRANSLATE_NOOP("Quantity", "Length") },
+    { Quantity::LightExposure,       "light_exposure",       QT_TRANSLATE_NOOP("Quantity", "Light exposure") },
+    { Quantity::LuminousIntensity,   "luminous_intensity",   QT_TRANSLATE_NOOP("Quantity", "Luminous intensity") },
   };
   *count = int(sizeof(kTable) / sizeof(kTable[0]));
   return kTable;

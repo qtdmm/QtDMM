@@ -352,7 +352,7 @@ void GraphMinimap::paintEvent(QPaintEvent *)
   }
   // the last digit of a steady value must not fill the strip: it would turn
   // into a square wave from top to bottom
-  const double least = qMax(std::abs(lo), std::abs(hi)) * kLeastSpan;
+  const double least = leastSpan(lo, hi, m_store ? m_store->displayStep(m_value) : 0);
   if (hi - lo < least)
   {
     const double middle = (lo + hi) / 2;

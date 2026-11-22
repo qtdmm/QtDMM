@@ -23,6 +23,7 @@ struct PortSample
   QString rangeText;        ///< "AUTO", "MANU" or empty, as the decoder said
   bool    showBar = false;  ///< the views draw a bar graph: the decoder has one, and the quantity a range
   QString name;             ///< the meter's own name of the value (DmmChannel::name), may be empty
+  Battery battery = Battery::Unknown;   ///< the meter's battery (DmmResponse::battery, lowBat)
 };
 
 /// The one place that interprets what the decoders deliver.

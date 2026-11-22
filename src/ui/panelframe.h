@@ -65,7 +65,12 @@ namespace PanelFrame
   /// @p text engraved in the wide top of the bezel (faceRect() with plate),
   /// like the model name on the front of an instrument: the manufacturer
   /// left, the model right (splitName()), only the model when both do not fit.
-  void paintPlate(QPainter &p, const QRectF &bezel, const QString &text, const Colors &c);
+  void paintPlate(QPainter &p, const QRectF &bezel, const QString &text, const Colors &c, double reserveRight = 0);
+  /// The band of the bezel's top paintPlate() writes in.
+  QRectF plateBand(const QRectF &bezel);
+  /// The lettering's colour on @p c's bezel: the manufacturer's (@p strong)
+  /// or the model's.
+  QColor plateInk(const Colors &c, bool strong);
 
   /// A device name taken apart for it: the manufacturer of the model list
   /// it begins with and the rest; no manufacturer for a name of its own.

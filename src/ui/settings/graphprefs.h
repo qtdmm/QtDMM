@@ -29,20 +29,17 @@ class ColorButton;
 class QCheckBox;
 class QComboBox;
 class QFormLayout;
-class QLineEdit;
-class QRadioButton;
 class QSpinBox;
 
-/// Settings page "Graph": colours, line and point style of the curve, the
-/// Y axis (automatic or fixed), the visible window, the crosshair and the
-/// integration curve (a section that opens when it is switched on).
+/// Settings page "Graph": colours, line and point style of the curves, the
+/// window a new graph shows, the crosshair and the statistics' side.
 class GraphPrefs : public SettingsPage
 {
   Q_OBJECT
 public:
   GraphPrefs(QWidget *parent = nullptr);
   ~GraphPrefs();
-  /// The graphs' default colours, a GraphWidget::variantName().
+  /// The graphs' default colours, a GraphLook::name().
   QString       variant() const;
   QColor        bgColor() const;
   QColor        gridColor() const;
@@ -53,45 +50,19 @@ public:
   int           lineMode() const;
   int           pointMode() const;
   bool          crosshair() const;
+  /// The statistics left of the graph (else right), for every graph.
+  bool          statsLeft() const;
 
-  /// @name Y axis and the visible window
-  /// @{
-  bool          automaticScale() const;
-  bool          includeZero() const;
-  double        scaleMin() const;
-  double        scaleMax() const;
+  /// The time window a new graph shows, seconds.
   int           windowSeconds() const;
-  /// @}
-
-  /// @name Integration curve
-  /// @{
-  bool          showIntegration() const;
-  /// Which value the curve integrates: 0 the main value, 1 the second display.
-  int           intValue() const;
-  QColor        intColor() const;
-  QColor        intThresholdColor() const;
-  int           intLineWidth() const;
-  int           intLineMode() const;
-  int           intPointMode() const;
-  double        intScale() const;
-  double        intThreshold() const;
-  double        intOffset() const;
-  void          setIntThreshold(double value);
-  /// @}
 
 public Q_SLOTS:
   virtual void  defaultsSLOT();
   virtual void  factoryDefaultsSLOT();
   virtual void  applySLOT();
 
-  void          zoomInSLOT(double fac);
-  void          zoomOutSLOT(double fac);
-  /// Visible window from a time button: whole minutes in minutes, else seconds.
-  void          setWindowSecondsSLOT(int seconds);
-
 private:
-  /// Shows what goes with the choices: the own colours with Custom, the
-  /// limits with a fixed Y axis, the integration curve when it is on.
+  /// Shows the own colours with Custom.
   void          updateRows();
 
   QFormLayout  *m_form;
@@ -100,17 +71,9 @@ private:
   QWidget      *m_ownColours;   ///< data, background, grid: only with Custom
   QComboBox    *ui_lineMode, *ui_pointMode;
   QSpinBox     *ui_lineWidth;
-  QRadioButton *autoScaleBut, *manualScaleBut;
-  QCheckBox    *ui_includeZero, *ui_crosshair;
-  QLineEdit    *ui_scaleMin, *ui_scaleMax;
+  QCheckBox    *ui_crosshair;
+  QCheckBox    *ui_openGl;   ///< Graph/openGl, read at start (QcpGraphCommon)
   QSpinBox     *ui_winSize;
   QComboBox    *sizeUnit;
-
-  QCheckBox    *ui_showInt;
-  QComboBox    *ui_intValue;
-  QList<QWidget *> m_intRows;
-  ColorButton  *ui_intColor, *ui_intThresholdColor;
-  QComboBox    *ui_intLineMode, *ui_intPointMode;
-  QSpinBox     *ui_intLineWidth;
-  QLineEdit    *ui_intScale, *ui_intOffset, *ui_intThreshold;
+  QComboBox    *ui_statsSide;
 };

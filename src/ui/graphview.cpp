@@ -1,0 +1,189 @@
+// Copyright (c) 2026 The QtDMM developers
+// SPDX-License-Identifier: GPL-3.0-or-later
+#include "ui/graphview.h"
+
+#include <QFileInfo>
+#include <QScopedValueRollback>
+
+#include "recording/recordingfile.h"
+#include "recording/recordingstore.h"
+
+#include "service/devicesession.h"
+#include "service/metercontroller.h"
+#include "ui/graphmodel.h"
+#include "ui/views/graphwidget.h"
+
+GraphView::GraphView(DeviceSession *session, GraphWidget *graph, const QString &key, QObject *parent)
+  : QObject(parent), m_session(session), m_graph(graph), m_model(new GraphModel(this)), m_key(key)
+{
+  // window and "All" both ways: the model is what the bench keeps, the
+  // graph changes them itself (zoom, time buttons, "All" growing)
+  m_graph->setWindowSeconds(m_model->windowSeconds());
+  m_graph->setFollowAll(m_model->followAll());
+  connect(m_model, &GraphModel::windowChanged, m_graph, &GraphWidget::setWindowSeconds);
+  connect(m_model, &GraphModel::followAllChanged, m_graph, &GraphWidget::setFollowAll);
+  connect(m_graph, &GraphWidget::windowChanged, m_model, &GraphModel::setWindowSeconds);
+  connect(m_graph, &GraphWidget::followAllChanged, m_model, &GraphModel::setFollowAll);
+  m_graph->setStatsVisible(m_model->statsVisible());
+  connect(m_model, &GraphModel::statsVisibleChanged, m_graph, &GraphWidget::setStatsVisible);
+  connect(m_graph, &GraphWidget::statsVisibleChanged, m_model, &GraphModel::setStatsVisible);
+  // overview, states and band both ways: the graph's buttons switch them
+  auto overviewToGraph = [this]
+  {
+    m_graph->setMinimapVisible(m_model->minimapVisible());
+    m_graph->setStatesVisible(m_model->statesVisible());
+    m_graph->setEnvelopeVisible(m_model->envelopeVisible());
+  };
+  overviewToGraph();
+  connect(m_model, &GraphModel::overviewChanged, m_graph, overviewToGraph);
+  connect(m_graph, &GraphWidget::overviewChanged, m_model, [this]
+  {
+    m_model->setMinimapVisible(m_graph->minimapVisible());
+    m_model->setStatesVisible(m_graph->statesVisible());
+    m_model->setEnvelopeVisible(m_graph->envelopeVisible());
+  });
+  // reference lines both ways: the graph changes them by a drag
+  auto referenceToGraph = [this]
+  {
+    m_graph->setReference(m_model->reference());
+    m_graph->setReferenceLines(m_model->referenceLines());
+    m_graph->setCrossingsVisible(m_model->crossingsVisible());
+  };
+  referenceToGraph();
+  connect(m_model, &GraphModel::referenceChanged, m_graph, referenceToGraph);
+  connect(m_graph, &GraphWidget::referenceChanged, m_model, [this]
+  {
+    m_model->setReference(m_graph->reference());
+    m_model->setReferenceLines(m_graph->referenceLines());
+    m_model->setCrossingsVisible(m_graph->crossingsVisible());
+  });
+  m_graph->setOutliers(m_model->outliers());
+  connect(m_model, &GraphModel::outliersChanged, m_graph, [this] { m_graph->setOutliers(m_model->outliers()); });
+  connect(m_graph, &GraphWidget::outliersChanged, m_model, [this] { m_model->setOutliers(m_graph->outliers()); });
+  connect(m_graph, &GraphWidget::leftValueChanged, this, &GraphView::followLeftValue);
+  for (const MeterController *ctl : m_session->controllers())
+    watch(ctl);
+  connect(m_session, &DeviceSession::opened, this, &GraphView::watch);
+  // the values' stores are the meters', their names the legend's
+  m_graph->setSources([this](const QString &source) -> RecordingStore *
+  {
+    MeterController *ctl = m_session->controller(source);
+    return ctl && ctl != m_closing ? ctl->recorder() : nullptr;
+  },
+  [this](const QString &source)
+  {
+    const MeterController *ctl = m_session->controller(source);
+    return ctl ? ctl->deviceName() : QString();
+  });
+  m_graph->setValues(m_model->values());
+  m_graph->setValueAxes(m_model->valueAxes());
+  m_graph->setFixedRanges(m_model->fixedRanges());
+  connect(m_model, &GraphModel::valuesChanged, this, [this] { m_graph->setValues(m_model->values()); });
+  connect(m_model, &GraphModel::valueAxesChanged, this, [this] { m_graph->setValueAxes(m_model->valueAxes()); });
+  connect(m_model, &GraphModel::fixedRangesChanged, this, [this] { m_graph->setFixedRanges(m_model->fixedRanges()); });
+  connect(m_model, &GraphModel::lookChanged, this, &GraphView::applyLook);
+  connect(m_session, &DeviceSession::opened, this, &GraphView::followBase);
+  // a store goes with its meter: let go of it before
+  connect(m_session, &DeviceSession::closing, this, [this](MeterController *ctl)
+  {
+    const QScopedValueRollback<MeterController *> going(m_closing, ctl);
+    followBase();
+  });
+}
+
+// The alarm thresholds on the left axis' value, which the reference line
+// snaps to, and the band of the limit test on it
+void GraphView::followLeftValue()
+{
+  disconnect(m_alarms);
+  disconnect(m_limits);
+  const ValueRef left = m_graph->leftValue();
+  const MeterController *ctl = left.id < 0 ? nullptr : m_session->controller(left.source);
+  if (ctl == m_closing)
+    ctl = nullptr;
+  if (ctl)
+  {
+    m_alarms = connect(ctl, &MeterController::alarmsChanged, this, &GraphView::applyLeftValue);
+    m_limits = connect(ctl, &MeterController::limitTestChanged, this, &GraphView::applyLeftValue);
+  }
+  applyLeftValue();
+}
+
+void GraphView::applyLeftValue()
+{
+  const ValueRef left = m_graph->leftValue();
+  const MeterController *ctl = left.id < 0 ? nullptr : m_session->controller(left.source);
+  if (ctl == m_closing)
+    ctl = nullptr;
+  QList<double> thresholds;
+  if (ctl)
+    for (const Alarm &a : ctl->alarms()->alarms())
+    {
+      const bool own = a.value.source.isEmpty() || a.value.source == ctl->source();
+      if (!a.enabled || a.value.id != left.id || !own || a.condition == Alarm::Overload || a.condition == Alarm::NoReadings)
+        continue;
+      thresholds << a.a;
+      if (a.condition == Alarm::Outside || a.condition == Alarm::Inside)
+        thresholds << a.b;
+    }
+  m_graph->setAlarmThresholds(thresholds);
+  if (ctl && ctl->limitTest().enabled && (ctl->limitTest().value.source.isEmpty() || ctl->limitTest().value.source == ctl->source()))
+    m_graph->setLimits(ValueRef(ctl->limitTest().value.id, left.source), ctl->limitTest().low(), ctl->limitTest().high());
+  else
+    m_graph->setLimits(ValueRef(-1));
+}
+
+void GraphView::watch(const MeterController *ctl)
+{
+  connect(ctl->recorder(), &RecordingStore::stateChanged, this, [this](RecordingStore::State state)
+  {
+    if (m_showsFile && state != RecordingStore::View)
+      closeFile();
+  });
+}
+
+bool GraphView::loadFile(const QString &path, QString *error)
+{
+  const std::optional<Recording> rec = RecordingFile::read(path, error);
+  if (!rec)
+    return false;
+  if (!m_fileStore)
+    m_fileStore = new RecordingStore(this);
+  // the columns of the file's own meter; those of others come with several values
+  m_fileStore->load(RecordingFile::devicePart(*rec, rec->device));
+  m_showsFile = true;
+  // the file is only looked at: a note set in it would be kept nowhere
+  m_graph->setMarksEditable(false);
+  m_graph->setStore(m_fileStore);
+  m_graph->setSourceName(QFileInfo(path).fileName());
+  Q_EMIT fileShownChanged(true);
+  return true;
+}
+
+void GraphView::closeFile()
+{
+  if (!m_showsFile)
+    return;
+  m_showsFile = false;
+  m_graph->setMarksEditable(true);
+  m_graph->setSourceName(QString());
+  m_graph->setStore(nullptr);
+  Q_EMIT fileShownChanged(false);
+}
+
+void GraphView::followBase()
+{
+  m_graph->sourcesChanged();
+}
+
+void GraphView::setDefaultVariant(const QString &name)
+{
+  m_defaultVariant = name;
+  applyLook();
+}
+
+void GraphView::applyLook()
+{
+  m_graph->setVariant(GraphLook::fromName(m_model->variant().isEmpty() ? m_defaultVariant : m_model->variant()));
+  m_graph->setPatternedLines(m_model->patternedLines());
+}

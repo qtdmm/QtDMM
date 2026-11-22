@@ -23,9 +23,8 @@ struct GridPoint
 {
   qint64  t = 0;            ///< ms since the start of the recording, a multiple of the step
   double  value = 0;        ///< the time-weighted mean over the step (the value at t for the first); NaN = none
-  double  integral = 0;     ///< the integral at t; NaN in a gap
   Quality quality = Quality::Valid;   ///< the worst in the step
-  quint32 limit = 0;        ///< the limit test's verdicts in the step (SampleFlag::Limit*)
+  quint32 limit = 0;        ///< the limit test's verdicts and the meter's states in the step (SampleFlag::Limit*, State)
 };
 
 /// One row of the readings series: a reading as the meter delivered it,
@@ -54,14 +53,13 @@ struct LoggedReading
 /// While recording it keeps every main reading (id 0) with its time, as a
 /// RecordingSeries of RawPoint: setReading() from the MeterController. The
 /// other values of the meter (a second display, id > 0) go into series of
-/// their own on the same time axis (extra()), with their integral too; the
+/// their own on the same time axis (extra()); the
 /// length, the marks and the export are the main value's, the triggers
 /// watch the main value or the one setTriggerValue() chose. An
 /// overload is a point without a value, and so is the moment the value went
 /// stale (setStale()). The sample time is no longer the rate it records at
 /// but the grid of the export: grid() gives the time-weighted mean of every
-/// step. The integral is one over time (unit x s) of the values above the
-/// integration threshold.
+/// step.
 ///
 /// The store is in one of three states (State): Live, the readings of the
 /// last liveKept() running through without being a recording; Record,
@@ -82,9 +80,9 @@ struct LoggedReading
 /// table). Its signals come in pairs around every change, so a table model
 /// can turn them into begin/end calls one to one.
 ///
-/// GraphWidget shows the store and follows its signals; it keeps only what is
-/// a matter of display (window, zoom, scale, colours, the integral's scale
-/// and offset). Only QtCore, so it can be tested on its own.
+/// The graph shows the store and follows its signals; it keeps only what is
+/// a matter of display (window, zoom, scale, colours). Only QtCore, so it
+/// can be tested on its own.
 ///
 /// Sample time and recording length are in tenths of a second, like the
 /// settings: a sample time of 5 is a grid of 0.5 s.
@@ -110,12 +108,21 @@ public:
   };
   Q_ENUM(State)
 
-  /// An alarm mark at a time of the recording.
+  /// What set a mark.
+  enum class MarkKind
+  {
+    Alarm,     ///< an alarm, a fault, a function changed (MeterController::markRequested())
+    Trigger,   ///< where a pre-triggered recording was triggered
+    Note       ///< a note of the user's (addNote(), QTDMM:MARK)
+  };
+  /// A mark at a time of the recording: a line in the graph with a flag.
   struct Mark
   {
     qint64  t;       ///< ms since the start of the recording
     quint32 color;   ///< ARGB, as QColor::rgba()
-    QString name;
+    QString name;    ///< the title, on the flag
+    QString note = QString();   ///< longer text, may be empty
+    MarkKind kind = MarkKind::Alarm;
   };
 
   /// The most readings a series keeps; the oldest go beyond it.
@@ -124,6 +131,8 @@ public:
   static constexpr qint64 kLiveMaxMs = 3600 * 1000;
   /// The colour of the mark where a pre-triggered recording was triggered.
   static constexpr quint32 kTriggerColor = 0xff2e9b3a;
+  /// The colour of a note's mark.
+  static constexpr quint32 kNoteColor = RecordingFile::kNoteColor;
 
   explicit RecordingStore(QObject *parent = nullptr);
 
@@ -176,9 +185,6 @@ public:
   /// takes its start too; the others start with it (startAt()) and never on
   /// their own: Manual.
   void        applySetup(const Setup &setup, bool lead);
-  /// Values at or below it reset the integral to 0.
-  void        setIntegrationThreshold(double v) { m_integrationThreshold = v; }
-  double      integrationThreshold() const { return m_integrationThreshold; }
   /// Unit of the recorded values, without SI prefix ("V"). While the store
   /// holds samples their unit stays; a new one applies from the next
   /// start() or clear() on.
@@ -203,8 +209,7 @@ public:
   /// something else (a second display from Hz to %), its series ends with a
   /// gap and a new one begins, or the one of that port goes on and moves to
   /// the end; the recording goes on. Their readings count from the
-  /// main value's first one; a display that is off is a gap. Their points
-  /// carry the integral as the main value's do (the graph may draw it).
+  /// main value's first one; a display that is off is a gap.
   int         extraCount() const { return int(m_extra.size()); }
   const RecordingSeries &extra(int i) const { return m_extra.at(i); }
   /// ms since the start the recording covers: up to now while it runs (and
@@ -221,6 +226,7 @@ public:
     double  min = std::nan("");
     double  max = std::nan("");
     double  mean = std::nan(""); ///< over time: each value for as long as it held
+    double  sigma = std::nan("");///< standard deviation, weighted over time as the mean
     double  integral = 0;        ///< value x s over the span; gaps count nothing
     qint64  covered = 0;         ///< ms of the span with a value
   };
@@ -231,7 +237,9 @@ public:
   Stats       stats(qint64 from, qint64 to) const { return statsOf(m_series, from, to); }
   /// stats() of @p series: the main one or one of extra(), on the same time
   /// axis.
-  Stats       statsOf(const RecordingSeries &series, qint64 from, qint64 to) const;
+  /// Readings @p skip names (by index) count as gaps: a graph's hidden outliers.
+  Stats       statsOf(const RecordingSeries &series, qint64 from, qint64 to,
+                      const std::function<bool(int)> &skip = nullptr) const;
   /// When the recording started (for an import: the file's first time stamp;
   /// in Live: when the live window started).
   QDateTime   startDateTime() const { return m_start; }
@@ -285,13 +293,16 @@ public:
   /// next. Before a value began its cells are empty (CellState::None).
   /// With @p foreign values of other meters the same way, on this time
   /// (offsetOf()). @p device names this meter's columns (Recording::device).
+  /// Recording::meta: what a loaded QtDMM recording had (its devices), the
+  /// marks, then @p info over it (MeterController::recordingInfo()).
   Recording   toRecording(bool raw = false, const QList<int> &extras = {}, const QList<Foreign> &foreign = {},
-                          const QString &device = QString()) const;
+                          const QString &device = QString(), const QJsonObject &info = {}) const;
   /// Writes the recording (CSV, .xlsx or .ods by suffix), on the grid or
   /// with @p raw every reading; clears dirty(), also of the @p foreign
   /// stores. In Live: the live window up to now.
   bool        write(const QString &path, QString *error = nullptr, bool raw = false, const QList<int> &extras = {},
-                    const QList<Foreign> &foreign = {}, const QString &device = QString());
+                    const QList<Foreign> &foreign = {}, const QString &device = QString(),
+                    const QJsonObject &info = {});
   /// Replaces the recording by @p rec: start, sample time and values, each
   /// at its time, and its other values as extra() (value 2 is id 1 ...);
   /// the store is in View then. A recording on the grid of its
@@ -307,6 +318,10 @@ public:
   int         readingCount() const { return m_readings.size(); }
   /// Reading @p i, 0 = the oldest.
   const LoggedReading &readingAt(int i) const { return m_readings.at(i); }
+  /// What one last digit of value @p id is worth now, in SI base units: from
+  /// the newest numbers shown (0.001 for "1.234 V" and "0.012 kV" is 1). 0 when
+  /// the readings have none, a file loaded for one.
+  double      displayStep(int id) const;
   /// Readings to keep (at least 1); the oldest go when the series shrinks.
   void        setReadingCapacity(int rows);
   int         readingCapacity() const { return m_readingCapacity; }
@@ -316,6 +331,12 @@ public:
   bool        readingsPaused() const { return m_readingsPaused; }
   /// An alarm raised on the newest reading: the row gets the colour.
   void        markLastReading(quint32 argb, const QString &name);
+  /// The same on the reading nearest to @p wall (ms since the epoch): a
+  /// note set at a time of the graph.
+  void        markReadingAt(qint64 wall, quint32 argb, const QString &name);
+  /// Takes the mark named @p name off the reading nearest to @p wall (a
+  /// note dragged away); another mark there stays.
+  void        unmarkReadingAt(qint64 wall, const QString &name);
   /// @}
 
 public Q_SLOTS:
@@ -336,7 +357,11 @@ public Q_SLOTS:
   /// The main value went stale (MeterController::staleChanged()): the live
   /// window or the recording gets a gap from where the last value stopped
   /// holding.
-  void        setStale(bool stale);
+  /// @p cause: why, when it is more than a silent meter (SampleFlag::GapLost, GapPause).
+  void        setStale(bool stale, quint32 cause = 0);
+  /// The gap the values stand in now has this cause after all (the
+  /// connection turned out to be lost): its points get the flag.
+  void        setGapCause(quint32 cause);
   /// The clock: the start at a clock time and the recording length.
   /// A timer calls it every second.
   void        poll();
@@ -364,6 +389,19 @@ public Q_SLOTS:
   void        clear();
   /// A mark at the newest reading (now, while recording).
   void        addMark(quint32 argb, const QString &name);
+  /// A note at @p t (ms of the recording; -1: where addMark() would put
+  /// it) titled @p title; the marks stay in the order of their time.
+  /// Returns its index in marks().
+  int         addNote(qint64 t, const QString &title, const QString &note);
+  /// The time a mark set now gets: now while recording or live, else the
+  /// newest reading.
+  qint64      markTime() const;
+  /// New title and text of mark @p index.
+  void        setMarkText(int index, const QString &title, const QString &note);
+  void        removeMark(int index);
+  /// Moves mark @p index to @p t (ms of the recording); the marks stay in
+  /// the order of their time. Returns its new index in marks().
+  int         setMarkTime(int index, qint64 t);
 
 Q_SIGNALS:
   /// A reading was stored (series().last()); @p shifted: older ones went
@@ -405,9 +443,11 @@ Q_SIGNALS:
   void        readingMarked(int row);
 
 private:
+  /// The row of m_readings nearest to @p wall, -1 when there is none.
+  int         readingNearest(qint64 wall) const;
   /// ms since the start of the recording, now.
   qint64      elapsed() const { return m_monotonic() - m_t0; }
-  /// Adds a point with the integral up to it.
+  /// Adds a point, not before the last one.
   void        appendPoint(RawPoint p);
   /// A gap in the other values not heard of for the stale limit at @p now.
   void        closeSilentExtras(qint64 now);
@@ -476,6 +516,9 @@ private:
   bool        m_fromFile = false;   ///< load(): the time base is the file's
   int         m_loadedGrid = 0;   ///< load(): the points are the steps of this grid (tenths); 0 = readings
   QList<Mark> m_marks;
+  /// load(): what the file's meta.json said beyond the marks (its devices),
+  /// written along again
+  QJsonObject m_fileInfo;
   QTimer      m_poll;
 
   int         m_sampleTime = 1;
@@ -483,7 +526,6 @@ private:
   int         m_preMs = 0;
   bool        m_holdOrigin = false;   ///< holdOrigin(), startAt(): the start stays
   qint64      m_preUsed = 0;          ///< ms the current recording reaches back before its trigger
-  double      m_integral = 0;   ///< the running integral, carried over gaps
   State       m_state = View;
   bool        m_dirty = false;
   QDateTime   m_start;
@@ -496,7 +538,6 @@ private:
   ValueRef    m_triggerValue;
   double      m_lastVal = 0;
   bool        m_lastValValid = false;
-  double      m_integrationThreshold = 0;
 
   /// The newest main reading: the first value of a recording that starts.
   Reading     m_reading;

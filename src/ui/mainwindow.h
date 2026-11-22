@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include "ui/dialogs/formulanodedlg.h"
+#include <QPointer>
 #include <functional>
 #include <optional>
 
@@ -33,23 +35,38 @@
 
 #include "ui_uimainwindow.h"
 #include "core/limittest.h"
+#include "core/projectfolder.h"
 #include "core/recentfiles.h"
 #include "core/valueref.h"
 #include "ui/devicesidebar.h"
 #include "ui/valuemenu.h"
 
+class NodeEditor;
+class LabPlotLive;
 class InstanceWidget;
 class DeviceSession;
 class WorkspaceFile;
 class MeterController;
+class RecordingStore;
 class LcdWidget;
 class HelpDlg;
+class CaptureDlg;
 class LogDlg;
 class AnalogMeter;
 class MeterView;
 class PoincareView;
+class BasketWidget;
 class ReadingsWidget;
 class PoincarePlot;
+class XYPlot;
+class XYView;
+class GraphWidget;
+class GraphView;
+class HistogramPlot;
+class HistogramView;
+class GraphCommon;
+class HeatmapPlot;
+class HeatmapView;
 class AlarmBar;
 class ShortcutRegistry;
 class FrontPanel;
@@ -75,6 +92,9 @@ public:
   /// @param parser the processed command line (--debug, --config-dir, --config-id)
   /// @param parent parent widget, normally none
   MainWindow(QCommandLineParser &parser, QWidget *parent = nullptr);
+  /// The views' lookups (m_graphViews, ...) go before the windows: the
+  /// MDI area must not report a window activated while they are torn down.
+  ~MainWindow() override;
   /// --debug: frame dump and the qtdmm.hid logging category.
   void      setConsoleLogging(bool);
 
@@ -192,24 +212,98 @@ protected:
   /// the menu, each with its value (a meter also its style), and go when
   /// closed.
   /// @{
-  enum class Added { Meter, Poincare };
+  enum class Added { Meter, Poincare, XY, Histogram, Heatmap, Graph };
   QList<QMdiSubWindow *> m_added;
   QAction    *m_newMeterAction = nullptr;
   QAction    *m_newPoincareAction = nullptr;
+  QAction    *m_xyAction = nullptr;
+  QAction    *m_newXYAction = nullptr;
+  XYPlot     *m_xyPlot = nullptr;
+  QMdiSubWindow *m_xyWin = nullptr;
+  QHash<XYPlot *, XYView *> m_xyViews;
+  /// The graphs: the first one in m_graphWin, more added.
+  QHash<GraphWidget *, GraphView *> m_graphViews;
+  /// The graph (QCP) the window's picture actions are for (Print, the export's
+  /// picture, Into the project): the one used last; nullptr: none used yet.
+  QPointer<GraphView> m_pictureGraph;
+  /// m_pictureGraph set: Record and Live show the state of what it shows.
+  void        setPictureGraph(GraphView *view);
+  /// m_pictureGraph while its window is shown: a hidden one is no longer the one used.
+  GraphView *pictureGraph() const;
+  /// The graph whose window is active, else pictureGraph(), else the first
+  /// one: zoom, note, copy image and Sources... are for it.
+  GraphView *currentGraph() const;
+  /// What Export writes for a graph (QCP): the file it shows, else the
+  /// recording of its values. False: not written, said why.
+  bool        writeGraphRecording(GraphView *view, const QString &path, bool everyReading);
+  QAction    *m_newHistogramAction = nullptr;
+  QAction    *m_newHeatmapAction = nullptr;
+  QAction    *m_heatmapAction = nullptr;
+  QAction    *m_histogramAction = nullptr;
+  QAction    *m_newGraphAction = nullptr;
   /// A window with another view of @p kind showing @p value, numbered
   /// @p number (the next free one for 0); not shown yet.
   QMdiSubWindow *addViewWindow(Added kind, const ValueRef &value, int number = 0);
   /// Another view of @p kind for @p value, shown and placed; with @p ask
   /// its Sources dialog first, cancelled no view.
-  void        newView(Added kind, const ValueRef &value, bool ask = false);
+  QMdiSubWindow *newView(Added kind, const ValueRef &value, bool ask = false);
+  /// Another graph showing @p value, without one the first meter's main value.
+  void        newGraph(const ValueRef &value = ValueRef());
+  /// The dialog of the values a graph shows; false when cancelled.
+  bool        editGraphSources(GraphView *view);
+  void        fillGraphAxisMenu(QMenu *menu, GraphView *view);
+  /// Where the reference line of a graph stands, its added lines, the crossings.
+  void        fillGraphReferenceMenu(QMenu *menu, GraphView *view, const QPoint &globalPos);
+  void        applyGraphLook(GraphView *view);
+  /// Asks for a recording and shows it in the graph of @p view.
+  void        loadIntoGraph(GraphView *view);
+  /// The recording file the user picks to load; empty when cancelled.
+  QString     askRecordingPath();
+  /// Shows the recording in @p path in the graph of @p view; false (and a
+  /// message) when it cannot be read.
+  bool        loadRecordingInto(GraphView *view, const QString &path);
+  /// A recording from the toolbar or the project: into the graph used last,
+  /// without one into a new graph.
+  void        importRecording();
+  bool        importRecording(const QString &path);
   void        newMeter(const ValueRef &value) { newView(Added::Meter, value); }
   void        removeAddedWindow(QMdiSubWindow *win);
   /// The analog meter or Poincaré plot in @p win, nullptr for another window.
   MeterView  *meterViewOf(const QMdiSubWindow *win) const;
   PoincareView *poincareViewOf(const QMdiSubWindow *win) const;
+  XYView      *xyViewOf(const QMdiSubWindow *win) const;
+  QList<QMdiSubWindow *> xyWindows() const;
+  bool        editXYSources(XYView *view);
+  /// The design's colours on a side plot (XY diagram, histogram, heatmap).
+  void        applyPlotColors(GraphCommon *plot);
+  HistogramView *histogramViewOf(const QMdiSubWindow *win) const;
+  HeatmapView *heatmapViewOf(const QMdiSubWindow *win) const;
+  /// @name Graphs
+  /// The first one ("graph") is always there, more ("graph-2", ...) come
+  /// from the menu and go when closed. All work alike on the session's
+  /// readings: each with its curves, axes, time window, cursors and
+  /// statistics. The window's actions (print, export, zoom, note) are for
+  /// the one used last (pictureGraph()).
+  /// @{
+  /// The window of a graph @p name ("graph", "graph-2") with @p title,
+  /// showing @p value; not shown yet, not among m_added.
+  QMdiSubWindow *addGraphWindow(const QString &name, const QString &title, const ValueRef &value);
+  GraphView *graphViewOf(const QMdiSubWindow *win) const;
+  /// The graph windows, the first one first.
+  QList<QMdiSubWindow *> graphWindows() const;
+  /// The recording of @p ctl when a graph shows a value of it, else nullptr:
+  /// a mark of an alarm or SCPI goes there.
+  RecordingStore *graphStoreFor(const MeterController *ctl) const;
+  /// Shows a graph's window: the first one by its action.
+  void        showGraphWindow(QMdiSubWindow *win);
+  /// The window's entry of a view's own menu: Hide view, Close window for one added.
+  QAction    *hideAction(QMdiSubWindow *win);
+  /// @}
   /// The windows of all analog meters or Poincaré plots, the first one first.
   QList<QMdiSubWindow *> meterWindows() const;
   QList<QMdiSubWindow *> poincareWindows() const;
+  QList<QMdiSubWindow *> histogramWindows() const;
+  QList<QMdiSubWindow *> heatmapWindows() const;
   /// The readings table or a Poincaré plot: a window of the column on the right.
   bool        isColumn(const QMdiSubWindow *win) const;
   /// @p value dragged out of the sidebar and dropped at @p pos of the area:
@@ -220,7 +314,12 @@ protected:
   void        applyPoincareColors(PoincarePlot *plot);
   /// @}
   ReadingsWidget *m_readings;
+  BasketWidget *m_basket = nullptr;
   PoincarePlot *m_poincare;
+  HistogramPlot *m_histogram = nullptr;
+  QHash<HistogramPlot *, HistogramView *> m_histogramViews;
+  HeatmapPlot *m_heatmap = nullptr;
+  QHash<HeatmapPlot *, HeatmapView *> m_heatmapViews;
   AlarmBar   *m_alarmBar;
   class AlarmService *m_alarmService;
   QMdiArea   *m_mdi;
@@ -230,10 +329,24 @@ protected:
   QMdiSubWindow *m_graphWin;
   QMdiSubWindow *m_readingsWin;
   QMdiSubWindow *m_poincareWin;
+  QMdiSubWindow *m_histogramWin = nullptr;
+  QMdiSubWindow *m_heatmapWin = nullptr;
+  QMdiSubWindow *m_basketWin;
   QAction    *m_displayAction = nullptr;
   QAction    *m_meterAction = nullptr;
   QAction    *m_readingsAction = nullptr;
   QAction    *m_poincareAction = nullptr;
+  QAction    *m_basketAction = nullptr;
+  QAction    *m_graphToBasket = nullptr;   ///< the recording and the graph into the project basket
+  QAction    *m_labPlotLive = nullptr;     ///< Live in LabPlot, while it records
+  QAction    *m_projectAction = nullptr;   ///< the toolbar's project button: its window or a new one, the arrow the rest
+  QAction    *m_benchIntoProject = nullptr;   ///< "Put the bench into a new project..."
+  QList<QAction *> m_benchActions;   ///< bench and project: off while My devices is empty
+  bool        m_basketBeside = false;   ///< the project's window beside the start page
+  QPointer<LabPlotLive> m_live;            ///< the recording live in LabPlot, while it goes on
+  QAction    *m_tableToBasket = nullptr;   ///< the readings into the project basket
+  QAction    *m_graphExport = nullptr;     ///< the export dialog, from the graph (Ctrl+E)
+  QAction    *m_tableExport = nullptr;     ///< the export dialog, from the readings table
   QAction    *m_addDeviceAction = nullptr;
   QDockWidget   *m_sidebarDock = nullptr;
   QElapsedTimer  m_designApplied;          ///< since setDesign(): its own palette change is no switch
@@ -248,7 +361,10 @@ protected:
   /// the last reading, the values; rich text.
   QString     deviceStatus(const QString &id) const;
   /// Connects the entry @p id (DeviceSession::open()), unless its port is in use.
-  void        openBeside(const QString &id);
+  /// Opens the entry @p id of My devices; @p waitForDevice: a workspace's
+  /// meter that is not there stays, its panel says so, and connects when it
+  /// comes (DeviceSession::open()).
+  void        openBeside(const QString &id, bool waitForDevice = false);
   void        showSidebar(bool show);
   /// The node "Open devices" anew: the meters of the session with their
   /// readings (each second while the sidebar is shown).
@@ -263,12 +379,40 @@ protected:
   /// "Connected: x" for the assistant's cards.
   QMap<QString, QString> placesInUse() const;
   /// The assistant "Add device": the device into My devices, connected
-  /// unless "Save only".
-  void        addDevice();
+  /// unless "Save only". @p start: an AddDeviceDlg::Connection to begin
+  /// with (a calculated value's settings), -1 page 1; @p input: a new
+  /// integral's value.
+  void        addDevice(int start = -1, const ValueRef &input = ValueRef(0));
+  /// The assistant at the settings of a new logic node of @p type
+  /// ("formula", "generator", "integral"; "Integrate..." of a value).
+  void        addNode(const QString &type, const ValueRef &input = ValueRef(0));
+  /// The settings of a logic node of @p type for the entry @p id (empty: a
+  /// new one) as stored (@p stored, null: a new one), with what it may take.
+  NodeEditor *makeNodeEditor(const QString &type, const QString &id, const LogicNode *stored,
+                             const QString &name, const ValueRef &input = ValueRef(0));
+  /// Whether inputs taken by the node of entry @p id close a loop through
+  /// the calculated values of My devices.
+  std::function<bool(const QList<ValueRef> &)> loopCheck(const QString &id) const;
+  /// The dialog of a node's entry (its NodeEditor; one of before too,
+  /// LegacyNodes): its keys as set, none when cancelled; @p name the new
+  /// name on the way out.
+  std::optional<QVariantMap> editNode(const QString &id, const QVariantMap &keys, QString *name);
+  /// The node of an entry's @p keys (Node/json, or one of before), null for
+  /// a device; why not in @p why.
+  std::unique_ptr<LogicNode> nodeOf(const QVariantMap &keys, QString *why = nullptr) const;
+  /// The values of My devices a formula may take (all but the entry @p id).
+  QList<FormulaNodeDlg::Choice> formulaChoices(const QString &id) const;
+  /// The entry @p id of My devices takes @p keys; a device connected takes
+  /// them at once (connected anew, its panel as it was).
+  void        applyEntryKeys(const QString &id, const QVariantMap &keys);
   /// The empty start: without a meter connected (or about to be) the window
   /// shows the big button "Add device", and "Connect from My devices" when
   /// it has entries, over the area instead of the views.
   void        updateEmptyStart();
+  /// The start page over the area, or left of the project's window while
+  /// that one shows (the arrangement keeps the left free for it).
+  void        placeEmptyStart();
+  QString     projectTip() const;
   QWidget    *m_emptyStart = nullptr;   ///< covers the area, with the buttons
   QPushButton *m_emptyConnect = nullptr;   ///< "Connect a device from My devices"
   QAction    *m_arrangeTop;
@@ -314,6 +458,7 @@ protected:
   QAction    *m_zoomOut;
   QAction    *m_zoomFit;
   QAction    *m_copyImage;
+  QAction    *m_noteAction;   ///< a note in the graph (Ctrl+Shift+N)
   ShortcutRegistry *m_shortcuts = nullptr;
   bool        m_running;
   QLabel     *m_error;
@@ -323,6 +468,9 @@ protected:
   HelpDlg    *m_helpDlg;
   QAction    *m_logAction = nullptr;
   LogDlg     *m_logDlg = nullptr;   ///< made when first opened
+  /// The capture windows of the open devices by their sidebar id, made when
+  /// first opened, gone with the device.
+  QHash<QString, QPointer<CaptureDlg>> m_captureDlgs;
   QString     m_configId;
 
   void        setupIcons();
@@ -362,7 +510,8 @@ protected:
   /// "Sources..." of a view: the values of the open meters it shows.
   /// "Sources..." of a view; for View::Meter the analog meter @p meter,
   /// nullptr for the first. False when cancelled.
-  bool        editSources(ValueMenu::View view, MeterView *meter = nullptr, PoincareView *plot = nullptr);
+  bool        editSources(ValueMenu::View view, MeterView *meter = nullptr, PoincareView *plot = nullptr,
+                          GraphView *graph = nullptr, HistogramView *histogram = nullptr, HeatmapView *heatmap = nullptr);
   /// Values... of a front panel: its device's values on the big and small line.
   void        editPanelValues(FrontPanel *panel);
   QAction    *m_graphSources = nullptr;   ///< in the graph's menu, with more than one meter
@@ -406,12 +555,43 @@ protected:
   /// Shows the windows, mode, tree, title bars, design and (Free) positions.
   void        applyWorkspace(const WorkspaceGet &get);
   void        storeWorkspace(const WorkspaceSet &set);
+  /// One graph's part of it, under its key (GraphView::key()); the
+  /// first one also reads the values of a bench from before 26.4.
+  void        applyGraphState(GraphView *view, const WorkspaceGet &get,
+                              const std::function<ValueRef(const QString &)> &valueOf);
   void        loadWorkspace();
   /// Loads the workspace @p file; false (with a message) when it is none.
   bool        loadWorkspaceFile(const QString &file);
-  void        saveWorkspace();
+  /// Saves the set-up as a bench; @p asNew: a new one (no name, not the
+  /// file in use), as "+ New bench..." of the project in the sidebar.
+  void        saveWorkspace(bool asNew = false);
+  /// The project's node in the sidebar: its benches, the one in use.
+  void        updateProjectSidebar();
+  /// The way from no project to one: a new project, opened, and the bench
+  /// in use saved into it (Save bench, proposed in the project's folder).
+  void        benchIntoNewProject();
+  /// The recording as CSV and the graph as PNG, into the project basket.
+  void        graphToBasket();
+  /// The same for a graph (QCP): its values' recording, its picture.
+  void        graphToBasketOf(GraphView *view);
+  /// Asks for a file (SVG, PDF, PNG, JPEG) and writes the picture of a graph (QCP) into it.
+  void        exportGraphImage(GraphView *view);
+  /// The readings table as CSV, into the project basket.
+  void        tableToBasket();
+  /// The export dialog (ExportDlg::What @p view preselected), then writes.
+  void        exportDialog(int view);
+  /// The export dialog for a graph (QCP): its picture, its values.
+  void        exportDialogFor(int view, GraphView *graphView);
+  /// LabPlot follows the recording that goes on (LabPlotLive): a CSV and
+  /// a project in the project basket, else in Documents/QtDMM; again while
+  /// it runs: LabPlot opens that project once more.
+  void        labPlotLive();
+  /// A free path in the project's folder for @p kind: date, time, the leading device.
+  QString     basketName(ProjectFolder::Kind kind, const QString &suffix) const;
   /// The workspaces used last, shared by all instances (workspaces.conf).
   RecentFiles recentWorkspaces() const;
+  /// The project baskets opened last, shared by all instances (projects.conf).
+  RecentFiles recentProjects() const;
   /// The sidebar's node and the menu "Recent workspaces" anew.
   void        updateRecentWorkspaces();
   /// The workspace in use: loaded or saved last (Windows/workspace-current).

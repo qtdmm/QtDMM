@@ -1,0 +1,265 @@
+// Copyright (c) 2026 The QtDMM developers
+// SPDX-License-Identifier: GPL-3.0-or-later
+#include "ui/dialogs/integralnodedlg.h"
+
+#include <cmath>
+
+#include <QCheckBox>
+#include <QComboBox>
+#include <QDoubleSpinBox>
+#include <QFormLayout>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QLineEdit>
+#include <QLocale>
+#include <QPushButton>
+#include <QVBoxLayout>
+
+#include "core/calcexpr.h"
+#include "core/siprefix.h"
+
+namespace
+{
+// a number as typed, also with an SI suffix ("1.5k"); none for anything else
+std::optional<double> number(const QString &text)
+{
+  const std::optional<CalcExpr> e = CalcExpr::parse(text);
+  return e && e->variables().isEmpty() ? e->eval({}) : std::nullopt;
+}
+}
+
+IntegralNodeEditor::IntegralNodeEditor(QWidget *parent) :
+  NodeEditor(parent)
+{
+  setObjectName("ui_integralNodeEditor");
+  auto *top = new QVBoxLayout(this);
+  top->setContentsMargins(0, 0, 0, 0);
+  auto *form = new QFormLayout;
+  top->addLayout(form);
+  m_name = new QLineEdit(this);
+  m_name->setObjectName("ui_integralName");
+  form->addRow(tr("&Name:"), m_name);
+  m_input = new SourceList(SourceList::Value, this);
+  m_input->setObjectName("ui_integralInput");
+  m_input->setToolTip(tr("The value summed up over time; each new reading of it adds the area since the one before"));
+  form->addRow(tr("&Value:"), m_input);
+  m_unit = new QComboBox(this);
+  m_unit->setObjectName("ui_integralUnit");
+  m_unit->setEditable(true);
+  m_unit->setToolTip(tr("The unit of the sum: the value's unit times hours (W: Wh), with a prefix if wanted (kWh)"));
+  form->addRow(tr("&Unit:"), m_unit);
+  m_maxAge = new QDoubleSpinBox(this);
+  m_maxAge->setObjectName("ui_integralMaxAge");
+  m_maxAge->setRange(0.1, 3600);
+  m_maxAge->setDecimals(1);
+  m_maxAge->setSuffix(" s");
+  m_maxAge->setToolTip(tr("Two readings further apart than this are a gap: the sum pauses over it"));
+  form->addRow(tr("&Gap after:"), m_maxAge);
+
+  m_onRecording = new QCheckBox(tr("Start at 0 when a &recording starts"), this);
+  m_onRecording->setObjectName("ui_integralOnRecording");
+  top->addWidget(m_onRecording);
+  auto *thresholdRow = new QHBoxLayout;
+  m_thresholdOn = new QCheckBox(tr("Start at 0 when the value rises &above:"), this);
+  m_thresholdOn->setObjectName("ui_integralThresholdOn");
+  m_threshold = new QLineEdit(this);
+  m_threshold->setObjectName("ui_integralThreshold");
+  m_threshold->setPlaceholderText(tr("e.g. 0.5"));
+  m_threshold->setToolTip(tr("In the value's base unit (V, A, W, not mA): 0.5 for 500 mA; e.g. a load switched on"));
+  m_threshold->setMaximumWidth(120);
+  m_thresholdUnit = new QLabel(this);
+  m_thresholdUnit->setObjectName("ui_integralThresholdUnit");
+  thresholdRow->addWidget(m_thresholdOn);
+  thresholdRow->addWidget(m_threshold);
+  thresholdRow->addWidget(m_thresholdUnit);
+  thresholdRow->addStretch(1);
+  top->addLayout(thresholdRow);
+
+  auto *nowRow = new QHBoxLayout;
+  m_now = new QLabel(this);
+  m_now->setObjectName("ui_integralNow");
+  m_zero = new QPushButton(tr("Set to &0"), this);
+  m_zero->setObjectName("ui_integralZero");
+  nowRow->addWidget(m_now);
+  nowRow->addWidget(m_zero);
+  nowRow->addStretch(1);
+  top->addLayout(nowRow);
+  m_now->hide();
+  m_zero->hide();
+
+  m_status = new QLabel(this);
+  m_status->setObjectName("ui_integralStatus");
+  m_status->setWordWrap(true);
+  top->addWidget(m_status);
+  top->addStretch(1);
+
+  connect(m_input, &SourceList::valueChanged, this, [this] { propose(); validate(); });
+  connect(m_unit, &QComboBox::currentTextChanged, this, [this]
+  {
+    if (!m_proposing)
+      m_unitChosen = true;
+    validate();
+  });
+  connect(m_name, &QLineEdit::textEdited, this, [this] { m_nameChosen = true; });
+  connect(m_name, &QLineEdit::textChanged, this, &IntegralNodeEditor::validate);
+  connect(m_thresholdOn, &QCheckBox::toggled, m_threshold, &QWidget::setEnabled);
+  connect(m_thresholdOn, &QCheckBox::toggled, this, &IntegralNodeEditor::validate);
+  connect(m_threshold, &QLineEdit::textChanged, this, &IntegralNodeEditor::validate);
+  connect(m_zero, &QPushButton::clicked, this, [this]
+  {
+    if (m_reset)
+      m_reset();
+    updateState();
+  });
+  m_live.setInterval(1000);
+  connect(&m_live, &QTimer::timeout, this, &IntegralNodeEditor::updateState);
+}
+
+void IntegralNodeEditor::setSources(const QList<SourceList::Source> &sources)
+{
+  m_input->setSources(sources);
+}
+
+void IntegralNodeEditor::setLoopCheck(std::function<bool(const QList<ValueRef> &)> makesLoop)
+{
+  m_makesLoop = std::move(makesLoop);
+  // one that would close a loop is greyed out in the list
+  m_input->setBlocked([this](const QString &source)
+  {
+    return m_makesLoop && m_makesLoop({ ValueRef(0, source) })
+             ? tr("It takes the values of this integral, directly or through others: a loop.")
+             : QString();
+  });
+  validate();
+}
+
+void IntegralNodeEditor::setState(std::function<std::optional<Reading>()> current, std::function<void()> reset)
+{
+  m_current = std::move(current);
+  m_reset = std::move(reset);
+  m_now->setVisible(bool(m_current));
+  m_zero->setVisible(bool(m_reset));
+  updateState();
+  if (m_current)
+    m_live.start();
+}
+
+void IntegralNodeEditor::load(const QString &name, const IntegralNode &node)
+{
+  m_on = node.isOn();
+  m_maxAge->setValue(node.maxAgeMs() / 1000.0);
+  m_onRecording->setChecked(node.resetOnRecording());
+  m_thresholdOn->setChecked(node.threshold().has_value());
+  m_threshold->setEnabled(node.threshold().has_value());
+  if (node.threshold())
+    m_threshold->setText(QString::number(*node.threshold()));
+  const bool known = !node.inputs().isEmpty();
+  if (known)
+  {
+    const QSignalBlocker block(m_input);
+    m_input->setValue(node.inputs().first());
+  }
+  // a stored one (it has its name) keeps its name and unit; a new one, also
+  // with its value given ("Integrate..."), is proposed them
+  const bool stored = !node.name().isEmpty();
+  m_unitChosen = stored;
+  m_nameChosen = stored;
+  m_proposing = true;
+  // a new one: no unit until its value gives one (IntegralNode's default
+  // Wh would stand there before a value is chosen)
+  m_unit->setCurrentText(stored ? node.unit() : QString());
+  m_proposing = false;
+  m_name->setText(name);
+  propose();
+  if (!stored)
+    m_name->selectAll();
+  validate();
+}
+
+QString IntegralNodeEditor::name() const
+{
+  return m_name->text().simplified();
+}
+
+std::unique_ptr<IntegralNode> IntegralNodeEditor::node() const
+{
+  auto node = std::make_unique<IntegralNode>();
+  node->setInputs({ m_input->value() });
+  node->setMaxAgeMs(int(std::lround(m_maxAge->value() * 1000)));
+  node->setOn(m_on);
+  node->setName(name());
+  node->setUnit(LogicNode::canonicalUnit(m_unit->currentText()));
+  node->setResetOnRecording(m_onRecording->isChecked());
+  node->setThreshold(m_thresholdOn->isChecked() ? number(m_threshold->text()) : std::nullopt);
+  return node;
+}
+
+void IntegralNodeEditor::propose()
+{
+  const QString base = LogicNode::canonicalUnit(m_input->unitOf(m_input->value()));
+  const QString unit = IntegralNode::integratedUnit(base);
+  // the threshold is in the value's base unit: said beside it
+  m_thresholdUnit->setText(SiPrefix::displayText(base));
+  m_proposing = true;
+  // a value whose unit is not known yet (its device not connected): the
+  // unit as it is
+  if (!m_unitChosen && !base.isEmpty())
+  {
+    // the sum's unit with and without the prefixes one wants
+    m_unit->clear();
+    m_unit->addItems({ unit, "k" + unit, "m" + unit });
+    m_unit->setCurrentText(unit);
+  }
+  m_proposing = false;
+  if (!m_nameChosen)
+    m_name->setText(base == QLatin1String("W") ? tr("Energy") : base == QLatin1String("A") ? tr("Charge") : tr("Integral"));
+}
+
+void IntegralNodeEditor::validate()
+{
+  QStringList problems;
+  if (name().isEmpty())
+    problems << tr("The name is missing.");
+  if (m_input->value().source.isEmpty())
+    problems << tr("Choose the value to integrate: open a device in the list.");
+  else if (m_unit->currentText().trimmed().isEmpty())
+    problems << tr("The unit is missing: it follows from the value once its device is connected, or type one (Wh, Ah).");
+  if (m_makesLoop && !m_input->value().source.isEmpty() && m_makesLoop({ m_input->value() }))
+    problems << tr("The value takes the values of this integral, directly or through others: a loop.");
+  if (m_thresholdOn->isChecked() && !number(m_threshold->text()))
+    problems << tr("The threshold is no number.");
+  // a note only: the sum is over hours, a unit without h (J, Ws) is off by 3600
+  QStringList shown = problems;
+  const QString unit = LogicNode::canonicalUnit(m_unit->currentText().trimmed());
+  if (!unit.isEmpty() && !unit.endsWith('h'))
+    shown << tr("Note: the sum is in the value's unit times hours; %1 has no h (for J take Wh times 3600 by a formula).").arg(unit);
+  m_status->setText(shown.join("<br>"));
+  setValid(problems.isEmpty());
+}
+
+void IntegralNodeEditor::updateState()
+{
+  if (!m_current)
+    return;
+  const std::optional<Reading> r = m_current();
+  if (!r || r->noNumber())
+  {
+    m_now->setText(tr("Now: —"));
+    return;
+  }
+  QString prefix;
+  const double scaled = SiPrefix::scale(r->value, r->baseUnit, &prefix);
+  m_now->setText(tr("Now: %1 %2").arg(QLocale().toString(scaled, 'g', 6), SiPrefix::displayText(prefix + r->baseUnit)));
+}
+
+std::unique_ptr<LogicNode> IntegralNodeEditor::logicNode() const
+{
+  return node();
+}
+
+IntegralNodeDlg::IntegralNodeDlg(QWidget *parent) :
+  NodeDlg(new IntegralNodeEditor, tr("Integral"), parent)
+{
+  setObjectName("ui_integralNodeDlg");
+  resize(480, 300);
+}

@@ -173,7 +173,8 @@ HIDSerialDevice::HIDSerialDevice(const DmmDecoder::DMMInfo &info, QString device
   {
     m_openError = tr("%1 is gone, and several cables with its USB ids are plugged in: choose the port in the "
                      "device settings.").arg(pathForEntry(device));
-    qWarning() << "HID:" << m_openError;
+    // said by the connection's state, once; not at each retry
+    qCDebug(lcHid) << m_openError;
     return;
   }
   const QString path = where.path;
@@ -196,7 +197,8 @@ HIDSerialDevice::HIDSerialDevice(const DmmDecoder::DMMInfo &info, QString device
 #ifdef Q_OS_LINUX
     m_openError += tr("\nCable plugged in? No permission? The cable needs the udev rule of QtDMM.");
 #endif
-    qWarning() << "HID:" << m_openError;
+    // said by the connection's state, once; not at each retry
+    qCDebug(lcHid) << m_openError;
     return;
   }
   qCDebug(lcHid) << "opened" << path
@@ -345,8 +347,12 @@ void HIDSerialDevice::onReport(const QByteArray &raw)
   }
   if (len > 0)
   {
+    if (!appendToBuffer(reinterpret_cast<const char *>(payload), len))
+    {
+      onReadError(tr("Receive buffer limit exceeded."));
+      return;
+    }
     m_dataSeen = true;
-    m_rx.append(reinterpret_cast<const char *>(payload), len);
     Q_EMIT readyRead();
   }
 }
@@ -355,6 +361,7 @@ void HIDSerialDevice::onReadError(const QString &what)
 {
   if (!m_isOpen)
     return;   // our own close() ends the loop without an error
+  setErrorString(what);
   qWarning() << "HID: read failed:" << what;
   m_isOpen = false;
   stopReader();

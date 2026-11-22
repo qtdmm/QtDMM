@@ -2,17 +2,21 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "ui/dialogs/devicesettingsdlg.h"
 
+#include <QDateTime>
 #include <QDesktopServices>
 #include <QDialogButtonBox>
 #include <QHBoxLayout>
 #include <QFrame>
 #include <QLabel>
+#include <QLocale>
 #include <QPushButton>
+#include <QScrollBar>
 #include <QTabWidget>
 #include <QTextBrowser>
 #include <QUrl>
 #include <QVBoxLayout>
 
+#include "device/meterconnection.h"
 #include "ui/devicesettings.h"
 #include "ui/devicespecs.h"
 #include "ui/devicesummary.h"
@@ -146,6 +150,20 @@ void DeviceSettingsDlg::setConnect(const std::function<bool()> &connected, const
   m_connect->setEnabled(!m_connected());
 }
 
+void DeviceSettingsDlg::setFrameSource(const std::function<MeterConnection *()> &source)
+{
+  m_frameSource = source;
+  updateStatus();
+}
+
+QString DeviceSettingsDlg::sampleRate(const QList<qint64> &times)
+{
+  if (times.size() < 2 || times.last() <= times.first())
+    return QStringLiteral("-");
+  const double hz = (times.size() - 1) * 1000.0 / double(times.last() - times.first());
+  return QLocale().toString(hz, 'f', hz < 1.0 ? 2 : 1) + QStringLiteral(" Hz");
+}
+
 QString DeviceSettingsDlg::statusText() const
 {
   return m_status->text();
@@ -164,9 +182,11 @@ void DeviceSettingsDlg::updateInfo()
   if (model != m_dataModel)
   {
     m_dataModel = model;
-    const QJsonObject spec = DeviceSpecs::find(vendor, m_settings->dmmInfo().model);
-    m_data->setHtml(spec.isEmpty() ? QString() : DeviceSpecs::html(spec));
-    m_tabs->setTabVisible(m_tabs->indexOf(m_data), !spec.isEmpty());
+    m_dataSpec = DeviceSpecs::find(vendor, m_settings->dmmInfo().model);
+    m_dataMark = {};
+    m_data->setHtml(m_dataSpec.isEmpty() ? QString() : DeviceSpecs::html(m_dataSpec));
+    m_tabs->setTabVisible(m_tabs->indexOf(m_data), !m_dataSpec.isEmpty());
+    updateDataMark();
   }
   QStringList links;
   const QString site = DeviceSymbol::website(vendor);
@@ -180,5 +200,52 @@ void DeviceSettingsDlg::updateStatus()
 {
   if (m_connected)
     m_connect->setEnabled(!m_connected());
-  m_status->setText(m_statusText ? m_statusText() : QString());
+  QString html = m_statusText ? m_statusText() : QString();
+  // the sample rate: the frames of the last 10 s, counted only while the dialog is open
+  MeterConnection *source = m_frameSource ? m_frameSource() : nullptr;
+  if (source != m_counted)
+  {
+    if (m_counted)
+      m_counted->disconnect(this);
+    m_counted = source;
+    m_frameTimes.clear();
+    if (source)
+      connect(source, &MeterConnection::frame, this,
+              [this] { m_frameTimes << QDateTime::currentMSecsSinceEpoch(); });
+  }
+  if (source)
+  {
+    const qint64 since = QDateTime::currentMSecsSinceEpoch() - 10000;
+    while (!m_frameTimes.isEmpty() && m_frameTimes.first() < since)
+      m_frameTimes.removeFirst();
+    html += QString("<p>%1</p>").arg(tr("Sample rate: %1").arg(sampleRate(m_frameTimes)).toHtmlEscaped());
+  }
+  m_status->setText(html);
+  updateDataMark();
+}
+
+void DeviceSettingsDlg::setReading(const std::function<std::optional<Reading>()> &reading)
+{
+  m_reading = reading;
+  updateDataMark();
+}
+
+void DeviceSettingsDlg::updateDataMark()
+{
+  if (m_dataSpec.isEmpty())
+    return;
+  const std::optional<Reading> r = m_reading ? m_reading() : std::nullopt;
+  const DeviceSpecs::Match mark = r ? DeviceSpecs::match(m_dataSpec, *r) : DeviceSpecs::Match();
+  if (mark == m_dataMark)
+    return;   // the same: the text stays, with where it is scrolled to and what is selected
+  m_dataMark = mark;
+  QColor color = palette().color(QPalette::Highlight);
+  color.setAlpha(255);
+  color = color.lighter(m_data->palette().color(QPalette::Base).lightness() > 128 ? 170 : 60);
+  const int scrolled = m_data->verticalScrollBar()->value();
+  m_data->setHtml(DeviceSpecs::html(m_dataSpec, mark, color));
+  if (mark.isValid())
+    m_data->scrollToAnchor(QStringLiteral("current"));
+  else
+    m_data->verticalScrollBar()->setValue(scrolled);
 }

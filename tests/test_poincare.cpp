@@ -19,6 +19,13 @@ static bool near(double a, double b)
   return std::abs(a - b) < 1e-9;
 }
 
+static bool sameStats(const PoincareSeries::Stats &a, const PoincareSeries::Stats &b)
+{
+  const auto same = [](double x, double y) { return x == y || (std::isnan(x) && std::isnan(y)); };
+  return a.count == b.count && same(a.meanX, b.meanX) && same(a.meanY, b.meanY) && same(a.sd1, b.sd1)
+         && same(a.sd2, b.sd2);
+}
+
 // a main reading as the MeterController makes it, value in SI
 static Reading reading(double value, const QString &text, const QString &unit = "V", const QString &special = "DC",
                        bool hold = false)
@@ -57,6 +64,7 @@ int main(int argc, char **argv)
     check(near(st.sd1, std::sqrt(2.0 / 3)) && near(st.sd2, std::sqrt(2.0 / 3)),
           QString("stats: SD1 %1 SD2 %2").arg(st.sd1).arg(st.sd2));
     const QVector<PoincareSeries::Pair> p = s.pairs();
+    check(sameStats(st, PoincareSeries::stats(p)), "stats from the shared pair list match the series");
     check(p.first().age == 3 && p.last().age == 0, "pairs: the newest has age 0");
     check(s.unit() == "V", "unit: " + s.unit());
   }
@@ -91,6 +99,7 @@ int main(int argc, char **argv)
     s.feed(reading(7, "7"));
     s.feed(reading(8, "8"));
     check(pairsText(s) == "1,2 3,4 5,6 7,8", "gaps: got " + pairsText(s));
+    check(sameStats(s.stats(), PoincareSeries::stats(s.pairs())), "gaps: stats from shared pairs match");
   }
 
   // --- 4. another port or unit starts afresh, a range change does not ---
@@ -128,7 +137,9 @@ int main(int argc, char **argv)
     k.setLag(99);
     check(k.lag() == PoincareSeries::kMaxLag, "lag: at most kMaxLag");
     k.clear();
-    check(k.valueCount() == 0 && k.pairs().isEmpty() && std::isnan(k.stats().sd1), "clear");
+    check(k.valueCount() == 0 && k.pairs().isEmpty() && std::isnan(k.stats().sd1)
+            && sameStats(k.stats(), PoincareSeries::stats(k.pairs())),
+          "clear and empty stats");
   }
 
   {

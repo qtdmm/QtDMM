@@ -7,8 +7,12 @@
 // the error paths.
 
 #include <QtCore>
+#include <QJsonArray>
+#include <QJsonObject>
 
+#include "recording/labplotproject.h"
 #include "recording/recordingfile.h"
+#include "recording/zipfile.h"
 #include "core/sampletypes.h"
 #include "testutil.h"
 
@@ -218,6 +222,22 @@ int main(int argc, char **argv)
     check(!RecordingFile::read(writeCsv("empty.csv", ""), &err) && err.contains("header"), "header only: " + err);
     check(!RecordingFile::read(writeCsv("bad.csv", "this is not a recording\n"), &err) && !err.isEmpty(), "garbage rejected");
     check(!RecordingFile::write(Recording(), tmp.path() + "/none.csv", &err) && !err.isEmpty(), "empty recording is not written");
+    // nowhere to write: an error, not "written" (R19-05)
+    Recording one;
+    one.start = QDateTime::currentDateTime();
+    one.sampleTimeTenths = 10;
+    one.unit = "V";
+    one.values << 1.0;
+    one.states << CellState::Ok;
+    err.clear();
+    check(!RecordingFile::write(one, tmp.path() + "/no/such/dir/x.csv", &err) && !err.isEmpty(), "CSV: no folder, an error");
+    err.clear();
+    check(!RecordingFile::writeAny(one, tmp.path() + "/no/such/dir/x.qtdmm-rec", &err) && !err.isEmpty(),
+          ".qtdmm-rec: no folder, an error");
+#ifdef Q_OS_LINUX
+    err.clear();
+    check(!RecordingFile::write(one, "/dev/full", &err) && !err.isEmpty(), "CSV to /dev/full: an error");
+#endif
   }
 
   // --- 6. writeAny: a spreadsheet by suffix, the CSV otherwise ---
@@ -240,6 +260,144 @@ int main(int argc, char **argv)
     check(QString::fromUtf8(c.readLine()).startsWith("timestamp;"), "csv is the csv");
     Recording empty;
     check(!RecordingFile::writeAny(empty, tmp.filePath("e.ods"), &err) && !err.isEmpty(), "empty refuses");
+  }
+
+  // --- QtDMM recording: the CSV in a ZIP with meta.json, read back the same ---
+  {
+    auto rec = RecordingFile::read(dataDir + "/new_larger.csv");
+    check(rec.has_value(), "fixture for the QtDMM recording");
+    if (rec)
+    {
+      rec->meta["marks"] = QJsonArray{ QJsonObject{ { "t", 1500.0 }, { "color", "#ffff0000" }, { "name", "Trigger" } } };
+      const QString path = tmp.filePath("probe.qtdmm-rec");
+      QString err;
+      check(RecordingFile::writeAny(*rec, path, &err), "QtDMM recording written: " + err);
+      QFile file(path);
+      check(file.open(QIODevice::ReadOnly) && file.read(4) == QByteArray("PK\x03\x04", 4), "a ZIP");
+      file.close();
+      // the same as the plain CSV of it
+      check(RecordingFile::write(*rec, tmp.filePath("probe.csv")), "the CSV of it");
+      const auto plain = RecordingFile::read(tmp.filePath("probe.csv"));
+      const auto back = RecordingFile::read(path, &err);
+      check(back && plain && back->values == plain->values && back->start == plain->start && back->unit == plain->unit
+              && back->times == plain->times,
+            "values, times, start and unit as from the CSV: " + err);
+      check(back && back->meta.value("format").toInt() == 1
+              && back->meta.value("marks").toArray().first().toObject().value("name").toString() == "Trigger",
+            "meta.json comes back with the marks");
+      check(back && back->meta.value("start").toString() == rec->start.toString(Qt::ISODateWithMs)
+              && back->meta.value("end").toString()
+                   == rec->start.addMSecs(rec->timeAt(int(rec->values.size()) - 1)).toString(Qt::ISODateWithMs)
+              && back->meta.value("sample-time").toDouble() == rec->sampleTimeTenths / 10.0,
+            "meta.json has start, end and sample time");
+      // a ZIP without the CSV is no recording
+      ZipWriter zip;
+      zip.add("other.txt", "x", false);
+      QFile bad(tmp.filePath("bad.qtdmm-rec"));
+      check(bad.open(QIODevice::WriteOnly) && bad.write(zip.finish()) > 0, "bad file written");
+      bad.close();
+      check(!RecordingFile::read(bad.fileName(), &err) && !err.isEmpty(), "a ZIP without recording.csv: an error");
+
+      ZipWriter largeEntry;
+      largeEntry.add("recording.csv", QByteArray(128, 'x'), false);
+      check(!zipEntry(largeEntry.finish(), QStringLiteral("recording.csv"), 127),
+            "ZIP entry above the caller's limit is refused");
+
+      // for LabPlot: numbers only, units in the header, no number empty
+      Recording lp;
+      lp.start = rec->start;
+      lp.unit = "V";
+      lp.device = "Sim A";
+      lp.values = { 1.5, qQNaN(), 0.002 };
+      lp.states = { CellState::Ok, CellState::Overload, CellState::Ok };
+      RecordingColumn other;
+      other.device = "Sim B";
+      other.unit = "A";
+      other.values = { qQNaN(), 0.25, 0.5 };
+      other.states = { CellState::None, CellState::Ok, CellState::Ok };
+      lp.extra << other;
+      const QString lpPath = tmp.filePath("probe.labplot.csv");
+      check(RecordingFile::writeAny(lp, lpPath, &err), "LabPlot CSV written: " + err);
+      QFile lpFile(lpPath);
+      check(lpFile.open(QIODevice::ReadOnly | QIODevice::Text), "LabPlot CSV there");
+      const QString text = QString::fromUtf8(lpFile.readAll());
+      lpFile.close();
+      check(text == "time[s];Sim A: value [V];Sim B: value [A]\n0;1.5;\n0.1;;0.25\n0.2;0.002;0.5\n",
+            "LabPlot CSV: " + text);
+
+      // a LabPlot project: the same columns, a plot per unit, a legend where two share one
+      RecordingColumn third;
+      third.device = "Sim/C";   // a slash would split LabPlot's path
+      third.unit = "V";
+      third.values = { 1.0, 2.0, 3.0 };
+      third.states = { CellState::Ok, CellState::Ok, CellState::Ok };
+      lp.extra << third;
+      const QString lmlPath = tmp.filePath("probe.lml");
+      check(RecordingFile::writeAny(lp, lmlPath, &err), "LabPlot project written: " + err);
+      QFile lml(lmlPath);
+      check(lml.open(QIODevice::ReadOnly), "LabPlot project there");
+      QXmlStreamReader xml(&lml);
+      QStringList columns, curves, plots, ranges;
+      QHash<QString, QVector<double>> numbers;
+      int legends = 0;
+      QString projectName, current, column;
+      while (!xml.atEnd())
+      {
+        xml.readNext();
+        if (xml.isCharacters() && !column.isEmpty() && !xml.isWhitespace())
+        {
+          const QByteArray raw = QByteArray::fromBase64(xml.text().toLatin1());
+          QVector<double> v(raw.size() / 8);
+          for (int i = 0; i < v.size(); ++i)
+            v[i] = qFromLittleEndian<double>(raw.constData() + i * 8);
+          numbers[column] = v;
+        }
+        if (xml.isEndElement() && xml.name() == u"column")
+          column.clear();
+        if (!xml.isStartElement())
+          continue;
+        const QXmlStreamAttributes a = xml.attributes();
+        if (xml.name() == u"project")
+          projectName = a.value("name").toString();
+        else if (xml.name() == u"column")
+        {
+          column = a.value("name").toString();
+          columns << column + "/" + a.value("designation").toString();
+        }
+        else if (xml.name() == u"cartesianPlot")
+          plots << a.value("name").toString();
+        else if (xml.name() == u"cartesianPlotLegend")
+          ++legends;
+        else if (xml.name() == u"yRange")
+          ranges << a.value("start").toString() + ".." + a.value("end").toString();
+        else if (xml.name() == u"general" && a.hasAttribute("yColumn"))
+          curves << a.value("yColumn").toString();
+        else if (xml.name() == u"current")
+          current = a.value("path").toString();
+      }
+      check(!xml.hasError(), "LabPlot project: well-formed XML " + xml.errorString());
+      check(projectName == "probe" && current == "probe/Graph",
+            "LabPlot project named like the file, graph in front: " + current);
+      check(columns == QStringList({ "time[s]/1", "Sim A: value [V]/2", "Sim B: value [A]/2", "Sim-C: value [V]/2" }),
+            "LabPlot project: columns " + columns.join(", "));
+      const QVector<double> simA = numbers.value("Sim A: value [V]");
+      check(numbers.value("time[s]") == QVector<double>({ 0, 0.1, 0.2 }) && simA.size() == 3 && std::isnan(simA[1])
+              && simA[2] == 0.002,
+            "LabPlot project: the numbers, NaN where none");
+      check(plots == QStringList({ "V", "A" }) && legends == 1,
+            "LabPlot project: a plot per unit, legend where two share: " + plots.join(", "));
+      const QStringList onColumns{ "probe/Data/Sim A: value [V]", "probe/Data/Sim-C: value [V]",
+                                   "probe/Data/Sim B: value [A]" };
+      check(curves == onColumns,
+            "LabPlot project: curves on the columns " + curves.join(", "));
+      check(ranges == QStringList({ "0..3", "0.25..0.5" }),
+            "LabPlot project: y ranges rounded out " + ranges.join(", "));
+      using LabPlotProject::niceRange;
+      check(niceRange(0.2, 0.3) == std::pair(0.2, 0.3) && niceRange(4.7, 5.1) == std::pair(4.7, 5.1)
+              && niceRange(0, 99.5) == std::pair(0.0, 100.0) && niceRange(5, 5) == std::pair(4.4, 5.6)
+              && niceRange(qQNaN(), qQNaN()) == std::pair(0.0, 1.0),
+            "nice ranges");
+    }
   }
 
   if (failed == 0)

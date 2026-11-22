@@ -2,104 +2,159 @@
 
 A meter shows what it measures. To see a quantity nobody measures
 directly - the power a load draws, the resistance from a voltage and a
-current, the difference between two channels - let one meter measure the
-voltage, another the current, and a *calculated value* compute from both.
-It is a device like any other: display, needle meter, recorder, export and
-printing all work on the calculated value exactly as on a measured one.
+current, the dew point from temperature and humidity - let your devices
+measure what they can and a *calculated value* compute the rest.
+It is a device like any other: display, needle meter, graph, recorder,
+export, alarms and SCPI all work on it exactly as on a measured one.
 
 ## Setting it up
 
-1. Put the meters into [My devices](my-devices.md) and connect them in one
-   QtDMM: *Use* in their context menu in the sidebar (or **Connect** at
-   the end of *Add device*). The node **Bench** of the sidebar
-   (F9) lists them.
-2. Each one is a variable by its name in My devices: lower case, other
-   characters than letters and digits as `_`, so *UT61E Bench* is
-   `ut61e_bench` (a name beginning with a digit gets a `_` in front). Short
-   names make short formulas: rename the entries `u` and `i` (Rename in
-   their context menu) for `u * i`.
-3. Add the calculation: *Add device*, *Simulated / calculated*, the model
-   **Calculated value**. Instead of the port and protocol settings a
-   *Formula* group appears:
-    - **Unit** - the unit of the result without SI prefix: `W`, `V`, `A`,
-      `Ohm`, ... QtDMM adds `m`, `k` and so on itself.
-    - **Formula** - e.g. `u * i`. Below it QtDMM lists the variables with
-      the values the open devices currently deliver, and which devices are
-      open; a formula that does not parse is shown in red with the
-      position of the error.
-4. *Connect*: it connects at once. The status line
-   reads *Calculating u * i* and the display shows the power.
+1. Put the meters into [My devices](my-devices.md).
+2. *Add device*, the tile **Calculated**, in its list **Formula** (a
+   double click or *Next*). The list says beside it what each kind does;
+   the search field above it finds one by its name or text. Its settings
+   follow:
+    - **Name** - how it is listed in My devices.
+    - **Inputs** - tick your devices in the list on the left, also one
+      that is not connected yet (grey; the calculated value then waits for
+      it). Opened, a device shows its values with their names in the
+      formula: `v1` is the device's main value, `v1.2`, `v1.3`, `v1.4` its
+      other values (a TFA sensor: temperature, humidity, CO₂). The inputs
+      ticked are listed on the right as `v1`, `v2`, ...: drag them or move
+      them with the arrows into another order - the formulas follow - and
+      mark one with **Leads**: a new reading of it computes a new result.
+      A device that would close a loop is greyed out.
+    - **Values** - up to four results, each with a name, a formula and a
+      unit. A value may use the ones above it as `y1`, `y2`, `y3`. The unit
+      is proposed from the inputs (V times A gives W) until you choose one.
+      Each value shows its result with the readings of right now; a formula
+      that does not parse keeps *Next* off and says where.
+    - **Maximum age of an input** - a reading older than this counts as
+      none (3 s by default).
+3. *Next*: the last page shows it as set up; **Connect** adds it to My
+   devices and connects it, **Save only** adds it without connecting.
+
+*Info and settings* in its context menu in the sidebar, or the gear on its
+front panel, opens its settings again.
+
+## On the front panel
+
+A calculated, simulated or integral value has a front panel like a meter:
+its values on the LCD, and below it, where a meter has its keys:
+
+- the **status LED**: green while it computes, yellow while it waits for
+  an input (why in its tooltip) or is held, dark while disconnected;
+- its own keys: an integral has **0** and **HOLD**.
+
+The **gear** at the right end of the name above every front panel, of a
+meter too, opens *Info and settings*. Connect and disconnect start and
+stop a calculated value as they do a meter. The small handle at the lower
+edge folds the keys away and back.
 
 Values are combined in their base units (volts, amperes, ohms), whatever
-range the meters happen to be in, and the result is shown with a fitting
-prefix: 12 V times 0.5 mA is `6.00 mW`.
+range the meters happen to be in. A result is in the base unit of the
+unit you give it, and shown with a fitting prefix: 12 V times 0.5 mA is
+`6.00 mW`. A unit with a prefix (`mW`) takes the result as 0.006 W, shown
+as 6 mW.
 
 ## Formulas
 
 - Operators `+ - * / ^`, parentheses. `^` binds tightest, so `-2^2` is `-4`
-  and `u^2/r` is what you expect.
+  and `v1^2/v2` is what you expect.
 - Numbers may have an exponent or an SI suffix: `1e-3`, `1.5k`, `22u`, `4.7n`;
   `pi` is a constant.
-- Functions: `sqrt(x)`, `abs(x)`, `log10(x)`, `sin(x)`, `cos(x)`, `exp(x)`,
+- Functions: `sqrt(x)`, `abs(x)`, `log10(x)`, `ln(x)`, `sin(x)`, `cos(x)`, `exp(x)`,
   `floor(x)`, `min(a, b)`, `max(a, b)` and `rand()` (a new value in [0, 1)
   every time).
-- Variables are the meters connected in this QtDMM, by their names in My
-  devices as above (also those connected with `--connect` or SCPI
-  `QTDMM:DEVice:OPEN`, see [command line](command-line.md)).
-  A calculated value can itself be an input for another one. `t` is
-  reserved: the seconds since the calculated value connected.
+- Variables: the inputs `v1`, `v1.2` ..., the values above `y1` ..., and `t`,
+  the seconds since the calculated value started. A calculated value can
+  itself be an input of another one, as long as they do not form a loop.
 
 Examples:
 
 | What | Unit | Formula |
 |---|---|---|
-| Power | `W` | `u * i` |
-| Resistance of a load | `Ohm` | `u / i` |
-| Voltage drop across a shunt | `V` | `u_in - u_out` |
-| Apparent power from RMS readings | `VA` | `u * i` |
-| Magnitude of two components | `V` | `sqrt(a^2 + b^2)` |
-| A reading scaled by a probe factor | `V` | `probe * 10` |
+| Power | `W` | `v1 * v2` |
+| Resistance of a load | `Ohm` | `v1 / v2` |
+| Voltage drop across a shunt | `V` | `v1 - v2` |
+| Magnitude of two components | `V` | `sqrt(v1^2 + v2^2)` |
+| A reading scaled by a probe factor | `V` | `v1 * 10` |
+| Dew point (Magnus, above 0 °C) of a TFA sensor | `°C` | `243.12*((17.62*v1.2)/(243.12+v1.2)+ln(v1.3/100))/((17.62*243.12)/(243.12+v1.2)-ln(v1.3/100))` |
 
-## The simulated meter
+## Simulated values
 
 For trying QtDMM without a multimeter, for demonstrations or for feeding a
-known signal into a calculation there is a second built-in model,
-**QtDMM / Simulated meter** (Virtual meter before 26.2). It is a calculated value with the formula
-built for you from a few fields:
+known signal into a calculation: *Add device*, the tile **Simulated**. It
+has no inputs and makes up to four values on a clock (every 250 ms by
+default), each with:
 
-- **Waveform** — *Constant* (the Max value), *Random* (a new value between
-  Min and Max each time), *Sine*, *Triangle*, *Square*, *Sawtooth* (between
-  Min and Max, once per Period), *Discharge* (from Max towards Min with the
-  time constant Period, like a battery under load) or *Custom formula*.
-- **Unit** and **Coupling** (DC or AC) — what the display and the graph
-  label the value with.
-- **Min**, **Max**, **Period (s)**, **Noise** — noise is the peak-to-peak
-  amplitude of uniform noise added on top, in the unit above.
-- **Formula** — what the fields expand to; with *Custom formula* you edit
-  it directly and may use everything from the section above, including the
-  readings of the other open devices.
-- **Values** — 1 to 4. From 2 on, a row for each further value with its
-  unit, coupling and formula; besides `t` and the other open devices a formula
-  can use the values before it as `v1`, `v2`, `v3`. Preset: value 2 a
-  current around 0.5 A, value 3 the power `v1 * v2` in W, value 4 a slowly
-  swinging temperature in °C. The further values go where a meter's second
-  display goes: the display's small line, the graph, the readings table,
-  the alarms and SCPI `READ? (@2)`.
+- **Name**, **Unit** and **AC/DC** - what the display and the graph label
+  the value with.
+- A **shape** - *Constant* (the max value), *Random* (a new value between
+  min and max each time), *Sine*, *Triangle*, *Square*, *Sawtooth* (between
+  min and max, once per period), *Discharge* (from max towards min with the
+  period as time constant, like a battery under load) - with **min**,
+  **max**, **period** (s) and **noise** (peak to peak, added on top), or
+  *Formula*: one of your own over `t` and the values above it (`y1` ...).
 
-The simulated meter needs no other device and delivers its value like a
-real one, so `u * i` works just as well with a virtual `u`.
+Each value shows where it is right now.
+
+## Integral
+
+The energy a load took, the charge into a battery, the light a plant got:
+*Add device*, the tile **Calculated**, in its list **Integral**, or
+*Integrate...* in the menu of a value (a right click on it in the sidebar
+or a view: the assistant starts at its settings). It sums up one value
+over time:
+
+- **Value** - open a device in the list and choose one of its values.
+- **Unit** - the value's unit times hours: W gives **Wh**, A **Ah**, lx
+  **lxh**, any other its unit with an `h`. A prefix may be chosen: `kWh`,
+  `mAh`.
+- **Gap after** - two readings further apart than this, or one without a
+  number (OL, ----), are a gap: the sum pauses over it and goes on after.
+- **Start at 0 when a recording starts** - on by default: the recording
+  shows the energy since its start.
+- **Start at 0 when the value rises above** a threshold - e.g. from the
+  moment a load is switched on. Staying above it does not start it again;
+  a value that wavers around the threshold starts it at each rise, so put
+  the threshold clearly between off and on. It is in the value's base
+  unit, shown beside the field: 0.5 A for 500 mA.
+
+The key **0** on its front panel, *Set integral to 0* in its context menu
+in the sidebar, the button *Set to 0* in its dialog and SCPI
+`QTDMM:NODE:RESet` start it at 0 by hand. After a restart of QtDMM it
+starts at 0; changed settings keep the sum as long as the value stays the
+same. **HOLD** on its front panel keeps its sum and adds nothing until it
+is pressed again; it stays held with the next start.
+
+A reading in another unit than the sum's - the meter switched from W to
+V - adds nothing: the sum pauses, and its status says *Unit does not fit:
+V instead of W*.
+
+Each new reading of the value adds the trapezoid since the one before: the
+mean of both times the time between them.
+
+## Entries from before
+
+The models **QtDMM / Simulated meter** (Virtual meter before 26.2) and
+**QtDMM / Calculated value** of earlier versions open as simulated and
+calculated values: a simulated meter keeps its waveform and its further
+values, a calculated value takes the devices its formula names (by their
+names in My devices, *UT61E Bench* as `ut61e_bench`) as its inputs. Their
+settings stay as they were until you save them in the dialog. One that
+names a device no longer in My devices does not open and says which;
+*Info and settings* lets you set it up anew.
 
 ## When an input is missing
 
-A calculated value polls its inputs four times a second. While a variable
-has no open device, that device has not delivered a value for three
-seconds, or it shows *OL*, the calculated display shows **OL** and
-the status line says which input is the problem, for example *Waiting for
-'i'*. The recorder keeps running; the gap is recorded like an
-overload from a real meter.
+While an input is not connected, has not delivered a reading within the
+maximum age, or shows *OL*, a value that needs it has no number: the
+display shows dashes, the graph a gap, and the status says which input it
+waits for. The other values go on.
 
-Readings arrive at the pace of the slowest meter and the poll interval, so
-a calculated value can lag its inputs by up to a quarter of a second plus
-one meter update. *Record* records the open devices together, on one time
-base (see [The recorder](recorder.md)); every CSV export carries
+A result is computed at the time of the leading input's reading, with the
+others' last readings. An input that is itself calculated from the leading
+device is waited for: its result of the same reading is taken. *Record* records the open devices together, on one
+time base (see [The recorder](recorder.md)); every CSV export carries
 timestamps.

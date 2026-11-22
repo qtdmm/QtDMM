@@ -67,8 +67,11 @@ public:
   /// Transport::availablePorts() or a host:port for RFC2217.
   void    setDevice(const QString &);
   /// Creates, opens and configures the port and starts reading. On failure
-  /// error() carries the reason and false is returned.
-  bool    open();
+  /// error() carries the reason and false is returned; with
+  /// @p waitForDevice it stays wanted and tries again every
+  /// setReconnectInterval() seconds, as after a lost connection (a meter
+  /// of a workspace, not plugged in yet).
+  bool    open(bool waitForDevice = false);
   /// Stops reading and closes the port; emits error("Not connected").
   void    close();
   /// Presses the meter's key @p key once (DmmDecoder::keyRequest()). False
@@ -108,10 +111,14 @@ public:
   /// --debug: dump every frame as hex to stdout, a line with time and name.
   void    setConsoleLogging(bool on) { m_consoleLogging = on; }
   void    setConsoleName(const QString &name) { m_consoleName = name; }
-  /// The inputs of a calculated value (PortType::Calc, CalcDevice).
-  void    setCalcInputs(CalcDevice::Inputs inputs);
+  /// How the meter is reached (setDevice()).
+  Transport::PortType portType() const { return m_portType; }
 
 Q_SIGNALS:
+  /// Every frame as it came, before response(): its bytes, when (ms since
+  /// the epoch) and what the decoder made of it, none when it did not
+  /// understand it. For the capture window (CaptureLog).
+  void    frame(const QByteArray &bytes, qint64 wall, const std::optional<DmmDecoder::DmmResponse> &response);
   /// The whole decoded frame, for ReadingAdapter (MeterController); value()
   /// is the same split into its values.
   void    response(const DmmDecoder::DmmResponse &response);
@@ -139,6 +146,8 @@ protected:
   void                  setState(LinkState state, const QString &message);
   /// Creates and opens the port; the common part of open() and a reconnect.
   bool                  openPort();
+  /// m_error of a failed openPort() as error(), unless it is the one of the try before.
+  void                  openFailed();
   /// Drops the port without touching m_wanted.
   void                  closePort();
   /// The port device reports that it is gone (socket closed, USB unplugged).
@@ -154,16 +163,25 @@ protected:
   int                   m_timeoutMs = 3000;
   int                   m_reconnectSeconds = 5;
   int                   m_secondsInError = 0;
+  QString               m_openError;            ///< the last failed openPort()'s m_error, said once
   QElapsedTimer         m_lastFrame;            ///< since the last complete frame (or open)
+  /// The models whose data the meter sends when its frames name others than
+  /// the one it was set up as (DmmDecoder::tellsModel()), checked with the
+  /// first frame after initDecoder(); empty: as set up.
+  QStringList           m_otherModels;
+  bool                  m_modelChecked = false;
   QString               m_name;
   bool                  m_consoleLogging;
   QString               m_consoleName;
   void                  consoleLine(const QByteArray &text) const;
+  /// Writes @p frame once (a key, a decoder's command; GATT: not as the poll),
+  /// logged as @p what on the console. False when empty or not connected.
+  bool                  sendOnce(const QByteArray &frame, const QByteArray &what);
   int                   m_flags;
   int                   m_delayTimer;
   std::shared_ptr<DmmDecoder> m_decoder;
   DmmDecoder::DMMInfo   m_dmmInfo;
-  Transport::PortType m_portType;
+  Transport::PortType m_portType = Transport::PortType::None;
 
   void                  timerEvent(QTimerEvent *) Q_DECL_OVERRIDE;
 

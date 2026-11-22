@@ -11,7 +11,7 @@ info.
 runs dmm-tools' dump_specs example (cargo, offline: the crates must be in
 cargo's cache) for each model below and writes its JSON with the QtDMM
 models it belongs to and the dmm-tools commit; the other files there
-(hp570c-app.json, cmt3503.json, cm2100b.json, ut363bt.json, ut383bt.json) are written by hand and left alone. dmm-tools is GPL-3.0-or-later
+(hp570c-app.json, cmt3503.json, cm2100b.json, ut333bt.json, ut353bt.json, ut363bt.json, ut383bt.json) are written by hand and left alone. dmm-tools is GPL-3.0-or-later
 (https://github.com/antoinecellerier/dmm-tools).
 """
 import json
@@ -31,6 +31,12 @@ MODELS = {
     "ut161d": ["Uni-Trend UT161D"],
     "ut161e": ["Uni-Trend UT161E"],
     "zt5b": ["ZOTEK ZT-5B", "ANENG V05B"],
+    "cms061": ["OWON CMS061", "Uni-Trend UT217A"],
+    "cms101": ["OWON CMS101", "Uni-Trend UT217B"],
+    "ut71a": ["Uni-Trend UT71A"],
+    "ut71b": ["Uni-Trend UT71B"],
+    "ut71cde": ["Uni-Trend UT71CDE"],
+    "vc920": ["Voltcraft VC 920", "Voltcraft VC 940", "Voltcraft VC 960"],
 }
 
 REPO = pathlib.Path(__file__).resolve().parent.parent

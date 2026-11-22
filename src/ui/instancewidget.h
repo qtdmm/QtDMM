@@ -26,8 +26,6 @@
 #include <QtGui>
 #include <QtPrintSupport>
 
-#include "ui_uiinstancewidget.h"
-
 #include "core/limittest.h"
 #include "core/reading.h"
 #include "core/valueref.h"
@@ -48,8 +46,8 @@ class ReadingsModel;
 struct Alarm;
 class DeviceLibrary;
 
-/// The recorder graph (shown in its own MDI window), plus the settings and
-/// the other dialogs.
+/// The session's settings, recording control and dialogs, without a window
+/// of its own (MainWindow keeps it hidden; the graphs are MainWindow's).
 ///
 /// The window has no meter of its own: every meter connected is one of the
 /// DeviceSession (MeterController: connection, min/max memory, alarms, SCPI,
@@ -58,7 +56,7 @@ class DeviceLibrary;
 /// values they are given (ValueRef with the meter's source) and know nothing
 /// of each other. MainWindow provides the frame (menus, toolbars, docks,
 /// status bar) and hooks its actions up to the *SLOT members here.
-class InstanceWidget : public QFrame, private Ui::UIInstanceWidget
+class InstanceWidget : public QFrame
 {
   Q_OBJECT
 public:
@@ -92,14 +90,9 @@ public:
   const QList<PoincareView *> &poincares() const { return m_poincares; }
   /// Table model that gets every reading (MainWindow owns it).
   void        setReadingLog(ReadingsModel *);
-  /// The limit test's band to the graph and the analog meter (they draw it
-  /// for the value they show).
-  void        applyLimitBands();
   /// --debug: pass on to MeterConnection::setConsoleLogging() of every meter,
   /// or only of the My devices entries @p only (--debug-device).
   void        setConsoleLogging(bool on, const QStringList &only = {});
-  /// The recorder graph (for the zoom/pan shortcuts in MainWindow).
-  GraphWidget   *graph() const { return ui_graph; }
   Settings   *settings() const { return m_settings; }
   /// "My devices", shared by all instances.
   DeviceLibrary *devices() const { return m_devices; }
@@ -109,6 +102,18 @@ public:
   /// gets one, or takes the entry at its place with its model. Empty when
   /// the window had none.
   QString     takeOldDevice();
+  /// The file a graph shows, for Record, Live, Clear and the
+  /// export without a leading meter (MainWindow's graph used last).
+  struct FileView
+  {
+    std::function<bool()> shown;    ///< that graph shows a file
+    std::function<void()> leave;    ///< back to its meter
+    std::function<bool(const QString &path, bool everyReading)> write;   ///< writes the file's readings
+  };
+  void        setFileView(const FileView &view) { m_fileView = view; }
+  /// The session's recording state (RecordingStore::State): the leading
+  /// meter's, else View for a file shown, else Live.
+  int         recordingState() const;
   /// Before a new recording: unsaved readings viewed are exported or
   /// dropped, or the user cancels (false). True at once in Live.
   bool        confirmRecording();
@@ -144,7 +149,7 @@ Q_SIGNALS:
 public Q_SLOTS:
   void        quitSLOT();
   void        helpSLOT();
-  /// Clears the graph.
+  /// Clears the recording; a recording viewed: Live again.
   void        clearSLOT();
   /// Starts recording (also triggered remotely via the shared state).
   void        startSLOT();
@@ -155,11 +160,20 @@ public Q_SLOTS:
   void        configSLOT();
   /// Opens the settings dialog on the recording page.
   void        configRecorderSLOT();
+  /// Opens the settings dialog on the Graph page.
+  void        configGraphSLOT();
   /// Opens the settings dialog on the SCPI server page.
   void        configScpiSLOT();
-  void        printSLOT();
-  void        exportSLOT();
-  void        importSLOT();
+  /// The print dialog, then @p print with the printer, the title and the comment.
+  void        printWith(const std::function<void(QPrinter *, const QString &, const QString &)> &print);
+  /// Writes what Export writes into @p file, without the dialog; the format
+  /// by its suffix (csv, xlsx, ods), @p everyReading instead of the grid.
+  /// @p values: only these (a graph's), empty all devices'. A file a graph
+  /// shows without a leading meter (setFileView()) is that file.
+  bool        writeRecordingTo(const QString &file, bool everyReading = false, const QList<ValueRef> &values = {});
+  /// The file dialog of the export: CSV, Excel, OpenDocument, every reading
+  /// or a QtDMM recording; empty when cancelled, @p raw for every reading.
+  QString     askExportFile(bool *raw);
   /// Settings dialog OK/Apply: re-reads the configuration (readConfig()).
   void        applySLOT();
 
@@ -172,28 +186,17 @@ protected:
   SettingsDialog  *m_configDlg;
   qtdmm::PrintDlg *m_printDlg;
   QPrinter    m_printer;
-  /// The graph's store while no meter has it: empty, Live (time axis only).
-  RecordingStore *m_emptyStore = nullptr;
-  QPointer<MeterController> m_graphBase;   ///< the meter of the graph's store, nullptr: m_emptyStore
-  QMetaObject::Connection m_graphUnit;      ///< its unit to the graph
-  MeterController *m_closing = nullptr;   ///< the meter closing now (DeviceSession::closing())
-  QMetaObject::Connection m_graphAlarms;    ///< its alarms: the reference line's thresholds
-  /// The graph shows none of its store's meter's values: the meter of its first.
-  void        followGraphBase();
-  /// The graph's store: of @p ctl, or the empty one for nullptr.
-  void        setGraphBase(MeterController *ctl);
-  /// The alarms' thresholds of the graph's meter, for its reference line to snap to.
-  void        applyAlarmThresholds();
-  QMetaObject::Connection m_graphLimitLink;   ///< of the meter of the graph's left axis
   QString     m_activeSource;   ///< setActiveSource()
   bool        m_consoleLogging = false;   ///< setConsoleLogging()
   QStringList m_consoleOnly;
   void        applyConsoleLogging(MeterController *ctl) const;
-  void        leaveFile();
   QList<MeterView *> m_meters;
   int         m_meterStyle = -1;   ///< the settings' style last applied, -1 before the first
   QList<PoincareView *> m_poincares;
   QPointer<ReadingsModel> m_readingLog;
+  FileView    m_fileView;   ///< setFileView()
+  bool        fileShown() const { return m_fileView.shown && m_fileView.shown(); }
+  void        leaveFile() const;
   /// The meters' values by name: the recording's choice of trigger value.
   void        updateValueNames();
   Settings    *m_settings;
@@ -202,23 +205,17 @@ protected:
   /// cancel. True when the caller may go on - nothing unsaved, exported or
   /// dropped; false for Cancel or a failed export.
   bool        keepUnsavedData(const QString &reason, const QString &discard);
-  /// The session's recording state (RecordingStore::State): the leading meter's, else the graph store's.
-  int         recordingState() const;
   /// Export with a file dialog: the session's recording with every meter
-  /// that recorded, else what the graph shows; false when cancelled or failed.
+  /// that recorded; false when cancelled or failed.
   bool        exportRecording();
   DeviceLibrary *m_devices;
   QString     m_instanceId;
   QString     m_configPath;   ///< --config-dir, passed on to new instances
 
-  /// Applies the settings to the services, graph and analog meter.
+  /// Applies the settings to the recording and the analog meters.
   void        readConfig();
   /// The SCPI page's settings to the session's services (ServiceHost::apply()).
   void        applyScpi();
   QRect       parentRect() const;
-
-protected Q_SLOTS:
-  /// Graph zoom changed; re-applies the window/total size.
-  void        zoomedSLOT();
 };
 

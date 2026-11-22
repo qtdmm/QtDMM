@@ -43,6 +43,14 @@ public:
   std::optional<DmmDecoder::DmmResponse> decode(const QByteArray &data, int id) override;
   QByteArray pollRequest() const override;
   QByteArray keyRequest(const QString &key) const override;
+  /// The keys of keyRequest(), but no PEAK on the UT61B+ and UT161B: their
+  /// manual gives them a plain MAX/MIN key (dmm-tools f2dea93).
+  bool hasKey(const QString &key, const QString &model) const override;
+  /// The UT61B+/D+/E+ and UT161 ignore HOLD in NCV, REL in continuity,
+  /// diode, Hz, duty and NCV, MIN/MAX in those and capacitance (dmm-tools'
+  /// HOLD_DEAD, REL_DEAD, MINMAX_DEAD, from a UT61E+ and a UT61B+). REL in
+  /// AC+DC V too, but its readings do not tell that position from DC V.
+  bool keyWorks(const QString &key, const QString &model, const Reading &reading) const override;
   /// The frame for command byte @p cmd: AB CD 03 cmd and the 16-bit BE sum.
   static QByteArray commandFrame(quint8 cmd);
   bool checkFormat(const char *data, size_t idx) override;

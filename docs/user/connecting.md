@@ -8,9 +8,12 @@ by step and keeps it in [My devices](my-devices.md). A window without a
 meter - the first start - shows nothing but a big **Add device** button.
 
 1. **How is it connected?** *Cable* (USB cable of the meter, USB-serial
-   adapter, serial port), *Bluetooth*, *Network*, *sigrok* or *Simulated /
-   calculated* - the simulated meter, a signal of its own to try QtDMM without
-   hardware, or a value calculated from other windows.
+   adapter, serial port), *Bluetooth*, *Network* or *sigrok*; also
+   *Simulated* - a signal of its own to try QtDMM without hardware - and
+   *Calculated*: a list of what can be calculated from your devices
+   (*Formula*, *Integral*), with what each does and a search. Their
+   settings follow on one page, then step 4 (see
+   [Calculated values](calculated-values.md)).
 2. **Where?** For a cable, Bluetooth or the network QtDMM looks right away,
    only there, and lists every port it finds, the recognised meters first. A USB cable
    names the meter family it belongs to (UT-D04: the serial UNI-T meters,
@@ -34,7 +37,7 @@ meter - the first start - shows nothing but a big **Add device** button.
    once, *Save only* keeps it in My devices without connecting - *Connect*
    in its context menu reads it later (see [My devices](my-devices.md)).
 
-sigrok and *Simulated / calculated* skip step 2.
+sigrok skips step 2.
 
 ## Choosing the device by hand
 
@@ -137,7 +140,10 @@ for AC+DC a "+" lights between AC and DC. Unlit ones stay faintly visible,
 like on the meter itself. Only those a meter of its kind has are there: a
 thermometer has HOLD, MAX and MIN, a luxmeter or sound level meter AUTO as
 well, an anemometer or air quality meter AVG as well, a Victron device none;
-one a reading lights shows anyway. Then the bar graph (multimeters and clamp
+one a reading lights shows anyway. After them, at the left, a battery
+when the meter tells its battery: one bar low, two half full, three full. A
+meter that only reports a low battery shows it with one bar, and nothing
+otherwise; one that tells nothing never shows it. Then the bar graph (multimeters and clamp
 meters only; the others leave its room empty) and, below the value, the minimum
 and maximum since the last **Reset** (F4), each as the meter showed it
 ("MIN 221.18 mV" stays so when the meter has moved on to V). A range change
@@ -206,17 +212,19 @@ have the keys of OWON's app: SELECT, RANGE, Hz/%, REL, MIN/MAX, LIGHT and
 HOLD, as each model has them; the CM2100B SELECT, ZERO, LIGHT and HOLD
 ([Bluetooth](bluetooth.md#owon)).
 
-The small triangle in the display's top right corner,
-or **Hide controls** in its right-click menu, folds the row away.
+The small handle at the panel's lower edge, or **Hide controls** in its
+right-click menu, folds the row away; the handle brings it back.
 
 ## Window layout
 
-The main window holds five windows: the digital display, the needle meter,
-the graph, the [readings table](readings-table.md) and the
-[Poincaré plot](poincare-plot.md). The toolbar buttons (or Ctrl+1 … Ctrl+5)
-show and hide them, all of a kind at once; the arrow beside one lists the
-windows of that kind to tick, the front panels by device, and *New...* opens
-another needle meter or Poincaré plot. Recording, Live, Clear, Export, Import
+The main window has eight window types: the digital display, the needle meter,
+the graph, the [readings table](readings-table.md), the
+[Poincaré plot](poincare-plot.md), the [XY diagram](xy-diagram.md), the
+[histogram](histogram.md) and the [heatmap](heatmap.md). The toolbar buttons
+(or Ctrl+1 … Ctrl+5 for the first five) show and hide them, all of a kind at once; the arrow beside one
+lists the windows of that kind to tick, the front panels by device, and
+*New...* opens another needle meter, Poincaré plot, XY diagram, histogram,
+heatmap or graph. Recording, Live, Clear, Export, Import
 and Print are in the graph's right-click menu, with their keys; Record also
 in the menu, as it records the whole bench. A fresh QtDMM starts as a
 compact instrument with display and meter only; starting a recording shows
@@ -317,7 +325,12 @@ colours and the style of the needle meter are chosen separately.
 **Settings → Appearance → Symbols** chooses the toolbar and menu symbols:
 *Coloured* (KDE's Oxygen icons, the default), *Plain* (KDE's monochrome Breeze
 icons, light or dark to match the window) or, on Linux and BSD where the
-desktop has an icon theme, *System* - your desktop's symbols, with the
-plain set for QtDMM's own symbols and anything the theme lacks. **Symbols
+desktop has an icon theme, *System + plain* or *System + coloured* - your
+desktop's symbols, with the plain or the coloured set for QtDMM's own
+symbols and anything the theme lacks. Choose the one that matches your
+theme: *coloured* for Oxygen, Papirus or Humanity, *plain* for Breeze or
+Adwaita. Settings from before the two entries take the one that suits the
+desktop's theme. The list of a project shows folders and files with the
+symbols of the set chosen too. **Symbols
 with text** below it puts the names under the toolbar buttons. The toolbars
 cannot be moved; Ctrl+M hides and shows them.

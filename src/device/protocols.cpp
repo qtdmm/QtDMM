@@ -48,6 +48,14 @@ const std::vector<ProtocolInfo> &protocols()
     { FrameFormat::UniTUT61Plus,          "UniTUT61Plus",          QT_TRANSLATE_NOOP("Protocols", "19 bytes binary, polled (UNI-T UT61B+/D+/E+, USB or Bluetooth adapter)"), "", "Bluetooth LE", make<DecoderUniTiDMM> },
     { FrameFormat::UniTUT202BT,           "UniTUT202BT",           QT_TRANSLATE_NOOP("Protocols", "19 bytes binary, polled over Bluetooth LE (UNI-T UT202BT clamp)"), "", "Bluetooth LE", make<DecoderUniTiDMM> },
     { FrameFormat::UniTiENV,              "UniTiENV",              QT_TRANSLATE_NOOP("Protocols", "19 bytes, polled over Bluetooth LE, lx or dB (UNI-T UT383BT, UT353BT)"), "", "Bluetooth LE", make<DecoderUniTiENV> },
+    { FrameFormat::UniTUT381A,            "UniTUT381A",            QT_TRANSLATE_NOOP("Protocols", "variable bytes binary, streamed over Bluetooth LE after a start command, lx (UNI-T UT381A)"), "", "Bluetooth LE", make<DecoderUT381A> },
+    { FrameFormat::UniTUT372D,            "UniTUT372D",            QT_TRANSLATE_NOOP("Protocols", "35 bytes binary, streamed over Bluetooth LE, RPM, Hz or a wheel's speed and length (UNI-T UT372D)"), "", "Bluetooth LE", make<DecoderUT372D> },
+    { FrameFormat::UniTUT382A,            "UniTUT382A",            QT_TRANSLATE_NOOP("Protocols", "19 bytes binary, polled over Bluetooth LE, lx or fc, lux hours or cd (UNI-T UT382A)"), "", "Bluetooth LE", make<DecoderUT382A> },
+    { FrameFormat::UniTUT320i,            "UniTUT320i",            QT_TRANSLATE_NOOP("Protocols", "23 bytes binary, streamed over Bluetooth LE, two temperatures (UNI-T UT320i)"), "", "Bluetooth LE", make<DecoderUT320i> },
+    { FrameFormat::UniTUT325F,            "UniTUT325F",            QT_TRANSLATE_NOOP("Protocols", "36 bytes binary, streamed over Bluetooth LE once switched on, four thermocouples (UNI-T UT325F)"), "", "Bluetooth LE", make<DecoderUT325F> },
+    { FrameFormat::UniTUT117C,            "UniTUT117C",            QT_TRANSLATE_NOOP("Protocols", "24 bytes binary with ASCII value, polled over Bluetooth LE (UNI-T UT117C)"), "", "Bluetooth LE", make<DecoderUT117C> },
+    { FrameFormat::UniTUT219PV,           "UniTUT219PV",           QT_TRANSLATE_NOOP("Protocols", "38 bytes binary with ASCII values, polled over Bluetooth LE, two displays (UNI-T UT219PV)"), "", "Bluetooth LE", make<DecoderUT219PV> },
+    { FrameFormat::TextLines,             "TextLines",             QT_TRANSLATE_NOOP("Protocols", "text lines of a microcontroller: Arduino Serial Plotter or Teleplot, up to four values"), "", "", make<DecoderTextLines> },
     { FrameFormat::TfaAirControl,         "TfaAirControl",         QT_TRANSLATE_NOOP("Protocols", "text lines from HID records, CO2/temperature/humidity (TFA AIRCO2NTROL)"), "Holtek",  "USB-HID (Holtek)",         make<DecoderTfaAirControl> },
     { FrameFormat::KeysightU12xx,         "KeysightU12xx",         QT_TRANSLATE_NOOP("Protocols", "variable bytes ASCII, polled with CONF?/FETC? (Agilent/Keysight U12xx)"), "",                      "",                         make<DecoderKeysightU12xx> },
     { FrameFormat::UniTUT32x,             "UniTUT32x",             QT_TRANSLATE_NOOP("Protocols", "19 bytes ASCII, continuous after a start byte (UNI-T UT32x thermometers)"), "",            "",                         make<DecoderUniTUT32x> },
@@ -68,6 +76,7 @@ const std::vector<ProtocolInfo> &protocols()
     { FrameFormat::UniTUT8803,            "UniTUT8803",            QT_TRANSLATE_NOOP("Protocols", "21 bytes from AB CD, ASCII display (UNI-T UT8803 bench meter with LCR, CP2110 USB)"), "", "", make<DecoderUT8803> },
     { FrameFormat::Eevblog121GW,          "Eevblog121GW",          QT_TRANSLATE_NOOP("Protocols", "19 bytes from F2 with an XOR check, main and secondary display (EEVblog 121GW, Bluetooth LE)"), "", "Bluetooth LE", make<Decoder121GW> },
     { FrameFormat::BrymenBM78xBT,         "BrymenBM78xBT",         QT_TRANSLATE_NOOP("Protocols", "32-byte reading packets with CRC-16 after a password login (Brymen BM788BT, BM787BT, Bluetooth LE)"), "", "Bluetooth LE", make<DecoderBM78xBT> },
+    { FrameFormat::RawCapture,            "RawCapture",            QT_TRANSLATE_NOOP("Protocols", "Unknown meter: bytes only, for a capture (Capture...)"),  "",                      "",                         make<DecoderRawCapture> },
   };
   return table;
 }

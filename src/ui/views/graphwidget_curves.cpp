@@ -1,943 +1,525 @@
-//======================================================================
-// File:		graphwidget_curves.cpp (from dmmgraph.cpp)
-// Author:	Matthias Toussaint
-// Created:	Tue Apr 10 17:45:35 CEST 2001
-//----------------------------------------------------------------------
-// This file is part of QtDMM.
+// Copyright (c) 2026 The QtDMM developers
+// SPDX-License-Identifier: GPL-3.0-or-later
 //
-// QtDMM is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// QtDMM is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with QtDMM.  If not, see <http://www.gnu.org/licenses/>.
-//----------------------------------------------------------------------
-// Copyright (c) 2001 Matthias Toussaint
-//======================================================================
-//
-// GraphWidget, part: building the curves: buckets, the integral, the envelope, the other values and the legend.
-// The class is in graphwidget.h, its other parts in graphwidget*.cpp.
-
-#include <QtGui>
-#include <QtWidgets>
-#include <QPen>
-#include <cmath>
-#include <climits>
-
-#include "ui/views/graphlegend.h"
+// GraphWidget: the values, their stores, the thinned points and the curves.
 #include "ui/views/graphwidget.h"
-#include "ui/views/graphwidget_p.h"
-#include "ui/views/graphminimap.h"
 
-QPainterPath GraphWidget::envelopePath() const
+#include "recording/recordingstore.h"
+#include "recording/seriesdecimator.h"
+#include "ui/views/graphband.h"
+#include "ui/views/graphlegend.h"
+#include "ui/views/graphtimebar.h"
+#include "ui/views/graphtext.h"   // curveName()
+#include "ui/views/qcp.h"
+
+#include <cmath>
+
+#include <QResizeEvent>
+#include <QSet>
+
+GraphWidget::GraphWidget(QWidget *parent) : QcpPlotBase(parent)
 {
-  return m_envelope->isVisible() ? m_envelope->path() : QPainterPath();
+  setMinimumHeight(minimumSizeHint().height());   // the width: minimumSizeHint(), from the row above
+  setupAxes();
+  setupInput();
+  setupOverview();   // the bands under the curves
+  setupOverlays();
+  setupMarks();
+  setupTheme();
+  refreshPlot();
 }
 
-// Columns of one pixel over the plot (and kEnvelopeColumns beyond each
-// edge, so the band runs out of the plot as the curve does): the lowest
-// and highest of the curve as drawn in each, its points and the lines
-// between them - readings further apart than the band is wide would leave
-// it a staircase. The curve has a point for every bucket, its minimum and
-// maximum, the buckets themselves a column wide, so this reads a few
-// points per column, not the readings. A gap (NaN) parts the band as it
-// parts the curve. Each column gets the extremes of the columns within
-// kEnvelopeColumns of it on its side of a gap.
-void GraphWidget::updateEnvelope()
+QSize GraphWidget::minimumSizeHint() const
 {
-  const QRectF plot = m_chart->plotArea();
-  const double x0 = m_xAxis->min(), x1 = m_xAxis->max();
-  const double y0 = m_yAxis->min(), y1 = m_yAxis->max();
-  const QList<QPointF> pts = m_envelopeOn ? referencePoints() : QList<QPointF>();
-  if (pts.isEmpty() || plot.width() < 2 || plot.height() <= 0 || !(x1 > x0) || !(y1 > y0))
-  {
-    m_envelope->setVisible(false);
+  // one legend entry: its line piece and a short name ("mA"); high enough
+  // for the axes and a curve one can read (lines of text: with the font)
+  const int line = QFontMetrics(font()).height();
+  return QSize(qMax(qMax(300, 20 * line), (m_timeBar ? m_timeBar->fixedWidth() : 0) + 60), qMax(220, 13 * line));
+}
+
+void GraphWidget::setSources(std::function<RecordingStore *(const QString &source)> storeOf,
+                          std::function<QString(const QString &source)> nameOf)
+{
+  m_storeOf = std::move(storeOf);
+  m_nameOf = std::move(nameOf);
+  makeCurves();
+}
+
+void GraphWidget::sourcesChanged()
+{
+  makeCurves();
+}
+
+void GraphWidget::setValues(const QList<ValueRef> &values)
+{
+  if (values == m_values)
     return;
-  }
-  const int k = kEnvelopeColumns;
-  // the columns counted from time 0, not from the left edge: Live moving
-  // on by a part of a pixel leaves each point in its column, the band only
-  // moves along (else it flickers, its columns cut anew every frame)
-  const double perColumn = (x1 - x0) / plot.width();
-  const double first = std::floor(x0 / perColumn) - k;
-  const int columns = int(plot.width()) + 2 * k + 2;
-  const double from = first * perColumn, to = from + columns * perColumn;
-  struct Column
-  {
-    double lo = qInf(), hi = -qInf();
-    int run = -1;   ///< which stretch between gaps; -1 no point
-  };
-  QList<Column> col(columns);
-  auto take = [&](int c, double lo, double hi, int r)
-  {
-    Column &cc = col[c];
-    cc.lo = qMin(cc.lo, lo);
-    cc.hi = qMax(cc.hi, hi);
-    cc.run = r;
-  };
-  auto columnOf = [&](double x) { return qBound(0, int((x - from) / perColumn), columns - 1); };
-  // the point before the window too: its line runs into it
-  auto it = std::lower_bound(pts.cbegin(), pts.cend(), from, [](const QPointF &p, double x) { return p.x() < x; });
-  if (it != pts.cbegin())
-    --it;
-  int run = 0;
-  const QPointF *prev = nullptr;
-  for (; it != pts.cend(); ++it)
-  {
-    if (std::isnan(it->y()))
-    {
-      // a gap parts the curve and the band
-      if (it->x() > to)
-        break;
-      run++;
-      prev = nullptr;
-      continue;
-    }
-    if (it->x() >= from)
-    {
-      const int c = columnOf(it->x());
-      take(c, it->y(), it->y(), run);
-      // the line from the point before: in each column it crosses, the
-      // part of it there
-      if (prev)
-        for (int j = columnOf(prev->x()); j <= c; ++j)
-        {
-          const double xa = qMax(prev->x(), from + j * perColumn), xb = qMin(it->x(), from + (j + 1) * perColumn);
-          const double dx = it->x() - prev->x();
-          auto yAt = [&](double x) { return dx > 0 ? prev->y() + (it->y() - prev->y()) * (x - prev->x()) / dx : it->y(); };
-          take(j, qMin(yAt(xa), yAt(xb)), qMax(yAt(xa), yAt(xb)), run);
-        }
-    }
-    if (it->x() > to)
-      break;
-    prev = &*it;
-  }
-  auto yOf = [&](double v) { return plot.bottom() - (v - y0) / (y1 - y0) * plot.height(); };
-  auto xOf = [&](int c) { return plot.left() + (first + c + 0.5) - x0 / perColumn; };
-  QPainterPath path;
-  QList<QPointF> upper, lower;
-  auto flush = [&]
-  {
-    if (upper.size() > 1)
-    {
-      QPolygonF poly(upper);
-      for (qsizetype i = lower.size() - 1; i >= 0; --i)
-        poly << lower[i];
-      path.addPolygon(poly);
-      path.closeSubpath();
-    }
-    upper.clear();
-    lower.clear();
-  };
-  int lastRun = -1;
-  for (int c = 0; c < columns; ++c)
-  {
-    if (col[c].run < 0)
-      continue;
-    if (col[c].run != lastRun)
-      flush();
-    lastRun = col[c].run;
-    double lo = col[c].lo, hi = col[c].hi;
-    for (int j = qMax(0, c - k); j <= qMin(columns - 1, c + k); ++j)
-      if (col[j].run == col[c].run)
-      {
-        lo = qMin(lo, col[j].lo);
-        hi = qMax(hi, col[j].hi);
-      }
-    upper << QPointF(xOf(c), yOf(hi));
-    lower << QPointF(xOf(c), yOf(lo));
-  }
-  flush();
-  QPainterPath clip;
-  clip.addRect(plot);
-  m_envelope->setPath(path.intersected(clip));
-  m_envelope->setVisible(true);
+  m_values = values;
+  makeCurves();
 }
 
-// ms per pixel column, rounded up to a power of two. Counted over the window
-// or, while the recording does not fill it yet, over what is there: a short
-// recording in a long window is drawn as it is. Readings further apart than a
-// column are a bucket each. The power of two: a growing recording builds the
-// curve anew only when the buckets double, not every few readings (as the
-// overview, GraphMinimap); a bucket is then one to two columns wide.
-qint64 GraphWidget::bucketSize() const
+void GraphWidget::setValueAxes(const QHash<ValueRef, int> &axes)
 {
-  const double plotWidth = m_chart->plotArea().width();
-  const int columns = qMax(1, int(plotWidth > 0 ? plotWidth : width()));
-  const qint64 shown = qMin<qint64>(qint64(m_windowSeconds) * 1000, m_store->duration() - m_store->origin());
-  const qint64 need = (shown + columns - 1) / columns;
-  qint64 ms = 1;
-  while (ms < need)
-    ms *= 2;
-  return ms;
+  if (axes == m_valueAxes)
+    return;
+  m_valueAxes = axes;
+  storeChanged();
 }
 
-// The index of the first reading in the bucket of reading @p i. The buckets
-// are columns of time counted from the start of the recording: while the
-// window scrolls, a reading stays in its bucket and the drawn minima and
-// maxima stay put instead of jittering with every new reading.
-int GraphWidget::bucketStart(int i) const
+void GraphWidget::setFixedRanges(const QMap<QString, QPair<double, double>> &ranges)
 {
-  const RecordingSeries &series = m_store->series();
-  const qint64 begin = series.at(i).t / m_bucket * m_bucket;
-  return qMin(i, series.lowerBound(begin));
+  if (ranges == m_fixedRanges)
+    return;
+  m_fixedRanges = ranges;
+  redraw();
 }
 
-// The points of the readings first..last: the reading itself, or with more
-// than one the minimum and the maximum in time order, so a spike survives
-// the thinning. The store keeps every reading; only the drawing is thinned.
-// Readings without a value (NaN: overload, stale) do not count; a bucket of
-// nothing else is one NaN point, the gap, and one that ends where the meter
-// fell silent ends with it.
-int GraphWidget::pointsOf(const RecordingSeries &series, int first, int last, bool integral, QList<QPointF> &out) const
+void GraphWidget::setStore(RecordingStore *store)
 {
-  auto value = [&](int i)
+  if (store == m_ownStore)
+    return;
+  m_ownStore = store;
+  makeCurves();
+}
+
+void GraphWidget::setSourceName(const QString &name)
+{
+  m_sourceName = name;
+  updateTimeBar();
+}
+
+// One curve per value whose meter is open, or the main value of the store
+// given; the stores are connected once each.
+void GraphWidget::makeCurves()
+{
+  for (const Curve &c : std::as_const(m_curves))
+    m_plot->removeGraph(c.graph);
+  m_curves.clear();
+  for (const QPointer<RecordingStore> &store : std::as_const(m_watched))
+    if (store)
+      disconnect(store, nullptr, this, nullptr);
+  m_watched.clear();
+
+  auto add = [this](const ValueRef &value, RecordingStore *store, const QString &meter)
   {
-    const RawPoint &p = series.at(i);
-    return integral ? m_integrationOffset + p.integral * m_integrationScale : p.value;
+    Curve c;
+    c.value = value;
+    c.store = store;
+    c.meter = meter;
+    c.graph = m_plot->addGraph(m_plot->xAxis, m_axes.first().axis);
+    // the points are thinned already, minimum and maximum of a column
+    c.graph->setAdaptiveSampling(false);
+    m_curves.append(c);
   };
-  auto x = [&](int i) { return series.at(i).t / 1000.0; };
-  while (first <= last && std::isnan(value(first)))
-    first++;
-  if (first > last)
+  if (m_ownStore)
+    add(ValueRef(0), m_ownStore, QString());
+  else if (m_storeOf)
+    for (const ValueRef &v : std::as_const(m_values))
+      if (RecordingStore *store = m_storeOf(v.source))
+        add(v, store, m_nameOf ? m_nameOf(v.source) : QString());
+
+  RecordingStore *base = m_curves.isEmpty() ? nullptr : m_curves.first().store.data();
+  if (base != m_store)
   {
-    out.append(QPointF(x(last), qQNaN()));
-    return 1;
+    // another recording gives the time: at its end, no frame of the one before
+    m_store = base;
+    m_followEnd = true;
+    m_zoomed = false;
   }
-  int lo = first, hi = first;
-  double loValue = value(first), hiValue = loValue;
-  for (int i = first + 1; i <= last; i++)
+  for (const Curve &c : std::as_const(m_curves))
   {
-    const double v = value(i);
-    if (std::isnan(v))
+    RecordingStore *store = c.store;
+    if (m_watched.contains(store))
       continue;
-    if (v < loValue)
+    m_watched.append(store);
+    connect(store, &RecordingStore::appended, this, [this, store](bool shifted) { mainAppended(store, shifted); });
+    connect(store, &RecordingStore::extraAppended, this, [this, store](int index) { extraAppended(store, index); });
+    connect(store, &RecordingStore::extrasChanged, this, &GraphWidget::storeChanged);
+    connect(store, &RecordingStore::cleared, this, &GraphWidget::storeChanged);
+    connect(store, &RecordingStore::loaded, this, &GraphWidget::storeChanged);
+    connect(store, &RecordingStore::stateChanged, this, &GraphWidget::storeChanged);
+    // also while the picture is held: a mark is named by its place among them
+    connect(store, &RecordingStore::marksChanged, this, [this]
     {
-      loValue = v;
-      lo = i;
-    }
-    if (v > hiValue)
-    {
-      hiValue = v;
-      hi = i;
-    }
+      updateMarks();
+      m_plot->replot(QCustomPlot::rpQueuedReplot);
+    });
+    connect(store, &QObject::destroyed, this, &GraphWidget::storeGone);
   }
-  // a bucket that ends where the meter fell silent: the gap goes on to the
-  // next reading, in a later bucket - the line must not bridge it (a sensor
-  // silent for minutes was drawn as a straight line whenever its last value
-  // and the gap fell into one column). An overload comes at the meter's
-  // pace and is as short as a reading.
-  const bool gapAfter = std::isnan(value(last)) && series.at(last).quality == Quality::Stale;
-  int n = 1;
-  if (lo == hi)
-    out.append(QPointF(x(lo), loValue));
+  // the time goes on without readings: the window follows
+  if (m_store)
+    connect(m_store, &RecordingStore::progressChanged, this, &GraphWidget::scheduleRefresh);
+  storeChanged();
+}
+
+// Only what the graph holds itself: whoever gives the stores may be in the
+// middle of taking this one away.
+void GraphWidget::storeGone(QObject *store)
+{
+  for (int i = int(m_curves.size()) - 1; i >= 0; --i)
+    if (!m_curves.at(i).store || m_curves.at(i).store.data() == store)
+    {
+      m_plot->removeGraph(m_curves.at(i).graph);
+      m_curves.removeAt(i);
+    }
+  m_watched.removeIf([store](const QPointer<RecordingStore> &s) { return !s || s.data() == store; });
+  RecordingStore *base = m_curves.isEmpty() ? nullptr : m_curves.first().store.data();
+  if (base != m_store)
+  {
+    m_store = base;
+    m_followEnd = true;
+    m_zoomed = false;
+    if (base)
+      connect(base, &RecordingStore::progressChanged, this, &GraphWidget::scheduleRefresh, Qt::UniqueConnection);
+  }
+  storeChanged();
+}
+
+QList<const RecordingSeries *> GraphWidget::seriesOf(const Curve &curve) const
+{
+  QList<const RecordingSeries *> parts;
+  if (!curve.store)
+    return parts;
+  if (curve.value.id == 0)
+    parts << &curve.store->series();
   else
-  {
-    if (lo > hi)
-    {
-      qSwap(lo, hi);
-      qSwap(loValue, hiValue);
-    }
-    out.append(QPointF(x(lo), loValue));
-    out.append(QPointF(x(hi), hiValue));
-    n = 2;
-  }
-  if (gapAfter)
-  {
-    out.append(QPointF(x(last), qQNaN()));
-    n++;
-  }
-  return n;
+    for (int i = 0; i < curve.store->extraCount(); ++i)
+      if (curve.store->extra(i).id == curve.value.id)
+        parts << &curve.store->extra(i);
+  return parts;
 }
 
-void GraphWidget::rebuildSeries()
+void GraphWidget::setHold(bool hold)
 {
-  m_rebuilds++;
-  QList<QPointF> points;
-  QList<QPointF> intPoints;
-  const int count = m_store->count();
-  m_bucket = bucketSize();
-  points.reserve(2 * count + 2);
-  intPoints.reserve(2 * count + 2);
-
-  m_tailData = m_tailInt = 0;
-  const RecordingSeries &series = m_store->series();
-  for (int first = 0; first < count;)
-  {
-    // the readings of this bucket
-    const qint64 end = (series.at(first).t / m_bucket + 1) * m_bucket;
-    const int last = qMin(series.lowerBound(end), count) - 1;
-    m_tailData = pointsOf(m_store->series(), first, last, false, points);
-    if (m_intValueId == 0 && m_showIntegration)
-      m_tailInt = pointsOf(m_store->series(), first, last, true, intPoints);
-    first = last + 1;
-  }
-
-  m_dataLine->setMarkers(pointsShown() ? m_dataPoints : nullptr);
-  m_dataLine->replace(points);
-  m_curvePts = points;
-  // the integral of another value: rebuildExtras()
-  m_intLine->setMarkers(intPointsShown() ? m_intPoints : nullptr);
-  m_intLine->replace(intPoints);
-  rebuildExtras();   // the same buckets
-}
-
-// The newest reading went into the series: a new bucket adds its point, one
-// that is still filling replaces the points it had.
-void GraphWidget::appendToSeries()
-{
-  const int count = m_store->count();
-  const int first = bucketStart(count - 1);
-  const bool filling = first != count - 1;
-  if (filling)
-  {
-    m_dataLine->removeLast(m_tailData);
-    m_curvePts.resize(qMax<qsizetype>(0, m_curvePts.size() - m_tailData));
-  }
-  QList<QPointF> points;
-  m_tailData = pointsOf(m_store->series(), first, count - 1, false, points);
-  m_dataLine->append(points);
-  m_curvePts.append(points);
-  if (m_intValueId == 0 && m_showIntegration)   // else onExtraAppended()
-    appendIntegral(m_store->series(), first, count - 1, filling);
-}
-
-// The integral's points of readings first..last of @p series, in place of
-// the ones they had while the bucket was @p filling.
-void GraphWidget::appendIntegral(const RecordingSeries &series, int first, int last, bool filling)
-{
-  if (filling)
-    m_intLine->removeLast(m_tailInt);
-  QList<QPointF> intPoints;
-  m_tailInt = pointsOf(series, first, last, true, intPoints);
-  m_intLine->append(intPoints);
-}
-
-void GraphWidget::setIntegrationValue(int id)
-{
-  id = qMax(0, id);
-  if (id == m_intValueId)
+  if (hold == this->hold())
     return;
-  m_intValueId = id;
-  // the curve on the main value's axis until its value says otherwise
-  integralOnAxis(m_yAxis);
-  rebuildSeries();
+  cancelRefresh();
+  QcpPlotBase::setHold(hold);
+  // what came meanwhile shows when it is released
+  if (!hold)
+    refreshPlot();
 }
 
-void GraphWidget::integralOnAxis(QAbstractAxis *axis)
+void GraphWidget::clear()
 {
-  m_intLine->setAxes({ m_xAxis, axis });
-  for (QAbstractAxis *a : m_intPoints->attachedAxes())
-    if (a != m_xAxis && a != axis)
-      m_intPoints->detachAxis(a);
-  if (!m_intPoints->attachedAxes().contains(axis))
-    m_intPoints->attachAxis(axis);
+  cancelRefresh();
+  m_dirty = true;
+  refreshPlot();
 }
 
-void GraphWidget::onAppended(bool shifted)
+void GraphWidget::refreshNow()
 {
-  const RawPoint &p = m_store->series().last();
-
-  // "All": the window grows once the recording fills it. The new window
-  // rebuilds the series with this reading in it: then it must not be
-  // appended again
-  // A window much longer than what there is (Live starts with All, the
-  // window from the settings) comes down to it.
-  const int rebuilds = m_rebuilds;
-  const qint64 recorded = m_store->duration() - m_store->origin();
-  const qint64 window = qint64(m_windowSeconds) * 1000;
-  if (m_followAll && (recorded >= window || window > 2 * qMax<qint64>(10000, recorded)))
-    requestAll(true);
-  const bool rebuilt = m_rebuilds != rebuilds;
-  {
-    // the scroll bar's own move of the axis would come once more below
-    const QSignalBlocker block(scrollbar);
-    updateScrollRange();
-  }
-  // a full store, Live or a recording seen at its end: the window moves on
-  // with what it keeps
-  if (m_store->origin() > 0 || m_store->state() == RecordingStore::Live || following())
-  {
-    updateXAxisRange();
-    updateMarkPositions();
-  }
-
-  const bool resFlag = m_autoScale && m_mainShown && growScale(p.value, m_scaleMin, m_scaleMax);
-
-  if (shifted || bucketSize() != m_bucket)
-    rebuildSeries();
-  else if (!rebuilt)
-    appendToSeries();
-
-  if (resFlag)
-  {
-    setYRange(m_scaleMin, m_scaleMax);
-    updateThresholdLinePositions();
-  }
-  else if (m_referenceKind == RefMean || m_referenceKind == RefMin || m_referenceKind == RefMax)
-    updateReferenceLine();
-  if (m_cursorT[0] >= 0 || m_cursorT[1] >= 0)
-    updateTimeCursors();
-  updateEnvelope();
+  cancelRefresh();
+  refreshPlot();
 }
 
-void GraphWidget::rebuildExtras()
+void GraphWidget::resizeEvent(QResizeEvent *event)
 {
-  const int n = m_store->extraCount();
-  // the units: the main value's on the left; on the right axes the units of
-  // the lowest values in others (by number, not by which came first), their
-  // newest series - a value with the axis chosen has the say there first,
-  // in any unit. The integrated value has its axis also while it is hidden
-  const QString main = leftUnit();
-  QMap<int, QString> units;   // the values on an axis, by number: their newest unit
-  for (int i = 0; i < n; ++i)
-  {
-    const RecordingSeries &s = m_store->extra(i);
-    const bool onAxis = m_shownValues.contains(s.id) || (m_intValueId > 0 && s.id == m_intValueId);
-    if (onAxis && !s.unit.isEmpty())
-      units[s.id] = s.unit;
-  }
-  for (SideAxis &a : m_right)
-    a.unit.clear();
-  for (auto it = units.cbegin(); it != units.cend(); ++it)
-    if (const int side = sideOf(valueAxis(it.key())); side > 0 && m_right[size_t(side - 1)].unit.isEmpty())
-      m_right[size_t(side - 1)].unit = it.value();
-  for (auto it = units.cbegin(); it != units.cend(); ++it)
-  {
-    if (valueAxis(it.key()) != AxisAuto || it.value() == main || it.value() == m_right[0].unit
-        || it.value() == m_right[1].unit)
-      continue;
-    for (SideAxis &a : m_right)
-      if (a.unit.isEmpty())
-      {
-        a.unit = it.value();
-        break;
-      }
-  }
+  QcpPlotBase::resizeEvent(event);
+  layoutStats();
+  scheduleRefresh();   // another width: other buckets
+}
 
-  while (int(m_extraCurves.size()) < n)
-  {
-    ExtraCurve c;
-    c.series = new QLineSeries();
-    m_chart->addSeries(c.series);
-    c.series->attachAxis(m_xAxis);
-    c.series->attachAxis(m_yAxis);
-    c.line = std::make_unique<GapLine>(c.series);
-    m_extraCurves.push_back(std::move(c));
-  }
+qint64 GraphWidget::bucketNow() const
+{
+  if (!m_store)
+    return 1;
+  const qint64 shown = qMin<qint64>(qint64(m_windowSeconds) * 1000, m_store->duration() - m_store->origin());
+  const int width = m_plot->axisRect()->width();
+  return SeriesDecimator::bucketSize(shown, width > 0 ? width : this->width());
+}
 
-  resetSideScales();
-  bool leftGrew = false;
-  for (int i = 0; i < int(m_extraCurves.size()); ++i)
+void GraphWidget::rebuildPoints()
+{
+  m_dirty = false;
+  m_bucket = bucketNow();
+  for (Curve &c : m_curves)
+    rebuildCurve(c);
+  assignAxes();
+  for (const Curve &c : std::as_const(m_curves))
   {
-    ExtraCurve &c = m_extraCurves[size_t(i)];
-    c.line->clear();
-    c.points.clear();
-    c.tail = 0;
-    if (i >= n)
-    {
-      c.shown = false;
-      c.line->setVisible(false);
-      continue;
-    }
-    const RecordingSeries &s = m_store->extra(i);
-    // a series without a unit yet (only gaps) goes with the main one
-    // the axis chosen, on Auto the first one that has its unit
-    const ValueAxis axis = valueAxis(s.id);
-    auto fits = [&](int side)
-    {
-      if (axis != AxisAuto && sideOf(axis) != side)
-        return false;
-      return side == 0 ? s.unit.isEmpty() || s.unit == main
-                       : !s.unit.isEmpty() && s.unit == m_right[size_t(side - 1)].unit;
-    };
-    c.side = axis != AxisAuto ? sideOf(axis) : fits(0) ? 0 : fits(1) ? 1 : fits(2) ? 2 : 0;
-    const bool fitted = fits(c.side);
-    c.shown = m_shownValues.contains(s.id) && fitted;
-    c.line->setAxes({ m_xAxis, yAxisOf(fitted ? c.side : 0) });
-    c.line->setPen(extraPen(s.id));
-    c.line->setVisible(c.shown);
-    if (!c.shown)
-    {
-      // a right axis also scales a hidden value integrated there
-      if (fitted && c.side > 0 && s.id == m_intValueId)
-        for (int j = 0; j < s.count(); ++j)
-          if (std::isfinite(s.at(j).value))
-            growSide(c.side, s.at(j).value);
-      continue;
-    }
-    QList<QPointF> points;
-    const int count = s.count();
-    for (int first = 0; first < count;)
-    {
-      const qint64 end = (s.at(first).t / m_bucket + 1) * m_bucket;
-      const int last = qMin(s.lowerBound(end), count) - 1;
-      c.tail = pointsOf(s, first, last, false, points);
-      first = last + 1;
-    }
-    c.line->replace(points);
-    c.points = points;
-    for (const QPointF &p : std::as_const(points))
-      if (std::isfinite(p.y()))
-      {
-        if (c.side > 0)
-          growSide(c.side, p.y());
-        else if (m_autoScale)
-          leftGrew = growScale(p.y(), m_scaleMin, m_scaleMax) || leftGrew;
-      }
+    c.graph->setVisible(c.axis >= 0);
+    c.graph->setValueAxis(m_axes.at(qMax(0, c.axis)).axis);
   }
-  // the other meters' values: the left axis in its unit, the right one if free
-  leftGrew = rebuildOtherCurves() || leftGrew;
-  if (leftGrew)
-  {
-    setYRange(m_scaleMin, m_scaleMax);
-    updateThresholdLinePositions();
-  }
-  updateRightAxis();
+  styleCurves();
   updateLegend();
-  updateMinimapValue();
-  if (m_intValueId != 0)
-    rebuildOtherIntegral();
 }
 
-// The integration curve of another value than the main one: its series in
-// turn (a gap between them), on the axis the value is on.
-void GraphWidget::rebuildOtherIntegral()
+// The series of the value one after the other (a second display that went
+// from Hz to % began a new one), a gap between them, on the graph's time.
+void GraphWidget::rebuildCurve(Curve &curve)
 {
+  curve.points.clear();
+  curve.tail = 0;
+  curve.newest = nullptr;
+  curve.unit.clear();
+  curve.unitless = false;
+  curve.label.clear();
+  if (!curve.store || !m_store)
+    return;
+  const QList<const RecordingSeries *> parts = seriesOf(curve);
+  if (parts.isEmpty())
+    return;
+  curve.newest = parts.last();
+  // the newest series names the unit; a loaded file's main value has only the store's
+  for (const RecordingSeries *s : parts)
+    if (!s->unit.isEmpty())
+      curve.unit = s->unit;
+  if (curve.unit.isEmpty() && curve.value.id == 0)
+    curve.unit = curve.store->unit();
+  curve.label = curveName(*curve.newest, curve.unit);
+  curve.shift = curve.store == m_store ? 0 : m_store->offsetOf(*curve.store) / 1000.0;
   QList<QPointF> points;
-  QAbstractAxis *axis = m_yAxis;
-  m_tailInt = 0;
-  for (int i = 0; i < m_store->extraCount(); ++i)
+  for (const RecordingSeries *s : parts)
   {
-    const RecordingSeries &s = m_store->extra(i);
-    if (s.id != m_intValueId || s.isEmpty())
+    if (s->isEmpty())
       continue;
-    if (i < int(m_extraCurves.size()) && m_extraCurves[size_t(i)].side > 0)
-      axis = yAxisOf(m_extraCurves[size_t(i)].side);
-    if (!m_showIntegration)
-      continue;
-    if (!points.isEmpty())
-      points.append(QPointF(s.first().t / 1000.0, qQNaN()));
-    for (int first = 0; first < s.count();)
+    if (!curve.points.isEmpty())
+      curve.points.append(QPointF(s->first().t / 1000.0 + curve.shift, qQNaN()));
+    points.clear();
+    curve.tail = SeriesDecimator::append(*s, 0, s->count() - 1, m_bucket, points, decimation(curve, *s));
+    for (const QPointF &p : std::as_const(points))
+      curve.points.append(QPointF(p.x() + curve.shift, p.y()));
+  }
+  curve.unitless = curve.unit.isEmpty() && !curve.points.isEmpty();
+}
+
+SeriesDecimator::Options GraphWidget::decimation(const Curve &curve, const RecordingSeries &series) const
+{
+  SeriesDecimator::Options options;
+  if (m_outliers.active())
+    options.hidden = [rule = m_outliers, unit = curve.unit, &series](int i) { return GraphOutliers::isOutlier(rule, series, i, unit); };
+  return options;
+}
+
+void GraphWidget::appendTail(Curve &curve, const RecordingSeries &series)
+{
+  const int last = series.count() - 1;
+  const int first = SeriesDecimator::bucketStart(series, last, m_bucket);
+  // A spike is one only with the reading after it: the reading before the
+  // newest, drawn already in an earlier bucket, is an outlier now - the
+  // curve anew with the next picture. Rare: only when one turns up.
+  if (m_outliers.active() && last - 1 >= 0 && last - 1 < first && GraphOutliers::isOutlier(m_outliers, series, last - 1, curve.unit))
+  {
+    m_dirty = true;
+    return;
+  }
+  // the bucket was there before this reading: its points go for the new ones
+  if (first < last)
+    curve.points.remove(curve.points.size() - curve.tail, curve.tail);
+  QList<QPointF> points;
+  curve.tail = SeriesDecimator::pointsOf(series, first, last, points, decimation(curve, series));
+  for (const QPointF &p : std::as_const(points))
+    curve.points.append(QPointF(p.x() + curve.shift, p.y()));
+}
+
+void GraphWidget::mainAppended(RecordingStore *store, bool shifted)
+{
+  // older readings went, or all is to be built anyway: with the next picture
+  if (!shifted && !m_dirty)
+    for (Curve &c : m_curves)
     {
-      const qint64 end = (s.at(first).t / m_bucket + 1) * m_bucket;
-      const int last = qMin(s.lowerBound(end), s.count()) - 1;
-      m_tailInt = pointsOf(s, first, last, true, points);
-      first = last + 1;
+      if (c.store != store || c.value.id != 0)
+        continue;
+      // the first reading names the unit, and with it the axis
+      if ((c.unit.isEmpty() && !c.unitless) || c.newest != &store->series())
+        m_dirty = true;
+      else
+        appendTail(c, store->series());
+    }
+  else
+    m_dirty = true;
+  scheduleRefresh();
+}
+
+void GraphWidget::extraAppended(RecordingStore *store, int index)
+{
+  if (!m_dirty && index >= 0 && index < store->extraCount())
+  {
+    const RecordingSeries &series = store->extra(index);
+    for (Curve &c : m_curves)
+    {
+      if (c.store != store || c.value.id != series.id || c.value.id == 0)
+        continue;
+      // a series that began, or one without a unit yet: all anew
+      if (c.newest != &series || (c.unit.isEmpty() && !c.unitless) || c.unit != series.unit)
+        m_dirty = true;
+      else
+        appendTail(c, series);
     }
   }
-  integralOnAxis(axis);
-  m_intLine->setMarkers(intPointsShown() ? m_intPoints : nullptr);
-  m_intLine->replace(points);
-  updateThresholdLinePositions();   // the integration threshold on that axis
+  scheduleRefresh();
 }
 
-void GraphWidget::onExtraAppended(int i)
+void GraphWidget::storeChanged()
 {
-  if (i >= int(m_extraCurves.size()))
-  {
-    rebuildExtras();
+  m_dirty = true;
+  scheduleRefresh();
+}
+
+void GraphWidget::refreshPlot()
+{
+  if (m_followAll)
+    fitAll(true);   // before the buckets: they follow the window
+  if (m_dirty || bucketNow() != m_bucket)
+    rebuildPoints();
+  double from = 0, to = 0;
+  updateAxes(from, to);
+  drawCurves(from, to);
+  updateOverview();
+  updateLevels();
+  updateCursors();
+  scheduleStats();
+  scheduleOutlierCount();
+  updateScrollBar();
+  updateTimeBar();
+  m_plot->replot(QCustomPlot::rpQueuedReplot);
+}
+
+void GraphWidget::redraw()
+{
+  if (hold())
     return;
-  }
-  if (bucketSize() != m_bucket)
+  cancelRefresh();
+  refreshPlot();
+}
+
+// The points of the time shown and one on either side, so the lines run to
+// the edges; the rest of the recording is not handed to the plot.
+void GraphWidget::drawCurves(double from, double to)
+{
+  const auto byTime = [](const QPointF &p, double t) { return p.x() < t; };
+  QVector<double> x, y;
+  const double width = m_plot->axisRect()->width();
+  for (Curve &c : m_curves)
   {
-    rebuildSeries();   // sets the bucket, then rebuildExtras()
-    return;
+    x.clear();
+    y.clear();
+    c.banded = false;
+    if (c.axis >= 0)
+    {
+      // more readings than columns: a band says the same and costs less than
+      // the zigzag (updateOverview()). The readings, not the points thinned
+      // to the columns: those are never many more than the columns.
+      int readings = 0;
+      for (const RecordingSeries *s : seriesOf(c))
+        readings += s->lowerBound(qint64((to - c.shift) * 1000)) - s->lowerBound(qint64((from - c.shift) * 1000));
+      c.banded = width > 0 && readings > width * GraphBand::kDensePoints
+                 && turnsIn(c, from, to) * GraphBand::kTurnColumns > width;
+    }
+    if (c.axis >= 0 && !c.banded)
+    {
+      auto begin = std::lower_bound(c.points.cbegin(), c.points.cend(), from, byTime);
+      auto end = std::lower_bound(begin, c.points.cend(), to, byTime);
+      if (begin != c.points.cbegin())
+        --begin;
+      if (end != c.points.cend())
+        ++end;
+      const double factor = m_axes.at(c.axis).factor;
+      x.reserve(end - begin);
+      y.reserve(end - begin);
+      for (auto it = begin; it != end; ++it)
+      {
+        x.append(it->x());
+        y.append(it->y() / factor);
+      }
+    }
+    styleDensity(c, int(x.size()));
+    c.graph->setData(x, y, true);
   }
-  ExtraCurve &c = m_extraCurves[size_t(i)];
-  const RecordingSeries &s = m_store->extra(i);
-  const int count = s.count();
-  // as appendToSeries(): a new bucket adds its points, one still filling
-  // replaces them
-  const qint64 begin = s.at(count - 1).t / m_bucket * m_bucket;
-  const int first = qMin(count - 1, s.lowerBound(begin));
-  // the integration curve of this value
-  if (s.id == m_intValueId && m_showIntegration)
-    appendIntegral(s, first, count - 1, first != count - 1);
-  if (!c.shown)
-  {
-    const double v = s.last().value;
-    if (c.side > 0 && s.id == m_intValueId && std::isfinite(v) && growSide(c.side, v))
-      updateRightAxis();
-    return;
-  }
-  if (first != count - 1)
-  {
-    c.line->removeLast(c.tail);
-    c.points.resize(qMax<qsizetype>(0, c.points.size() - c.tail));
-  }
+}
+
+// One entry per curve drawn; one curve alone needs none. With several meters
+// their names come first and go when it gets narrow.
+void GraphWidget::updateLegend()
+{
+  QList<GraphLegend::Entry> entries;
+  QSet<QString> sources;
+  for (const Curve &c : std::as_const(m_curves))
+    sources.insert(c.value.source);
+  if (m_curves.size() > 1)
+    for (int i = 0; i < m_curves.size(); ++i)
+    {
+      const Curve &c = m_curves.at(i);
+      if (c.axis < 0)
+        continue;
+      const QString unit = SiPrefix::displayText(c.unit);
+      const QString label = c.label.isEmpty() ? c.meter : c.label;
+      const QString full = sources.size() > 1 && !c.meter.isEmpty() && !c.label.isEmpty() ? c.meter + " · " + c.label : label;
+      entries.append({ curvePen(i), { full, label, label, unit.isEmpty() ? label : unit } });
+    }
+  m_timeBar->setLegend(entries, m_look.theme.labels);
+}
+
+QList<QPointF> GraphWidget::curvePoints(int i) const
+{
+  return m_curves.value(i).points;
+}
+
+QList<QPointF> GraphWidget::drawnPoints(int i) const
+{
   QList<QPointF> points;
-  c.tail = pointsOf(s, first, count - 1, false, points);
-  c.line->append(points);
-  c.points.append(points);
-  const double v = s.last().value;
-  bool grew = false;
-  if (std::isfinite(v) && c.side > 0)
-  {
-    if (growSide(c.side, v))
-      updateRightAxis();
-  }
-  else if (std::isfinite(v) && m_autoScale && growScale(v, m_scaleMin, m_scaleMax))
-  {
-    setYRange(m_scaleMin, m_scaleMax);
-    updateThresholdLinePositions();
-    grew = true;   // the reference line and the band with it
-  }
-  // what follows the value of the left axis, as onAppended() for the main one
-  if (s.id == referenceId() && c.side == 0 && !grew)
-  {
-    if (m_referenceKind == RefMean || m_referenceKind == RefMin || m_referenceKind == RefMax)
-      updateReferenceLine();
-    updateEnvelope();
-  }
-  if (m_cursorT[0] >= 0 || m_cursorT[1] >= 0)
-    updateTimeCursors();
+  if (i < 0 || i >= m_curves.size())
+    return points;
+  const QCPGraph *graph = m_curves.at(i).graph;
+  for (auto it = graph->data()->constBegin(); it != graph->data()->constEnd(); ++it)
+    points.append(QPointF(it->key, it->value));
+  return points;
 }
 
-// A style for each value, by its number, so curves on top of each other are
-// all seen and a value keeps its look when another is hidden: value 2
-// dashed, 3 dotted, 4 dash-dot; a little thinner than the main value, drawn
-// on top of it.
-Qt::PenStyle GraphWidget::valueStyle(int id)
+int GraphWidget::curveAxis(int i) const
 {
-  switch (id)
-  {
-    case 0:  return Qt::SolidLine;
-    case 1:  return Qt::DashLine;
-    case 2:  return Qt::DotLine;
-    default: return Qt::DashDotLine;
-  }
+  return i >= 0 && i < m_curves.size() ? m_curves.at(i).axis : -1;
 }
 
-QPen GraphWidget::extraPen(int id) const
-{
-  return QPen(extraColor(id), qMax(1.0, m_lineWidth * 0.75), valueStyle(id), Qt::RoundCap, Qt::RoundJoin);
-}
 
 QString GraphWidget::legendText() const
 {
-  return m_legend && m_legend->isVisible() ? m_legend->text() : QString();
+  return m_timeBar->legendText();
 }
 
-void GraphWidget::updateLegend()
+// The turns of the curve in the time shown, of at least kTurnPixels on its
+// axis: a zigzag has one every few columns, a smooth curve two a period.
+int GraphWidget::turnsIn(const Curve &curve, double from, double to) const
 {
-  if (!m_legend)
-    return;
-  // one entry per value, its newest series; only with more than the main one
-  QList<GraphLegend::Entry> entries;
-  QSet<int> seen;
-  for (int i = m_store->extraCount() - 1; i >= 0; --i)
-  {
-    const RecordingSeries &s = m_store->extra(i);
-    if (seen.contains(s.id) || i >= int(m_extraCurves.size()) || !m_extraCurves[size_t(i)].shown)
-      continue;
-    seen.insert(s.id);
-    entries.prepend({ extraPen(s.id), curveName(s, s.unit) });
-  }
-  for (int i = 0; i < int(m_otherCurves.size()); ++i)
-    if (m_otherCurves[size_t(i)].shown)
-      entries.append({ otherPen(i), m_otherCurves[size_t(i)].name });
-  // the main value alone needs none; without it, the axis does not say which
-  if (entries.isEmpty() && m_mainShown)
-  {
-    m_legend->hide();
-    return;
-  }
-  if (m_mainShown)
-    entries.prepend({ QPen(dataColor(), m_lineWidth, penStyle(m_lineMode)), curveName(m_store->series(), m_store->unit()) });
-  if (entries.isEmpty())
-  {
-    m_legend->hide();
-    return;
-  }
-  const QColor ink = m_xLabelColor.isValid() ? m_xLabelColor : palette().color(QPalette::WindowText);
-  m_legend->setEntries(entries, ink);
-  // top left inside the plot, below the state ("LIVE", "REC")
-  const QPoint topLeft = m_chartView->mapFromScene(m_chart->plotArea().topLeft());
-  const int below = m_stateLabel && m_stateLabel->isVisible() ? m_stateLabel->height() : 0;
-  m_legend->move(topLeft.x() + 6, topLeft.y() + 4 + below);
-  m_legend->show();
-  m_legend->raise();
-}
-
-void GraphWidget::setValueShown(int id, bool shown)
-{
-  if (id == 0)
-  {
-    // back on the left: the others there move over (automatic), those
-    // with the left axis chosen in another unit go off
-    if (shown == m_mainShown)
-      return;
-    if (shown)
-      makeRoom(0, AxisLeft, true);
-    m_mainShown = shown;
-  }
-  else if (shown == m_shownValues.contains(id))
-    return;
-  else if (shown)
-  {
-    if (valueAxis(id) != AxisAuto)
-      makeRoom(id, valueAxis(id));
-    m_shownValues.insert(id);
-  }
-  else
-    m_shownValues.remove(id);
-  refreshValues();
-}
-
-void GraphWidget::setValueAxis(int id, ValueAxis axis)
-{
-  if (id <= 0 || axis == valueAxis(id))
-    return;
-  if (axis == AxisAuto)
-    m_valueAxes.remove(id);
-  else
-  {
-    if (m_shownValues.contains(id))
-      makeRoom(id, axis);
-    m_valueAxes[id] = axis;
-  }
-  refreshValues();
-}
-
-QString GraphWidget::valueUnitOf(int id) const
-{
-  if (id <= 0)
-    return m_store->unit();
-  for (int i = m_store->extraCount() - 1; i >= 0; --i)
-    if (m_store->extra(i).id == id && !m_store->extra(i).unit.isEmpty())
-      return m_store->extra(i).unit;
-  return QString();
-}
-
-bool GraphWidget::valueDrawn(int id) const
-{
-  if (id <= 0)
-    return m_mainShown;
-  for (int i = 0; i < m_store->extraCount() && i < int(m_extraCurves.size()); ++i)
-    if (m_store->extra(i).id == id && m_extraCurves[size_t(i)].shown)
-      return true;
-  return false;
-}
-
-int GraphWidget::minimapValue() const
-{
-  const int left = referenceId();
-  if (left >= 0)
-    return left;
-  int lowest = -1;
-  for (int i = 0; i < m_store->extraCount() && i < int(m_extraCurves.size()); ++i)
-    if (m_extraCurves[size_t(i)].shown && (lowest < 0 || m_store->extra(i).id < lowest))
-      lowest = m_store->extra(i).id;
-  return qMax(0, lowest);
-}
-
-void GraphWidget::updateMinimapValue()
-{
-  if (!m_minimap)
-    return;
-  // another meter's value on the left axis: from its store, on its time
-  if (const int other = referenceId() < 0 ? referenceOther() : -1; other >= 0)
-  {
-    const OtherCurve &c = m_otherCurves[size_t(other)];
-    m_minimapShift = m_store->offsetOf(*c.store);
-    m_minimap->setStore(c.store);
-    m_minimap->setValue(c.value.id);
-    m_minimap->setCurveColor(otherColor(other));
-  }
-  else
-  {
-    const int id = minimapValue();
-    m_minimapShift = 0;
-    m_minimap->setStore(m_store);
-    m_minimap->setValue(id);
-    m_minimap->setCurveColor(valueColor(id));
-  }
-  updateMinimapView();
-}
-
-GraphWidget::ValueAxis GraphWidget::valueSide(int id) const
-{
-  if (id <= 0)
-    return m_mainShown ? AxisLeft : AxisAuto;
-  for (int i = m_store->extraCount() - 1; i >= 0; --i)
-    if (i < int(m_extraCurves.size()) && m_store->extra(i).id == id && m_extraCurves[size_t(i)].shown)
-      return axisOfSide(m_extraCurves[size_t(i)].side);
-  return AxisAuto;
-}
-
-QColor GraphWidget::sideColor(int side) const
-{
-  int lowest = INT_MAX;
-  for (int i = 0; m_store && i < m_store->extraCount() && i < int(m_extraCurves.size()); ++i)
-    if (m_extraCurves[size_t(i)].shown && m_extraCurves[size_t(i)].side == side)
-      lowest = qMin(lowest, m_store->extra(i).id);
-  if (lowest != INT_MAX)
-    return valueColor(lowest);
-  for (int i = 0; i < int(m_otherCurves.size()); ++i)
-    if (m_otherCurves[size_t(i)].shown && m_otherCurves[size_t(i)].side == side)
-      return otherColor(i);
-  return m_stateColor.isValid() ? m_stateColor : m_xAxis->labelsBrush().color();
-}
-
-void GraphWidget::makeRoom(int id, ValueAxis axis, bool chosenOnly)
-{
-  const QString unit = valueUnitOf(id);
-  const int side = sideOf(axis);
-  const QString taken = side == 0 ? leftUnit() : m_right[size_t(side - 1)].unit;
-  if (unit.isEmpty() || taken.isEmpty() || taken == unit)
-    return;
-  // a curve on Auto pushed off a right axis moves to the other one when that
-  // is free (or freed by this value) or has its unit already
-  const int other = side == 1 ? 2 : 1;
-  bool otherTaken = false;
-  for (int i = 0; side > 0 && i < m_store->extraCount() && i < int(m_extraCurves.size()); ++i)
-    if (m_store->extra(i).id != id && m_extraCurves[size_t(i)].shown && m_extraCurves[size_t(i)].side == other)
-      otherTaken = true;
-  for (const OtherCurve &c : m_otherCurves)
-    otherTaken = otherTaken || (side > 0 && c.shown && c.side == other);
-  const QString otherUnit = m_right[size_t(other - 1)].unit;
-  // the values drawn on that axis now, in the other unit
-  QStringList names;
-  auto off = [&](int value, const QString &name)
-  {
-    names << name;
-    if (value == 0)
-      m_mainShown = false;
-    else
-      m_shownValues.remove(value);
-  };
-  if (axis == AxisLeft && m_mainShown && id != 0)
-    off(0, curveName(m_store->series(), m_store->unit()));
-  QSet<int> done;
-  for (int i = 0; i < m_store->extraCount() && i < int(m_extraCurves.size()); ++i)
-  {
-    const RecordingSeries &s = m_store->extra(i);
-    const ExtraCurve &c = m_extraCurves[size_t(i)];
-    if (s.id == id || done.contains(s.id) || !c.shown || c.side != side || s.unit == unit
-        || (chosenOnly && valueAxis(s.id) != axis))
-      continue;
-    done.insert(s.id);
-    if (side > 0 && valueAxis(s.id) == AxisAuto && (!otherTaken || otherUnit == s.unit))
-    {
-      otherTaken = true;   // it takes the other axis
-      continue;
-    }
-    off(s.id, curveName(s, s.unit));
-  }
-  static const char *const sides[] = { QT_TR_NOOP("left"), QT_TR_NOOP("right"), QT_TR_NOOP("third") };
-  if (!names.isEmpty())
-    Q_EMIT notice(tr("%1 off: the %2 axis shows %3 now")
-                    .arg(names.join(QStringLiteral(", ")), tr(sides[side]), SiPrefix::displayText(unit)));
-}
-
-void GraphWidget::refreshValues()
-{
-  // the view afresh: the left unit may be another one now
-  resetSideScales();
-  updateSeriesAppearance();   // the curves, then rebuildExtras()
-  showUnit();
-  if (m_autoScale)
-    setScale(true, m_includeZero, m_scaleMin, m_scaleMax);
-  updateYLabels();
-  updateThresholdLinesVisibility();
-  updateReferenceLine();
-  updateEnvelope();
-  updateTimeCursors();
-}
-
-int GraphWidget::referenceId() const
-{
-  if (m_mainShown)
+  const Axis &axis = m_axes.at(curve.axis);
+  const double span = axis.axis->range().size() * axis.factor;
+  const double height = m_plot->axisRect()->height();
+  if (!(span > 0) || height <= 0)
     return 0;
-  // the lowest with the left axis chosen, else the lowest left to the graph;
-  // those on the right are not the left axis'
-  int lowest = -1;
-  bool fixed = false;
-  for (int i = 0; i < m_store->extraCount(); ++i)
+  const double perUnit = height / span;   // pixels per base unit
+  const auto byTime = [](const QPointF &p, double t) { return p.x() < t; };
+  auto it = std::lower_bound(curve.points.cbegin(), curve.points.cend(), from, byTime);
+  const auto end = std::lower_bound(it, curve.points.cend(), to, byTime);
+  int turns = 0, direction = 0;
+  double extreme = qQNaN();
+  for (; it != end; ++it)
   {
-    const RecordingSeries &s = m_store->extra(i);
-    const ValueAxis axis = valueAxis(s.id);
-    if (!m_shownValues.contains(s.id) || s.unit.isEmpty() || sideOf(axis) > 0 || (fixed && axis != AxisLeft))
-      continue;
-    if (lowest < 0 || s.id < lowest || (axis == AxisLeft && !fixed))
+    const double y = it->y() * perUnit;
+    if (std::isnan(y))
     {
-      lowest = s.id;
-      fixed = axis == AxisLeft;
+      extreme = qQNaN();   // a gap: a new start after it
+      direction = 0;
+      continue;
+    }
+    if (std::isnan(extreme))
+      extreme = y;
+    else if (direction == 0)
+    {
+      if (std::abs(y - extreme) >= GraphBand::kTurnPixels)
+      {
+        direction = y > extreme ? 1 : -1;
+        extreme = y;
+      }
+    }
+    else if ((y - extreme) * direction > 0)
+      extreme = y;   // on in the same direction
+    else if (std::abs(y - extreme) >= GraphBand::kTurnPixels)
+    {
+      ++turns;
+      direction = -direction;
+      extreme = y;
     }
   }
-  return lowest;
-}
-
-ValueRef GraphWidget::leftValue() const
-{
-  if (const int id = referenceId(); id >= 0)
-    return ValueRef(id, m_baseSource);
-  const int other = referenceOther();
-  return other >= 0 ? m_otherCurves[size_t(other)].value : ValueRef(-1);
-}
-
-int GraphWidget::referenceOther() const
-{
-  if (referenceId() >= 0)
-    return -1;
-  for (int i = 0; i < int(m_otherCurves.size()); ++i)
-    if (m_otherCurves[size_t(i)].shown && m_otherCurves[size_t(i)].side == 0 && m_otherCurves[size_t(i)].store)
-      return i;
-  return -1;
-}
-
-QString GraphWidget::leftUnit() const
-{
-  // the newest series of the value has the say; nothing of this meter on
-  // the left: another meter's value there
-  const int id = referenceId();
-  if (const int other = id < 0 ? referenceOther() : -1; other >= 0 && !m_otherCurves[size_t(other)].unit.isEmpty())
-    return m_otherCurves[size_t(other)].unit;
-  for (int i = m_store->extraCount() - 1; id > 0 && i >= 0; --i)
-    if (m_store->extra(i).id == id && !m_store->extra(i).unit.isEmpty())
-      return m_store->extra(i).unit;
-  return m_store->unit();
-}
-
-QList<QPointF> GraphWidget::referencePoints() const
-{
-  const int id = referenceId();
-  if (id == 0)
-    return m_curvePts;
-  if (const int other = id < 0 ? referenceOther() : -1; other >= 0)
-    return m_otherCurves[size_t(other)].points;
-  // the curves of the value on the left (Hz, then % again: two), in time,
-  // a gap between them
-  QList<const QList<QPointF> *> parts;
-  for (int i = 0; id > 0 && i < m_store->extraCount() && i < int(m_extraCurves.size()); ++i)
-  {
-    const ExtraCurve &c = m_extraCurves[size_t(i)];
-    if (m_store->extra(i).id == id && c.shown && c.side == 0 && !c.points.isEmpty())
-      parts << &c.points;
-  }
-  if (parts.size() == 1)
-    return *parts.first();
-  std::sort(parts.begin(), parts.end(), [](auto a, auto b) { return a->first().x() < b->first().x(); });
-  QList<QPointF> out;
-  for (const QList<QPointF> *p : std::as_const(parts))
-  {
-    if (!out.isEmpty())
-      out << QPointF(p->first().x(), qQNaN());
-    out += *p;
-  }
-  return out;
-}
-
-QList<int> GraphWidget::shownValues() const
-{
-  QList<int> ids(m_shownValues.cbegin(), m_shownValues.cend());
-  std::sort(ids.begin(), ids.end());
-  return ids;
+  return turns;
 }

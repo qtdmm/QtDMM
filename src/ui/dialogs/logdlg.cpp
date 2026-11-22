@@ -1,6 +1,7 @@
 // Copyright (c) 2026 The QtDMM developers
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "ui/dialogs/logdlg.h"
+#include "core/projectfolder.h"
 
 #include <QAbstractTableModel>
 #include <QCheckBox>
@@ -255,8 +256,8 @@ void LogDlg::search(bool forward)
 void LogDlg::exportLog()
 {
   const QString dir = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
-  const QString file = QFileDialog::getSaveFileName(this, tr("Export log"),
-                                                    QDir(dir).filePath(fileName(QDate::currentDate())),
+  const ProjectFolder::Proposal where(QDir(dir).filePath(fileName(QDate::currentDate())), ProjectFolder::Documents);
+  const QString file = QFileDialog::getSaveFileName(this, tr("Export log"), where.path(),
                                                     tr("Log files (*.log)"));
   if (file.isEmpty())
     return;

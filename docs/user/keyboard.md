@@ -33,10 +33,11 @@ handbook window are fixed.
 | Space | Record: start the recorder, or stop it when it is running |
 | Ctrl+Del | Clear the recording |
 | F4 | Reset the min/max memory of all devices |
-| Ctrl+E | Export the recording as CSV |
+| Ctrl+E | Export dialog: recording, readings table or picture, format and place |
 | Ctrl+I | Import a CSV file |
 | Ctrl+P | Print the graph |
 | Ctrl+Shift+C | Copy the graph as an image to the clipboard |
+| Ctrl+Shift+N | A note in the graph at the newest reading |
 | F8 | Settings |
 | Shift+F8 | Settings of the device chosen in the sidebar |
 | Ctrl+F8 | Settings, Recording page |
@@ -55,6 +56,7 @@ handbook window are fixed.
 | Ctrl+3 | Show / hide the graph |
 | Ctrl+4 | Show / hide the readings table |
 | Ctrl+5 | Show / hide the Poincaré plot |
+| Ctrl+6 | Show / hide the project |
 | F10 | Hide / show the title bars of the windows |
 | Ctrl+M | Hide / show the toolbar |
 | F11 | Full screen on / off |
@@ -62,7 +64,7 @@ handbook window are fixed.
 ## Graph
 
 The zoom shortcuts work anywhere in the main window; the plain keys
-(`+`, `-`, `0`, arrows, Home, End) after a click into the graph.
+(`+`, `-`, `0`, arrows, Home, End, N) after a click into the graph.
 
 | Input | Effect |
 |---|---|
@@ -78,10 +80,14 @@ The zoom shortcuts work anywhere in the main window; the plain keys
 | Left button drag on the reference line | Move it; it snaps to 0, the mean, minimum and maximum shown and the alarm thresholds |
 | Click / Shift+click | Time cursor A / B: time and value, with both the span, the change, the mean and the integral |
 | Left button drag on a time cursor | Move it |
+| Shift + left button drag | Zoom on the frame: its time and the height on every axis; **Undo zoom** in the menu goes back (Esc while dragging: no zoom) |
 | Esc | Remove the time cursors |
+| N | A note at the newest reading |
+| Click on a flag | Its title, time and text |
+| Double click on a flag | Edit its title and text |
 | Drag in the overview | Move the window; while live it pauses there, a click at the right end follows again |
 | Drag a bracket of the overview | Widen or narrow the window |
-| Right button | Menu: connect, start/stop, clear, configure, copy image, colours, reference line, time cursors, overview, min/max band, import/export |
+| Right button, Shift+F10 or the menu key | Menu: start/stop, new graph, sources, axes and their ranges, colours, patterned lines, reference line, outliers, View (overview, min/max band, meter states, crossings, statistics), time cursors, undo zoom, load recording, cursor A or B here, note here or now, hold, reset, configure, copy image, export, print; on a flag: edit note, remove mark. From the keyboard it opens where the mouse is over the graph, else in its middle |
 
 ## Readings table
 

@@ -101,13 +101,14 @@ Bluetooth meter, the other open devices - is under `QTDMM:`.
 |---|---|
 | `QTDMM:RECord?` | what the graph does - `LIVE`, `REC` (recording), `VIEW` (a recording that ended, a file) or `IDLE` (nothing yet) - with the seconds it spans, the number of readings and the unit: `REC,42.250,170,"V"` |
 | `QTDMM:RECord:DATA? [<n>\|MAX][,(@list)]` | the last n readings of the graph (100 without n, at most 10000) as CSV in an IEEE 488.2 block: a line `seconds,value`, then one line per reading, seconds since the start; `9.9E+37` for an overload, `nan` for a gap. A channel list picks the value (1 the main value, the default): `QTDMM:RECord:DATA? 500,(@2)`; with several the lines begin with the channel, `channel,seconds,value`, the last n of each, one channel after the other (each value has its own times) |
-| `QTDMM:RECord:SAVE "<file>"[,RAW]` | writes the recording that ended to `<file>` in the folder *Documents/QtDMM* (made when missing), as the export does: on the grid of the sample time, or every reading with `RAW`; CSV without a suffix, `.xlsx` and `.ods` by theirs. A file name only, no folder (error -257), and no file that exists already (-257); -221 while it records or with nothing recorded, -250 when it cannot be written. Its columns are named after the meter (`Sim A: value` ...); at the meter that led the recording the devices that recorded with it follow (`Sim B: value` ...). The recording counts as saved then, theirs too |
+| `QTDMM:RECord:SAVE "<file>"[,RAW]` | writes the recording that ended to `<file>` in the folder *Documents/QtDMM* (made when missing), as the export does: on the grid of the sample time, or every reading with `RAW`; CSV without a suffix, `.xlsx`, `.ods` the QtDMM recording `.qtdmm-rec` (with the marks) the CSV for LabPlot `.labplot.csv` (numbers only) and the LabPlot project `.lml` (with a graph) by theirs. A file name only, no folder (error -257), and no file that exists already (-257); -221 while it records or with nothing recorded, -250 when it cannot be written. Its columns are named after the meter (`Sim A: value` ...); at the meter that led the recording the devices that recorded with it follow (`Sim B: value` ...). The recording counts as saved then, theirs too |
 | `QTDMM:ALARm?` | the number of alarms raised (acknowledged ones too) |
 | `QTDMM:ALARm:LIST?` | every alarm with its state: `"Over 5 V",RAIS,"Low",OFF` - `OFF`, `PEND` (the condition holds, not yet for its minimum duration), `RAIS`, `ACKN` |
 | `QTDMM:ALARm:ACKnowledge` | acknowledges the alarms, as the banner's button |
 | `QTDMM:LIMit:VERDict?` | the PASS/FAIL test's verdict on the last reading of its value: `PASS`, `HI`, `LO`, `NONE` (off, not connected, no number) |
 | `QTDMM:LIMit:COUNt?` | the verdicts counted since the last reset: `<pass>,<high>,<low>` |
-| `QTDMM:MARK "text"` | a mark at the newest reading, in the graph and the readings table (`SCPI` without text) |
+| `QTDMM:MARK "title"[,"text"]` | a note at the newest reading: in the graph with its title on the flag and the text on a click, and a mark in the readings table (`SCPI` without title) |
+| `QTDMM:NODE:RESet` | sets an integral (or another calculated value with a state) to 0; error -241 for a device |
 | `QTDMM:KEY "hold"`, `QTDMM:KEY:CATalog?` | presses a key of the meter (UNI-T UT60BT, UT61B+/D+/E+, UT161, UT202BT, the iENV meters UT333BT, UT353BT, UT363BT, UT383BT, the ZOTEK and OWON Bluetooth meters), lists the keys it has: `"SELECT1","RANGE","AUTO","HOLD",...`; a meter without keys gives error -241, a key not sent (the meter not connected) -240 |
 | `QTDMM:CHANnel:CATalog?` | the channels of `READ? (@n)`: number, what it measures and unit - `1,"carbon_dioxide","ppm",2,"temperature","C"`; empty strings before a channel's first reading |
 | `QTDMM:DEVice:CATalog?` | the entries of *My devices*: id, name, and 1 when this QtDMM has it open - `"ab12cd34","UT61E bench",1,"9f3e01aa","SmartShunt",0` |
@@ -121,7 +122,7 @@ $ lxi scpi -a localhost -p 5025 'QTDMM:MARK "load on"'
 
 The commands that change something - `INPut`, `INITiate`, `ABORt`,
 `CALCulate:AVERage:CLEar`, `CALCulate:LIMit`, `QTDMM:ALARm:ACKnowledge`, `QTDMM:MARK`,
-`QTDMM:KEY`, `QTDMM:DEVice:OPEN`/`CLOSe`, `QTDMM:RECord:SAVE` - work for every client that reaches the port. With *This
+`QTDMM:KEY`, `QTDMM:NODE:RESet`, `QTDMM:DEVice:OPEN`/`CLOSe`, `QTDMM:RECord:SAVE` - work for every client that reaches the port. With *This
 computer only* that is a program on this computer; open the port to the
 network only where everyone on it may do so.
 

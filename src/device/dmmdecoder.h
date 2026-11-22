@@ -5,7 +5,10 @@
 #include <QByteArray>
 #include <optional>
 
+#include "core/battery.h"
 #include "device/frameformat.h"
+
+struct Reading;
 
 /// Base class of all protocol decoders and registry of the supported meters.
 ///
@@ -74,6 +77,7 @@ public:
     bool hold = false;    ///< the meter's HOLD annunciator is on
     bool showBar = false; ///< the meter shows a bar graph for this reading
     bool lowBat = false;  ///< low battery indicator
+    Battery battery = Battery::Unknown; ///< the battery's level, when the meter sends one (batteryOfLevel()); else lowBat says Low
     QString error;    ///< non-empty when the frame was understood but flagged an error
     qint64 received = 0;     ///< Sample::now() when the frame came in (FrameReader); 0 = not known, take the time of adapting
     qint64 receivedWall = 0; ///< the same as ms since the epoch
@@ -114,9 +118,16 @@ public:
     QString sigrokExe{""};             ///< sigrok-cli path for SigrokDevice, empty otherwise
     QString sigrokDriver{""};          ///< libsigrok driver of a bench meter read through sigrok-cli ("scpi-dmm"), empty otherwise
     int   channels{0};                 ///< values the meter shows (main + secondary displays); 0 = framesPerReading
+    QStringList units;                 ///< the user's unit of values 1..4 (unitsChoosable()), empty entry = automatic
 
     /// How many values the meter has: channels, or one per frame.
     int valueCount() const { return channels > 0 ? channels : framesPerReading; }
+    /// The baud rate is the user's, the model's only the default: a
+    /// microcontroller's sketch sets its own (Serial.begin()).
+    bool baudChoosable() const { return protocol == FrameFormat::TextLines; }
+    /// The unit of each value is the user's choice too: a microcontroller
+    /// sends numbers and names, the unit only when its label is one.
+    bool unitsChoosable() const { return protocol == FrameFormat::TextLines; }
   };
 
   explicit DmmDecoder(FrameFormat::DataFormat df);
@@ -125,6 +136,10 @@ public:
   /// is everything received since the previous one (a line protocol whose
   /// checkFormat() fires on the terminator, see DecoderFlukeQM).
   virtual size_t                     getPacketLength() = 0;
+  /// Cuts frames by time instead: a pause of this many ms after the last
+  /// byte ends a frame (DecoderRawCapture, a meter whose protocol is not
+  /// known). 0, the default: getPacketLength() and checkFormat() cut them.
+  virtual int                        frameGapMs() const { return 0; }
   /// Frame delimiter: true when the ring buffer @p data, whose newest byte is
   /// at index @p len, ends with a complete frame (typically checked on the
   /// terminator and the high nibbles of the VC820-style byte counters).
@@ -154,6 +169,11 @@ public:
   /// keyNames()); empty when the meter has no such key, cannot be
   /// remote-controlled or the key needs a reading first.
   virtual QByteArray keyRequest(const QString &key) const { Q_UNUSED(key); return QByteArray(); }
+  /// Bytes to send once, asked after every decode(): a meter that wants a
+  /// setting written back after reading it (the UT325F switches its live
+  /// stream on in a settings block). MeterConnection sends them like a key,
+  /// not as a poll that is repeated. Empty: nothing to send.
+  virtual QByteArray takeCommand() { return QByteArray(); }
   /// True when the meter @p model (DMMInfo::model) has the key @p key. By
   /// default every key keyRequest() knows; a decoder for several meters with
   /// different keypads, or one whose keys need a reading first (a unit key
@@ -163,12 +183,22 @@ public:
     Q_UNUSED(model);
     return !keyRequest(key).isEmpty();
   }
+  /// False when the meter @p model ignores the key @p key with @p reading on
+  /// its display (a mode where the key does nothing): ControlBar greys it
+  /// out. By default every key works.
+  virtual bool keyWorks(const QString &key, const QString &model, const Reading &reading) const
+  {
+    Q_UNUSED(key);
+    Q_UNUSED(model);
+    Q_UNUSED(reading);
+    return true;
+  }
   /// Every key name keyRequest() may know, in the order of the meters' keypads.
   static QStringList keyNames()
   {
     return { "fn_v", "fn_a", "fn_a_long", "fn_ohm", "fn_ncv", "fn_ncv_long", "fn_auto", "fn_cap", "fn_diode",
-             "fn_hz", "select1", "select2", "range", "auto", "hold", "rel", "zero", "minmax", "minmax_off", "peak",
-             "peak_off", "max", "min", "avg", "unit", "unit2", "weighting", "lamp" };
+             "fn_hz", "select1", "select2", "lpf", "range", "auto", "hold", "autohold", "rel", "zero", "minmax", "minmax_off", "peak",
+             "peak_off", "inrush", "max", "min", "avg", "unit", "unit2", "weighting", "lamp" };
   }
   /// True when the meter tells which model of the protocol it is: its frames
   /// (ZotekBLE: the layout, modelsFromFrame()) or its device information
@@ -177,6 +207,10 @@ public:
   /// The meter chosen (DMMInfo::model), for a protocol whose models read a
   /// frame differently; set before the first frame, from the GUI thread.
   virtual void setModel(const QString &model) { Q_UNUSED(model); }
+  /// The units the user chose for values 1..4 (DMMInfo::units), for a
+  /// protocol whose units are the user's (unitsChoosable()); set like
+  /// setModel(). An empty entry: the decoder's own unit.
+  virtual void setUnits(const QStringList &units) { Q_UNUSED(units); }
   /// The models (DMMInfo::name) a meter that sent @p frame can be; empty
   /// when the frames do not tell (tellsModel()).
   virtual QStringList modelsFromFrame(const QByteArray &frame) const { Q_UNUSED(frame); return {}; }
@@ -231,13 +265,17 @@ protected:
   /// the decimal point at @p commaPos, sets unit to prefix+baseUnit and dval
   /// to the value scaled by the prefix. See the DmmChannel contract.
   void formatResultValue(int commaPos, const QString& prefix, const QString& baseUnit);
+  /// For decoders without a checksum, at the end of decode(): a function or
+  /// range byte they do not know set no unit. That frame is damaged, its digits
+  /// are no reading; without this they would count as a valid 0.
+  void noValueWithoutUnit();
   /// Tests bit @p bit (0 = LSB) of byte @p byte of the frame.
   bool bit(const QByteArray &data, int byte, int bit) const;
   /// Copies the ASCII digits data[first..last] into a string, with an
   /// optional leading minus.
   QString makeValue(const QByteArray &data, int first, int last, bool neg=false);
 
-  static std::vector<DMMInfo> *m_configurations;
+  static std::vector<DMMInfo> &configurations();
   DmmResponse m_result;
   FrameFormat::DataFormat m_type;
   QString m_name;

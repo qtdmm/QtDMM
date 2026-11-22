@@ -40,7 +40,7 @@ std::optional<DmmDecoder::DmmResponse> DecoderCyrusTekES51962::decode(const QByt
     m_result.main().special+= "DC";
 
 
-  if (!memcmp(data + 1, "4000", 4) || (data[6] & 1) != 0)
+  if (!memcmp(data.constData() + 1, "4000", 4) || (data[6] & 1) != 0)
     m_result.main().val = "  0L";
 
   // Function
@@ -62,7 +62,6 @@ std::optional<DmmDecoder::DmmResponse> DecoderCyrusTekES51962::decode(const QByt
       }
       break;
     case 0x33:
-      m_result.main().unit = "kOhm";
       switch (data[0]) // Range
       {
         case '0': formatResultValue(3,"","Ohm"); break;
@@ -106,13 +105,13 @@ std::optional<DmmDecoder::DmmResponse> DecoderCyrusTekES51962::decode(const QByt
       }
       break;
     case 0x3b:
-      m_result.main().unit = "V";
       switch (data[0]) // Range
       {
         case '0': formatResultValue(3,"m","V"); break;
         case '1': formatResultValue(1,"","V"); break;
         case '2': formatResultValue(2,"","V"); break;
         case '3': formatResultValue(3,"","V"); break;
+        case '4': formatResultValue(0,"","V"); break;   // 4000 V, UT70B.log
       }
       break;
     case 0x3d:
@@ -134,5 +133,6 @@ std::optional<DmmDecoder::DmmResponse> DecoderCyrusTekES51962::decode(const QByt
       break;
   }
 
+  noValueWithoutUnit();
   return m_result;
 }

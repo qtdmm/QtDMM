@@ -95,6 +95,7 @@ public:
   {
     AnnAuto = 0x001, AnnPeak = 0x002, AnnMax = 0x004, AnnMin = 0x008, AnnAvg = 0x010,
     AnnAc = 0x020, AnnDc = 0x040, AnnDiode = 0x080, AnnContinuity = 0x100, AnnHold = 0x200,
+    AnnBattery = 0x400,   ///< no look has it as a ghost: shown only while the meter tells its battery
     AnnAll = 0x3ff
   };
   /// What the display of a kind of meter has: a bar graph, its annunciators.
@@ -127,6 +128,8 @@ public:
   /// @name Annunciators
   /// @{
   void setHold(bool);
+  /// The battery symbol: off while Unknown, else with 1 (Low) to 3 (Full) bars.
+  void setBattery(Battery battery);
   void setAuto(bool);
   void setManu(bool);
   /// @}
@@ -158,6 +161,12 @@ public:
   /// The device's name on the bezel above the face, like the model name on
   /// an instrument; empty: none, the face takes the room.
   void setCaption(const QString &caption);
+  /// Pixels kept free at the right end of the name (for a button there).
+  void setPlateReserve(double px);
+  /// Where the name is written (widget coordinates); empty without one.
+  QRectF plateBand() const;
+  /// The colour of the name's lettering: the manufacturer's (@p strong) or the model's.
+  QColor plateInk(bool strong) const;
   /// Words in place of the number while there is none ("Waiting for data",
   /// ValueFeed::notice()); empty: the number.
   void setNotice(const QString &notice);
@@ -256,9 +265,11 @@ private:
   int m_primary = 0;   ///< setPrimary()
   std::optional<QList<int>> m_secondaries;   ///< setSecondaries(), unset: the first ones
   bool m_hold = false;
+  Battery m_battery = Battery::Unknown;   ///< setBattery()
   bool m_auto = false;
   bool m_stale = false;
   QString m_caption;   ///< setCaption()
+  double  m_plateReserve = 0;   ///< setPlateReserve()
   QString m_notice;    ///< setNotice()
   bool m_limitOn = false;
   LimitTest::Verdict m_verdict = LimitTest::NoVerdict;

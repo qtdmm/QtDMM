@@ -1,0 +1,91 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 6789def9..365e4f93 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -12,7 +12,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
+ set(CMAKE_AUTOMOC ON)
+ 
+ set(QT_NO_PRIVATE_MODULE_WARNING ON)  # NeoQCP renders through QRhi, which Qt ships as a private API
+-find_package(Qt6 6.7 REQUIRED COMPONENTS Core Gui GuiPrivate Widgets Svg PrintSupport ShaderTools)
++find_package(Qt6 6.7 REQUIRED COMPONENTS Core Gui Widgets Svg PrintSupport ShaderTools)
+ find_package(Python3 REQUIRED COMPONENTS Interpreter)
+ 
+ include(cmake/sources.cmake)
+diff --git a/src/global.h b/src/global.h
+index 367bde79..bcf7f2fa 100644
+--- a/src/global.h
++++ b/src/global.h
+@@ -437,4 +437,12 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QCP::PlottingHints)
+ Q_DECLARE_OPERATORS_FOR_FLAGS(QCP::MarginSides)
+ Q_DECLARE_OPERATORS_FOR_FLAGS(QCP::Interactions)
+ 
++
++// local patch for Qt 6.8 (QImage::flipped is Qt 6.9)
++#include <QImage>
++inline QImage qcpFlipped68(const QImage &image, Qt::Orientations o)
++{
++    return image.mirrored(o.testFlag(Qt::Horizontal), o.testFlag(Qt::Vertical));
++}
++
+ #endif // QCP_GLOBAL_H
+diff --git a/src/items/item-pixmap.cpp b/src/items/item-pixmap.cpp
+index d7ab082f..5f85f164 100644
+--- a/src/items/item-pixmap.cpp
++++ b/src/items/item-pixmap.cpp
+@@ -227,7 +227,7 @@ void QCPItemPixmap::updateScaledPixmap(QRect finalRect, bool flipHorz, bool flip
+                                            mTransformationMode);
+             if (flipHorz || flipVert)
+                 mScaledPixmap
+-                    = QPixmap::fromImage(mScaledPixmap.toImage().flipped(
++                    = QPixmap::fromImage(qcpFlipped68(mScaledPixmap.toImage(), 
+                         QCP::flipOrientations(flipHorz, flipVert)));
+             mScaledPixmap.setDevicePixelRatio(devicePixelRatio);
+         }
+diff --git a/src/layoutelements/layoutelement-colorscale.cpp b/src/layoutelements/layoutelement-colorscale.cpp
+index 6f769243..188ebbcc 100644
+--- a/src/layoutelements/layoutelement-colorscale.cpp
++++ b/src/layoutelements/layoutelement-colorscale.cpp
+@@ -669,7 +669,7 @@ void QCPColorScaleAxisRectPrivate::draw(QCPPainter* painter)
+     }
+ 
+     painter->drawImage(rect().adjusted(0, -1, 0, -1),
+-                       mGradientImage.flipped(QCP::flipOrientations(mirrorHorz, mirrorVert)));
++                       qcpFlipped68(mGradientImage, QCP::flipOrientations(mirrorHorz, mirrorVert)));
+     QCPAxisRect::draw(painter);
+ }
+ 
+diff --git a/src/painting/colormap-renderer.cpp b/src/painting/colormap-renderer.cpp
+index d9fb104c..1a5aaeb6 100644
+--- a/src/painting/colormap-renderer.cpp
++++ b/src/painting/colormap-renderer.cpp
+@@ -164,7 +164,7 @@ const QImage& QCPColormapRenderer::flippedMapImage(Qt::Orientations flips)
+ {
+     if (mFlippedMapImage.isNull() || flips != mLastFlips)
+     {
+-        mFlippedMapImage = flips ? mMapImage.flipped(flips) : mMapImage;
++        mFlippedMapImage = flips ? qcpFlipped68(mMapImage, flips) : mMapImage;
+         mLastFlips = flips;
+     }
+     return mFlippedMapImage;
+diff --git a/src/plottables/plottable-colormap.cpp b/src/plottables/plottable-colormap.cpp
+index 72812047..a45158f0 100644
+--- a/src/plottables/plottable-colormap.cpp
++++ b/src/plottables/plottable-colormap.cpp
+@@ -978,7 +978,7 @@ void QCPColorMap::updateLegendIcon(Qt::TransformationMode transformMode, const Q
+                            ->rangeReversed();
+         bool mirrorY = (valueAxis()->orientation() == Qt::Vertical ? valueAxis() : keyAxis())
+                            ->rangeReversed();
+-        mLegendIcon = QPixmap::fromImage(mMapImage.flipped(QCP::flipOrientations(mirrorX, mirrorY)))
++        mLegendIcon = QPixmap::fromImage(qcpFlipped68(mMapImage, QCP::flipOrientations(mirrorX, mirrorY)))
+                           .scaled(thumbSize, Qt::KeepAspectRatio, transformMode);
+     }
+ }
+@@ -1270,7 +1270,7 @@ void QCPColorMap::draw(QCPPainter* painter)
+                   .normalized();
+         localPainter->setClipRect(tightClipRect, Qt::IntersectClip);
+     }
+-    localPainter->drawImage(imageRect, mMapImage.flipped(QCP::flipOrientations(mirrorX, mirrorY)));
++    localPainter->drawImage(imageRect, qcpFlipped68(mMapImage, QCP::flipOrientations(mirrorX, mirrorY)));
+     if (mTightBoundary)
+         localPainter->setClipRegion(clipBackup);
+     localPainter->setRenderHint(QPainter::SmoothPixmapTransform, smoothBackup);

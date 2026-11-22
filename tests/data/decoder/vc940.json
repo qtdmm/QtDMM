@@ -949,6 +949,274 @@
         "hold": false,
         "port": "current.ac.dc"
       }
+    },
+    {
+      "comment": "[dmm-tools 6874b45, UT71D capture (dmm-tools #22)] 'AC 00.000 A'",
+      "hex": "30 30 30 30 30 31 39 31 30 0D 0A",
+      "expected": {
+        "dval": 0.0,
+        "unit": "A",
+        "range": "MANU",
+        "hold": false,
+        "port": "current.ac"
+      }
+    },
+    {
+      "comment": "[dmm-tools 6874b45, UT71D capture (dmm-tools #22)] 'AC+DC 0.0436 V AUTO'",
+      "hex": "30 30 34 33 36 31 32 33 31 0D 0A",
+      "expected": {
+        "dval": 0.0436,
+        "unit": "V",
+        "range": "AUTO",
+        "hold": false,
+        "port": "voltage.ac.dc"
+      }
+    },
+    {
+      "comment": "[dmm-tools 6874b45, UT71D capture (dmm-tools #22)] 'AC 00.000 mA AUTO'",
+      "hex": "30 30 30 30 30 30 38 31 31 0D 0A",
+      "expected": {
+        "dval": 0.0,
+        "unit": "mA",
+        "range": "AUTO",
+        "hold": false,
+        "port": "current.ac"
+      }
+    },
+    {
+      "comment": "[dmm-tools 6874b45, UT71D capture (dmm-tools #22)] 'AC 000.00 µA AUTO'",
+      "hex": "30 30 30 30 30 30 37 31 31 0D 0A",
+      "expected": {
+        "dval": 0.0,
+        "unit": "uA",
+        "range": "AUTO",
+        "hold": false,
+        "port": "current.ac"
+      }
+    },
+    {
+      "comment": "[dmm-tools 6874b45, UT71D capture (dmm-tools #22)] 'AC 0.0897 V AUTO'",
+      "hex": "30 30 38 39 37 31 32 31 31 0D 0A",
+      "expected": {
+        "dval": 0.0897,
+        "unit": "V",
+        "range": "AUTO",
+        "hold": false,
+        "port": "voltage.ac"
+      }
+    },
+    {
+      "comment": "[dmm-tools 6874b45, UT71D capture (dmm-tools #22)] '00.007 nF AUTO'",
+      "hex": "30 30 30 30 37 31 35 30 31 0D 0A",
+      "expected": {
+        "dval": 7.000000000000001e-12,
+        "unit": "nF",
+        "range": "AUTO",
+        "hold": false,
+        "port": "capacitance"
+      }
+    },
+    {
+      "comment": "[dmm-tools 6874b45, UT71D capture (dmm-tools #22)] '0.L Ohm continuity'",
+      "hex": "3A 3A 30 3C 3A 30 3A 30 30 0D 0A",
+      "expected": {
+        "unit": "Ohm",
+        "range": "MANU",
+        "hold": false,
+        "port": "continuity",
+        "val": "OL"
+      }
+    },
+    {
+      "comment": "[dmm-tools 6874b45, UT71D capture (dmm-tools #22)] 'DC 00.000 A'",
+      "hex": "30 30 30 30 30 31 39 30 30 0D 0A",
+      "expected": {
+        "dval": 0.0,
+        "unit": "A",
+        "range": "MANU",
+        "hold": false,
+        "port": "current.dc"
+      }
+    },
+    {
+      "comment": "[dmm-tools 6874b45, UT71D capture (dmm-tools #22)] 'DC 00.000 mA AUTO'",
+      "hex": "30 30 30 30 30 30 38 30 31 0D 0A",
+      "expected": {
+        "dval": 0.0,
+        "unit": "mA",
+        "range": "AUTO",
+        "hold": false,
+        "port": "current.dc"
+      }
+    },
+    {
+      "comment": "[dmm-tools 6874b45, UT71D capture (dmm-tools #22)] 'DC 364.99 mV'",
+      "hex": "33 36 34 39 39 30 33 30 30 0D 0A",
+      "expected": {
+        "dval": 0.36499000000000004,
+        "unit": "mV",
+        "range": "MANU",
+        "hold": false,
+        "port": "voltage.dc"
+      }
+    },
+    {
+      "comment": "[dmm-tools 6874b45, UT71D capture (dmm-tools #22)] 'DC 000.00 µA AUTO'",
+      "hex": "30 30 30 30 30 30 37 30 31 0D 0A",
+      "expected": {
+        "dval": 0.0,
+        "unit": "uA",
+        "range": "AUTO",
+        "hold": false,
+        "port": "current.dc"
+      }
+    },
+    {
+      "comment": "[dmm-tools 6874b45, UT71D capture (dmm-tools #22)] 'DC 0.000 V AUTO (4000 counts)'",
+      "hex": "30 30 30 30 3A 31 31 30 31 0D 0A",
+      "expected": {
+        "dval": 0.0,
+        "unit": "V",
+        "range": "AUTO",
+        "hold": false,
+        "port": "voltage.dc"
+      }
+    },
+    {
+      "comment": "[dmm-tools 6874b45, UT71D capture (dmm-tools #22)] 'DC 0.0001 V AUTO'",
+      "hex": "30 30 30 30 31 31 31 30 31 0D 0A",
+      "expected": {
+        "dval": 0.0001,
+        "unit": "V",
+        "range": "AUTO",
+        "hold": false,
+        "port": "voltage.dc"
+      }
+    },
+    {
+      "comment": "[dmm-tools 6874b45, UT71D capture (dmm-tools #22)] 'DC -1.2928 V AUTO'",
+      "hex": "31 32 39 32 38 31 31 30 35 0D 0A",
+      "expected": {
+        "dval": -1.2928,
+        "unit": "V",
+        "range": "AUTO",
+        "hold": false,
+        "port": "voltage.dc"
+      }
+    },
+    {
+      "comment": "[dmm-tools 6874b45, UT71D capture (dmm-tools #22)] 'DC -0.0020 V MAN REL'",
+      "hex": "30 30 30 32 30 31 31 30 36 0D 0A",
+      "expected": {
+        "dval": -0.002,
+        "unit": "V",
+        "range": "MANU",
+        "hold": false,
+        "port": "voltage.dc"
+      }
+    },
+    {
+      "comment": "[dmm-tools 6874b45, UT71D capture (dmm-tools #22)] '.0L V diode'",
+      "hex": "3A 3A 30 3C 3A 30 3B 30 30 0D 0A",
+      "expected": {
+        "unit": "V",
+        "range": "MANU",
+        "hold": false,
+        "port": "voltage.diode",
+        "val": "OL"
+      }
+    },
+    {
+      "comment": "[dmm-tools 6874b45, UT71D capture (dmm-tools #22)] '000.00 % duty AUTO'",
+      "hex": "30 30 30 30 30 30 3C 30 35 0D 0A",
+      "expected": {
+        "dval": 0.0,
+        "unit": "%",
+        "range": "AUTO",
+        "hold": false,
+        "port": "duty_cycle"
+      }
+    },
+    {
+      "comment": "[dmm-tools 6874b45, UT71D capture (dmm-tools #22)] '00.000 Hz AUTO'",
+      "hex": "30 30 30 30 30 30 3C 30 31 0D 0A",
+      "expected": {
+        "dval": 0.0,
+        "unit": "Hz",
+        "range": "AUTO",
+        "hold": false,
+        "port": "frequency"
+      }
+    },
+    {
+      "comment": "[dmm-tools 6874b45, UT71D capture (dmm-tools #22)] 'L0. % 4-20 mA loop'",
+      "hex": "3A 3C 30 3A 3A 30 3F 30 30 0D 0A",
+      "expected": {
+        "unit": "%",
+        "range": "MANU",
+        "hold": false,
+        "val": "LO",
+        "noValue": true,
+        "port": "duty_cycle",
+        "special": "PC"
+      }
+    },
+    {
+      "comment": "[dmm-tools 5bbf178 (unit test)] 'L0. % 4-20 mA loop, still AC'",
+      "hex": "3A 3C 30 3A 3A 30 3F 31 30 0D 0A",
+      "expected": {
+        "unit": "%",
+        "range": "MANU",
+        "hold": false,
+        "val": "LO",
+        "noValue": true,
+        "port": "duty_cycle",
+        "special": "PC"
+      }
+    },
+    {
+      "comment": "[dmm-tools 6874b45, UT71D capture (dmm-tools #22)] '2.7015 MOhm AUTO'",
+      "hex": "32 37 30 31 35 35 34 30 31 0D 0A",
+      "expected": {
+        "dval": 2701500.0,
+        "unit": "MOhm",
+        "range": "AUTO",
+        "hold": false,
+        "port": "resistance"
+      }
+    },
+    {
+      "comment": "[dmm-tools 6874b45, UT71D capture (dmm-tools #22)] '.0L MOhm AUTO'",
+      "hex": "3A 3A 30 3C 3A 36 34 30 31 0D 0A",
+      "expected": {
+        "unit": "MOhm",
+        "range": "AUTO",
+        "hold": false,
+        "port": "resistance",
+        "val": "OL"
+      }
+    },
+    {
+      "comment": "[dmm-tools 6874b45, UT71D capture (dmm-tools #22)] '0026.4 °C'",
+      "hex": "30 30 32 36 34 30 36 30 30 0D 0A",
+      "expected": {
+        "dval": 26.4,
+        "unit": "C",
+        "range": "MANU",
+        "hold": false,
+        "port": "temperature"
+      }
+    },
+    {
+      "comment": "[dmm-tools 6874b45, UT71D capture (dmm-tools #22)] '0079.5 °F'",
+      "hex": "30 30 37 39 35 30 3D 30 30 0D 0A",
+      "expected": {
+        "dval": 79.5,
+        "unit": "dF",
+        "range": "MANU",
+        "hold": false,
+        "port": "temperature"
+      }
     }
   ]
 }

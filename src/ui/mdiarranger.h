@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
 
+#include <functional>
+
 #include <QList>
 #include <QObject>
 #include <QPointer>
@@ -106,6 +108,10 @@ public:
   /// The table column in the automatic modes is at least this wide (still
   /// at most half the area): the width the main window grew by for it.
   void setTableWidth(int width);
+  /// Held: arranges nothing and leaves the windows where they are (the
+  /// start page over them, the project's window placed beside it by hand);
+  /// let go, it arranges again.
+  void setHeld(bool held);
 
   /// The tree worth keeping as text over the windows' object names - in
   /// Fixed mode, or once the user changed an automatic layout; empty
@@ -125,14 +131,18 @@ public:
   /// The rule tree for the windows with @p roles inside @p area (viewport
   /// coordinates); @p left: the instruments on the left instead of on top.
   static Node ruleTree(const QRect &area, const QList<Role> &roles, bool left, int headerHeight,
-                       int tableMinWidth = 260, const QList<Fit> &fits = {});
+                       int tableMinWidth = 260, const QList<Fit> &fits = {}, int graphMinWidth = 0);
+  /// The least a cell may get along an orientation (minExtent()).
+  using MinOf = std::function<int(const Node &node, Qt::Orientation orient)>;
   /// Lays @p node out in @p area: the rect of each leaf (indexed by leaf)
-  /// and, if wanted, the dividers.
+  /// and, if wanted, the dividers. With @p minOf no cell below its least
+  /// size: the others give way, or the cells go beyond the area.
   static void applyTree(const Node &node, const QRect &area, QList<QRect> &rects,
-                        std::vector<Divider> *dividers = nullptr);
+                        std::vector<Divider> *dividers = nullptr, const MinOf &minOf = {});
   /// The rects the automatic mode gives the windows with @p roles.
   static QList<QRect> layout(const QRect &area, const QList<Role> &roles, int headerHeight,
-                             int tableMinWidth = 260, bool left = false, const QList<Fit> &fits = {});
+                             int tableMinWidth = 260, bool left = false, const QList<Fit> &fits = {},
+                             int graphMinWidth = 0);
   /// A tree from hand-placed rects: cut where the windows (with @p tolerance)
   /// leave a gap, the cut in the middle of the gap. Leaves are the indices
   /// of @p rects.
@@ -173,6 +183,12 @@ private:
   QList<int> visibleWindows() const;
   int headerHeight() const;
   int tableMinWidth(const QList<int> &visible) const;
+  /// The widest minimum of the graphs shown (their row of buttons), 0 without one.
+  int graphMinWidth(const QList<int> &visible) const;
+  /// The least a cell may get along @p orient: its windows' minimum sizes
+  /// (a heatmap's colour scale, a graph's buttons), side by side summed with
+  /// the gaps, one above the other the largest.
+  int minExtent(const Node &node, Qt::Orientation orient) const;
   QRect cellArea() const;
   Node *nodeAt(const std::vector<int> &path);
   // drag to swap
@@ -194,6 +210,7 @@ private:
   QList<Fit> m_fits;               ///< parallel to m_order
   bool m_pending = false;
   int m_tableWidth = 0;            ///< see setTableWidth()
+  bool m_held = false;             ///< see setHeld()
 
   Node m_root;
   bool m_hasTree = false;

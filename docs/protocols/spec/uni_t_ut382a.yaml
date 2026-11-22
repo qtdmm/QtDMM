@@ -1,0 +1,58 @@
+protocol: UniTUT382A
+decoder: src/device/decoders/uni_t_ut382a.cpp
+devices: [Uni-Trend UT382A]
+frames_per_reading: 1
+sources:
+  - "ablage/uni-t/uni-t-protocols/ut382a.md (notes decompiled from UNI-T's iENV app: transport §1, frame §3, commands §4, received frames and modes §5)"
+
+# UNI-T UT382A luxmeter over Bluetooth LE, the iENV service FF12 (write
+# FF01, notify FF02); not the UT382 with its cable. QtDMM asks the status
+# (AA BB 04 40 00 01 A9) on connecting and polls with "start data"
+# (AA BB 04 39 00 01 A2). The live frame (command 1, 19 bytes):
+#
+#   0-1   AA BB          header
+#   2     length         0x10: command + payload + 2 check bytes
+#   3     command        1
+#   4     mode           0 reading, 1/2/3 MAX/MIN/AVG (inferred), 4 zero
+#                        calibration, 5 countdown, 6 difference, 7 integral,
+#                        8 luminous intensity
+#   5     flags          bit 7 overload, bit 6 error, bit 5 sign (mode 6),
+#                        bits 0-2 battery level
+#   6-9   float32 BE     value 1 in lux
+#   10-13 float32 BE     value 2 (mode 7: lx·h)
+#   14-16 h, m, s        elapsed time
+#   17-18 check          (the app checks none it gets)
+#
+# The unit fc (lux x 0.093) and HOLD come from the settings (2) and status
+# (0x0C) frames; cd needs the distance of a start frame (4). Decimals as
+# the app shows them: two below 100, one below 1000, else none. SYNTHETIC
+# vectors: built from that layout, no capture of a meter exists.
+vectors:
+  - source_line: "523.4 lx (synthetic)"
+    bytes: AA BB 10 01 00 04 44 02 D9 9A 00 00 00 00 00 00 00 03 33
+    reading: {value: "523.4", unit: "lx"}
+    expect: {val: "523.4", battery: full}
+  - source_line: "523.4 lx, battery 1 (synthetic)"
+    bytes: AA BB 10 01 00 01 44 02 D9 9A 00 00 00 00 00 00 00 03 30
+    reading: {value: "523.4", unit: "lx"}
+    expect: {val: "523.4", battery: low}
+  - source_line: "MAX 85.27 lx (synthetic)"
+    bytes: AA BB 10 01 01 04 42 AA 8A 3D 00 00 00 00 00 00 00 03 2E
+    reading: {value: "85.27", unit: "lx"}
+    expect: {val: "85.27"}
+  - source_line: "difference -12.50 lx, sign bit set (synthetic)"
+    bytes: AA BB 10 01 06 24 41 48 00 00 00 00 00 00 00 00 00 02 29
+    reading: {value: "-12.50", unit: "lx"}
+    expect: {val: "-12.50"}
+  - source_line: "integral 1235 lx, 56.78 lx·h after 0:12:30 (synthetic)"
+    bytes: AA BB 10 01 07 04 44 9A 53 33 42 63 1E B8 00 0C 1E 04 8A
+    reading: {value: "1235", unit: "lx"}
+    expect: {val: "1235"}
+  - source_line: "overload (synthetic)"
+    bytes: AA BB 10 01 00 84 00 00 00 00 00 00 00 00 00 00 00 01 FA
+    reading: {value: "OL", unit: "lx"}
+    expect: {val: "OL"}
+  - source_line: "luminous intensity without a distance: 250.0 lx (synthetic)"
+    bytes: AA BB 10 01 08 04 43 7A 00 00 00 00 00 00 00 00 00 02 3F
+    reading: {value: "250.0", unit: "lx"}
+    expect: {val: "250.0"}

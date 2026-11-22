@@ -4,9 +4,11 @@
 // WorkspaceFile: version 2 (JSON) written and read back to the same window
 // keys, devices and picture; version 1 (ini) still read; a file of a newer
 // QtDMM or no workspace refused; the keys it does not know kept.
+#include <QBuffer>
 #include <QCoreApplication>
 #include <QDebug>
 #include <QFile>
+#include <QImage>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -124,6 +126,28 @@ int main(int argc, char **argv)
     check(writeText(path("text.qtdmm-workspace"), "hello") && !WorkspaceFile::read(path("text.qtdmm-workspace"), &error),
           "no ini workspace either: " + error);
     check(!WorkspaceFile::read(path("missing.qtdmm-workspace"), &error), "a missing file: " + error);
+  }
+
+  // 4. oversized files and images are refused before they can consume
+  //    unbounded memory when loaded or shown in a tooltip
+  {
+    QString error;
+    check(writeText(path("large.qtdmm-workspace"), QByteArray(33 * 1024 * 1024, ' '))
+            && !WorkspaceFile::read(path("large.qtdmm-workspace"), &error) && !error.isEmpty(),
+          "oversized workspace file is refused: " + error);
+
+    QImage image(5000, 1, QImage::Format_RGB32);
+    QByteArray png;
+    QBuffer buffer(&png);
+    buffer.open(QIODevice::WriteOnly);
+    image.save(&buffer, "PNG");
+    const QJsonObject oversizedThumbnail{ { "format", "qtdmm-workspace" }, { "version", 2 }, { "minReader", 2 },
+                                           { "thumbnail", QString::fromLatin1(png.toBase64()) } };
+    check(writeText(path("large-thumbnail.qtdmm-workspace"),
+                    QJsonDocument(oversizedThumbnail).toJson(QJsonDocument::Compact))
+            && !WorkspaceFile::read(path("large-thumbnail.qtdmm-workspace"), &error)
+            && error.contains("dimensions"),
+          "oversized thumbnail dimensions are refused: " + error);
   }
 
   if (failed)

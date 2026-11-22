@@ -55,7 +55,9 @@ QString prefixFor(Ladder ladder, int range)
     case Hertz:
       return range >= 1 && range <= 3 ? QStringLiteral("k") : range >= 4 && range <= 5 ? QStringLiteral("M") : QString();
     case Henry:
-      return range < 4 ? QStringLiteral("m") : QString();
+      // range 0 the manual's 600 µH row, as the 2020 SDK has it; the 2018
+      // lookup gave m there, a thousand times off (dmm-tools 78a8503)
+      return range == 0 ? QStringLiteral("µ") : range < 4 ? QStringLiteral("m") : QString();
     case Farad:
       return range <= 2 ? QStringLiteral("n") : range <= 5 ? QStringLiteral("µ") : QStringLiteral("m");
     default:

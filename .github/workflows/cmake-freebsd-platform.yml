@@ -28,12 +28,15 @@ jobs:
         usesh: true
         prepare: |
           pkg install -y cmake ninja ccache pkgconf git python3 \
-            qt6-base qt6-serialport qt6-charts qt6-connectivity qt6-multimedia qt6-svg qt6-tools hidapi \
+            qt6-base qt6-serialport qt6-connectivity qt6-multimedia qt6-svg qt6-tools hidapi \
             dejavu fontconfig
         run: |
+          # the checkout is synced into the VM with another owner: without
+          # this git refuses it and the version is "unknown"
+          git config --global --add safe.directory "$PWD"
           # ccache: no cache is kept between runs, but the tests compile many
           # sources again, those come from the cache within the build
           cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           cmake --build build
-          ctest --test-dir build --output-on-failure --timeout 300
+          ctest --test-dir build --output-on-failure --timeout 300 --parallel 4

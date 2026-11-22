@@ -2,7 +2,7 @@
 
 How the QtDMM sources are written. The rules describe the code as it is (measured on 26.2, review R13); where the code is not uniform yet, the rule says which way new code goes. Existing code is not reformatted in bulk: a file follows the rules when it is changed anyway, so `git blame` stays useful.
 
-C++17 and Qt 6. The build with `-DQTDMM_WERROR=ON` has no warnings, and stays so.
+C++20 and Qt 6. The build with `-DQTDMM_WERROR=ON` has no warnings, and stays so.
 
 ## Files
 

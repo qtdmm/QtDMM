@@ -32,7 +32,6 @@
         buildInputs = with pkgs; [
           hidapi
           qt6.qtbase
-          qt6.qtcharts
           qt6.qtconnectivity
           qt6.qtmultimedia
           qt6.qtserialport

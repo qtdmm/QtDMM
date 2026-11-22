@@ -90,11 +90,25 @@ QPair<QString, QString> splitName(const QString &name)
   return { QString(), name };
 }
 
-void paintPlate(QPainter &p, const QRectF &bezel, const QString &text, const Colors &c)
+QRectF plateBand(const QRectF &bezel)
 {
   const QRectF face = faceRect(bezel, true);
-  const QRectF band(face.left() + faceRadius(face), bezel.top() + 1, face.width() - 2 * faceRadius(face),
-                    face.top() - bezel.top() - 1);
+  return QRectF(face.left() + faceRadius(face), bezel.top() + 1, face.width() - 2 * faceRadius(face),
+                face.top() - bezel.top() - 1);
+}
+
+QColor plateInk(const Colors &c, bool strong)
+{
+  const bool light = c.bezelDark.lightness() > 140;
+  if (strong)
+    return light ? QColor(40, 40, 40) : QColor(205, 205, 205);
+  return light ? QColor(85, 85, 85) : QColor(150, 150, 150);
+}
+
+void paintPlate(QPainter &p, const QRectF &bezel, const QString &text, const Colors &c, double reserveRight)
+{
+  // reserveRight: room kept free at the right end (the panel's gear)
+  const QRectF band = plateBand(bezel).adjusted(0, 0, -reserveRight, 0);
   // a device's own name: the manufacturer bold on the left, the model on
   // the right as on the front of an instrument; a name given by the user
   // stays whole. Too narrow for both, the manufacturer goes first.
@@ -114,8 +128,8 @@ void paintPlate(QPainter &p, const QRectF &bezel, const QString &text, const Col
   // the lettering of the metal: light on a dark bezel with a dark edge
   // below, dark on a light one with a light edge
   const bool light = c.bezelDark.lightness() > 140;
-  const QColor ink = light ? QColor(40, 40, 40) : QColor(205, 205, 205);
-  const QColor second = light ? QColor(85, 85, 85) : QColor(150, 150, 150);
+  const QColor ink = plateInk(c, true);
+  const QColor second = plateInk(c, false);
   const QColor edge = light ? QColor(255, 255, 255, 110) : QColor(0, 0, 0, 110);
   auto engrave = [&](const QFont &font, const QString &str, Qt::Alignment align, const QColor &color) {
     p.setFont(font);

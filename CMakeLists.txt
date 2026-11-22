@@ -3,14 +3,14 @@ cmake_minimum_required(VERSION 3.19)
 project(qtdmm VERSION "0.0.0" HOMEPAGE_URL "https://qtdmm.de" LANGUAGES C CXX)
 
 ## main settings
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 set(PROJECT_LICENSE "GPL-3.0-or-later AND LGPL-3.0-or-later")
 set(RESOURCES "${CMAKE_BINARY_DIR}/resources.qrc")
 set(APP_NAME "QtDMM")
 set(APP_ORGANIZATION "QtDMM")
-set(QT_COMPONENTS Widgets SerialPort PrintSupport Test LinguistTools Network Charts Svg)
+set(QT_COMPONENTS Widgets SerialPort PrintSupport Test LinguistTools Network Svg OpenGL)
 
 include( cmake/git_version.cmake )
 
@@ -101,6 +101,16 @@ foreach(file_path IN LISTS SOUND_FILES)
 endforeach()
 set(RES_CONTENT "${RES_CONTENT}    </qresource>\n")
 
+## parts of a LabPlot project (LabPlotProject, assets/labplot/README.md)
+file(GLOB LABPLOT_FILES CONFIGURE_DEPENDS assets/labplot/*.xml)
+list(SORT LABPLOT_FILES)
+set(RES_CONTENT "${RES_CONTENT}    <qresource prefix=\"/labplot\">\n")
+foreach(file_path IN LISTS LABPLOT_FILES)
+	get_filename_component(base_name "${file_path}" NAME)
+	set(RES_CONTENT "${RES_CONTENT}        <file alias=\"${base_name}\">${file_path}</file>\n")
+endforeach()
+set(RES_CONTENT "${RES_CONTENT}    </qresource>\n")
+
 ## specification data of some meters from their manuals (dmm-tools, via
 ## tools/update_device_specs.py) for the Data tab of a device's info
 file(GLOB SPEC_FILES CONFIGURE_DEPENDS assets/specs/*.json)
@@ -165,6 +175,18 @@ if (NOT QTDMM_WITH_BLE)
 endif()
 
 ## AES-128-CTR for the encrypted Victron advertisements (public domain tiny-AES-c)
+## NeoQCP in place of the QCustomPlot in src/3rdparty: a trial, for the XY
+## diagram, the histogram and the heatmap (src/ui/views/qcp.h). NeoQCP draws
+## through Qt's QRhi, always on the GPU: it needs the Qt Shader Tools and Qt's
+## private Gui headers, and without a GPU it costs several times the CPU.
+## "./compile.sh neoqcp" fetches the sources and sets both.
+option(QTDMM_WITH_NEOQCP "Draw the QCustomPlot views with NeoQCP (a trial; needs the Qt Shader Tools)" OFF)
+set(QTDMM_NEOQCP_DIR "${CMAKE_SOURCE_DIR}/.neoqcp" CACHE PATH "The NeoQCP sources, for QTDMM_WITH_NEOQCP")
+if (QTDMM_WITH_NEOQCP)
+	include(cmake/neoqcp.cmake)
+	list(FILTER SRC_FILES EXCLUDE REGEX "3rdparty/qcustomplot/")
+endif()
+
 list(APPEND SRC_FILES src/3rdparty/tiny-aes/aes.c)
 
 ## ZIP writer for the XLSX/ODS export (MIT, miniz). Only deflate and CRC are
@@ -297,8 +319,8 @@ target_link_libraries(qtdmm_core PUBLIC
 	Qt6::SerialPort
 	Qt6::PrintSupport
 	Qt6::Network
-	Qt6::Charts
 	Qt6::Svg
+	Qt6::OpenGL
 	${HIDAPI_TARGET}
 	$<$<BOOL:${QTDMM_WITH_BLE}>:Qt6::Bluetooth>
 	$<$<BOOL:${QTDMM_WITH_MULTIMEDIA}>:Qt6::Multimedia>
@@ -309,6 +331,21 @@ if (QTDMM_WITH_BLE)
 endif()
 if (QTDMM_WITH_MULTIMEDIA)
 	target_compile_definitions(qtdmm_core PUBLIC QTDMM_WITH_MULTIMEDIA)
+endif()
+
+if (QTDMM_WITH_NEOQCP)
+	# its headers as a system's: their warnings are not QtDMM's (QTDMM_WERROR)
+	target_link_libraries(qtdmm_core PUBLIC NeoQCP::NeoQCP)
+	target_include_directories(qtdmm_core SYSTEM PUBLIC $<TARGET_PROPERTY:NeoQCP,INTERFACE_INCLUDE_DIRECTORIES>)
+	target_compile_definitions(qtdmm_core PUBLIC QTDMM_NEOQCP)
+else()
+	# PUBLIC: it changes QCustomPlot's class layout, so every user of the header needs it
+	target_compile_definitions(qtdmm_core PUBLIC QCUSTOMPLOT_USE_OPENGL)
+	# QCustomPlot's OpenGL buffer calls glClear()/glClearColor() itself; Qt6::OpenGL
+	# does not hand the system's GL library on with MSVC
+	if (WIN32)
+		target_link_libraries(qtdmm_core PUBLIC opengl32)
+	endif()
 endif()
 
 add_executable(${PROJECT_NAME}
@@ -330,6 +367,9 @@ option(QTDMM_WERROR "Treat compiler warnings in QtDMM's own code as errors" OFF)
 if(QTDMM_WERROR)
 	# bundled third-party code keeps its warnings; they are not ours to fix
 	set(_third_party src/3rdparty/miniz/miniz.c src/3rdparty/tiny-aes/aes.c)
+	if (NOT QTDMM_WITH_NEOQCP)
+		list(APPEND _third_party src/3rdparty/qcustomplot/qcustomplot.cpp)
+	endif()
 	if(MSVC)
 		set(QTDMM_WARNING_FLAGS /W4 /WX)
 		set_property(SOURCE ${_third_party} APPEND PROPERTY COMPILE_OPTIONS "/WX-")

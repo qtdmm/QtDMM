@@ -22,6 +22,7 @@ std::optional<DmmDecoder::DmmResponse> DecoderCyrusTekES51922::decode(const QByt
   m_result.main().id     = id;
   m_result.showBar = true;
   m_result.hold   = bit(data,11,1);
+  m_result.lowBat = bit(data,7,1);   // status byte: judge, sign, BATT, OL
   m_result.range  = bit(data,10,1) ? "AUTO":"MANU";
   m_result.main().special= bit(data,10,2) ? "AC"  :"DC";
   m_result.main().val    = makeValue(data,1,5, bit(data,7,2));
@@ -142,5 +143,6 @@ std::optional<DmmDecoder::DmmResponse> DecoderCyrusTekES51922::decode(const QByt
     m_result.main().val  = "OL";
     m_result.main().dval = 0;
   }
+  noValueWithoutUnit();
   return m_result;
 }

@@ -262,7 +262,8 @@ int main(int argc, char **argv)
     QStringList marks;
     QObject::connect(&qDev, &ScpiDevice::resetMinMaxRequested, [&] { ++clears; });
     QObject::connect(&qDev, &ScpiDevice::acknowledgeAlarmsRequested, [&] { ++acks; });
-    QObject::connect(&qDev, &ScpiDevice::markRequested, [&](const QString &t) { marks << t; });
+    QObject::connect(&qDev, &ScpiDevice::markRequested, [&](const QString &t, const QString &n)
+                     { marks << (n.isEmpty() ? t : t + '/' + n); });
 
     check(ask(q, "CALC:AVER:MIN?;MAX?;AVER?;COUN?") == "+1.000000E-01;+2.500000E+00;+1.200000E+00;3",
           "CALCulate:AVERage " + ask(q, "CALC:AVER:MIN?;MAX?;AVER?;COUN?"));
@@ -322,6 +323,10 @@ int main(int argc, char **argv)
     q.process("QTDMM:MARK \"x;y\";:QTDMM:MARK 'it''s \"z\"'");
     check(marks == QStringList({ "a;b", "x;y", "it's \"z\"" }) && ask(q, "SYST:ERR?") == "0,\"No error\"",
           "a ; in single or double quotes stays in the string " + marks.join('|'));
+    marks.clear();
+    q.process("QTDMM:MARK \"Load on\",\"R1 changed, 10 k\"");
+    q.process("QTDMM:MARK 'a,b'");
+    check(marks == QStringList({ "Load on/R1 changed, 10 k", "a,b" }), "MARK with a text, a comma in quotes " + marks.join('|'));
 
     check(ask(q, "QTDMM:KEY:CATalog?") == "\"RANGE\",\"HOLD\"", "KEY:CATalog?");
     q.process("QTDMM:KEY \"HOLD\"");

@@ -51,6 +51,15 @@ int main(int argc, char **argv)
           && !keys.contains("Graph/sample-time"),
         "meter keys: " + QStringList(keys.keys()).join(", "));
 
+  // a simulated meter or calculated value of before without its port line:
+  // its model keeps its keys (they open as a logic node)
+  {
+    const QVariantMap sim = DeviceLibrary::entryKeys({ { "DMM/model", "QtDMM Simulated meter" }, { "DMM/virtual-max", "5" } });
+    const QVariantMap calc = DeviceLibrary::entryKeys({ { "DMM/model", "QtDMM Calculated value" }, { "DMM/calc-expression", "u * i" } });
+    check(sim.value("DMM/virtual-max") == "5" && calc.value("DMM/calc-expression") == "u * i",
+          "an entry of before without its port line keeps its keys");
+  }
+
   // --- 2. the library: add, list, apply into another instance and back ---
   DeviceLibrary lib(dir.path());
   QSignalSpy changed(&lib, &DeviceLibrary::changed);

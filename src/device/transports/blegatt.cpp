@@ -2,6 +2,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "device/transports/blegatt.h"
 #include "device/decoders/brymen_bm78xbt.h"
+#include "device/decoders/uni_t_ut381a.h"
+#include "device/decoders/uni_t_ut117c.h"
+#include "device/decoders/uni_t_ut219pv.h"
+#include "device/decoders/uni_t_ut320i.h"
+#include "device/decoders/uni_t_ut325f.h"
+#include "device/decoders/uni_t_ut382a.h"
 #include "device/transports/ble.h"
 
 #include <QBluetoothAddress>
@@ -88,6 +94,12 @@ std::optional<BleGattDevice::Profile> BleGattDevice::profile(FrameFormat::DataFo
   {
     case FrameFormat::UniTiDMM:
       return Profile{ kIsscService, kIsscNotify, { kIsscWrite, kIsscWriteFallback }, { "UT60BT" } };
+    case FrameFormat::UniTUT117C:
+      // the name UNI-T's app wants exactly; polled, it streams nothing
+      return Profile{ kIsscService, kIsscNotify, { kIsscWrite }, { "UT117C" } };
+    case FrameFormat::UniTUT219PV:
+      // the name UNI-T's app wants exactly; polled, it streams nothing
+      return Profile{ kIsscService, kIsscNotify, { kIsscWrite }, { "UT219PV" } };
     case FrameFormat::UniTUT61Plus:   // UT161 built in; UT61B+/D+/E+ through the UT-D07B adapter
     case FrameFormat::UniTUT181A:     // through the UT-D07B adapter
     case FrameFormat::UniTUT171:      // the UT171B/C through the UT-D07B adapter
@@ -96,6 +108,27 @@ std::optional<BleGattDevice::Profile> BleGattDevice::profile(FrameFormat::DataFo
       // the UT353BT advertises as "UT353BT" (esphome_uni_trend_sound_meter);
       // the UT383BT's name is assumed alike
       return Profile{ kIenvService, kIenvNotify, { kIenvWrite }, { "UT383BT", "UT353BT" } };
+    case FrameFormat::UniTUT381A:
+      // the name UNI-T's app looks for; live frames only after "Start live"
+      // (the app sets the clock and asks the settings first: UNVERIFIED
+      // whether the meter needs that)
+      return Profile{ kIenvService, kIenvNotify, { kIenvWrite }, { "UT381A" }, DecoderUT381A::startLive() };
+    case FrameFormat::UniTUT372D:
+      // the name UNI-T's app looks for; it streams once notifications are on
+      return Profile{ kIenvService, kIenvNotify, { kIenvWrite }, { "UT372D" } };
+    case FrameFormat::UniTUT382A:
+      // the name UNI-T's app looks for; the status first (unit, HOLD), then
+      // the decoder's poll for live frames
+      return Profile{ kIenvService, kIenvNotify, { kIenvWrite }, { "UT382A" }, DecoderUT382A::checkStatus() };
+    case FrameFormat::UniTUT320i:
+      // advertised as "UT320i SN:<serial>"; it pushes once notifications
+      // are on, the settings asked first for the unit it shows
+      return Profile{ kIenvService, kIenvNotify, { kIenvWrite }, { "UT320i" }, DecoderUT320i::settingsRequest() };
+    case FrameFormat::UniTUT325F:
+      // the name UNI-T's app looks for; the panel first, the decoder then
+      // switches the live stream on (takeCommand()). UNVERIFIED: the app
+      // sets the clock before, whether the meter needs it
+      return Profile{ kIenvService, kIenvNotify, { kIenvWrite }, { "UT325F" }, DecoderUT325F::getPanel() };
     case FrameFormat::UniTUT202BT:
       // UNI-T's app asks the name (0x5F) before anything else, and a UT60BT
       // is reported to need it (dmm-tools, UT61 family spec §6.4; our UT60BT
@@ -182,6 +215,7 @@ bool BleGattDevice::open(OpenMode mode)
 
   m_serviceFound = false;
   m_ready = false;
+  m_failed = false;
 
   m_connectTimeout = new QTimer(this);
   m_connectTimeout->setSingleShot(true);
@@ -297,14 +331,15 @@ void BleGattDevice::close()
     m_controller->deleteLater();
     m_controller = nullptr;
   }
-  m_rx.clear();
+  clearBuffer();
   QIODevice::close();
 }
 
 void BleGattDevice::fail(const QString &reason)
 {
-  if (!isOpen())
+  if (!isOpen() || m_failed)
     return;
+  m_failed = true;
   qCDebug(lcBle) << m_address << reason;
   setErrorString(reason);
   m_ready = false;
@@ -338,7 +373,11 @@ void BleGattDevice::onDiscoveryFinished()
     if (c.uuid() != m_profile->notify)
       return;
     qCDebug(lcBle) << m_address << "rx" << value.toHex(' ');
-    m_rx += value;
+    if (!appendToBuffer(value))
+    {
+      fail(tr("Bluetooth receive buffer limit exceeded."));
+      return;
+    }
     m_pollSent.invalidate();
     // the answer is in: ask again, but not faster than kRepollMs
     if (!m_lastPoll.isEmpty() && m_repoll && !m_repoll->isActive())

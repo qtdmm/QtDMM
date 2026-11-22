@@ -1,6 +1,6 @@
 protocol: ZotekBLE
 decoder: src/device/decoders/zotek.cpp
-devices: [ZOTEK ZT-5B, ZOTEK ZT-5BQ, ZOTEK ZT-300AB, ZOTEK ZT-5566SE, ANENG V05B, ANENG ST207, ANENG AN9002, ANENG AN999S]
+devices: [ZOTEK ZT-5B, ZOTEK ZT-5BQ, ZOTEK ZT-300AB, ZOTEK ZT-5566SE, ANENG V05B, ANENG ST207, ANENG AN9002, ANENG AN999S, BSIDE ZT-5B, BSIDE ZT-5BQ, BSIDE ZT-300AB, BABATools AD900]
 frames_per_reading: 1
 unit_map:                      # spec spelling -> what the decoder emits
   "u": "µ"

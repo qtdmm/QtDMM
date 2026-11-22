@@ -111,7 +111,7 @@ void insertBeside(Node &split, const Node *kid, int leaf, bool before, double sh
 }
 
 void applyNode(const Node &n, const QRect &r, QList<QRect> &rects, std::vector<MdiArranger::Divider> *dividers,
-               std::vector<int> &path)
+               std::vector<int> &path, const MdiArranger::MinOf &minOf)
 {
   if (n.isLeaf())
   {
@@ -127,14 +127,45 @@ void applyNode(const Node &n, const QRect &r, QList<QRect> &rects, std::vector<M
   const int k = int(n.kids.size());
   const int extent = vert ? r.height() : r.width();
   const int avail = extent - kGap * (k - 1);
-  int pos = vert ? r.top() : r.left();
-  const int end = pos + extent;
+  // by the ratios; the last takes what is left
+  std::vector<int> lens(static_cast<size_t>(k), 0);
+  int used = 0;
   for (int i = 0; i < k; ++i)
   {
-    const int len = i == k - 1 ? end - pos : int(std::lround(avail * n.ratios[i]));
+    lens[size_t(i)] = i == k - 1 ? avail - used : int(std::lround(avail * n.ratios[size_t(i)]));
+    used += lens[size_t(i)];
+  }
+  // none below its windows' minimum: what they lack comes from the others'
+  // room above theirs; when that is not enough the cells go beyond the
+  // area, which then scrolls
+  if (minOf)
+  {
+    std::vector<int> mins(static_cast<size_t>(k));
+    int lack = 0;
+    int room = 0;
+    for (int i = 0; i < k; ++i)
+    {
+      mins[size_t(i)] = minOf(n.kids[size_t(i)], n.orient);
+      lack += qMax(0, mins[size_t(i)] - lens[size_t(i)]);
+      room += qMax(0, lens[size_t(i)] - mins[size_t(i)]);
+    }
+    if (lack > 0)
+    {
+      const double share = room > 0 ? qMin(1.0, double(lack) / room) : 0.0;
+      for (int i = 0; i < k; ++i)
+      {
+        int &len = lens[size_t(i)];
+        len = len < mins[size_t(i)] ? mins[size_t(i)] : len - int(std::lround((len - mins[size_t(i)]) * share));
+      }
+    }
+  }
+  int pos = vert ? r.top() : r.left();
+  for (int i = 0; i < k; ++i)
+  {
+    const int len = lens[size_t(i)];
     const QRect cell = vert ? QRect(r.left(), pos, r.width(), len) : QRect(pos, r.top(), len, r.height());
     path.push_back(i);
-    applyNode(n.kids[i], cell, rects, dividers, path);
+    applyNode(n.kids[i], cell, rects, dividers, path, minOf);
     path.pop_back();
     pos += len;
     if (i < k - 1)
@@ -455,6 +486,14 @@ void MdiArranger::setTableWidth(int width)
   arrange();
 }
 
+void MdiArranger::setHeld(bool held)
+{
+  if (held == m_held)
+    return;
+  m_held = held;
+  arrange();
+}
+
 QString MdiArranger::layoutText() const
 {
   if (!m_hasTree || m_mode == Free || ((m_mode == DisplaysOnTop || m_mode == DisplaysOnLeft) && !m_custom))
@@ -510,7 +549,8 @@ void MdiArranger::arrangeNow()
   QList<Role> roles;
   for (int i : visible)
     roles << m_roles[i];
-  const QList<QRect> rects = layout(m_area->viewport()->rect(), roles, headerHeight(), tableMinWidth(visible));
+  const QList<QRect> rects = layout(m_area->viewport()->rect(), roles, headerHeight(), tableMinWidth(visible), false, {},
+                                    graphMinWidth(visible));
   for (int k = 0; k < visible.size(); ++k)
     m_order[visible[k]]->setGeometry(rects[k]);
 }
@@ -522,7 +562,7 @@ void MdiArranger::arrangeNow()
 // anything else - and the graph in the rest, with a table in a column on the
 // right.
 MdiArranger::Node MdiArranger::ruleTree(const QRect &area, const QList<Role> &roles, bool left, int headerHeight,
-                                        int tableMinWidth, const QList<Fit> &fits)
+                                        int tableMinWidth, const QList<Fit> &fits, int graphMinWidth)
 {
   const QRect all = area.adjusted(kGap, kGap, -kGap, -kGap);
   QList<int> inst, graphs, tables;
@@ -543,8 +583,9 @@ MdiArranger::Node MdiArranger::ruleTree(const QRect &area, const QList<Role> &ro
     if (tables.isEmpty())
       return line(Qt::Vertical, graphs);
     // the table's footer (buttons, statistics) must not be squeezed, but the
-    // graph keeps at least half
-    const int tw = qMin(qMax(tableMinWidth, int(r.width() * 0.3)), r.width() / 2);
+    // graph keeps at least half, and its own minimum (its row of buttons)
+    const int tw = qMax(qMin(qMin(qMax(tableMinWidth, int(r.width() * 0.3)), r.width() / 2),
+                             r.width() - kGap - graphMinWidth), qMin(120, r.width() / 2));
     const double avail = r.width() - kGap;
     return splitNode(Qt::Horizontal, { line(Qt::Vertical, graphs), line(Qt::Vertical, tables) },
                      { (avail - tw) / avail, tw / avail });
@@ -581,6 +622,13 @@ MdiArranger::Node MdiArranger::ruleTree(const QRect &area, const QList<Role> &ro
       bestLines = lines;
       bestExtent = extent;
     }
+  }
+  // instruments on the left leave the graphs their minimum width (the row of
+  // buttons above), as far as the instruments keep a useful size
+  if (left && !graphs.isEmpty() && graphMinWidth > 0)
+  {
+    const double room = all.width() - kGap - graphMinWidth - (tables.isEmpty() ? 0 : tableMinWidth + kGap);
+    bestExtent = qMax(qMin(bestExtent, room), qMin(bestExtent, 120.0 * bestLines));
   }
   const int per = (n + bestLines - 1) / bestLines;
   // a line of instruments: no cell bigger than its content can fill (an LCD
@@ -658,19 +706,20 @@ MdiArranger::Node MdiArranger::ruleTree(const QRect &area, const QList<Role> &ro
   return splitNode(outer, { strip, rest(restRect) }, { stripExtent / avail, (avail - stripExtent) / avail });
 }
 
-void MdiArranger::applyTree(const Node &node, const QRect &area, QList<QRect> &rects, std::vector<Divider> *dividers)
+void MdiArranger::applyTree(const Node &node, const QRect &area, QList<QRect> &rects, std::vector<Divider> *dividers,
+                            const MinOf &minOf)
 {
   std::vector<int> path;
-  applyNode(node, area, rects, dividers, path);
+  applyNode(node, area, rects, dividers, path, minOf);
 }
 
 QList<QRect> MdiArranger::layout(const QRect &area, const QList<Role> &roles, int headerHeight, int tableMinWidth,
-                                 bool left, const QList<Fit> &fits)
+                                 bool left, const QList<Fit> &fits, int graphMinWidth)
 {
   QList<QRect> rects(roles.size());
   if (!roles.isEmpty())
-    applyTree(ruleTree(area, roles, left, headerHeight, tableMinWidth, fits), area.adjusted(kGap, kGap, -kGap, -kGap),
-              rects);
+    applyTree(ruleTree(area, roles, left, headerHeight, tableMinWidth, fits, graphMinWidth),
+              area.adjusted(kGap, kGap, -kGap, -kGap), rects);
   return rects;
 }
 
@@ -729,8 +778,11 @@ void MdiArranger::leaveTree(int leaf)
   {
     m_saved = m_root;
     m_savedNames.clear();
-    for (const QMdiSubWindow *w : std::as_const(m_order))
-      m_savedNames << w->objectName();
+    // only the leaves of the saved tree: a window away already (hidden
+    // before a new one came) has no place in it and comes back as new
+    const QList<int> inSaved = leaves(m_root);
+    for (int i = 0; i < m_order.size(); ++i)
+      m_savedNames << (inSaved.contains(i) ? m_order[i]->objectName() : QString());
     m_savedValid = true;
   }
   if (m_root.isLeaf())
@@ -756,7 +808,7 @@ void MdiArranger::restoreSaved(const QList<int> &present)
 }
 
 // A window new to the tree: beside the last of its kind, along the longer
-// side of that cell. With none of its kind at the edge, an instrument at the
+// side of that cell (a graph below the last graph). With none of its kind at the edge, an instrument at the
 // start, as the rules have it.
 void MdiArranger::addNew(int leaf)
 {
@@ -768,14 +820,17 @@ void MdiArranger::addNew(int leaf)
       same = id;
   if (same < 0)
   {
+    // a table goes to the right as in the rule's layout, the others
+    // along the longer side
     const QRect a = m_area->viewport()->rect();
-    addAtEdge(m_root, leaf, a.width() > a.height() * 2, role == Instrument);
+    addAtEdge(m_root, leaf, role == Table || a.width() > a.height() * 2, role == Instrument);
     return;
   }
   QList<QRect> rects;
   applyTree(m_root, cellArea(), rects);
   const QRect cell = rects.value(same);
-  const Qt::Orientation o = cell.width() >= cell.height() ? Qt::Horizontal : Qt::Vertical;
+  // graphs stack, as the rules have it: their time axes want the width
+  const Qt::Orientation o = role != Graph && cell.width() >= cell.height() ? Qt::Horizontal : Qt::Vertical;
   Node *node = findLeaf(m_root, same);
   Node *split = parentOf(m_root, node);
   if (split && split->orient == o)
@@ -853,6 +908,37 @@ int MdiArranger::tableMinWidth(const QList<int> &visible) const
   return w;
 }
 
+int MdiArranger::minExtent(const Node &node, Qt::Orientation orient) const
+{
+  const bool vert = orient == Qt::Vertical;
+  if (node.isLeaf())
+  {
+    if (node.leaf < 0 || node.leaf >= m_order.size() || !m_order[node.leaf])
+      return 0;
+    const QSize min = m_order[node.leaf]->minimumSizeHint().expandedTo(m_order[node.leaf]->minimumSize());
+    return vert ? min.height() : min.width();
+  }
+  // along the split: all of them and the gaps; across it: the largest
+  int sum = 0;
+  int most = 0;
+  for (const Node &kid : node.kids)
+  {
+    const int m = minExtent(kid, orient);
+    sum += m;
+    most = qMax(most, m);
+  }
+  return node.orient == orient ? sum + kGap * int(node.kids.size() - 1) : most;
+}
+
+int MdiArranger::graphMinWidth(const QList<int> &visible) const
+{
+  int w = 0;
+  for (int i : visible)
+    if (m_roles[i] == Graph)
+      w = qMax(w, m_order[i]->minimumSizeHint().width());
+  return w;
+}
+
 QRect MdiArranger::cellArea() const
 {
   return m_area->viewport()->rect().adjusted(kGap, kGap, -kGap, -kGap);
@@ -875,7 +961,7 @@ void MdiArranger::doArrange()
   m_dividers.clear();
   if (m_divHint)
     m_divHint->hide();
-  if (m_mode == Free)
+  if (m_mode == Free || m_held)
     return;
   const QList<int> visible = visibleWindows();
   for (int i : visible)
@@ -900,7 +986,8 @@ void MdiArranger::doArrange()
       }
       fits << f;
     }
-    m_root = ruleTree(m_area->viewport()->rect(), roles, left, headerHeight(), tableMinWidth(visible), fits);
+    m_root = ruleTree(m_area->viewport()->rect(), roles, left, headerHeight(), tableMinWidth(visible), fits,
+                      graphMinWidth(visible));
     remapLeaves(m_root, visible);
     m_hasTree = true;
   };
@@ -920,13 +1007,17 @@ void MdiArranger::doArrange()
       QList<int> known, coming;
       for (int i : visible)
         if (!inTree.contains(i))
-          (m_savedValid && m_savedNames.contains(m_order[i]->objectName()) ? known : coming) << i;
+        {
+          const QString name = m_order[i]->objectName();
+          (m_savedValid && !name.isEmpty() && m_savedNames.contains(name) ? known : coming) << i;
+        }
       if (!known.isEmpty())
         restoreSaved(inTree + known);
       if (!m_hasTree && !coming.isEmpty())
       {
         m_root = leafNode(coming.takeFirst());
         m_hasTree = true;
+        m_savedValid = false;   // the tree is another one now, as in addNew()
       }
       for (int i : std::as_const(coming))
         addNew(i);
@@ -944,7 +1035,9 @@ void MdiArranger::doArrange()
   m_treeFor = visible;
 
   QList<QRect> rects;
-  applyTree(m_root, cellArea(), rects, &m_dividers);
+  // no window below its minimum (a plot no stamp): the area scrolls instead
+  applyTree(m_root, cellArea(), rects, &m_dividers,
+            [this](const Node &node, Qt::Orientation orient) { return minExtent(node, orient); });
   for (int i : visible)
     if (i < rects.size() && rects[i].isValid())
       m_order[i]->setGeometry(rects[i]);
@@ -977,7 +1070,7 @@ QMdiSubWindow *MdiArranger::windowAt(const QPoint &global, const QMdiSubWindow *
 
 void MdiArranger::dragMoving(QMdiSubWindow *window, const QPoint &global)
 {
-  if (m_mode == Free)
+  if (m_mode == Free || m_held)
     return;
   if (!m_band)
     m_band = new QRubberBand(QRubberBand::Rectangle, m_area->viewport());
@@ -996,7 +1089,7 @@ void MdiArranger::dragDropped(QMdiSubWindow *window, const QPoint &global)
 {
   if (m_band)
     m_band->hide();
-  if (m_mode == Free)
+  if (m_mode == Free || m_held)
     return;
   if (QMdiSubWindow *target = windowAt(global, window); target && m_hasTree)
   {
@@ -1088,8 +1181,11 @@ bool MdiArranger::dividerEvent(QObject *watched, QEvent *event)
         const double delta = double(vert ? p.y() - m_divLast.y() : p.x() - m_divLast.x()) / m_divDrag.avail;
         double &a = n->ratios[size_t(m_divDrag.index)];
         double &b = n->ratios[size_t(m_divDrag.index) + 1];
-        const double minR = 4.0 * QFontMetrics(m_area->font()).height() / m_divDrag.avail;
-        const double d = qBound(qMin(0.0, minR - a), delta, qMax(0.0, b - minR));
+        // neither side below its windows' minimum (nor below a few lines)
+        const int lines = 4 * QFontMetrics(m_area->font()).height();
+        const double minA = double(qMax(lines, minExtent(n->kids[size_t(m_divDrag.index)], m_divDrag.orient))) / m_divDrag.avail;
+        const double minB = double(qMax(lines, minExtent(n->kids[size_t(m_divDrag.index) + 1], m_divDrag.orient))) / m_divDrag.avail;
+        const double d = qBound(qMin(0.0, minA - a), delta, qMax(0.0, b - minB));
         a += d;
         b -= d;
         m_divLast = p;

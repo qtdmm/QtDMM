@@ -78,8 +78,17 @@ Meaning meaning(const QString &base, const QString &mode, FrameFormat::DataForma
     { "ppm",    Quantity::Unknown,           "ppm" },   // a concentration; of what, the meter says
     { "lx",     Quantity::Illuminance,       "lx" },
     { "fc",     Quantity::Illuminance,       "fc" },    // foot-candle, 1 fc = 10.764 lx
+    { "lx·h",   Quantity::LightExposure,     "lx·h" },  // a luxmeter's integral
+    { "cd",     Quantity::LuminousIntensity, "cd" },    // from lux and distance
     { "%RH",    Quantity::RelativeHumidity,  "%" },     // hygrometers
     { "m/s",    Quantity::WindSpeed,         "m/s" },
+    { "m/min",  Quantity::LinearSpeed,       "m/min" },   // a tachometer's measuring wheel
+    { "in/min", Quantity::LinearSpeed,       "in/min" },
+    { "ft/min", Quantity::LinearSpeed,       "ft/min" },
+    { "m",      Quantity::Length,            "m" },
+    { "in",     Quantity::Length,            "in" },
+    { "ft",     Quantity::Length,            "ft" },
+    { "REV",    Quantity::Count,             "REV" },     // revolutions counted
     { "dBA",    Quantity::SoundPressureLevel, "dBA" },  // sound level meters, A and C weighting
     { "dBC",    Quantity::SoundPressureLevel, "dBC" },
   };
@@ -266,16 +275,19 @@ Reading ReadingAdapter::reading(const PortSample &ps)
   r.quality = ps.sample.quality;
   r.measuringRange = ps.sample.range;
   r.name = ps.name;
+  r.battery = ps.battery;
   return r;
 }
 
 QList<PortSample> ReadingAdapter::adapt(const DmmDecoder::DmmResponse &r, qint64 wall)
 {
   QList<PortSample> out;
+  // a level when the meter sends one; else its low-battery annunciator
+  const Battery battery = r.battery != Battery::Unknown ? r.battery : r.lowBat ? Battery::Low : Battery::Unknown;
   for (const DmmDecoder::DmmChannel &c : r.channels)
   {
     const Quality shown = !c.fault.isEmpty() ? Quality::Fault : c.noValue ? Quality::NoValue : Quality::Valid;
-    out << adaptValue(c.dval, c.val, c.unit, c.special, r.range, r.hold, r.showBar, r.lowBat, c.id,
+    out << adaptValue(c.dval, c.val, c.unit, c.special, r.range, r.hold, r.showBar, battery == Battery::Low, c.id,
                       r.receivedWall != 0 ? r.receivedWall : wall, shown);
     if (r.received != 0)
       out.last().sample.t = r.received;
@@ -283,6 +295,7 @@ QList<PortSample> ReadingAdapter::adapt(const DmmDecoder::DmmResponse &r, qint64
     out.last().sample.flags |= c.states & (SampleFlag::Max | SampleFlag::Min | SampleFlag::Avg | SampleFlag::Relative
                                            | SampleFlag::Peak);
     out.last().name = c.name;
+    out.last().battery = battery;
   }
   return out;
 }

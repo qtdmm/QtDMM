@@ -8,10 +8,11 @@
 #include <QString>
 #include <QStringList>
 #include <QVariantMap>
+#include <memory>
 #include <optional>
 
 #include "core/valueref.h"
-#include "device/transports/calc.h"
+#include "logic/logicnode.h"
 #include "recording/recordingstore.h"
 
 class DeviceLibrary;
@@ -59,9 +60,22 @@ public:
   /// Opens and connects the entry @p id of "My devices". Null and the
   /// reason in @p error (a SCPI error, "<code>,<text>", in English) when it
   /// is unknown, already open or does not connect.
-  MeterController *open(const QString &id, QString *error = nullptr);
-  /// The same with the entry's keys and name given.
-  MeterController *open(const QString &id, const QVariantMap &keys, const QString &name, QString *error = nullptr);
+  /// With @p waitForDevice one that does not connect stays open, not
+  /// connected, and connects when it comes (a workspace's meter not
+  /// plugged in yet, MeterConnection::open()); the reason in @p error all the
+  /// same.
+  MeterController *open(const QString &id, QString *error = nullptr, bool waitForDevice = false);
+  /// The same with the entry's keys and name given. An entry of a logic
+  /// node (Node/json, MyDevice::isNode()) opens as one (openNode()).
+  MeterController *open(const QString &id, const QVariantMap &keys, const QString &name, QString *error = nullptr,
+                        bool waitForDevice = false);
+  /// Opens the logic node @p node as the entry @p id: a source like a
+  /// device ("device:<id>"), running at once (NodeRunner). Null and why in
+  /// @p error when it is open already or its inputs close a loop.
+  MeterController *openNode(const QString &id, const QString &name, std::unique_ptr<LogicNode> node,
+                            QString *error = nullptr);
+  /// The inputs of the node open as @p source; none for a device.
+  QList<ValueRef> nodeInputs(const QString &source) const;
   /// Closes a meter open() opened; false (and why) for one not open.
   bool        close(const QString &id, QString *error = nullptr);
 
@@ -103,14 +117,14 @@ public:
   /// The meter of @p value; nullptr for an empty source or while that meter
   /// is not open.
   MeterController *controller(const ValueRef &value) const;
-  /// What a calculated value of this process reads (CalcDevice): the main
-  /// value of each meter here by its name in My devices, as a variable
-  /// ("UT61E Bench": ut61e_bench).
-  CalcDevice::Inputs calcInputs() const;
-  /// The variable of a meter named @p name in a formula: lower case,
+  /// The variable of a meter named @p name in a calculated value of
+  /// before (LegacyNodes; "UT61E Bench": ut61e_bench): lower case,
   /// other characters than letters, digits and '_' as '_', a '_' before a
   /// leading digit.
   static QString variableName(const QString &name);
+  /// The source ("device:<id>") of the entry of My devices whose
+  /// variableName() is @p name; empty for none.
+  QString     sourceOfVariable(const QString &name) const;
 
   /// The entries of "My devices", for QTDMM:DEVice:CATalog?.
   DeviceLibrary *library() const { return m_library; }
@@ -130,6 +144,10 @@ Q_SIGNALS:
   void        info(const QString &text);
 
 private:
+  /// The rest of open() for a device or a node: its name, its messages,
+  /// its rules, connected, one of the session's.
+  MeterController *adopt(MeterController *ctl, const QString &id, const QString &name, QString *error,
+                         bool waitForDevice);
   void        installScpi();
   /// The rules of the entry @p id on @p ctl, and its changes back into the entry.
   void        applyRules(MeterController *ctl, const QString &id);

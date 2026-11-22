@@ -1,11 +1,11 @@
 {
- "source": "dmm-tools f96e318",
+ "source": "dmm-tools 766d4da",
  "device": "zt5b",
  "models": [
   "ZOTEK ZT-5B",
   "ANENG V05B"
  ],
- "model": "ZT-5B / V05B",
+ "model": "ZOTEK ZT-5B",
  "tables": [
   {
    "input_impedance": null,

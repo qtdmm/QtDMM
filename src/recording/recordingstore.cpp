@@ -2,7 +2,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "recording/recordingstore.h"
 
+#include <algorithm>
+
 #include <QCoreApplication>
+#include <QJsonArray>
+#include <cmath>
 #include <vector>
 
 #include "core/siprefix.h"
@@ -59,7 +63,8 @@ qint64 RecordingStore::duration() const
   return m_series.isEmpty() ? 0 : m_series.last().t;
 }
 
-RecordingStore::Stats RecordingStore::statsOf(const RecordingSeries &series, qint64 from, qint64 to) const
+RecordingStore::Stats RecordingStore::statsOf(const RecordingSeries &series, qint64 from, qint64 to,
+                                              const std::function<bool(int)> &skip) const
 {
   Stats st;
   if (from > to)
@@ -73,6 +78,11 @@ RecordingStore::Stats RecordingStore::statsOf(const RecordingSeries &series, qin
   const bool loaded = m_state == View && m_stopT < 0;
   const qint64 step = loaded ? qint64(m_loadedGrid) * 100 : 0;
   double sum = 0;
+  // σ from the values less the first one: E[v²] - mean² of large values
+  // with a small spread loses its digits (3 V steady gave 42 nV)
+  double ref = qQNaN();
+  double sumD = 0, sumD2 = 0;   // of the readings, for a file of no time
+  double intD = 0, intD2 = 0;   // (v - ref) x s and (v - ref)² x s
   for (int i = qMax(0, series.holding(from)); i < n; ++i)
   {
     const RawPoint &p = series.at(i);
@@ -95,22 +105,37 @@ RecordingStore::Stats RecordingStore::statsOf(const RecordingSeries &series, qin
       end = qMin(to, i + 1 < n ? series.at(i + 1).t : duration());
       counts = loaded && i == n - 1 && p.t >= from;
     }
-    if (p.gap() || (end <= begin && !counts))
+    if (p.gap() || (end <= begin && !counts) || (skip && skip(i)))
       continue;
     st.count++;
     st.min = st.count == 1 ? p.value : qMin(st.min, p.value);
     st.max = st.count == 1 ? p.value : qMax(st.max, p.value);
     sum += p.value;
+    if (std::isnan(ref))
+      ref = p.value;
+    const double d = p.value - ref;
+    sumD += d;
+    sumD2 += d * d;
     if (end > begin)
     {
       st.integral += p.value * double(end - begin) / 1000;
+      intD += d * double(end - begin) / 1000;
+      intD2 += d * d * double(end - begin) / 1000;
       st.covered += end - begin;
     }
   }
   if (st.covered > 0)
+  {
     st.mean = st.integral * 1000 / double(st.covered);
+    const double m = intD * 1000 / double(st.covered);
+    st.sigma = std::sqrt(qMax(0.0, intD2 * 1000 / double(st.covered) - m * m));
+  }
   else if (st.count > 0)
+  {
     st.mean = sum / st.count; // readings that held for no time (a file of one row)
+    const double m = sumD / st.count;
+    st.sigma = std::sqrt(qMax(0.0, sumD2 / st.count - m * m));
+  }
   return st;
 }
 
@@ -187,7 +212,7 @@ QVector<GridPoint> RecordingStore::gridOf(const RecordingSeries &series, int ten
     for (int i = 0; i < n; ++i)
     {
       const RawPoint &p = series.at(i);
-      out.append({ p.t, p.value, p.integral, p.quality, p.flags & SampleFlag::Limit });
+      out.append({ p.t, p.value, p.quality, p.flags & (SampleFlag::Limit | SampleFlag::State) });
     }
     return out;
   }
@@ -216,28 +241,18 @@ QVector<GridPoint> RecordingStore::gridOf(const RecordingSeries &series, int ten
     const int j = series.lowerBound(t);
     return j > 0 ? j - 1 : j < n && series.at(j).t == t ? j : -1;
   };
-  // the integral at time t: the last point's, plus its value since then
-  auto integralAt = [&](qint64 t)
-  {
-    const int j = before(t);
-    if (j < 0 || series.at(j).gap())
-      return qQNaN();
-    const RawPoint &p = series.at(j);
-    return p.value > m_integrationThreshold ? p.integral + p.value * double(t - p.t) / 1000.0 : p.integral;
-  };
 
   for (qint64 k = kFirst; k <= kLast; ++k)
   {
     GridPoint g;
     g.t = k * step;
-    g.integral = integralAt(g.t);
     if (k == 0)
     {
       // the first step is the value at the start
       const int j = before(0);
       g.value = j < 0 ? qQNaN() : series.at(j).value;
       g.quality = j < 0 ? Quality::Stale : series.at(j).quality;
-      g.limit = j < 0 ? 0 : series.at(j).flags & SampleFlag::Limit;
+      g.limit = j < 0 ? 0 : series.at(j).flags & (SampleFlag::Limit | SampleFlag::State);
     }
     else
     {
@@ -259,7 +274,7 @@ QVector<GridPoint> RecordingStore::gridOf(const RecordingSeries &series, int ten
         const qint64 from = qMax(p.t, a), to = qMin(until, b);
         if (to <= from)
           continue;
-        g.limit |= p.flags & SampleFlag::Limit;   // a FAIL in the step is not hidden by a PASS
+        g.limit |= p.flags & (SampleFlag::Limit | SampleFlag::State);   // a FAIL in the step is not hidden by a PASS
         if (p.gap())
         {
           q = worse(q, p.quality == Quality::Valid ? Quality::Stale : p.quality);
@@ -306,9 +321,12 @@ qint64 RecordingStore::offsetOf(const RecordingStore &other) const
 }
 
 Recording RecordingStore::toRecording(bool raw, const QList<int> &extras, const QList<Foreign> &foreign,
-                                       const QString &device) const
+                                       const QString &device, const QJsonObject &info) const
 {
   Recording rec;
+  rec.meta = m_fileInfo;
+  for (auto it = info.begin(); it != info.end(); ++it)
+    rec.meta[it.key()] = it.value();
   rec.sampleTimeTenths = m_sampleTime;
   rec.unit = m_unit;
   rec.device = device;
@@ -399,14 +417,14 @@ Recording RecordingStore::toRecording(bool raw, const QList<int> &extras, const 
       const RawPoint &p = m_series.at(qMax(0, m_series.holding(t)));
       rec.values << p.value;
       rec.states << cellState(p.value, p.quality);
-      rec.limits << (p.flags & SampleFlag::Limit);
+      rec.limits << (p.flags & (SampleFlag::Limit | SampleFlag::State));
       rec.times << t - t0;
       for (int c = 0; c < others.size(); ++c)
       {
         const int j = others[c]->holding(t);
         rec.extra[c].values << (j < 0 ? qQNaN() : others[c]->at(j).value);
         rec.extra[c].states << (j < 0 ? CellState::None : cellState(others[c]->at(j).value, others[c]->at(j).quality));
-        rec.extra[c].limits << (j < 0 ? 0u : others[c]->at(j).flags & SampleFlag::Limit);
+        rec.extra[c].limits << (j < 0 ? 0u : others[c]->at(j).flags & (SampleFlag::Limit | SampleFlag::State));
       }
     }
     return rec;
@@ -446,13 +464,27 @@ Recording RecordingStore::toRecording(bool raw, const QList<int> &extras, const 
       col.limits << (there ? own[j].limit : 0u);
     }
   }
+  // what the columns do not keep, for a QtDMM recording
+  QJsonArray marks;
+  for (const Mark &m : m_marks)
+  {
+    QJsonObject o{ { "t", double(m.t) }, { "color", QString("#%1").arg(m.color, 8, 16, QChar('0')) }, { "name", m.name } };
+    // an alarm's mark as before: older QtDMM read it the same
+    if (!m.note.isEmpty())
+      o["note"] = m.note;
+    if (m.kind != MarkKind::Alarm)
+      o["kind"] = m.kind == MarkKind::Note ? "note" : "trigger";
+    marks.append(o);
+  }
+  if (!marks.isEmpty())
+    rec.meta["marks"] = marks;
   return rec;
 }
 
 bool RecordingStore::write(const QString &path, QString *error, bool raw, const QList<int> &extras,
-                           const QList<Foreign> &foreign, const QString &device)
+                           const QList<Foreign> &foreign, const QString &device, const QJsonObject &info)
 {
-  if (!RecordingFile::writeAny(toRecording(raw, extras, foreign, device), path, error))
+  if (!RecordingFile::writeAny(toRecording(raw, extras, foreign, device, info), path, error))
     return false;
   m_dirty = false;
   for (const Foreign &f : foreign)
@@ -528,6 +560,19 @@ void RecordingStore::load(const Recording &rec)
   m_fromFile = true;
   m_stopT = -1;
   m_dirty = false;
+  // a QtDMM recording brings its marks back, and keeps what it says of its
+  // devices for the next export
+  m_fileInfo = rec.meta;
+  for (const char *written : { "marks", "format", "qtdmm", "written", "start", "end", "sample-time" })
+    m_fileInfo.remove(QLatin1String(written));
+  for (const QJsonValue &v : rec.meta.value("marks").toArray())
+  {
+    const QJsonObject m = v.toObject();
+    const QString kind = m.value("kind").toString();
+    m_marks.append(Mark{ qint64(m.value("t").toDouble()), m.value("color").toString().mid(1).toUInt(nullptr, 16),
+                         m.value("name").toString(), m.value("note").toString(),
+                         kind == "note" ? MarkKind::Note : kind == "trigger" ? MarkKind::Trigger : MarkKind::Alarm });
+  }
   Q_EMIT marksChanged();
   Q_EMIT loaded();
   if (was != View)
@@ -658,22 +703,8 @@ int RecordingStore::extraIndex(int id) const
 void RecordingStore::appendExtraPoint(int i, RawPoint p)
 {
   RecordingSeries &s = m_extra[i];
-  // the integral as for the main value (appendPoint()): the graph can draw
-  // it for a value other than the main one
-  double run = s.runningIntegral;
   if (!s.isEmpty())
-  {
-    const RawPoint &prev = s.last();
-    p.t = qMax(p.t, prev.t);
-    if (!prev.gap() && prev.value > m_integrationThreshold)
-      run += prev.value * double(p.t - prev.t) / 1000.0;
-  }
-  else
-    run = 0;
-  if (!p.gap() && p.value <= m_integrationThreshold)
-    run = 0;
-  s.runningIntegral = run;
-  p.integral = p.gap() ? qQNaN() : run;
+    p.t = qMax(p.t, s.last().t);
   s.append(p);
   if (m_state == Record)
     m_dirty = true;
@@ -869,7 +900,21 @@ bool RecordingStore::trigger(double val)
   return started;
 }
 
-void RecordingStore::setStale(bool stale)
+void RecordingStore::setGapCause(quint32 cause)
+{
+  if (m_state == View)
+    return;
+  auto mark = [cause](RecordingSeries &s)
+  {
+    if (!s.isEmpty() && s.last().gap() && s.last().quality == Quality::Stale)
+      s.addLastFlags(cause);
+  };
+  mark(m_series);
+  for (RecordingSeries &s : m_extra)
+    mark(s);
+}
+
+void RecordingStore::setStale(bool stale, quint32 cause)
 {
   if (!stale || m_state == View)
     return;
@@ -884,6 +929,7 @@ void RecordingStore::setStale(bool stale)
     p.t = qMin(s.last().t + m_staleMs, qMax(s.last().t, elapsed()));
     p.value = qQNaN();
     p.quality = Quality::Stale;
+    p.flags = cause;
     appendExtraPoint(i, p);
     extras = true;
   }
@@ -896,6 +942,7 @@ void RecordingStore::setStale(bool stale)
   p.t = qMin(m_series.last().t + m_staleMs, qMax(m_series.last().t, elapsed()));
   p.value = qQNaN();
   p.quality = Quality::Stale;
+  p.flags = cause;
   append(p);
 }
 
@@ -957,7 +1004,7 @@ void RecordingStore::begin(qint64 preMs)
     m_start = m_start.addMSecs(-back);
     m_preUsed = back;
     appendLivePart(pre);
-    m_marks.append(Mark { back, kTriggerColor, QCoreApplication::translate("RecordingStore", "Trigger") });
+    m_marks.append(Mark { back, kTriggerColor, QCoreApplication::translate("RecordingStore", "Trigger"), {}, MarkKind::Trigger });
     Q_EMIT marksChanged();
   }
   else
@@ -1124,38 +1171,72 @@ void RecordingStore::clear()
   m_stopT = m_state != View ? -1 : 0;
   m_loadedGrid = 0;
   m_fromFile = false;
-  m_integral = 0;
+  m_fileInfo = QJsonObject();
   m_dirty = false;
   Q_EMIT cleared();
   if (hadMarks)
     Q_EMIT marksChanged();
 }
 
-void RecordingStore::addMark(quint32 argb, const QString &name)
+qint64 RecordingStore::markTime() const
 {
   // now while recording or live; else on the newest reading
-  const qint64 t = m_state != View ? elapsed() : m_series.isEmpty() ? 0 : m_series.last().t;
-  m_marks.append(Mark { t, argb, name });
+  return m_state != View ? elapsed() : m_series.isEmpty() ? 0 : m_series.last().t;
+}
+
+void RecordingStore::addMark(quint32 argb, const QString &name)
+{
+  m_marks.append(Mark { markTime(), argb, name });
   Q_EMIT marksChanged();
+}
+
+int RecordingStore::addNote(qint64 t, const QString &title, const QString &note)
+{
+  if (t < 0)
+    t = markTime();
+  // after the marks of the same time: numbered as they came
+  const auto at = std::upper_bound(m_marks.begin(), m_marks.end(), t, [](qint64 v, const Mark &m) { return v < m.t; });
+  const int index = int(at - m_marks.begin());
+  m_marks.insert(index, Mark { t, kNoteColor, title, note, MarkKind::Note });
+  Q_EMIT marksChanged();
+  return index;
+}
+
+void RecordingStore::setMarkText(int index, const QString &title, const QString &note)
+{
+  if (index < 0 || index >= m_marks.size())
+    return;
+  m_marks[index].name = title;
+  m_marks[index].note = note;
+  Q_EMIT marksChanged();
+}
+
+void RecordingStore::removeMark(int index)
+{
+  if (index < 0 || index >= m_marks.size())
+    return;
+  m_marks.removeAt(index);
+  Q_EMIT marksChanged();
+}
+
+int RecordingStore::setMarkTime(int index, qint64 t)
+{
+  if (index < 0 || index >= m_marks.size())
+    return index;
+  Mark mark = m_marks.takeAt(index);
+  mark.t = t;
+  // after the marks of the same time, as addNote() puts it
+  const auto at = std::upper_bound(m_marks.begin(), m_marks.end(), t, [](qint64 v, const Mark &m) { return v < m.t; });
+  const int moved = int(at - m_marks.begin());
+  m_marks.insert(moved, mark);
+  Q_EMIT marksChanged();
+  return moved;
 }
 
 void RecordingStore::appendPoint(RawPoint p)
 {
   if (!m_series.isEmpty())
-  {
-    const RawPoint &prev = m_series.last();
-    p.t = qMax(p.t, prev.t);
-    // integration: the values above the threshold over the time they held;
-    // at or below it the integral is back to 0 (the first value, too), a
-    // gap adds nothing and the integral carries over it
-    if (!prev.gap() && prev.value > m_integrationThreshold)
-      m_integral += prev.value * double(p.t - prev.t) / 1000.0;
-  }
-  else
-    m_integral = 0;
-  if (!p.gap() && p.value <= m_integrationThreshold)
-    m_integral = 0;
-  p.integral = p.gap() ? qQNaN() : m_integral;
+    p.t = qMax(p.t, m_series.last().t);
   m_series.append(p);
 }
 
@@ -1225,6 +1306,24 @@ bool RecordingStore::trimMain()
   return true;
 }
 
+double RecordingStore::displayStep(int id) const
+{
+  constexpr int kLook = 64;   // the newest rows are enough: other values lie between them
+  for (int i = readingCount() - 1; i >= qMax(0, readingCount() - kLook); --i)
+  {
+    const LoggedReading &e = readingAt(i);
+    const QString text = QString(e.text).remove(' ');
+    bool number = false;
+    text.toDouble(&number);
+    if (e.id != id || e.quality != Quality::Valid || !number)
+      continue;
+    const int point = text.indexOf('.');
+    const int decimals = point < 0 ? 0 : int(text.size()) - point - 1;
+    return std::pow(10.0, -decimals) * SiPrefix::factor(SiPrefix::split(e.unit).prefix);
+  }
+  return 0;
+}
+
 void RecordingStore::logReading(const Reading &reading)
 {
   // a secondary display that is off (an empty second value) is no reading
@@ -1292,6 +1391,39 @@ void RecordingStore::clearReadings()
   Q_EMIT readingsAboutToClear();
   m_readings.clear();
   Q_EMIT readingsCleared();
+}
+
+int RecordingStore::readingNearest(qint64 wall) const
+{
+  if (m_readings.isEmpty())
+    return -1;
+  // the readings come in the order of their time
+  const auto at = std::lower_bound(m_readings.cbegin(), m_readings.cend(), wall,
+                                   [](const LoggedReading &r, qint64 v) { return r.when < v; });
+  int row = int(at - m_readings.cbegin());
+  if (row == m_readings.size() || (row > 0 && wall - m_readings[row - 1].when < m_readings[row].when - wall))
+    --row;
+  return row;
+}
+
+void RecordingStore::unmarkReadingAt(qint64 wall, const QString &name)
+{
+  const int row = readingNearest(wall);
+  if (row < 0 || m_readings[row].alarmName != name)
+    return;
+  m_readings[row].alarmArgb = 0;
+  m_readings[row].alarmName.clear();
+  Q_EMIT readingMarked(row);
+}
+
+void RecordingStore::markReadingAt(qint64 wall, quint32 argb, const QString &name)
+{
+  const int row = readingNearest(wall);
+  if (row < 0)
+    return;
+  m_readings[row].alarmArgb = argb;
+  m_readings[row].alarmName = name;
+  Q_EMIT readingMarked(row);
 }
 
 void RecordingStore::markLastReading(quint32 argb, const QString &name)

@@ -9,11 +9,11 @@
 
 #include "device/discovery/discovery.h"
 #include "device/dmmdecoder.h"
-#include "device/transports/calc.h"
 
 class DeviceLibrary;
 class DeviceSettings;
 class DeviceSummary;
+class NodeEditor;
 class QLabel;
 class QLineEdit;
 class QListWidget;
@@ -21,20 +21,30 @@ class QProgressBar;
 class QPushButton;
 class QStackedWidget;
 class QToolButton;
+class QTreeWidget;
 
 /// The assistant "Add device": how the meter is connected (page 1), where
 /// (page 2: a passive search for that connection, every port found, the
 /// recognised ones first, or typed in), which meter it is with its settings
 /// and a name (page 3), and whether it is connected at once or only kept
-/// (page 4). sigrok and simulated meters have no page 2.
+/// (page 4). sigrok meters have no page 2.
+///
+/// Page 1 also has the tiles Simulated (a generator) and Calculated: the
+/// latter goes on to a list of the logic nodes with inputs (KindPage:
+/// formula, integral ..., grouped, with what each does and a search). A
+/// logic node has its settings (NodeEditor, made by setNodeEditors()) on a
+/// page of their own instead of pages 2 and 3, and page 4 after it.
 /// The caller keeps the result in My devices - a find that already is one
 /// of them (knownDevice()) changes that entry instead.
 class AddDeviceDlg : public QDialog
 {
   Q_OBJECT
 public:
-  enum Connection { Cable, Bluetooth, Network, Sigrok, Simulated };
-  enum Page { ConnectionPage, PortPage, DevicePage, TargetPage };
+  /// Simulated, Calculated, Integral: a generator, a formula over values or
+  /// an integral of one (logic nodes), set up on the NodePage. NodeKinds:
+  /// the tile Calculated, the KindPage to choose one of the nodes with inputs.
+  enum Connection { Cable, Bluetooth, Network, Sigrok, Simulated, Calculated, Integral, NodeKinds };
+  enum Page { ConnectionPage, PortPage, DevicePage, TargetPage, NodePage, KindPage };
   /// Page 4: into My devices and connected at once, or into My devices only.
   enum Target { NoTarget, Connect, SaveOnly };
 
@@ -44,8 +54,6 @@ public:
   /// The ports for the port field (Transport::availablePorts() and the custom ports).
   void        setPorts(const QStringList &ports);
   void        setSigrokExe(const QString &exe);
-  /// The readings of the meters open here, for the formula of a calculated value.
-  void        setCalcInputs(const CalcDevice::Inputs &inputs);
   /// Places (DeviceLibrary::place()) the open devices use, with what a
   /// find at that place says ("In use here").
   void        setPlacesInUse(const QMap<QString, QString> &places) { m_inUse = places; }
@@ -62,8 +70,23 @@ public:
   /// for the tests): the Bluetooth tile is off then and its tooltip says why.
   void        setBluetoothCheck(std::function<QString()> check);
 
+  /// The settings of a logic node of @p kind (Simulated, Calculated,
+  /// Integral), filled in for a new one; without: plain editors.
+  void        setNodeEditors(std::function<NodeEditor *(Connection kind)> make) { m_makeEditor = std::move(make); }
   /// Page 1: the connection; goes on to the next page.
   void        chooseConnection(Connection connection);
+  /// Whether @p connection is a logic node (Simulated, Calculated, Integral).
+  static bool isNode(Connection connection);
+  /// The node page's editor, null for a device.
+  NodeEditor *nodeEditor() const { return m_editor; }
+  /// The KindPage: the kinds of logic nodes with inputs offered (by their
+  /// Connection), in their order, without the ones the search hides.
+  QList<Connection> nodeKinds() const;
+  /// The KindPage: the kind marked, NodeKinds for none.
+  Connection  markedKind() const;
+  void        markKind(Connection kind);
+  /// The KindPage's search: shows the kinds whose name or text has @p text.
+  void        searchKinds(const QString &text);
   Connection  connection() const { return m_connection; }
   Page        page() const;
   /// Whether "Next" may be pressed now.
@@ -84,7 +107,8 @@ public:
   /// unchanged on page 3); empty for a new device.
   QString     knownDevice() const;
 
-  /// The device's meter keys, as DeviceSettings::keys() gives them.
+  /// The device's meter keys, as DeviceSettings::keys() gives them; a
+  /// logic node's model and Node/json.
   QVariantMap keys() const;
   QString     name() const;
   /// Where the device goes; set by the button on page 4.
@@ -99,6 +123,10 @@ public:
 public Q_SLOTS:
   void        back();
   void        next();
+
+protected:
+  /// The search field of the KindPage: up and down move in the list, Enter is Next.
+  bool        eventFilter(QObject *watched, QEvent *event) override;
 
 private:
   QToolButton *tile(const QString &icon, const QString &text, const QString &toolTip);
@@ -125,6 +153,12 @@ private:
   DeviceLibrary  *m_library = nullptr;
   DeviceSettings *m_settings = nullptr;
   QStackedWidget *m_pages = nullptr;
+  QTreeWidget    *m_kindList = nullptr;   ///< the KindPage: groups, their kinds
+  QLabel         *m_kindAbout = nullptr;  ///< what the kind marked does
+  QLineEdit      *m_kindSearch = nullptr; ///< in the title row, on the KindPage only
+  QWidget        *m_nodePage = nullptr;
+  NodeEditor     *m_editor = nullptr;   ///< on m_nodePage, for a logic node
+  std::function<NodeEditor *(Connection)> m_makeEditor;
   QLabel         *m_title = nullptr;
   QLineEdit      *m_name = nullptr;
   QToolButton    *m_connect = nullptr;

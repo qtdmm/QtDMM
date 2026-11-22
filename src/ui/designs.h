@@ -58,19 +58,29 @@ namespace Designs
   ///   to match the palette
   /// - SystemIcons: the desktop's icon theme (Linux/BSD, where there is
   ///   one), the plain set filling the gaps - QtDMM's own symbols are
-  ///   only there
-  enum IconSet { SystemIcons, Plain, Coloured };
-  /// "system", "plain", "colored" - the settings value (Icons/set).
+  ///   only there ("System + plain")
+  /// - SystemColoured: the same with the coloured set ("System + coloured"),
+  ///   for a coloured desktop theme such as Oxygen
+  enum IconSet { SystemIcons, Plain, Coloured, SystemColoured };
+  /// "system-plain", "plain", "colored", "system-colored" - the settings
+  /// value (Icons/set). "system", from before the two, reads as the one
+  /// systemThemeColoured() says.
   QString iconSetName(IconSet set);
   IconSet iconSetFromName(const QString &name);
   /// Whether the desktop has an icon theme SystemIcons could use.
   bool systemIconsAvailable();
+  /// Whether the desktop's icon theme is a coloured one (Oxygen, Papirus,
+  /// Humanity, Tango ...): then the coloured set fills its gaps by default.
+  bool systemThemeColoured(const QString &theme);
+  /// The desktop's icon theme (empty on Windows and macOS).
+  QString systemIconTheme();
   /// Called by apply() with the last choice; widgets repaint with the new
   /// symbols.
   void setIconSet(IconSet set);
   IconSet iconSet();
   /// The built-in set in use ("qtdmm-oxygen", "qtdmm-breeze" or
-  /// "qtdmm-breeze-dark"); under SystemIcons the plain one, as the fallback.
+  /// "qtdmm-breeze-dark"); under SystemIcons the plain one, under
+  /// SystemColoured the coloured one, as the fallback.
   QString iconTheme();
   /// A symbol of the plain set (light or dark to match the palette),
   /// whichever set the toolbar has: for lists that should look alike.

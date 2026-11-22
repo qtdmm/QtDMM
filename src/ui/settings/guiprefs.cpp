@@ -60,11 +60,15 @@ GuiPrefs::GuiPrefs(QWidget *parent) : SettingsPage(parent)
   ui_iconSet->addItem(tr("Plain"), QString("plain"));
   // only where the desktop has an icon theme (not on Windows, macOS)
   if (Designs::systemIconsAvailable())
-    ui_iconSet->addItem(tr("System"), QString("system"));
+  {
+    ui_iconSet->addItem(tr("System + plain"), QString("system-plain"));
+    ui_iconSet->addItem(tr("System + coloured"), QString("system-colored"));
+  }
   ui_iconSet->setToolTip(tr("<b>Coloured</b>: QtDMM's coloured symbols (Oxygen). <b>Plain</b>: monochrome "
-                            "symbols (Breeze), light or dark to match the design. <b>System</b>: the icon "
-                            "theme of your desktop, where it has one; QtDMM's own symbols and what the theme "
-                            "lacks come from the plain set."));
+                            "symbols (Breeze), light or dark to match the design. <b>System + plain</b>, "
+                            "<b>System + coloured</b>: the icon theme of your desktop, where it has one; "
+                            "QtDMM's own symbols and what the theme lacks come from the plain or the "
+                            "coloured set."));
   form->addRow(tr("S&ymbols:"), ui_iconSet);
   ui_textLabel = new QCheckBox(tr("Symbols &with text"), this);
   ui_textLabel->setObjectName("ui_textLabel");
@@ -181,6 +185,8 @@ void GuiPrefs::defaultsSLOT()
   QString set = m_cfg->getString("Icons/set");
   if (set.isEmpty())
     set = m_cfg->getBool("Icons/system-theme", false) ? "system" : "colored";
+  // "system" was one entry: the one that suits the desktop's theme
+  set = Designs::iconSetName(Designs::iconSetFromName(set));
   ui_iconSet->setCurrentIndex(qMax(0, ui_iconSet->findData(set)));
 
 

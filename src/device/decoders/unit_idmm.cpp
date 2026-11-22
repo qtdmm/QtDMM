@@ -4,6 +4,7 @@
 
 #include <QRegularExpression>
 
+#include "core/reading.h"
 #include "core/sampletypes.h"
 
 static const bool registered = []() {
@@ -119,8 +120,13 @@ const Function kFunctions61Plus[] = {
   /* 19 */ { "Live",   "NCV", "",    { "" } },
   /* 20 */ { "NCV",    "NCV", "",    { "" } },
   /* 21 */ { "LozV",   "AC",    "V",   { "" } },
-  /* 22 */ { "ACA",    "AC",    "A",   { "" } },
-  /* 23 */ { "DCA",    "DC",    "A",   { "" } },
+  // 22 and 23 as UNI-T's UT61E+ software V2.02 has them, Hz on the 6,000
+  // count ladder and duty, not the clamp's AC A and DC A of the protocol
+  // deck, which spans the family's clamps (dmm-tools a0f661c, ut61eplus spec
+  // §2.5). No UT61+ dial position is known to send them; the UT61D+ manual's
+  // LoZ Hz and duty (short press of Hz%/USB) may (dmm-tools #7). UNVERIFIED
+  /* 22 */ { "Hz",     "HZ",  "Hz",  { "", "", "k", "k", "k", "M" } },
+  /* 23 */ { "%",      "DU",  "%",   { "" } },
   /* 24 */ { "LPF",    "AC",    "V",   { "" } },
   /* 25 */ { "AC/DC",  "",    "V",   { "" } },
   /* 26 */ { "LPF",    "AC",    "V",   { "" } },
@@ -230,6 +236,31 @@ QByteArray DecoderUniTiDMM::keyRequest(const QString &key) const
   return QByteArray();
 }
 
+bool DecoderUniTiDMM::hasKey(const QString &key, const QString &model) const
+{
+  // whether a UT61B+ reacts to 0x4D stays open (dmm-tools, UT61 family #7)
+  if ((key == QLatin1String("peak") || key == QLatin1String("peak_off"))
+      && (model.startsWith(QLatin1String("UT61B+")) || model.startsWith(QLatin1String("UT161B"))))
+    return false;
+  return !keyRequest(key).isEmpty();
+}
+
+bool DecoderUniTiDMM::keyWorks(const QString &key, const QString &model, const Reading &reading) const
+{
+  if (!model.startsWith(QLatin1String("UT61")) && !model.startsWith(QLatin1String("UT161")))
+    return true;
+  const Quantity q = reading.port.quantity;
+  const bool ncv = q == Quantity::Unknown && reading.baseUnit.isEmpty();
+  const bool noRel = ncv || reading.continuity() || reading.diode() || q == Quantity::Frequency || q == Quantity::DutyCycle;
+  if (key == QLatin1String("hold"))
+    return !ncv;
+  if (key == QLatin1String("rel"))
+    return !noRel;
+  if (key == QLatin1String("minmax"))
+    return !noRel && q != Quantity::Capacitance;
+  return true;
+}
+
 bool DecoderUniTiDMM::frameValid(const unsigned char *f)
 {
   if (f[0] != 0xAB || f[1] != 0xCD || f[2] != kFrameLength - 3)
@@ -267,11 +298,17 @@ std::optional<DmmDecoder::DmmResponse> DecoderUniTiDMM::decode(const QByteArray 
   const int fn = f[3] & 0x7F;
   const bool plus = m_type == FrameFormat::UniTUT61Plus;
   const bool clamp = m_type == FrameFormat::UniTUT202BT;
-  if (fn >= (plus ? kFunctionCount61Plus : clamp ? kFunctionCount202 : kFunctionCount))
+  // a function the table lacks: its digits, without a unit, so a meter on
+  // it does not look dead (dmm-tools 2738c05). A second display's frame of
+  // one stays refused: as a reading it would switch the value every frame
+  static const Function unknown = { "unknown", "", "", { "" } };
+  const int count = plus ? kFunctionCount61Plus : clamp ? kFunctionCount202 : kFunctionCount;
+  const Function *listed = fn < count ? (plus ? &kFunctions61Plus[fn] : clamp ? &kFunctions202[fn] : &kFunctions[fn])
+                                      : nullptr;
+  const bool known = listed && listed->name;
+  if (!known && second)
     return std::nullopt;
-  const Function &func = plus ? kFunctions61Plus[fn] : clamp ? kFunctions202[fn] : kFunctions[fn];
-  if (!func.name)
-    return std::nullopt;
+  const Function &func = known ? *listed : unknown;
   const int range = f[4] - '0';
   const unsigned char flagsA = f[14], flagsB = f[15], flagsC = f[16];
 
@@ -284,8 +321,9 @@ std::optional<DmmDecoder::DmmResponse> DecoderUniTiDMM::decode(const QByteArray 
       break;
     }
 
-  m_result.main().special = *func.special ? QString::fromLatin1(func.special)
-                                   : QString::fromLatin1(flagsC & 0x08 ? "AC" : "DC");
+  m_result.main().special = !known         ? QString()
+                            : *func.special ? QString::fromLatin1(func.special)
+                                            : QString::fromLatin1(flagsC & 0x08 ? "AC" : "DC");
   // UT61E+ DC V position with AC shown alongside: the meter alternates, the
   // AC frames become the second value (display line 2, "2nd" in the table)
   if ((plus && fn == 25 && (flagsC & 0x08)) || second)
@@ -300,6 +338,7 @@ std::optional<DmmDecoder::DmmResponse> DecoderUniTiDMM::decode(const QByteArray 
     return displayed(f, prefix);
   }
   m_result.hold = m_hold = flagsA & 0x02;
+  m_result.lowBat = flagsB & 0x02;   // B bit 1: low battery (UNI-T's app)
   // the meter's other keys: A bit3 MAX, bit2 MIN, bit0 REL; C bit2/bit1 peak
   // max/min
   if (flagsA & 0x08)

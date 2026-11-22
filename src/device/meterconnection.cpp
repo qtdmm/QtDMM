@@ -29,7 +29,6 @@
 #include "device/meterconnection.h"
 #include "device/transports/hidserial.h"
 #include "device/transports/hidholtek.h"
-#include "device/transports/calc.h"
 #ifdef QTDMM_WITH_BLE
 #include "device/transports/ble.h"
 #include "device/transports/blegatt.h"
@@ -141,16 +140,11 @@ void MeterConnection::setDevice(const QString &device)
   // "ble <address> <key>" likewise
   // "hid 0xvvvv:0xpppp <path>": the USB ids find the cable again when the
   // path has changed (HidPath)
-  if (m_portType == Transport::PortType::Calc || m_portType == Transport::PortType::Ble
+  if (m_portType == Transport::PortType::Ble
       || m_portType == Transport::PortType::Hid || m_portType == Transport::PortType::HidHoltek)
     m_device = device.section(' ', 1).trimmed();
   else
     m_device = deviceList.last();
-}
-
-void MeterConnection::setCalcInputs(CalcDevice::Inputs inputs)
-{
-  m_portHandler->setCalcInputs(std::move(inputs));
 }
 
 void MeterConnection::initDecoder( FrameFormat::DataFormat df)
@@ -161,17 +155,24 @@ void MeterConnection::initDecoder( FrameFormat::DataFormat df)
     m_readerThread->setDecoder(m_decoder);
   }
   m_decoder->setModel(m_dmmInfo.model);
+  m_decoder->setUnits(m_dmmInfo.units);
+  m_modelChecked = false;
+  m_otherModels.clear();
 }
 
 
 bool MeterConnection::sendKey(const QString &key)
 {
-  const QByteArray frame = m_decoder ? m_decoder->keyRequest(key) : QByteArray();
+  return sendOnce(m_decoder ? m_decoder->keyRequest(key) : QByteArray(), "key " + key.toUtf8());
+}
+
+bool MeterConnection::sendOnce(const QByteArray &frame, const QByteArray &what)
+{
   QIODevice *port = m_portHandler->port();
   if (frame.isEmpty() || !port || !port->isOpen())
     return false;
   if (m_consoleLogging)
-    consoleLine("key " + key.toUtf8() + ": " + frame.toHex(' '));
+    consoleLine(what + ": " + frame.toHex(' '));
 #ifdef QTDMM_WITH_BLE
   // a GATT link repeats what is written as its poll: a key goes once
   if (auto *gatt = dynamic_cast<BleGattDevice *>(port))
@@ -190,13 +191,35 @@ QStringList MeterConnection::keys() const
   return keys;
 }
 
-bool MeterConnection::open()
+bool MeterConnection::open(bool waitForDevice)
 {
   m_wanted = true;
+  // asked anew: its problem said again
+  m_openError.clear();
   if (openPort())
     return true;
-  m_wanted = false;
+  if (!waitForDevice || m_reconnectSeconds <= 0)
+  {
+    m_wanted = false;
+    return false;
+  }
+  // not there yet: waited for as one that went away
+  closePort();
+  m_secondsInError = 0;
+  setState(LinkState::Error, m_error + "\n" + tr("Retrying every %1 s.").arg(m_reconnectSeconds));
+  if (m_delayTimer == 0)
+    m_delayTimer = startTimer(1000);
   return false;
+}
+
+void MeterConnection::openFailed()
+{
+  // a retry that fails as the one before says nothing new: the state still
+  // says it, the log has it once
+  if (m_error == m_openError)
+    return;
+  m_openError = m_error;
+  Q_EMIT error(m_error);
 }
 
 bool MeterConnection::openPort()
@@ -206,19 +229,19 @@ bool MeterConnection::openPort()
     const bool bluetooth = m_portType == Transport::PortType::Ble || m_portType == Transport::PortType::BleGatt;
     m_error = bluetooth ? tr("This QtDMM was built without Bluetooth support.")
                         : tr("Error creating port %1.").arg(deviceName());
-    Q_EMIT error(m_error);
+    openFailed();
     return false;
   }
 
   if (m_portHandler->port() && !m_portHandler->port()->open(QIODevice::ReadWrite))
   {
-    if (m_portType == Transport::PortType::Calc || m_portType == Transport::PortType::RFC2217
+    if (m_portType == Transport::PortType::RFC2217
         || m_portType == Transport::PortType::HidHoltek || m_portType == Transport::PortType::Ble || m_portType == Transport::PortType::BleGatt
         || m_portType == Transport::PortType::Hid)
     {
-      // the formula did not parse / the address or key is malformed; the device says where
+      // the address or key is malformed, the server refused; the device says why
       m_error = m_portHandler->port()->errorString();
-      Q_EMIT error(m_error);
+      openFailed();
       m_portHandler->close();
       return false;
     }
@@ -226,7 +249,9 @@ bool MeterConnection::openPort()
     {
       case QSerialPort::PermissionError:
         m_error = permissionHint();
-        QMessageBox::critical(nullptr, tr("Missing Permission"), m_error);
+        // once, not again at each retry
+        if (m_error != m_openError)
+          QMessageBox::critical(nullptr, tr("Missing Permission"), m_error);
         break;
       case QSerialPort::DeviceNotFoundError:
         m_error = tr("No such device %1.").arg(deviceName());
@@ -235,7 +260,7 @@ bool MeterConnection::openPort()
         m_error = tr("Error opening %1.\nDMM connected and switched on?").arg(deviceName());
         break;
     }
-    Q_EMIT error(m_error);
+    openFailed();
     m_portHandler->close();
     return false;
   }
@@ -245,26 +270,26 @@ bool MeterConnection::openPort()
     if (!m_portHandler->init())
     {
       m_error = tr("Error configuring serial port %1.").arg(deviceName());
-      Q_EMIT error(m_error);
+      openFailed();
       m_portHandler->close();
       return false;
     }
   }
   QIODevice *port = m_portHandler->port();
-  if (auto *calc = dynamic_cast<CalcDevice *>(port))
-  {
-    // which input meter is missing or silent; shown in the status bar
-    // instead of "Connected" until all inputs deliver
-    connect(calc, &CalcDevice::status, this, [this](const QString &message)
-    {
-      if (m_state == LinkState::Connected || m_state == LinkState::Connecting)
-        setState(m_state, message.isEmpty() ? connectedMessage() : message);
-    });
-  }
   // the port devices tell when they are gone: socket closed or refused,
   // USB cable unplugged, sigrok-cli exited, serial device vanished
   if (auto *rfc = dynamic_cast<RFC2217SerialDevice *>(port))
+  {
     connect(rfc, &RFC2217SerialDevice::finished, this, [this, rfc] { portLost(rfc, rfc->errorString()); });
+    // refused at once (loopback on FreeBSD): finished() came before this
+    // connect, and the link would end in Timeout instead of Error
+    if (rfc->hasFinished())
+      QTimer::singleShot(0, this, [this, rfc = QPointer<RFC2217SerialDevice>(rfc)]
+      {
+        if (rfc)
+          portLost(rfc, rfc->errorString());
+      });
+  }
   else if (auto *hid = dynamic_cast<HIDSerialDevice *>(port))
     connect(hid, &HIDSerialDevice::finished, this, [this, hid] { portLost(hid, QString()); });
   else if (auto *htk = dynamic_cast<HidHoltekDevice *>(port))
@@ -285,6 +310,7 @@ bool MeterConnection::openPort()
         portLost(serial, serial->errorString());
     });
 
+  m_openError.clear();
   m_readerThread->setHandle(port);
   m_lastFrame.start();
   m_secondsInError = 0;
@@ -368,9 +394,6 @@ QString MeterConnection::deviceName() const
 
 QString MeterConnection::connectedMessage() const
 {
-  // the formula is long and says little: what kind of source it is
-  if (m_portType == Transport::PortType::Calc)
-    return m_dmmInfo.model == QLatin1String("Simulated meter") ? tr("Simulated") : tr("Calculated");
   // the way in the status bar, the port in its tooltip (the second line)
   QString way;
   switch (m_portType)
@@ -434,8 +457,15 @@ void MeterConnection::timerEvent(QTimerEvent *)
     if (m_reconnectSeconds > 0 && m_secondsInError >= m_reconnectSeconds)
     {
       m_secondsInError = 0;
+      // openPort() leaves its reason in m_error: the state's message before
+      // it, to tell a retry that fails as before (nothing new to say)
+      const QString before = m_error;
       if (!openPort())
-        setState(LinkState::Error, m_error + "\n" + tr("Retrying every %1 s.").arg(m_reconnectSeconds));
+      {
+        const QString text = m_error + "\n" + tr("Retrying every %1 s.").arg(m_reconnectSeconds);
+        m_error = before;
+        setState(LinkState::Error, text);
+      }
     }
     return;
   }
@@ -473,20 +503,41 @@ void MeterConnection::readEventSLOT(const QByteArray &data, int id, qint64 t, qi
     return;
 
   m_lastFrame.restart();
-  if (auto r = m_decoder->decode(data, id); r)
+  auto r = m_decoder->decode(data, id);
+  sendOnce(m_decoder->takeCommand(), "command");
+  if (r)
   {
     r->received = t;
     r->receivedWall = wall;
+  }
+  // a copy of every frame only while a capture window looks
+  static const QMetaMethod frameSignal = QMetaMethod::fromSignal(&MeterConnection::frame);
+  if (isSignalConnected(frameSignal))
+    Q_EMIT frame(data, wall, r);
+  // a meter sending another model's frames (a ZOTEK layout): it says once
+  // which model to choose (dmm-tools abe0fc8)
+  if (r && !m_modelChecked && m_decoder->tellsModel())
+  {
+    m_modelChecked = true;
+    const QStringList models = m_decoder->modelsFromFrame(data);
+    if (!models.isEmpty() && !models.contains(m_dmmInfo.name))
+      for (const QString &m : models)
+        m_otherModels << QString(m).remove(QLatin1String(" *"));
+  }
+  if (r)
+  {
     Q_EMIT response(*r);
     for (const DmmDecoder::DmmChannel &c : r->channels)
       Q_EMIT value(c.dval, c.val, c.unit, c.special, r->range, r->hold, r->showBar, c.id);
-    // a calculated value's text comes from CalcDevice::status (which input
-    // is missing); only the state is ours
-    if (m_portType == Transport::PortType::Calc)
-      setState(LinkState::Connected, m_error);
-    else
-      setState(LinkState::Connected, r->error.isEmpty() ? connectedMessage() : QString("%1 %2").arg(r->error, deviceName()));
+    setState(LinkState::Connected, !r->error.isEmpty() ? QString("%1 %2").arg(r->error, deviceName())
+                                   : !m_otherModels.isEmpty()
+                                     ? tr("%1 sends the data of a %2: choose that model in its settings")
+                                         .arg(deviceName(), m_otherModels.join(QLatin1String(" / ")))
+                                     : connectedMessage());
   }
+  else if (m_decoder->getType() == FrameFormat::RawCapture)
+    // no value by design: the bytes are only for the capture window
+    setState(LinkState::Connected, tr("Capture only %1").arg(deviceName()));
   else
     setState(LinkState::Connected, tr("Error %1").arg(deviceName()));
 }

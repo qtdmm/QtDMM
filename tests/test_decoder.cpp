@@ -13,6 +13,11 @@
 #include "device/dmmdecoder.h"
 #include "device/protocols.h"
 #include "device/decoders/uni_t_ienv.h"
+#include "device/decoders/text_lines.h"
+#include "device/decoders/uni_t_ut117c.h"
+#include "device/decoders/uni_t_ut219pv.h"
+#include "device/decoders/uni_t_ut320i.h"
+#include "device/decoders/uni_t_ut325f.h"
 #include "device/decoders/brymen_bm78xbt.h"
 #include "device/decoders/uni_t_ut181a.h"
 #include "core/readingadapter.h"
@@ -68,6 +73,342 @@ int main(int argc, char **argv)
     expect(ut60bt, "minmax", "");
     expect(ut60bt, "peak", "");
     expect(ut60bt, "nosuchkey", "");
+    // UT381A (synthetic frames, ut381a.md): HOLD sends 0x31 with the other
+    // state than the meter's last; the settings frame switches the unit to
+    // fc (lux x 0.093); the live frame's mode reaches the states
+    {
+      auto ut381a = DmmDecoder::getInstance(FrameFormat::UniTUT381A);
+      auto bad = [&](const char *what)
+      {
+        qWarning() << "UT381A:" << what;
+        ++problems;
+      };
+      const QByteArray live = QByteArray::fromHex("aabb0c0100054402d99a0000000330");
+      if (ut381a->keyRequest("hold") != QByteArray::fromHex("aabb043101019b"))
+        bad("HOLD while not held is not 31 01");
+      if (ut381a->decode(QByteArray::fromHex("aabb040301016d"), 0))
+        bad("the HOLD frame gives a reading");
+      if (ut381a->keyRequest("hold") != QByteArray::fromHex("aabb043100019a"))
+        bad("HOLD while held is not 31 00");
+      const auto held = ut381a->decode(live, 0);
+      if (!held || !held->hold || held->main().unit != "lx" || held->main().val != "523.4")
+        bad("the live frame after HOLD: not 523.4 lx held");
+      ut381a->decode(QByteArray::fromHex("aabb0702e00300000251"), 0);
+      const auto fc = ut381a->decode(live, 0);
+      if (!fc || fc->main().unit != "fc" || fc->main().val != "48.68")
+        bad(qPrintable("the settings frame's fc: got " + (fc ? fc->main().val + " " + fc->main().unit : QString("none"))));
+      const auto max = DmmDecoder::getInstance(FrameFormat::UniTUT381A)
+                         ->decode(QByteArray::fromHex("aabb0c0101054236ae1400000002b2"), 0);
+      if (!max || !(max->main().states & SampleFlag::Max))
+        bad("mode 1 is not MAX");
+      if (DmmDecoder::getInstance(FrameFormat::UniTUT381A)->keyRequest("minmax").size())
+        bad("a key other than HOLD gives a frame");
+    }
+    // UT372D (synthetic frames, ut372d.md): the four displays are values
+    // 1-4; HOLD and "unit" send set frames with the probe and unit last seen
+    {
+      auto ut372d = DmmDecoder::getInstance(FrameFormat::UniTUT372D);
+      auto bad = [&](const char *what)
+      {
+        qWarning() << "UT372D:" << what;
+        ++problems;
+      };
+      const auto hz = ut372d->decode(QByteArray::fromHex("aabb200101010000020000097100020000098800020000095600020000096f01000373"), 0);
+      if (!hz || hz->channels.size() != 4 || hz->main().val != "24.17" || hz->channels[1].val != "24.40"
+          || !(hz->channels[1].states & SampleFlag::Max) || !(hz->channels[3].states & SampleFlag::Avg)
+          || hz->channels[2].unit != "Hz" || hz->hold)
+        bad("24.17 Hz: not four values NOW, MAX, MIN, AVG measuring");
+      if (ut372d->keyRequest("hold") != QByteArray::fromHex("aabb0632010100019f"))
+        bad("HOLD while measuring is not 32 <probe> <unit> 00");
+      if (ut372d->keyRequest("unit") != QByteArray::fromHex("aabb0631010200019f"))
+        bad("unit after Hz on the contact probe is not REV (31 01 02)");
+      ut372d->decode(QByteArray::fromHex("aabb20050305000001000001720001000001720001000000000001000000be0001033b"), 0);
+      if (ut372d->keyRequest("hold") != QByteArray::fromHex("aabb063203050101a6"))
+        bad("HOLD while held is not 32 03 05 01");
+      if (ut372d->keyRequest("unit") != QByteArray::fromHex("aabb0631030000019f"))
+        bad("unit after ft on a wheel is not m/min (31 03 00)");
+    }
+    // UT382A (synthetic frames, ut382a.md): HOLD and fc from the status
+    // frame, lx·h as value 2 in the integral, cd once a start frame told
+    // the distance, the zero calibration skipped
+    {
+      auto ut382a = DmmDecoder::getInstance(FrameFormat::UniTUT382A);
+      auto bad = [&](const char *what)
+      {
+        qWarning() << "UT382A:" << what;
+        ++problems;
+      };
+      const QByteArray live = QByteArray::fromHex("aabb100100044402d99a000000000000000333");
+      if (ut382a->pollRequest() != QByteArray::fromHex("aabb04390001a2"))
+        bad("the poll is not 39 00");
+      if (ut382a->keyRequest("hold") != QByteArray::fromHex("aabb043101019b"))
+        bad("HOLD while not held is not 31 01");
+      if (ut382a->decode(QByteArray::fromHex("aabb080c01800103e80365"), 0))
+        bad("the status frame gives a reading");
+      const auto held = ut382a->decode(live, 0);
+      if (!held || !held->hold || held->main().unit != "fc" || held->main().val != "48.68")
+        bad("after the status (held, fc): not 48.68 fc held");
+      if (ut382a->keyRequest("hold") != QByteArray::fromHex("aabb043100019a"))
+        bad("HOLD while held is not 31 00");
+      ut382a->decode(QByteArray::fromHex("aabb080c00000103e80265"), 0);
+      const auto integral = ut382a->decode(QByteArray::fromHex("aabb10010704449a533342631eb8000c1e048a"), 0);
+      if (!integral || integral->channels.size() != 2 || integral->main().val != "1235" || integral->main().unit != "lx"
+          || integral->channels[1].val != "56.78" || integral->channels[1].unit != "lx·h" || integral->hold)
+        bad("integral: not 1235 lx and 56.78 lx·h");
+      const QByteArray intensity = QByteArray::fromHex("aabb10010804437a000000000000000000023f");
+      const auto plain = ut382a->decode(intensity, 0);
+      if (!plain || plain->channels.size() != 1 || plain->main().unit != "lx")
+        bad("intensity without a distance is not lux alone");
+      ut382a->decode(QByteArray::fromHex("aabb0c040100000000c8000000023e"), 0);
+      const auto cd = ut382a->decode(intensity, 0);
+      if (!cd || cd->main().unit != "cd" || cd->main().val != "1000" || cd->channels.size() != 2
+          || cd->channels[1].val != "250.0")
+        bad(qPrintable("250 lx at 2 m: got " + (cd ? cd->main().val + " " + cd->main().unit : QString("none"))));
+      const auto diff = ut382a->decode(QByteArray::fromHex("aabb1001062441480000000000000000000229"), 0);
+      if (!diff || diff->main().val != "-12.50")
+        bad("difference with the sign bit is not -12.50");
+      const auto err = ut382a->decode(QByteArray::fromHex("aabb10010044000000000000000000000001ba"), 0);
+      if (!err || !err->main().noValue)
+        bad("the error flag is not no value");
+      if (ut382a->decode(QByteArray::fromHex("aabb100104043f80000000000000000000023d"), 0))
+        bad("the zero calibration gives a reading");
+      if (ut382a->keyRequest("minmax").size())
+        bad("a key other than HOLD gives a frame");
+    }
+    // UT320i (synthetic frames, ut320i.md): T1 and T2 as two values, a
+    // missing probe without a value, the unit of the settings frame, the
+    // sum checked
+    {
+      auto ut320i = DmmDecoder::getInstance(FrameFormat::UniTUT320i);
+      auto bad = [&](const char *what)
+      {
+        qWarning() << "UT320i:" << what;
+        ++problems;
+      };
+      if (DecoderUT320i::settingsRequest() != QByteArray::fromHex("aabb04310601a0"))
+        bad("the settings request is not 31 06");
+      const QByteArray both = QByteArray::fromHex("aabb140100000000000000003333bb413333b3c00004b5");
+      const auto c = ut320i->decode(both, 0);
+      if (!c || c->channels.size() != 2 || c->main().val != "23.4" || c->main().unit != "C"
+          || c->channels[1].val != "-5.6" || c->channels[1].name != "T2")
+        bad("not T1 23.4 C and T2 -5.6 C");
+      const auto missing = ut320i->decode(QByteArray::fromHex("aabb14010000000000000000cdcc744200000000030" "3cc"), 0);
+      if (!missing || missing->main().val != "61.2" || !missing->channels[1].noValue)
+        bad("T2 without a probe is not no value");
+      const auto ol = ut320i->decode(QByteArray::fromHex("aabb14010000000000000000000000000000000006" "0180"), 0);
+      if (!ol || ol->main().val != "OL" || ol->channels[1].val != "-OL")
+        bad("flags 1/2 are not OL / -OL");
+      if (ut320i->decode(QByteArray::fromHex("aabb0a06ff0100000001000276"), 0))
+        bad("the settings frame gives a reading");
+      const auto f = ut320i->decode(both, 0);
+      if (!f || f->main().unit != "dF" || f->main().val != "74.1" || f->channels[1].val != "21.9")
+        bad(qPrintable("after the settings (F): got " + (f ? f->main().val + " " + f->main().unit : QString("none"))));
+      ut320i->decode(QByteArray::fromHex("aabb0a06ff0200000001000277"), 0);
+      const auto k = ut320i->decode(both, 0);
+      if (!k || k->main().unit != "K" || k->main().val != "296.5")
+        bad("after the settings (K): not 296.5 K (23.4 as float32 + 273.15)");
+      const auto one = DmmDecoder::getInstance(FrameFormat::UniTUT320i)
+                         ->decode(QByteArray::fromHex("aabb12110102030405060708090a6666124200" "02df"), 0);
+      if (!one || one->main().val != "36.6" || !one->channels[1].val.isEmpty())
+        bad("command 0x11: not 36.6 with the second value cleared");
+      if (ut320i->decode(QByteArray::fromHex("aabb140100000000000000003333bb413333b3c00004b4"), 0))
+        bad("a wrong sum gives a reading");
+    }
+    // UT325F (synthetic frames, ut325f.md): the panel with the live output
+    // off is written back once with it on (takeCommand()); the keys change
+    // one field of the panel; four values named with their thermocouple
+    {
+      auto ut325f = DmmDecoder::getInstance(FrameFormat::UniTUT325F);
+      auto bad = [&](const char *what)
+      {
+        qWarning() << "UT325F:" << what;
+        ++problems;
+      };
+      if (DecoderUT325F::getPanel() != QByteArray::fromHex("aa550003350137"))
+        bad("get panel is not AA 55 00 03 35 01 37");
+      if (!ut325f->hasKey("hold", "") || !ut325f->hasKey("unit", "") || ut325f->keyRequest("hold").size())
+        bad("the keys before the panel: shown, but no frame");
+      const QByteArray live = QByteArray::fromHex("aa550020013333bb410000c942cdcc44c100805444000000000000ac4100000000000830");
+      const QByteArray split = live.left(20);
+      if (ut325f->checkFormat(split.constData(), size_t(split.size() - 1)) || !ut325f->checkFormat(live.constData(), size_t(live.size() - 1)))
+        bad("the live frame is not found by its length alone");
+      if (ut325f->decode(QByteArray::fromHex("aa5500130600000100000000000100000000030001011e"), 0))
+        bad("the panel gives a reading");
+      if (ut325f->takeCommand() != QByteArray::fromHex("aa55001036010001000000000001000000000148"))
+        bad("the panel with the live output off is not written back with it on");
+      if (ut325f->takeCommand().size())
+        bad("the command is given twice");
+      if (ut325f->keyRequest("hold") != QByteArray::fromHex("aa55001036010101000000000001000000000149"))
+        bad("HOLD is not the panel with hold 1");
+      if (ut325f->keyRequest("minmax") != QByteArray::fromHex("aa55001036010001000000000001010000000149"))
+        bad("MIN/MAX is not the panel with mode 1");
+      if (ut325f->keyRequest("unit") != QByteArray::fromHex("aa55001036010001000000000001000100000149"))
+        bad("UNIT is not the panel with unit 1");
+      const auto c = ut325f->decode(live, 0);
+      if (!c || c->channels.size() != 4 || c->main().val != "23.4" || c->channels[3].val != "850.0"
+          || c->channels[2].val != "-12.3" || c->channels[1].name != "T2 (K)" || c->hold)
+        bad("not four values T1-T4 (K) 23.4 ... 850.0 C");
+      if (!c || c->battery != Battery::Mid)
+        bad("the panel's battery 3 of 5 is not mid");
+      ut325f->decode(QByteArray::fromHex("aa55001306010101000000000001000000000300010120"), 0);
+      if (ut325f->takeCommand().size())
+        bad("a panel with the live output on is written back");
+      const auto words = ut325f->decode(QByteArray::fromHex("aa550020013333bb41000000000000000000000000003122150000ac41000000000003d7"), 0);
+      if (!words || !words->hold || !words->channels[1].noValue || words->channels[2].val != "OL"
+          || words->channels[3].val != "-OL" || words->channels[2].name != "T3 (T)" || words->channels[3].name != "T4 (S)")
+        bad("held: T2 no probe, T3 OL (T), T4 -OL (S) not shown so");
+      ut325f->decode(QByteArray::fromHex("aa55001306010001000000000001000100000300010120"), 0);
+      const auto max = ut325f->decode(QByteArray::fromHex("aa5500200166661242666614420000000000000000000030300000ac41000000000104b0"), 0);
+      if (!max || max->main().unit != "dF" || max->main().val != "97.9" || !(max->channels[1].states & SampleFlag::Max))
+        bad(qPrintable("MAX in F: got " + (max ? max->main().val + " " + max->main().unit : QString("none"))));
+    }
+    // UT117C (synthetic frames, ut117c.md): the poll and the keys as the
+    // app sends them, keys greyed out by function, NCV, µF and low
+    // battery, both length conventions, a wrong sum
+    {
+      auto ut117c = DmmDecoder::getInstance(FrameFormat::UniTUT117C);
+      auto bad = [&](const char *what)
+      {
+        qWarning() << "UT117C:" << what;
+        ++problems;
+      };
+      if (ut117c->pollRequest() != QByteArray::fromHex("abcd0004050001" "81"))
+        bad("the poll is not AB CD 00 04 05 00 01 81");
+      const QList<QPair<const char *, const char *>> keys = {
+        { "hold", "abcd0004125a01e8" }, { "select1", "abcd0004015a01d7" }, { "range", "abcd00040201017f" },
+        { "auto", "abcd00040200017e" }, { "rel", "abcd0004035a01d9" }, { "minmax", "abcd000404010181" },
+        { "minmax_off", "abcd000404000180" }, { "lpf", "abcd0004145a01ea" }, { "lamp", "abcd0004155a01eb" },
+      };
+      for (const auto &k : keys)
+        if (ut117c->keyRequest(k.first) != QByteArray::fromHex(k.second))
+          bad(qPrintable(QString("key %1 is not %2").arg(k.first, k.second)));
+      const Reading none;
+      const auto ncv = ut117c->decode(QByteArray::fromHex("abcd0014020d31002020202020202020202030000000033c"), 0);
+      if (!ncv || ncv->main().val != "HI" || !ncv->main().noValue || ncv->main().special != "NCV")
+        bad("NCV range '1' is not HI without a value");
+      if (ut117c->keyWorks("hold", "", none) || !ut117c->keyWorks("select1", "", none))
+        bad("NCV: HOLD not grey or SELECT grey");
+      const auto cap = ut117c->decode(QByteArray::fromHex("abcd001402093100202020342e3730754620300008000404"), 0);
+      if (!cap || cap->main().unit != QString::fromUtf8("µF") || cap->main().val != "4.70" || !cap->lowBat
+          || std::abs(cap->main().dval - 4.7e-6) > 1e-12)
+        bad("capacitance: not 4.70 µF with low battery");
+      if (!ut117c->keyWorks("range", "", none) || ut117c->keyWorks("lpf", "", none))
+        bad("capacitance: RANGE grey or LPF not grey");
+      const auto dcv = ut117c->decode(QByteArray::fromHex("abcd0012020430002020352e3132335620203000000003bf"), 0);
+      if (!dcv || dcv->main().val != "5.123" || dcv->main().special != "DC")
+        bad("the reading with length 0x12 (libreble) is not read");
+      if (ut117c->keyWorks("select1", "", none))
+        bad("DC V: SELECT not grey");
+      if (ut117c->decode(QByteArray::fromHex("abcd0014020430002020352e3132335620203000000003c2"), 0))
+        bad("a wrong sum gives a reading");
+      if (ut117c->decode(QByteArray::fromHex("abcd0004010001" "7d"), 0))
+        bad("a key's answer gives a reading");
+    }
+    // UT219PV (synthetic frames, ut219pv.md): two displays, none where the
+    // function has none; HOLD and ZERO; the keys; a save key on the meter
+    // answered once; LPF only with a low-pass twin
+    {
+      auto ut219pv = DmmDecoder::getInstance(FrameFormat::UniTUT219PV);
+      auto bad = [&](const char *what)
+      {
+        qWarning() << "UT219PV:" << what;
+        ++problems;
+      };
+      const QList<QPair<const char *, const char *>> keys = {
+        { "select1", "abcd0004015a01d7" }, { "hold", "abcd0004125a01e8" }, { "autohold", "abcd0004115a01e7" },
+        { "minmax", "abcd000404010181" }, { "minmax_off", "abcd000404000180" }, { "inrush", "abcd0004135a01e9" },
+        { "lpf", "abcd0004145a01ea" }, { "zero", "abcd0004035a01d9" },
+      };
+      for (const auto &k : keys)
+        if (ut219pv->keyRequest(k.first) != QByteArray::fromHex(k.second))
+          bad(qPrintable(QString("key %1 is not %2").arg(k.first, k.second)));
+      const Reading none;
+      const auto acv = ut219pv->decode(QByteArray::fromHex("abcd0022020330203233302e34562020302035302e3030487a202020303030003400000006a5"), 0);
+      if (!acv || acv->channels.size() != 2 || acv->channels[1].val != "50.00" || acv->channels[1].unit != "Hz"
+          || acv->channels[1].special != "HZ")
+        bad("AC V: the second display is not 50.00 Hz");
+      if (!ut219pv->keyWorks("lpf", "", none))
+        bad("AC V: LPF grey");
+      const auto dca = ut219pv->decode(QByteArray::fromHex("abcd00220201302031322e3334412020302020202020202020202020303030003400000005ba"), 0);
+      if (!dca || dca->main().val != "12.34" || !dca->channels[1].val.isEmpty())
+        bad("DC A: not 12.34 A with the second value empty");
+      if (ut219pv->keyWorks("lpf", "", none))
+        bad("DC A: LPF not grey");
+      const auto temp = ut219pv->decode(QByteArray::fromHex("abcd0022021130202032332e356f432030202037342e336f46202020303030003400000006cc"), 0);
+      if (!temp || temp->main().unit != "C" || temp->channels[1].unit != "dF" || temp->channels[1].val != "74.3")
+        bad("temperature: not 23.5 C and 74.3 dF");
+      const auto held = ut219pv->decode(QByteArray::fromHex("abcd002202023020202d312e32562020302020202020202020202020303030003406000005bc"), 0);
+      if (!held || !held->hold || held->main().val != "-1.2" || !(held->main().states & SampleFlag::Relative))
+        bad("HOLD and ZERO: not -1.2 V held, relative");
+      const auto flex = ut219pv->decode(QByteArray::fromHex("abcd002202133020202020202020202030202020202020202020202030303000340000000553"), 0);
+      if (!flex || !flex->main().noValue)
+        bad("flex clamp missing: not without a value");
+      if (ut219pv->decode(QByteArray::fromHex("abcd00040c000188"), 0))
+        bad("a save key gives a reading");
+      if (ut219pv->takeCommand() != QByteArray::fromHex("abcd00040c000188") || ut219pv->takeCommand().size())
+        bad("the single-save key is not answered once with 0C 00");
+      ut219pv->decode(QByteArray::fromHex("abcd00040a5a01e0"), 0);
+      if (ut219pv->takeCommand() != QByteArray::fromHex("abcd00040a000186"))
+        bad("the multi-save key is not answered with 0A 00");
+    }
+    // text lines (Serial Plotter, Teleplot): a value per name up to four,
+    // a Teleplot line gives its one value, xy two, skipped lines, the rest
+    // of a line too long for the reader
+    {
+      auto lines = DmmDecoder::getInstance(FrameFormat::TextLines);
+      auto bad = [&](const char *what)
+      {
+        qWarning() << "TextLines:" << what;
+        ++problems;
+      };
+      auto line = [&](const char *text) { return lines->decode(QByteArray(text) + "\r\n", 0); };
+      const auto first = line("a:1,b:2");
+      if (!first || first->channels.size() != 2 || first->channels[0].id != 0 || first->channels[1].id != 1
+          || first->channels[1].name != "b" || first->channels[1].val != "2")
+        bad("a:1,b:2 is not values 1 and 2 named a and b");
+      const auto b = line("b:7.5\xc2\xa7mV");
+      if (!b || b->channels.size() != 1 || b->main().id != 1 || b->main().unit != "mV" || std::abs(b->main().dval - 0.0075) > 1e-12)
+        bad("Teleplot b:7.5 mV is not value 2 alone, 0.0075");
+      const auto xy = line("p:12.3:45.67|xy");
+      if (!xy || xy->channels.size() != 2 || xy->channels[0].id != 2 || xy->channels[0].name != "p.x"
+          || xy->channels[1].id != 3 || xy->channels[1].val != "45.67")
+        bad("p:12.3:45.67|xy is not values 3 and 4, p.x and p.y");
+      const auto fifth = line("e:5,a:9");
+      if (!fifth || fifth->channels.size() != 1 || fifth->main().id != 0 || fifth->main().val != "9")
+        bad("a fifth name is not left out");
+      for (const char *skipped : { "hello world", "v:abc", "nan", "inf", "x:1:2:3", "p:1|xy", "a:1,b:x",
+                                   "state:on|t", ">:Hello world", "3D|cube:S:cube", "", "\xff\xfe" })
+        if (line(skipped))
+          bad(qPrintable(QString("not skipped: ") + skipped));
+      // a label that is a unit is the unit too; "C" alone and words are names
+      auto units = DmmDecoder::getInstance(FrameFormat::TextLines);
+      const auto va = units->decode("V:3.31,mA:12.5,temp:20,C:1\r\n", 0);
+      if (!va || va->channels.size() != 4 || va->channels[0].unit != "V" || !va->channels[0].name.isEmpty()
+          || va->channels[1].unit != "mA" || std::abs(va->channels[1].dval - 0.0125) > 1e-12
+          || !va->channels[2].unit.isEmpty() || !va->channels[3].unit.isEmpty())
+        bad("V, mA as units and not as names (named by what they measure); temp and C not");
+      // units chosen in the settings: the number as sent, in that unit;
+      // "none" takes the label's unit away, an empty entry keeps it
+      auto chosen = DmmDecoder::getInstance(FrameFormat::TextLines);
+      chosen->setUnits({"°C", "none", ""});
+      const auto ch = chosen->decode("mV:3.31,mA:12.5,temp:20\r\n", 0);
+      if (!ch || ch->channels.size() != 3 || ch->channels[0].unit != "°C" || std::abs(ch->channels[0].dval - 3.31) > 1e-12
+          || !ch->channels[1].unit.isEmpty() || std::abs(ch->channels[1].dval - 12.5) > 1e-12
+          || !ch->channels[2].unit.isEmpty() || ch->channels[2].name != "temp"
+          || ch->channels[0].name != "mV" || ch->channels[1].name != "mA")
+        bad("units chosen per value");
+      const auto ch2 = chosen->decode("mV:1,mA:2,temp:3,V:4\r\n", 0);
+      if (!ch2 || ch2->channels.size() != 4 || ch2->channels[3].unit != "V")
+        bad("value 4 without a chosen unit keeps its label's");
+      const QByteArray longLine(120, '1');
+      for (int i = 0; i < longLine.size(); ++i)
+        if (lines->checkFormat(longLine.constData(), size_t(qMin(i, FIFO_LENGTH - 1))))
+          bad("a line without LF ends");
+      if (line("a:23"))
+        bad("the rest of a line too long for the reader is taken");
+      if (!line("a:23"))
+        bad("the line after it is not taken");
+    }
     expect(ut61plus, "hold", "abcd034a01c5");
     expect(ut61plus, "minmax", "abcd034101bc");
     expect(ut61plus, "minmax_off", "abcd034201bd");
@@ -89,6 +430,17 @@ int main(int argc, char **argv)
     expect(ut202bt, "peak", "");
     expect(ut60bt, "fn_a", "");
     expect(ut61plus, "fn_v", "");
+    // no PEAK on the UT61B+ and UT161B, whose manual has a plain MAX/MIN key
+    // (dmm-tools f2dea93); the other UT61+ have it
+    {
+      auto d = DmmDecoder::getInstance(ut61plus);
+      if (d->hasKey("peak", "UT61B+ *") || d->hasKey("peak_off", "UT161B (UT-D09 USB) *")
+          || !d->hasKey("minmax", "UT61B+ *") || !d->hasKey("peak", "UT61E+ *") || !d->hasKey("peak", "UT161D *"))
+      {
+        qWarning() << "UT61+ keys per model: PEAK only where the manual has it";
+        ++problems;
+      }
+    }
     expect(FrameFormat::Metex14, "hold", "");   // no remote control
 
     // the ZOTEK meters: AB CD 03 <key> 00 00 00 00 <sum>, scrambled with the
@@ -130,7 +482,9 @@ int main(int argc, char **argv)
       zcheck(!zdecode("1b847055a2c1227166fa3a"), "blank display: no reading");
       // the layout names the model
       zcheck(z->modelsFromFrame(QByteArray::fromHex("1b847041085c7d7f66fa3a"))
-               == QStringList({ "ZOTEK ZT-300AB *", "ANENG AN9002 *" }), "type 3 is the ZT-300AB");
+               == QStringList({ "ZOTEK ZT-300AB *", "ANENG AN9002 *", "BSIDE ZT-300AB *", "BABATools AD900 *" }),
+             "type 3 is the ZT-300AB (and the AD900 of unknown layout)");
+      zcheck(z->hasKey("fn_auto", "BSIDE ZT-5B *") && !z->hasKey("hold", "BABATools AD900 *"), "BSIDE keys, none for the AD900");
       zcheck(z->modelsFromFrame(QByteArray::fromHex("1b8471153c2bd9fa66a9")).value(0) == "ZOTEK ZT-5B *", "type 2 is the ZT-5B");
       zcheck(z->modelsFromFrame(QByteArray::fromHex("0102030405")).isEmpty(), "no packet, no model");
       // a notification longer than its packet (zeros after it, the key on
@@ -322,17 +676,59 @@ int main(int argc, char **argv)
       ucheck(u->keyRequest("minmax") == DecoderUT181A::command(0x04, QByteArray::fromHex("01")), "MAX/MIN on");
     }
 
-    // the UT171 (dmm-tools UT171 spec §4.3): the UT181A's framing, connect
-    // while no measurement came, no keys
+    // the UT171 (dmm-tools UT171 spec §4): the UT181A's framing, connect while
+    // no measurement came; the keys as UNI-T's software sends them, RANGE and
+    // REL from the reading shown
     {
       auto u = DmmDecoder::getInstance(FrameFormat::UniTUT171);
-      const bool before = u->pollRequest() == QByteArray::fromHex("abcd04000a010f00");
-      const bool read = u->decode(QByteArray::fromHex("abcd1100 02000102011f854541 0000 00000000 4101"), 0).has_value();
-      if (!before || !read || !u->pollRequest().isEmpty() || u->hasKey("hold", "UT171A *"))
+      int bad = 0;
+      auto ucheck = [&](bool ok, const char *what)
       {
-        qWarning() << "UT171: connect before the first measurement, none after it, no keys";
-        ++problems;
-      }
+        if (!ok)
+        {
+          qWarning() << "UT171:" << what;
+          ++bad;
+        }
+      };
+      // a measurement: 02, status A, status B, mode, range, float, decimals/state, unit
+      auto measurement = [](quint8 a, quint8 b, quint8 mode, quint8 range, float v)
+      {
+        QByteArray p = QByteArray::fromHex("02") + char(a) + char(b) + char(mode) + char(range);
+        p.append(reinterpret_cast<const char *>(&v), 4).append(char(0x40)).append(char(0x00));
+        QByteArray f = QByteArray::fromHex("abcd") + char((p.size() + 2) & 0xFF) + char(0);
+        f += p;
+        quint16 sum = 0;
+        for (int i = 2; i < f.size(); ++i)
+          sum = quint16(sum + quint8(f[i]));
+        return f + char(sum & 0xFF) + char(sum >> 8);
+      };
+      auto cmd = [](const char *hex) { return DecoderUT181A::command(quint8(QByteArray::fromHex(hex)[0]),
+                                                                     QByteArray::fromHex(hex).mid(1)); };
+      ucheck(u->pollRequest() == QByteArray::fromHex("abcd04000a010f00"), "connect before the first measurement");
+      ucheck(u->keyRequest("range").isEmpty() && u->keyRequest("rel").isEmpty(), "RANGE and REL need a reading");
+      ucheck(u->keyRequest("hold") == QByteArray::fromHex("abcd0400075a6500"), "HOLD 07 5A as the software's frame");
+      ucheck(u->keyRequest("auto") == cmd("0200") && u->keyRequest("select2") == cmd("035a")
+               && u->keyRequest("minmax") == cmd("0501") && u->keyRequest("minmax_off") == cmd("0500")
+               && u->keyRequest("peak") == cmd("0601") && u->keyRequest("peak_off") == cmd("0600"),
+             "AUTO, Hz%, MAX/MIN and Peak");
+      // V DC, manual range 2 of 4: RANGE to row 3, REL with the float shown
+      const float v = 1.2345f;
+      ucheck(u->decode(measurement(0x00, 0x00, 0x02, 2, v), 0).has_value(), "V DC reads");
+      ucheck(u->pollRequest().isEmpty(), "no connect while measurements come");
+      ucheck(u->keyRequest("range") == cmd("0203"), "RANGE in manual: the next row");
+      const QByteArray shown(reinterpret_cast<const char *>(&v), 4);
+      ucheck(u->keyRequest("rel") == DecoderUT181A::command(0x04, QByteArray(1, '\x01') + shown),
+             "REL: 04 01 with the float shown");
+      u->decode(measurement(0x00, 0x00, 0x02, 4, v), 0);
+      ucheck(u->keyRequest("range") == cmd("0201"), "RANGE after the last row: the first");
+      u->decode(measurement(0x00, 0x01, 0x02, 2, v), 0);
+      ucheck(u->keyRequest("range") == cmd("0202"), "RANGE in auto: manual on the row shown");
+      u->decode(measurement(0x10, 0x01, 0x02, 2, 0.0f), 0);
+      ucheck(u->keyRequest("rel") == cmd("0400"), "REL while REL is on: leave it");
+      u->decode(measurement(0x00, 0x01, 0x0D, 0, 0.5f), 0);
+      ucheck(u->keyRequest("range").isEmpty(), "no RANGE on the diode, which has no rows");
+      ucheck(u->hasKey("hold", "UT171A *") && !u->hasKey("lamp", "UT171C *"), "the software's keys only");
+      problems += bad;
     }
 
     // the EEVblog 121GW (dmm-tools 121GW spec §11.1): F4 and the code twice
@@ -369,6 +765,38 @@ int main(int argc, char **argv)
       {
         qWarning() << "VC-880 streams, the VC-890 is polled after FF 00";
         ++problems;
+      }
+    }
+
+    // no checksum: a function or range byte the decoder does not know is a
+    // damaged frame, its digits are no reading and no 0
+    {
+      struct Frames { FrameFormat::DataFormat format; const char *good; QList<const char *> damaged; };
+      const QList<Frames> list = {
+        { FrameFormat::VC940Continuous, "313233343a313130310d0a",
+          { "313233343a313e30310d0a", "313233343a303430310d0a" } },
+        { FrameFormat::CyrustekES51922, "3030303030303b3030303a300d0a",
+          { "3030303030303e3030303a300d0a", "3730303030303b3030303a300d0a" } },
+        { FrameFormat::CyrustekES51962, "30303035383b30303a0d0a",
+          { "30303035383730303a0d0a", "37303035383b30303a0d0a", "37303035383330303a0d0a" } },
+        { FrameFormat::CyrustekES51986, "30303030303b38303a0d0a",
+          { "30303030303738303a0d0a", "37303030303b38303a0d0a" } },
+      };
+      for (const Frames &f : list)
+      {
+        auto d = DmmDecoder::getInstance(f.format);
+        const auto good = d->decode(QByteArray::fromHex(f.good), 0);
+        bool ok = good && !good->main().noValue;
+        for (const char *frame : f.damaged)
+        {
+          const auto r = d->decode(QByteArray::fromHex(frame), 0);
+          ok = ok && r && r->main().noValue;
+        }
+        if (!ok)
+        {
+          qWarning() << "unknown function or range byte is no value:" << f.good;
+          ++problems;
+        }
       }
     }
 
@@ -899,7 +1327,14 @@ int main(int argc, char **argv)
     if (expected.contains("noValue")) check("noValue", main.noValue,      expected["noValue"]);
     if (expected.contains("fault"))   check("fault",   main.fault,        expected["fault"]);
     if (expected.contains("lowBat"))  check("lowBat",  result->lowBat,    expected["lowBat"]);
+    if (expected.contains("battery"))
+    {
+      static const char *const names[] = { "unknown", "low", "mid", "full" };
+      check("battery", QString::fromLatin1(names[int(result->battery)]), expected["battery"]);
+    }
     if (expected.contains("relative")) check("relative", bool(main.states & SampleFlag::Relative), expected["relative"]);
+    if (expected.contains("max"))     check("max",     bool(main.states & SampleFlag::Max), expected["max"]);
+    if (expected.contains("min"))     check("min",     bool(main.states & SampleFlag::Min), expected["min"]);
     if (expected.contains("dval2"))   check("dval2",   sub.dval,          expected["dval2"]);
     if (expected.contains("val2"))    check("val2",    sub.val,           expected["val2"]);
     if (expected.contains("unit2"))   check("unit2",   sub.unit,          expected["unit2"]);

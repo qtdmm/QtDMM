@@ -83,7 +83,10 @@ std::optional<DmmDecoder::DmmResponse> DecoderUT8802::decode(const QByteArray &d
   const Position *p = positionOf(f[1]);
   if (f[0] != 0xAC || !p)
     return std::nullopt;
-  const quint8 status = f[7];
+  // the flags and the sign in frame byte 6, as every uci.dll build with
+  // UT8802 code reads them (dmm-tools 3d327e2); byte 7 has only the error
+  // flag (bit 7). No meter has been read either way.
+  const quint8 status = f[6];
   const int point = f[5] & 0x0F;
 
   m_result = {};
@@ -105,12 +108,15 @@ std::optional<DmmDecoder::DmmResponse> DecoderUT8802::decode(const QByteArray &d
 
   int digits[5];
   digitsOf(f, digits);
-  bool overload = status & 0x40;
+  // OL is bit 6 alone (spec §3.2); a 0x0C digit, once read as an L, is
+  // text nothing knows: '?' (dmm-tools 953e1e3)
+  const bool overload = status & 0x40;
   QString shown;
+  bool unknown = false;
   for (int d : digits)
   {
-    overload = overload || d == 0x0C;
-    shown += QChar('0' + (d == 0x0A ? 0 : d));
+    unknown = unknown || d > 0x0A;
+    shown += d > 0x0A ? QChar('?') : QChar('0' + (d == 0x0A ? 0 : d));
   }
   if (overload)
   {
@@ -126,6 +132,7 @@ std::optional<DmmDecoder::DmmResponse> DecoderUT8802::decode(const QByteArray &d
   if (status & 0x80)
     shown.prepend('-');
   main.val = shown;
-  main.dval = shown.toDouble() * prefixFactor(prefix);
+  main.dval = unknown ? 0 : shown.toDouble() * prefixFactor(prefix);
+  main.noValue = unknown;
   return m_result;
 }

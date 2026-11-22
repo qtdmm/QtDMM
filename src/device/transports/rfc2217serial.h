@@ -30,6 +30,9 @@ public:
   /// otherwise the device counts as open while the TCP connection comes up.
   bool open(OpenMode mode) override;
   void close() override;
+  /// The connection failed or ended already (finished() came): the connect
+  /// starts in the constructor, so this can be before anyone listened.
+  bool hasFinished() const { return m_finished; }
 
 Q_SIGNALS:
   void finished();
@@ -49,6 +52,7 @@ private:
   void setPortParameters();
 
   QTcpSocket *m_socket = nullptr;
+  bool m_finished = false;
   DmmDecoder::DMMInfo m_dmmInfo;
   QString m_host;
   quint16 m_port = 0;

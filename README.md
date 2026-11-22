@@ -166,6 +166,7 @@ meter working, please report it on the
 | APPA | S3 ¹ | Handheld multimeter | - | `AppaDmm` | Bluetooth LE | - | 6000 |
 | APPA | sFlex-10A ¹ | Clamp meter | - | `AppaDmm` | Bluetooth LE | - | 6000 |
 | APPA | sFlex-18A ¹ | Clamp meter | - | `AppaDmm` | Bluetooth LE | - | 6000 |
+| BABATools | AD900 ¹ | Handheld multimeter | - | `ZotekBLE` | Bluetooth LE | - | 6000 |
 | Benetech | GM1020 ¹ | Luxmeter | - | `BenetechGM1020` | 19200 8N1 | - | 4000 |
 | BENNING | CM 10-1 ¹ | Clamp meter | - | `AppaDmm` | Bluetooth LE | - | 6000 |
 | BENNING | CM 10-PV ¹ | Clamp meter | - | `AppaDmm` | Bluetooth LE | - | 6000 |
@@ -190,6 +191,9 @@ meter working, please report it on the
 | Brymen | BM829s ¹ | Handheld multimeter | Brymen BM82x (BU-86X) | `BrymenBM82x` | USB-HID (BU-86X) | - | 6000 |
 | Brymen | BM867s ¹ | Handheld multimeter | Brymen BM86x (BU-86X) | `BrymenBM86x` | USB-HID (BU-86X) | - | 50000 |
 | Brymen | BM869s | Handheld multimeter | Brymen BM86x (BU-86X) | `BrymenBM86x` | USB-HID (BU-86X) | - | 50000 |
+| BSIDE | ZT-300AB ¹ | Handheld multimeter | - | `ZotekBLE` | Bluetooth LE | - | 6000 |
+| BSIDE | ZT-5B ¹ | Handheld multimeter | - | `ZotekBLE` | Bluetooth LE | - | 6000 |
+| BSIDE | ZT-5BQ ¹ | Handheld multimeter | - | `ZotekBLE` | Bluetooth LE | - | 6000 |
 | CMT | 3503 ¹ | Handheld multimeter | - | `Appa500` | 9600 8N1 | - | 50000 |
 | CO2Meter | CM-INK-1 ¹ | Air quality meter | Holtek | `TfaAirControl` | USB-HID (Holtek) | - | 5000 |
 | Digitech | QM1350 | Handheld multimeter | Metex KS57C2016 | `Metex14` | 600 7N2 | DTR | 4000 |
@@ -218,6 +222,7 @@ meter working, please report it on the
 | Generic | DTM0660 4000 count ² | Generic | DTM0660 | `DTM0660` | 2400 8N1 | DTR | 4000 |
 | Generic | DTM0660 6000 count ² | Generic | DTM0660 | `DTM0660` | 2400 8N1 | DTR | 6000 |
 | Generic | DTM0660 8000 count ² | Generic | DTM0660 | `DTM0660` | 2400 8N1 | DTR | 8000 |
+| Generic | Microcontroller (text lines: Serial Plotter, Teleplot) | Microcontroller | - | `TextLines` | 115200 8N1 | - | 0 |
 | Greenlee | DM-210A ¹ | Handheld multimeter | Brymen BM25x | `BrymenBM25x` | 9600 8N1 | DTR RTS | 6000 |
 | Greenlee | DM-810A ¹ | Handheld multimeter | Brymen BM82x (BU-86X) | `BrymenBM82x` | USB-HID (BU-86X) | - | 6000 |
 | Greenlee | DM-820A ¹ | Handheld multimeter | Brymen BM82x (BU-86X) | `BrymenBM82x` | USB-HID (BU-86X) | - | 6000 |
@@ -331,6 +336,7 @@ meter working, please report it on the
 | Tenma | 72-9380A ¹ | Handheld multimeter | - | `VC940Continuous` | 2400 7O1 | DTR | 40000 |
 | TFA Dostmann | AIRCO2NTROL Coach | Air quality meter | Holtek | `TfaAirControl` | USB-HID (Holtek) | - | 5000 |
 | TFA Dostmann | AIRCO2NTROL Mini | Air quality meter | Holtek | `TfaAirControl` | USB-HID (Holtek) | - | 5000 |
+| Uni-Trend | UT117C ¹ | Handheld multimeter | - | `UniTUT117C` | Bluetooth LE | - | 6000 |
 | Uni-Trend | UT161B (UT-D09 USB) ¹ | Handheld multimeter | - | `UniTUT61Plus` | 9600 8N1 | - | 6000 |
 | Uni-Trend | UT161B ¹ | Handheld multimeter | - | `UniTUT61Plus` | Bluetooth LE | - | 6000 |
 | Uni-Trend | UT161D (UT-D09 USB) ¹ | Handheld multimeter | - | `UniTUT61Plus` | 9600 8N1 | - | 6000 |
@@ -346,15 +352,21 @@ meter working, please report it on the
 | Uni-Trend | UT202BT | Clamp meter | - | `UniTUT202BT` | Bluetooth LE | - | 10000 |
 | Uni-Trend | UT217A | Handheld multimeter | - | `OwonBLE15` | Bluetooth LE | - | 20000 |
 | Uni-Trend | UT217B ¹ | Handheld multimeter | - | `OwonBLE15` | Bluetooth LE | - | 20000 |
+| Uni-Trend | UT219PV ¹ | Clamp meter | - | `UniTUT219PV` | Bluetooth LE | - | 10000 |
 | Uni-Trend | UT30A ¹ | Handheld multimeter | FS9721 LP3 | `VC820Continuous` | 2400 8N1 | DTR | 4000 |
 | Uni-Trend | UT30E ¹ | Handheld multimeter | FS9721 LP3 | `VC820Continuous` | 2400 8N1 | DTR | 4000 |
+| Uni-Trend | UT320i ¹ | Thermometer | - | `UniTUT320i` | Bluetooth LE | - | 2000 |
 | Uni-Trend | UT321 ¹ | Thermometer | - | `UniTUT32x` | 2400 8N1 | - | 9999 |
 | Uni-Trend | UT322 ¹ | Thermometer | - | `UniTUT32x` | 2400 8N1 | - | 9999 |
 | Uni-Trend | UT325 ¹ | Thermometer | - | `UniTUT32x` | 2400 8N1 | - | 9999 |
+| Uni-Trend | UT325F ¹ | Thermometer | - | `UniTUT325F` | Bluetooth LE | - | 20000 |
 | Uni-Trend | UT333BT | Air quality meter | - | `UniTiENV` | Bluetooth LE | - | 1000 |
 | Uni-Trend | UT353BT | Sound level meter | - | `UniTiENV` | Bluetooth LE | - | 10000 |
 | Uni-Trend | UT363BT | Anemometer | - | `UniTiENV` | Bluetooth LE | - | 10000 |
+| Uni-Trend | UT372D ¹ | Tachometer | - | `UniTUT372D` | Bluetooth LE | - | 100000 |
+| Uni-Trend | UT381A ¹ | Luxmeter | - | `UniTUT381A` | Bluetooth LE | - | 200000 |
 | Uni-Trend | UT382 ¹ | Luxmeter | - | `UniTUT382` | 19200 8N1 | - | 2000 |
+| Uni-Trend | UT382A ¹ | Luxmeter | - | `UniTUT382A` | Bluetooth LE | - | 400000 |
 | Uni-Trend | UT383BT | Luxmeter | - | `UniTiENV` | Bluetooth LE | - | 100000 |
 | Uni-Trend | UT60A | Handheld multimeter | FS9721 LP3 | `VC820Continuous` | 2400 8N1 | DTR | 4000 |
 | Uni-Trend | UT60BT | Handheld multimeter | - | `UniTiDMM` | Bluetooth LE | - | 10000 |
@@ -445,9 +457,9 @@ meter working, please report it on the
 - **Generic DTM0660 4000 count, DTM0660 6000 count, DTM0660 8000 count**: the DTM0660 chip has a UART, but meters built on it (Victor VC921 and similar) ship without an interface: an IR LED with a 100 Ω resistor goes on the chip's TX pin and the RS232 bit in the 24C02 EEPROM has to be set - [eevblog: hacking the Victor VC-921](https://www.eevblog.com/forum/testgear/hacking-the-victor-vc-921/). PeakTech 3415 and Velleman DVM4100 use the same chip but come with a cable and need no change.
 - **Vichy VC99**: the FS9922-DMM4 chip sends the display at 2400 baud on an unused pin; a wire or IR LED has to be soldered to it and *REL* held to start the output - [Hackaday](https://hackaday.com/2010/11/30/unlocking-rs232-serial-comm-on-a-multimeter/), [David Pilling](https://www.davidpilling.com/wiki/index.php/VC99).
 
-324 devices across 57 vendors.
+336 devices across 59 vendors.
 
-By type: Handheld multimeter 242, Bench multimeter 33, Clamp meter 25, Thermometer 6, Air quality meter 4, Generic 4, Luxmeter 3, Battery monitor 2, Solar charge controller 2, Anemometer 1, Inverter 1, Sound level meter 1.
+By type: Handheld multimeter 247, Bench multimeter 33, Clamp meter 26, Thermometer 8, Luxmeter 5, Air quality meter 4, Generic 4, Battery monitor 2, Solar charge controller 2, Anemometer 1, Inverter 1, Microcontroller 1, Sound level meter 1, Tachometer 1.
 
 ## Command line
 

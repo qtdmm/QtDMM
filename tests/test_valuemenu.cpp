@@ -1,10 +1,9 @@
 // Copyright (c) 2026 The QtDMM developers
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// ValueMenu, where a value of an open meter is shown: the window's meter's
-// values go to InstanceWidget, another meter's LCD places to its front
-// panel, its graph curve on the axis chosen, the analog meter and the
-// Poincaré plot by its ValueRef.
+// ValueMenu, where a value of an open meter is shown: the LCD places to the
+// meter's front panel, the graphs' curves on the axis chosen (GraphModel),
+// the analog meter and the Poincaré plot by its ValueRef.
 #include <QApplication>
 #include <QDebug>
 #include <QMenu>
@@ -15,9 +14,8 @@
 #include "service/devicesession.h"
 #include "service/metercontroller.h"
 #include "ui/frontpanel.h"
-#include "ui/instancewidget.h"
+#include "ui/graphmodel.h"
 #include "ui/valuemenu.h"
-#include "ui/views/graphwidget.h"
 #include "ui/views/lcdwidget.h"
 #include "testutil.h"
 
@@ -46,7 +44,6 @@ int main(int argc, char **argv)
                                       {"DMM/virtual-max", "0.25"}, {"DMM/virtual-values", 2}});
   DeviceSession session;
   session.setConfigDir(dir.path());
-  InstanceWidget wid("vm", dir.path(), &session);
   MeterController *ctl = session.open(b);
   check(ctl != nullptr, "Sim B open");
   if (!ctl)
@@ -59,7 +56,8 @@ int main(int argc, char **argv)
   QList<std::pair<ValueMenu::View, QString>> shown;
   QList<ValueRef> table;
   ValueMenu::Target target;
-  target.wid = &wid;
+  GraphModel first;
+  target.graphs = [&] { return QList<std::pair<QString, GraphModel *>>{ { "Graph", &first } }; };
   target.panel = [&](const QString &s) { return s == source ? &panel : nullptr; };
   target.tableShown = [&](const ValueRef &v) { return table.contains(v); };
   target.setTableShown = [&](const ValueRef &v, bool on) { on ? table.append(v) : void(table.removeAll(v)); };
@@ -88,19 +86,24 @@ int main(int argc, char **argv)
   {
     QMenu *menu = menuFor(ValueRef(0, source));
     action(menu, { "&Graph", "&Right axis" })->trigger();
-    check(wid.graph()->valueShown(ValueRef(0, source)) && wid.graph()->valueAxis(ValueRef(0, source)) == GraphWidget::AxisRight,
+    check(first.values().contains(ValueRef(0, source)) && first.valueAxis(ValueRef(0, source)) == 1,
           "in the graph on the right axis");
+    check(!shown.isEmpty() && shown.last().first == ValueMenu::View::Graph, "the graph shown");
     delete menu;
     menu = menuFor(ValueRef(0, source));
     check(action(menu, { "&Graph", "&Right axis" })->isChecked(), "the menu says right");
     action(menu, { "&Graph", "&Off" })->trigger();
-    check(!wid.graph()->valueShown(ValueRef(0, source)), "off the graph");
+    check(!first.values().contains(ValueRef(0, source)), "off the graph");
     delete menu;
     menu = menuFor(ValueRef(0, source));
     check(action(menu, { "&Graph", "&Off" })->isChecked() && !action(menu, { "&Graph", "&Right axis" })->isChecked()
             && !action(menu, { "&Graph", "&Left axis" })->isChecked(),
           "off: the menu says off, no axis beside it");
+    action(menu, { "&Graph", "&Automatic" })->trigger();
+    check(first.values().contains(ValueRef(0, source)) && first.valueAxis(ValueRef(0, source)) == GraphModel::kAxisAuto,
+          "automatic: in the graph, the axis of its unit");
     delete menu;
+    first.setValues({});
   }
   // 3. the analog meters and the Poincaré plot choose in their own menu;
   //    here only a new analog meter for the value
@@ -135,29 +138,33 @@ int main(int argc, char **argv)
     delete menu;
   }
 
-  // 4. the graph's store follows its values: Sim B's value, Sim B's store
-  //    (its value the main curve); another meter's value first, its store;
-  //    Sim B closed, the next value's meter; none left, the empty store
+  // 3b. two graphs: a submenu each by its window's title; a choice is for
+  //     that graph alone and shows its window
   {
-    const QString c = lib.add("Sim C", {{"DMM/model", "QtDMM Simulated meter"}, {"Port settings/device", "calc V/DC 3"}});
-    MeterController *other = session.open(c);
-    check(other != nullptr, "Sim C open");
-    if (!other)
-      return 1;
-    GraphWidget *graph = wid.graph();
-    graph->setValues({ ValueRef(0, source) });
-    check(graph->store() == ctl->recorder() && graph->baseSource() == source && graph->mainShown()
-            && graph->otherValues().isEmpty(),
-          "only Sim B's value: its store is the graph's, the value its main curve");
-    graph->setValues({ ValueRef(0, source), ValueRef(0, other->source()) });
-    check(graph->store() == ctl->recorder() && graph->otherValues() == QList<ValueRef>{ ValueRef(0, other->source()) },
-          "Sim C's value beside: a curve from its store");
-    session.close(b);
-    check(graph->store() == other->recorder() && graph->values().contains(ValueRef(0, source)),
-          "Sim B closed: Sim C's store, Sim B's value kept");
-    session.close(c);
-    check(graph->baseSource().isEmpty() && graph->store()->count() == 0,
-          QString("none left: the empty store, got %1 with %2").arg(graph->baseSource()).arg(graph->store()->count()));
+    GraphModel second;
+    first.setValues({ ValueRef(0, source) });
+    second.setValues({ ValueRef(1, source) });
+    const GraphModel *shownGraph = nullptr;
+    ValueRef added;
+    target.graphs = [&] { return QList<std::pair<QString, GraphModel *>>{ { "Graph", &first }, { "Graph 2", &second } }; };
+    target.showGraph = [&](const GraphModel *g) { shownGraph = g; };
+    target.newGraph = [&](const ValueRef &v) { added = v; };
+    QMenu *menu = menuFor(ValueRef(1, source));
+    QAction *right = action(menu, { "&Graph", "Graph", "&Right axis" });
+    check(right && action(menu, { "&Graph", "Graph", "&Off" })->isChecked()
+            && action(menu, { "&Graph", "Graph 2", "&Off" }) && !action(menu, { "&Graph", "Graph 2", "&Off" })->isChecked(),
+          "two graphs: a submenu each, with what each shows");
+    if (right)
+      right->trigger();
+    check(first.values().contains(ValueRef(1, source)) && first.valueAxis(ValueRef(1, source)) == 1
+            && shownGraph == &first && second.values() == QList<ValueRef>{ ValueRef(1, source) },
+          "on the first graph's right axis: that graph alone, its window shown");
+    if (QAction *a = action(menu, { "&Graph", "&New graph" }))
+      a->trigger();
+    check(added == ValueRef(1, source), "New graph: with the value");
+    delete menu;
+    target.showGraph = nullptr;
+    target.newGraph = nullptr;
   }
 
   if (failed)

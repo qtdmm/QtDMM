@@ -14,14 +14,17 @@
 #include <QSvgGenerator>
 #include <cmath>
 
+#include "core/projectfolder.h"
 #include "core/settings.h"
 #include "core/siprefix.h"
 
 PoincarePlot::PoincarePlot(QWidget *parent) :
-  QWidget(parent)
+  GraphCommon(parent)
 {
   setMouseTracking(true);
-  setMinimumSize(160, 160);
+  // square, no stamp (lines of text: it grows with the font)
+  const int side = qMax(240, 14 * QFontMetrics(font()).height());
+  setMinimumSize(side, side);
   // new readings are drawn on the FrameClock's next tick, not each one at
   // once; with the clock off on a timer of its own, at most 20 a second
   m_repaint.setSingleShot(true);
@@ -45,13 +48,15 @@ void PoincarePlot::setSettings(Settings *cfg)
   m_cfg = cfg;
 }
 
-void PoincarePlot::setThemeColors(const QBrush &background, const QColor &grid, const QColor &labels,
-                                  const QColor &data)
+void PoincarePlot::setTheme(const PlotTheme &theme)
 {
-  m_background = background;
-  m_grid = grid;
-  m_labels = labels;
-  m_data = data;
+  GraphCommon::setTheme(theme);
+  update();
+}
+
+void PoincarePlot::setTitle(const QString &title)
+{
+  GraphCommon::setTitle(title);
   update();
 }
 
@@ -81,7 +86,7 @@ void PoincarePlot::setEllipse(bool on)
 
 void PoincarePlot::setHold(bool on)
 {
-  m_hold = on;
+  GraphCommon::setHold(on);
   scheduleUpdate();
 }
 
@@ -142,10 +147,10 @@ void PoincarePlot::scheduleUpdate()
 
 void PoincarePlot::refresh()
 {
-  if (!m_hold)
+  if (!hold())
   {
     m_shown = m_series.pairs();
-    m_stats = m_series.stats();
+    m_stats = PoincareSeries::stats(m_shown);
     m_unit = m_series.unit();
     m_resolution = m_series.resolution();
   }
@@ -174,49 +179,39 @@ void PoincarePlot::addMenuActions(QMenu *menu)
   ellipse->setCheckable(true);
   ellipse->setChecked(m_ellipse);
   connect(ellipse, &QAction::toggled, this, &PoincarePlot::setEllipse);
-  QAction *hold = menu->addAction(tr("H&old picture"));
-  hold->setCheckable(true);
-  hold->setChecked(m_hold);
-  connect(hold, &QAction::toggled, this, &PoincarePlot::setHold);
-  connect(menu->addAction(tr("&Clear")), &QAction::triggered, this, &PoincarePlot::clear);
+  QAction *holdAction = menu->addAction(tr("&Hold picture"));
+  holdAction->setCheckable(true);
+  holdAction->setChecked(hold());
+  connect(holdAction, &QAction::toggled, this, &PoincarePlot::setHold);
+  connect(menu->addAction(tr("&Reset")), &QAction::triggered, this, &PoincarePlot::clear);
   connect(menu->addAction(tr("&Save image...")), &QAction::triggered, this, &PoincarePlot::exportImageSLOT);
 }
 
 bool PoincarePlot::exportImageSLOT()
 {
-  const QString png = tr("PNG image (*.png)"), svg = tr("SVG image (*.svg)");
-  QString filter = png;
-  QString fn = QFileDialog::getSaveFileName(this, tr("Save image"), "poincare.png", png + ";;" + svg, &filter);
-  if (fn.isEmpty())
+//  const QString dir = ProjectFolder::lastFolder(ProjectFolder::Images);
+  const ProjectFolder::Proposal where("poincare.png", ProjectFolder::Images);
+  const QString file = QFileDialog::getSaveFileName(this, tr("Save Poincaré plot"), where.path(),
+                                                     tr("Images (*.png *.jpg *.jpeg *.svg)"));
+  if (file.isEmpty())
     return false;
-  if (QFileInfo(fn).suffix().isEmpty())
-    fn += filter == svg ? ".svg" : ".png";
-  return exportImageFile(fn);
-}
-
-bool PoincarePlot::exportImageFile(const QString &fileName, QSize size)
-{
-  if (size.isEmpty())
-    size = this->size();
-  if (QFileInfo(fileName).suffix().compare("svg", Qt::CaseInsensitive) == 0)
+  const QString suffix = QFileInfo(file).suffix().toLower();
+  if (suffix == "svg")
   {
     QSvgGenerator svg;
-    svg.setFileName(fileName);
-    svg.setSize(size);
-    svg.setViewBox(QRect(QPoint(0, 0), size));
+    svg.setFileName(file);
+    svg.setSize(size());
+    svg.setViewBox(rect());
     svg.setTitle(tr("QtDMM Poincaré plot"));
-    QPainter p;
-    if (!p.begin(&svg))
-      return false;
-    render(p, QRect(QPoint(0, 0), size));
-    return p.end();
+    QPainter p(&svg);
+    render(p, QRect(QPoint(0, 0), size()));
+    return true;
   }
-  QImage image(size, QImage::Format_ARGB32);
-  image.fill(Qt::transparent);
+  QImage image(size(), QImage::Format_ARGB32_Premultiplied);
   QPainter p(&image);
-  render(p, QRect(QPoint(0, 0), size));
+  render(p, QRect(QPoint(0, 0), size()));
   p.end();
-  return image.save(fileName);
+  return image.save(file);
 }
 
 QRect PoincarePlot::plotRect(const QRect &area) const
@@ -224,7 +219,8 @@ QRect PoincarePlot::plotRect(const QRect &area) const
   const QFontMetrics fm(font());
   const int left = fm.horizontalAdvance("-000.000") + fm.height() + 10;
   const int bottom = 2 * fm.height() + 8;
-  const int top = (m_caption.isEmpty() ? fm.height() / 2 : fm.height() * 3 / 2) + 4, right = fm.horizontalAdvance("000") / 2 + 6;
+  const QString caption = m_caption.isEmpty() ? title() : m_caption;
+  const int top = (caption.isEmpty() ? fm.height() / 2 : fm.height() * 3 / 2) + 4, right = fm.horizontalAdvance("000") / 2 + 6;
   const int side = qMax(20, qMin(area.width() - left - right, area.height() - top - bottom));
   const int x = area.left() + left + (area.width() - left - right - side) / 2;
   const int y = area.top() + top + (area.height() - top - bottom - side) / 2;
@@ -240,10 +236,10 @@ void PoincarePlot::paintEvent(QPaintEvent *)
 void PoincarePlot::render(QPainter &p, const QRect &area)
 {
   const QPalette pal = palette();
-  const QBrush background = m_background.style() != Qt::NoBrush ? m_background : pal.base();
-  const QColor grid = m_grid.isValid() ? m_grid : pal.color(QPalette::Mid);
-  const QColor labels = m_labels.isValid() ? m_labels : pal.color(QPalette::Text);
-  const QColor data = m_data.isValid() ? m_data : pal.color(QPalette::Highlight);
+  const QBrush background = theme().background.style() != Qt::NoBrush ? theme().background : pal.base();
+  const QColor grid = theme().grid.isValid() ? theme().grid : pal.color(QPalette::Mid);
+  const QColor labels = theme().labels.isValid() ? theme().labels : pal.color(QPalette::Text);
+  const QColor data = theme().data.isValid() ? theme().data : pal.color(QPalette::Highlight);
   p.setRenderHint(QPainter::Antialiasing);
   p.fillRect(area, background);
   p.setFont(font());
@@ -252,11 +248,12 @@ void PoincarePlot::render(QPainter &p, const QRect &area)
   m_plot = plot;
 
   // where the value comes from, above the plot as on the other views
-  if (!m_caption.isEmpty())
+  const QString caption = m_caption.isEmpty() ? title() : m_caption;
+  if (!caption.isEmpty())
   {
     p.setPen(labels);
     p.drawText(QRect(area.left() + 6, area.top() + 2, area.width() - 12, fm.height()), Qt::AlignLeft | Qt::AlignVCenter,
-               fm.elidedText(m_caption, Qt::ElideRight, area.width() - 12));
+               fm.elidedText(caption, Qt::ElideRight, area.width() - 12));
   }
   if (m_shown.isEmpty())
   {
@@ -264,6 +261,11 @@ void PoincarePlot::render(QPainter &p, const QRect &area)
     p.drawText(area, Qt::AlignCenter, !m_notice.isEmpty() ? m_notice
                                       : m_series.valueCount() > 0 ? tr("Waiting for the next reading")
                                                                   : tr("No readings yet"));
+    if (hold())
+    {
+      p.setPen(labels);
+      p.drawText(QPoint(plot.left() + 6, plot.top() + fm.ascent() + 4), tr("HOLD"));
+    }
     return;
   }
 
@@ -310,7 +312,7 @@ void PoincarePlot::render(QPainter &p, const QRect &area)
       p.drawText(QPointF(px(v) - w / 2.0, plot.bottom() + fm.ascent() + 3), text);
     p.drawText(QPointF(plot.left() - w - 4, py(v) + fm.ascent() / 2.0 - 1), text);
   }
-  const QString unitText = unit.isEmpty() ? QString() : QString(" [%1]").arg(unit);
+  const QString unitText = unit.isEmpty() ? QString() : QStringLiteral(" [%1]").arg(unit);
   const QString xTitle = tr("x(n)") + unitText;
   const QString yTitle = tr("x(n+%1)").arg(m_series.lag()) + unitText;
   p.drawText(QPointF(plot.center().x() - fm.horizontalAdvance(xTitle) / 2.0, plot.bottom() + 2 * fm.height() + 4),
@@ -370,7 +372,7 @@ void PoincarePlot::render(QPainter &p, const QRect &area)
   if (std::isfinite(m_stats.sd1))
     lines << tr("SD1 %1").arg(valueText(m_stats.sd1)) << tr("SD2 %1").arg(valueText(m_stats.sd2));
   lines << tr("n = %1, k = %2").arg(m_stats.count).arg(m_series.lag());
-  if (m_hold)
+  if (hold())
     lines << tr("HOLD");
   int y = plot.top() + fm.ascent() + 4;
   p.setPen(labels);

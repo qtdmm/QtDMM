@@ -16,6 +16,7 @@
 #include "core/reading.h"
 #include "core/readingadapter.h"
 #include "core/sampletypes.h"
+#include "device/meterconnection.h"
 #include "recording/recordingstore.h"
 #include "service/devicesession.h"
 #include "service/metercontroller.h"
@@ -80,6 +81,20 @@ int main(int argc, char **argv)
   // 2. refused: twice, unknown
   check(!session.open(sim, &error) && error.startsWith("-221,"), "open twice: " + error);
   check(!session.open("nosuch", &error) && error.startsWith("-224,"), "unknown id: " + error);
+  // a workspace's meter that is not plugged in: refused, or with waiting it
+  // stays open, not connected, and tries again (a port path no system has)
+  {
+    const QString absent = lib.add("Absent", {{"DMM/model", "Uni-Trend UT61E"},
+                                              {"Port settings/device", "serial " + dir.filePath("no-such-tty")}});
+    check(!session.open(absent, &error) && error.startsWith("-240,"), "absent: refused - " + error);
+    error.clear();
+    MeterController *waiting = session.open(absent, &error, true);
+    check(waiting && !waiting->dmm()->isOpen() && error.startsWith("-240,")
+            && waiting->dmm()->linkState() == MeterConnection::LinkState::Error,
+          "absent, waiting for it: open, not connected, in error - " + error);
+    check(session.controller("device:" + absent) == waiting, "the waiting meter is one of the session's");
+    session.close(absent);
+  }
   // 3. SCPI: catalog, open, close
   const QString cat = ask("QTDMM:DEV:CAT?");
   check(cat.contains(QString("\"%1\",\"Bench sim\",1").arg(sim)) && cat.contains(QString("\"%1\",\"Power\",0").arg(calc)),
@@ -93,20 +108,20 @@ int main(int argc, char **argv)
     QObject::connect(power, &MeterController::reading, [&value](const Reading &r) { value = r.value; });
     check(waitFor([&] { return qAbs(value - 3.0) < 1e-9; }, 4000), QString("bench_sim * 2 = 3: %1").arg(value));
   }
-  // the meters of the process only, by their names
-  {
-    const QMap<QString, CalcDevice::Input> in = session.calcInputs()();
-    check(in.contains("bench_sim") && qAbs(in.value("bench_sim").value - 1.5) < 1e-9 && !in.contains("test"),
-          QString("the meters of the process: bench_sim %1").arg(in.value("bench_sim").value));
-  }
+  // a calculated value of before names the entries of My devices
+  check(session.sourceOfVariable("bench_sim") == "device:" + sim && session.sourceOfVariable("nosuch").isEmpty(),
+        "the variable of an entry: " + session.sourceOfVariable("bench_sim"));
   check(DeviceSession::variableName("UT61E Bench") == "ut61e_bench" && DeviceSession::variableName("34465A") == "_34465a",
         "variable names");
   check(ask("INST:CAT?") == "\"WINDOW_METER\",\"BENCH_SIM\",\"POWER\"", "three meters: " + ask("INST:CAT?"));
   // one that does not connect: the SCPI error in English
-  const QString broken = lib.add("Broken", {{"DMM/model", "QtDMM Calculated value"}, {"Port settings/device", "calc W"},
-                                            {"DMM/calc-unit", "W"}, {"DMM/calc-expression", ""}});
+  const QString broken = lib.add("Broken", {{"DMM/model", "UNI-T UT61E"}, {"Port settings/device", "/dev/qtdmm-test-nosuch"}});
   QString why;
   check(!session.open(broken, &why) && why == "-240,Hardware error; Broken: does not connect", "does not connect: " + why);
+  // a calculated value of before whose formula does not parse: refused, as it was
+  const QString badFormula = lib.add("Bad formula", {{"DMM/model", "QtDMM Calculated value"}, {"Port settings/device", "calc W"},
+                                                     {"DMM/calc-unit", "W"}, {"DMM/calc-expression", ""}});
+  check(!session.open(badFormula, &why) && why.startsWith("-221,") && why.contains("Formula error"), "a formula error: " + why);
   ask("QTDMM:DEV:OPEN \"nosuch\"");
   check(ask("SYST:ERR?").startsWith("-224,"), "QTDMM:DEV:OPEN of an unknown id");
   // a second of the same name is POWER_2, and stays so when the first closes
@@ -177,6 +192,8 @@ int main(int argc, char **argv)
     QObject::connect(&session, &DeviceSession::error, &session, [&replaced](const QString &text) { replaced = text; });
     lead->start();
     check(replaced.isEmpty(), "saved: no message at the next start: " + replaced);
+    // a reading in it, so it is one not saved (the meter here ticks every 250 ms)
+    check(waitFor([&] { return mine->count() > 0; }, 4000), "a reading recorded");
     lead->stop();
     lead->start();
     check(mine->isRunning() && replaced.contains("Bench sim"), "not saved: replaced, said so: " + replaced);
@@ -376,6 +393,14 @@ int main(int argc, char **argv)
     check(head.contains(";Bench sim: value;Bench sim: unit;Bench sim: status") && head.contains(";Power: value;")
             && !b->recorder()->dirty() && !power->recorder()->dirty(),
           "with the meters that recorded with it, saved too: " + head);
+    // a graph's values only (Export, Values: this graph): the other meter's
+    // value in it, the calculated one not; the main value is the time base
+    QString err;
+    const QString part = dir.path() + "/rec/graph.csv";
+    check(window.writeRecording(part, false, &err, { ValueRef(0, b->source()) }), "a graph's values written: " + err);
+    QFile g(part);
+    const QString head2 = g.open(QIODevice::ReadOnly) ? QString::fromUtf8(g.readLine()).trimmed() : QString();
+    check(head2.contains(";Bench sim: value;") && !head2.contains("Power"), "only the graph's values: " + head2);
     session.close(calc);
   }
 

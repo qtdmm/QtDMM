@@ -37,6 +37,10 @@ public:
   /// Shows the keys the meter @p model has, read by the decoder of @p format
   /// (DmmDecoder::hasKey()).
   void setProtocol(FrameFormat::DataFormat format, const QString &model);
+  /// A key in a colour of its own (a style sheet): darker while pressed or
+  /// on, faded while off. HOLD is blue, as on the meters (and a node's HOLD).
+  static QString keyColour(const QColor &face, const QColor &text);
+  static QColor  holdColour() { return QColor(0x3c, 0x9a, 0xff); }
   /// Holding MIN/MAX or PEAK this long leaves it (ms).
   static constexpr int kLongPressMs = 700;
 
@@ -46,7 +50,8 @@ public:
   int heightForWidth(int width) const override;
 
 public Q_SLOTS:
-  /// The key states the reading reports (HOLD, AUTO).
+  /// The key states the reading reports (HOLD, AUTO); a key the meter
+  /// ignores in this mode greyed out (DmmDecoder::keyWorks()).
   void showReading(const Reading &reading);
 
 Q_SIGNALS:
@@ -68,14 +73,18 @@ private:
   QToolButton *m_max = nullptr;
   QToolButton *m_min = nullptr;
   QToolButton *m_avg = nullptr;
+  std::shared_ptr<DmmDecoder> m_decoder;   ///< setProtocol()
+  QString     m_model;
+  bool        m_connected = false;
   /// Places the groups in rows for @p width; returns the height used.
   int layoutGroups(int width, bool apply) const;
   /// layoutGroups() for the width now, the height to fit.
   void relayout();
 };
 
-/// The small fold button in the top right corner of the display that hides
-/// and shows the ControlBar: ▾ open, ▸ folded; muted until hovered.
+/// The handle under a front panel's keys that hides and shows them
+/// (ControlBar, NodeBar): a small tab at the panel's lower edge, a double
+/// chevron up while open, down while folded; muted until hovered.
 class FoldButton : public QWidget
 {
   Q_OBJECT
@@ -95,5 +104,31 @@ protected:
 
 private:
   bool m_folded = false;
+  bool m_hover = false;
+};
+
+/// The gear on a front panel's name plate (LcdWidget::plateBand()), drawn
+/// like its lettering: the model's colour, the manufacturer's when hovered.
+/// A click: clicked().
+class PanelGear : public QWidget
+{
+  Q_OBJECT
+public:
+  explicit PanelGear(QWidget *parent);
+  /// The colours: at rest and hovered.
+  void setInk(const QColor &rest, const QColor &hover);
+
+Q_SIGNALS:
+  void clicked();
+
+protected:
+  void paintEvent(QPaintEvent *) override;
+  void enterEvent(QEnterEvent *) override;
+  void leaveEvent(QEvent *) override;
+  void mouseReleaseEvent(QMouseEvent *) override;
+
+private:
+  QColor m_rest = Qt::gray;
+  QColor m_hoverInk = Qt::white;
   bool m_hover = false;
 };

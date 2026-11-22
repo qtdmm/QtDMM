@@ -5,9 +5,9 @@
 #include <QBrush>
 #include <QColor>
 #include <QTimer>
-#include <QWidget>
 
 #include "core/poincare.h"
+#include "ui/views/graphcommon.h"
 
 class QMenu;
 class Settings;
@@ -22,7 +22,7 @@ class Settings;
 /// reading while it exists, shown or not, and repaints at most 20 times a
 /// second. Hold freezes the picture, the series goes on underneath.
 /// Settings: Poincare/capacity, Poincare/lag, Poincare/ellipse.
-class PoincarePlot : public QWidget
+class PoincarePlot : public GraphCommon
 {
   Q_OBJECT
 public:
@@ -32,7 +32,8 @@ public:
   void        setSettings(Settings *cfg);
   /// Colours of the window design (Designs::graphColors()); an invalid
   /// @p data takes the highlight colour.
-  void        setThemeColors(const QBrush &background, const QColor &grid, const QColor &labels, const QColor &data);
+  void        setTheme(const PlotTheme &theme) override;
+  void        setTitle(const QString &title) override;
   /// The plot's own entries for the window's context menu.
   void        addMenuActions(QMenu *menu);
 
@@ -41,8 +42,7 @@ public:
   void        setCapacity(int values);
   void        setEllipse(bool on);
   bool        ellipse() const { return m_ellipse; }
-  void        setHold(bool on);
-  bool        hold() const { return m_hold; }
+  void        setHold(bool on) override;
   /// Which value of the meter it plots (Reading::id; the context menu
   /// "Value"); another one starts afresh.
   void        setValueId(int id);
@@ -55,7 +55,7 @@ public Q_SLOTS:
   void        addReading(const Reading &reading);
   /// The main value went stale (true) or is current again.
   void        setStale(bool stale);
-  void        clear();
+  void        clear() override;
   /// Where the value comes from (ValueFeed::caption()), above the plot.
   void        setCaption(const QString &caption);
   /// Why there are no points (ValueFeed::notice()), in place of them.
@@ -63,7 +63,7 @@ public Q_SLOTS:
 
 protected:
   void        paintEvent(QPaintEvent *) override;
-  void        mouseMoveEvent(QMouseEvent *) override;
+  void        mouseMoveEvent(QMouseEvent *ev) override;
   void        leaveEvent(QEvent *) override;
 
 private:
@@ -78,7 +78,6 @@ private:
   PoincareSeries::Stats m_stats;
   QString     m_unit;
   double      m_resolution = 0;
-  bool        m_hold = false;
   int         m_valueId = 0;
   bool        m_ellipse = true;
   Settings   *m_cfg = nullptr;
@@ -93,10 +92,6 @@ private:
   QPoint      m_mouse;
   bool        m_mouseIn = false;
 
-  QBrush      m_background;
   QString     m_caption;   ///< setCaption()
   QString     m_notice;    ///< setNotice()
-  QColor      m_grid;
-  QColor      m_labels;
-  QColor      m_data;
 };

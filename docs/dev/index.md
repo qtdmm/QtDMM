@@ -144,7 +144,29 @@ installer, both produced by CPack from the same install tree
 domain, the Victron decryption) and miniz (MIT, deflate and CRC for the
 XLSX/ODS export - the ZIP container itself is written by
 `SpreadsheetWriter`, since LibreOffice rejects miniz's data descriptors on
-the ODS mimetype entry).
+the ODS mimetype entry) and QCustomPlot 2.1.1 in Wireshark's fork
+(GPL-2.0-or-later, trimmed of old Qt code paths; the XY diagram, histogram
+and heatmap draw with it, on top of `QcpGraphCommon`, and the graph,
+`GraphWidget` (`ui/graphview.*`, `ui/graphmodel.*`,
+`ui/views/graphwidget*.cpp`), OpenGL only with
+`Graph/openGl`, off by default: classic QCustomPlot's OpenGL leaves artefacts
+and costs more with several plots). It is meant as a step towards NeoQCP.
+Upstream QCustomPlot is no longer developed: QtDMM keeps its copy, with
+fixes that leave the API alone, each marked `QtDMM:` and listed in
+`src/3rdparty/qcustomplot/QTDMM_CHANGES.md` (test `qcp_local`).
+
+**NeoQCP for a trial.** `./compile.sh neoqcp` (CMake: `-DQTDMM_WITH_NEOQCP=ON`,
+sources in `QTDMM_NEOQCP_DIR`, `.neoqcp/` by default) builds the same three
+views with [NeoQCP](https://github.com/SciQLop/NeoQCP) instead. The script
+fetches a fixed revision; `cmake/neoqcp.cmake` builds it as a static library
+of the build, without LaTeX labels, and for Qt older than 6.9 applies
+`cmake/neoqcp-qt6.8.patch` to the checkout (NeoQCP uses two things of Qt 6.9).
+It needs Qt 6.7 or newer with the Qt Shader Tools. QtDMM's sources include
+`ui/views/qcp.h`, which picks the library; nothing else knows which one it is.
+NeoQCP always draws on the GPU through QRhi: on a desktop with a graphics
+card the load is that of QCustomPlot, without one (a virtual machine, remote
+access, Xvfb) it is several times as high, and the OpenGL switch of the
+settings is hidden. A build without the word `neoqcp` is back on QCustomPlot.
 
 The symbols come in three icon themes under `assets/icons/sets/`, compiled
 into the resources (`:/icons`); the code asks for symbols by name with

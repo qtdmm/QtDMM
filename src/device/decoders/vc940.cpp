@@ -168,5 +168,6 @@ std::optional<DmmDecoder::DmmResponse> DecoderVC940::decode(const QByteArray &da
       main.val = function != 0xC && neg ? QStringLiteral("-OL") : QStringLiteral("OL");
   }
 
+  noValueWithoutUnit();
   return m_result;
 }

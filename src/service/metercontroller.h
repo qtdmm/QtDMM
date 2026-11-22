@@ -4,6 +4,8 @@
 
 #include <QColor>
 #include <QElapsedTimer>
+#include <QJsonArray>
+#include <QJsonObject>
 #include <QObject>
 #include <QString>
 #include <array>
@@ -11,23 +13,30 @@
 #include <optional>
 
 #include "core/minmaxmemory.h"
+#include "core/valueref.h"
 #include "core/alarm.h"
 #include "core/limittest.h"
 #include "core/readingadapter.h"
 #include "core/reading.h"
 #include "core/sampletypes.h"
 #include "core/stalerule.h"
+#include "recording/recordingstore.h"
 #include "service/servicehost.h"
 
-class MeterConnection;
+#include "device/meterconnection.h"
+
 struct MeterSetup;
 class QProcess;
 class ScpiDevice;
-class RecordingStore;
 
 /// The meter session without any user interface: the connection (MeterConnection), the
 /// min/max memory, the alarms, its part in the SCPI server (ScpiDevice in a ServiceHost),
 /// and the alarms' programs.
+///
+/// It is a source of readings: a device (its connection makes them) or a
+/// logic node (Kind::Node: NodeRunner delivers them, deliver(); no
+/// connection, dmm() is null). What a view asks of the source - wanted,
+/// its state, its message, its kind - it asks here, not of the connection.
 ///
 /// Views (LCD, analog meter, graph, readings table) and the window hang off
 /// its signals; none of them talks to another. Whatever needs a question to
@@ -39,11 +48,37 @@ class MeterController : public QObject
 public:
   /// The meter takes part in the network services of @p host (MainWindow's);
   /// without one it keeps services of its own.
-  explicit MeterController(QObject *parent = nullptr, ServiceHost *host = nullptr);
+  /// What makes its readings: a device's connection or a logic node.
+  enum class Kind { Device, Node };
+  explicit MeterController(QObject *parent = nullptr, ServiceHost *host = nullptr, Kind kind = Kind::Device);
   ~MeterController() override;
 
   /// The connection; the settings page configures its port and protocol.
+  /// Null for a logic node.
   MeterConnection        *dmm() const { return m_dmm; }
+
+  /// @name The source, device or logic node
+  /// @{
+  bool        isNode() const { return m_dmm == nullptr; }
+  /// Connected or connecting (a device), running (a node): connectMeter(true).
+  bool        isWanted() const;
+  /// Where it stands: a device's link; a node is Connected while it runs and
+  /// its inputs are there, Timeout while one is missing or too old (why: errorString()).
+  MeterConnection::LinkState linkState() const;
+  /// Its last message: the connection's, or why a node waits.
+  QString     errorString() const;
+  /// A short word for the state (MeterConnection::shortState()); empty when fine.
+  QString     shortState() const;
+  /// The model: the connection's; a node's from setNodeInfo().
+  const DmmDecoder::DMMInfo &sourceInfo() const;
+  /// A node's model: vendor "QtDMM", model its kind, channels its outputs.
+  void        setNodeInfo(const DmmDecoder::DMMInfo &info);
+  /// A node's state and why (NodeRunner): linkStateChanged() on a change.
+  void        setNodeState(MeterConnection::LinkState state, const QString &detail = QString());
+  /// A node's readings, as a decoder's frame would bring them (the leading
+  /// input's time in received/receivedWall).
+  void        deliver(const DmmDecoder::DmmResponse &response) { responseSLOT(response); }
+  /// @}
   /// The recorder: the readings feed it from here on, views (the graph)
   /// show it. SCPI learns when it starts or stops.
   RecordingStore *recorder() const { return m_recorder; }
@@ -71,7 +106,21 @@ public:
   QString     saveRecording(const QString &name, bool raw);
   /// Writes the recording with all values of this meter and of those that
   /// recorded with it to @p path (CSV, .xlsx, .ods); they count as saved then.
-  bool        writeRecording(const QString &path, bool raw, QString *error = nullptr);
+  /// The recording to @p path. @p only: the values to write (a graph's,
+  /// ValueRef by source and id), empty: all of this meter's and of the meters
+  /// that recorded with it. The main value is the file's time base and is
+  /// always written.
+  bool        writeRecording(const QString &path, bool raw, QString *error = nullptr,
+                             const QList<ValueRef> &only = {});
+  /// The same recording as writeRecording() writes it, on the grid, without
+  /// writing it (LabPlotLive follows it); not saved by that.
+  Recording   recording() const;
+  /// What a QtDMM recording keeps of this meter (meta.json "devices"): its
+  /// name, model, protocol (not of a virtual meter), the values recorded
+  /// (id, unit, quantity as PortKey text, the meter's own name), the alarms
+  /// and the limit test - without sounds and commands, which are paths of
+  /// this computer.
+  QJsonObject recordingInfo() const;
   /// The meters whose recordings saveRecording() writes along (DeviceSession:
   /// those that recorded with this one), their names before the columns.
   void        setRecordedWith(std::function<QList<MeterController *>()> meters) { m_recordedWith = std::move(meters); }
@@ -122,8 +171,9 @@ public:
   void        resetLimitCount();
 
   /// Connects (true) or disconnects the meter. False when the port could
-  /// not be opened.
-  bool        connectMeter(bool on);
+  /// not be opened; with @p waitForDevice it tries again until the device
+  /// comes (MeterConnection::open()).
+  bool        connectMeter(bool on, bool waitForDevice = false);
   /// Presses the meter's key @p key (ControlBar); false when it could not be
   /// sent (no such key, not connected).
   bool        pressKey(const QString &key);
@@ -194,6 +244,9 @@ Q_SIGNALS:
   void        staleChanged(bool stale);
   /// For the status bar's connection field (MeterConnection messages, alarms, SCPI errors).
   void        error(const QString &);
+  /// The source's state changed (linkState()), with the text why: the
+  /// connection's, or a node's.
+  void        linkStateChanged(MeterConnection::LinkState state, const QString &detail);
   /// For the status bar's info field.
   void        info(const QString &);
 
@@ -226,9 +279,12 @@ Q_SIGNALS:
   /// An alarm wants the recorder started (true) or stopped.
   void        recordingRequested(bool start);
   /// A mark in the graph and/or the readings table: an alarm ("Alarm
-  /// Overvoltage"), a change of function, a SCPI client (QTDMM:MARK);
+  /// Overvoltage"), a change of function, a SCPI client's note (QTDMM:MARK,
+  /// table only: the graph takes noteRequested());
   /// @p name is the text shown.
   void        markRequested(const QColor &color, const QString &name, bool graph, bool table);
+  /// A SCPI client set a note (QTDMM:MARK "title","text") for the graph.
+  void        noteRequested(const QString &title, const QString &note);
 
   /// A SCPI client asked to connect/disconnect the meter.
   void        connectRequested(bool on);
@@ -243,6 +299,10 @@ Q_SIGNALS:
   void        deviceNameChanged(const QString &name);
 
 private:
+  /// The values writeRecording() takes: this meter's other values, those of
+  /// the meters that recorded with it, and meta.json's "devices".
+  void        recordingSources(QList<int> &extras, QList<RecordingStore::Foreign> &foreign, QJsonArray &devices,
+                               const QList<ValueRef> &only = {}) const;
   /// valueMinMaxChanged() with the memory of value @p id as it is.
   void        emitValueMinMax(int id);
   void        responseSLOT(const DmmDecoder::DmmResponse &response);
@@ -256,7 +316,11 @@ private:
   void        installScpiSources();
   void        timerEvent(QTimerEvent *) override;
 
-  MeterConnection                *m_dmm;
+  MeterConnection                *m_dmm;   ///< null for a node
+  DmmDecoder::DMMInfo             m_nodeInfo;
+  MeterConnection::LinkState      m_nodeState = MeterConnection::LinkState::Closed;
+  QString                         m_nodeError;
+  bool                            m_nodeWanted = false;
   AlarmManager       *m_alarms;
   RecordingStore     *m_recorder;
   ReadingAdapter      m_adapter;

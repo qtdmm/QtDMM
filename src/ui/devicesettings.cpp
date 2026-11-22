@@ -33,7 +33,6 @@
 #include "device/discovery/discovery.h"
 #include "device/metersetup.h"
 #include "device/protocols.h"
-#include "core/calcexpr.h"
 #include "device/victronble.h"
 #ifdef QTDMM_WITH_BLE
 #include "device/transports/ble.h"
@@ -50,63 +49,47 @@ DeviceSettings::DeviceSettings(QWidget *parent) : QWidget(parent)
   port->setModel(m_portlist);
 
   setupComboBoxModel();
+  // the rates of microcontroller boards above the meters' 19200
+  for (const char *rate : { "38400", "57600", "74880", "115200", "230400", "250000", "460800", "500000", "921600",
+                            "1000000", "2000000" })
+    baudRate->addItem(QString::fromLatin1(rate));
 
   message2->hide();
-  ui_calcGroup->hide();
   ui_bleGroup->hide();
   ui_sigrokGroup->hide();
   connect(ui_sigrokDriver, &QLineEdit::textChanged, this, &DeviceSettings::updateSigrokHint);
   connect(ui_bleKey, &QLineEdit::textChanged, this, &DeviceSettings::updateBleHint);
   connect(ui_bleAddress, &QComboBox::currentTextChanged, this, &DeviceSettings::updateBleHint);
-  ui_virtualGroup->hide();
-  connect(ui_calcExpression, &QLineEdit::textChanged, this, &DeviceSettings::updateCalcHint);
-  connect(ui_virtualSignal, &QComboBox::currentIndexChanged, this, &DeviceSettings::updateVirtualFormula);
-  for (QLineEdit *e : {ui_virtualMin, ui_virtualMax, ui_virtualPeriod, ui_virtualNoise})
-    connect(e, &QLineEdit::textChanged, this, &DeviceSettings::updateVirtualFormula);
-  connect(ui_virtualFormula, &QLineEdit::textChanged, this, [this]{ if (ui_virtualSignal->currentIndex() == 7) updateVirtualFormula(); });
-  // the simulated meter's other values, below the waveform: how many, then
-  // a row each with unit, coupling and formula
+  // a microcontroller's values: the unit of each, from its label or chosen
   {
-    auto *label = new QLabel(tr("&Values:"), ui_virtualGroup);
-    m_virtualValues = new QSpinBox(ui_virtualGroup);
-    m_virtualValues->setObjectName("ui_virtualValues");
-    m_virtualValues->setRange(1, kMaxValues);
-    m_virtualValues->setToolTip(tr("How many values the simulated meter shows: the waveform above and up to three more, "
-                                   "each a formula of its own (v1, v2 ... are the values before it)"));
-    label->setBuddy(m_virtualValues);
-    gridLayout_virtual->addWidget(label, 5, 0);
-    gridLayout_virtual->addWidget(m_virtualValues, 5, 1);
-    for (int i = 0; i < int(m_virtualRows.size()); ++i)
+    m_unitsGroup = new QGroupBox(tr("Values"), this);
+    m_unitsGroup->setObjectName("ui_unitsGroup");
+    auto *grid = new QGridLayout(m_unitsGroup);
+    for (int i = 0; i < kMaxValues; ++i)
     {
-      VirtualValue &row = m_virtualRows[size_t(i)];
-      row.label = new QLabel(tr("Value %1:").arg(i + 2), ui_virtualGroup);
-      row.unit = new QLineEdit(ui_virtualGroup);
-      row.unit->setObjectName(QString("ui_virtualUnit%1").arg(i + 2));
-      row.unit->setMaximumWidth(ui_virtualUnit->maximumWidth());
-      row.unit->setToolTip(tr("The unit of value %1").arg(i + 2));
-      row.coupling = new QComboBox(ui_virtualGroup);
-      row.coupling->setObjectName(QString("ui_virtualCoupling%1").arg(i + 2));
-      row.coupling->addItems({ "DC", "AC" });
-      row.formula = new QLineEdit(ui_virtualGroup);
-      row.formula->setObjectName(QString("ui_virtualFormula%1").arg(i + 2));
-      row.formula->setProperty("tip", tr("The formula of value %1: t is the time in seconds, v1 ... v%2 the values "
-                                         "before it").arg(i + 2).arg(i + 1));
-      gridLayout_virtual->addWidget(row.label, 6 + i, 0);
-      gridLayout_virtual->addWidget(row.unit, 6 + i, 1);
-      gridLayout_virtual->addWidget(row.coupling, 6 + i, 2);
-      gridLayout_virtual->addWidget(row.formula, 6 + i, 3);
-      connect(row.formula, &QLineEdit::textChanged, this, &DeviceSettings::updateVirtualValues);
+      m_unitLabels[size_t(i)] = new QLabel(m_unitsGroup);
+      auto *combo = new QComboBox(m_unitsGroup);
+      combo->setObjectName(QString("ui_unit%1").arg(i + 1));
+      combo->addItem(tr("Automatic"), QString());
+      for (const QString &unit : DecoderTextLines::units())
+        combo->addItem(unit == QLatin1String("Ohm") ? QStringLiteral("\u03A9") : unit, unit);
+      combo->addItem(tr("No unit"), QString::fromLatin1(DecoderTextLines::kNoUnit));
+      combo->setToolTip(tr("The unit of value %1. Automatic: the unit its label names (\"V:\", \"mA:\"), else none. "
+                           "A unit chosen here takes the number as sent.").arg(i + 1));
+      m_unitLabels[size_t(i)]->setBuddy(combo);
+      m_unitCombos[size_t(i)] = combo;
+      grid->addWidget(m_unitLabels[size_t(i)], i, 0);
+      grid->addWidget(combo, i, 1);
     }
-    connect(m_virtualValues, &QSpinBox::valueChanged, this, &DeviceSettings::updateVirtualValues);
-    connect(m_virtualValues, &QSpinBox::valueChanged, this, &DeviceSettings::changed);
-    updateVirtualValues();
+    grid->setColumnStretch(2, 1);
+    verticalLayout_2->insertWidget(verticalLayout_2->indexOf(ui_advancedBox) + 1, m_unitsGroup);
+    m_unitsGroup->hide();
+    setValueNames({});
   }
   // no frames: a section title above each group, shown with it
   for (QGroupBox *group : findChildren<QGroupBox *>())
     sectionTitle(group);
   showPortParameters(false);
-  m_calcHintTimer.setInterval(1000);   // live values of the input meters
-  connect(&m_calcHintTimer, &QTimer::timeout, this, &DeviceSettings::updateCalcHint);
 
   // any edit may complete the fields or break them (isComplete())
   for (QLineEdit *e : findChildren<QLineEdit *>())
@@ -134,7 +117,7 @@ void DeviceSettings::setDescriptionFilesVisible(bool visible)
 void DeviceSettings::setPortVisible(bool visible)
 {
   m_portVisible = visible;
-  updateCalcMode();
+  updateConnectionMode();
 }
 
 bool DeviceSettings::isComplete() const
@@ -145,16 +128,6 @@ bool DeviceSettings::isComplete() const
   const int modelIdx = ui_model->currentIndex();
   if (modelIdx < 0 || modelIdx >= static_cast<int>(m_currentVendorModels.size()))
     return false;
-  if (isCalculated())
-    return CalcExpr::parse(ui_calcExpression->text()).has_value();
-  if (isVirtual())
-  {
-    for (int i = 0; i < m_virtualValues->value() - 1; ++i)
-      if (m_virtualRows[size_t(i)].unit->text().trimmed().isEmpty()
-          || !CalcExpr::parse(m_virtualRows[size_t(i)].formula->text()).has_value())
-        return false;
-    return CalcExpr::parse(ui_virtualFormula->text()).has_value();
-  }
   if (isSigrokMeter())
     return !ui_sigrokDriver->text().trimmed().isEmpty();
   const QString address = ui_bleAddress->currentText().section(' ', 0, 0).trimmed();
@@ -251,9 +224,6 @@ void DeviceSettings::fillModels()
   }
 
   vendors.sort(Qt::CaseInsensitive);
-  // the virtual meters of QtDMM itself go first, real vendors alphabetically
-  if (vendors.removeOne("QtDMM"))
-    vendors.prepend("QtDMM");
   ui_vendor->addItems(vendors);
 
   // The completer searches the full, unfiltered device list (all vendors),
@@ -388,24 +358,10 @@ void DeviceSettings::load(const QVariantMap &keys)
   ui_bleSecond->clear();
   ui_bleThird->clear();
   ui_bleFourth->clear();
-  ui_calcUnit->setText        (cfgString("DMM/calc-unit", "W"));
-  ui_calcExpression->setText  (cfgString("DMM/calc-expression"));
-  ui_virtualSignal->setCurrentIndex(cfgInt("DMM/virtual-waveform", 2));
-  ui_virtualUnit->setText     (cfgString("DMM/virtual-unit", "V"));
-  ui_virtualCoupling->setCurrentText(cfgString("DMM/virtual-coupling", "DC"));
-  ui_virtualMin->setText      (cfgString("DMM/virtual-min", "0"));
-  ui_virtualMax->setText      (cfgString("DMM/virtual-max", "10"));
-  ui_virtualPeriod->setText   (cfgString("DMM/virtual-period", "20"));
-  ui_virtualNoise->setText    (cfgString("DMM/virtual-noise", "0"));
-  if (ui_virtualSignal->currentIndex() == 7)
-    ui_virtualFormula->setText(cfgString("DMM/virtual-formula"));
-  m_virtualValues->setValue(cfgInt("DMM/virtual-values", 1));
-  for (int i = 0; i < int(m_virtualRows.size()); ++i)
+  for (int i = 0; i < kMaxValues; ++i)
   {
-    const QString n = QString::number(i + 2);
-    m_virtualRows[size_t(i)].unit->setText(cfgString("DMM/virtual-unit" + n, MeterSetup::kVirtualDefaults[i][0]));
-    m_virtualRows[size_t(i)].coupling->setCurrentText(cfgString("DMM/virtual-coupling" + n, "DC"));
-    m_virtualRows[size_t(i)].formula->setText(cfgString("DMM/virtual-formula" + n, MeterSetup::kVirtualDefaults[i][1]));
+    const int idx = m_unitCombos[size_t(i)]->findData(cfgString(QString("DMM/unit-%1").arg(i + 1)).trimmed());
+    m_unitCombos[size_t(i)]->setCurrentIndex(qMax(0, idx));
   }
   baudRate->setCurrentText    (cfgString("Port settings/baud"));
   bitsCombo->setCurrentText   (cfgString("Port settings/bits", "7"));
@@ -446,8 +402,20 @@ void DeviceSettings::load(const QVariantMap &keys)
     enterManualMode();
   else
     on_ui_model_activated(ui_model->currentIndex());
-  // a known model brings its port parameters and protocol: nothing to set
-  showPortParameters(ui_vendor->currentIndex() == 0);
+  // a known model brings its port parameters and protocol: nothing to set,
+  // but for a microcontroller the baud rate saved
+  if (m_dmmInfo.baudChoosable() && cfgInt("Port settings/baud") > 0)
+    baudRate->setCurrentText(cfgString("Port settings/baud"));
+  showPortParameters(ui_vendor->currentIndex() == 0 || m_dmmInfo.baudChoosable());
+}
+
+void DeviceSettings::setValueNames(const QStringList &names)
+{
+  for (int i = 0; i < kMaxValues; ++i)
+  {
+    const QString name = names.value(i);
+    m_unitLabels[size_t(i)]->setText(name.isEmpty() ? tr("Value %1:").arg(i + 1) : tr("Value %1 (%2):").arg(i + 1).arg(name));
+  }
 }
 
 void DeviceSettings::showPortParameters(bool show)
@@ -520,25 +488,13 @@ QVariantMap DeviceSettings::keys() const
   keys.insert("Port settings/ble-second", ui_bleSecond->currentData().toString());
   keys.insert("Port settings/ble-third", ui_bleThird->currentData().toString());
   keys.insert("Port settings/ble-fourth", ui_bleFourth->currentData().toString());
-  keys.insert("DMM/calc-unit", ui_calcUnit->text().trimmed());
-  keys.insert("DMM/calc-expression", ui_calcExpression->text().trimmed());
-  keys.insert("DMM/virtual-waveform", ui_virtualSignal->currentIndex());
-  keys.insert("DMM/virtual-unit", ui_virtualUnit->text().trimmed());
-  keys.insert("DMM/virtual-coupling", ui_virtualCoupling->currentText());
-  keys.insert("DMM/virtual-min", ui_virtualMin->text().trimmed());
-  keys.insert("DMM/virtual-max", ui_virtualMax->text().trimmed());
-  keys.insert("DMM/virtual-period", ui_virtualPeriod->text().trimmed());
-  keys.insert("DMM/virtual-noise", ui_virtualNoise->text().trimmed());
-  keys.insert("DMM/virtual-formula", ui_virtualFormula->text().trimmed());
-  keys.insert("DMM/virtual-values", m_virtualValues->value());
-  for (int i = 0; i < int(m_virtualRows.size()); ++i)
-  {
-    const QString n = QString::number(i + 2);
-    keys.insert("DMM/virtual-unit" + n, m_virtualRows[size_t(i)].unit->text().trimmed());
-    keys.insert("DMM/virtual-coupling" + n, m_virtualRows[size_t(i)].coupling->currentText());
-    keys.insert("DMM/virtual-formula" + n, m_virtualRows[size_t(i)].formula->text().trimmed());
-  }
   keys.insert("Port settings/baud", baudRate->currentText());
+  // only a microcontroller's, and only a chosen one: the other meters'
+  // entries stay as they were (an extra key would read as a change)
+  if (ui_vendor->currentIndex() != 0 && m_dmmInfo.unitsChoosable())
+    for (int i = 0; i < kMaxValues; ++i)
+      if (const QString unit = m_unitCombos[size_t(i)]->currentData().toString(); !unit.isEmpty())
+        keys.insert(QString("DMM/unit-%1").arg(i + 1), unit);
   keys.insert("Port settings/bits", bitsCombo->currentText());
   keys.insert("Port settings/stop-bits", stopBitsCombo->currentText());
   keys.insert("Port settings/parity", parityCombo->currentIndex());
@@ -557,8 +513,8 @@ QVariantMap DeviceSettings::keys() const
   keys.insert("DMM/rts", uirts->isChecked());
   keys.insert("DMM/dtr", uidtr->isChecked());
 
-  // a simulated or calculated meter has its formula there, not the port of
-  // the meter before; a sigrok meter its driver (typed or the model's)
+  // a Bluetooth meter its address, a sigrok meter its driver (typed or the
+  // model's), not the port of the meter before
   if (isGatt())
     keys.insert("Port settings/device", "blegatt " + address);
   else if (isBluetooth())
@@ -568,8 +524,6 @@ QVariantMap DeviceSettings::keys() const
     keys.insert("Port settings/device", "SIGROK " + ui_sigrokDriver->text().trimmed());
     keys.insert("Port settings/device", MeterSetup::fromKeys(keys).device);
   }
-  else if (isCalculated() || isVirtual())
-    keys.insert("Port settings/device", MeterSetup::fromKeys(keys).device);
   else
     keys.insert("Port settings/device", port->currentText());
   return keys;
@@ -601,69 +555,15 @@ bool DeviceSettings::isGatt() const
   return ui_vendor->currentIndex() != 0 && MeterSetup::isGatt(m_dmmInfo);
 }
 
-bool DeviceSettings::isCalculated() const
+// What a model's way of connecting shows: the port and its line settings,
+// the protocol, the Bluetooth or sigrok group, a microcontroller's units.
+void DeviceSettings::updateConnectionMode()
 {
-  return ui_vendor->currentIndex() != 0 && MeterSetup::isCalculated(m_dmmInfo);
-}
-
-bool DeviceSettings::isVirtual() const
-{
-  return ui_vendor->currentIndex() != 0 && MeterSetup::isVirtual(m_dmmInfo);
-}
-
-void DeviceSettings::updateVirtualFormula()
-{
-  const int wave = ui_virtualSignal->currentIndex();
-  const bool custom = wave == 7;
-  ui_virtualFormula->setReadOnly(!custom);
-  for (QWidget *w : std::initializer_list<QWidget *>{ui_virtualMin, ui_virtualMax, ui_virtualPeriod, ui_virtualNoise})
-    w->setEnabled(!custom);
-  ui_virtualPeriod->setEnabled(!custom && wave >= 2);
-  if (!custom)
-    ui_virtualFormula->setText(CalcExpr::waveformFormula(static_cast<CalcExpr::Waveform>(wave), ui_virtualMin->text(), ui_virtualMax->text(),
-                                              ui_virtualPeriod->text(), ui_virtualNoise->text()));
-  QString error;
-  int pos = -1;
-  const bool ok = CalcExpr::parse(ui_virtualFormula->text(), &error, &pos).has_value();
-  ui_virtualFormula->setStyleSheet(ok ? QString() : QStringLiteral("QLineEdit { color: #b00; }"));
-  ui_virtualFormula->setToolTip(ok ? QString() : tr("Position %1: %2").arg(pos + 1).arg(error));
-}
-
-void DeviceSettings::updateVirtualValues()
-{
-  for (int i = 0; i < int(m_virtualRows.size()); ++i)
-  {
-    const VirtualValue &row = m_virtualRows[size_t(i)];
-    const bool shown = i < m_virtualValues->value() - 1;
-    for (QWidget *w : std::initializer_list<QWidget *>{ row.label, row.unit, row.coupling, row.formula })
-      w->setVisible(shown);
-    QString error;
-    int pos = -1;
-    const bool ok = CalcExpr::parse(row.formula->text(), &error, &pos).has_value();
-    row.formula->setStyleSheet(ok ? QString() : QStringLiteral("QLineEdit { color: #b00; }"));
-    row.formula->setToolTip(ok ? row.formula->property("tip").toString() : tr("Position %1: %2").arg(pos + 1).arg(error));
-  }
-}
-
-void DeviceSettings::setCalcInputs(const CalcDevice::Inputs &inputs)
-{
-  m_inputs = inputs;
-}
-
-// A calculated value has no port and no protocol to set up; the formula
-// group takes their place. The port field then carries "calc <unit> <formula>"
-// (see device()), so MeterConnection and Transport need no special settings keys.
-void DeviceSettings::updateCalcMode()
-{
-  const bool calc = isCalculated();
-  const bool virt = isVirtual();
   const bool ble = isBluetooth();
   const bool sigrok = isSigrokMeter();
-  ButtonGroup11->setVisible(m_portVisible && !calc && !virt && !ble && !sigrok);
-  ui_serialBox->setVisible(!calc && !virt && !ble && !sigrok);
-  ui_protocol->setVisible(!calc && !virt);
-  ui_calcGroup->setVisible(calc);
-  ui_virtualGroup->setVisible(virt);
+  ButtonGroup11->setVisible(m_portVisible && !ble && !sigrok);
+  ui_serialBox->setVisible(!ble && !sigrok);
+  m_unitsGroup->setVisible(ui_vendor->currentIndex() != 0 && m_dmmInfo.unitsChoosable() && !ble && !sigrok);
   ui_bleGroup->setVisible(ble);
   const bool gatt = isGatt();
   for (QWidget *w : std::initializer_list<QWidget *>{ ui_bleKeyLabel, ui_bleKey, ui_bleMainLabel, ui_bleMain,
@@ -704,51 +604,6 @@ void DeviceSettings::updateCalcMode()
     updateBleFields();
     updateBleHint();
   }
-  if (virt)
-    updateVirtualFormula();
-  if (calc)
-  {
-    updateCalcHint();
-    m_calcHintTimer.start();
-  }
-  else
-    m_calcHintTimer.stop();
-}
-
-void DeviceSettings::updateCalcHint()
-{
-  QString error;
-  int pos = -1;
-  const auto expr = CalcExpr::parse(ui_calcExpression->text(), &error, &pos);
-  QStringList lines;
-
-  // the variables are the meters open in this program, by their names
-  const QMap<QString, CalcDevice::Input> readings = m_inputs ? m_inputs() : QMap<QString, CalcDevice::Input>();
-  if (!expr)
-  {
-    if (!ui_calcExpression->text().trimmed().isEmpty())
-      lines << QString("<span style=\"color:#b00\">%1</span>").arg(tr("Position %1: %2").arg(pos + 1).arg(error.toHtmlEscaped()));
-  }
-  else
-    for (const QString &var : expr->variables())
-    {
-      if (var == QLatin1String("t"))
-        continue;
-      const auto it = readings.constFind(var);
-      if (it != readings.constEnd() && it->valid)
-        lines << QString("%1 = %2 %3").arg(var.toHtmlEscaped(), SiPrefix::format(it->value), it->unit.toHtmlEscaped());
-      else if (it != readings.constEnd())
-        lines << QString("%1 = OL").arg(var.toHtmlEscaped());
-      else
-        lines << QString("<span style=\"color:#b00\">%1</span>").arg(tr("%1: no such device open").arg(var.toHtmlEscaped()));
-    }
-
-  if (!readings.isEmpty())
-    lines << tr("Open devices: %1").arg(readings.keys().join(", ").toHtmlEscaped());
-  else
-    lines << tr("No other device is open.");
-
-  ui_calcHint->setText(lines.join("<br>"));
 }
 
 void DeviceSettings::enterManualMode()
@@ -789,7 +644,7 @@ void DeviceSettings::enterManualMode()
   m_dmmInfo.rts = uirts->isChecked();
   m_dmmInfo.dtr = uidtr->isChecked();
 
-  updateCalcMode();
+  updateConnectionMode();
 }
 
 void DeviceSettings::on_ui_model_activated(int id)
@@ -840,7 +695,14 @@ void DeviceSettings::on_ui_model_activated(int id)
   uidtr->setChecked(m_currentVendorModels[id].dtr);
 
   ui_filename->setText("");
-  updateCalcMode();
+  // a microcontroller: the rate its sketch sets, the rest from the model
+  if (m_dmmInfo.baudChoosable())
+  {
+    showPortParameters(true);
+    baudRate->setDisabled(false);
+    ui_baudLabel->setDisabled(false);
+  }
+  updateConnectionMode();
 }
 
 bool DeviceSettings::rts() const

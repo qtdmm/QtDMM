@@ -29,9 +29,11 @@ int main(int argc, char **argv)
   for (const DmmDecoder::DMMInfo &info : DmmDecoder::getDeviceConfigurations())
   {
     int kinds = 0;
-    for (AddDeviceDlg::Connection c : { AddDeviceDlg::Cable, AddDeviceDlg::Bluetooth, AddDeviceDlg::Sigrok, AddDeviceDlg::Simulated })
+    for (AddDeviceDlg::Connection c : { AddDeviceDlg::Cable, AddDeviceDlg::Bluetooth, AddDeviceDlg::Sigrok })
       kinds += AddDeviceDlg::offers(c, info) ? 1 : 0;
     check(kinds == 1, "one connection for " + info.name);
+    check(!AddDeviceDlg::offers(AddDeviceDlg::Simulated, info) && !AddDeviceDlg::offers(AddDeviceDlg::Calculated, info),
+          "no model is simulated or calculated (logic nodes): " + info.name);
     check(AddDeviceDlg::offers(AddDeviceDlg::Network, info) == AddDeviceDlg::offers(AddDeviceDlg::Cable, info),
           "network offers the cable meters: " + info.name);
   }
@@ -47,7 +49,6 @@ int main(int argc, char **argv)
   check(offered(AddDeviceDlg::Bluetooth, "Uni-Trend UT61E+ (UT-D07B Bluetooth) *"), "UT61E+ with UT-D07B is Bluetooth");
   check(offered(AddDeviceDlg::Cable, "Uni-Trend UT61E+"), "UT61E+ with its cable is a cable meter");
   check(offered(AddDeviceDlg::Sigrok, "Keysight 34465A (sigrok) *"), "34465A is sigrok");
-  check(offered(AddDeviceDlg::Simulated, "QtDMM Calculated value"), "calculated value is simulated");
 
   // 2. page order: sigrok and simulated go from page 1 straight to page 3
   {
@@ -64,18 +65,125 @@ int main(int argc, char **argv)
     dlg.back();
     check(dlg.page() == AddDeviceDlg::ConnectionPage, "back to page 1");
 
-    dlg.chooseConnection(AddDeviceDlg::Simulated);
-    check(dlg.page() == AddDeviceDlg::DevicePage && dlg.settings()->isVirtual(), "simulated: page 3, the virtual meter");
-    check(dlg.name() == "Simulated meter (2)", "name: unique in My devices: " + dlg.name());
-    check(dlg.canGoNext(), "virtual meter: Next");
-    dlg.next();
-    check(dlg.page() == AddDeviceDlg::TargetPage, "page 4");
-    dlg.back();
-    check(dlg.page() == AddDeviceDlg::DevicePage, "back to page 3");
-    dlg.next();
-    dlg.findChild<QToolButton *>("ui_connect")->click();
-    check(dlg.result() == QDialog::Accepted && dlg.target() == AddDeviceDlg::Connect, "Connect finishes");
-    check(dlg.keys().value("DMM/model") == "QtDMM Simulated meter", "keys: the model");
+    // page 1: six tiles, Simulated among the devices; Calculated goes on
+    // to the kinds of logic nodes with inputs, their settings on the node
+    // page, then page 4
+    for (AddDeviceDlg::Connection c : { AddDeviceDlg::Cable, AddDeviceDlg::Bluetooth, AddDeviceDlg::Network,
+                                        AddDeviceDlg::Sigrok, AddDeviceDlg::Simulated, AddDeviceDlg::NodeKinds })
+      check(dlg.findChild<QToolButton *>("ui_connection" + QString::number(c)), "page 1 has the tile " + QString::number(c));
+    check(!dlg.findChild<QToolButton *>("ui_connection" + QString::number(AddDeviceDlg::Integral))
+            && !dlg.findChild<QToolButton *>("ui_connection" + QString::number(AddDeviceDlg::Calculated)),
+          "no tile of its own for a formula or an integral");
+    {
+      AddDeviceDlg kinds(&library);
+      kinds.setDiscoverers([](AddDeviceDlg::Connection) { return QList<Discoverer *>(); });
+      auto *search = kinds.findChild<QLineEdit *>("ui_kindSearch");
+      check(search && search->isHidden(), "the search only on the kind page");
+      // with QTDMM_SHOT_DIR set, page 1 and the kind page as pictures
+      const QString shots = qEnvironmentVariable("QTDMM_SHOT_DIR");
+      if (!shots.isEmpty())
+      {
+        kinds.show();
+        QApplication::processEvents();
+        kinds.grab().save(shots + "/add_page1.png");
+      }
+      kinds.findChild<QToolButton *>("ui_connection" + QString::number(AddDeviceDlg::NodeKinds))->click();
+      if (!shots.isEmpty())
+      {
+        QApplication::processEvents();
+        kinds.grab().save(shots + "/add_kinds.png");
+      }
+      check(kinds.page() == AddDeviceDlg::KindPage && !search->isHidden(), "Calculated: the kind page with its search");
+      check(kinds.nodeKinds() == QList<AddDeviceDlg::Connection>({ AddDeviceDlg::Calculated, AddDeviceDlg::Integral }),
+            "the kinds: formula and integral, no generator");
+      check(kinds.markedKind() == AddDeviceDlg::Calculated && kinds.canGoNext(), "the first marked, Next on");
+      check(!kinds.findChild<QLabel *>("ui_kindAbout")->text().isEmpty(), "what it does beside the list");
+      kinds.searchKinds("energy");
+      check(kinds.nodeKinds() == QList<AddDeviceDlg::Connection>({ AddDeviceDlg::Integral })
+              && kinds.markedKind() == AddDeviceDlg::Integral,
+            "the search finds the integral by its text, the mark on it");
+      kinds.searchKinds("nothing like this");
+      check(kinds.nodeKinds().isEmpty() && !kinds.canGoNext(), "nothing found: no Next");
+      check(kinds.findChild<QLabel *>("ui_kindAbout")->text().contains("nothing like this"),
+            "nothing found: said beside the list: " + kinds.findChild<QLabel *>("ui_kindAbout")->text());
+      kinds.searchKinds(QString());
+      kinds.markKind(AddDeviceDlg::Integral);
+      auto *list = kinds.findChild<QTreeWidget *>("ui_kindList");
+      Q_EMIT list->itemDoubleClicked(list->currentItem(), 0);
+      check(kinds.page() == AddDeviceDlg::NodePage && kinds.connection() == AddDeviceDlg::Integral,
+            "a double click: the integral's settings");
+      kinds.back();
+      check(kinds.page() == AddDeviceDlg::KindPage && kinds.markedKind() == AddDeviceDlg::Integral,
+            "back: the kind page, the integral marked");
+      kinds.back();
+      check(kinds.page() == AddDeviceDlg::ConnectionPage && search->isHidden(), "back: page 1, no search");
+    }
+    // the kind page from the keyboard: typing goes into the search, the
+    // arrows move in the list, Enter goes on
+    {
+      AddDeviceDlg keys(&library);
+      keys.setDiscoverers([](AddDeviceDlg::Connection) { return QList<Discoverer *>(); });
+      keys.show();
+      QApplication::processEvents();
+      keys.findChild<QToolButton *>("ui_connection" + QString::number(AddDeviceDlg::NodeKinds))->click();
+      QApplication::processEvents();
+      auto *search = keys.findChild<QLineEdit *>("ui_kindSearch");
+      check(keys.focusWidget() == search, QString("the focus in the search: %1")
+                                            .arg(keys.focusWidget() ? keys.focusWidget()->objectName() : QString("none")));
+      QKeyEvent down(QEvent::KeyPress, Qt::Key_Down, Qt::NoModifier);
+      QCoreApplication::sendEvent(search, &down);
+      check(keys.markedKind() == AddDeviceDlg::Integral && search->text().isEmpty(), "down in the search: the integral marked");
+      QKeyEvent up(QEvent::KeyPress, Qt::Key_Up, Qt::NoModifier);
+      QCoreApplication::sendEvent(search, &up);
+      check(keys.markedKind() == AddDeviceDlg::Calculated, "up: the formula again");
+      QKeyEvent enter(QEvent::KeyPress, Qt::Key_Return, Qt::NoModifier);
+      QCoreApplication::sendEvent(search, &enter);
+      check(keys.page() == AddDeviceDlg::NodePage && keys.connection() == AddDeviceDlg::Calculated, "Enter: Next, the formula's settings");
+    }
+    // one width for all pages: the node pages fit into the first's
+    {
+      AddDeviceDlg wide(&library);
+      wide.setDiscoverers([](AddDeviceDlg::Connection) { return QList<Discoverer *>(); });
+      wide.show();
+      QApplication::processEvents();
+      const int width = wide.width();
+      for (AddDeviceDlg::Connection c : { AddDeviceDlg::Simulated, AddDeviceDlg::Calculated, AddDeviceDlg::Integral })
+      {
+        wide.chooseConnection(c);
+        QApplication::processEvents();
+        check(wide.width() == width, QString("the width stays with %1: %2, not %3").arg(int(c)).arg(width).arg(wide.width()));
+        wide.back();
+      }
+    }
+    for (AddDeviceDlg::Connection c : { AddDeviceDlg::Simulated, AddDeviceDlg::Calculated, AddDeviceDlg::Integral })
+    {
+      AddDeviceDlg node(&library);
+      node.setDiscoverers([](AddDeviceDlg::Connection) { return QList<Discoverer *>(); });
+      node.chooseConnection(c);
+      check(node.result() != QDialog::Accepted && node.page() == AddDeviceDlg::NodePage && node.nodeEditor(),
+            "a node: its settings on the node page");
+      check(node.canGoNext() == (c == AddDeviceDlg::Simulated), "Next only when complete (a generator is at once)");
+      if (c != AddDeviceDlg::Simulated)
+      {
+        // straight to it ("Integrate..."): back to the kinds, it marked
+        node.back();
+        check(node.page() == AddDeviceDlg::KindPage && node.markedKind() == c, "back: the kind page, it marked");
+        continue;
+      }
+      node.back();
+      check(node.page() == AddDeviceDlg::ConnectionPage, "a generator: back to page 1");
+      node.chooseConnection(c);
+      node.next();
+      check(node.page() == AddDeviceDlg::TargetPage, "Next: page 4");
+      check(node.keys().value("DMM/model").toString() == "QtDMM Generator"
+              && node.keys().value("Node/json").toString().contains("generator") && node.name() == "Simulated",
+            "its keys: model and Node/json, its name: " + node.name());
+      node.back();
+      check(node.page() == AddDeviceDlg::NodePage, "back from page 4: the node page");
+      node.next();
+      node.findChild<QToolButton *>("ui_saveOnly")->click();
+      check(node.result() == QDialog::Accepted && node.target() == AddDeviceDlg::SaveOnly, "Save only: done");
+    }
   }
 
   // the searches of the real dialog look at this machine; here the finds are given
@@ -122,7 +230,6 @@ int main(int argc, char **argv)
       { "victron", AddDeviceDlg::Bluetooth, "AA:BB:CC:DD:EE:FF",
         { { "DMM/model", "Victron SmartSolar MPPT" }, { "Port settings/ble-address", "AA:BB:CC:DD:EE:FF" },
           { "Port settings/ble-key", "00112233445566778899aabbccddeeff" } }, "Solar charge controller", "Bluetooth LE" },
-      { "simulated", AddDeviceDlg::Simulated, QString(), {}, "Virtual meter", "simulated in QtDMM" },   // protocol "-"
       { "manual", AddDeviceDlg::Cable, "/dev/ttyACM0", {}, "-", "/dev/ttyACM0" },
     };
     for (const Case &c : cases)
@@ -142,8 +249,6 @@ int main(int argc, char **argv)
       const QString info = dlg.findChild<QLabel *>("ui_deviceInfo")->text();
       check(info.contains(">" + c.type + "<") && info.contains(c.connectionText), c.shot + ": info " + info);
       check(!info.contains("00112233445566778899aabbccddeeff") && !info.contains("SERIAL "), c.shot + ": no key, no SERIAL: " + info);
-      if (c.connection == AddDeviceDlg::Simulated)
-        check(!info.contains("Sigrok"), "simulated: no internal protocol name: " + info);
       check(drawn(dlg.findChild<QLabel *>("ui_deviceSymbol")->pixmap()) > 2000, c.shot + ": a picture");
       if (!shots.isEmpty())
       {
@@ -159,7 +264,7 @@ int main(int argc, char **argv)
   {
     AddDeviceDlg dlg(&library);
     dlg.setDiscoverers(noSearch);
-    dlg.chooseConnection(AddDeviceDlg::Simulated);
+    dlg.chooseConnection(AddDeviceDlg::Sigrok);
     dlg.next();
     check(dlg.page() == AddDeviceDlg::TargetPage, "page 4 also in an empty window");
     QToolButton *keep = dlg.findChild<QToolButton *>("ui_saveOnly");
@@ -363,7 +468,8 @@ int main(int argc, char **argv)
       dlg.chooseCandidate(c.key);
       waitFor([&] { return dlg.candidateModels(c.key).value(0) == "ZOTEK ZT-300AB *"; });
       check(dlg.candidateModels(c.key)
-              == QStringList({ "ZOTEK ZT-300AB *", "ANENG AN9002 *", "ZOTEK ZT-5B *", "ZOTEK ZT-5BQ *" }),
+              == QStringList({ "ZOTEK ZT-300AB *", "ANENG AN9002 *", "BSIDE ZT-300AB *", "BABATools AD900 *",
+                               "ZOTEK ZT-5B *", "ZOTEK ZT-5BQ *" }),
             "ZOTEK: the type-3 packet puts the ZT-300AB first: " + dlg.candidateModels(c.key).join(", "));
       dlg.chooseCandidate(c.key);
       check(opened == 1, "ZOTEK: listened to once");

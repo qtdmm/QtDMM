@@ -10,7 +10,7 @@
 
 class QMenu;
 class FrontPanel;
-class InstanceWidget;
+class GraphModel;
 
 /// The context menu of one value of an open meter (a value row of the
 /// sidebar, or the row of a meter with one value): which window shows it,
@@ -22,17 +22,16 @@ class InstanceWidget;
 /// choose their value with Sources... in their own menu.
 ///
 /// The LCD places go to the meter's FrontPanel, the other views get the
-/// value by its ValueRef (InstanceWidget).
+/// value by its ValueRef (MainWindow).
 class ValueMenu
 {
   Q_DECLARE_TR_FUNCTIONS(ValueMenu)
 public:
-  enum class View { Lcd, Meter, Poincare, Graph, Table };
+  enum class View { Lcd, Meter, Poincare, Histogram, Heatmap, Graph, Table };
 
   /// What the menu acts on.
   struct Target
   {
-    InstanceWidget *wid = nullptr;
     /// The front panel of another meter by its source, nullptr when none.
     std::function<FrontPanel *(const QString &source)> panel;
     /// The readings table shows a value, and showing it.
@@ -47,6 +46,15 @@ public:
     /// A new analog meter or Poincaré plot showing the value (none: no entry).
     std::function<void(const ValueRef &)> newMeter;
     std::function<void(const ValueRef &)> newPoincare;
+    std::function<void(const ValueRef &)> newHistogram;
+    std::function<void(const ValueRef &)> newHeatmap;
+    /// The graphs by their windows' titles (none: no entries), showing
+    /// one's window, and a new graph with the value.
+    std::function<QList<std::pair<QString, GraphModel *>>()> graphs;
+    std::function<void(const GraphModel *)> showGraph;
+    std::function<void(const ValueRef &)> newGraph;
+    /// A new integral of the value (IntegralNode; none: no entry).
+    std::function<void(const ValueRef &)> integrate;
   };
 
   /// Fills @p menu for @p value of an open meter.

@@ -45,10 +45,10 @@ if (BUILD_TESTING)
 	## the core's base types and ReadingAdapter (the decoder fixtures check the ports too)
 	qtdmm_add_test(reading_adapter test_adapter tests/test_adapter.cpp)
 
-	qtdmm_add_test(dmmgraph test_graph tests/test_graph.cpp "${TEST_DATA}/graph")
-
 	## the recorder's store on its own
 	qtdmm_add_test(recording_store test_recordingstore tests/test_recordingstore.cpp "${TEST_DATA}/graph")
+
+	qtdmm_add_test(buffered_device test_buffereddevice tests/test_buffereddevice.cpp)
 
 	## the recorder against readings with given times: the grid export, the
 	## integral and the triggers, as recorded with the 100 ms sample clock
@@ -77,6 +77,11 @@ if (BUILD_TESTING)
 
 	## the meters of one process (DeviceSession): opened from My devices without a window, SCPI QTDMM:DEVice
 	qtdmm_add_test(device_session test_devicesession tests/test_devicesession.cpp)
+
+	## logic nodes: the common form, a node as a source of the session (triggered, inputs missing or old, bypass, loops)
+	qtdmm_add_test(logic_node test_logicnode tests/test_logicnode.cpp)
+	qtdmm_add_test(formula_node_dialog test_formulanodedlg tests/test_formulanodedlg.cpp)
+	qtdmm_add_test(legacy_nodes test_legacynodes tests/test_legacynodes.cpp)
 
 	## the program itself, offscreen: a meter in the window and two with --also, read over SCPI TCP
 	## (Unix only: the console and the end of a GUI process on Windows)
@@ -117,6 +122,9 @@ if (BUILD_TESTING)
 	## the application's log and its window
 	qtdmm_add_test(app_log test_applog tests/test_applog.cpp)
 
+	## a meter's frames captured with what it showed, exported as spec vectors
+	qtdmm_add_test(capture test_capture tests/test_capture.cpp)
+
 	## the settings pages: keys through the pages, fields with their choice,
 	## the recording length asked by Record
 	qtdmm_add_test(settings_pages test_settingspages tests/test_settingspages.cpp)
@@ -126,10 +134,6 @@ if (BUILD_TESTING)
 
 	## the formula evaluator of calculated instances
 	qtdmm_add_test(calc_expression test_calc tests/test_calc.cpp)
-
-	## the calculated-value source: formula over the other instances' readings,
-	## checked through the real ASCII decoder
-	qtdmm_add_test(calc_device test_calc_device tests/test_calc_device.cpp)
 
 	## HID cable chips: report layouts and chip detection, no hardware needed
 	qtdmm_add_test(hid_cable test_hid tests/test_hid.cpp "${TEST_DATA}/hid_cables.json")
@@ -147,6 +151,15 @@ if (BUILD_TESTING)
 
 	## the recorder's CSV formats, without widgets
 	qtdmm_add_test(recording_file test_recording tests/test_recording.cpp "${TEST_DATA}/graph")
+	target_link_libraries(test_recording PRIVATE qtdmm_resources)   # the LabPlot templates
+	qtdmm_add_test(labplot_live test_labplotlive tests/test_labplotlive.cpp)
+	target_link_libraries(test_labplotlive PRIVATE qtdmm_resources)   # the LabPlot templates
+
+	## the export dialog: formats, where to, the last choice
+	qtdmm_add_test(export_dialog test_exportdlg tests/test_exportdlg.cpp)
+
+	## the project basket: its folder, copies under free names
+	qtdmm_add_test(basket test_basket tests/test_basket.cpp)
 
 	## the readings table model, without its widget
 	qtdmm_add_test(reading_log test_readinglog tests/test_readinglog.cpp)
@@ -208,6 +221,19 @@ if (BUILD_TESTING)
 
 	## the Poincaré plot's values: pairs, SD1/SD2, gaps, port changes
 	qtdmm_add_test(poincare_series test_poincare tests/test_poincare.cpp)
+	qtdmm_add_test(plot_axis test_plotaxis tests/test_plotaxis.cpp)
+
+	## the heatmap: cells averaged, no-data colour, hold, colour scale, clear
+	qtdmm_add_test(heatmap test_heatmap tests/test_heatmap.cpp)
+	qtdmm_add_test(qcp_xy test_qcpxy tests/test_qcpxy.cpp)
+	qtdmm_add_test(qcp_local test_qcplocal tests/test_qcplocal.cpp)
+	qtdmm_add_test(histogram test_histogram tests/test_histogram.cpp)
+
+	## the thinning of a series for drawing: buckets, minimum/maximum, gaps
+	qtdmm_add_test(series_decimator test_seriesdecimator tests/test_seriesdecimator.cpp)
+
+	## the graph on QCustomPlot: the curve against the store, gaps, axes, hold, scrolling, zoom, files
+	qtdmm_add_test(graph test_graph tests/test_graph.cpp "${TEST_DATA}/graph")
 
 	## the drawing clock of the views: wanted, off, slower when ticks cost too much
 	qtdmm_add_test(frame_clock test_frameclock tests/test_frameclock.cpp)

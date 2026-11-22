@@ -90,6 +90,15 @@ public:
     UniTUT8803,
     Eevblog121GW,
     BrymenBM78xBT,
+    RawCapture,            ///< no decoder: frames cut at a pause, only for the capture window
+    UniTUT381A,
+    UniTUT372D,
+    UniTUT382A,
+    UniTUT320i,
+    UniTUT325F,
+    UniTUT117C,
+    UniTUT219PV,
+    TextLines,
     EndOfList              // new stuff always before!
   };
 

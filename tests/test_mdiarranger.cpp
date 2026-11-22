@@ -68,6 +68,18 @@ static void testLayout()
     checkTiling(area, r, "no graph");
     check(r[1].width() == area.width() - 12, "no graph: table full width");
   }
+  // a narrow area, instruments on the left: the graph keeps its minimum
+  // (its row of buttons), the instruments and the table give way
+  {
+    const QRect narrow(0, 0, 640, 600);
+    QList<QRect> r = MdiArranger::layout(narrow, { R::Instrument, R::Instrument, R::Graph }, 22, 260, true, {}, 450);
+    checkTiling(narrow, r, "narrow left");
+    check(r[2].width() >= 450, QString("narrow left: graph %1 wide, at least 450").arg(r[2].width()));
+    r = MdiArranger::layout(QRect(0, 0, 900, 600), { R::Graph, R::Table }, 22, 260, false, {}, 600);
+    check(r[0].width() >= 600 && r[1].width() >= 120, QString("graph and table: graph %1, table %2").arg(r[0].width()).arg(r[1].width()));
+    r = MdiArranger::layout(narrow, { R::Instrument, R::Instrument, R::Graph }, 22, 260, true);
+    check(r[2].width() < 450, "without a minimum: as before");
+  }
 }
 
 static void testWindows()
@@ -308,6 +320,36 @@ static void testDerive()
   MdiArranger::addAtEdge(n, 3, false);
   MdiArranger::applyTree(n, QRect(0, 0, 1000, 700), r);
   check(r[3].bottom() == 699 && r[3].width() == 1000, "add at edge: a new row at the bottom");
+}
+
+// no cell below its windows' minimum: the others give way; when they
+// cannot, the cells go beyond the area (it scrolls)
+static void testMinimum()
+{
+  using Node = MdiArranger::Node;
+  Node row;
+  row.orient = Qt::Horizontal;
+  for (int i = 0; i < 3; ++i)
+  {
+    Node leaf;
+    leaf.leaf = i;
+    row.kids.push_back(leaf);
+  }
+  row.ratios = { 0.6, 0.2, 0.2 };
+  // leaf 1 needs 300 of 1000: from the others' room above their 100
+  auto mins = [](int need) { return [need](const Node &n, Qt::Orientation) { return n.leaf == 1 ? need : 100; }; };
+  QList<QRect> r;
+  MdiArranger::applyTree(row, QRect(0, 0, 1000, 400), r, nullptr, mins(300));
+  check(r[1].width() >= 300 && r[0].width() >= 100 && r[2].width() >= 100 && r[2].right() <= 999,
+        QString("leaf 1 its 300 (%1), the others give way within the area (end %2)").arg(r[1].width()).arg(r[2].right()));
+  check(r[0].width() > r[2].width(), "the larger one gives more but stays larger");
+  // more than there is: each its least, beyond the area
+  MdiArranger::applyTree(row, QRect(0, 0, 400, 400), r, nullptr, mins(300));
+  check(r[0].width() == 100 && r[1].width() == 300 && r[2].width() == 100 && r[2].right() > 399,
+        QString("too little room: each its least, the last ends at %1").arg(r[2].right()));
+  // without minimums: the ratios as before
+  MdiArranger::applyTree(row, QRect(0, 0, 1000, 400), r);
+  check(r[1].width() < 300, "no minimums: the ratios");
 }
 
 static void testArranged()
@@ -569,6 +611,81 @@ static void testArranged()
   delete fresh;
   arranger.arrange();
   QTest::qWait(50);
+  // a new table (the project's window) goes to the right, as in the rule
+  // layout, not below the graph
+  QMdiSubWindow *table = area.addSubWindow(new QLabel("table"));
+  table->setObjectName("table");
+  table->show();
+  arranger.addWindow(table, R::Table);
+  QTest::qWait(50);
+  check(table->geometry().left() > wins[2]->geometry().right() && table->geometry().top() <= wins[1]->geometry().top()
+          && table->geometry().bottom() >= wins[2]->geometry().bottom(),
+        "Fixed: a new table stands at the right over the whole height");
+  delete table;
+  arranger.arrange();
+  QTest::qWait(50);
+  // hidden, a new one, another hidden, both back: each gets a place (R19-04)
+  {
+    auto overlapFree = [&wins](QMdiSubWindow *extra)
+    {
+      QList<QMdiSubWindow *> shown{ wins[0], wins[1], wins[2], extra };
+      for (int a = 0; a < shown.size(); ++a)
+        for (int b = a + 1; b < shown.size(); ++b)
+          if (shown[a]->geometry().intersects(shown[b]->geometry()))
+            return false;
+      return true;
+    };
+    wins[1]->hide();
+    QTest::qWait(50);
+    QMdiSubWindow *later = area.addSubWindow(new QLabel("later"));
+    later->setObjectName("later");
+    later->show();
+    arranger.addWindow(later, R::Graph);
+    QTest::qWait(50);
+    wins[2]->hide();
+    QTest::qWait(50);
+    wins[1]->show();
+    QTest::qWait(50);
+    check(!wins[1]->geometry().intersects(later->geometry()) && !wins[1]->geometry().intersects(wins[0]->geometry()),
+          "Fixed: hidden before a new window came, shown again: a place of its own");
+    wins[2]->show();
+    QTest::qWait(50);
+    check(overlapFree(later), "Fixed: and the other one back too: no window over another");
+    // all away, a new one alone, one back: the new one keeps its place
+    for (QMdiSubWindow *w : { wins[0], wins[1], wins[2], later })
+    {
+      w->hide();
+      QTest::qWait(50);
+    }
+    QMdiSubWindow *alone = area.addSubWindow(new QLabel("alone"));
+    alone->setObjectName("alone");
+    alone->show();
+    arranger.addWindow(alone, R::Graph);
+    QTest::qWait(50);
+    wins[0]->show();
+    QTest::qWait(50);
+    check(!wins[0]->geometry().intersects(alone->geometry()),
+          "Fixed: all away, a new one alone, one back: side by side, got " + arranger.layoutText());
+    delete alone;
+    delete later;
+    wins[1]->show();
+    wins[2]->show();
+    arranger.arrange();
+    QTest::qWait(50);
+  }
+  // held: the windows stay where they are, let go they are arranged again
+  {
+    const QRect before = wins[2]->geometry();
+    arranger.setHeld(true);
+    wins[2]->setGeometry(10, 10, 50, 50);
+    area.resize(area.width() + 20, area.height());
+    QTest::qWait(50);
+    check(wins[2]->geometry() == QRect(10, 10, 50, 50), "held: nothing arranged");
+    arranger.setHeld(false);
+    area.resize(area.width() - 20, area.height());
+    QTest::qWait(50);
+    check(wins[2]->geometry() == before, "let go: arranged again");
+  }
   // a resize keeps the proportions
   const double gShare = double(wins[2]->height()) / vp->height();
   area.resize(900, 700);
@@ -584,6 +701,38 @@ static void testArranged()
   }
 }
 
+// A graph new to a kept arrangement goes below the last graph, not beside it
+static void testNewGraph()
+{
+  QMdiArea area;
+  area.resize(1200, 700);
+  MdiArranger arranger(&area);
+  QList<QMdiSubWindow *> wins;
+  for (const char *name : { "a", "g", "t" })
+  {
+    QMdiSubWindow *w = area.addSubWindow(new QLabel(name));
+    w->setObjectName(name);
+    wins << w;
+  }
+  arranger.addWindow(wins[0], R::Instrument);
+  arranger.addWindow(wins[1], R::Graph);
+  arranger.addWindow(wins[2], R::Table);
+  area.show();
+  arranger.setMode(MdiArranger::Fixed);
+  QTest::qWait(50);
+  const QRect before = wins[1]->geometry();
+  check(before.width() > before.height(), "new graph: the first one is wider than tall");
+  QMdiSubWindow *g2 = area.addSubWindow(new QLabel("g2"));
+  g2->setObjectName("g2");
+  arranger.addWindow(g2, R::Graph);
+  g2->show();
+  QTest::qWait(50);
+  const QRect g = wins[1]->geometry(), n = g2->geometry();
+  check(n.top() > g.bottom() && n.left() == g.left() && n.width() == g.width() && g.width() == before.width(),
+        QString("new graph: below the first, as wide: %1,%2 %3x%4 and %5,%6 %7x%8")
+          .arg(g.x()).arg(g.y()).arg(g.width()).arg(g.height()).arg(n.x()).arg(n.y()).arg(n.width()).arg(n.height()));
+}
+
 int main(int argc, char **argv)
 {
   qputenv("QT_QPA_PLATFORM", "offscreen");
@@ -595,7 +744,9 @@ int main(int argc, char **argv)
   testFit();
   testText();
   testDerive();
+  testMinimum();
   testArranged();
+  testNewGraph();
   if (failed)
     qWarning() << failed << "check(s) failed";
   else

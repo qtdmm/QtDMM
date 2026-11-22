@@ -118,7 +118,11 @@ int main(int argc, char **argv)
   check(states.size() == before, "no state changes after close()");
 
   // --- 5. nobody listening -> Error with the socket's reason ---
-  const quint16 deadPort = server.serverPort();
+  // port 1 (tcpmux): privileged and unused. Not the port of the server
+  // closed here: ctest runs in parallel, and another test's server may take
+  // it the moment it is free - the connect is accepted, no frame comes, and
+  // the link ends in Timeout instead of Error (seen on FreeBSD)
+  const quint16 deadPort = 1;
   server.close();
   MeterConnection refused(nullptr);
   refused.setDmmInfo(info);
@@ -140,6 +144,21 @@ int main(int argc, char **argv)
   bad.setDevice("RFC2217 nonsense");
   check(!bad.open(), "open() fails for an address without port");
   check(bad.errorString().contains("host:port"), "malformed address text: " + bad.errorString());
+
+  // --- 6b. waited for, retried: its problem said once, not at each retry ---
+  {
+    MeterConnection waiting(nullptr);
+    waiting.setDmmInfo(info);
+    waiting.setFormat(FrameFormat::Sigrok);
+    waiting.setReconnectInterval(1);
+    waiting.setDevice("RFC2217 nonsense");
+    int errors = 0;
+    QObject::connect(&waiting, &MeterConnection::error, [&errors] { ++errors; });
+    check(!waiting.open(true), "waited for: not open yet");
+    waitFor([] { return false; }, 2600);
+    check(errors == 2, QString("retried twice: the open error once, the state once, %1 errors").arg(errors));
+    waiting.close();
+  }
 
   // --- 7. polled, variable-length protocol (Fluke QM) end to end ---
   // The reader must send the decoder's poll request and cut the answer -

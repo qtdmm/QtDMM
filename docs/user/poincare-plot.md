@@ -57,7 +57,7 @@ Right-click into the plot:
 - **Ellipse SD1/SD2** - the ellipse on or off; the numbers stay.
 - **Hold picture** - freezes what you see; the readings go on being
   collected, and the next update after releasing it shows them.
-- **Clear** - starts afresh.
+- **Reset** - starts afresh.
 - **Save image...** - the plot as PNG or SVG.
 
 **Sources...** in its right-click menu chooses the value plotted, of any

@@ -158,6 +158,8 @@ private:
   QString handleQtdmm(const Command &cmd, bool &isQuery);
   QByteArray recordingData(const Command &cmd, bool &isQuery);
   static QString unquote(const QString &arg);
+  /// The arguments split at the commas outside quotes, each unquote()d.
+  static QStringList quotedArgs(const QString &args);
   /// The channels of a query: its channel list "(@1,3)", "(@1:3)" in the
   /// arguments, else @p suffix (READ2?). Empty with an error queued when the
   /// list is broken (-104) or names a channel the meter has not (-222).

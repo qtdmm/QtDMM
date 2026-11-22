@@ -141,7 +141,16 @@ Where the meter showed no value, the curve has a gap instead of a line:
   line says it, and the graph and the readings table get a red mark where
   it began.
 
-Hovering over a gap shows "OL", "fault" or "no value". In the export, an interval
+The strip of meter states at the bottom of the plot (see below) has a lane
+for the gaps and tells their causes apart by a hatching and a word each:
+**no value** (the meter fell silent for longer than its rhythm allows),
+**connection lost** (the port went away, QtDMM reconnects), **paused**
+(QtDMM gave the port away on purpose, to an alarm's program with
+*Disconnect first*), **no number** and **fault**. A recording saved keeps
+the cause (`LOST`, `PAUSE` in the column `flags`).
+
+Hovering over a gap shows "OL", "fault", "no value", "connection lost" or
+"paused". In the export, an interval
 that holds some values and some gaps is the average of the values there
 were; the integration curve carries on across a gap.
 
@@ -164,10 +173,10 @@ were; the integration curve carries on across a gap.
   bracket to widen or narrow the window. Moved back while live, the graph
   stays at that part (`Live paused` top left) while the readings go on; a
   click at the right end of the overview, a time button or *Live* follows
-  the newest reading again. **Overview** in the right-click menu switches it
+  the newest reading again. **Display → Overview** in the right-click menu switches it
   off: the scroll bar is back. Whether it shows is kept with the window
   layout and in a saved bench.
-- **Min/max band** in the right-click menu draws a faint band behind the
+- **Display → Min/max band** in the right-click menu draws a faint band behind the
   curve: at each point the lowest to the highest the curve reaches within
   four pixels to either side. It shows how much a value scatters around
   the curve, as wide on screen at 1 minute as at 1 hour. It is off at
@@ -176,11 +185,27 @@ were; the integration curve carries on across a gap.
   temperature of a hygrometer or an anemometer, the frequency of a UT61E,
   the second value of a Victron or a Fluke 45) shows it as another curve,
   recorded with the main value on the same time axis. Each value has a
-  colour of its own; a legend at the top left names the curves. A value in
+  colour of its own; a legend at the top left names the curves (in a
+  narrow graph with shorter names: first without the device's vendor, then
+  without the device, at last the units alone). Zoomed far out, with more
+  readings than the plot has pixel columns, a curve
+  becomes a band from its lowest to its
+  highest reading: a faint fill with the outline in the curve's own dashes,
+  so it is still told apart without its colour and every peak stays
+  visible. Zoomed in again it is a line. A value in
   the main value's unit shares its axis, the first other unit gets an axis
   on the right with a scale of its own, a third unit a third axis outside
-  it. The titles of the right axes ([°C], [Hz]) are in the colour of their
-  first curve, so it is clear which axis is whose. At most three units are
+  it. The titles of the right axes ([°C], [kHz]) are in the colour of their
+  first curve, so it is clear which axis is whose. Like the left axis, a
+  right axis takes the prefix of the range it shows: 12 kHz reads 12 under
+  [kHz], 3.5 mV 3.5 under [mV]. The curve stays one curve when the meter
+  changes range (Hz to kHz, V to mV); a value in mV shares the axis of a
+  value in V. **Axis → Range [Hz]** in
+  the graph's menu chooses **Automatic** or **Fixed range...** for the
+  axis of a unit, left or right: a minimum and a maximum, 49.5 to 50.5 Hz
+  say, while the other axes scale themselves. The axis then shows that
+  range, whatever the readings do. It is kept per unit with the window
+  layout and in a saved bench. At most three units are
   drawn at a time: putting a value in a fourth unit on an axis switches off
   the curves of the unit there. When the second display
   changes what it shows (Hz to %), its curve ends and a new one begins; the
@@ -194,14 +219,13 @@ were; the integration curve carries on across a gap.
   goes with it. Every change sets the axes and
   scales afresh from the curves shown; the recording stays as it is, and
   the main value is still recorded and exported. The choice is kept with
-  the window layout. They are recorded either way. The time cursors show
-  every value drawn, with a line of statistics each; the overview shows
+  the window layout. They are recorded either way. The statistics beside
+  the graph show every value drawn; the overview shows
   the value of the left axis (with none there the first one on the right),
   in its colour. With none of the graph's device (the device of its first
   value) on the left axis, the first value of another device there is the
   left axis' value: the overview, the reference line, the cursor levels
-  and the PASS/FAIL band are then that device's; the triggers are the main value's; the integration curve can
-  take value 2 (see *Integration* below). The export of a recording has all
+  and the PASS/FAIL band are then that device's; the triggers are the main value's. The export of a recording has all
   values of every device that recorded, also those switched off here (see
   [Export and import](#export-and-import)).
 - **Mouse wheel** zooms the time axis; the **middle button** drags it. On the
@@ -215,8 +239,9 @@ were; the integration curve carries on across a gap.
   sharp at any size and can be edited in Inkscape or dropped into a document;
   **PNG** and **JPEG** are pixels. The picture is what the graph shows, so zoom
   and pan first.
-- Hovering shows a crosshair with the time (to the millisecond) and the
-  value of the reading at the cursor.
+- Hovering shows a crosshair with the time as the axis counts it (to the
+  millisecond; the clock time is in the tooltip) and the value on the left
+  axis of the reading at the cursor.
 - The **reference line** runs across the graph at 0 whenever 0 lies inside
   the vertical scale, with its value small at the right end (`0 A`): a
   current that charges and discharges, or a voltage around zero, reads
@@ -229,32 +254,163 @@ were; the integration curve carries on across a gap.
   **Reference line**, chooses the same, and **Off** hides the line. On the mean, minimum or maximum the
   line follows the readings and says what it is (`mean 1.83 A`). Where it
   stands is kept with the window layout and in a saved bench.
+  **Add a line at ...** in the same menu adds up to four more lines at
+  fixed values, dashed, where the menu was opened; drag them like the first one, **Remove the line at ...**
+  takes one away. The window layout keeps them.
+- **Crossings:** where the curve of the left axis crosses a reference line
+  in the window shown, a small hollow triangle marks the place, pointing up
+  where the curve rose through the line and down where it fell; the line's
+  label counts them (`1.2 V · 8×`). Crossings closer than three pixels
+  count once. A line on the mean, minimum or maximum gets none - a noisy
+  curve crosses its mean at every other reading. **Display → Reference line → Crossings**
+  switches the marks off; kept with the window layout.
+- **Outliers:** **Display → Outliers** leaves single wrong readings out of the
+  drawing - a contact that bounced, a spike from a motor starting. The
+  recording, its export and the readings table keep them; the line runs
+  from the reading before to the one after.
+  - **More than n σ from their neighbours...**: a reading further from the
+    mean of the 25 readings on each side of it than n times their
+    standard deviation (n = 3 at first). Neighbours rather than the whole
+    window: a drifting value keeps its ends, and Live need not draw
+    everything anew with each reading.
+  - **Spikes larger than...**: a reading further than the given amount
+    from both the reading before and the one after it, the same way. A
+    step to another level is away from one side only and stays; the
+    newest reading shows until the next one comes.
+  - **Outside limits...**: below a minimum or above a maximum.
+
+  Spikes and limits are in the unit of the left axis and leave curves in
+  other units alone; σ applies to every curve. The statistics leave the
+  hidden readings out too (`Shown 28 s without 2 outliers`), and the top
+  left of the plot says how many are hidden in the window. **Show all**
+  draws them again; the choice is kept with the window layout.
 - **Time cursors:** a click into the graph sets cursor **A**, Shift+click
-  cursor **B**; drag them to move them, Esc or **Remove time cursors** in
-  the right-click menu takes them away. Top right the graph shows the time
-  and the values drawn at each cursor and, with both, the time between them
-  and a line for each value: its change (Δ), its mean and for a current or
-  a power its integral, in Ah, Wh or VAh - the charge a battery took
-  between two points, for instance. The value of the integration curve
-  gets its integral too, in its unit times seconds (V·s). When a value
-  changed what it measures in between (Hz to %), the line is of what it
-  measures at the later cursor. A dashed line across the graph at the
+  cursor **B** (or **Cursor A here** / **Cursor B here** in the right-click
+  menu); drag them to move them, Esc or **Remove time cursors** in
+  the right-click menu takes them away. The statistics beside the graph
+  show the time and the values drawn at each cursor and, with both, the
+  time between them and for each value its change (Δ), its mean, standard
+  deviation (σ), minimum, maximum, the number of readings and for a
+  current or a power its integral, in Ah, Wh or VAh - the charge a battery
+  took between two points, for instance. When a value
+  changed what it measures in between (Hz to %), the values are of what it
+  measures at the later cursor.
+- **Statistics:** beside the graph, on its left, a column with the
+  cursors (as above) and, under **Shown**, each value's mean, σ, minimum,
+  maximum, peak-peak and number of readings over the window the graph
+  shows; it follows the readings a few times a second. It is hidden at
+  first: the **Σ** button beside the time buttons, or **Display → Statistics**
+  in the right-click menu, shows and hides it; whether it shows is kept with
+  the graph (window layout and bench). *Settings → Graph → Statistics* puts
+  it left or right of the graph, for every graph. The mean and σ weigh each
+  reading for as long as it held.
+  The numbers of a value share one prefix and one number of decimals, so
+  they stand below each other (3.000 V, 0.075 V), a unit stays with its
+  number, and a long name is cut. A cursor's time is given as the time axis
+  counts it (16.874 s); the tooltip of the column has the clock times.
+  Curves of other devices in the graph are listed too, under the device's
+  name.
+- **Meter states:** a strip at the bottom of the plot shows what the meter
+  reported with the readings of the value on the left axis, as bars over
+  the time it held: **HOLD** (the display was frozen, the flat line is no
+  measurement), **MIN**, **MAX** or **PEAK** (a stored extreme, not the
+  value at that time), **REL** (a difference to a reference) and **OL**
+  (overload). Each state has a lane, a colour and its name in the bar; the
+  line under the mouse names the state of the reading. Without such a state
+  in the window there is no strip. **Display → Meter states** in the
+  right-click menu switches it off, kept with the graph. A recording saved
+  keeps the states (see Export), so a file loaded shows them again; files
+  written before 27.1 have only OL.
+- **Buttons beside the time buttons:** ⊟ the overview, ≋ the min/max
+  band, ✎ sets a note now and Σ the statistics; the right-click menu has
+  the same. A dashed line across the graph at the
   value of the left axis under each cursor shows the change as the distance between them;
   the cursors' names hang as flags under the graph, at the time labels.
-- **Integration** (**Settings → Graph → Integration curve**) draws a second curve: the
-  integral over time of the readings above a threshold, in the unit times
-  seconds (V·s, A·s, W·s), scaled and offset as configured — for charge or
-  energy over time. Each reading counts for the time it was shown. For
-  ampere-hours or watt-hours set the scale to 1/3600, `0.000277778`. A
-  scale set before version 26.2, when the curve was the sum of the samples,
-  is converted once, so the curve looks as before. **Apply to** chooses the value
-  it integrates: value 1, the main display, or value 2, the second display
-  of a meter that has one (a current on a Victron, for instance); it then
-  goes on that value's axis. Without a second display there is no curve
-  for value 2.
+- **Zoom on a frame:** hold Shift and drag a frame over the graph: the
+  graph shows its time and its height, on the right axes too. New readings
+  leave the height alone. **Undo zoom** in the right-click menu gives back
+  the window and the axes of before, **Live** follows the readings again
+  with the axes automatic. A drag without Shift does what it did.
+- **Notes** mark a moment of the measurement: *Note here...* in the
+  graph's context menu sets one where you clicked, N (in the
+  graph, Ctrl+Shift+N anywhere) at the newest reading. A note has a title,
+  shown on its flag under the graph next to the alarm marks, and an
+  optional longer text. The marks are numbered in the order of their time.
+  A click on a flag shows its title, time and text, a double click edits
+  them - an alarm's or the trigger's mark can get a text too -, and its
+  context menu removes the mark. Drag a note's flag along the time axis
+  to move it (Esc while dragging puts it back); alarm and trigger marks
+  stay where it happened. A note also marks the reading nearest to it in
+  the readings table, and that mark moves along. The marks with their text
+  go into a QtDMM recording (`.qtdmm-rec`) and into the columns `mark` and
+  `note` of a CSV or spreadsheet; a SCPI client sets a note with
+  `QTDMM:MARK "title","text"`.
 - **Print** (Ctrl+P) prints the graph with a title and comment.
 
+An integral over time (the charge of a battery, the energy of a load) is
+no curve of the graph: the statistics give it between the time cursors
+for a current or a power, in Ah or Wh.
+
+## More than one graph
+
+**New...** in the list at the arrow of the **Graph** button opens another
+graph window (with more than one value to choose from it asks for its values
+first); *New graph* in the menu of a value in the sidebar, or dropping a
+value on the free area, opens one with that value. A click on the button
+shows or hides all of them. In a layout you arranged, a new graph goes
+below the last one, as wide as it.
+
+All graphs are alike and show the same readings, the recording is one for
+the whole bench: Record, Stop, Live and Clear in any graph act on all. Each
+graph has its own curves and axes, time window and zoom, fixed ranges,
+time cursors, statistics, reference line, overview, buttons and colours.
+One graph can show the last minute while another shows the whole
+recording.
+
+- With several graphs the **Graph** entry of a value in the sidebar has a
+  submenu for each, by its window's title; a value dragged from the sidebar
+  goes into the graph it is dropped on.
+- Print, Export, *Into the project*, *Copy graph image* and the zoom and note
+  keys work on the graph used last (a click in it, its menu, its window
+  active); from a graph's own menu on that graph. *Import* in the toolbar
+  and a recording opened from the project go into the graph used last.
+- *Settings → Graph → Time axis* sets the time window a new graph starts
+  with.
+- **Close window** in an added graph's menu removes it; the first graph only
+  hides. The window layout and benches keep the graphs with what they show.
+
+## The graph's menu
+
+The right-click menu of a graph holds, from top to bottom:
+
+- What the click point means: **Note here...** (a note where you clicked;
+  N alone sets one at the newest reading), **Cursor A here** / **Cursor B
+  here**, and only when there is something to undo **Undo zoom** and
+  **Remove time cursors**.
+- **Start recording** / **Stop recording**, **Hold picture**, **Reset**.
+- **Display**: the switches **Overview**, **Min/max band**, **Meter
+  states**, **Statistics**, then the looks of this graph: **Colour
+  variant**, **Patterned lines**, **Axis** (each value on the left axis, one
+  of the right ones or Automatic; the range of each axis), **Reference
+  line** (with its crossings), **Outliers**.
+- **Output**: **Copy image**, **Export image...** (SVG and PDF keep the
+  plot as vectors, PNG, JPEG), **Print**, **Export...**, **Into the
+  project**, **Live in LabPlot**. The picture is the legend, the plot and
+  the states' strip, without the buttons, the overview and the statistics.
+- **Sources...** (the values of any open device), **Load recording...**
+  (a file in this graph instead of the devices' readings; **Back to the
+  device** returns. A device that starts recording or goes live ends the
+  look at the file, and so do *Live* and *Clear* in the toolbar. A value
+  dragged onto a graph that shows a file is not taken), **New graph** (with
+  the same first value), **Configure...** (*Settings → Graph*).
+- **Hide view** / **Close window** last.
+
 ## Colours
+
+At the top of **Settings → Graph**, **Draw the XY diagram, histogram and
+heatmap with OpenGL** lets the graphics card draw those three plots. It is
+off at first and still experimental: with several plots open it can leave
+artefacts and raise the load. QtDMM takes it at its next start.
 
 **Settings → Graph → Colours** sets the colours of the graph:
 
@@ -266,27 +422,96 @@ were; the integration curve carries on across a gap.
   in up to 10 divisions of a whole step (10 min: 10 × 1 min, 1 min:
   6 × 10 s); in Live the grid lines run along with the readings, like the
   paper of a recorder.
-  The phosphor colours dash the integration curve and add a fine scale:
+  The phosphor colours add a fine scale:
   on the reference line, else along the bottom edge, and on the trigger
   of a pre-triggered recording, else along the left edge. They have no
   cross in the middle - it looked like a reference and said nothing.
+- **Colour-blind safe** draws on white with the Okabe-Ito colours (blue,
+  vermilion, bluish green, orange, reddish purple, sky blue), which stay
+  apart with red-green or blue-yellow colour weakness.
+- **High contrast** draws white and pure, bright colours on black, the
+  curves 1.5 times as thick.
 - **Custom** uses the colour buttons that show up beside it.
 
-A curve colour you chose yourself stays in every variant. The graph's
-right-click menu, **Graph colours**, can choose other colours for this graph
-only; *Default* goes back to the setting.
+A curve colour you chose yourself stays in every variant.
+
+**Display → Patterned lines** in a graph's right-click menu dashes each curve
+of another device in a pattern of its own (long dashes, dash-dot-dot,
+sparse dots, long-short), so the curves are told apart without their
+colours; the meter's own values are dashed, dotted and dash-dotted anyway.
+Where the readings lie closer together than one round of a pattern, the
+curve is drawn solid: dashes on a dense line only flicker. The legend shows the patterns. It is off at first; whether it is on is kept
+with the window layout. The graph's
+right-click menu, **Display → Colour variant**, can choose other colours for this graph
+only; *As in the settings* goes back to the setting.
 
 ## Export and import
 
-*Export* (Ctrl+E) writes the recording on the grid of **Sample every** as
-CSV, or - pick the file type in the dialog or just name the file `.xlsx` /
-`.ods` - as an Excel or OpenDocument spreadsheet with the same columns.
-The file type **CSV, every reading** writes each reading at its own time
+**Export...** (Ctrl+E, also in the context menus of the graph and the
+readings table) asks in one dialog what to export - the recording, the
+readings table or a picture of the graph -, in which format, and where to:
+a file, or the open [project](project-basket.md) with a name made of
+date, time and device. It keeps the last choice. For the recording,
+**Values** chooses **All devices** (the default: every value of every
+meter that recorded) or **The values of this graph** - the curves of the
+graph used last, with several graphs the one you clicked or zoomed last.
+The main value of the recording is its time base and is always written.
+The formats of the recording:
+
+- **QtDMM recording** (`.qtdmm-rec`) keeps what a CSV does not: the marks
+  (alarms, trigger, your own) and, in its `meta.json`, start, end and
+  sample time and each meter that recorded: its name, model and protocol,
+  the values with unit and quantity (`voltage.dc`, the same in every
+  language) and the meter's own name of a value where it has one, the
+  alarms and the limit test (without
+  sounds and commands, which are paths of this computer). It is a ZIP of
+  the same CSV (`recording.csv`) and that `meta.json`; *Import* reads it
+  back with its marks, and saved again it keeps what it said of the
+  meters. Unpacked, the CSV reads anywhere.
+- **LabPlot project** (`.lml`) opens in [LabPlot](https://labplot.org)
+  without its import dialog: a spreadsheet *Data* with the time in seconds
+  and one column per value, and a worksheet *Graph* with a plot per unit,
+  one below the other on the same time axis, a legend where values share
+  one. The axes are scaled to the values; what is no number (OL, a gap)
+  stays a gap in the curve. Made for LabPlot 2.12; *Import* does not read
+  it back.
+- **Live in LabPlot** (in the graph's context menu, while it records)
+  lets LabPlot follow the recording as it goes on: QtDMM writes a CSV that
+  grows by each row (`… live.csv`, `#time[s];Sim A: value [V];…` as its
+  first line, `nan` where there is no number) and a LabPlot project
+  (`… live.lml`) with a *live data source* on that file and the graph as
+  above; LabPlot reads the file on each change and its plots grow and
+  scale along. Both go into the open project, else into
+  *Documents/QtDMM*. The columns are those at the start; a value that
+  ends is `nan` from then on. When the recording stops, the file has all of
+  it and stays; open the project later and LabPlot reads it again. Clicked
+  again while it runs, LabPlot opens the same project once more.
+- **CSV for LabPlot** (`.labplot.csv`) has numbers only, for
+  LabPlot's import or any other analysis program: the time in
+  seconds, then one column per value in its unit without SI prefix,
+  `time[s];Sim A: value [V];Sim A: value 2 [A]`, an empty cell where the
+  value is no number. *Import* does not read it back.
+- **Then open in LabPlot** writes the LabPlot project and starts LabPlot
+  with it, the graph in front. QtDMM looks for `labplot` in the `PATH`, the Flatpak `org.kde.labplot` and
+  the usual place on Windows and macOS; another place is set under
+  **Settings → General → Programs → LabPlot**. QtDMM as Flatpak cannot
+  start other programs: open the file in LabPlot yourself.
+
+**CSV, on the recording's grid** writes the recording on the grid of
+**Sample every**; **Excel** and **OpenDocument** write a spreadsheet with
+the same columns. **CSV, every reading** writes each reading at its own time
 instead, a gap as a row of its own; *Import* reads its times back. In the spreadsheet
 the timestamps are date cells (shown with milliseconds) and the values
 numbers, so charts and formulas work without converting anything; the
 header row is bold and stays put when you scroll. CSV is what *Import*
 reads back (spreadsheets are not imported; save as CSV from there).
+
+With marks, each row ends with **mark** and **note**: the title and text
+of the marks nearest to that row's time (several on one row joined by
+` | `). A text with `;`, `"` or a line break is in quotes, as spreadsheets
+read it. *Import* brings them back as notes at the row's time - to the
+row, not to the millisecond, and alarm marks as notes too; the QtDMM
+recording keeps them exactly.
 
 The CSV is semicolon-separated:
 
@@ -308,6 +533,15 @@ end of the row keeps its verdict: `PASS`, `FAIL HI`, `FAIL LO`, or empty
 where the test was off. On the grid a step with a FAIL in it is FAIL, even
 when the other readings in it passed. A file read back shows the verdicts
 again.
+
+When the meter reported a state with a reading, a column `flags` after it
+keeps the states: `HOLD`, `MIN`, `MAX`, `PEAK`, `AVG`, `REL`, several
+separated by a space, empty where there was none. A gap has `LOST` there
+when the connection was lost and `PAUSE` when QtDMM gave the port away on
+purpose. On the grid a step has
+the states of all readings in it. A file read back shows them in the
+graph's strip of meter states. A recording without any state has no such
+column.
 
 The other values of the meter follow, three columns each - `value 2;unit 2;status 2`, then
 `value 3` ... - on the same rows. On the grid each is the mean over the step

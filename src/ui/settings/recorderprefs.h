@@ -25,7 +25,7 @@
 
 #include "ui/settings/settingspage.h"
 #include "core/valueref.h"
-#include "ui/views/graphwidget.h"
+#include "recording/recordingstore.h"
 
 class QComboBox;
 class QFormLayout;
@@ -35,7 +35,7 @@ class QSpinBox;
 class QTimeEdit;
 
 /// Settings page "Recording": the export grid (sample every) and how a
-/// recording starts (GraphWidget::SampleMode) with its thresholds and
+/// recording starts (RecordingStore::StartMode) with its thresholds and
 /// pre-trigger.
 ///
 /// The recording length (Sample/time) is not on the page: the window asks
@@ -47,7 +47,7 @@ class RecorderPrefs : public SettingsPage
 public:
   RecorderPrefs(QWidget *parent = nullptr);
   ~RecorderPrefs();
-  GraphWidget::SampleMode sampleMode() const;
+  RecordingStore::StartMode sampleMode() const;
   int         sampleStep() const;
   /// The recording length in tenths of a second, 0 = until stopped.
   int         sampleLength() const;
@@ -80,7 +80,6 @@ public Q_SLOTS:
   virtual void  defaultsSLOT()Q_DECL_OVERRIDE;
   virtual void  factoryDefaultsSLOT()Q_DECL_OVERRIDE;
   virtual void  applySLOT()Q_DECL_OVERRIDE;
-  void          setSampleTimeSLOT(int sampleTime);
 
 private:
   /// The fields of the start chosen, the threshold of the edge chosen.

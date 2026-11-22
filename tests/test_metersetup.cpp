@@ -33,17 +33,29 @@ int main(int argc, char **argv)
     const QVariantMap saved {
       {"DMM/model", cfg.name}, {"Port settings/device", "/dev/ttyUSB1"}, {"Port settings/baud", "1200"},
       {"Port settings/ble-address", "AA:BB:CC:DD:EE:FF"}, {"Port settings/ble-key", "00112233445566778899aabbccddeeff"},
-      {"Port settings/sigrok-conn", "/dev/ttyUSB0"}, {"DMM/calc-expression", "u * i"}, {"DMM/number-of-values", 3}};
+      {"Port settings/sigrok-conn", "/dev/ttyUSB0"}, {"DMM/calc-expression", "u * i"}, {"DMM/number-of-values", 3},
+      {"DMM/unit-1", "°C"}, {"DMM/unit-3", "none"}};
     fresh.load(saved);
     const MeterSetup direct = MeterSetup::fromKeys(saved);
     const MeterSetup page = MeterSetup::fromKeys(fresh.keys());
     const QString what = cfg.name + ": ";
     check(direct.knownModel && direct.info.name == cfg.name, what + "model found");
     check(direct.format == cfg.protocol && fresh.format() == cfg.protocol, what + "protocol");
-    check(direct.info.baud == cfg.baud && direct.info.display == fresh.display()
+    // a microcontroller keeps the rate saved, the others take the model's
+    check(direct.info.baud == (cfg.baudChoosable() ? 1200 : cfg.baud)
+            && direct.info.display == fresh.display()
             && direct.info.framesPerReading == fresh.framesPerReading() && direct.info.externalSetup == fresh.externalSetup()
             && direct.info.rts == fresh.rts() && direct.info.dtr == fresh.dtr(),
           what + "port parameters as the page has them");
+    // a microcontroller's units: from the keys and through the page; the
+    // others have none, and the page adds no keys for them
+    const QStringList units = cfg.unitsChoosable() ? QStringList{"°C", "", "none", ""} : QStringList();
+    check(direct.info.units == units && page.info.units == units,
+          what + "units " + direct.info.units.join('|') + ", page " + page.info.units.join('|'));
+    check(cfg.unitsChoosable() == fresh.keys().contains("DMM/unit-1") && !fresh.keys().contains("DMM/unit-2"),
+          what + "unit keys of the page");
+    const QGroupBox *unitsGroup = fresh.findChild<QGroupBox *>("ui_unitsGroup");
+    check(unitsGroup && unitsGroup->isVisibleTo(&fresh) == cfg.unitsChoosable(), what + "units group shown");
     check(direct.device == page.device, what + direct.device + " != " + page.device);
     check(direct.valueCount == page.valueCount && direct.valueCount == fresh.valueCount(),
           what + QString("values %1, page %2").arg(direct.valueCount).arg(fresh.valueCount()));
@@ -71,15 +83,6 @@ int main(int argc, char **argv)
         "cable meter: no Bluetooth string as its port");
 
   // 4. the kinds of meter without a port
-  check(MeterSetup::fromKeys({{"DMM/model", "QtDMM Calculated value"}, {"DMM/calc-unit", "W"}, {"DMM/calc-expression", "u * i"}}).device
-          == "calc W u * i",
-        "calculated value");
-  {
-    const MeterSetup s = MeterSetup::fromKeys({{"DMM/model", "QtDMM Simulated meter"}, {"DMM/virtual-waveform", 7},
-                                               {"DMM/virtual-formula", "1 + t"}, {"DMM/virtual-values", 2}});
-    check(s.device == QString("calc V/DC 1 + t; A/DC %1").arg(MeterSetup::kVirtualDefaults[0][1]) && s.valueCount == 2,
-          "simulated meter: " + s.device);
-  }
   {
     const MeterSetup s = MeterSetup::fromKeys({{"DMM/model", "Victron SmartShunt"}, {"Port settings/ble-address", "AA:BB:CC:DD:EE:FF"},
                                                {"Port settings/ble-key", "0011 2233"}});

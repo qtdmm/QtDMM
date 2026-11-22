@@ -6,7 +6,6 @@
       "name": "Generic / unknown",
       "match": [
         "Generic",
-        "QtDMM",
         "sigrok"
       ],
       "colors": {
@@ -33,7 +32,8 @@
         "luxmeter",
         "environment",
         "sound_level",
-        "anemometer"
+        "anemometer",
+        "tachometer"
       ]
     },
     "voltcraft": {
@@ -805,7 +805,9 @@
     "zotek": {
       "name": "ZOTEK",
       "match": [
-        "ZOTEK"
+        "ZOTEK",
+        "BSIDE",
+        "BABATools"
       ],
       "url": "",
       "example_device": "ZT-5B",

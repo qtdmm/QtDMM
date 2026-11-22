@@ -8,13 +8,16 @@
 
 #include "service/metercontroller.h"
 #include "ui/frontpanel.h"
-#include "ui/instancewidget.h"
-#include "ui/views/graphwidget.h"
+#include "ui/graphmodel.h"
+
+namespace
+{
+constexpr int kOff = -2;   ///< the entry "Off" of a graph: not GraphModel::kAxisAuto
+}
 
 void ValueMenu::fill(QMenu *menu, const Target &target, const ValueRef &value)
 {
   menu->setToolTipsVisible(true);
-  InstanceWidget *wid = target.wid;
   auto checkable = [](QMenu *m, const QString &text, bool on)
   {
     QAction *a = m->addAction(text);
@@ -81,50 +84,61 @@ void ValueMenu::fill(QMenu *menu, const Target &target, const ValueRef &value)
   if (target.newPoincare)
     QObject::connect(menu->addAction(tr("New &Poincaré plot")), &QAction::triggered, menu,
                      [add = target.newPoincare, ref] { add(ref); });
-  // the graph: off, or on an axis. A unit the axis has already joins it,
-  // another one takes its place there (GraphWidget::setValueAxis())
-  GraphWidget *graph = wid->graph();
-  QMenu *curves = menu->addMenu(tr("&Graph"));
-  auto *sides = new QActionGroup(curves);
-  const bool shown = graph->valueShown(ref);
-  const GraphWidget::ValueAxis side = graph->valueSide(ref);
-  const GraphWidget::ValueAxis chosen = graph->valueAxis(ref);
-  const std::pair<GraphWidget::ValueAxis, QString> choices[] = { { GraphWidget::AxisAuto, tr("&Off") },
-                                                                 { GraphWidget::AxisLeft, tr("&Left axis") },
-                                                                 { GraphWidget::AxisRight, tr("&Right axis") },
-                                                                 { GraphWidget::AxisThird, tr("&Third axis") } };
-  for (const auto &[axis, text] : choices)
+  if (target.newHistogram)
+    QObject::connect(menu->addAction(tr("New &histogram")), &QAction::triggered, menu,
+                     [add = target.newHistogram, ref] { add(ref); });
+  if (target.newHeatmap)
+    QObject::connect(menu->addAction(tr("New heatmap")), &QAction::triggered, menu,
+                     [add = target.newHeatmap, ref] { add(ref); });
+  // the graphs: off, or on an axis (Automatic: the axis of its unit, else
+  // the next free one)
+  QList<std::pair<QString, GraphModel *>> graphs;
+  if (target.graphs)
+    graphs = target.graphs();
+  // one graph: its axes at once; several: a submenu each, by their windows
+  QMenu *graphMenu = menu->addMenu(tr("&Graph"));
+  for (const auto &[title, graph] : std::as_const(graphs))
   {
-    const bool off = axis == GraphWidget::AxisAuto;
-    // another meter's value without room: the axis chosen for it
-    QAction *a = checkable(curves, text, off ? !shown : shown && (side != GraphWidget::AxisAuto ? side : chosen) == axis);
-    sides->addAction(a);
-    if (graph->isBase(ref) && id == 0 && axis != GraphWidget::AxisAuto && axis != GraphWidget::AxisLeft)
+    QMenu *curves = graphs.size() > 1 ? graphMenu->addMenu(QString(title).replace('&', "&&")) : graphMenu;
+    auto *sides = new QActionGroup(curves);
+    const bool shown = graph->values().contains(ref);
+    const int chosen = graph->valueAxis(ref);
+    const std::pair<int, QString> choices[] = { { kOff, tr("&Off") },
+                                                { GraphModel::kAxisAuto, tr("&Automatic") },
+                                                { 0, tr("&Left axis") },
+                                                { 1, tr("&Right axis") },
+                                                { 2, tr("&Third axis") } };
+    for (const auto &[axis, text] : choices)
     {
-      a->setEnabled(false);
-      a->setToolTip(tr("The main value is on the left axis"));
+      QAction *a = checkable(curves, text, axis == kOff ? !shown : shown && chosen == axis);
+      sides->addAction(a);
+      QObject::connect(a, &QAction::triggered, menu, [model = QPointer<GraphModel>(graph), ref, axis = axis, show,
+                                                      showGraph = target.showGraph]
+      {
+        if (!model)
+          return;
+        QList<ValueRef> values = model->values();
+        if (axis == kOff)
+        {
+          values.removeAll(ref);
+          model->setValues(values);
+          return;
+        }
+        model->setValueAxis(ref, axis);
+        if (!values.contains(ref))
+          model->setValues(values << ref);
+        if (showGraph)
+          showGraph(model);
+        else
+          show(View::Graph, ref.source);
+      });
     }
-    QObject::connect(a, &QAction::triggered, menu, [graph, ref, axis = axis, off, show]
-    {
-      if (off)
-      {
-        graph->setValueShown(ref, false);
-        return;
-      }
-      // the graph's meter: the axis first (it makes room there); another
-      // meter's: on first, then its axis
-      if (graph->isBase(ref))
-      {
-        graph->setValueAxis(ref, axis);
-        graph->setValueShown(ref, true);
-      }
-      else
-      {
-        graph->setValueShown(ref, true);
-        graph->setValueAxis(ref, axis);
-      }
-      show(View::Graph, ref.source);
-    });
+  }
+  if (target.newGraph)
+  {
+    graphMenu->addSeparator();
+    QObject::connect(graphMenu->addAction(tr("&New graph")), &QAction::triggered, menu,
+                     [add = target.newGraph, ref] { add(ref); });
   }
   // the readings table: all values at first; copying follows it, the
   // export keeps them all
@@ -137,6 +151,10 @@ void ValueMenu::fill(QMenu *menu, const Target &target, const ValueRef &value)
     if (on)
       show(View::Table, ref.source);
   });
+  // a calculated value from it: its integral (energy from a power)
+  if (target.integrate)
+    QObject::connect(menu->addAction(tr("&Integrate...")), &QAction::triggered, menu,
+                     [add = target.integrate, ref] { add(ref); });
   // the rules on it, kept with its meter
   if (target.addAlarm || target.editLimits)
     menu->addSeparator();

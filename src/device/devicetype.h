@@ -27,10 +27,12 @@ enum Type
   Environment,     ///< CO2, temperature, humidity
   SoundLevel,
   Anemometer,
+  Tachometer,      ///< revolutions (optical or contact), a measuring wheel's speed and length
+  Microcontroller, ///< a board printing its values as text lines (Serial Plotter, Teleplot)
   BatteryMonitor,
   SolarCharger,
   Inverter,
-  Virtual,         ///< QtDMM's own: Simulated meter, Calculated value
+  Virtual,         ///< QtDMM's own: generators and formulas (logic nodes)
   Generic          ///< not one model: any sigrok SCPI meter, bare DTM0660 boards
 };
 

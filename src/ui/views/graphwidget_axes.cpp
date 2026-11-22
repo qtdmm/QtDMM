@@ -1,547 +1,450 @@
-//======================================================================
-// File:		graphwidget_axes.cpp (from dmmgraph.cpp)
-// Author:	Matthias Toussaint
-// Created:	Tue Apr 10 17:45:35 CEST 2001
-//----------------------------------------------------------------------
-// This file is part of QtDMM.
+// Copyright (c) 2026 The QtDMM developers
+// SPDX-License-Identifier: GPL-3.0-or-later
 //
-// QtDMM is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// QtDMM is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with QtDMM.  If not, see <http://www.gnu.org/licenses/>.
-//----------------------------------------------------------------------
-// Copyright (c) 2001 Matthias Toussaint
-//======================================================================
-//
-// GraphWidget, part: the axes: time and value labels, the scales, the units and the right axis.
-// The class is in graphwidget.h, its other parts in graphwidget*.cpp.
+// GraphWidget: the time shown (window, "All", scrolling), the time axis and
+// the left axis, the row above and the scrollbar below.
+#include "ui/views/graphwidget.h"
 
-#include <QtGui>
-#include <QtWidgets>
+#include "recording/recordingstore.h"
+#include "ui/graphmodel.h"
+#include "ui/views/graphtimebar.h"
+#include "core/siprefix.h"
+#include "ui/views/qcp.h"
+
+#include <QCoreApplication>
+#include <QScrollBar>
+#include <QSignalBlocker>
+#include <QVBoxLayout>
 #include <cmath>
 
-#include "ui/frameclock.h"
-#include "ui/views/graphwidget.h"
-#include "ui/views/graphwidget_p.h"
-#include "core/nicestep.h"
-#include "core/siprefix.h"
+// "0:01:20"
+static QString timeText(qint64 ms)
+{
+  const qint64 seconds = qMax<qint64>(0, ms / 1000);
+  return QString("%1:%2:%3").arg(seconds / 3600).arg(seconds / 60 % 60, 2, 10, QChar('0')).arg(seconds % 60, 2, 10, QChar('0'));
+}
+
+void GraphWidget::setupAxes()
+{
+  // the time since the start of the recording
+  QSharedPointer<QCPAxisTickerTime> time(new QCPAxisTickerTime);
+  time->setTimeFormat(QStringLiteral("%h:%m:%s"));
+  m_plot->xAxis->setTicker(time);
+  // the value axes: the left one, the others on the right, outwards
+  for (int i = 0; i < kMaxAxes; ++i)
+  {
+    Axis a;
+    a.axis = i == 0 ? m_plot->yAxis : i == 1 ? m_plot->yAxis2 : m_plot->axisRect()->addAxis(QCPAxis::atRight);
+    if (i > 0)
+    {
+      a.axis->setVisible(false);
+      a.axis->setTickLabels(true);
+      a.axis->grid()->setVisible(false);   // one grid, the left axis'
+    }
+    m_axes.append(a);
+  }
+
+  // above the plot the state and the time buttons, below it the scrollbar
+  auto *box = qobject_cast<QVBoxLayout *>(layout());
+  m_timeBar = new GraphTimeBar(this);
+  m_timeBar->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+  box->insertWidget(0, m_timeBar);
+  box->setStretchFactor(m_plot, 1);
+  connect(m_timeBar, &GraphTimeBar::windowChosen, this, [this](int seconds)
+  {
+    if (seconds == 0)
+      setFollowAll(true);
+    else
+    {
+      setWindowSeconds(seconds);
+      followEnd();
+    }
+  });
+  m_scrollBar = new QScrollBar(Qt::Horizontal, this);
+  m_scrollBar->setFocusPolicy(Qt::NoFocus);
+  box->addWidget(m_scrollBar);
+  // in tenths of a second over what the store keeps
+  connect(m_scrollBar, &QScrollBar::valueChanged, this, [this](int value)
+  {
+    if (m_store)
+      showFrom(m_store->origin() + qint64(value) * 100);
+  });
+}
+
+void GraphWidget::setWindowSeconds(int seconds)
+{
+  seconds = qMax(1, seconds);
+  if (seconds == m_windowSeconds)
+    return;
+  // another window (a time button, a zoom, the bench) ends "All"
+  if (m_followAll)
+  {
+    m_followAll = false;
+    Q_EMIT followAllChanged(false);
+  }
+  applyWindow(seconds);
+  redraw();
+}
+
+void GraphWidget::applyWindow(int seconds)
+{
+  seconds = qMax(1, seconds);
+  if (seconds == m_windowSeconds)
+    return;
+  m_windowSeconds = seconds;
+  Q_EMIT windowChanged(seconds);
+}
+
+void GraphWidget::setFollowAll(bool on)
+{
+  if (on == m_followAll)
+    return;
+  m_followAll = on;
+  if (on)
+  {
+    m_followEnd = true;
+    fitAll(false);
+  }
+  Q_EMIT followAllChanged(on);
+  redraw();
+}
+
+void GraphWidget::fitAll(bool grow)
+{
+  if (!m_store)
+    return;
+  const double recorded = (m_store->duration() - m_store->origin()) / 1000.0;
+  // growing by a quarter at a time: the window does not change with every reading
+  if (grow && recorded <= m_windowSeconds)
+    return;
+  const qint64 limit = m_store->lengthLimit();
+  applyWindow(GraphModel::allTarget(recorded, grow, limit > 0 ? int((limit + 999) / 1000) : 0));
+}
+
+qint64 GraphWidget::lastStart() const
+{
+  if (!m_store)
+    return 0;
+  return qMax(m_store->origin(), m_store->duration() - qint64(m_windowSeconds) * 1000);
+}
+
+double GraphWidget::shownSeconds() const
+{
+  if (!m_store || !m_followAll || !m_followEnd)
+    return m_windowSeconds;
+  const double recorded = (m_store->duration() - m_store->origin()) / 1000.0;
+  return recorded < m_windowSeconds ? qMax(10.0, recorded) : m_windowSeconds;
+}
 
 qint64 GraphWidget::windowStart() const
 {
-  // Live: the newest reading at the right edge once the window is full (the
-  // axis ends a sample time short of the window, updateXAxisRange())
-  if (m_store->state() == RecordingStore::Live)
+  if (!m_store)
+    return 0;
+  if (m_followEnd)
+    return lastStart();
+  return qBound(m_store->origin(), m_start, lastStart());
+}
+
+void GraphWidget::showFrom(qint64 start)
+{
+  if (!m_store)
+    return;
+  // at the end it follows again: the scrollbar pushed to the right, a drag past the newest
+  m_followEnd = start >= lastStart();
+  m_start = qMax(m_store->origin(), start);
+  redraw();
+}
+
+void GraphWidget::followEnd()
+{
+  if (m_followEnd)
+    return;
+  m_followEnd = true;
+  redraw();
+}
+
+void GraphWidget::zoomBy(double factor)
+{
+  if (factor <= 0)
+    return;
+  // around the middle of what is shown; following, the end stays the newest
+  const qint64 middle = windowStart() + qint64(m_windowSeconds) * 500;
+  const bool atEnd = m_followEnd;
+  setWindowSeconds(qBound(1, qRound(m_windowSeconds / factor), 99999 * 60));
+  if (!atEnd)
+    showFrom(middle - qint64(m_windowSeconds) * 500);
+}
+
+void GraphWidget::zoomFit()
+{
+  if (!m_store)
+    return;
+  if (m_followAll)
   {
-    // paused by the overview: where it was put, while the store keeps it
-    const qint64 follow = followStart();
-    return m_liveHold ? qBound(m_store->origin(), m_holdStart, follow) : follow;
+    m_followAll = false;
+    Q_EMIT followAllChanged(false);
   }
-  // a recording seen at its end: to the millisecond, as Live, so it runs
-  // on smoothly between the readings
-  if (following())
-    return followStart();
-  // the scroll bar counts tenths of a second from what the store keeps
-  return m_store->origin() + qint64(qMax(0, scrollbar->value())) * 100;
+  fitAll(false);
+  m_followEnd = true;
+  redraw();
+}
+
+void GraphWidget::zoomToRect(const QRect &rect)
+{
+  const QRect plot = m_plot->axisRect()->rect();
+  const QRect frame = rect.normalized().intersected(plot);
+  if (!m_store || frame.width() < 1 || frame.height() < 1)
+    return;
+  if (!m_zoomed)
+    m_zoomBefore = { windowStart(), m_windowSeconds, m_followAll, m_followEnd };
+  // each value axis: the frame's height in its scale, kept in the base unit
+  for (Axis &a : m_axes)
+  {
+    a.zoomMin = a.axis->pixelToCoord(frame.bottom()) * a.factor;
+    a.zoomMax = a.axis->pixelToCoord(frame.top()) * a.factor;
+  }
+  m_zoomed = true;
+  const double t0 = m_plot->xAxis->pixelToCoord(frame.left());
+  const double t1 = m_plot->xAxis->pixelToCoord(frame.right());
+  setWindowSeconds(qMax(1, qRound(t1 - t0)));
+  showFrom(qRound64(t0 * 1000));
+}
+
+void GraphWidget::endZoom(bool restoreWindow)
+{
+  if (!m_zoomed)
+    return;
+  m_zoomed = false;
+  if (restoreWindow)
+  {
+    if (m_zoomBefore.all)
+      setFollowAll(true);
+    else
+    {
+      setWindowSeconds(m_zoomBefore.seconds);
+      if (m_zoomBefore.atEnd)
+        followEnd();
+      else
+        showFrom(m_zoomBefore.start);
+    }
+  }
+  redraw();
+}
+
+// The axis chosen for a value if its unit fits there. On Auto the axis its
+// unit got by Auto, else the first free one, else an axis chosen for that
+// unit: a value put on an axis of its own stays alone there while there is
+// room. A value whose unit finds no axis is not drawn. The values with a
+// choice come first, so Auto fills what is left.
+QString GraphWidget::unitText(const QString &unit)
+{
+  return unit == kNoUnit ? QCoreApplication::translate("GraphWidget", "no unit") : SiPrefix::displayText(unit);
+}
+
+void GraphWidget::assignAxes()
+{
+  for (Axis &a : m_axes)
+    a.unit.clear();
+  QList<bool> chosenAxis(m_axes.size(), false);
+  m_notice.clear();
+  auto fits = [this](int axis, const QString &unit)
+  { return axis >= 0 && axis < m_axes.size() && (m_axes.at(axis).unit.isEmpty() || m_axes.at(axis).unit == unit); };
+  QStringList left;
+  for (int pass = 0; pass < 2; ++pass)
+    for (Curve &c : m_curves)
+    {
+      const int chosen = m_ownStore ? kAxisAuto : m_valueAxes.value(c.value, kAxisAuto);
+      if ((chosen == kAxisAuto) != (pass == 1))
+        continue;
+      c.axis = -1;
+      const QString unit = c.unitless ? kNoUnit : c.unit;
+      if (unit.isEmpty())
+        continue;   // no reading yet
+      if (chosen != kAxisAuto)
+      {
+        c.axis = fits(chosen, unit) ? chosen : -1;
+        if (c.axis >= 0)
+          chosenAxis[c.axis] = true;
+      }
+      else
+      {
+        for (int i = 0; i < m_axes.size() && c.axis < 0; ++i)
+          if (m_axes.at(i).unit == unit && !chosenAxis.at(i))
+            c.axis = i;
+        for (int i = 0; i < m_axes.size() && c.axis < 0; ++i)
+          if (m_axes.at(i).unit.isEmpty())
+            c.axis = i;
+        for (int i = 0; i < m_axes.size() && c.axis < 0; ++i)
+          if (m_axes.at(i).unit == unit)
+            c.axis = i;
+      }
+      if (c.axis >= 0)
+        m_axes[c.axis].unit = unit;
+      else if (const QString shown = unitText(unit); !left.contains(shown))
+        left << shown;
+    }
+  if (!left.isEmpty())
+    m_notice = tr("%1: no free axis").arg(left.join(", "));
+}
+
+bool GraphWidget::valueSpan(int axis, double from, double to, double &lo, double &hi) const
+{
+  bool any = false;
+  const auto byTime = [](const QPointF &p, double t) { return p.x() < t; };
+  for (const Curve &c : m_curves)
+  {
+    if (c.axis != axis)
+      continue;
+    for (auto it = std::lower_bound(c.points.cbegin(), c.points.cend(), from, byTime);
+         it != c.points.cend() && it->x() <= to; ++it)
+    {
+      if (std::isnan(it->y()))
+        continue;
+      lo = any ? qMin(lo, it->y()) : it->y();
+      hi = any ? qMax(hi, it->y()) : it->y();
+      any = true;
+    }
+  }
+  return any;
+}
+
+// The time axis over the window; each value axis over the frame zoomed on,
+// the fixed range of its unit or the values shown, in the unit with the SI
+// prefix that suits them. An axis without a unit is not shown, but the left one.
+void GraphWidget::updateAxes(double &from, double &to)
+{
+  from = windowStart() / 1000.0;
+  to = from + shownSeconds();
+  m_plot->xAxis->setRange(from, to);
+  // a label is about 70 pixels wide: fewer ticks on a narrow plot
+  // with divisions up to 10 of them
+  m_plot->xAxis->ticker()->setTickCount(qBound(2, m_plot->axisRect()->width() / 110, m_look.divisions ? 10 : 6));
+
+  bool anyValue = false;
+  for (int i = 0; i < m_axes.size(); ++i)
+  {
+    Axis &a = m_axes[i];
+    a.axis->setVisible(i == 0 || !a.unit.isEmpty());
+    double lo = 0, hi = 0;
+    const bool any = valueSpan(i, from, to, lo, hi);
+    anyValue = anyValue || any;
+    if (m_zoomed)
+    {
+      lo = a.zoomMin;
+      hi = a.zoomMax;
+    }
+    else if (const auto fixed = m_fixedRanges.constFind(a.unit); !a.unit.isEmpty() && fixed != m_fixedRanges.cend())
+    {
+      lo = fixed->first;
+      hi = fixed->second;
+    }
+    else
+    {
+      // a little room above and below, the curve does not touch the frame
+      const double room = (hi - lo) * 0.05;
+      lo -= room;
+      hi += room;
+    }
+    PlotAxis::Range range = PlotAxis::range(lo, hi, a.unit == kNoUnit ? QString() : a.unit);
+    // a scope's or a recorder's graticule: 8 divisions of a whole step on
+    // every axis, so one grid is right for all; not for a range that is given
+    const bool given = m_zoomed || (!a.unit.isEmpty() && m_fixedRanges.contains(a.unit));
+    const bool divided = m_look.divisions && !given && (any || !a.unit.isEmpty());
+    if (divided)
+    {
+      double low = range.minimum / range.factor, high = range.maximum / range.factor, step = 1;
+      divide(low, high, step);
+      range.minimum = low * range.factor;
+      range.maximum = high * range.factor;
+      QSharedPointer<QCPAxisTickerFixed> ticker(new QCPAxisTickerFixed);
+      ticker->setTickStep(step);
+      ticker->setScaleStrategy(QCPAxisTickerFixed::ssNone);
+      a.axis->setTicker(ticker);
+    }
+    else if (a.divided)
+      a.axis->setTicker(QSharedPointer<QCPAxisTicker>(new QCPAxisTicker));
+    a.divided = divided;
+    setAxisRange(a.axis, range);
+    a.factor = range.factor;
+  }
+  setCrosshairEnabled(anyValue && m_lookSettings.crosshair);
+}
+
+void GraphWidget::updateScrollBar()
+{
+  const QSignalBlocker quiet(m_scrollBar);
+  const qint64 origin = m_store ? m_store->origin() : 0;
+  m_scrollBar->setRange(0, int((lastStart() - origin) / 100));
+  m_scrollBar->setSingleStep(qMax(1, m_windowSeconds));
+  m_scrollBar->setPageStep(m_windowSeconds * 10);
+  m_scrollBar->setValue(int((windowStart() - origin) / 100));
+}
+
+void GraphWidget::updateTimeBar()
+{
+  m_timeBar->setWindow(m_windowSeconds, m_followAll);
+  QString state;
+  if (m_store)
+  {
+    const QString length = timeText(m_store->duration());
+    if (m_store->state() == RecordingStore::Live)
+      state = m_followEnd ? tr("Live") : tr("Live · held");
+    else if (m_store->state() == RecordingStore::Record)
+      state = tr("Recording · %1").arg(length);
+    else if (!m_sourceName.isEmpty())
+      state = tr("%1 · %2").arg(m_sourceName, length);
+    else if (m_store->count() > 0)
+      state = tr("Stopped · %1").arg(length);
+  }
+  if (m_outliersHidden > 0)
+  {
+    const QString hidden = QCoreApplication::translate("GraphWidget", "%n outlier(s) hidden", nullptr, m_outliersHidden);
+    state = state.isEmpty() ? hidden : state + QStringLiteral(" · ") + hidden;
+  }
+  if (!m_notice.isEmpty())
+    state = state.isEmpty() ? m_notice : state + "   " + m_notice;
+  m_timeBar->setStateText(state);
 }
 
 double GraphWidget::timeAxisStart() const
 {
-  return m_xAxis->min();
+  return m_plot->xAxis->range().lower;
 }
 
-qint64 GraphWidget::followStart() const
+double GraphWidget::timeAxisEnd() const
 {
-  const qint64 window = qint64(qMax(1, m_windowSeconds)) * 1000;
-  const qint64 shortOf = qMin<qint64>(m_store->sampleTime() * 100, window / 10);
-  return qMax(m_store->origin(), m_store->duration() - window + shortOf);
+  return m_plot->xAxis->range().upper;
 }
 
-bool GraphWidget::following() const
+int GraphWidget::axisCount() const
 {
-  if (m_store->state() == RecordingStore::Live)
-    return !m_liveHold;
-  // "All" shows the whole recording, its end too
-  return m_store->state() == RecordingStore::Record
-         && (m_followAll || (scrollbar->maximum() > 0 && scrollbar->value() >= scrollbar->maximum()));
+  int n = 1;
+  for (int i = 1; i < m_axes.size(); ++i)
+    n += !m_axes.at(i).unit.isEmpty();
+  return n;
 }
 
-void GraphWidget::updateClockWant()
+QString GraphWidget::axisTitle(int i) const
 {
-  const bool moving = m_store->state() == RecordingStore::Live || m_store->state() == RecordingStore::Record;
-  FrameClock::instance()->want(this, moving && isVisible());
+  return i >= 0 && i < m_axes.size() ? m_axes.at(i).axis->label() : QString();
 }
 
-void GraphWidget::frameTick()
+double GraphWidget::axisMin(int i) const
 {
-  if (!following() || !isVisible())
-    return;
-  updateTimeAxis();
-  updateMarkPositions();
-  // the min/max band is drawn in pixels: along with the time axis
-  if (m_envelopeOn)
-    updateEnvelope();
+  return i >= 0 && i < m_axes.size() ? m_axes.at(i).axis->range().lower : 0;
 }
 
-void GraphWidget::updateXAxisRange()
+double GraphWidget::axisMax(int i) const
 {
-  updateTimeAxis();
-  updateReferenceLine();   // the window's mean, minimum or maximum
-  updateEnvelope();
+  return i >= 0 && i < m_axes.size() ? m_axes.at(i).axis->range().upper : 0;
 }
 
-void GraphWidget::updateTimeAxis()
+QString GraphWidget::stateText() const
 {
-  // one sample time short of the window, as it always was: no label on the
-  // right edge
-  double window = qMax(1, m_windowSeconds);
-  double start = windowStart() / 1000.0, end = start + window - qMin(m_store->sampleTime() / 10.0, window / 10);
-  if (stretching())
-  {
-    start = m_store->origin() / 1000.0;
-    window = stretchedSeconds();
-    end = start + window;
-  }
-  double div = timeStep((end - start) / 6);   // about 5 ticks
-  if (divisions())
-  {
-    // up to 10 divisions of a whole time step over exactly the window:
-    // 600 s are 10 x 1 min, 1 min 6 x 10 s. The axis is not moved onto a
-    // step - that made 1 min 100 s wide and Live jump every 10 s; the grid
-    // lines stay on whole steps and run with the readings
-    div = timeStep(window / 10);
-    end = start + window;
-  }
-  m_xAxis->setRange(start, end);
-  updateLineSpans();
-  // the ticks on whole steps, counted from the start of the recording
-  m_xStep = div;
-  m_xAxis->setTickType(QValueAxis::TicksDynamic);
-  m_xAxis->setTickAnchor(0);
-  m_xAxis->setTickInterval(div);
-  updateXLabels();
-  updateMinimapView();
+  return m_timeBar->stateText();
 }
 
-bool GraphWidget::stretching() const
+QRect GraphWidget::plotRect() const
 {
-  return m_followAll && following() && m_store->duration() - m_store->origin() < qint64(m_windowSeconds) * 1000;
-}
-
-double GraphWidget::stretchedSeconds() const
-{
-  return qMax(10.0, (m_store->duration() - m_store->origin()) / 1000.0);
-}
-
-void GraphWidget::updateLineSpans()
-{
-  const double min = m_xAxis->min(), max = m_xAxis->max();
-  // the newest values run on with the clock while the window follows them
-  const double now = following() ? m_store->duration() / 1000.0 : qQNaN();
-  m_dataLine->setSpan(min, max);
-  m_dataLine->setHold(now);
-  m_intLine->setSpan(min, max);
-  for (ExtraCurve &c : m_extraCurves)
-  {
-    c.line->setSpan(min, max);
-    c.line->setHold(now);
-  }
-  for (OtherCurve &c : m_otherCurves)
-    c.line->setSpan(min, max);
-}
-
-double GraphWidget::timeStep(double v)
-{
-  if (!(v > 0) || !std::isfinite(v))
-    return 1;
-  static const double steps[] = { 0.1, 0.2, 0.5, 1, 2, 5, 10, 15, 30, 60, 120, 300, 600, 900, 1800,
-                                  3600, 7200, 10800, 21600, 43200, 86400 };
-  for (double s : steps)
-    if (s >= v * (1 - 1e-12))
-      return s;
-  return niceStep(v / 86400) * 86400;   // days in 1-2-5
-}
-
-// Seconds, minutes or hours, as the step reads best; the title says which.
-void GraphWidget::updateXLabels()
-{
-  if (!m_xAxis || m_xStep <= 0)
-    return;
-  double unit = 1;
-  QString title = tr("[sec]");
-  if (m_xStep >= 3600 && std::fmod(m_xStep, 3600) == 0)
-  {
-    unit = 3600;
-    title = tr("[h]");
-  }
-  else if (m_xStep >= 60 && std::fmod(m_xStep, 60) == 0)
-  {
-    unit = 60;
-    title = tr("[min]");
-  }
-  if (m_xAxis->titleText() != title)
-    m_xAxis->setTitleText(title);
-
-  const QRectF plot = m_chart->plotArea();
-  const double min = m_xAxis->min(), max = m_xAxis->max();
-  QList<double> values;
-  if (max > min && plot.width() > 0)
-    for (double v = std::ceil(min / m_xStep - 1e-9) * m_xStep; v <= max + m_xStep * 1e-9 && values.size() < 200; v += m_xStep)
-      values << v;
-  while (m_xLabels.size() < values.size())
-  {
-    auto *item = new QGraphicsSimpleTextItem(m_chart);
-    item->setZValue(m_yTitle->zValue());
-    m_xLabels << item;
-  }
-  const QFont font = m_xAxis->labelsFont();
-  // Qt's labels start below the axis line and its tick marks
-  const double top = plot.bottom() + 6;
-  for (int i = 0; i < m_xLabels.size(); ++i)
-  {
-    QGraphicsSimpleTextItem *item = m_xLabels[i];
-    item->setVisible(i < values.size());
-    if (i >= values.size())
-      continue;
-    const double v = values[i] / unit;
-    item->setText(QString::number(std::abs(v) < 1e-9 ? 0.0 : v, 'g', 6));
-    item->setFont(font);
-    item->setBrush(m_xLabelColor.isValid() ? QBrush(m_xLabelColor) : m_xAxis->titleBrush());
-    const double x = plot.left() + (values[i] - min) / (max - min) * plot.width();
-    item->setPos(x - item->boundingRect().width() / 2, top);
-  }
-  updateTimeCursors();
-}
-
-QString GraphWidget::yPrefix() const
-{
-  const QString base = leftUnit();
-  // units that take no prefix: °C, %, ppm, none ...
-  if (!SiPrefix::takesPrefix(base))
-    return QString();
-  // by the axis, not by the reading: a meter that changes range (V, mV, µV)
-  // turned the whole axis to mV with labels like 1.6e+04; 350 mV on an axis
-  // up to 0.4 V are still mV. Without readings yet the axis says nothing:
-  // the meter's prefix
-  if (m_mainShown && m_store->count() == 0 && !m_liveBase.isEmpty() && m_liveBase == base)
-    return m_livePrefix;
-  QString prefix;
-  SiPrefix::scale(qMax(std::abs(m_yAxis->min()), std::abs(m_yAxis->max())), &prefix);
-  return prefix;
-}
-
-void GraphWidget::updateYLabels()
-{
-  if (!m_yAxis)
-    return;
-  const QString prefix = yPrefix();
-  if (prefix != m_yPrefix)
-  {
-    m_yPrefix = prefix;
-    showUnit();
-  }
-  const double factor = SiPrefix::factor(prefix);
-  const QRectF plot = m_chart->plotArea();
-  const double min = m_yAxis->min(), max = m_yAxis->max();
-  const int n = m_yAxis->tickCount();
-  QList<double> values;
-  if (max > min && plot.height() > 0 && n > 1)
-    for (int i = 0; i < n; ++i)
-      values << min + i * (max - min) / (n - 1);
-  while (m_yLabels.size() < values.size())
-  {
-    auto *item = new QGraphicsSimpleTextItem(m_chart);
-    item->setZValue(m_yTitle->zValue());
-    m_yLabels << item;
-  }
-  const QFont font = m_yAxis->labelsFont();
-  const double gap = QFontMetricsF(font).horizontalAdvance(' ') + 2;
-  for (int i = 0; i < m_yLabels.size(); ++i)
-  {
-    QGraphicsSimpleTextItem *item = m_yLabels[i];
-    item->setVisible(i < values.size());
-    if (i >= values.size())
-      continue;
-    // as precise as Qt's invisible labels that keep the room ("%.4g"), and
-    // no "-0"
-    double v = values[i] / factor;
-    if (std::abs(values[i]) < (max - min) * 1e-9)
-      v = 0;
-    item->setText(QString::number(v, 'g', 4));
-    item->setFont(font);
-    item->setBrush(m_xLabelColor.isValid() ? QBrush(m_xLabelColor) : m_yAxis->titleBrush());
-    const QRectF r = item->boundingRect();
-    const double y = plot.bottom() - (values[i] - min) / (max - min) * plot.height();
-    item->setPos(qMax(1.0, plot.left() - r.width() - gap), y - r.height() / 2);
-  }
-  updateReferenceLine();
-  updateEnvelope();
-  updateTimeCursors();   // their levels
-}
-
-bool GraphWidget::divisions() const
-{
-  return m_variant == ScopeBlue || phosphor() || m_variant == ChartRecorder;
-}
-
-void GraphWidget::setYRange(double min, double max)
-{
-  // a range without width - no value yet (the auto scale starts at
-  // +-1e40, or 0..0 with "include zero"), or one value that stays the same
-  // (0 V on a shorted input) - draws no grid and no labels: show 0..1
-  // while there is no value, else a tenth of the value around it (0: +-1)
-  const bool noWidth = !std::isfinite(min) || !std::isfinite(max) || !(max > min);
-  if (noWidth && (m_store->count() == 0 || !std::isfinite(min) || !std::isfinite(max) || min > max))
-  {
-    min = 0;
-    max = 1;
-  }
-  else if (max == min)
-  {
-    const double half = min == 0 ? 1.0 : std::abs(min) * 0.1;
-    min -= half;
-    max += half;
-  }
-  if (divisions() && max > min && std::isfinite(min) && std::isfinite(max))
-  {
-    // 8 divisions of a 1-2-5 step; the range grows to whole steps
-    double div = niceStep((max - min) / 8);
-    double first = std::floor(min / div + 1e-9) * div;
-    while (first + 8 * div < max - div * 1e-9)
-    {
-      div = niceStep(div * 1.01);
-      first = std::floor(min / div + 1e-9) * div;
-    }
-    m_yAxis->setRange(first, first + 8 * div);
-  }
-  else
-    m_yAxis->setRange(min, max);
-  updateCentreTicks();
-  updateYLabels();
-}
-
-void GraphWidget::updateCentreTicks()
-{
-  if (!phosphor())
-  {
-    m_centreTicks->setPath(QPainterPath());
-    return;
-  }
-  // No cross in the middle: it said nothing and looked like a reference.
-  // The horizontal line is the reference line while that is in view, the
-  // vertical one the trigger of a pre-triggered recording; without them
-  // the fine ticks sit on the plot's bottom and left edge.
-  const QRectF pa = m_chart->plotArea();
-  const double ref = referenceY();
-  const bool horizontal = std::isfinite(ref);
-  const double cy = horizontal ? ref : pa.bottom();
-  bool vertical = false;
-  double cx = pa.left();
-  const double min = m_xAxis->min(), max = m_xAxis->max();
-  for (const RecordingStore::Mark &m : m_store->marks())
-    if (m.color == RecordingStore::kTriggerColor && max > min && m.t / 1000.0 >= min && m.t / 1000.0 <= max)
-    {
-      cx = pa.left() + (m.t / 1000.0 - min) / (max - min) * pa.width();
-      vertical = true;
-    }
-  QPainterPath path;
-  if (horizontal)
-  {
-    path.moveTo(pa.left(), cy);
-    path.lineTo(pa.right(), cy);
-  }
-  if (vertical)
-  {
-    path.moveTo(cx, pa.top());
-    path.lineTo(cx, pa.bottom());
-  }
-  // on a line both sides, on the edge inwards
-  const double up = 3, down = horizontal ? 3 : 0, right = 3, left = vertical ? 3 : 0;
-  const double dx = pa.width() / 50, dy = pa.height() / 40;   // 10 x 8 divisions, 5 ticks each
-  for (int i = 0; i <= 50; ++i)
-  {
-    path.moveTo(pa.left() + i * dx, cy - up);
-    path.lineTo(pa.left() + i * dx, cy + down);
-  }
-  for (int i = 0; i <= 40; ++i)
-  {
-    path.moveTo(cx - left, pa.top() + i * dy);
-    path.lineTo(cx + right, pa.top() + i * dy);
-  }
-  m_centreTicks->setPath(path);
-}
-
-void GraphWidget::setUnit(const QString &unit)
-{
-  // Values arrive in SI base units (see DmmChannel), so the store keeps the
-  // base unit; the prefix is the y labels' (yPrefix()).
-  const SiPrefix::Split split = SiPrefix::split(unit);
-  m_store->setUnit(split.baseUnit);
-  m_liveBase = split.baseUnit;
-  m_livePrefix = split.prefix == QLatin1String("u") ? QStringLiteral("µ") : split.prefix;
-  showUnit();
-  updateYLabels();
-}
-
-// The axis title: the unit of the recorded values (a recording keeps its
-// unit when the meter changes to another one).
-void GraphWidget::showUnit()
-{
-  const QString base = leftUnit();
-  // as the right axis and the display write it: "[°C]", "[kΩ]"
-  m_yTitle->setText(base.isEmpty() ? QString() : QString("[%1]").arg(SiPrefix::displayText(m_yPrefix + base)));
-  // room above the plot for the title
-  const int h = base.isEmpty() ? 0 : int(m_yTitle->boundingRect().height()
-                                             + QFontMetricsF(m_yAxis->labelsFont()).height() / 2);
-  // and at least as much as the time buttons need, so they sit above the plot
-  const int bar = m_timeBar ? m_timeBar->sizeHint().height() : 0;
-  m_chart->setMargins(QMargins(4, 4 + qMax(h, bar), 4, 4));
-  placeYTitle();
-}
-
-// right-aligned with the axis line, just above the plot area
-void GraphWidget::placeYTitle()
-{
-  const QRectF plot = m_chart->plotArea();
-  const QRectF text = m_yTitle->boundingRect();
-  // the top tick label is centred on the plot's top edge: stay above it
-  const double labelHalf = QFontMetricsF(m_yAxis->labelsFont()).height() / 2;
-  m_yTitle->setPos(qMax(2.0, plot.left() - text.width() - 4), plot.top() - labelHalf - text.height() - 1);
-  // the right one left-aligned with its axis line; the third one, the
-  // outermost axis, at the right edge, the right one ending before it
-  if (!m_right[0].title)
-    return;
-  const double width = m_chart->size().width();
-  QGraphicsSimpleTextItem *right = m_right[0].title, *third = m_right[1].title;
-  double end = width - 2;
-  if (third->isVisible())
-  {
-    third->setPos(width - third->boundingRect().width() - 2, plot.top() - labelHalf - third->boundingRect().height() - 1);
-    end = third->x() - 6;
-  }
-  right->setPos(qMin(plot.right() + 4, end - right->boundingRect().width()),
-                plot.top() - labelHalf - right->boundingRect().height() - 1);
-}
-
-void GraphWidget::setScale(bool autoScale, bool includeZero, double min, double max)
-{
-  m_autoScale = autoScale;
-  m_includeZero = includeZero;
-
-  if (!autoScale)
-  {
-    m_scaleMin = min;
-    m_scaleMax = max;
-
-  }
-  else
-  {
-    if (m_includeZero)
-      m_scaleMin = m_scaleMax = 0;
-    else
-    {
-      m_scaleMin =  1e40;
-      m_scaleMax = -1e40;
-    }
-
-    for (int i = 0; m_mainShown && i < m_store->count(); i++)
-      growScale(m_store->series().at(i).value, m_scaleMin, m_scaleMax);
-    // the other values drawn on the left axis
-    for (int i = 0; i < m_store->extraCount() && i < int(m_extraCurves.size()); ++i)
-    {
-      const ExtraCurve &c = m_extraCurves[size_t(i)];
-      if (!c.shown || c.side != 0)
-        continue;
-      const RecordingSeries &x = m_store->extra(i);
-      for (int j = 0; j < x.count(); ++j)
-        if (std::isfinite(x.at(j).value))
-          growScale(x.at(j).value, m_scaleMin, m_scaleMax);
-    }
-    for (const OtherCurve &c : m_otherCurves)
-      for (const QPointF &p : c.points)
-        if (c.shown && c.side == 0 && std::isfinite(p.y()))
-          growScale(p.y(), m_scaleMin, m_scaleMax);
-  }
-
-  setYRange(m_scaleMin, m_scaleMax);
-  updateThresholdLinePositions();
-}
-
-bool GraphWidget::growSide(int side, double v)
-{
-  SideAxis &a = m_right[size_t(side - 1)];
-  return growScale(v, a.scaleMin, a.scaleMax);
-}
-
-void GraphWidget::resetSideScales()
-{
-  for (SideAxis &a : m_right)
-  {
-    a.scaleMin = 1e40;
-    a.scaleMax = -1e40;
-  }
-}
-
-QString GraphWidget::sideTitle(int side) const
-{
-  const SideAxis &a = m_right[size_t(side - 1)];
-  return a.title->isVisible() ? a.title->text() : QString();
-}
-
-void GraphWidget::updateRightAxis()
-{
-  for (int k = 0; k < int(m_right.size()); ++k)
-  {
-    SideAxis &a = m_right[size_t(k)];
-    const bool on = !a.unit.isEmpty();
-    a.axis->setVisible(on);
-    a.title->setVisible(on);
-    if (!on)
-      continue;
-    double min = a.scaleMin, max = a.scaleMax;
-    if (m_includeZero)
-    {
-      min = qMin(min, 0.0);
-      max = qMax(max, 0.0);
-    }
-    if (!std::isfinite(min) || !std::isfinite(max) || !(max >= min) || min > 1e39)
-    {
-      min = 0;
-      max = 1;
-    }
-    else if (max == min)
-    {
-      const double half = min == 0 ? 1.0 : std::abs(min) * 0.1;
-      min -= half;
-      max += half;
-    }
-    // its ticks on the left axis' grid lines: the same count, a round step
-    const int ticks = qMax(2, m_yAxis->tickCount());
-    const double step = niceStep((max - min) / (ticks - 1));
-    const double first = std::floor(min / step + 1e-9) * step;
-    double top = first + (ticks - 1) * step;
-    double s = step;
-    while (top < max - s * 1e-9)
-    {
-      s = niceStep(s * 1.01);
-      top = std::floor(min / s + 1e-9) * s + (ticks - 1) * s;
-    }
-    const double from = std::floor(min / s + 1e-9) * s;
-    a.axis->setTickCount(ticks);
-    a.axis->setRange(from, from + (ticks - 1) * s);
-    a.title->setText(QString("[%1]").arg(SiPrefix::displayText(a.unit)));
-    // in the colour of its first curve: which axis is whose, with three
-    a.title->setBrush(sideColor(k + 1));
-  }
-  placeYTitle();
-  placeTimeBar();
-  if (m_intValueId > 0)
-    updateThresholdLinePositions();
+  return m_plot->axisRect()->rect();
 }

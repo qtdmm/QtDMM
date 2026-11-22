@@ -15,6 +15,7 @@
 #include <QMimeData>
 
 #include "core/devicelibrary.h"
+#include "device/meterconnection.h"
 #include "ui/devicesettings.h"
 #include "ui/devicesidebar.h"
 #include "ui/devicespecs.h"
@@ -99,6 +100,10 @@ int main(int argc, char **argv)
   check(DeviceSidebar::shownAtStart(QVariant(), 2), "two devices, never set: open");
   check(!DeviceSidebar::shownAtStart(QVariant(false), 3), "closed by the user: stays closed");
   check(DeviceSidebar::shownAtStart(QVariant(true), 1), "opened by the user: stays open");
+  check(DeviceSettingsDlg::sampleRate({}) == "-", "sample rate: none");
+  check(DeviceSettingsDlg::sampleRate({ 1000 }) == "-", "sample rate: one frame");
+  check(DeviceSettingsDlg::sampleRate({ 0, 500, 1000, 1500, 2000 }) == QLocale().toString(2.0, 'f', 1) + " Hz", "sample rate: 2 Hz");
+  check(DeviceSettingsDlg::sampleRate({ 0, 2000, 4000 }) == QLocale().toString(0.5, 'f', 2) + " Hz", "sample rate: below 1 Hz");
   check(DeviceSidebar::opensAfterAdd(1, 2), "the second device opens it");
   check(!DeviceSidebar::opensAfterAdd(0, 1), "the first does not");
   check(!DeviceSidebar::opensAfterAdd(2, 3), "the third does not");
@@ -138,6 +143,26 @@ int main(int argc, char **argv)
     QObject::connect(&dlg, &DeviceSettingsDlg::helpRequested, [&](const QString &p) { page = p; });
     Q_EMIT dlg.findChild<QLabel *>("ui_deviceLinks")->linkActivated("help:supported-devices.md");
     check(page == "supported-devices.md", "Info: the help link asks for its page");
+    // the sample rate: only with a connection, from its frames while the dialog is open
+    check(!dlg.statusText().contains("Sample rate"), "Info: no sample rate without a connection");
+    MeterConnection dmm(nullptr);
+    MeterConnection *source = nullptr;
+    dlg.setFrameSource([&] { return source; });
+    source = &dmm;
+    dlg.setFrameSource([&] { return source; });
+    check(dlg.statusText().contains("Sample rate: -"), "Info: sample rate - before two frames: " + dlg.statusText());
+    for (int i = 0; i < 3; ++i)
+    {
+      Q_EMIT dmm.frame(QByteArray("x"), 0, std::nullopt);
+      QTest::qWait(100);
+    }
+    dlg.setFrameSource([&] { return source; });
+    check(dlg.statusText().contains(" Hz") && !dlg.statusText().contains("Sample rate: -"),
+          "Info: sample rate from the frames: " + dlg.statusText());
+    source = nullptr;
+    dlg.setFrameSource([&] { return source; });
+    check(!dlg.statusText().contains("Sample rate") && !QObject::disconnect(&dmm, &MeterConnection::frame, &dlg, nullptr),
+          "Info: no counting after the connection went");
     dlg.showTab(DeviceSettingsDlg::SettingsTab);
     check(dlg.currentTab() == DeviceSettingsDlg::SettingsTab && dlg.settings()->isVisibleTo(&dlg), "the Settings tab");
     check(!dlg.hasData(), "UT61E: no specifications, no Data tab");
@@ -165,7 +190,72 @@ int main(int argc, char **argv)
     check(DeviceSpecs::html(DeviceSpecs::find("Uni-Trend", "UT363BT")).contains("0~30 m/s")
             && DeviceSpecs::html(DeviceSpecs::find("Uni-Trend", "UT383BT")).contains("0~9999 Lux"),
           "UT363BT, UT383BT: from their manuals");
+    check(DeviceSpecs::html(DeviceSpecs::find("Uni-Trend", "UT353BT")).contains("30~130dB")
+            && DeviceSpecs::html(DeviceSpecs::find("Uni-Trend", "UT333BT")).contains("0~100.0%RH"),
+          "UT353BT, UT333BT: their specifications");
     check(DeviceSpecs::html(DeviceSpecs::find("OWON", "CM2100B")).contains("100.0A"), "CM2100B: from its spec sheet");
+    // the range of the reading on the display, marked (UT803: A. DC Voltage
+    // 600mV and 6V..1000V, E. Resistance with a note on 600Ω, G. Diode)
+    {
+      const QJsonObject ut803 = DeviceSpecs::find("Uni-Trend", "UT803");
+      auto reading = [](Quantity q, quint32 flags, double full)
+      {
+        Reading r;
+        r.port.quantity = q;
+        r.flags = flags;
+        r.measuringRange.full = full;
+        return r;
+      };
+      auto at = [&](const Reading &r, int table, int row)
+      {
+        const DeviceSpecs::Match m = DeviceSpecs::match(ut803, r);
+        return m.table == table && m.row == row;
+      };
+      check(at(reading(Quantity::Voltage, SampleFlag::DC, 60), 1, 1), "DC 60 V: second DC table, 60V");
+      check(at(reading(Quantity::Voltage, SampleFlag::DC, 0.6), 0, 0), "DC 600 mV: the mV table");
+      check(at(reading(Quantity::Voltage, SampleFlag::AC, 6), 3, 0), "AC 6 V: the AC table");
+      check(at(reading(Quantity::Resistance, 0, 600), 10, 0), "600 Ω");
+      check(at(reading(Quantity::Voltage, SampleFlag::DC | SampleFlag::Diode, std::nan("")), 12, 0), "diode");
+      check(at(reading(Quantity::Current, SampleFlag::DC, std::nan("")), 4, -1), "DC A, no full scale: first table only");
+      check(!DeviceSpecs::match(ut803, reading(Quantity::Unknown, 0, 1)).isValid(), "an unknown quantity: no mark");
+      // headings that name only the unit (VC 920/940/960: "DC / V", "AC / V", "Ω")
+      const QJsonObject vc940 = DeviceSpecs::find("Voltcraft", "VC 940");
+      auto vcAt = [&](const Reading &r, int table, int row)
+      {
+        const DeviceSpecs::Match m = DeviceSpecs::match(vc940, r);
+        return m.table == table && m.row == row;
+      };
+      check(vcAt(reading(Quantity::Voltage, SampleFlag::DC, 40), 1, 1) && vcAt(reading(Quantity::Voltage, SampleFlag::AC, 4), 2, 0)
+              && vcAt(reading(Quantity::Resistance, 0, 4e6), 10, 4), "VC 940: DC 40 V, AC 4 V, 4 MΩ by unit headings");
+      const QString marked = DeviceSpecs::html(ut803, { 10, 0 }, QColor("#ffff00"));
+      const int row = marked.indexOf("<tr style=\"background-color:#ffff00\"><td>600Ω");
+      const int note = marked.indexOf("600Ω: accuracy");
+      check(marked.contains("<a name=\"current\">") && row >= 0 && note > row
+              && !marked.contains("<li>600Ω: accuracy"), "the 600Ω row marked, its note below it");
+      // every heading of the data files is known, but for these three (the
+      // VC 920's 4-20 mA loop % has no quantity of its own)
+      QStringList unknown;
+      for (const QString &name : QDir(":/specs").entryList({ "*.json" }))
+      {
+        QFile f(":/specs/" + name);
+        if (!f.open(QIODevice::ReadOnly))
+        {
+          unknown << name + ": not readable";
+          continue;
+        }
+        for (const QJsonValue &t : QJsonDocument::fromJson(f.readAll()).object().value("tables").toArray())
+        {
+          const QString heading = t.toObject().value("table").toString();
+          if (!DeviceSpecs::knowsHeading(heading) && heading != "Auto" && heading != "Wind Rating" && heading != "4-20 mA")
+            unknown << name + ": " + heading;
+        }
+      }
+      check(unknown.isEmpty(), "headings match() does not know: " + unknown.join(", "));
+      dlg.setReading([&] { return std::optional<Reading>(reading(Quantity::Voltage, SampleFlag::DC, 60)); });
+      check(dlg.dataMark().table == 1 && dlg.dataMark().row == 1, "the dialog marks the live range");
+      dlg.setReading([] { return std::optional<Reading>(); });
+      check(!dlg.dataMark().isValid(), "not connected: no mark");
+    }
     // Connect at the bottom left: only once set up, greyed while connected
     check(dlg.connectButton()->isHidden(), "no Connect without setConnect()");
     bool connected = false;
@@ -346,7 +436,10 @@ int main(int argc, char **argv)
   // double click or Enter loads one, not a gone one
   {
     QTreeWidgetItem *node = sidebar.workspacesNode();
-    check(sidebar.indexOfTopLevelItem(node) == 0, "Workspaces on top, before My devices");
+    // on top after the open project's node, which hides without one
+    check(sidebar.indexOfTopLevelItem(node) == 1 && sidebar.indexOfTopLevelItem(sidebar.projectNode()) == 0
+            && sidebar.projectNode()->isHidden(),
+          "Workspaces on top after the project, before My devices");
     check(node->isHidden(), "hidden without workspaces");
     QFile file(QDir(dir.path()).filePath("Bench.qtdmm-workspace"));
     check(file.open(QIODevice::WriteOnly), "a workspace file");
@@ -378,6 +471,24 @@ int main(int argc, char **argv)
     sidebar.setCurrentItem(node->child(0));
     QTest::keyClick(&sidebar, Qt::Key_Return);
     check(loaded.size() == 2, "Enter loads");
+    // the open project: its benches, the one in use in bold, "+ New bench..."
+    QTreeWidgetItem *project = sidebar.projectNode();
+    sidebar.setProject("Ripple", { { file.fileName(), "Bench test", {} }, { gone, {}, {} } }, file.fileName());
+    check(!project->isHidden() && project->text(0).contains("Ripple") && project->childCount() == 3
+            && project->child(0)->font(0).bold() && !project->child(1)->font(0).bold(),
+          "the project's benches, the one in use bold, then New bench: " + project->text(0));
+    int newBench = 0;
+    QObject::connect(&sidebar, &DeviceSidebar::newBenchRequested, [&] { ++newBench; });
+    Q_EMIT sidebar.itemClicked(project->child(2), 0);
+    check(newBench == 1, "+ New bench... asks for a new bench");
+    const qsizetype before = loaded.size();
+    Q_EMIT sidebar.itemDoubleClicked(project->child(0), 0);
+    Q_EMIT sidebar.itemDoubleClicked(project->child(2), 0);
+    check(loaded.size() == before + 1 && loaded.last() == file.fileName(),
+          "a double click loads a bench of the project, not New bench");
+    loaded.removeLast();
+    sidebar.setProject(QString(), {}, QString());
+    check(project->isHidden() && project->childCount() == 0, "no project: no node");
     Q_EMIT sidebar.itemClicked(node->child(0), 0);
     check(loaded.size() == 2, "a single click does nothing");
     sidebar.setWorkspaces({});

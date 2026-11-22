@@ -224,6 +224,21 @@ int main(int argc, char **argv)
     check(s.size() == 2 && s[1].sample.text.isEmpty(), "an empty second value comes along, to clear the display");
     r.lowBat = true;
     check(a.adapt(r, 0)[0].sample.flags & SampleFlag::LowBattery, "low battery flag");
+    // the battery: a level the meter sends, else its low-battery annunciator;
+    // every value of the frame and its Reading carry it
+    check(a.adapt(r, 0)[1].battery == Battery::Low && ReadingAdapter::reading(a.adapt(r, 0)[1]).battery == Battery::Low,
+          "low battery: Low on every value and its Reading");
+    r.lowBat = false;
+    check(a.adapt(r, 0)[0].battery == Battery::Unknown, "no annunciator, no level: unknown");
+    r.battery = Battery::Mid;
+    s = a.adapt(r, 0);
+    check(s[0].battery == Battery::Mid && !(s[0].sample.flags & SampleFlag::LowBattery), "a level: Mid, no low flag");
+    r.battery = Battery::Low;
+    check(a.adapt(r, 0)[0].sample.flags & SampleFlag::LowBattery, "level Low: the low battery flag too");
+    check(batteryOfLevel(0, 5) == Battery::Low && batteryOfLevel(1, 5) == Battery::Low && batteryOfLevel(2, 5) == Battery::Mid
+            && batteryOfLevel(3, 5) == Battery::Mid && batteryOfLevel(4, 5) == Battery::Full && batteryOfLevel(5, 5) == Battery::Full
+            && batteryOfLevel(6, 5) == Battery::Unknown && batteryOfLevel(-1, 5) == Battery::Unknown,
+          "levels 0..5 in thirds, 6 off the scale");
   }
 
   // --- no number shown ("----") or a fault word ("FUSE"): no value, and no

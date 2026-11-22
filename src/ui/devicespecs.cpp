@@ -9,6 +9,10 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QRegularExpression>
+#include <cmath>
+
+#include "core/reading.h"
+#include "core/siprefix.h"
 
 namespace DeviceSpecs
 {
@@ -39,6 +43,90 @@ QString esc(const QJsonValue &v)
 {
   return v.toString().toHtmlEscaped();
 }
+
+// what a table heading measures, from its words: the manuals name them
+// freely ("DC Voltage", "B. AC Voltage", "Resistance(Ω)", "I. Frequency",
+// "Diode and Continuity")
+enum Coupling { Any, AC, DC, ACDC };
+struct Kind
+{
+  QList<Quantity> quantities;
+  bool diode = false;
+  Coupling coupling = Any;
+};
+
+Kind kindOf(const QString &heading)
+{
+  QString h = heading.toLower();
+  h.remove(QRegularExpression(QStringLiteral("\\(.*\\)")));   // "(AC+DC measurement is available)"
+  Kind k;
+  static const QList<QPair<const char *, Quantity>> words = {
+    { "voltage", Quantity::Voltage }, { "current", Quantity::Current }, { "resistance", Quantity::Resistance },
+    { "capacitance", Quantity::Capacitance }, { "frequency", Quantity::Frequency }, { "duty", Quantity::DutyCycle },
+    { "continuity", Quantity::Continuity }, { "on-off", Quantity::Continuity }, { "temperature", Quantity::Temperature },
+    { "illuminance", Quantity::Illuminance }, { "wind speed", Quantity::WindSpeed }, { "transistor", Quantity::Gain },
+    { "sound level", Quantity::SoundPressureLevel }, { "humidity", Quantity::RelativeHumidity },
+    { "capacity", Quantity::Capacitance }, { "power", Quantity::Power },
+  };
+  for (const auto &w : words)
+    if (h.contains(QLatin1String(w.first)))
+      k.quantities << w.second;
+  // a heading that names the unit only: "DC / V", "AC / A", "Ω" (VC 920)
+  static const QRegularExpression unitOnly(QStringLiteral("(?:^|/)\\s*(v|a|ω)\\s*$"));
+  const QRegularExpressionMatch u = unitOnly.match(h);
+  if (u.hasMatch())
+    k.quantities << (u.captured(1) == QLatin1String("v") ? Quantity::Voltage
+                     : u.captured(1) == QLatin1String("a") ? Quantity::Current : Quantity::Resistance);
+  k.diode = h.contains(QLatin1String("diode"));
+  if (h.contains(QLatin1String("ac+dc")))
+    k.coupling = ACDC;
+  else if (h.contains(QRegularExpression(QStringLiteral("\\bac\\b"))))
+    k.coupling = AC;
+  else if (h.contains(QRegularExpression(QStringLiteral("\\bdc\\b"))))
+    k.coupling = DC;
+  return k;
+}
+
+bool fits(const Kind &k, const Reading &r)
+{
+  if (r.diode())
+    return k.diode;
+  if (!k.quantities.contains(r.port.quantity))
+    return false;
+  if (k.coupling == Any)
+    return true;
+  const Coupling c = r.ac() && r.dc() ? ACDC : r.ac() ? AC : r.dc() ? DC : Any;
+  return c == k.coupling;
+}
+
+// the full scale a range names ("220.00mV" 0.22, "6.000kΩ" 6000), NaN for
+// a span or a word ("0~30 m/s", "Diode")
+double fullScale(const QString &range)
+{
+  static const QRegularExpression re(QStringLiteral("^(\\d+(?:\\.\\d+)?)\\s*([nµumkMG]?)(V|A|Ω|F|Hz)"));
+  const QRegularExpressionMatch m = re.match(range);
+  if (!m.hasMatch())
+    return std::nan("");
+  QString prefix = m.captured(2);
+  if (prefix == QLatin1String("u"))
+    prefix = QStringLiteral("µ");
+  return m.captured(1).toDouble() * SiPrefix::factor(prefix);
+}
+
+// the range a note is about: "600Ω: ..." or "20.00mF range: ...", -1 when
+// it is about the whole table
+int noteRow(const QString &note, const QJsonArray &ranges)
+{
+  const int colon = note.indexOf(QLatin1Char(':'));
+  if (colon <= 0)
+    return -1;
+  QString head = note.left(colon).trimmed();
+  head.remove(QRegularExpression(QStringLiteral("\\s+range$")));
+  for (int i = 0; i < ranges.size(); ++i)
+    if (ranges.at(i).toObject().value("range").toString() == head)
+      return i;
+  return -1;
+}
 }
 
 QJsonObject find(const QString &vendor, const QString &model)
@@ -50,19 +138,59 @@ QJsonObject find(const QString &vendor, const QString &model)
   return all().value(vendor + ' ' + base);
 }
 
-QString html(const QJsonObject &spec)
+bool knowsHeading(const QString &heading)
+{
+  const Kind k = kindOf(heading);
+  return !k.quantities.isEmpty() || k.diode;
+}
+
+Match match(const QJsonObject &spec, const Reading &reading)
+{
+  Match first;
+  const QJsonArray tables = spec.value("tables").toArray();
+  const double full = reading.measuringRange.full;
+  for (int t = 0; t < tables.size(); ++t)
+  {
+    const QJsonObject table = tables.at(t).toObject();
+    if (!fits(kindOf(table.value("table").toString()), reading))
+      continue;
+    const QJsonArray ranges = table.value("ranges").toArray();
+    for (int i = 0; i < ranges.size(); ++i)
+    {
+      const QString range = ranges.at(i).toObject().value("range").toString();
+      // diode and continuity share a table, their rows named so
+      if (reading.diode() && range.contains(QLatin1String("diode"), Qt::CaseInsensitive))
+        return { t, i };
+      if (reading.continuity() && range.contains(QLatin1String("continuity"), Qt::CaseInsensitive))
+        return { t, i };
+      const double named = fullScale(range);
+      if (std::isfinite(full) && std::isfinite(named) && std::abs(named - full) <= 1e-6 * std::abs(full))
+        return { t, i };
+    }
+    if (!first.isValid())
+      first.table = t;
+  }
+  return first;
+}
+
+QString html(const QJsonObject &spec, const Match &current, const QColor &mark)
 {
   QString out;
   QString last;
-  for (const QJsonValue &v : spec.value("tables").toArray())
+  const QString markStyle = mark.isValid() ? QString(" style=\"background-color:%1\"").arg(mark.name()) : QString();
+  const QJsonArray tables = spec.value("tables").toArray();
+  for (int t = 0; t < tables.size(); ++t)
   {
-    const QJsonObject table = v.toObject();
+    const QJsonObject table = tables.at(t).toObject();
+    const bool here = current.table == t;
+    if (here)
+      out += QStringLiteral("<a name=\"current\"></a>");
     // a function split into several tables (other input impedance or fuse)
     // has its heading once
     const QString name = table.value("table").toString();
-    if (name != last)
+    if (name != last || here)
     {
-      out += QString("<h3>%1</h3>").arg(name.toHtmlEscaped());
+      out += QString("<h3%1>%2</h3>").arg(here ? markStyle : QString(), name.toHtmlEscaped());
       last = name;
     }
     QStringList facts;
@@ -79,9 +207,21 @@ QString html(const QJsonObject &spec)
     const QString accuracy = QCoreApplication::translate("DeviceSpecs", "Accuracy ±(% of reading + digits)");
     out += QString("<table border=\"1\" cellspacing=\"0\" cellpadding=\"3\"><tr><th>%1</th><th>%2</th><th>%3</th></tr>")
              .arg(range.toHtmlEscaped(), resolution.toHtmlEscaped(), accuracy.toHtmlEscaped());
-    for (const QJsonValue &r : table.value("ranges").toArray())
+    // notes on one range go below it, the others below the table
+    const QJsonArray ranges = table.value("ranges").toArray();
+    QHash<int, QStringList> rowNotes;
+    QStringList notes;
+    for (const QJsonValue &n : table.value("notes").toArray())
     {
-      const QJsonObject row = r.toObject();
+      const int row = noteRow(n.toString(), ranges);
+      if (row >= 0)
+        rowNotes[row] << esc(n);
+      else
+        notes << "<li>" + esc(n) + "</li>";
+    }
+    for (int i = 0; i < ranges.size(); ++i)
+    {
+      const QJsonObject row = ranges.at(i).toObject();
       QStringList bands;
       for (const QJsonValue &a : row.value("accuracy").toArray())
       {
@@ -89,13 +229,13 @@ QString html(const QJsonObject &spec)
         bands << (band.value("freq_range").isString() ? esc(band.value("freq_range")) + ": " : QString())
                  + esc(band.value("accuracy"));
       }
-      out += QString("<tr><td>%1</td><td>%2</td><td>%3</td></tr>")
-               .arg(esc(row.value("range")), esc(row.value("resolution")), bands.join("<br>"));
+      const QString style = here && current.row == i ? markStyle : QString();
+      out += QString("<tr%1><td>%2</td><td>%3</td><td>%4</td></tr>")
+               .arg(style, esc(row.value("range")), esc(row.value("resolution")), bands.join("<br>"));
+      for (const QString &note : rowNotes.value(i))
+        out += QString("<tr%1><td colspan=\"3\"><small>%2</small></td></tr>").arg(style, note);
     }
     out += "</table>";
-    QStringList notes;
-    for (const QJsonValue &n : table.value("notes").toArray())
-      notes << "<li>" + esc(n) + "</li>";
     if (!notes.isEmpty())
       out += "<ul>" + notes.join(QString()) + "</ul>";
   }

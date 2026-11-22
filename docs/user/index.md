@@ -2,8 +2,8 @@
 
 QtDMM reads a digital multimeter over a serial, USB-HID, RFC2217 or sigrok
 connection, shows the live reading on an LCD-style display and an analog
-meter, and records it in a transient recorder with thresholds, an
-integration curve, CSV export and printing. Several meters run side by
+meter, and records it in a transient recorder with thresholds, statistics, CSV
+export and printing. Several meters run side by
 side, one window each, and can be combined into calculated values.
 
 ## Contents
@@ -15,20 +15,30 @@ side, one window each, and can be combined into calculated values.
 - [Needle meter](analog-meter.md) — the moving-coil style instrument: scale,
   red zone, readouts, styles.
 - [The recorder](recorder.md) — live graph, recording and view; starting manually, at a time or on a threshold;
-  zoom, pan and cursor; integration; CSV export and import.
+  zoom, pan and cursors; statistics; CSV export and import.
 - [Readings table](readings-table.md) — every reading the meter sent, with
   time, mode and range; copy to a spreadsheet or export as CSV.
+- [Project](project-basket.md) — optional: the files of a project in one folder,
+  its benches, recordings, pictures, PDFs, LabPlot projects.
 - [Poincaré plot](poincare-plot.md) — each reading against the next: how
   much the value scatters, noise against drift, SD1 and SD2.
+- [XY diagram](xy-diagram.md) — one value against another: a diode's current
+  against its voltage, a sensor against a reference.
+- [Histogram](histogram.md) — how the readings of one value are distributed:
+  one peak, two levels, outliers.
+- [Heatmap](heatmap.md) — a third measured value shown by colour across two
+  measurement axes.
 - [Alarms](alarms.md) — a banner, sound, popup, program or the recorder when
   the reading leaves its range or stops coming.
 - [PASS/FAIL limit test](limit-test.md) — nominal ± tolerance or lower and
   upper limit: PASS or FAIL, HI or LO and the deviation on the display.
 - [Supported devices](supported-devices.md) — every meter QtDMM knows, with
   protocol and serial settings.
+- [Your own board](microcontroller.md) — an Arduino, ESP32 or Pico sending
+  its values as text lines (Serial Plotter, Teleplot).
 - [Calculated values](calculated-values.md) — power from a voltage and a
-  current meter: formulas over the readings of the open devices; the
-  simulated meter for demos without hardware.
+  current meter: formulas over the values of your devices; simulated
+  values for demos without hardware.
 - [Bench meters through sigrok-cli](bench-meters.md) — Keysight, Agilent, HP
   and Siglent SCPI meters over USB-TMC, LAN or serial, with sigrok-cli doing
   the talking.

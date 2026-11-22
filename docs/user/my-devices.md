@@ -59,7 +59,9 @@ panels take the LCD colours of the settings, one can have its own (see
 *PASS/FAIL test*, *Limits...* and *Alarms...* are in the context menu of
 its front panel and of its row. The window layout remembers the meters
 connected and connects them again at the next start; a bench file does
-the same when it is loaded. **Services** shows what this window offers to other
+the same when it is loaded. A meter that is not plugged in or switched on
+then gets its front panel all the same, showing *No connection*, and
+connects as soon as it is there (QtDMM tries every 5 seconds). **Services** shows what this window offers to other
 programs: the [SCPI server and HiSLIP](scpi-server.md) with their port, or
 *off*.
 
@@ -135,7 +137,9 @@ The context menu of a device:
   - **Info**: the device at a glance as on the assistant's last page
     (picture, name, model, type, protocol, connection); whether it is
     connected, how long ago the last reading came, a low battery, and its
-    values with their readings, updated every second. Below
+    values with their readings, updated every second; for a connected device
+    the sample rate in Hz, the frames the meter sent in the last 10 s
+    (counted only while the dialog is open). Below
     a link to the maker's website (in the browser) and to the list of
     supported devices in this help.
   - **Data** (only for some meters - UNI-T UT803, UT804, UT61B+/D+/E+,
@@ -165,8 +169,9 @@ Drag a device within My devices to change the order.
 
 **Add device...** (the device symbol with a + at the left of the toolbar,
 or **+ Add device...** at the end of My devices in the sidebar) asks step
-by step: how the meter is connected - *Cable*, *Bluetooth*, *Network*,
-*sigrok* or *Simulated / calculated* -, which meter it is, with a name, and
+by step: how the meter is connected - *Cable*, *Bluetooth*, *Network* or
+*sigrok*, or *Simulated* or *Calculated* (a formula, an integral ...) -,
+which meter it is (or what to calculate), with a name, and
 whether to connect it now: **Connect** keeps it in My devices and connects
 it at once, **Save only** keeps it in My devices without connecting. The page of the meter offers only the models of that
 connection; *Next* waits until what the meter needs is filled in (the port,

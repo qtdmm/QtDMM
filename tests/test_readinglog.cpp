@@ -7,6 +7,8 @@
 // filter.
 
 #include <QtCore>
+#include <QJsonArray>
+#include <QJsonObject>
 #include <QAbstractItemModelTester>
 #include <QApplication>
 #include <QLabel>
@@ -16,6 +18,7 @@
 
 #include "recording/readingsmodel.h"
 #include "core/reading.h"
+#include "recording/recordingfile.h"
 #include "recording/recordingstore.h"
 #include "ui/views/readingswidget.h"
 #include "testutil.h"
@@ -227,6 +230,89 @@ int main(int argc, char **argv)
           && QString::fromUtf8(jf.readAll()).split('\n').value(2).endsWith(";AUTO;0;FAIL HI"), "limit: the CSV has the column");
   }
 
+  // --- 5b. a note of the graph marks the reading nearest to its time;
+  //          the store's marks: notes in the order of time, meta.json ---
+  {
+    ReadingsModel noted;
+    for (int secs : { 0, 10, 20 })
+      noted.append(entry(1.0, "1.000", "V", secs));
+    const QDateTime t0 = entry(0, "", "V", 0).when;
+    noted.markAt(t0.addSecs(12), QColor(0x1e, 0x90, 0xff), "Load on");
+    noted.markAt(t0.addSecs(16), QColor(0x1e, 0x90, 0xff), "Load off");
+    noted.markAt(t0.addSecs(99), QColor(0x1e, 0x90, 0xff), "Late");
+    check(noted.data(noted.index(1, 0), Qt::ToolTipRole).toString() == "Load on"
+            && noted.data(noted.index(2, 0), Qt::ToolTipRole).toString() == "Late"
+            && noted.data(noted.index(0, 0), Qt::ToolTipRole).toString().isEmpty(),
+          "notes: the nearest reading marked");
+
+    Recording rec;
+    rec.start = t0;
+    rec.sampleTimeTenths = 10;
+    rec.unit = "V";
+    rec.values = { 1.0, 2.0, 3.0, 4.0 };
+    // a file of before: a mark without kind is an alarm's
+    rec.meta["marks"] = QJsonArray{ QJsonObject{ { "t", 2000.0 }, { "color", "#ffd03030" }, { "name", "Alarm Hi" } } };
+    RecordingStore store;
+    store.load(rec);
+    check(store.marks().size() == 1 && store.marks().at(0).kind == RecordingStore::MarkKind::Alarm, "notes: an old mark is an alarm's");
+    check(store.addNote(1000, "Start", "R1 10 k") == 0 && store.addNote(2000, "Same time", {}) == 2
+            && store.addNote(-1, "Now", {}) == 3 && store.marks().at(3).t == store.markTime(),
+          "notes: by time, after those of the same time; -1 at the newest reading");
+    store.setMarkText(1, "Alarm Hi", "fuse checked");
+    store.removeMark(2);
+    const QJsonArray marks = store.toRecording().meta.value("marks").toArray();
+    check(marks.size() == 3 && marks.at(0).toObject().value("kind").toString() == "note"
+            && marks.at(0).toObject().value("note").toString() == "R1 10 k"
+            && !marks.at(1).toObject().contains("kind") && marks.at(1).toObject().value("note").toString() == "fuse checked",
+          "notes: kind and text in meta.json, an alarm's mark without kind");
+    Recording again = rec;
+    again.meta["marks"] = marks;
+    RecordingStore back;
+    back.load(again);
+    check(back.marks().size() == 3 && back.marks().at(0).kind == RecordingStore::MarkKind::Note
+            && back.marks().at(0).note == "R1 10 k" && back.marks().at(0).color == RecordingStore::kNoteColor
+            && back.marks().at(1).note == "fuse checked",
+          "notes: read back");
+
+    // dragged: the mark goes to its new time, in the order of time
+    check(back.setMarkTime(0, 2500) == 1 && back.marks().at(1).name == "Start" && back.marks().at(0).name == "Alarm Hi",
+          "notes: moved after the alarm's mark");
+    // the readings table's mark goes along
+    noted.moveMark(t0.addSecs(12), t0.addSecs(1), QColor(0x1e, 0x90, 0xff), "Load on");
+    check(noted.data(noted.index(1, 0), Qt::ToolTipRole).toString().isEmpty()
+            && noted.data(noted.index(0, 0), Qt::ToolTipRole).toString() == "Load on",
+          "notes: the table's mark moved");
+
+    // in a CSV: mark;note on the nearest row, quoted, and back as notes
+    Recording withMarks = rec;
+    withMarks.meta["marks"] = QJsonArray{
+      QJsonObject{ { "t", 1100.0 }, { "color", "#ff1e90ff" }, { "name", "Load on" }, { "note", "R1; 10 k\n\"hot\"" }, { "kind", "note" } },
+      QJsonObject{ { "t", 1200.0 }, { "color", "#ffd03030" }, { "name", "Alarm Hi" } },
+      QJsonObject{ { "t", 2900.0 }, { "color", "#ff1e90ff" }, { "name", "End" }, { "kind", "note" } } };
+    const QString csv = tmp.filePath("marks.csv");
+    QString err;
+    check(RecordingFile::write(withMarks, csv, &err), "marks: CSV written " + err);
+    QFile cf(csv);
+    check(cf.open(QIODevice::ReadOnly | QIODevice::Text), "marks: CSV opened");
+    const QString text = QString::fromUtf8(cf.readAll());
+    cf.close();
+    check(text.section('\n', 0, 0).endsWith(";status;mark;note")
+            && text.contains(";Load on | Alarm Hi;\"R1; 10 k\n\"\"hot\"\" | \"\n") && text.contains(";End;\n"),
+          "marks: the columns, two on one row, quoted: " + text);
+    const std::optional<Recording> csvBack = RecordingFile::read(csv, &err);
+    const QJsonArray rm = csvBack ? csvBack->meta.value("marks").toArray() : QJsonArray();
+    check(csvBack && csvBack->values.size() == 4 && rm.size() == 3 && rm.at(0).toObject().value("t").toDouble() == 1000
+            && rm.at(0).toObject().value("note").toString() == "R1; 10 k\n\"hot\""
+            && rm.at(1).toObject().value("name").toString() == "Alarm Hi" && rm.at(2).toObject().value("t").toDouble() == 3000
+            && rm.at(2).toObject().value("kind").toString() == "note",
+          "marks: read back as notes at their rows");
+    const QString rpath = tmp.filePath("marks.qtdmm-rec");
+    check(RecordingFile::writeAny(withMarks, rpath, &err), "marks: recording written " + err);
+    const std::optional<Recording> recBack = RecordingFile::read(rpath, &err);
+    check(recBack && recBack->meta.value("marks").toArray().at(0).toObject().value("t").toDouble() == 1100,
+          "marks: a .qtdmm-rec keeps them exactly in meta.json, not in its CSV");
+  }
+
   // --- 6. spreadsheet export ---
   {
     log.markLast(QColor("#d82222"), "Low voltage");
@@ -334,8 +420,17 @@ int main(int argc, char **argv)
     model->setValueHidden(0, true);
     check(stats->text().contains("Value\u00a02\u00a0(Battery\u00a0current)") && view->model()->rowCount() == 3,
           "value 1 left out: the line is of value 2: " + stats->text());
+    // a reading reaches the line a moment later, many at once in one go
+    const QString before = stats->text();
+    for (int i = 0; i < 5; ++i)
+      model->append(entry(0.8, "0.800", "A", 3 + i, 1));
+    check(stats->text() == before, "the line waits for the readings to come together");
+    QEventLoop wait;
+    QTimer::singleShot(400, &wait, &QEventLoop::quit);
+    wait.exec();
+    check(stats->text() != before && stats->text().contains("8\u00a0reading"), "then it has them: " + stats->text());
     model->setValueHidden(0, false);
-    check(view->model() == model && view->model()->rowCount() == 6, "all shown: the table on the model again");
+    check(view->model() == model && view->model()->rowCount() == 11, "all shown: the table on the model again");
   }
 
   // several meters: their readings in one table with the Device column, the

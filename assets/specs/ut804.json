@@ -1,13 +1,13 @@
 {
- "source": "dmm-tools f96e318",
+ "source": "dmm-tools 766d4da",
  "device": "ut804",
  "models": [
   "Uni-Trend UT804"
  ],
- "model": "UT804",
+ "model": "UNI-T UT804",
  "tables": [
   {
-   "input_impedance": "Around 2.5GΩ",
+   "input_impedance": "About 2.5GΩ",
    "notes": [],
    "overload_protection": "1000V",
    "page": 59,
@@ -16,7 +16,7 @@
      "accuracy": [
       {
        "accuracy": "0.025%+5",
-       "freq_range": "under REL mode"
+       "freq_range": "In REL mode"
       }
      ],
      "range": "400mV",
@@ -26,7 +26,7 @@
    "table": "A. DC Voltage"
   },
   {
-   "input_impedance": "Around 10MΩ",
+   "input_impedance": "About 10MΩ",
    "notes": [],
    "overload_protection": "1000V",
    "page": 59,
@@ -75,11 +75,11 @@
    "table": "A. DC Voltage"
   },
   {
-   "input_impedance": "Approx 10MΩ",
+   "input_impedance": "About 10MΩ",
    "notes": [
     "True RMS and accuracy valid 10%–100% of range",
-    "Crest factor up to 3.0 (1000V: 1.5)",
-    "Shorted leads: 80-digit residual, accuracy unaffected",
+    "Crest factor ≤3.0 (1000V: 1.5)",
+    "Shorted leads: residual 80 digits, accuracy unaffected",
     "AC+DC: add 1%+35 digits to accuracy"
    ],
    "overload_protection": "1000V",
@@ -132,7 +132,7 @@
        "freq_range": ">1kHz~10kHz"
       },
       {
-       "accuracy": "Not Specified",
+       "accuracy": "Not specified",
        "freq_range": ">10kHz~100kHz"
       }
      ],
@@ -163,7 +163,7 @@
   {
    "input_impedance": null,
    "notes": [
-    "10A: ≤5A continuous; >5A–10A ≤10s at a time, >15min apart"
+    "10A: ≤5A continuous; >5A–10A max. 10s, then rest >15min"
    ],
    "overload_protection": "Fuse 0.5A 250V",
    "page": 61,
@@ -194,7 +194,7 @@
   {
    "input_impedance": null,
    "notes": [
-    "10A: ≤5A continuous; >5A–10A ≤10s at a time, >15min apart"
+    "10A: ≤5A continuous; >5A–10A max. 10s, then rest >15min"
    ],
    "overload_protection": "Fuse 0.5A 250V",
    "page": 61,
@@ -225,7 +225,7 @@
   {
    "input_impedance": null,
    "notes": [
-    "10A: ≤5A continuous; >5A–10A ≤10s at a time, >15min apart"
+    "10A: ≤5A continuous; >5A–10A max. 10s, then rest >15min"
    ],
    "overload_protection": "Fuse 10A 250V",
    "page": 61,
@@ -246,10 +246,10 @@
   {
    "input_impedance": null,
    "notes": [
-    "True RMS and accuracy valid 10%–100% of range; crest factor up to 3.0",
-    "Shorted leads: 80-digit residual, accuracy unaffected",
+    "True RMS and accuracy valid 10%–100% of range; crest factor ≤3.0",
+    "Shorted leads: residual 80 digits, accuracy unaffected",
     "AC+DC: add 1%+35 digits to accuracy",
-    "10A: ≤5A continuous; >5A–10A ≤10s at a time, >15min apart"
+    "10A: ≤5A continuous; >5A–10A max. 10s, then rest >15min"
    ],
    "overload_protection": "Fuse 0.5A 250V",
    "page": 62,
@@ -296,10 +296,10 @@
   {
    "input_impedance": null,
    "notes": [
-    "True RMS and accuracy valid 10%–100% of range; crest factor up to 3.0",
-    "Shorted leads: 80-digit residual, accuracy unaffected",
+    "True RMS and accuracy valid 10%–100% of range; crest factor ≤3.0",
+    "Shorted leads: residual 80 digits, accuracy unaffected",
     "AC+DC: add 1%+35 digits to accuracy",
-    "10A: ≤5A continuous; >5A–10A ≤10s at a time, >15min apart"
+    "10A: ≤5A continuous; >5A–10A max. 10s, then rest >15min"
    ],
    "overload_protection": "Fuse 0.5A 250V",
    "page": 62,
@@ -346,10 +346,10 @@
   {
    "input_impedance": null,
    "notes": [
-    "True RMS and accuracy valid 10%–100% of range; crest factor up to 3.0",
-    "Shorted leads: 80-digit residual, accuracy unaffected",
+    "True RMS and accuracy valid 10%–100% of range; crest factor ≤3.0",
+    "Shorted leads: residual 80 digits, accuracy unaffected",
     "AC+DC: add 1%+35 digits to accuracy",
-    "10A: ≤5A continuous; >5A–10A ≤10s at a time, >15min apart"
+    "10A: ≤5A continuous; >5A–10A max. 10s, then rest >15min"
    ],
    "overload_protection": "Fuse 10A 250V",
    "page": 62,
@@ -643,7 +643,7 @@
     {
      "accuracy": [
       {
-       "accuracy": "Not Specified",
+       "accuracy": "Not specified",
        "freq_range": null
       }
      ],
@@ -680,7 +680,7 @@
    "input_impedance": null,
    "notes": [
     "Included K-type point-contact probe: below 230°C only",
-    "Above 230°C: use the rod contact probe"
+    "Above 230°C: use the rod-type probe"
    ],
    "overload_protection": "1000V",
    "page": 66,
@@ -710,7 +710,7 @@
    "input_impedance": null,
    "notes": [
     "Included K-type point-contact probe: below 230°C only",
-    "Above 230°C: use the rod contact probe"
+    "Above 230°C: use the rod-type probe"
    ],
    "overload_protection": "1000V",
    "page": 67,
@@ -739,7 +739,7 @@
   {
    "input_impedance": null,
    "notes": [
-    "4mA shows 0%, 20mA shows 100%",
+    "4mA shows 0%; 20mA shows 100%",
     "<4mA shows LO, >20mA shows HI"
    ],
    "overload_protection": "Fuse 0.5A 250V",

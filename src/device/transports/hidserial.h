@@ -91,7 +91,7 @@ protected:
   static bool availablePorts(QStringList &portlist,unsigned short vendorId, unsigned short productId);
   /// Sends the chip's line configuration (feature reports); false on failure.
   bool configureCable();
-  /// Queued from the reader thread: unpack one report into m_rx.
+  /// Queued from the reader thread: unpack one report into the receive buffer.
   void onReport(const QByteArray &raw);
   void onReadError(const QString &what);
   /// Stops the reader and waits for it; the reader closes the handle.

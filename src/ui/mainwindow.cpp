@@ -32,6 +32,13 @@
 #include "ui/frameclock.h"
 #include "ui/meterview.h"
 #include "ui/poincareview.h"
+#include "ui/xyview.h"
+#include "ui/graphmodel.h"
+#include "ui/graphview.h"
+#include "ui/settings/graphprefs.h"
+#include "ui/views/graphwidget.h"
+#include "ui/histogramview.h"
+#include "ui/heatmapview.h"
 #include "ui/dialogs/helpdlg.h"
 #include "ui/dialogs/devicesettingsdlg.h"
 #include "ui/devicesettings.h"
@@ -39,24 +46,42 @@
 #include "ui/valuemenu.h"
 #include "ui/tilebutton.h"
 #include "ui/dialogs/adddevicedlg.h"
+#include "device/metersetup.h"
+#include "logic/formulanode.h"
+#include "logic/generatornode.h"
+#include "logic/integralnode.h"
+#include "service/noderunner.h"
+#include "ui/dialogs/integralnodedlg.h"
+#include "logic/legacynodes.h"
+#include "ui/dialogs/generatornodedlg.h"
 #include "ui/dialogs/limitdlg.h"
 #include "device/transport.h"
 #include "device/transports/serial.h"
+#include "core/projectfolder.h"
 #include "core/devicelibrary.h"
 #include "core/sampletypes.h"
 #include "core/siprefix.h"
+#include "recording/labplotlive.h"
+#include "recording/recordingfile.h"
 #include "recording/recordingstore.h"
 #include "ui/instancewidget.h"
-#include "ui/views/graphwidget.h"
 #include "ui/views/lcdwidget.h"
 #include "ui/views/poincareplot.h"
+#include "ui/views/xyplot.h"
+#include "ui/views/histogramplot.h"
+#include "ui/views/heatmapplot.h"
+#include "ui/views/colormap.h"
 #include "ui/settings/settingsdialog.h"
 #include "ui/settings/alarmprefs.h"
 #include "ui/settings/generalprefs.h"
 #include "ui/settings/guiprefs.h"
 #include "ui/settings/keyboardprefs.h"
 #include "ui/views/analogmeter.h"
+#include "ui/views/basketwidget.h"
+
+static const char *kWorkspaceSuffix = "qtdmm-workspace";
 #include "ui/views/readingswidget.h"
+#include "ui/dialogs/capturedlg.h"
 #include "ui/dialogs/logdlg.h"
 #include "ui/dialogs/panelvaluesdlg.h"
 #include "ui/dialogs/sourcesdlg.h"
@@ -66,6 +91,7 @@
 #include "ui/alarmservice.h"
 #include "ui/mdiarranger.h"
 #include "service/metercontroller.h"
+#include "device/devicetype.h"
 #include "device/meterconnection.h"
 #include "ui/designs.h"
 #include "ui/controlbar.h"
@@ -73,10 +99,14 @@
 #include "ui/shortcuts.h"
 #include "service/devicesession.h"
 #include "core/workspacefile.h"
+#include "ui/dialogs/exportdlg.h"
+#include "ui/labplot.h"
 #include "ui/dialogs/workspacedlg.h"
 #include <QBuffer>
 #include <QMdiArea>
+#include <QDirIterator>
 #include <QRegularExpression>
+#include <QStandardPaths>
 #include <QMdiSubWindow>
 #include <QLoggingCategory>
 #include <QIconEngine>
@@ -128,8 +158,6 @@ private:
   bool m_stop;
 };
 
-/// A theme symbol with a "+" in its lower right corner (Add device: the
-/// meter and "add"), looked up when painted, so it follows the symbol set.
 class PlusIconEngine : public PaintedIconEngine
 {
 public:
@@ -146,6 +174,13 @@ public:
 private:
   QString m_name;
 };
+}
+
+MainWindow::~MainWindow()
+{
+  // the members go first, the child windows after them: a window activated
+  // meanwhile would look the graph up in a hash already gone
+  disconnect(m_mdi, nullptr, this, nullptr);
 }
 
 MainWindow::MainWindow(QCommandLineParser &parser, QWidget *parent)
@@ -210,14 +245,14 @@ MainWindow::MainWindow(QCommandLineParser &parser, QWidget *parent)
       updateRecorderActions();
   });
   connect(m_wid, &InstanceWidget::recorderState, this, &MainWindow::updateRecorderActions);
+  // without a leading meter Record, Live, Clear and the export are for the
+  // file the graph used last shows
+  m_wid->setFileView({ [this] { const GraphView *view = pictureGraph(); return view && view->showsFile(); },
+                       [this] { if (GraphView *view = pictureGraph()) view->closeFile(); },
+                       [this](const QString &path, bool everyReading)
+                       { GraphView *view = pictureGraph(); return view && writeGraphRecording(view, path, everyReading); } });
   // a file loaded without a device: the start page makes way for its graph
-  connect(m_wid, &InstanceWidget::recorderState, this, [this]
-  {
-    const bool covered = !m_emptyStart->isHidden();
-    updateEmptyStart();
-    if (covered && m_emptyStart->isHidden())
-      action_Graph->setChecked(true);
-  });
+  connect(m_wid, &InstanceWidget::recorderState, this, &MainWindow::updateEmptyStart);
 
   // Record while a meter is connected
   auto recordable = [this] { connectSLOT(!m_session->controllers().isEmpty()); };
@@ -257,6 +292,12 @@ MainWindow::MainWindow(QCommandLineParser &parser, QWidget *parent)
       applyLcdLook(panelOf(win));
   });
   connect(m_wid, &InstanceWidget::configChanged, this, &MainWindow::updateRecentWorkspaces);
+  // the Graph page: the graphs take its look
+  connect(m_wid, &InstanceWidget::configChanged, this, [this]
+  {
+    for (GraphView *view : std::as_const(m_graphViews))
+      applyGraphLook(view);
+  });
   // the sidebar as left, with two devices or more
   const bool sidebarSet = !m_wid->settings()->getString("Windows/sidebar").isEmpty();
   showSidebar(DeviceSidebar::shownAtStart(sidebarSet ? QVariant(m_wid->settings()->getBool("Windows/sidebar"))
@@ -325,7 +366,7 @@ void MainWindow::createViews()
   // a value or an entry of My devices dragged out of the sidebar
   m_mdi->viewport()->setAcceptDrops(true);
   m_mdi->viewport()->installEventFilter(this);
-  connect(addButton, &QToolButton::clicked, this, &MainWindow::addDevice);
+  connect(addButton, &QToolButton::clicked, this, [this] { addDevice(); });
 
   // the alarms of every open meter: sounds, popups, one banner
   m_alarmService = new AlarmService(m_session, this, this);
@@ -342,7 +383,9 @@ void MainWindow::createViews()
   // no cell bigger than the instrument can fill
   m_arranger->setContentAspect(m_meterWin, AnalogMeter::kMinAspect, AnalogMeter::kMaxAspect);
 
-  m_graphWin = addView(m_wid, tr("Graph"), MdiArranger::Graph, "graph");
+  // the first graph: hidden, never closed; the session widget has no window
+  m_wid->hide();
+  m_graphWin = addGraphWindow("graph", tr("Graph"), ValueRef());
   // the drawing clock of the views; 0 = off, the graph moves with each reading only
   FrameClock::instance()->setRate(m_wid->settings()->getInt("Graph/frame-rate", 30));
 
@@ -356,6 +399,101 @@ void MainWindow::createViews()
   m_poincare->setWindowTitle(tr("Poincaré plot"));
   m_poincare->setSettings(m_wid->settings());
   m_poincareWin = addView(m_poincare, m_poincare->windowTitle(), MdiArranger::Table, "poincare");
+
+  m_xyPlot = new XYPlot(this);
+  m_xyPlot->setWindowTitle(tr("XY diagram"));
+  auto *xy = new XYView(m_session, m_xyPlot, this);
+  m_xyViews.insert(m_xyPlot, xy);
+  applyPlotColors(m_xyPlot);
+  m_xyPlot->setContextMenuPolicy(Qt::CustomContextMenu);
+  m_xyWin = addView(m_xyPlot, m_xyPlot->windowTitle(), MdiArranger::Table, "xy");
+  connect(m_xyPlot, &QWidget::customContextMenuRequested, this, [this](const QPoint &pos)
+  {
+    windowMenu(m_xyWin, m_xyPlot->mapToGlobal(pos));
+  });
+
+  m_histogram = new HistogramPlot(this);
+  m_histogram->setWindowTitle(tr("Histogram"));
+  auto *histogram = new HistogramView(m_session, m_histogram, this);
+  m_histogramViews.insert(m_histogram, histogram);
+  m_histogramWin = addView(m_histogram, m_histogram->windowTitle(), MdiArranger::Table, "histogram");
+  applyPlotColors(m_histogram);
+  m_histogram->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(m_histogram, &QWidget::customContextMenuRequested, this, [this](const QPoint &pos)
+  {
+    windowMenu(m_histogramWin, m_histogram->mapToGlobal(pos));
+  });
+
+  m_heatmap = new HeatmapPlot(this);
+  m_heatmap->setWindowTitle(tr("Heatmap"));
+  auto *heatmap = new HeatmapView(m_session, m_heatmap, this);
+  m_heatmapViews.insert(m_heatmap, heatmap);
+  m_heatmapWin = addView(m_heatmap, m_heatmap->windowTitle(), MdiArranger::Table, "heatmap");
+  applyPlotColors(m_heatmap);
+  m_heatmap->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(m_heatmap, &QWidget::customContextMenuRequested, this, [this](const QPoint &pos)
+  {
+    windowMenu(m_heatmapWin, m_heatmap->mapToGlobal(pos));
+  });
+
+  // the files of a project, a folder; it stays open until another is
+  m_basket = new BasketWidget(this);
+  m_basketWin = addView(m_basket, m_basket->windowTitle(), MdiArranger::Table, "basket");
+  const QString basketDir = m_wid->settings()->getString("Basket/folder");
+  if (QFileInfo(basketDir).isDir())
+  {
+    m_basket->setFolder(basketDir);
+    recentProjects().add(basketDir);   // the one open at the start is one of the last ones too
+  }
+  auto basketBase = [this]
+  {
+    const QString base = m_wid->settings()->getString("Basket/base-dir");
+    m_basket->setBaseFolder(base.isEmpty() ? GeneralPrefs::defaultBasketBase() : base);
+    ProjectFolder::setByType(m_wid->settings()->getBool("Basket/by-type", true));
+  };
+  basketBase();
+  connect(m_wid, &InstanceWidget::configChanged, this, basketBase);
+  connect(m_basket, &BasketWidget::folderChanged, this, [this](const QString &folder)
+  {
+    m_wid->settings()->setString("Basket/folder", folder);
+    // a message of before belongs to the project of before (a bench
+    // switching it says so after this)
+    for (QLabel *l : { m_error, m_info })
+    {
+      l->clear();
+      l->setToolTip(QString());
+    }
+    m_wid->settings()->save();   // set only stages it: the next start reads the file
+    if (!folder.isEmpty())
+      recentProjects().add(folder);
+    updateWindowTitle();
+    updateProjectSidebar();
+    // without a basket everything is as before
+    for (QAction *a : { m_graphToBasket, m_tableToBasket })
+      a->setVisible(!folder.isEmpty());
+    // a closed project leaves nothing to show in its window
+    if (folder.isEmpty() && m_basketAction)
+      m_basketAction->setChecked(false);
+  });
+  connect(m_basket, &BasketWidget::error, m_wid, &InstanceWidget::error);
+  // made, opened or imported: its window shows (a bench switching the
+  // project leaves the windows as the bench has them)
+  connect(m_basket, &BasketWidget::projectOpened, this, [this] { m_basketAction->setChecked(true); });
+  connect(m_basket, &BasketWidget::openRequested, this, [this](const QString &path)
+  {
+    // a bench is loaded, a recording of QtDMM goes into the graph, anything
+    // else to its program
+    const QString suffix = QFileInfo(path).suffix();
+    if (suffix == kWorkspaceSuffix)
+      loadWorkspaceFile(path);
+    else if ((suffix.compare("csv", Qt::CaseInsensitive) == 0 || suffix == RecordingFile::kSuffix)
+             && RecordingFile::read(path).has_value())
+    {
+      importRecording(path);
+    }
+    else
+      m_basket->openWithSystem(path);
+  });
   m_wid->addPoincare(m_poincare);
 
   // right-click on the meter or the plot: the window's menu (also without title bar)
@@ -420,24 +558,73 @@ void MainWindow::createViews()
     const MeterController *ctl = m_session->controllers().value(0);
     newView(Added::Poincare, ctl ? ValueRef(0, ctl->source()) : ValueRef(), true);
   });
+  m_newHistogramAction = new QAction(QIcon::fromTheme("qtdmm-histogram"), tr("Add &histogram"), this);
+  m_newHistogramAction->setObjectName("action_NewHistogram");
+  connect(m_newHistogramAction, &QAction::triggered, this, [this]
+  {
+    const MeterController *ctl = m_session->controllers().value(0);
+    newView(Added::Histogram, ctl ? ValueRef(0, ctl->source()) : ValueRef(), true);
+  });
+  m_newHeatmapAction = new QAction(QIcon::fromTheme("qtdmm-heatmap"), tr("Add &heatmap"), this);
+  m_newHeatmapAction->setObjectName("action_NewHeatmap");
+  connect(m_newHeatmapAction, &QAction::triggered, this, [this]
+  {
+    const MeterController *ctl = m_session->controllers().value(0);
+    const ValueRef first = ctl ? ValueRef(0, ctl->source()) : ValueRef();
+    newView(Added::Heatmap, first, true);
+  });
+  m_newGraphAction = new QAction(action_Graph->icon(), tr("Add g&raph"), this);
+  m_newGraphAction->setObjectName("action_NewGraph");
+  m_newGraphAction->setWhatsThis(
+    tr("<html><head/><body><p><span style=\" font-weight:600;\">Add graph</span></p>"
+       "<p>Another graph window on the same readings, with its own curves, axes, time window, "
+       "cursors and statistics; closing it removes it.</p></body></html>"));
+  connect(m_newGraphAction, &QAction::triggered, this, [this]
+  {
+    const MeterController *ctl = m_session->controllers().value(0);
+    newView(Added::Graph, ctl ? ValueRef(0, ctl->source()) : ValueRef(), true);
+  });
+  m_newXYAction = new QAction(QIcon::fromTheme("qtdmm-xy"), tr("Add &XY diagram"), this);
+  m_newXYAction->setObjectName("action_NewXY");
+  m_newXYAction->setToolTip(tr("Add an XY diagram"));
+  connect(m_newXYAction, &QAction::triggered, this, [this]
+  {
+    const MeterController *ctl = m_session->controllers().value(0);
+    newView(Added::XY, ctl ? ValueRef(0, ctl->source()) : ValueRef(), true);
+  });
+  m_xyAction = windowAction(m_xyWin, tr("&XY diagram"), "", "qtdmm-xy",
+    tr("Plot one measured value against another in an XY diagram."));
+  m_xyAction->setObjectName("action_WindowXY");
+  m_basketAction = windowAction(m_basketWin, tr("Pro&ject"), "Ctrl+6", "document-open",
+    tr("<html><head/><body><p><span style=\" font-weight:600;\">Project</span></p>"
+       "<p>The files of a project: its benches, recordings, pictures, PDFs, LabPlot projects. "
+       "A folder; drop files in to copy them there.</p></body></html>"));
+  if (m_basketAction->icon().isNull())
+    m_basketAction->setIcon(style()->standardIcon(QStyle::SP_DirIcon));
   m_poincareAction = windowAction(m_poincareWin, tr("Poi&ncaré plot"), "Ctrl+5", "qtdmm-poincare",
     tr("<html><head/><body><p><span style=\" font-weight:600;\">Poincaré plot</span></p>"
        "<p>Each reading against the next one: noise widens the cloud across the diagonal, "
        "drift stretches it along it. SD1 and SD2 put both in numbers.</p></body></html>"));
+  m_histogramAction = windowAction(m_histogramWin, tr("H&istogram"), "", "qtdmm-histogram",
+    tr("Show the distribution of recent readings for one measured value."));
+  m_heatmapAction = windowAction(m_heatmapWin, tr("He&atmap"), "", "",
+    tr("Plot three measured values: two for position and one for color."));
+  m_heatmapAction->setIcon(QIcon::fromTheme("qtdmm-heatmap"));
+  m_heatmapAction->setObjectName("action_WindowHeatmap");
   // the graph keeps its action from the .ui (toolbar button with Ctrl+3)
   bindWindowAction(action_Graph, m_graphWin);
   // graph and table have menus of their own: they begin with the window's
   // entry, as the window menu of the others
-  auto hideWindow = [this](QMdiSubWindow *win)
-  {
-    QAction *hide = new QAction(tr("&Hide view"), this);
-    connect(hide, &QAction::triggered, win, &QWidget::hide);
-    return hide;
-  };
+  auto hideWindow = [this](QMdiSubWindow *win) { return hideAction(win); };
   // the values of the open meters they show, with more than one
   m_graphSources = new QAction(tr("S&ources..."), this);
   m_tableSources = new QAction(tr("S&ources..."), this);
-  connect(m_graphSources, &QAction::triggered, this, [this] { editSources(ValueMenu::View::Graph); });
+  connect(m_graphSources, &QAction::triggered, this, [this]
+  {
+    // the graph used last, else the first one
+    if (GraphView *view = currentGraph())
+      editGraphSources(view);
+  });
   connect(m_tableSources, &QAction::triggered, this, [this] { editSources(ValueMenu::View::Table); });
   auto sourcesShown = [this]
   {
@@ -448,32 +635,87 @@ void MainWindow::createViews()
   sourcesShown();
   connect(m_session, &DeviceSession::opened, this, sourcesShown);
   connect(m_session, &DeviceSession::closed, this, sourcesShown);
-  m_wid->graph()->setWindowActions({ hideWindow(m_graphWin), m_graphSources });
-  m_wid->graph()->setPrintAction(action_Print);
-  m_readings->setWindowActions({ hideWindow(m_readingsWin), m_tableSources });
+  // what the view shows, as files into the open project basket
+  m_graphToBasket = new QAction(tr("Into the pro&ject"), this);
+  m_graphToBasket->setToolTip(tr("The recording as CSV and the graph as a picture, into the project"));
+  connect(m_graphToBasket, &QAction::triggered, this, &MainWindow::graphToBasket);
+  m_tableToBasket = new QAction(tr("Into the pro&ject"), this);
+  m_tableToBasket->setToolTip(tr("The readings as CSV, into the project"));
+  connect(m_tableToBasket, &QAction::triggered, this, &MainWindow::tableToBasket);
+  for (QAction *a : { m_graphToBasket, m_tableToBasket })
+    a->setVisible(!m_basket->folder().isEmpty());
+  // what, which format, where to, in one dialog
+  m_graphExport = new QAction(tr("E&xport..."), this);
+  m_graphExport->setObjectName("action_ExportDialog");
+  m_graphExport->setShortcut(QKeySequence("Ctrl+E"));
+  m_graphExport->setToolTip(tr("Export the recording, the readings or a picture: format and place in a dialog"));
+  connect(m_graphExport, &QAction::triggered, this, [this] { exportDialog(ExportDlg::Recording); });
+  m_labPlotLive = new QAction(tr("Live in &LabPlot"), this);
+  m_labPlotLive->setObjectName("action_LabPlotLive");
+  m_labPlotLive->setToolTip(tr("LabPlot follows the recording while it goes on: its graph grows with it"));
+  m_labPlotLive->setEnabled(false);   // while it records (updateRecorderActions())
+  connect(m_labPlotLive, &QAction::triggered, this, &MainWindow::labPlotLive);
+  m_tableExport = new QAction(m_graphExport->text(), this);
+  connect(m_tableExport, &QAction::triggered, this, [this] { exportDialog(ExportDlg::Table); });
+  // the actions are for the graph used last, also the one whose window is active
+  connect(m_mdi, &QMdiArea::subWindowActivated, this, [this](QMdiSubWindow *win)
+  {
+    if (GraphView *graphView = graphViewOf(win))
+      setPictureGraph(graphView);
+  });
+  m_readings->setWindowActions({ hideWindow(m_readingsWin), m_tableSources, m_tableToBasket, m_tableExport });
   m_displayAction->setObjectName("action_WindowDisplay");
   m_meterAction->setObjectName("action_WindowMeter");
   m_readingsAction->setObjectName("action_WindowReadings");
   m_poincareAction->setObjectName("action_WindowPoincare");
+  m_histogramAction->setObjectName("action_WindowHistogram");
+  m_basketAction->setObjectName("action_WindowBasket");
 
   // a front panel for each meter, also those opened before the window
   connect(m_session, &DeviceSession::opened, this, &MainWindow::addPanel);
   // a meter of the table opened again: its readings come in again
   // an empty view takes the meter connected: the graph its main value, the
-  // analog meter and the Poincaré plot it when theirs is not connected -
+  // analog meter and the Poincaré plot and XY plots it when theirs is not connected -
   // while the workspace's meters open one by one only when none was chosen
   connect(m_session, &DeviceSession::opened, this, [this](MeterController *ctl)
   {
     auto free = [this](const ValueRef &v)
     { return !m_session->controller(v) && !m_openingPending.contains(v.source.section(':', 1)); };
-    if (m_wid->graph()->values().isEmpty())
-      m_wid->graph()->setValues({ ValueRef(0, ctl->source()) });
+    // a microcontroller's values all, as the Arduino IDE's plotter shows
+    // them [E 18.11.]: a board sends them to be plotted
+    QList<ValueRef> plotted { ValueRef(0, ctl->source()) };
+    if (DeviceType::ofProtocol(ctl->sourceInfo().protocol) == DeviceType::Microcontroller)
+      for (int id = 1; id < kMaxValues; ++id)   // they come with its lines; one never sent is not drawn
+        plotted << ValueRef(id, ctl->source());
+    for (GraphView *view : std::as_const(m_graphViews))
+      if (view->model()->values().isEmpty())
+        view->model()->setValues(plotted);
     for (MeterView *meter : m_wid->meters())
       if (free(meter->value()))
         meter->setValue(ValueRef(0, ctl->source()));
     for (PoincareView *plot : m_wid->poincares())
       if (free(plot->value()))
         plot->setValue(ValueRef(0, ctl->source()));
+    for (XYView *view : m_xyViews)
+    {
+      ValueRef x = view->xValue(), y = view->yValue();
+      if (free(x)) x = ValueRef(0, ctl->source());
+      if (free(y)) y = ValueRef(0, ctl->source());
+      if (x != view->xValue() || y != view->yValue())
+        view->setValues(x, y);
+    }
+    for (HistogramView *histogram : m_histogramViews)
+      if (free(histogram->value()))
+        histogram->setValue(ValueRef(0, ctl->source()));
+    for (HeatmapView *heatmap : m_heatmapViews)
+    {
+      ValueRef x = heatmap->value(0), y = heatmap->value(1), z = heatmap->value(2);
+      bool changed = false;
+      for (ValueRef *value : { &x, &y, &z })
+        if (free(*value)) { *value = ValueRef(0, ctl->source()); changed = true; }
+      if (changed)
+        heatmap->setValues(x, y, z);
+    }
   });
   // a meter opened or closed: in the table when it shows all, else only its readings to it
   auto tableFollows = [this]
@@ -503,6 +745,7 @@ void MainWindow::addPanel(MeterController *ctl)
   QMdiSubWindow *win = addView(panel, ctl->deviceName(), MdiArranger::Instrument, "panel-" + id);
   m_panelWins.insert(ctl->source(), win);
   connect(panel, &FrontPanel::foldToggled, this, [this] { updateControls(); });
+  connect(panel, &FrontPanel::settingsRequested, this, [this](const QString &id) { deviceSettings(id); });
   connect(panel, &FrontPanel::keysChanged, this, [this] { updateControls(); });
   connect(panel, &FrontPanel::keyFailed, this, [this, panel]
   {
@@ -561,9 +804,70 @@ void MainWindow::removePanel(const QString &source)
   m_arranger->arrange();
 }
 
+QMdiSubWindow *MainWindow::addGraphWindow(const QString &name, const QString &title, const ValueRef &value)
+{
+  auto *graph = new GraphWidget(this);
+  graph->setWindowTitle(title);
+  auto *view = new GraphView(m_session, graph, name, this);
+  m_graphViews.insert(graph, view);
+  view->model()->setWindowSeconds(m_wid->settingsDialog()->graphPage()->windowSeconds());
+  const Designs::GraphColors g = Designs::graphColors(Designs::current());
+  graph->setThemeColors(g.background, g.grid, g.labels, g.data);
+  applyGraphLook(view);
+  if (!value.source.isEmpty())
+    view->model()->setValues({ value });
+  // a file shown: Record and Live say so, the start page makes way
+  connect(view, &GraphView::fileShownChanged, this, [this]
+  {
+    updateRecorderActions();
+    updateEmptyStart();
+  });
+  // the start threshold dragged: the Recording page takes it
+  connect(graph, &GraphWidget::startThresholdDragged, m_wid->settingsDialog(), &SettingsDialog::thresholdChangedSLOT);
+  QMdiSubWindow *win = addView(graph, title, MdiArranger::Graph, name);
+  graph->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(graph, &QWidget::customContextMenuRequested, this, [this, graph, win](const QPoint &pos)
+  {
+    const QPoint globalPos = graph->mapToGlobal(pos);
+    // on a mark's flag or a note's line: that mark
+    if (const int mark = graph->markAtGlobal(globalPos); mark >= 0 && graph->marksEditable())
+    {
+      const qint64 t = graph->markTime(mark);
+      const QString name = graph->markName(mark);
+      QMenu menu(this);
+      const QAction *edit = menu.addAction(QCoreApplication::translate("GraphWidget", "&Edit note..."));
+      const QAction *remove = menu.addAction(QCoreApplication::translate("GraphWidget", "&Remove mark"));
+      const QAction *chosen = menu.exec(globalPos);
+      // an alarm may have come meanwhile: only the mark the menu was opened on
+      if (!chosen || graph->markTime(mark) != t || graph->markName(mark) != name)
+        return;
+      if (chosen == edit)
+        graph->editMark(mark);
+      else if (chosen == remove)
+        graph->removeMark(mark);
+      return;
+    }
+    windowMenu(win, globalPos);
+  });
+  // a note set in the graph marks its reading in the table
+  connect(graph, &GraphWidget::noteAdded, this, [this](const QDateTime &when, const QString &title)
+  {
+    m_readings->log()->markAt(when, QColor::fromRgba(RecordingStore::kNoteColor), title);
+  });
+  connect(graph, &GraphWidget::noteMoved, this, [this](const QDateTime &from, const QDateTime &to, const QString &title)
+  {
+    m_readings->log()->moveMark(from, to, QColor::fromRgba(RecordingStore::kNoteColor), title);
+  });
+  return win;
+}
+
 QMdiSubWindow *MainWindow::addViewWindow(Added kind, const ValueRef &value, int number)
 {
-  const QString prefix = kind == Added::Meter ? QStringLiteral("meter-") : QStringLiteral("poincare-");
+  const QString prefix = kind == Added::Meter ? QStringLiteral("meter-")
+                         : kind == Added::Graph ? QStringLiteral("graph-")
+                         : kind == Added::XY ? QStringLiteral("xy-")
+                         : kind == Added::Histogram ? QStringLiteral("histogram-")
+                         : kind == Added::Heatmap ? QStringLiteral("heatmap-") : QStringLiteral("poincare-");
   if (number < 2)
   {
     QStringList taken;
@@ -573,6 +877,30 @@ QMdiSubWindow *MainWindow::addViewWindow(Added kind, const ValueRef &value, int 
   }
   QWidget *view;
   QMdiSubWindow *win;
+  if (kind == Added::Graph)
+  {
+    win = addGraphWindow(prefix + QString::number(number), tr("Graph %1").arg(number), value);
+    m_added << win;
+    return win;
+  }
+  if (kind == Added::XY)
+  {
+    auto *plot = new XYPlot(this);
+    plot->setWindowTitle(tr("XY diagram %1").arg(number));
+    auto *view = new XYView(m_session, plot, this);
+    m_xyViews.insert(plot, view);
+    applyPlotColors(plot);
+    if (!value.source.isEmpty())
+      view->setValues(value, value);
+    win = addView(plot, plot->windowTitle(), MdiArranger::Table, prefix + QString::number(number));
+    view->plot()->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(plot, &QWidget::customContextMenuRequested, this, [this, plot, win](const QPoint &pos)
+    {
+      windowMenu(win, plot->mapToGlobal(pos));
+    });
+    m_added << win;
+    return win;
+  }
   if (kind == Added::Meter)
   {
     auto *meter = new AnalogMeter(this);
@@ -582,6 +910,28 @@ QMdiSubWindow *MainWindow::addViewWindow(Added kind, const ValueRef &value, int 
     m_arranger->setContentAspect(win, AnalogMeter::kMinAspect, AnalogMeter::kMaxAspect);
     applyFrame(meter);
     view = meter;
+  }
+  else if (kind == Added::Histogram)
+  {
+    auto *plot = new HistogramPlot(this);
+    plot->setWindowTitle(tr("Histogram %1").arg(number));
+    auto *source = new HistogramView(m_session, plot, this);
+    m_histogramViews.insert(plot, source);
+    source->setValue(value);
+    win = addView(plot, plot->windowTitle(), MdiArranger::Table, prefix + QString::number(number));
+    applyPlotColors(plot);
+    view = plot;
+  }
+  else if (kind == Added::Heatmap)
+  {
+    auto *plot = new HeatmapPlot(this);
+    plot->setWindowTitle(tr("Heatmap %1").arg(number));
+    auto *source = new HeatmapView(m_session, plot, this);
+    m_heatmapViews.insert(plot, source);
+    source->setValues(value, value, value);
+    win = addView(plot, plot->windowTitle(), MdiArranger::Table, prefix + QString::number(number));
+    applyPlotColors(plot);
+    view = plot;
   }
   else
   {
@@ -602,26 +952,52 @@ QMdiSubWindow *MainWindow::addViewWindow(Added kind, const ValueRef &value, int 
   return win;
 }
 
-void MainWindow::newView(Added kind, const ValueRef &value, bool ask)
+QMdiSubWindow *MainWindow::newView(Added kind, const ValueRef &value, bool ask)
 {
   QMdiSubWindow *win = addViewWindow(kind, value);
   // from the menu its value is asked first (the active device's first one
   // ticked); cancelled, there is no new view. With no device open there is
   // nothing to pick from.
-  if (ask && !m_session->controllers().isEmpty())
+  if (ask && kind == Added::Graph)
   {
-    MeterView *meter = meterViewOf(win);
-    PoincareView *plot = poincareViewOf(win);
-    if (!editSources(meter ? ValueMenu::View::Meter : ValueMenu::View::Poincare, meter, plot))
+    // one device with one value has nothing to choose from
+    const QList<MeterController *> meters = m_session->controllers();
+    if ((meters.size() > 1 || (meters.size() == 1 && meters.first()->valueCount() > 1)) && !editGraphSources(graphViewOf(win)))
     {
       removeAddedWindow(win);
-      return;
+      return nullptr;
+    }
+  }
+  else if (ask && !m_session->controllers().isEmpty())
+  {
+    if (kind == Added::XY)
+    {
+      if (!editXYSources(xyViewOf(win)))
+      {
+        removeAddedWindow(win);
+        return nullptr;
+      }
+    }
+    else
+    {
+      MeterView *meter = meterViewOf(win);
+      PoincareView *plot = poincareViewOf(win);
+      HistogramView *histogram = histogramViewOf(win);
+      HeatmapView *heatmap = heatmapViewOf(win);
+      if (!editSources(meter ? ValueMenu::View::Meter : heatmap ? ValueMenu::View::Heatmap
+                             : histogram ? ValueMenu::View::Histogram : ValueMenu::View::Poincare,
+                       meter, plot, nullptr, histogram, heatmap))
+      {
+        removeAddedWindow(win);
+        return nullptr;
+      }
     }
   }
   win->show();
   m_mdi->setActiveSubWindow(win);
   growFor(win);
   m_arranger->arrange();
+  return win;
 }
 
 void MainWindow::removeAddedWindow(QMdiSubWindow *win)
@@ -632,6 +1008,26 @@ void MainWindow::removeAddedWindow(QMdiSubWindow *win)
     m_wid->removeMeter(meter);
   if (PoincareView *plot = poincareViewOf(win))
     m_wid->removePoincare(plot);
+  if (HistogramView *histogram = histogramViewOf(win))
+  {
+    m_histogramViews.remove(histogram->plot());
+    delete histogram;
+  }
+  if (HeatmapView *heatmap = heatmapViewOf(win))
+  {
+    m_heatmapViews.remove(heatmap->plot());
+    delete heatmap;
+  }
+  if (XYView *view = xyViewOf(win))
+  {
+    m_xyViews.remove(view->plot());
+    delete view;
+  }
+  if (GraphView *graph = graphViewOf(win))
+  {
+    m_graphViews.remove(graph->graph());
+    delete graph;
+  }
   m_grown.remove(win->widget());
   m_grown.remove(win);
   delete win;
@@ -654,6 +1050,71 @@ PoincareView *MainWindow::poincareViewOf(const QMdiSubWindow *win) const
   return nullptr;
 }
 
+HistogramView *MainWindow::histogramViewOf(const QMdiSubWindow *win) const
+{
+  for (HistogramView *view : m_histogramViews)
+    if (win && view->plot() == win->widget())
+      return view;
+  return nullptr;
+}
+
+HeatmapView *MainWindow::heatmapViewOf(const QMdiSubWindow *win) const
+{
+  for (HeatmapView *view : m_heatmapViews)
+    if (win && view->plot() == win->widget())
+      return view;
+  return nullptr;
+}
+
+QList<QMdiSubWindow *> MainWindow::heatmapWindows() const
+{
+  QList<QMdiSubWindow *> wins { m_heatmapWin };
+  for (QMdiSubWindow *win : m_added)
+    if (heatmapViewOf(win))
+      wins << win;
+  return wins;
+}
+
+XYView *MainWindow::xyViewOf(const QMdiSubWindow *win) const
+{
+  for (XYView *view : m_xyViews)
+    if (win && view->plot() == win->widget())
+      return view;
+  return nullptr;
+}
+
+// A graph draws the marks of its meters' own recordings
+RecordingStore *MainWindow::graphStoreFor(const MeterController *ctl) const
+{
+  for (const GraphView *view : m_graphViews)
+  {
+    const QList<ValueRef> shown = view->model()->values();
+    if (std::any_of(shown.cbegin(), shown.cend(), [ctl](const ValueRef &v) { return v.source == ctl->source(); }))
+      return ctl->recorder();
+  }
+  return nullptr;
+}
+
+void MainWindow::showGraphWindow(QMdiSubWindow *win)
+{
+  if (win == m_graphWin)
+    action_Graph->setChecked(true);
+  else if (win->isHidden())
+  {
+    win->show();
+    growFor(win);
+    m_arranger->arrange();
+  }
+}
+
+QAction *MainWindow::hideAction(QMdiSubWindow *win)
+{
+  // a view added goes when closed (eventFilter()), the first of a kind hides
+  QAction *hide = new QAction(m_added.contains(win) ? tr("&Close window") : tr("&Hide view"), win);
+  connect(hide, &QAction::triggered, win, &QWidget::close);
+  return hide;
+}
+
 QList<QMdiSubWindow *> MainWindow::meterWindows() const
 {
   QList<QMdiSubWindow *> wins { m_meterWin };
@@ -672,9 +1133,257 @@ QList<QMdiSubWindow *> MainWindow::poincareWindows() const
   return wins;
 }
 
+QList<QMdiSubWindow *> MainWindow::histogramWindows() const
+{
+  QList<QMdiSubWindow *> wins { m_histogramWin };
+  for (QMdiSubWindow *w : m_added)
+    if (histogramViewOf(w))
+      wins << w;
+  return wins;
+}
+
+GraphView *MainWindow::graphViewOf(const QMdiSubWindow *win) const
+{
+  for (GraphView *view : m_graphViews)
+    if (win && view->graph() == win->widget())
+      return view;
+  return nullptr;
+}
+
+QList<QMdiSubWindow *> MainWindow::graphWindows() const
+{
+  QList<QMdiSubWindow *> wins { m_graphWin };
+  for (QMdiSubWindow *win : m_added)
+    if (graphViewOf(win))
+      wins << win;
+  return wins;
+}
+
+void MainWindow::loadIntoGraph(GraphView *view)
+{
+  if (const QString path = askRecordingPath(); !path.isEmpty())
+    loadRecordingInto(view, path);
+}
+
+QString MainWindow::askRecordingPath()
+{
+  return QFileDialog::getOpenFileName(this, tr("Load recording"), m_wid->settings()->getString("QtDMM/LastUsesPath"),
+                                      tr("Recordings (*.%1 *.csv *.txt);;All files (*)").arg(RecordingFile::kSuffix));
+}
+
+bool MainWindow::loadRecordingInto(GraphView *view, const QString &path)
+{
+  m_wid->settings()->setString("QtDMM/LastUsesPath", QDir().absoluteFilePath(path));
+  QString error;
+  if (view->loadFile(path, &error))
+    return true;
+  QMessageBox::warning(this, tr("Load recording"), error);
+  return false;
+}
+
+void MainWindow::importRecording()
+{
+  if (const QString path = askRecordingPath(); !path.isEmpty())
+    importRecording(path);
+}
+
+bool MainWindow::importRecording(const QString &path)
+{
+  // the graph used last, else the first one; it is the one used now, so
+  // Record and Live follow its file
+  GraphView *view = pictureGraph() ? pictureGraph() : graphViewOf(m_graphWin);
+  if (!loadRecordingInto(view, path))
+    return false;
+  for (QMdiSubWindow *win : graphWindows())
+    if (graphViewOf(win) == view)
+      showGraphWindow(win);
+  setPictureGraph(view);
+  return true;
+}
+
+void MainWindow::setPictureGraph(GraphView *view)
+{
+  if (m_pictureGraph == view)
+    return;
+  m_pictureGraph = view;
+  updateRecorderActions();
+}
+
+void MainWindow::newGraph(const ValueRef &value)
+{
+  const MeterController *ctl = m_session->controllers().value(0);
+  // from the button its values are asked; next to another graph it shows that one's first value
+  newView(Added::Graph, !value.source.isEmpty() ? value : ctl ? ValueRef(0, ctl->source()) : ValueRef(),
+          value.source.isEmpty());
+}
+
+// The Graph page of the settings on a graph: variant, colours, line,
+// points and width.
+void MainWindow::applyGraphLook(GraphView *view)
+{
+  const GraphPrefs *prefs = m_wid->settingsDialog()->graphPage();
+  GraphLook::Settings settings;
+  settings.background = prefs->bgColor();
+  settings.grid = prefs->gridColor();
+  settings.data = prefs->dataColor();
+  settings.lineMode = prefs->lineMode();
+  settings.pointMode = prefs->pointMode();
+  settings.lineWidth = prefs->lineWidth();
+  settings.cursor = prefs->cursorColor();
+  settings.trigger = prefs->startColor();
+  settings.crosshair = prefs->crosshair();
+  settings.statsLeft = prefs->statsLeft();
+  view->graph()->setLookSettings(settings);
+  view->setDefaultVariant(prefs->variant());
+}
+
+bool MainWindow::editGraphSources(GraphView *view)
+{
+  // the open meters with their values
+  QList<SourcesDlg::Meter> meters;
+  for (const MeterController *ctl : m_session->controllers())
+  {
+    SourcesDlg::Meter meter;
+    meter.source = ctl->source();
+    meter.name = ctl->deviceName();
+    for (int id = 0; id < ctl->valueCount(); ++id)
+      meter.values << otherValueRow(ctl, id).name;
+    meters << meter;
+  }
+  SourcesDlg dlg(view->graph()->windowTitle(), true, meters, this);
+  dlg.setChosen(view->model()->values());
+  if (dlg.exec() != QDialog::Accepted)
+    return false;
+  view->model()->setValues(dlg.chosen());
+  return true;
+}
+
+// "Axis" in the menu of a graph: for each value Automatic or one of the
+// axes the graph has. The entries are words of the context "GraphWidget"
+// (graphwords.h)
+void MainWindow::fillGraphReferenceMenu(QMenu *menu, GraphView *view, const QPoint &globalPos)
+{
+  using namespace GraphReference;
+  auto word = [](const char *text) { return QCoreApplication::translate("GraphWidget", text); };
+  GraphModel *model = view->model();
+  const GraphWidget *graph = view->graph();
+  const Line now = model->reference();
+  auto entry = [&](const QString &text, const Line &line)
+  {
+    QAction *a = menu->addAction(text);
+    a->setCheckable(true);
+    a->setChecked(now == line);
+    connect(a, &QAction::triggered, model, [model, line] { model->setReference(line); });
+    return a;
+  };
+  entry(word("At &0"), line(Zero));
+  entry(word("&Mean of the window"), line(Mean));
+  entry(word("M&inimum of the window"), line(Min));
+  entry(word("Ma&ximum of the window"), line(Max));
+  if (!graph->alarmThresholds().isEmpty())
+    menu->addSeparator();
+  for (double a : graph->alarmThresholds())
+    entry(word("Alarm threshold %1").arg(graph->levelText(a)), line(GraphReference::Alarm, a));
+  if (now.kind == Value)
+  {
+    menu->addSeparator();
+    entry(word("At %1 (dragged)").arg(graph->levelText(now.value)), now)->setEnabled(false);
+  }
+  menu->addSeparator();
+  entry(word("&Off"), line(Off));
+  // further lines at fixed values: where the menu was opened, else in the middle
+  menu->addSeparator();
+  const QList<double> lines = model->referenceLines();
+  const double at = graph->roundedValueAt(globalPos);
+  QAction *add = menu->addAction(word("&Add a line at %1").arg(graph->levelText(at)));
+  add->setEnabled(lines.size() < kMaxLines && graph->leftValue().id >= 0);
+  connect(add, &QAction::triggered, model, [model, lines, at] { model->setReferenceLines(lines + QList<double>{ at }); });
+  for (int i = 0; i < lines.size(); ++i)
+    connect(menu->addAction(word("Remove the line at %1").arg(graph->levelText(lines.at(i)))), &QAction::triggered, model, [model, lines, i]
+    {
+      QList<double> rest = lines;
+      rest.removeAt(i);
+      model->setReferenceLines(rest);
+    });
+  menu->addSeparator();
+  QAction *crossings = menu->addAction(tr("&Crossings"));
+  crossings->setCheckable(true);
+  crossings->setChecked(model->crossingsVisible());
+  connect(crossings, &QAction::toggled, model, &GraphModel::setCrossingsVisible);
+}
+
+void MainWindow::fillGraphAxisMenu(QMenu *menu, GraphView *view)
+{
+  const QList<ValueRef> values = view->model()->values();
+  const QString places[] = { tr("&Left axis"), tr("&Right axis"), tr("&Third axis") };
+  for (const ValueRef &value : values)
+  {
+    const MeterController *ctl = m_session->controller(value);
+    if (!ctl)
+      continue;
+    QString name = otherValueRow(ctl, value.id).name;
+    if (m_session->controllers().size() > 1)
+      name = ctl->deviceName() + " · " + name;
+    QMenu *sub = values.size() > 1 ? menu->addMenu(name.replace('&', "&&")) : menu;
+    auto *group = new QActionGroup(sub);
+    auto entry = [&](const QString &text, int axis)
+    {
+      QAction *a = sub->addAction(text);
+      a->setCheckable(true);
+      a->setChecked(view->model()->valueAxis(value) == axis);
+      group->addAction(a);
+      connect(a, &QAction::triggered, view, [view, value, axis] { view->model()->setValueAxis(value, axis); });
+    };
+    entry(tr("&Automatic"), GraphModel::kAxisAuto);
+    for (int axis = 0; axis < GraphWidget::kMaxAxes; ++axis)
+      entry(axis < 3 ? places[axis] : tr("Axis %1").arg(axis + 1), axis);
+  }
+  // the range of each axis drawn: fitted to the values, or fixed by unit
+  // (words of the context GraphWidget)
+  auto word = [](const char *text) { return QCoreApplication::translate("GraphWidget", text); };
+  const QStringList units = view->graph()->axisUnits();
+  if (!units.isEmpty())
+    menu->addSeparator();
+  for (const QString &unit : units)
+  {
+    QMenu *sub = menu->addMenu(tr("Range [%1]").arg(GraphWidget::unitText(unit)).replace('&', "&&"));
+    const QMap<QString, GraphModel::Range> ranges = view->model()->fixedRanges();
+    const bool fixed = ranges.contains(unit);
+    auto *group = new QActionGroup(sub);
+    QAction *automatic = sub->addAction(word("&Automatic"));
+    QAction *range = sub->addAction(fixed ? word("&Fixed: %1 .. %2 %3...")
+                                              .arg(QLocale().toString(ranges.value(unit).first),
+                                                   QLocale().toString(ranges.value(unit).second),
+                                                   unit == GraphWidget::kNoUnit ? QString() : SiPrefix::displayText(unit))
+                                          : word("&Fixed range..."));
+    for (QAction *a : { automatic, range })
+    {
+      a->setCheckable(true);
+      group->addAction(a);
+    }
+    (fixed ? range : automatic)->setChecked(true);
+    connect(automatic, &QAction::triggered, view, [view, unit] { view->model()->clearFixedRange(unit); });
+    connect(range, &QAction::triggered, view, [view, unit, fixed, ranges]
+    {
+      double min = ranges.value(unit).first, max = ranges.value(unit).second;
+      if (view->graph()->askFixedRange(unit, min, max, fixed))
+        view->model()->setFixedRange(unit, min, max);
+    });
+  }
+}
+
+QList<QMdiSubWindow *> MainWindow::xyWindows() const
+{
+  QList<QMdiSubWindow *> wins { m_xyWin };
+  for (QMdiSubWindow *win : m_added)
+    if (xyViewOf(win))
+      wins << win;
+  return wins;
+}
+
 bool MainWindow::isColumn(const QMdiSubWindow *win) const
 {
-  return win == m_readingsWin || poincareViewOf(win);
+  return win == m_readingsWin || poincareViewOf(win) || xyViewOf(win) || histogramViewOf(win) || heatmapViewOf(win);
 }
 
 bool MainWindow::isInstrument(const QMdiSubWindow *win) const
@@ -698,9 +1407,10 @@ void MainWindow::applyLcdLook(FrontPanel *panel)
   lcd->setLcdVariant(static_cast<LcdWidget::LcdVariant>(variant));
   if (ctl)
   {
-    const DmmDecoder::DMMInfo &info = ctl->dmm()->dmmInfo();
-    // the controller's count: the Simulated meter's values are not the model's
-    lcd->setDisplayMode(info.display, gui->showMinMax(), gui->showBar(), ctl->valueCount());
+    const DmmDecoder::DMMInfo &info = ctl->sourceInfo();
+    // the controller's count: a node's values are not a model's; a sum or a
+    // formula has no range for a bar
+    lcd->setDisplayMode(info.display, gui->showMinMax(), gui->showBar() && !ctl->isNode(), ctl->valueCount());
     lcd->setLook(LcdWidget::lookOf(DeviceType::of(info)));
   }
 }
@@ -732,7 +1442,7 @@ void MainWindow::openPending()
     const QScopedValueRollback<QStringList> opening(m_openingPending, ids);
     for (const QString &id : ids)
       if (!m_session->controller("device:" + id))
-        openBeside(id);
+        openBeside(id, true);   // one not plugged in yet: its panel waits for it
   }
   updateEmptyStart();
   // a layout naming panels takes once they are there
@@ -777,11 +1487,7 @@ void MainWindow::createSidebar()
   action_ConfigureDMM->setEnabled(false);
   connect(m_sidebar, &QTreeWidget::itemSelectionChanged, this, [this]
           { action_ConfigureDMM->setEnabled(!m_sidebar->chosenDevice().isEmpty()); });
-  connect(m_wid->graph(), &GraphWidget::notice, this, [this](const QString &text)
-  {
-    statusBar()->showMessage(text, 5000);
-  });
-  connect(m_sidebar, &DeviceSidebar::openBesideRequested, this, &MainWindow::openBeside);
+  connect(m_sidebar, &DeviceSidebar::openBesideRequested, this, [this](const QString &id) { openBeside(id); });
   connect(m_sidebar, &DeviceSidebar::closeRequested, this, [this](const QString &id)
   {
     if (keepRecordingOf(id, tr("Closing it discards its recording, which is not saved.")))
@@ -823,22 +1529,52 @@ void MainWindow::createSidebar()
     if (MeterController *ctl = openController(id))
       editLimits(ctl, false);
   });
+  connect(m_sidebar, &DeviceSidebar::nodeResetRequested, this, [this](const QString &id)
+  {
+    if (NodeRunner *runner = NodeRunner::of(m_session->controller("device:" + id)))
+      runner->reset();
+  });
+  connect(m_sidebar, &DeviceSidebar::captureRequested, this, [this, openController](const QString &id)
+  {
+    // from My devices: connected first, beside the others
+    if (!openController(id))
+      openBeside(id);
+    MeterController *ctl = openController(id);
+    if (!ctl || !ctl->dmm())   // a logic node has no frames
+      return;
+    QPointer<CaptureDlg> &dlg = m_captureDlgs[id];
+    if (!dlg)
+    {
+      const QString name = ctl->deviceName().isEmpty() ? ctl->sourceInfo().name : ctl->deviceName();
+      dlg = new CaptureDlg(ctl->dmm(), name, m_wid->settings(), this);
+    }
+    dlg->show();
+    dlg->raise();
+    dlg->activateWindow();
+  });
   // an alarm of a meter marks the graph while it shows a value of it
   connect(m_session, &DeviceSession::opened, this, [this](MeterController *ctl)
   {
     connect(ctl, &MeterController::markRequested, this, [this, ctl](const QColor &color, const QString &name, bool graph, bool)
     {
-      const QList<ValueRef> shown = m_wid->graph()->values();
-      if (graph && std::any_of(shown.cbegin(), shown.cend(), [this, ctl](const ValueRef &v)
-                               { return m_wid->graph()->resolved(v).source == ctl->source(); }))
-        m_wid->graph()->addMark(color, tr("%1: %2").arg(ctl->deviceName(), name));
+      if (!graph)
+        return;
+      if (RecordingStore *own = graphStoreFor(ctl))
+        own->addMark(color.rgba(), tr("%1: %2").arg(ctl->deviceName(), name));
+    });
+    // a SCPI client's note in the graph (the table: markRequested())
+    connect(ctl, &MeterController::noteRequested, this, [this, ctl](const QString &title, const QString &note)
+    {
+      if (RecordingStore *own = graphStoreFor(ctl))
+        own->addNote(-1, tr("%1: %2").arg(ctl->deviceName(), title), note);
     });
   });
   connect(m_session, &DeviceSession::opened, this, &MainWindow::updateOpenDevices);
   connect(m_session, &DeviceSession::closed, this, &MainWindow::updateOpenDevices);
-  connect(m_sidebar, &DeviceSidebar::addDeviceRequested, this, &MainWindow::addDevice);
+  connect(m_sidebar, &DeviceSidebar::addDeviceRequested, this, [this] { addDevice(); });
   connect(m_sidebar, &DeviceSidebar::serviceSettingsRequested, m_wid, &InstanceWidget::configScpiSLOT);
   connect(m_sidebar, &DeviceSidebar::workspaceRequested, this, &MainWindow::loadWorkspaceFile);
+  connect(m_sidebar, &DeviceSidebar::newBenchRequested, this, [this] { saveWorkspace(true); });
   connect(m_sidebar, &DeviceSidebar::removeWorkspaceRequested, this, [this](const QString &file)
   {
     recentWorkspaces().remove(file);
@@ -867,14 +1603,72 @@ void MainWindow::fillViewToolbar()
   m_addDeviceAction->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">Add device</span></p>"
                                      "<p>Step by step: how the meter is connected, which one it is, and whether it "
                                      "goes into this window or a new one. It is kept in My devices.</p></body></html>"));
-  connect(m_addDeviceAction, &QAction::triggered, this, &MainWindow::addDevice);
+  connect(m_addDeviceAction, &QAction::triggered, this, [this] { addDevice(); });
   toolBarDMM->insertAction(m_sidebarAction, m_addDeviceAction);
+
+  // the project, second: the arrow makes one, opens one, takes one of the
+  // last ones or closes the open one
+  m_projectAction = new QAction(QIcon::fromTheme("document-open", style()->standardIcon(QStyle::SP_DirOpenIcon)),
+                                tr("Project"), this);
+  m_projectAction->setObjectName("action_ProjectBasket");
+  m_projectAction->setToolTip(projectTip());
+  // [E 09.11.] with a project its window, without one a new project (whose
+  // window then shows); pressed while the window shows
+  m_projectAction->setCheckable(true);
+  m_benchActions << m_projectAction << m_basketAction << m_basket->newAction() << m_basket->openAction()
+                 << m_basket->importAction();
+  connect(m_basketAction, &QAction::toggled, this, &MainWindow::updateEmptyStart);
+  connect(m_projectAction, &QAction::triggered, this, [this]
+  {
+    if (m_basket->folder().isEmpty())
+      m_basket->newAction()->trigger();   // a new one shows its window (projectOpened)
+    else
+      m_basketAction->toggle();
+    m_projectAction->setChecked(m_basketAction->isChecked());
+  });
+  connect(m_basketAction, &QAction::toggled, m_projectAction, &QAction::setChecked);
+  m_projectAction->setChecked(m_basketAction->isChecked());
+  toolBarDMM->insertAction(m_sidebarAction, m_projectAction);
+  addViewMenu(m_projectAction, [this](QMenu *menu)
+  {
+    menu->addAction(m_basket->newAction());
+    menu->addAction(m_basket->openAction());
+    menu->addAction(m_benchIntoProject);
+    const QStringList dirs = recentProjects().list().mid(0, 10);
+    if (!dirs.isEmpty())
+      menu->addSeparator();
+    for (int i = 0; i < dirs.size(); ++i)
+    {
+      const QString &dir = dirs[i];
+      QString name = BasketWidget::projectName(dir).replace('&', "&&");
+      // 1 ... 9 as the letters, then none
+      QAction *a = menu->addAction(i < 9 ? QString("&%1 %2").arg(i + 1).arg(name) : name);
+      a->setToolTip(QDir::toNativeSeparators(dir));
+      a->setCheckable(true);
+      a->setChecked(dir == m_basket->folder());
+      a->setEnabled(QFileInfo(dir).isDir());
+      connect(a, &QAction::triggered, this, [this, dir]
+      {
+        m_basket->setFolder(dir);
+        m_basketAction->setChecked(true);
+      });
+    }
+    if (!m_basket->folder().isEmpty())
+    {
+      menu->addSeparator();
+      menu->addAction(m_basket->closeAction());
+    }
+    menu->setToolTipsVisible(true);
+  });
 
   toolBarDMM->insertSeparator(action_Connect);
   toolBarDMM->addSeparator();
   toolBarDMM->addAction(m_displayAction);
   toolBarDMM->addAction(m_meterAction);
   toolBarDMM->addAction(m_poincareAction);
+  toolBarDMM->addAction(m_xyAction);
+  toolBarDMM->addAction(m_histogramAction);
+  toolBarDMM->addAction(m_heatmapAction);
   toolBarDMM->addAction(action_Graph);
   toolBarDMM->addAction(m_readingsAction);
   connect(m_displayAction, &QAction::toggled, this, &MainWindow::storeDisplaySLOT);
@@ -901,11 +1695,41 @@ void MainWindow::fillViewToolbar()
     menu->addSeparator();
     connect(menu->addAction(tr("&New...")), &QAction::triggered, m_newPoincareAction, &QAction::trigger);
   });
+  addViewMenu(m_xyAction, [this](QMenu *menu)
+  {
+    for (QMdiSubWindow *win : xyWindows())
+      addViewEntry(menu, win, win->windowTitle());
+    menu->addSeparator();
+    connect(menu->addAction(tr("&New...")), &QAction::triggered, m_newXYAction, &QAction::trigger);
+  });
+  addViewMenu(m_histogramAction, [this](QMenu *menu)
+  {
+    for (QMdiSubWindow *win : histogramWindows())
+      addViewEntry(menu, win, viewName(win, histogramViewOf(win)->value()));
+    menu->addSeparator();
+    connect(menu->addAction(tr("&New...")), &QAction::triggered, m_newHistogramAction, &QAction::trigger);
+  });
+  addViewMenu(m_heatmapAction, [this](QMenu *menu)
+  {
+    for (QMdiSubWindow *win : heatmapWindows())
+      addViewEntry(menu, win, win->windowTitle());
+    if (!m_session->controllers().isEmpty())
+    {
+      menu->addSeparator();
+      connect(menu->addAction(tr("S&ources...")), &QAction::triggered, this,
+              [this] { editSources(ValueMenu::View::Heatmap, nullptr, nullptr, nullptr, nullptr, heatmapViewOf(m_heatmapWin)); });
+    }
+    menu->addSeparator();
+    connect(menu->addAction(tr("&New...")), &QAction::triggered, m_newHeatmapAction, &QAction::trigger);
+  });
   addViewMenu(action_Graph, [this](QMenu *menu)
   {
-    addViewEntry(menu, m_graphWin, m_graphWin->windowTitle());
+    for (QMdiSubWindow *win : graphWindows())
+      addViewEntry(menu, win, win->windowTitle());
     if (m_graphSources->isVisible())
       menu->addAction(m_graphSources);
+    menu->addSeparator();
+    connect(menu->addAction(tr("&New...")), &QAction::triggered, m_newGraphAction, &QAction::trigger);
   });
   // no value yet: the click is the way to choose one; the others of the
   // kind follow the button
@@ -929,6 +1753,7 @@ void MainWindow::fillViewToolbar()
       m_arranger->arrange();
     });
   };
+  kindClicked(action_Graph, [this] { return graphWindows(); }, [] { return true; });
   kindClicked(m_meterAction, [this] { return meterWindows(); }, [this]
   {
     const bool none = meterWindows().size() == 1 && meterViewOf(m_meterWin)->value().source.isEmpty();
@@ -939,6 +1764,25 @@ void MainWindow::fillViewToolbar()
     const bool none = poincareWindows().size() == 1 && poincareViewOf(m_poincareWin)->value().source.isEmpty();
     return !none || m_session->controllers().isEmpty()
            || editSources(ValueMenu::View::Poincare, nullptr, poincareViewOf(m_poincareWin));
+  });
+  kindClicked(m_xyAction, [this] { return xyWindows(); }, [this]
+  {
+    const XYView *view = m_xyViews.value(m_xyPlot);
+    const bool none = view->xValue().source.isEmpty() || view->yValue().source.isEmpty();
+    return !none || m_session->controllers().isEmpty() || editXYSources(m_xyViews.value(m_xyPlot));
+  });
+  kindClicked(m_histogramAction, [this] { return histogramWindows(); }, [this]
+  {
+    const bool none = histogramViewOf(m_histogramWin)->value().source.isEmpty();
+    return !none || m_session->controllers().isEmpty()
+           || editSources(ValueMenu::View::Histogram, nullptr, nullptr, nullptr, histogramViewOf(m_histogramWin));
+  });
+  kindClicked(m_heatmapAction, [this] { return heatmapWindows(); }, [this]
+  {
+    const HeatmapView *view = heatmapViewOf(m_heatmapWin);
+    const bool none = view->value(0).source.isEmpty() || view->value(1).source.isEmpty() || view->value(2).source.isEmpty();
+    return !none || m_session->controllers().isEmpty()
+           || editSources(ValueMenu::View::Heatmap, nullptr, nullptr, nullptr, nullptr, heatmapViewOf(m_heatmapWin));
   });
 }
 
@@ -965,7 +1809,7 @@ void MainWindow::addViewEntry(QMenu *menu, QMdiSubWindow *win, const QString &na
   connect(entry, &QAction::toggled, this, [this, win](bool on)
   {
     // the windows with an action of their own through it, it follows them
-    for (QAction *a : { m_meterAction, m_poincareAction, action_Graph })
+    for (QAction *a : { m_meterAction, m_poincareAction, m_xyAction, m_histogramAction, m_heatmapAction, action_Graph })
       if (a->property("window").value<QObject *>() == win)
       {
         a->setChecked(on);
@@ -1062,9 +1906,17 @@ QList<QAction *> MainWindow::createArrangeMenu()
                           "the windows: the devices connected (a copy of their entries in My devices), which "
                           "windows are shown with which values, the arrangement, "
                           "title bars, toolbar, design and the size of the main window.</p></body></html>"));
-  connect(saveWs, &QAction::triggered, this, &MainWindow::saveWorkspace);
+  connect(saveWs, &QAction::triggered, this, [this] { saveWorkspace(); });
+  m_benchIntoProject = m_arrangeMenu->addAction(tr("Put the bench into a &new project..."));
+  m_benchIntoProject->setObjectName("action_BenchIntoProject");
+  m_benchIntoProject->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">Put the bench into a "
+                                      "new project</span></p><p>Makes a new project, opens it and saves the bench "
+                                      "into its folder: the way from a single bench to a project of several."
+                                      "</p></body></html>"));
+  connect(m_benchIntoProject, &QAction::triggered, this, &MainWindow::benchIntoNewProject);
   // the same at the sidebar's Recent benches
-  m_sidebar->setWorkspaceActions({ loadWs, saveWs });
+  m_sidebar->setWorkspaceActions({ loadWs, saveWs, m_benchIntoProject });
+  m_benchActions << loadWs << saveWs << m_benchIntoProject << m_recentMenu->menuAction();
   m_autoSaveLayout = m_arrangeMenu->addAction(tr("Save layout on e&xit"));
   m_autoSaveLayout->setCheckable(true);
   m_autoSaveLayout->setChecked(true);
@@ -1137,8 +1989,8 @@ void MainWindow::createStatusBar()
   });
   connect(m_wid, &InstanceWidget::info, this, [this](const QString &text)
   {
-    // without a device the graph's Live time says nothing
-    if (m_session->controllers().isEmpty() && m_wid->graph()->store()->state() == RecordingStore::Live)
+    // without a device Live says nothing
+    if (m_session->controllers().isEmpty() && m_wid->recordingState() == RecordingStore::Live)
       return;
     m_info->setText(text.section('\n', 0, 0));
     m_info->setToolTip(text.section('\n', 1));
@@ -1146,8 +1998,6 @@ void MainWindow::createStatusBar()
   connect(m_wid, &InstanceWidget::useTextLabel, this, &MainWindow::setUseTextLabel);
   connect(m_wid, &InstanceWidget::iconSet, this, [](const QString &set)
           { Designs::setIconSet(Designs::iconSetFromName(set)); });
-  // the graph's menu: Connect and Disconnect, as the toolbar
-  connect(m_wid->graph(), &GraphWidget::connectDMM, this, &MainWindow::connectBench);
   connect(m_wid, &InstanceWidget::showDisplay, this, &MainWindow::showDisplaySLOT);
 }
 
@@ -1169,10 +2019,10 @@ void MainWindow::placeWindow()
     move(winRect.x(), winRect.y());
   // the views shown at the start count as grown for; the table column gets
   // the width the window has for it
-  for (QMdiSubWindow *w : { m_meterWin, m_graphWin, m_readingsWin, m_poincareWin })
+  for (QMdiSubWindow *w : { m_meterWin, m_graphWin, m_readingsWin, m_poincareWin, m_histogramWin, m_heatmapWin })
     if (!w->isHidden())
       m_grown.insert(w);
-  if (m_grown.contains(m_readingsWin) || m_grown.contains(m_poincareWin))
+  if (m_grown.contains(m_readingsWin) || m_grown.contains(m_poincareWin) || m_grown.contains(m_histogramWin) || m_grown.contains(m_heatmapWin))
     m_arranger->setTableWidth(growthFor(m_readingsWin).width());
   if (stored && m_wid->settingsDialog()->generalPage()->saveWindowSize())
   {
@@ -1184,7 +2034,7 @@ void MainWindow::placeWindow()
     // from the content: an instrument, plus what each shown view adds; the
     // front panels grow it when their meters connect
     QSize start(28 * em(), 22 * em());
-    for (QMdiSubWindow *w : { m_graphWin, m_readingsWin, m_poincareWin })
+    for (QMdiSubWindow *w : { m_graphWin, m_readingsWin, m_poincareWin, m_histogramWin, m_heatmapWin })
       if (m_grown.contains(w))
         start += growthFor(w);
     // at least 800×600 at the first start, the views fill it; they grow
@@ -1201,11 +2051,25 @@ void MainWindow::placeWindow()
 
 void MainWindow::updateEmptyStart()
 {
-  const bool empty = m_session->controllers().isEmpty() && m_pendingOpen.isEmpty() && !m_wid->graph()->showsFile();
-  m_emptyConnect->setVisible(!m_wid->devices()->list().isEmpty());
+  const QList<QMdiSubWindow *> graphWins = graphWindows();
+  const bool showsFile = std::any_of(graphWins.cbegin(), graphWins.cend(), [this](QMdiSubWindow *w) { return graphViewOf(w)->showsFile(); });
+  const bool empty = m_session->controllers().isEmpty() && m_pendingOpen.isEmpty() && !showsFile;
+  const bool noDevices = m_wid->devices()->list().isEmpty();
+  m_emptyConnect->setVisible(!noDevices);
   // nothing to see behind the start page; checked stays what comes back
-  for (QAction *a : { m_displayAction, m_meterAction, m_poincareAction, action_Graph, m_readingsAction })
+  for (QAction *a : { m_displayAction, m_meterAction, m_poincareAction, m_xyAction, m_histogramAction, m_heatmapAction, action_Graph, m_readingsAction })
     a->setEnabled(!empty);
+  // [E 09.11.] a project or a bench makes no sense without a device
+  if (m_benchActions.constFirst()->isEnabled() == noDevices)
+  {
+    for (QAction *a : m_benchActions)
+      a->setEnabled(!noDevices);
+    updateProjectSidebar();
+    updateRecentWorkspaces();
+  }
+  m_projectAction->setToolTip(noDevices ? tr("Project and bench: add a device first") : projectTip());
+  // the project's window stays at hand beside the start page
+  m_basketBeside = empty && !noDevices && !m_basketWin->isHidden();
   if (empty)
   {
     // the last device closed: its messages go with it
@@ -1215,28 +2079,64 @@ void MainWindow::updateEmptyStart()
         l->clear();
         l->setToolTip(QString());
       }
-    m_emptyStart->setGeometry(m_mdi->rect());
     m_emptyStart->raise();
   }
   m_emptyStart->setVisible(empty);
+  placeEmptyStart();
 }
 
-void MainWindow::addDevice()
+QString MainWindow::projectTip() const
+{
+  return tr("Show or hide the project's window; without a project: a new one. The arrow: new, open, the last ones");
+}
+
+void MainWindow::placeEmptyStart()
+{
+  const bool beside = m_basketBeside && !m_emptyStart->isHidden();
+  // the others stay where they are, under the start page
+  m_arranger->setHeld(beside);
+  QRect r = m_mdi->rect();
+  if (beside)
+  {
+    // the project's window over a column at the right, like the readings table
+    const QWidget *vp = m_mdi->viewport();
+    const int column = qMin(vp->width() / 2, qMax(320, m_basketWin->minimumSizeHint().width()));
+    m_basketWin->setGeometry(vp->width() - column, 0, column, vp->height());
+    m_basketWin->raise();
+    r.setWidth(vp->x() + vp->width() - column);
+  }
+  m_emptyStart->setGeometry(r);
+}
+
+void MainWindow::addDevice(int start, const ValueRef &input)
 {
   AddDeviceDlg dlg(m_wid->devices(), this);
   dlg.setPorts(Transport::availablePorts() + m_wid->settings()->customPorts());
   dlg.setSigrokExe(m_wid->settings()->getString("Port settings/sigrok_exe", "sigrok-cli"));
-  dlg.setCalcInputs(m_session->calcInputs());
   dlg.setPlacesInUse(placesInUse());
+  // a calculated value's settings, filled in for a new one
+  dlg.setNodeEditors([this, input](AddDeviceDlg::Connection kind)
+  {
+    if (kind == AddDeviceDlg::Simulated)
+      return makeNodeEditor(GeneratorNode::kType, QString(), nullptr, tr("Simulated"));
+    if (kind == AddDeviceDlg::Integral)
+      return makeNodeEditor(IntegralNode::kType, QString(), nullptr, QString(), input);
+    return makeNodeEditor(FormulaNode::kType, QString(), nullptr, tr("Calculated"));
+  });
+  // straight to a calculated value's settings ("Integrate..." of a value)
+  if (start >= 0)
+    dlg.chooseConnection(static_cast<AddDeviceDlg::Connection>(start));
   if (dlg.exec() != QDialog::Accepted)
     return;
+  const bool node = AddDeviceDlg::isNode(dlg.connection());
   QVariantMap keys = dlg.keys();
-  keys.insert("Port settings/device", SerialDevice::stableDevice(keys.value("Port settings/device").toString()));
+  if (!node)
+    keys.insert("Port settings/device", SerialDevice::stableDevice(keys.value("Port settings/device").toString()));
   const int before = int(m_wid->devices()->list().size());
   // a find that is one of My devices changes that entry: no second one
   QString id = dlg.knownDevice();
   if (id.isEmpty())
-    id = m_wid->devices()->add(dlg.name(), keys);
+    id = m_wid->devices()->add(node ? m_wid->devices()->uniqueName(dlg.name()) : dlg.name(), keys);
   else
   {
     m_wid->devices()->update(id, keys);
@@ -1251,6 +2151,150 @@ void MainWindow::addDevice()
     showSidebar(true);
     m_wid->settings()->setBool("Windows/sidebar", true);
   }
+}
+
+QList<FormulaNodeDlg::Choice> MainWindow::formulaChoices(const QString &id) const
+{
+  QList<FormulaNodeDlg::Choice> out;
+  for (const MyDevice &device : m_wid->devices()->list())
+  {
+    if (device.id == id)
+      continue;
+    FormulaNodeDlg::Choice c;
+    c.source = "device:" + device.id;
+    c.name = device.name;
+    const MeterController *ctl = m_session->controller(c.source);
+    c.connected = ctl != nullptr;
+    // not connected: its values by number, units unknown; a calculated
+    // one: its outputs as set. DMM/number-of-values is the frames per
+    // reading, not the values: the model's count (MeterSetup)
+    std::unique_ptr<LogicNode> node = nodeOf(device.keys);
+    // a node by its kind, as on the tiles of Add device
+    if (node)
+      c.icon = node->type() == QLatin1String(IntegralNode::kType)    ? QStringLiteral("qtdmm-integration")
+               : node->type() == QLatin1String(GeneratorNode::kType) ? QStringLiteral("qtdmm-simulated")
+                                                                     : QStringLiteral("qtdmm-calculated");
+    const QList<LogicNode::Output> outputs = node ? node->outputs() : QList<LogicNode::Output>();
+    const int count = ctl ? ctl->valueCount() : node ? int(outputs.size())
+                                                     : qBound(1, MeterSetup::fromKeys(device.keys).valueCount, kMaxValues);
+    for (int i = 0; i < count && i < kMaxValues; ++i)
+    {
+      QString value = ctl ? ctl->valueName(i) : QString();
+      if (value.isEmpty() && node)
+        value = outputs[i].name;
+      c.values << (value.isEmpty() ? tr("value %1").arg(i + 1) : value);
+      c.units << (ctl ? ctl->lastReading(i).baseUnit : node ? SiPrefix::split(outputs[i].unit).baseUnit : QString());
+    }
+    out << c;
+  }
+  return out;
+}
+
+std::unique_ptr<LogicNode> MainWindow::nodeOf(const QVariantMap &keys, QString *why) const
+{
+  if (keys.contains("Node/json"))
+    return LogicNode::fromJsonText(keys.value("Node/json").toString());
+  if (LegacyNodes::isLegacy(keys))
+    return LegacyNodes::fromKeys(keys, [this](const QString &v) { return m_session->sourceOfVariable(v); }, why);
+  return nullptr;
+}
+
+NodeEditor *MainWindow::makeNodeEditor(const QString &type, const QString &id, const LogicNode *stored,
+                                       const QString &name, const ValueRef &input)
+{
+  if (type == QLatin1String(IntegralNode::kType))
+  {
+    auto *editor = new IntegralNodeEditor;
+    editor->setSources(formulaChoices(id));
+    // one open: where it is now, and setting it to 0
+    if (!id.isEmpty())
+      if (MeterController *ctl = m_session->controller("device:" + id); NodeRunner::of(ctl))
+        editor->setState([this, id]() -> std::optional<Reading>
+                         {
+                           const MeterController *c = m_session->controller("device:" + id);
+                           return c && c->lastReading().msecs > 0 ? std::optional(c->lastReading()) : std::nullopt;
+                         },
+                         [this, id]
+                         {
+                           if (NodeRunner *runner = NodeRunner::of(m_session->controller("device:" + id)))
+                             runner->reset();
+                         });
+    const auto *integral = dynamic_cast<const IntegralNode *>(stored);
+    IntegralNode fresh;
+    if (!input.source.isEmpty())
+      fresh.setInputs({ input });
+    editor->load(name, integral ? *integral : fresh);
+    if (!id.isEmpty())
+      editor->setLoopCheck(loopCheck(id));
+    return editor;
+  }
+
+  if (type == QLatin1String(GeneratorNode::kType))
+  {
+    auto *editor = new GeneratorNodeEditor;
+    const auto *generator = dynamic_cast<const GeneratorNode *>(stored);
+    editor->load(name, generator ? *generator : GeneratorNode());
+    return editor;
+  }
+
+  auto *editor = new FormulaNodeEditor;
+  editor->setChoices(formulaChoices(id));
+  editor->setCurrent([this](const ValueRef &ref) -> std::optional<Reading>
+  {
+    const MeterController *ctl = m_session->controller(ref.source);
+    if (!ctl)
+      return std::nullopt;
+    const Reading r = ctl->lastReading(ref.id);
+    return r.msecs > 0 ? std::optional(r) : std::nullopt;
+  });
+  const auto *formula = dynamic_cast<const FormulaNode *>(stored);
+  editor->load(name, formula ? *formula : FormulaNode());
+  // the inputs of the calculated values of My devices, for loops
+  if (!id.isEmpty())
+    editor->setLoopCheck(loopCheck(id));
+  return editor;
+}
+
+std::function<bool(const QList<ValueRef> &)> MainWindow::loopCheck(const QString &id) const
+{
+  // the inputs of the calculated values of My devices
+  const QString source = "device:" + id;
+  return [this, source](const QList<ValueRef> &inputs)
+  {
+    return LogicNode::makesLoop(source, inputs, [this](const QString &s) -> QList<ValueRef>
+    {
+      const std::optional<MyDevice> d = m_wid->devices()->find(s.mid(int(qstrlen("device:"))));
+      const std::unique_ptr<LogicNode> n = d ? nodeOf(d->keys) : nullptr;
+      return n ? n->inputs() : QList<ValueRef>();
+    });
+  };
+}
+
+std::optional<QVariantMap> MainWindow::editNode(const QString &id, const QVariantMap &keys, QString *name)
+{
+  QString why;
+  std::unique_ptr<LogicNode> stored = nodeOf(keys, &why);
+  // a calculated value of before naming a device no longer there: set up anew
+  if (!stored && LegacyNodes::isLegacy(keys))
+    QMessageBox::warning(this, *name, tr("%1\nSet up its formula anew.").arg(why));
+  const QString type = stored ? stored->type() : QString::fromLatin1(FormulaNode::kType);
+  const QString title = type == QLatin1String(IntegralNode::kType) ? tr("Integral")
+                        : type == QLatin1String(GeneratorNode::kType) ? tr("Simulated values")
+                                                                       : tr("Calculated value");
+  NodeDlg dlg(makeNodeEditor(type, id, stored.get(), *name), title, this);
+  dlg.resize(type == QLatin1String(GeneratorNode::kType) ? QSize(760, 360) : QSize(640, 480));
+  if (dlg.exec() != QDialog::Accepted)
+    return std::nullopt;
+  *name = dlg.editor()->name();
+  return QVariantMap { { "DMM/model", dlg.editor()->model() }, { "Node/json", dlg.editor()->logicNode()->toJsonText() } };
+}
+
+void MainWindow::addNode(const QString &type, const ValueRef &input)
+{
+  addDevice(type == QLatin1String(GeneratorNode::kType) ? AddDeviceDlg::Simulated
+            : type == QLatin1String(IntegralNode::kType) ? AddDeviceDlg::Integral
+                                                          : AddDeviceDlg::Calculated,
+            input);
 }
 
 QMap<QString, const MeterController *> MainWindow::placeOwners() const
@@ -1278,12 +2322,30 @@ QMap<QString, QString> MainWindow::placesInUse() const
   return inUse;
 }
 
-// "QtDMM: UT61E, Victron", with the --config-id when one is given
+// "Ripple › Bench 1 – QtDMM": the project and the bench in use, either
+// alone when the other is not; without both the devices, "QtDMM: UT61E,
+// Victron". With the --config-id when one is given
 void MainWindow::updateWindowTitle()
 {
   QString title = APP_NAME;
   if (!m_configId.isEmpty())
     title += QString(" [%1]").arg(m_configId);
+  QStringList where;
+  const QString project = m_basket ? m_basket->folder() : QString();
+  if (!project.isEmpty())
+    where << BasketWidget::projectName(project);
+  // a bench without a name of its own by its file, as the sidebar has it;
+  // with a project only one of it (in its folder), until saved there [V 09.11.]
+  const bool benchInProject = project.isEmpty()
+                              || (!m_workspaceFile.isEmpty()
+                                  && BasketWidget::projectOf(m_workspaceFile, project) == project);
+  if ((!m_workspaceName.isEmpty() || !m_workspaceFile.isEmpty()) && benchInProject)
+    where << (m_workspaceName.isEmpty() ? QFileInfo(m_workspaceFile).completeBaseName() : m_workspaceName);
+  if (!where.isEmpty())
+  {
+    setWindowTitle(where.join(QStringLiteral(" \u203A ")) + QStringLiteral(" \u2013 ") + title);
+    return;
+  }
   QStringList names;
   for (const MeterController *ctl : m_session->controllers())
     names << ctl->deviceName();
@@ -1323,28 +2385,19 @@ void MainWindow::createActions()
     m_wid->liveSLOT();
     updateRecorderActions();   // pressed again when the question was cancelled
   });
-  // the graph's context menu starts and stops like the button; it records
-  // only the meters whose values it shows
-  connect(m_wid->graph(), &GraphWidget::recordRequested, this, [this](bool start)
-  {
-    if (!start)
-      action_Stop->trigger();
-    else if (action_Start->isEnabled())
-    {
-      QStringList sources;
-      for (const ValueRef &v : m_wid->graph()->values())
-        sources << m_wid->graph()->resolved(v).source;
-      m_session->setRecordingScope(sources);
-      action_Start->trigger();
-      if (!m_session->isRecording())
-        m_session->clearRecordingScope();   // cancelled
-    }
-  });
   connect(action_Stop, &QAction::triggered, m_wid, &InstanceWidget::stopSLOT);
   connect(action_Clear, &QAction::triggered, m_wid, &InstanceWidget::clearSLOT);
-  connect(action_Print, &QAction::triggered, m_wid, &InstanceWidget::printSLOT);
-  connect(action_Import, &QAction::triggered, m_wid, &InstanceWidget::importSLOT);
-  connect(action_Export, &QAction::triggered, m_wid, &InstanceWidget::exportSLOT);
+  connect(action_Print, &QAction::triggered, this, [this]
+  {
+    // the graph used last, else the first one
+    if (QPointer<GraphView> graphView = pictureGraph() ? pictureGraph() : graphViewOf(m_graphWin))
+      m_wid->printWith([graphView](QPrinter *printer, const QString &title, const QString &comment)
+      {
+        if (graphView)
+          graphView->graph()->print(printer, title, comment);
+      });
+  });
+  connect(action_Import, &QAction::triggered, this, qOverload<>(&MainWindow::importRecording));
   connect(action_Configure, &QAction::triggered, m_wid, &InstanceWidget::configSLOT);
   // Shift+F8: the settings of the device chosen in the sidebar, as its context menu there
   connect(action_ConfigureDMM, &QAction::triggered, this, [this]
@@ -1405,31 +2458,60 @@ void MainWindow::createExtraActions()
   m_zoomIn = new QAction(tr("Zoom &in"), this);
   m_zoomIn->setObjectName("action_ZoomIn");
   m_zoomIn->setShortcuts({QKeySequence::ZoomIn, QKeySequence("Ctrl+=")});
-  connect(m_zoomIn, &QAction::triggered, m_wid->graph(), &GraphWidget::zoomInSLOT);
+  connect(m_zoomIn, &QAction::triggered, this, [this]
+  {
+    if (const GraphView *view = currentGraph())
+      view->graph()->zoomBy(1.25);
+  });
   m_zoomOut = new QAction(tr("Zoom &out"), this);
   m_zoomOut->setObjectName("action_ZoomOut");
   m_zoomOut->setShortcut(QKeySequence::ZoomOut);
-  connect(m_zoomOut, &QAction::triggered, m_wid->graph(), &GraphWidget::zoomOutSLOT);
+  connect(m_zoomOut, &QAction::triggered, this, [this]
+  {
+    if (const GraphView *view = currentGraph())
+      view->graph()->zoomBy(1 / 1.25);
+  });
   m_zoomFit = new QAction(tr("Show &whole recording"), this);
   m_zoomFit->setObjectName("action_ZoomFit");
   m_zoomFit->setShortcut(QKeySequence("Ctrl+0"));
-  connect(m_zoomFit, &QAction::triggered, m_wid->graph(), &GraphWidget::zoomFitSLOT);
+  connect(m_zoomFit, &QAction::triggered, this, [this]
+  {
+    if (const GraphView *view = currentGraph())
+      view->graph()->zoomFit();
+  });
+  // a note in the graph at the newest reading, also while the graph has no focus
+  m_noteAction = new QAction(tr("&Note in the graph..."), this);
+  m_noteAction->setObjectName("action_Note");
+  m_noteAction->setShortcut(QKeySequence("Ctrl+Shift+N"));
+  m_noteAction->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">Note in the graph</span></p>"
+                                "<p>Sets a note at the newest reading: a flag with its title under the graph, "
+                                "its text on a click. In the graph's context menu also where you clicked; "
+                                "N in the graph does the same.</p></body></html>"));
+  connect(m_noteAction, &QAction::triggered, this, [this]
+  {
+    if (GraphView *view = currentGraph())
+      view->graph()->askNote();
+  });
   m_copyImage = new QAction(tr("Cop&y graph image"), this);
   m_copyImage->setObjectName("action_CopyImage");
   m_copyImage->setShortcut(QKeySequence("Ctrl+Shift+C"));
   m_copyImage->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">Copy graph image</span></p>"
                                "<p>Puts a picture of the graph on the clipboard, ready to paste into a "
                                "report or a chat.</p></body></html>"));
-  connect(m_copyImage, &QAction::triggered, m_wid->graph(), &GraphWidget::copyImageSLOT);
+  connect(m_copyImage, &QAction::triggered, this, [this]
+  {
+    if (GraphView *view = currentGraph())
+      view->graph()->copyImage();
+  });
 
   // Space (Record) toggles the recorder; Start and Stop have neither a
   // button nor a key of their own any more
   addActions({action_Configure, action_ConfigureDMM, action_Direct_help, action_Help, action_Quit,
-              m_displayAction, m_meterAction, m_readingsAction, m_poincareAction, m_titleBars,
-              m_fullScreen, m_toolbars, m_zoomIn, m_zoomOut, m_zoomFit, m_copyImage,
+              m_displayAction, m_meterAction, m_readingsAction, m_poincareAction, m_histogramAction, m_heatmapAction, m_basketAction, m_titleBars,
+              m_fullScreen, m_toolbars, m_zoomIn, m_zoomOut, m_zoomFit, m_copyImage, m_noteAction,
               // no buttons of their own: the keys stay, the graph's menu has them
               action_Connect, action_Reset, action_Record, action_Live, action_Clear,
-              action_Export, action_Import, action_Print});
+              m_graphExport, action_Import, action_Print});
 }
 
 // Every command that may have a key, in the groups of the page Keyboard;
@@ -1443,11 +2525,14 @@ void MainWindow::createShortcuts(const QList<QAction *> &workspace)
   for (QAction *a : { action_Connect, action_Reset, action_ConfigureDMM, m_addDeviceAction })
     m_shortcuts->add(a, meter);
   m_shortcuts->add(action_Record, recording, tr("Record / Stop"));
-  for (QAction *a : { action_Live, action_Clear, m_zoomIn, m_zoomOut, m_zoomFit, m_copyImage, action_Export,
-                      action_Import, action_Print })
+  for (QAction *a : { action_Live, action_Clear, m_zoomIn, m_zoomOut, m_zoomFit, m_copyImage, m_noteAction,
+                      m_graphExport, action_Import, action_Print })
     m_shortcuts->add(a, recording);
   for (QAction *a : { m_sidebarAction, m_displayAction, m_meterAction, m_newMeterAction, action_Graph,
-                      m_readingsAction, m_poincareAction, m_newPoincareAction, m_titleBars, m_toolbars, m_fullScreen })
+                      m_readingsAction, m_poincareAction, m_newPoincareAction, m_histogramAction, m_newHistogramAction,
+                      m_heatmapAction, m_newHeatmapAction,
+                      m_xyAction, m_newXYAction, m_newGraphAction, m_basketAction, m_titleBars, m_toolbars,
+                      m_fullScreen })
     m_shortcuts->add(a, windows);
   for (QAction *a : workspace)
     m_shortcuts->add(a, windows);
@@ -1527,7 +2612,6 @@ void MainWindow::runningSLOT(bool on)
   action_Start->setEnabled(!on);
   action_Stop->setEnabled(on);
   action_Print->setEnabled(!on);
-  action_Export->setEnabled(!on);
   action_Import->setEnabled(!on);
   updateRecorderActions();
 }
@@ -1543,8 +2627,7 @@ void MainWindow::connectSLOT(bool on)
 
 void MainWindow::updateRecorderActions()
 {
-  const MeterController *lead = m_session->lead();
-  const RecordingStore::State state = (lead ? lead->recorder() : m_wid->graph()->store())->state();
+  const auto state = RecordingStore::State(m_wid->recordingState());
   const bool recording = state == RecordingStore::Record;
   action_Record->setEnabled(recording ? action_Stop->isEnabled() : action_Start->isEnabled());
   action_Record->setIcon(QIcon(new RecordIconEngine(recording)));
@@ -1553,6 +2636,8 @@ void MainWindow::updateRecorderActions()
   action_Record->setToolTip(QString("%1 (%2)").arg(recording ? tr("Stop recording") : tr("Start recording"), key));
   action_Live->setEnabled(!recording);
   action_Live->setChecked(state == RecordingStore::Live);
+  if (m_labPlotLive)
+    m_labPlotLive->setEnabled(recording || (m_live && m_live->isRunning()));
 }
 
 void MainWindow::on_action_Help_triggered()
@@ -1613,8 +2698,11 @@ void MainWindow::on_action_Menu_triggered()
     m_menu->addAction(m_displayAction);
     m_menu->addAction(m_meterAction);
     m_menu->addAction(m_poincareAction);
+    m_menu->addAction(m_histogramAction);
+    m_menu->addAction(m_heatmapAction);
     m_menu->addAction(action_Graph);
     m_menu->addAction(m_readingsAction);
+    m_menu->addAction(m_basketAction);
     // Arrange has its button next to the menu's; here only while the toolbar is hidden
     m_arrangeEntry = new QAction(m_arrangeMenu->title(), m_menu);
     m_arrangeEntry->setMenu(m_arrangeMenu);
@@ -1734,8 +2822,8 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
       openBeside(id);
     return true;
   }
-  if (watched == m_mdi && event->type() == QEvent::Resize)
-    m_emptyStart->setGeometry(m_mdi->rect());
+  if (watched == m_mdi && event->type() == QEvent::Resize && !m_emptyStart->isHidden())
+    placeEmptyStart();
   // closing a window (its title bar button, Ctrl+F4) only hides it: a real
   // close would close the view inside as well, and it would not come back
   if (event->type() == QEvent::Close)
@@ -1755,7 +2843,8 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
   // minimizing the main window hides its children spontaneously; they are
   // not closed, so only explicit show/hide counts (isHidden() stays false)
   if ((event->type() == QEvent::Show || event->type() == QEvent::Hide) && !event->spontaneous())
-    for (QAction *a : { m_displayAction, m_meterAction, m_readingsAction, m_poincareAction, action_Graph })
+    for (QAction *a : { m_displayAction, m_meterAction, m_readingsAction, m_poincareAction, m_histogramAction, m_heatmapAction, action_Graph,
+                        m_basketAction })
       if (a && a->property("window").value<QObject *>() == watched)
       {
         const bool visible = !static_cast<QWidget *>(watched)->isHidden();
@@ -1778,6 +2867,8 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
   MeterView *meter = meterViewOf(win);
   const bool added = m_added.contains(win);
   PoincareView *plot = poincareViewOf(win);
+  HistogramView *histogram = histogramViewOf(win);
+  HeatmapView *heatmap = heatmapViewOf(win);
   QAction *hide = menu.addAction(added ? tr("&Close window") : tr("&Hide view"));
   FrontPanel *panel = panelOf(win);
   // a front panel goes with its device, also while the menu is open
@@ -1834,11 +2925,189 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
     addRulesMenu(&menu, panel->controller());
   }
   // the value it shows, of any open meter
-  if ((meter || plot) && !m_session->controllers().isEmpty())
-    connect(menu.addAction(tr("S&ources...")), &QAction::triggered, this, [this, meter, plot]
+  if ((meter || plot || histogram || heatmap) && !m_session->controllers().isEmpty())
+    connect(menu.addAction(tr("S&ources...")), &QAction::triggered, this, [this, meter, plot, histogram, heatmap]
     {
-      editSources(meter ? ValueMenu::View::Meter : ValueMenu::View::Poincare, meter, plot);
+      editSources(meter ? ValueMenu::View::Meter : heatmap ? ValueMenu::View::Heatmap
+                            : histogram ? ValueMenu::View::Histogram : ValueMenu::View::Poincare,
+                  meter, plot, nullptr, histogram, heatmap);
     });
+  auto addBasicPlotActions = [this, &menu](QWidget *widget, bool held, std::function<void(bool)> setHold,
+                                            std::function<void()> reset, const QString &fileName)
+  {
+    QAction *hold = menu.addAction(tr("&Hold picture"));
+    hold->setCheckable(true);
+    hold->setChecked(held);
+    connect(hold, &QAction::toggled, widget, [setHold](bool on) { setHold(on); });
+    connect(menu.addAction(tr("&Reset")), &QAction::triggered, widget, [reset] { reset(); });
+    connect(menu.addAction(tr("&Save image...")), &QAction::triggered, this, [this, widget, fileName]
+    {
+      const QString png = tr("PNG image (*.png)");
+      const ProjectFolder::Proposal where(fileName, ProjectFolder::Images);
+      QString path = QFileDialog::getSaveFileName(this, tr("Save image"), where.path(), png);
+      if (path.isEmpty()) return;
+      if (QFileInfo(path).suffix().isEmpty()) path += ".png";
+      if (!widget->grab().save(path))
+        QMessageBox::warning(this, tr("Save image"), tr("Could not save the image."));
+    });
+  };
+  GraphView *graphView = graphViewOf(win);
+  if (graphView)
+    setPictureGraph(graphView);   // the window's picture actions are for it now
+  // on a mark's flag: its note (words of the context GraphWidget)
+  const int graphMark = graphView ? graphView->graph()->markAtGlobal(globalPos) : -1;
+  if (graphMark >= 0)
+  {
+    GraphWidget *graph = graphView->graph();
+    auto word = [](const char *text) { return QCoreApplication::translate("GraphWidget", text); };
+    if (graph->markIsNote(graphMark) && graph->marksEditable())
+      connect(menu.addAction(word("&Edit note...")), &QAction::triggered, graph, [graph, graphMark] { graph->editMark(graphMark); });
+    if (graph->marksEditable())
+      connect(menu.addAction(word("&Remove mark")), &QAction::triggered, graph, [graph, graphMark] { graph->removeMark(graphMark); });
+  }
+  else if (graphView)
+  {
+    // the core menu (tmp/redesign/graph_kontextmenue.md): first what the
+    // click point means, then recording and picture, the switches and the
+    // looks in "Display", the pictures and files in "Output", the window last
+    GraphWidget *graph = graphView->graph();
+    GraphModel *model = graphView->model();
+    auto word = [](const char *text) { return QCoreApplication::translate("GraphWidget", text); };
+    // at the click point: a note, the time cursors (a click sets A, Shift+click B)
+    const qint64 at = graph->timeAt(globalPos);
+    if (graph->store() && graph->marksEditable() && at >= 0)
+    {
+      QAction *note = menu.addAction(word("Note here..."));
+      note->setShortcut(QKeySequence(Qt::Key_N));   // shown as a hint: N alone notes at the newest reading
+      connect(note, &QAction::triggered, graph, [graph, at] { graph->askNote(at); });
+    }
+    if (at >= 0)
+      for (int which : { 0, 1 })
+        connect(menu.addAction(which == 0 ? word("Cursor A here") : word("Cursor B here")), &QAction::triggered, graph,
+                [graph, which, at] { graph->setTimeCursor(which, at); });
+    // only when they do something
+    if (graph->zoomed())
+      connect(menu.addAction(tr("&Undo zoom")), &QAction::triggered, graph, [graph] { graph->endZoom(true); });
+    if (graph->timeCursor(0) >= 0 || graph->timeCursor(1) >= 0)
+      connect(menu.addAction(tr("Remove &time cursors")), &QAction::triggered, graph, &GraphWidget::clearTimeCursors);
+    menu.addSeparator();
+    // recording, as the button does: only the devices whose values it shows
+    if (graph->store() && graph->store()->isRunning())
+      connect(menu.addAction(word("Stop recording")), &QAction::triggered, action_Stop, &QAction::trigger);
+    else if (!graphView->showsFile() && action_Start->isEnabled())
+      connect(menu.addAction(word("Start recording")), &QAction::triggered, this, [this, graphView]
+      {
+        QStringList sources;
+        for (const ValueRef &v : graphView->model()->values())
+          sources << v.source;
+        m_session->setRecordingScope(sources);
+        action_Start->trigger();
+        if (!m_session->isRecording())
+          m_session->clearRecordingScope();   // cancelled
+      });
+    QAction *hold = menu.addAction(tr("&Hold picture"));
+    hold->setCheckable(true);
+    hold->setChecked(graph->hold());
+    connect(hold, &QAction::toggled, graph, [graph](bool on) { graph->setHold(on); });
+    // as Clear in the toolbar: the recording goes (asked first when not
+    // saved), a recording or a file viewed: Live again
+    connect(menu.addAction(tr("&Reset")), &QAction::triggered, action_Clear, &QAction::trigger);
+    menu.addSeparator();
+    {
+      // what it shows: the switches, then its looks (own texts: the letters
+      // of the GraphWidget words are taken in this menu)
+      QMenu *display = menu.addMenu(tr("Displa&y"));
+      auto toggle = [&](const QString &text, bool on, void (GraphModel::*set)(bool))
+      {
+        QAction *a = display->addAction(text);
+        a->setCheckable(true);
+        a->setChecked(on);
+        connect(a, &QAction::toggled, model, set);
+      };
+      toggle(tr("Overvie&w"), model->minimapVisible(), &GraphModel::setMinimapVisible);
+      toggle(tr("Min/max &band"), model->envelopeVisible(), &GraphModel::setEnvelopeVisible);
+      toggle(tr("&Meter states"), model->statesVisible(), &GraphModel::setStatesVisible);
+      toggle(tr("Stat&istics"), model->statsVisible(), &GraphModel::setStatsVisible);
+      display->addSeparator();
+      // this graph's own colours, or those of the settings
+      QMenu *variants = display->addMenu(tr("Colour &variant"));
+      auto *group = new QActionGroup(variants);
+      auto entry = [&](const QString &text, const QString &name)
+      {
+        QAction *a = variants->addAction(text);
+        a->setCheckable(true);
+        a->setChecked(model->variant() == name);
+        group->addAction(a);
+        connect(a, &QAction::triggered, graphView, [model, name] { model->setVariant(name); });
+      };
+      entry(tr("As in the &settings"), QString());
+      variants->addSeparator();
+      for (GraphLook::Variant v : GraphLook::variants())
+        entry(GraphLook::title(v), GraphLook::name(v));
+      toggle(tr("&Patterned lines"), model->patternedLines(), &GraphModel::setPatternedLines);
+      if (!graphView->showsFile() && !m_session->controllers().isEmpty() && !model->values().isEmpty())
+        fillGraphAxisMenu(display->addMenu(tr("A&xis")), graphView);
+      if (!graphView->showsFile())
+        fillGraphReferenceMenu(display->addMenu(tr("Re&ference line")), graphView, QCursor::pos());
+      // readings not drawn, the recording keeps them; the entries are the
+      // words of the context GraphWidget, the menu's letter its own
+      using namespace GraphOutliers;
+      QMenu *outliers = display->addMenu(tr("Outli&ers"));
+      const Rule rule = model->outliers();
+      const QString unit = SiPrefix::displayText(rule.unit);
+      auto mode = [&](const QString &text, Mode m)
+      {
+        QAction *a = outliers->addAction(text);
+        a->setCheckable(true);
+        a->setChecked(rule.mode == m);
+        connect(a, &QAction::triggered, graph, [graph, m] { graph->askOutliers(m); });
+      };
+      mode(word("&Show all"), Shown);
+      mode(rule.mode == Sigma ? word("&More than %1 σ from their neighbours...").arg(rule.a)
+                              : word("&More than n σ from their neighbours..."), Sigma);
+      mode(rule.mode == Jump ? word("&Spikes larger than %1 %2...").arg(rule.a).arg(unit) : word("&Spikes larger than..."), Jump);
+      mode(rule.mode == Limits ? word("Outside %1 .. %2 %3...").arg(rule.a).arg(rule.b).arg(unit) : word("Outside &limits..."), Limits);
+    }
+    {
+      // pictures and the recording; the window's actions without their letters
+      QMenu *output = menu.addMenu(tr("Out&put"));
+      connect(output->addAction(word("Copy image")), &QAction::triggered, graph, &GraphWidget::copyImage);
+      connect(output->addAction(word("Export image...")), &QAction::triggered, this, [this, graphView] { exportGraphImage(graphView); });
+      for (QAction *shared : { action_Print, m_graphExport, m_graphToBasket, m_labPlotLive })
+      {
+        QAction *a = output->addAction(shared->icon(), QString(shared->text()).remove('&'));
+        a->setEnabled(shared->isEnabled());
+        connect(a, &QAction::triggered, shared, &QAction::trigger);
+      }
+    }
+    menu.addSeparator();
+    if (!graphView->showsFile() && !m_session->controllers().isEmpty())
+      connect(menu.addAction(tr("S&ources...")), &QAction::triggered, this, [this, graphView] { editGraphSources(graphView); });
+    connect(menu.addAction(tr("&Load recording...")), &QAction::triggered, this, [this, graphView] { loadIntoGraph(graphView); });
+    if (graphView->showsFile())
+      connect(menu.addAction(tr("Back to the &device")), &QAction::triggered, graphView, &GraphView::closeFile);
+    // another one, first with the same value
+    const QList<ValueRef> values = model->values();
+    connect(menu.addAction(tr("&New graph")), &QAction::triggered, this, [this, values] { newGraph(values.value(0)); });
+    // the Graph page of the settings: colours, line, points, width
+    connect(menu.addAction(word("Configure...")), &QAction::triggered, m_wid, &InstanceWidget::configGraphSLOT);
+    // the window last
+    menu.removeAction(hide);
+    menu.addSeparator();
+    menu.addAction(hide);
+  }
+  if (XYView *xy = xyViewOf(win))
+  {
+    if (!m_session->controllers().isEmpty())
+      connect(menu.addAction(tr("S&ources...")), &QAction::triggered, this, [this, xy] { editXYSources(xy); });
+    connect(menu.addAction(m_newXYAction->text()), &QAction::triggered, this, [this, xy]
+    {
+      newView(Added::XY, xy->xValue());
+    });
+    menu.addSeparator();
+    addBasicPlotActions(xy->plot(), xy->plot()->hold(), [plot = xy->plot()](bool on) { plot->setHold(on); },
+                        [plot = xy->plot()] { plot->clear(); }, QStringLiteral("xy.png"));
+  }
   if (meter)
   {
     // this meter's own, the settings' until one is picked
@@ -1862,6 +3131,43 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
             [this, plot] { newView(Added::Poincare, plot->value()); });
     menu.addSeparator();
     plot->plot()->addMenuActions(&menu);
+  }
+  if (histogram)
+  {
+    connect(menu.addAction(m_newHistogramAction->text()), &QAction::triggered, this, [this, histogram]
+    {
+      newView(Added::Histogram, histogram->value());
+    });
+    menu.addSeparator();
+    addBasicPlotActions(histogram->plot(), histogram->plot()->hold(),
+                        [plot = histogram->plot()](bool on) { plot->setHold(on); },
+                        [plot = histogram->plot()] { plot->clear(); }, QStringLiteral("histogram.png"));
+  }
+  if (heatmap)
+  {
+    QMenu *colorScheme = menu.addMenu(tr("&Color scheme"));
+    auto *group = new QActionGroup(colorScheme);
+    group->setExclusive(true);
+    for (ColorMap::Scheme scheme : ColorMap::all())
+    {
+      QAction *action = colorScheme->addAction(ColorMap::name(scheme));
+      action->setCheckable(true);
+      action->setChecked(scheme == heatmap->plot()->colorScheme());
+      group->addAction(action);
+      connect(action, &QAction::triggered, this, [heatmap, scheme]
+      {
+        heatmap->plot()->setColorScheme(scheme);
+      });
+    }
+
+    connect(menu.addAction(m_newHeatmapAction->text()), &QAction::triggered, this, [this, heatmap]
+    {
+      newView(Added::Heatmap, heatmap->value(0));
+    });
+    menu.addSeparator();
+    addBasicPlotActions(heatmap->plot(), heatmap->plot()->hold(),
+                        [plot = heatmap->plot()](bool on) { plot->setHold(on); },
+                        [plot = heatmap->plot()] { plot->clear(); }, QStringLiteral("heatmap.png"));
   }
   if (menu.exec(globalPos) != hide || !window)
     return;
@@ -2004,12 +3310,23 @@ static QString readingText(const Reading &r)
     .trimmed();
 }
 
-bool MainWindow::editSources(ValueMenu::View view, MeterView *meter, PoincareView *plot)
+bool MainWindow::editSources(ValueMenu::View view, MeterView *meter, PoincareView *plot, GraphView *graph,
+                             HistogramView *histogram, HeatmapView *heatmap)
 {
+  if (view == ValueMenu::View::Graph)
+  {
+    if (!graph)
+      graph = currentGraph();
+    return editGraphSources(graph);
+  }
   if (!meter)
     meter = meterViewOf(m_meterWin);
   if (!plot)
     plot = poincareViewOf(m_poincareWin);
+  if (!histogram)
+    histogram = histogramViewOf(m_histogramWin);
+  if (!heatmap)
+    heatmap = heatmapViewOf(m_heatmapWin);
   // the open meters with their values
   QList<SourcesDlg::Meter> meters;
   QList<ValueRef> all;
@@ -2025,16 +3342,11 @@ bool MainWindow::editSources(ValueMenu::View view, MeterView *meter, PoincareVie
     }
     meters << meter;
   }
-  GraphWidget *graph = m_wid->graph();
-  const bool several = view == ValueMenu::View::Graph || view == ValueMenu::View::Table;
+  const bool several = view == ValueMenu::View::Table || view == ValueMenu::View::Heatmap;
   QList<ValueRef> chosen;
   QString name;
   switch (view)
   {
-    case ValueMenu::View::Graph:
-      name = tr("Graph");
-      chosen = graph->values();   // each with its meter's source, as the dialog lists them
-      break;
     case ValueMenu::View::Table:
       name = tr("Readings table");
       for (const ValueRef &v : std::as_const(all))
@@ -2045,24 +3357,41 @@ bool MainWindow::editSources(ValueMenu::View view, MeterView *meter, PoincareVie
       name = meter->meter()->windowTitle();
       chosen << meter->value();
       break;
+    case ValueMenu::View::Histogram:
+      name = histogram->plot()->windowTitle();
+      chosen << histogram->value();
+      break;
+    case ValueMenu::View::Heatmap:
+      name = heatmap->plot()->windowTitle();
+      chosen << heatmap->value(0) << heatmap->value(1) << heatmap->value(2);
+      break;
     default:
       name = plot->plot()->windowTitle();
       chosen << plot->value();
       break;
   }
-  SourcesDlg dlg(name, several, meters, this);
-  dlg.setChosen(chosen);
-  if (dlg.exec() != QDialog::Accepted)
-    return false;
-  const QList<ValueRef> picked = dlg.chosen();
+  QList<ValueRef> picked;
+  ValueRef pickedZ;
+  if (view == ValueMenu::View::Heatmap)
+  {
+    SourcesDlg dlg(name, meters, chosen.value(0), chosen.value(1), chosen.value(2), this);
+    if (dlg.exec() != QDialog::Accepted)
+      return false;
+    picked << dlg.xValue() << dlg.yValue();
+    pickedZ = dlg.zValue();
+  }
+  else
+  {
+    SourcesDlg dlg(name, several, meters, this);
+    dlg.setChosen(chosen);
+    if (dlg.exec() != QDialog::Accepted)
+      return false;
+    picked = dlg.chosen();
+  }
   if (!several && picked.isEmpty())
     return false;
   switch (view)
   {
-    case ValueMenu::View::Graph:
-      graph->setValues(picked);
-      action_Graph->setChecked(true);
-      break;
     case ValueMenu::View::Table:
     {
       // the meters of the values picked
@@ -2087,6 +3416,16 @@ bool MainWindow::editSources(ValueMenu::View view, MeterView *meter, PoincareVie
       if (meter == meterViewOf(m_meterWin))
         m_meterAction->setChecked(true);
       break;
+    case ValueMenu::View::Histogram:
+      histogram->setValue(picked.first());
+      if (histogram == histogramViewOf(m_histogramWin))
+        m_histogramAction->setChecked(true);
+      break;
+    case ValueMenu::View::Heatmap:
+      heatmap->setValues(picked[0], picked[1], pickedZ);
+      if (heatmap == heatmapViewOf(m_heatmapWin))
+        m_heatmapAction->setChecked(true);
+      break;
     default:
       plot->setValue(picked.first());
       if (plot == poincareViewOf(m_poincareWin))
@@ -2094,6 +3433,27 @@ bool MainWindow::editSources(ValueMenu::View view, MeterView *meter, PoincareVie
       break;
   }
   updateOpenDevices();
+  return true;
+}
+
+bool MainWindow::editXYSources(XYView *view)
+{
+  if (!view)
+    return false;
+  QList<SourcesDlg::Meter> meters;
+  for (const MeterController *ctl : m_session->controllers())
+  {
+    SourcesDlg::Meter meter;
+    meter.source = ctl->source();
+    meter.name = ctl->deviceName();
+    for (int id = 0; id < ctl->valueCount(); ++id)
+      meter.values << otherValueRow(ctl, id).name;
+    meters << meter;
+  }
+  SourcesDlg dlg(view->plot()->windowTitle(), meters, view->xValue(), view->yValue(), this);
+  if (dlg.exec() != QDialog::Accepted)
+    return false;
+  view->setValues(dlg.xValue(), dlg.yValue());
   return true;
 }
 
@@ -2109,8 +3469,22 @@ void MainWindow::dropValue(const ValueRef &value, const QPoint &pos)
     meter->setValue(value);
   else if (PoincareView *plot = poincareViewOf(win))
     plot->setValue(value);
-  else if (win == m_graphWin)
-    m_wid->graph()->setValueShown(value, true);
+  else if (HistogramView *histogram = histogramViewOf(win))
+    histogram->setValue(value);
+  else if (HeatmapView *heatmap = heatmapViewOf(win))
+    heatmap->setValues(value, heatmap->value(1), heatmap->value(2));
+  else if (GraphView *graphView = graphViewOf(win))
+  {
+    // one more curve; a graph showing a file has none of a device
+    if (graphView->showsFile())
+    {
+      statusBar()->showMessage(tr("A graph showing a loaded recording takes no values of a device: Back to the device in its menu"), 6000);
+      return;
+    }
+    QList<ValueRef> values = graphView->model()->values();
+    if (!values.contains(value))
+      graphView->model()->setValues(values << value);
+  }
   else if (win == m_readingsWin)
     setTableShown(value, true);
   else if (FrontPanel *panel = panelOf(win))
@@ -2135,16 +3509,31 @@ void MainWindow::dropValue(const ValueRef &value, const QPoint &pos)
     QMenu menu(this);
     QAction *meter = menu.addAction(m_newMeterAction->icon(), tr("New &needle meter"));
     QAction *plot = menu.addAction(m_newPoincareAction->icon(), tr("New &Poincaré plot"));
+    QAction *histogram = menu.addAction(m_newHistogramAction->icon(), tr("New &histogram"));
+    QAction *heatmap = menu.addAction(m_newHeatmapAction->icon(), tr("New &heatmap"));
     QAction *graph = menu.addAction(action_Graph->icon(), tr("In the &graph"));
+    QAction *newGraph = menu.addAction(action_Graph->icon(), tr("New g&raph"));
     QAction *chosen = menu.exec(m_mdi->viewport()->mapToGlobal(pos));
     if (chosen == meter)
       newView(Added::Meter, value);
     else if (chosen == plot)
       newView(Added::Poincare, value);
+    else if (chosen == histogram)
+      newView(Added::Histogram, value);
+    else if (chosen == heatmap)
+      newView(Added::Heatmap, value, true);
+    else if (chosen == newGraph)
+      newView(Added::Graph, value);
     else if (chosen == graph)
     {
-      m_wid->graph()->setValueShown(value, true);
-      action_Graph->setChecked(true);
+      // the first graph; one more curve
+      GraphView *first = graphViewOf(m_graphWin);
+      if (first->showsFile())
+        first->closeFile();
+      QList<ValueRef> values = first->model()->values();
+      if (!values.contains(value))
+        first->model()->setValues(values << value);
+      showGraphWindow(m_graphWin);
     }
   }
   updateOpenDevices();
@@ -2265,14 +3654,19 @@ DeviceSidebar::Value MainWindow::otherValueRow(const MeterController *ctl, int i
   }
   const ValueRef value(id, ctl->source());
   // a curve where one sees it
-  if (!m_graphWin->isHidden())
-    row.color = m_wid->graph()->drawnColor(value);
+  QStringList inGraphs;
+  for (QMdiSubWindow *win : graphWindows())
+    if (const QColor color = win->isHidden() ? QColor() : graphViewOf(win)->graph()->drawnColor(value); color.isValid())
+    {
+      if (!row.color.isValid())
+        row.color = color;   // the first graph's
+      inGraphs << win->windowTitle();
+    }
   // the views showing it, for the marks of its row
   if (QMdiSubWindow *win = m_panelWins.value(ctl->source()); win && !win->isHidden())
     if (const FrontPanel *panel = panelOf(win))
       row.onPanel = panel->value().id == id || panel->secondaries().contains(id);
-  if (row.color.isValid())
-    row.views << m_graphWin->windowTitle();
+  row.views << inGraphs;
   if (row.onPanel)
     row.views << m_panelWins.value(ctl->source())->windowTitle();
   for (QMdiSubWindow *win : meterWindows())
@@ -2287,6 +3681,16 @@ DeviceSidebar::Value MainWindow::otherValueRow(const MeterController *ctl, int i
       ++row.poincares;
       row.views << win->windowTitle();
     }
+  for (QMdiSubWindow *win : histogramWindows())
+    if (const HistogramView *histogram = histogramViewOf(win); histogram && !win->isHidden() && histogram->value() == value)
+    {
+      ++row.histograms;
+      row.views << win->windowTitle();
+    }
+  for (QMdiSubWindow *win : heatmapWindows())
+    if (const HeatmapView *heatmap = heatmapViewOf(win); heatmap && !win->isHidden()
+        && (heatmap->value(0) == value || heatmap->value(1) == value || heatmap->value(2) == value))
+      row.views << win->windowTitle();
   return row;
 }
 
@@ -2295,7 +3699,7 @@ void MainWindow::updateOpenDevices()
   // pressed while a device of the bench is connected (also by SCPI, its menu)
   bool any = false;
   for (const MeterController *ctl : m_session->controllers())
-    any = any || ctl->dmm()->isWanted();
+    any = any || ctl->isWanted();
   action_Connect->setChecked(any);
   action_Connect->setEnabled(!m_session->controllers().isEmpty());
   action_Reset->setEnabled(!m_session->controllers().isEmpty());
@@ -2308,10 +3712,10 @@ void MainWindow::updateOpenDevices()
     DeviceSidebar::OpenDevice row;
     row.id = ctl->deviceId();
     row.name = ctl->deviceName();
-    row.connected = ctl->dmm()->isWanted();
+    row.connected = ctl->isWanted();
     // the dot green while readings come in; why none come is on the front panel
     const Reading &r = ctl->lastReading();
-    row.active = row.connected && ctl->dmm()->shortState().isEmpty() && r.msecs > 0 && now - r.msecs < 3000;
+    row.active = row.connected && ctl->shortState().isEmpty() && r.msecs > 0 && now - r.msecs < 3000;
     // its values, with what the graph shows
     for (int value = 0; value < ctl->valueCount(); ++value)
       row.values << otherValueRow(ctl, value);
@@ -2329,13 +3733,21 @@ void MainWindow::pointToViews(const ValueRef &value)
   QList<QMdiSubWindow *> wins;
   if (row.onPanel)
     wins << m_panelWins.value(value.source);
-  if (row.color.isValid())
-    wins << m_graphWin;
+  for (QMdiSubWindow *win : graphWindows())
+    if (!win->isHidden() && graphViewOf(win)->graph()->drawnColor(value).isValid())
+      wins << win;
   for (QMdiSubWindow *win : meterWindows())
     if (const MeterView *meter = meterViewOf(win); meter && !win->isHidden() && meter->value() == value)
       wins << win;
   for (QMdiSubWindow *win : poincareWindows())
     if (const PoincareView *plot = poincareViewOf(win); plot && !win->isHidden() && plot->value() == value)
+      wins << win;
+  for (QMdiSubWindow *win : histogramWindows())
+    if (const HistogramView *histogram = histogramViewOf(win); histogram && !win->isHidden() && histogram->value() == value)
+      wins << win;
+  for (QMdiSubWindow *win : heatmapWindows())
+    if (const HeatmapView *heatmap = heatmapViewOf(win); heatmap && !win->isHidden()
+        && (heatmap->value(0) == value || heatmap->value(1) == value || heatmap->value(2) == value))
       wins << win;
   // a frame in the selection colour for a moment, above what the view draws
   for (QMdiSubWindow *win : std::as_const(wins))
@@ -2362,7 +3774,6 @@ void MainWindow::valueMenu(const ValueRef &value, const QPoint &globalPos)
 void MainWindow::fillValueMenu(QMenu *menu, const ValueRef &value)
 {
   ValueMenu::Target target;
-  target.wid = m_wid;
   target.panel = [this](const QString &source) { return panelOf(m_panelWins.value(source)); };
   target.tableShown = [this](const ValueRef &v) { return tableShows(v); };
   target.setTableShown = [this](const ValueRef &v, bool on) { setTableShown(v, on); };
@@ -2374,6 +3785,23 @@ void MainWindow::fillValueMenu(QMenu *menu, const ValueRef &value)
   };
   target.newMeter = [this](const ValueRef &v) { newMeter(v); };
   target.newPoincare = [this](const ValueRef &v) { newView(Added::Poincare, v); };
+  target.newHistogram = [this](const ValueRef &v) { newView(Added::Histogram, v); };
+  target.newHeatmap = [this](const ValueRef &v) { newView(Added::Heatmap, v); };
+  target.newGraph = [this](const ValueRef &v) { newView(Added::Graph, v); };
+  target.integrate = [this](const ValueRef &v) { addNode(IntegralNode::kType, v); };
+  target.graphs = [this]
+  {
+    QList<std::pair<QString, GraphModel *>> graphs;
+    for (const QMdiSubWindow *win : graphWindows())
+      graphs << std::make_pair(win->windowTitle(), graphViewOf(win)->model());
+    return graphs;
+  };
+  target.showGraph = [this](const GraphModel *model)
+  {
+    for (QMdiSubWindow *win : graphWindows())
+      if (graphViewOf(win)->model() == model)
+        showGraphWindow(win);
+  };
   target.show = [this](ValueMenu::View view, const QString &source)
   {
     QMdiSubWindow *panel = m_panelWins.value(source);
@@ -2386,7 +3814,8 @@ void MainWindow::fillValueMenu(QMenu *menu, const ValueRef &value)
     }
     QAction *action = view == ValueMenu::View::Lcd   ? m_displayAction
                     : view == ValueMenu::View::Table ? m_readingsAction
-                                                      : action_Graph;
+                    : view == ValueMenu::View::Histogram ? m_histogramAction
+                    : view == ValueMenu::View::Heatmap ? m_heatmapAction : action_Graph;
     action->setChecked(true);
   };
   ValueMenu::fill(menu, target, value);
@@ -2415,12 +3844,45 @@ void MainWindow::deviceSettings(const QString &id, bool settingsTab)
   const std::optional<MyDevice> device = m_wid->devices()->find(id);
   if (!device)
     return;
+  // a calculated or simulated value (also one of before): its node, no meter settings
+  if (device->isNode() || LegacyNodes::isLegacy(device->keys))
+  {
+    QString name = device->name;
+    const std::optional<QVariantMap> keys = editNode(id, device->keys, &name);
+    if (!keys)
+      return;
+    if (name != device->name)
+      m_wid->devices()->rename(id, m_wid->devices()->uniqueName(name));
+    if (*keys != device->keys)
+      applyEntryKeys(id, *keys);
+    return;
+  }
   DeviceSettingsDlg dlg(device->name, this);
   dlg.settings()->setPorts(Transport::availablePorts() + m_wid->settings()->customPorts());
   dlg.settings()->setSigrokExe(m_wid->settings()->getString("Port settings/sigrok_exe", "sigrok-cli"));
-  dlg.settings()->setCalcInputs(m_session->calcInputs());
   dlg.load(device->keys);
   dlg.setStatus([this, id] { return deviceStatus(id); });
+  dlg.setFrameSource([this, id]
+  {
+    const MeterController *ctl = m_session->controller("device:" + id);
+    return ctl ? ctl->dmm() : nullptr;
+  });
+  // the Data tab marks the range of the reading on the display
+  dlg.setReading([this, id]() -> std::optional<Reading>
+  {
+    const MeterController *ctl = m_session->controller("device:" + id);
+    if (!ctl)
+      return std::nullopt;
+    return ctl->lastReading();
+  });
+  // the names of a connected microcontroller's values, beside their units
+  if (const MeterController *ctl = m_session->controller("device:" + id))
+  {
+    QStringList names;
+    for (int i = 0; i < kMaxValues; ++i)
+      names << ctl->valueName(i);
+    dlg.settings()->setValueNames(names);
+  }
   // Connect, as the sidebar's menu
   dlg.setConnect([this, id] { return m_sidebar->isConnected(id); }, [this, id] { openBeside(id); });
   if (settingsTab)
@@ -2439,6 +3901,11 @@ void MainWindow::deviceSettings(const QString &id, bool settingsTab)
   keys.insert("Port settings/device", SerialDevice::stableDevice(keys.value("Port settings/device").toString()));
   if (DeviceLibrary::entryKeys(keys) == device->keys)
     return;   // nothing changed: the meter stays connected, the recording too
+  applyEntryKeys(id, keys);
+}
+
+void MainWindow::applyEntryKeys(const QString &id, const QVariantMap &keys)
+{
   m_wid->devices()->update(id, keys);
   // a device connected takes them at once: connected anew, its panel stays
   // as it was; its recording not saved: only when asked, else next time
@@ -2463,8 +3930,30 @@ void MainWindow::deviceSettings(const QString &id, bool settingsTab)
         state.lcdVariant = m_panelLcd.value(ctl->source());
       m_panelStates.insert(id, state);
     }
+    // a calculated value keeps its state (an integral its sum) when its
+    // inputs stay: only its settings changed
+    QJsonObject nodeState;
+    QList<ValueRef> nodeInputs;
+    QString nodeType;
+    if (const NodeRunner *runner = NodeRunner::of(ctl))
+    {
+      nodeState = runner->node()->state();
+      nodeInputs = runner->node()->inputs();
+      nodeType = runner->node()->type();
+    }
     m_session->close(id);
     openBeside(id);
+    if (NodeRunner *runner = NodeRunner::of(m_session->controller("device:" + id));
+        runner && !nodeState.isEmpty() && runner->node()->type() == nodeType)
+    {
+      QStringList before, after;
+      for (const ValueRef &r : std::as_const(nodeInputs))
+        before << r.toString();
+      for (const ValueRef &r : runner->node()->inputs())
+        after << r.toString();
+      if (before == after)
+        runner->node()->setState(nodeState);
+    }
   }
 }
 
@@ -2484,7 +3973,7 @@ QString MainWindow::deviceStatus(const QString &id) const
   QString state;
   const Reading last = ctl->lastReading();
   const qint64 ago = last.msecs > 0 ? (QDateTime::currentMSecsSinceEpoch() - last.msecs) / 1000 : -1;
-  switch (ctl->dmm()->linkState())
+  switch (ctl->linkState())
   {
     case MeterConnection::LinkState::Closed:     state = tr("Not connected."); break;
     case MeterConnection::LinkState::Connecting: state = tr("Connecting ..."); break;
@@ -2498,8 +3987,12 @@ QString MainWindow::deviceStatus(const QString &id) const
   QString html = para(state);
   if (ago >= 0)
     html += para(tr("Last reading %n s ago.", "", int(ago)));
-  if (last.flags & SampleFlag::LowBattery)
+  if (last.battery == Battery::Low)
     html += para(tr("The meter's battery is low."));
+  else if (last.battery == Battery::Mid)
+    html += para(tr("The meter's battery is half full."));
+  else if (last.battery == Battery::Full)
+    html += para(tr("The meter's battery is full."));
   // its values with their readings
   QString rows;
   for (int value = 0; value < ctl->valueCount(); ++value)
@@ -2513,7 +4006,7 @@ QString MainWindow::deviceStatus(const QString &id) const
   return html;
 }
 
-void MainWindow::openBeside(const QString &id)
+void MainWindow::openBeside(const QString &id, bool waitForDevice)
 {
   const std::optional<MyDevice> device = m_wid->devices()->find(id);
   if (!device)
@@ -2527,7 +4020,9 @@ void MainWindow::openBeside(const QString &id)
     return;
   }
   QString error;
-  if (m_session->open(id, &error))
+  if (const MeterController *ctl = m_session->open(id, &error, waitForDevice); ctl && ctl->dmm() && !ctl->dmm()->isOpen())
+    statusBar()->showMessage(tr("%1: waiting for the device").arg(device->name), 4000);
+  else if (ctl)
     statusBar()->showMessage(tr("%1 connected").arg(device->name), 4000);
   // one that does not connect said why in the status bar already
   else if (!error.startsWith("-240,"))
@@ -2583,6 +4078,9 @@ void MainWindow::saveWindows()
       cfg->setString(key, value.toString());
   });
   cfg->setBool("Windows/user-sized", m_userSized);
+  // the rack of 27.1's first logic nodes is gone: their front panels took over
+  for (const char *key : { "Windows/rack-order", "Windows/rack-geometry", "Windows/rack-open" })
+    cfg->remove(key);
   // the front panels of devices no longer connected: their keys go
   // (an id may have '-' in it: those kept are compared whole)
   const QStringList open = cfg->getString("Windows/open-devices").split(' ', Qt::SkipEmptyParts);
@@ -2659,9 +4157,33 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
     meterViewOf(win)->setStyle(styleOf(get(key + "-style", QString())));
     win->show();
   }
+  // the graphs' settings below (applyGraphState())
+  for (const QString &number : get("Windows/graphs", QString()).toString().split(' ', Qt::SkipEmptyParts))
+    addViewWindow(Added::Graph, ValueRef(), number.toInt())->setVisible(get("Windows/graph-" + number + "-shown", true).toBool());
   for (const QString &number : get("Windows/poincares", QString()).toString().split(' ', Qt::SkipEmptyParts))
     addViewWindow(Added::Poincare, valueOf(get("Windows/poincare-" + number + "-value", QString()).toString()),
                   number.toInt())->show();
+  for (const QString &number : get("Windows/histograms", QString()).toString().split(' ', Qt::SkipEmptyParts))
+    addViewWindow(Added::Histogram, valueOf(get("Windows/histogram-" + number + "-value", QString()).toString()),
+                  number.toInt())->show();
+  for (const QString &number : get("Windows/xys", QString()).toString().split(' ', Qt::SkipEmptyParts))
+  {
+    QMdiSubWindow *win = addViewWindow(Added::XY, ValueRef(), number.toInt());
+    XYView *view = xyViewOf(win);
+    view->setValues(valueOf(get("Windows/xy-" + number + "-0", QString()).toString()),
+                    valueOf(get("Windows/xy-" + number + "-1", QString()).toString()));
+    win->show();
+  }
+  for (const QString &number : get("Windows/heatmaps", QString()).toString().split(' ', Qt::SkipEmptyParts))
+  {
+    QMdiSubWindow *win = addViewWindow(Added::Heatmap, ValueRef(), number.toInt());
+    HeatmapView *view = heatmapViewOf(win);
+    view->setValues(valueOf(get("Windows/heatmap-" + number + "-0", QString()).toString()),
+                    valueOf(get("Windows/heatmap-" + number + "-1", QString()).toString()),
+                    valueOf(get("Windows/heatmap-" + number + "-2", QString()).toString()));
+    view->plot()->setColorScheme(ColorMap::fromKey(get("Windows/heatmap-" + number + "-scheme", QString()).toString()));
+    win->show();
+  }
   const QString layout = get("Windows/layout", QString()).toString();
   if (!m_arranger->setLayoutText(layout))
   {
@@ -2674,15 +4196,24 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
   m_toolbars->setChecked(get("Windows/toolbar-hidden", false).toBool());
   if (free)
   {
+    // the front panels too: arrangeNow() below moves those already open
+    // (a workspace loaded with its meters connected)
+    auto windows = [this]
+    {
+      return meterWindows() + poincareWindows() + xyWindows() + histogramWindows() + heatmapWindows() + graphWindows()
+             + QList<QMdiSubWindow *>{ m_readingsWin } + panelWindows();
+    };
     QMap<QString, QString> geometry;
-    for (QMdiSubWindow *w : meterWindows() + poincareWindows() + QList<QMdiSubWindow *>{ m_graphWin, m_readingsWin })
+    for (QMdiSubWindow *w : windows())
       geometry[w->objectName()] = get("Windows/geometry-" + w->objectName(), QString()).toString();
+    for (const QString &id : std::as_const(m_pendingOpen))
+      geometry["panel-" + id] = get("Windows/geometry-panel-" + id, QString()).toString();
     // once the window is shown and the area has its size: the automatic
     // layout for a start, then the stored positions on top of it
-    QTimer::singleShot(0, this, [this, geometry]
+    QTimer::singleShot(0, this, [this, geometry, windows]
     {
       m_arranger->arrangeNow();
-      for (QMdiSubWindow *w : meterWindows() + poincareWindows() + QList<QMdiSubWindow *>{ m_graphWin, m_readingsWin })
+      for (QMdiSubWindow *w : windows())
       {
         const QStringList g = geometry.value(w->objectName()).split(' ');
         if (g.size() == 4)
@@ -2695,55 +4226,22 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
   action_Graph->setChecked(get("MainWindow/show-graph", false).toBool());   // a fresh start is a compact instrument
   m_readingsAction->setChecked(get("Windows/readings", false).toBool());
   m_poincareAction->setChecked(get("Windows/poincare", false).toBool());
-  m_wid->graph()->setReferenceSetting(get("Windows/graph-reference", QString()).toString());
-  m_wid->graph()->setMinimapVisible(get("Windows/graph-minimap", true).toBool());
-  m_wid->graph()->setEnvelopeVisible(get("Windows/graph-envelope", false).toBool());
+  m_xyAction->setChecked(get("Windows/xy", false).toBool());
+  m_histogramAction->setChecked(get("Windows/histogram", false).toBool());
+  m_heatmapAction->setChecked(get("Windows/heatmap", false).toBool());
+  m_basketAction->setChecked(get("Windows/basket", false).toBool());
   // "1@device:ab12cd34" (ValueRef)
   meterViewOf(m_meterWin)->setValue(valueOf(get("Windows/meter-value", 0).toString()));
   poincareViewOf(m_poincareWin)->setValue(valueOf(get("Windows/poincare-value", 0).toString()));
-  // the axis of each value in the graph, "1@device:a:right 0@device:b:left";
-  // before 26.4 the window's meter by its id alone ("1:right"); missing: automatic
-  {
-    const QStringList axes = get("Windows/graph-value-axes", QString()).toString().split(' ', Qt::SkipEmptyParts);
-    for (int id = 1; id <= 3; ++id)
-      m_wid->graph()->setValueAxis(id, GraphWidget::AxisAuto);
-    for (const QString &entry : axes)
-    {
-      const qsizetype colon = entry.lastIndexOf(':');
-      if (colon < 0)
-        continue;
-      const QString side = entry.mid(colon + 1);
-      m_wid->graph()->setValueAxis(valueOf(entry.left(colon)),
-                                   side == "left" ? GraphWidget::AxisLeft
-                                   : side == "right" ? GraphWidget::AxisRight
-                                   : side == "third" ? GraphWidget::AxisThird : GraphWidget::AxisAuto);
-    }
-  }
-  // the graph's values, of any meter: "0@device:a 2@device:a 0@device:b";
-  // before 26.4 the window's ids ("1 2") with the main value apart
-  {
-    QList<ValueRef> values;
-    const QString list = get("Windows/graph-values", QStringLiteral("-")).toString();
-    if (list != QLatin1String("-"))
-      for (const QString &text : list.split(' ', Qt::SkipEmptyParts))
-        values << valueOf(text);
-    else
-    {
-      if (get("Windows/graph-main-shown", true).toBool())
-        values << valueOf("0");
-      for (const QString &text : get("Windows/graph-shown-values", QString()).toString().split(' ', Qt::SkipEmptyParts))
-        values << valueOf(text);
-    }
-    // a file from before 26.4 names no meter: its values are those of a meter
-    // connected. Without any they are none: the first meter connected takes
-    // the empty graph
-    if (list == QLatin1String("-") && !m_session->controllers().isEmpty())
-      for (ValueRef &v : values)
-        if (v.source.isEmpty())
-          v.source = m_session->controllers().first()->source();
-    values.removeIf([](const ValueRef &v) { return v.source.isEmpty(); });
-    m_wid->graph()->setValues(values);
-  }
+  xyViewOf(m_xyWin)->setValues(valueOf(get("Windows/xy-x", QString()).toString()),
+                               valueOf(get("Windows/xy-y", QString()).toString()));
+  histogramViewOf(m_histogramWin)->setValue(valueOf(get("Windows/histogram-value", QString()).toString()));
+  heatmapViewOf(m_heatmapWin)->setValues(valueOf(get("Windows/heatmap-x", QString()).toString()),
+                                         valueOf(get("Windows/heatmap-y", QString()).toString()),
+                                         valueOf(get("Windows/heatmap-z", QString()).toString()));
+  heatmapViewOf(m_heatmapWin)->plot()->setColorScheme(ColorMap::fromKey(get("Windows/heatmap-scheme", QString()).toString()));
+  for (QMdiSubWindow *win : graphWindows())
+    applyGraphState(graphViewOf(win), get, valueOf);
   // the values the readings table leaves out, "1 2", another meter's
   // "1@device:ab12cd34"; none at first. The other meters in it, by source
   {
@@ -2767,7 +4265,7 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
     applyTableSources();
   }
   // an unchecked action did not toggle: hide its window explicitly
-  for (QAction *a : { m_meterAction, action_Graph, m_readingsAction, m_poincareAction })
+  for (QAction *a : { m_meterAction, action_Graph, m_readingsAction, m_poincareAction, m_xyAction, m_histogramAction, m_heatmapAction, m_basketAction })
     qobject_cast<QWidget *>(a->property("window").value<QObject *>())->setVisible(a->isChecked());
   if (!m_displayAction->isChecked())
     for (QMdiSubWindow *win : std::as_const(m_panelWins))
@@ -2775,6 +4273,58 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
   m_restoring = false;
   syncArrangeActions();
   m_arranger->arrange();
+}
+
+void MainWindow::applyGraphState(GraphView *view, const WorkspaceGet &get,
+                                 const std::function<ValueRef(const QString &)> &valueOf)
+{
+  GraphModel *model = view->model();
+  const QString key = "Windows/" + view->key();
+  // what is missing keeps its default; without a window of its own the settings'
+  model->readSettings([&get](const QString &k, const QVariant &def) { return get(k, def); }, key);
+  if (get(key + "-window", 0).toInt() <= 0)
+    model->setWindowSeconds(m_wid->settingsDialog()->graphPage()->windowSeconds());
+  // the values and their axes through valueOf(): before 26.4 the window's
+  // meter by its id alone ("1", "1:right"), the main value apart
+  QList<ValueRef> values;
+  const QString list = get(key + "-values", QStringLiteral("-")).toString();
+  if (list != QLatin1String("-"))
+    for (const QString &text : list.split(' ', Qt::SkipEmptyParts))
+      values << valueOf(text);
+  else if (view == graphViewOf(m_graphWin))
+  {
+    if (get("Windows/graph-main-shown", true).toBool())
+      values << valueOf("0");
+    for (const QString &text : get("Windows/graph-shown-values", QString()).toString().split(' ', Qt::SkipEmptyParts))
+      values << valueOf(text);
+  }
+  // a file from before 26.4 names no meter: its values are those of a meter
+  // connected. Without any they are none: the first meter connected takes
+  // the empty graph
+  auto own = [this, &list](ValueRef v)
+  {
+    if (list == QLatin1String("-") && v.source.isEmpty() && !m_session->controllers().isEmpty())
+      v.source = m_session->controllers().first()->source();
+    return v;
+  };
+  QHash<ValueRef, int> axes;
+  for (const QString &entry : get(key + "-value-axes", QString()).toString().split(' ', Qt::SkipEmptyParts))
+  {
+    const qsizetype colon = entry.lastIndexOf(':');
+    const QString side = colon < 0 ? QString() : entry.mid(colon + 1);
+    const int axis = side == "left" ? 0 : side == "right" ? 1 : side == "third" ? 2
+                   : side.startsWith("axis") ? side.mid(4).toInt() - 1 : GraphModel::kAxisAuto;
+    if (const ValueRef v = own(valueOf(entry.left(colon))); colon > 0 && !v.source.isEmpty() && axis >= 0)
+      axes.insert(v, axis);
+  }
+  for (ValueRef &v : values)
+    v = own(v);
+  values.removeIf([](const ValueRef &v) { return v.source.isEmpty(); });
+  for (const ValueRef &v : model->valueAxes().keys())
+    model->setValueAxis(v, GraphModel::kAxisAuto);
+  for (auto it = axes.cbegin(); it != axes.cend(); ++it)
+    model->setValueAxis(it.key(), it.value());
+  model->setValues(values);
 }
 
 void MainWindow::storeWorkspace(const WorkspaceSet &set)
@@ -2786,7 +4336,7 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
   set("Windows/toolbar-hidden", m_toolbars->isChecked());
   set("Windows/design", Designs::name(Designs::current()));
   if (m_arranger->mode() == MdiArranger::Free)
-    for (QMdiSubWindow *w : meterWindows() + poincareWindows() + QList<QMdiSubWindow *>{ m_graphWin, m_readingsWin }
+    for (QMdiSubWindow *w : meterWindows() + poincareWindows() + xyWindows() + histogramWindows() + heatmapWindows() + graphWindows() + QList<QMdiSubWindow *>{ m_readingsWin }
                             + panelWindows())
     {
       const QRect g = w->geometry();
@@ -2820,10 +4370,11 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
   set("Windows/meter", m_meterAction->isChecked());
   set("Windows/readings", m_readingsAction->isChecked());
   set("Windows/poincare", m_poincareAction->isChecked());
+  set("Windows/xy", m_xyAction->isChecked());
+  set("Windows/histogram", m_histogramAction->isChecked());
+  set("Windows/heatmap", m_heatmapAction->isChecked());
+  set("Windows/basket", m_basketAction->isChecked());
   set("MainWindow/show-graph", action_Graph->isChecked());
-  set("Windows/graph-reference", m_wid->graph()->referenceSetting());
-  set("Windows/graph-minimap", m_wid->graph()->minimapVisible());
-  set("Windows/graph-envelope", m_wid->graph()->envelopeVisible());
   set("Windows/meter-value", meterViewOf(m_meterWin)->value().toString());
   const auto styleText = [](int style) { return style < 0 ? QString() : QString::number(style); };
   set("Windows/meter-style", styleText(meterViewOf(m_meterWin)->style()));
@@ -2837,6 +4388,13 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
   }
   set("Windows/meters", meters.join(' '));
   set("Windows/poincare-value", poincareViewOf(m_poincareWin)->value().toString());
+  set("Windows/xy-x", xyViewOf(m_xyWin)->xValue().toString());
+  set("Windows/xy-y", xyViewOf(m_xyWin)->yValue().toString());
+  set("Windows/histogram-value", histogramViewOf(m_histogramWin)->value().toString());
+  set("Windows/heatmap-x", heatmapViewOf(m_heatmapWin)->value(0).toString());
+  set("Windows/heatmap-y", heatmapViewOf(m_heatmapWin)->value(1).toString());
+  set("Windows/heatmap-z", heatmapViewOf(m_heatmapWin)->value(2).toString());
+  set("Windows/heatmap-scheme", ColorMap::key(heatmapViewOf(m_heatmapWin)->plot()->colorScheme()));
   QStringList plots;
   for (QMdiSubWindow *w : poincareWindows().mid(1))
   {
@@ -2845,54 +4403,279 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
     set("Windows/poincare-" + number + "-value", poincareViewOf(w)->value().toString());
   }
   set("Windows/poincares", plots.join(' '));
-  GraphWidget *graph = m_wid->graph();
-  QStringList shown;
-  for (const ValueRef &v : graph->values())
-    shown << v.toString();
-  set("Windows/graph-values", shown.join(' '));
+  QStringList xys;
+  for (QMdiSubWindow *w : xyWindows().mid(1))
+  {
+    const QString number = w->objectName().section('-', 1);
+    xys << number;
+    XYView *view = xyViewOf(w);
+    set("Windows/xy-" + number + "-0", view->xValue().toString());
+    set("Windows/xy-" + number + "-1", view->yValue().toString());
+  }
+  set("Windows/xys", xys.join(' '));
+  QStringList histograms;
+  for (QMdiSubWindow *w : histogramWindows().mid(1))
+  {
+    const QString number = w->objectName().section('-', 1);
+    histograms << number;
+    set("Windows/histogram-" + number + "-value", histogramViewOf(w)->value().toString());
+  }
+  set("Windows/histograms", histograms.join(' '));
+  QStringList heatmaps;
+  for (QMdiSubWindow *w : heatmapWindows().mid(1))
+  {
+    const QString number = w->objectName().section('-', 1);
+    heatmaps << number;
+    HeatmapView *view = heatmapViewOf(w);
+    for (int axis = 0; axis < 3; ++axis)
+      set("Windows/heatmap-" + number + "-" + QString::number(axis), view->value(axis).toString());
+    set("Windows/heatmap-" + number + "-scheme", ColorMap::key(view->plot()->colorScheme()));
+  }
+  set("Windows/heatmaps", heatmaps.join(' '));
+  QStringList graphs;
+  for (QMdiSubWindow *w : graphWindows())
+  {
+    graphViewOf(w)->model()->writeSettings([&set](const QString &k, const QVariant &v) { set(k, v); },
+                                            "Windows/" + w->objectName());
+    if (w != m_graphWin)
+    {
+      graphs << w->objectName().section('-', 1);
+      set("Windows/" + w->objectName() + "-shown", !w->isHidden());
+    }
+  }
+  set("Windows/graphs", graphs.join(' '));
   QStringList tableHidden;
   for (const ValueRef &v : m_readings->log()->hiddenValues())
     tableHidden << v.toString();
   tableHidden.sort();
   set("Windows/table-hidden-values", tableHidden.join(' '));
   set("Windows/table-devices", m_tableMeters.join(' '));
-  // the axes chosen, of the graph's meter also for its values not shown
-  QList<ValueRef> withAxis;
-  for (int id = 1; id <= 3; ++id)
-    withAxis << ValueRef(id, graph->baseSource());
-  for (const ValueRef &v : graph->otherValues())
-    withAxis << v;
-  QStringList axes;
-  for (const ValueRef &v : std::as_const(withAxis))
-    if (graph->valueAxis(v) != GraphWidget::AxisAuto)
-    {
-      const GraphWidget::ValueAxis axis = graph->valueAxis(v);
-      axes << QString("%1:%2").arg(v.toString(), axis == GraphWidget::AxisLeft ? "left" : axis == GraphWidget::AxisRight ? "right" : "third");
-    }
-  set("Windows/graph-value-axes", axes.join(' '));
 }
 
 // A workspace file (WorkspaceFile): the window's keys, the devices connected,
 // a name, a description and a picture.
-static const char *kWorkspaceSuffix = "qtdmm-workspace";
+QString MainWindow::basketName(ProjectFolder::Kind kind, const QString &suffix) const
+{
+  // "recordings/2026-11-08 0714 Sim A.csv": sorts by time, the folder says what it is
+  const QString device = m_session->lead() ? m_session->lead()->deviceName() : QString();
+  QString name = QDateTime::currentDateTime().toString("yyyy-MM-dd HHmm") + (device.isEmpty() ? "" : " " + device);
+  name.replace(QRegularExpression(R"([/\\:*?"<>|])"), "_");
+  return BasketWidget::freeName(ProjectFolder::dirFor(m_basket->folder(), kind), name + "." + suffix);
+}
 
-void MainWindow::saveWorkspace()
+void MainWindow::graphToBasket()
+{
+  // the graph used last, else the first one
+  graphToBasketOf(pictureGraph() ? pictureGraph() : graphViewOf(m_graphWin));
+}
+
+GraphView *MainWindow::currentGraph() const
+{
+  // the graph whose window is active, else the one used last, else the first
+  if (GraphView *view = graphViewOf(m_mdi->activeSubWindow()))
+    return view;
+  return pictureGraph() ? pictureGraph() : graphViewOf(m_graphWin);
+}
+
+GraphView *MainWindow::pictureGraph() const
+{
+  return m_pictureGraph && m_pictureGraph->graph()->isVisibleTo(m_mdi) ? m_pictureGraph.data() : nullptr;
+}
+
+bool MainWindow::writeGraphRecording(GraphView *view, const QString &path, bool everyReading)
+{
+  if (!view->showsFile())
+    return m_wid->writeRecordingTo(path, everyReading, view->model()->values());
+  // a file loaded into it: that recording, all its values
+  RecordingStore *store = view->graph()->store();
+  QString error = QCoreApplication::translate("InstanceWidget", "nothing recorded");
+  QList<int> extras;
+  for (int i = 0; store && i < store->extraCount(); ++i)
+    extras << i;
+  if (store && store->count() > 0 && store->write(path, &error, everyReading, extras))
+    return true;
+  Q_EMIT m_wid->error(tr("Export failed: %1").arg(error));
+  return false;
+}
+
+void MainWindow::graphToBasketOf(GraphView *view)
+{
+  const QString csv = basketName(ProjectFolder::Recordings, "csv");
+  if (!writeGraphRecording(view, csv, false))
+    return;
+  const QString png = BasketWidget::freeName(ProjectFolder::dirFor(m_basket->folder(), ProjectFolder::Images),
+                                             QFileInfo(csv).completeBaseName() + ".png");
+  if (!view->graph()->exportImageFile(png))
+    Q_EMIT m_wid->error(tr("Project: cannot write %1").arg(QDir::toNativeSeparators(png)));
+  else
+    Q_EMIT m_wid->error(tr("Into the project: %1").arg(QFileInfo(csv).completeBaseName()));
+}
+
+// The dialog of a graph's picture, with its last place
+void MainWindow::exportGraphImage(GraphView *view)
+{
+  auto word = [](const char *text) { return QCoreApplication::translate("GraphWidget", text); };
+  Settings *cfg = m_wid->settings();
+  const QFileInfo last(cfg->getString("QtDMM/LastImagePath"));
+  const QStringList suffixes = { "svg", "pdf", "png", "jpg" };
+  const QString suffix = suffixes.contains(last.suffix().toLower()) ? last.suffix().toLower() : "svg";
+  const QString name = last.baseName().isEmpty() ? QString("untitled") : last.absolutePath() + "/" + last.baseName();
+  const QString svgFilter = word("Scalable vector graphics (*.svg)"), pdfFilter = word("PDF (*.pdf)"),
+                pngFilter = word("PNG image (*.png)"), jpgFilter = word("JPEG image (*.jpg)");
+  QString filter = suffix == "pdf" ? pdfFilter : suffix == "png" ? pngFilter : suffix == "jpg" ? jpgFilter : svgFilter;
+  const ProjectFolder::Proposal where(name + "." + suffix, ProjectFolder::Images);
+  QString path = QFileDialog::getSaveFileName(this, word("Export image"), where.path(),
+                                              svgFilter + ";;" + pdfFilter + ";;" + pngFilter + ";;" + jpgFilter, &filter);
+  if (path.isEmpty())
+    return;
+  // a name typed without a suffix follows the chosen filter
+  if (!suffixes.contains(QFileInfo(path).suffix().toLower()))
+    path += "." + QString(filter == pdfFilter ? "pdf" : filter == pngFilter ? "png" : filter == jpgFilter ? "jpg" : "svg");
+  cfg->setString("QtDMM/LastImagePath", QDir().absoluteFilePath(path));
+  if (!view->graph()->exportImageFile(path))
+    Q_EMIT m_wid->error(word("Could not write %1").arg(QDir::toNativeSeparators(path)));
+}
+
+void MainWindow::exportDialog(int view)
+{
+  exportDialogFor(view, pictureGraph() ? pictureGraph() : graphViewOf(m_graphWin));
+}
+
+void MainWindow::exportDialogFor(int view, GraphView *graphView)
+{
+  ExportDlg dlg(static_cast<ExportDlg::What>(view), m_basket->folder(), m_wid->settings(), this);
+  if (dlg.exec() != QDialog::Accepted)
+    return;
+  QString path = dlg.file();
+  if (dlg.toBasket())
+    path = basketName(dlg.what() == ExportDlg::Picture ? ProjectFolder::Images
+                      : dlg.format() == QLatin1String(RecordingFile::kLabPlotProjectSuffix) ? ProjectFolder::Analysis
+                                                        : ProjectFolder::Recordings, dlg.format());
+  bool ok = false;
+  QString error;
+  switch (dlg.what())
+  {
+    case ExportDlg::Recording:
+      // says why itself
+      ok = graphView && (dlg.graphValuesOnly() || graphView->showsFile()) ? writeGraphRecording(graphView, path, dlg.everyReading())
+                                                                    : m_wid->writeRecordingTo(path, dlg.everyReading());
+      break;
+    case ExportDlg::Table:
+      ok = m_readings->log()->writeAny(path, &error);
+      break;
+    case ExportDlg::Picture:
+      ok = graphView && graphView->graph()->exportImageFile(path);
+      break;
+  }
+  QString labPlotError;
+  if (ok && dlg.openInLabPlot()
+      && !LabPlot::open(path, m_wid->settings()->getString("Programs/labplot"), &labPlotError))
+    Q_EMIT m_wid->error(labPlotError);
+  else if (ok)
+    Q_EMIT m_wid->error(tr("Exported to %1").arg(QDir::toNativeSeparators(path)));
+  else if (dlg.what() != ExportDlg::Recording)
+    Q_EMIT m_wid->error(tr("Export failed: %1").arg(error.isEmpty() ? QDir::toNativeSeparators(path) : error));
+}
+
+void MainWindow::labPlotLive()
+{
+  const QString program = m_wid->settings()->getString("Programs/labplot");
+  QString error;
+  if (m_live && m_live->isRunning())   // again: the same project
+  {
+    if (!LabPlot::open(m_live->projectPath(), program, &error))
+      Q_EMIT m_wid->error(error);
+    return;
+  }
+  QPointer<MeterController> lead = m_session->lead();
+  if (!lead || lead->recorder()->state() != RecordingStore::Record)
+  {
+    Q_EMIT m_wid->error(tr("Live in LabPlot: start a recording first"));
+    return;
+  }
+  QString dir = ProjectFolder::dirFor(m_basket->folder(), ProjectFolder::Analysis);
+  const bool inProject = !dir.isEmpty();
+  if (!inProject)
+  {
+    dir = QDir(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).filePath("QtDMM");
+    QDir().mkpath(dir);
+  }
+  // "analysis/2026-11-09 1030 Sim A.csv" and ".lml" beside it, both new;
+  // outside a project "... Sim A live.csv"
+  QString name = QDateTime::currentDateTime().toString("yyyy-MM-dd HHmm") + " " + lead->deviceName();
+  if (!inProject)
+    name += " " + tr("live");
+  name.replace(QRegularExpression(R"([/\\:*?"<>|])"), "_");
+  QString base = name;
+  auto taken = [&dir](const QString &b)
+  {
+    return QFileInfo::exists(QDir(dir).filePath(b + ".csv")) || QFileInfo::exists(QDir(dir).filePath(b + ".lml"));
+  };
+  for (int n = 2; taken(base); ++n)
+    base = QString("%1 (%2)").arg(name).arg(n);
+  if (m_live)
+    m_live->deleteLater();
+  m_live = new LabPlotLive([lead] { return lead ? lead->recording() : Recording(); },
+                           [lead] { return lead && lead->recorder()->state() == RecordingStore::Record; }, this);
+  connect(m_live, &LabPlotLive::stopped, this, [this, csv = QDir(dir).filePath(base + ".csv")]
+  {
+    if (m_live->writeFailed())
+      Q_EMIT m_wid->error(tr("Live in LabPlot: cannot write %1, stopped").arg(QDir::toNativeSeparators(csv)));
+    else
+      Q_EMIT m_wid->error(tr("Live in LabPlot: the recording ended, the file has all of it"));
+    updateRecorderActions();
+  });
+  const QString csv = QDir(dir).filePath(base + ".csv"), project = QDir(dir).filePath(base + ".lml");
+  if (!m_live->start(csv, project, &error))
+  {
+    Q_EMIT m_wid->error(tr("Live in LabPlot: %1").arg(error));
+    return;
+  }
+  if (!LabPlot::open(project, program, &error))
+    Q_EMIT m_wid->error(error);
+  else
+    Q_EMIT m_wid->error(tr("Live in LabPlot: %1").arg(QDir::toNativeSeparators(csv)));
+}
+
+void MainWindow::tableToBasket()
+{
+  const QString csv = basketName(ProjectFolder::Recordings, "csv");
+  QString error;
+  if (!m_readings->log()->write(csv, &error))
+    Q_EMIT m_wid->error(tr("Project: cannot write %1: %2").arg(QDir::toNativeSeparators(csv), error));
+  else
+    Q_EMIT m_wid->error(tr("Into the project: %1").arg(QFileInfo(csv).fileName()));
+}
+
+void MainWindow::saveWorkspace(bool asNew)
 {
   Settings *cfg = m_wid->settings();
   // the picture: the windows as they stand
   const QPixmap shot = m_mdi->grab().scaledToWidth(480, Qt::SmoothTransformation);
-  WorkspaceDlg dlg(m_workspaceName, m_workspaceDescription, shot, this);
+  // a new one starts without the name and file of the one in use
+  const QString currentName = asNew ? QString() : m_workspaceName;
+  const QString currentFile = asNew ? QString() : m_workspaceFile;
+  WorkspaceDlg dlg(currentName, asNew ? QString() : m_workspaceDescription, shot, this);
   if (dlg.exec() != QDialog::Accepted)
     return;
-  const QString dir = cfg->getString("Windows/workspace-dir",
-                                     QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
+  // a project basket open: the bench goes into it
+  const QString dir = !m_basket->folder().isEmpty()
+                        ? m_basket->folder()
+                        : cfg->getString("Windows/workspace-dir",
+                                         QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
   // the file of the workspace in use, else one named after it
   QString base = dlg.name();
   base.replace(QRegularExpression(R"([/\\:*?"<>|])"), "_");
-  const QString proposal = !m_workspaceFile.isEmpty() && (dlg.name() == m_workspaceName || base.isEmpty())
-                             ? m_workspaceFile
+  const QString proposal = !currentFile.isEmpty() && (dlg.name() == currentName || base.isEmpty())
+                             ? currentFile
                              : QDir(dir).filePath((base.isEmpty() ? QString("untitled") : base) + "." + kWorkspaceSuffix);
-  QString file = QFileDialog::getSaveFileName(this, tr("Save bench"), proposal,
+  // a bench of the project stays where it is; one loaded from elsewhere goes
+  // into the project all the same, among its benches
+  const QString project = m_basket->folder();
+  const bool ofProject = proposal == currentFile && !project.isEmpty()
+                         && BasketWidget::projectOf(currentFile, project) == project;
+  const ProjectFolder::Proposal where(proposal, ofProject ? ProjectFolder::Root : ProjectFolder::Benches);
+  QString file = QFileDialog::getSaveFileName(this, tr("Save bench"), ofProject ? currentFile : where.path(),
                                               tr("QtDMM bench (*.%1)").arg(kWorkspaceSuffix));
   if (file.isEmpty())
     return;
@@ -2930,8 +4713,12 @@ void MainWindow::saveWorkspace()
 void MainWindow::loadWorkspace()
 {
   Settings *cfg = m_wid->settings();
-  const QString dir = cfg->getString("Windows/workspace-dir",
-                                     QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
+  // the project's benches, the project, else where the last one came from
+  const QString benches = QDir(m_basket->folder()).filePath(ProjectFolder::folderName(ProjectFolder::Benches));
+  const QString dir = m_basket->folder().isEmpty() ? cfg->getString("Windows/workspace-dir",
+                                                                    QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation))
+                      : QFileInfo(benches).isDir() ? benches
+                                                   : m_basket->folder();
   const QString file = QFileDialog::getOpenFileName(this, tr("Load bench"), dir,
                                                     tr("QtDMM bench (*.%1)").arg(kWorkspaceSuffix));
   if (!file.isEmpty())
@@ -3014,14 +4801,28 @@ bool MainWindow::loadWorkspaceFile(const QString &file)
   recentWorkspaces().add(file);
   setCurrentWorkspace(file);
   updateRecentWorkspaces();
-  QString text = tr("Bench loaded from %1").arg(QDir::toNativeSeparators(file));
+  // the note first, the path in the tooltip (second line) [V 09.11.]
+  QString text = tr("Bench loaded");
+  // the bench belongs to the project in whose folder it lies: loading it
+  // opens that one, or closes the open one when it lies outside; no
+  // question, the status bar says so
+  const QString before = m_basket->folder();
+  const QString project = BasketWidget::projectOf(file, before);
+  if (project != before)
+  {
+    m_basket->setFolder(project);
+    text += "; "
+            + (project.isEmpty()
+                 ? tr("project %1 closed: the bench is not in it").arg(BasketWidget::projectName(before))
+                 : tr("project %1 opened: the bench is in it").arg(BasketWidget::projectName(project)));
+  }
   if (!restored.isEmpty())
     text += "; " + tr("back in My devices: %1").arg(restored.join(", "));
   if (programsLeft)
     text += "; " + tr("the programs of their alarms were left out, set them again in Alarms...");
   if (!keyless.isEmpty())
     text += "; " + tr("%1 without its key: enter it in the device settings").arg(keyless.join(", "));
-  Q_EMIT m_wid->error(text);
+  Q_EMIT m_wid->error(text + '\n' + QDir::toNativeSeparators(file));
   return true;
 }
 
@@ -3033,6 +4834,46 @@ void MainWindow::setCurrentWorkspace(const QString &file)
   m_workspaceDescription = ws ? ws->description : QString();
   m_wid->settings()->setString("Windows/workspace-current", m_workspaceFile);
   m_sidebar->setCurrentWorkspace(m_workspaceName, ws ? workspaceTooltip(file, *ws) : QString());
+  updateWindowTitle();
+  updateProjectSidebar();
+}
+
+void MainWindow::benchIntoNewProject()
+{
+  const QString before = m_basket->folder();
+  m_basket->newAction()->trigger();
+  const QString project = m_basket->folder();
+  if (project.isEmpty() || project == before)
+    return;   // no new project made
+  // the bench into it: its name and file proposed, now in the project's folder
+  saveWorkspace();
+}
+
+void MainWindow::updateProjectSidebar()
+{
+  const QString project = m_basket ? m_basket->folder() : QString();
+  // without a device no project or bench either [E 09.11.]
+  if (project.isEmpty() || !QFileInfo(project).isDir() || m_wid->devices()->list().isEmpty())
+  {
+    m_sidebar->setProject(QString(), {}, QString());
+    return;
+  }
+  // its benches: the bench files in its folder and the folders under it
+  QList<DeviceSidebar::Workspace> benches;
+  QDirIterator it(project, { QString("*.") + kWorkspaceSuffix }, QDir::Files, QDirIterator::Subdirectories);
+  while (it.hasNext())
+  {
+    const QString file = it.next();
+    const std::optional<WorkspaceFile> ws = WorkspaceFile::read(file);
+    benches.append({ file, ws ? ws->name : QString(), ws ? workspaceTooltip(file, *ws) : QString(), false });
+  }
+  std::sort(benches.begin(), benches.end(), [](const DeviceSidebar::Workspace &a, const DeviceSidebar::Workspace &b)
+  {
+    const QString na = a.name.isEmpty() ? QFileInfo(a.file).completeBaseName() : a.name;
+    const QString nb = b.name.isEmpty() ? QFileInfo(b.file).completeBaseName() : b.name;
+    return na.localeAwareCompare(nb) < 0;
+  });
+  m_sidebar->setProject(BasketWidget::projectName(project), benches, m_workspaceFile);
 }
 
 QString MainWindow::workspaceTooltip(const QString &file, const WorkspaceFile &ws)
@@ -3051,6 +4892,12 @@ RecentFiles MainWindow::recentWorkspaces() const
   return RecentFiles(QDir(m_wid->settings()->configDir()).filePath("workspaces.conf"));
 }
 
+RecentFiles MainWindow::recentProjects() const
+{
+  return RecentFiles(QDir(m_wid->settings()->configDir()).filePath("projects.conf"), QStringLiteral("Projects/recent"),
+                     20);
+}
+
 void MainWindow::updateRecentWorkspaces()
 {
   // the favourites first, then the others used last
@@ -3064,20 +4911,25 @@ void MainWindow::updateRecentWorkspaces()
     const std::optional<WorkspaceFile> ws = QFileInfo::exists(file) ? WorkspaceFile::read(file) : std::nullopt;
     rows.append({ file, ws ? ws->name : QString(), ws ? workspaceTooltip(file, *ws) : QString(), favorites.contains(file) });
   }
-  m_sidebar->setWorkspaces(rows);
+  const bool noDevices = m_wid->devices()->list().isEmpty();
+  m_sidebar->setWorkspaces(noDevices ? QList<DeviceSidebar::Workspace>() : rows);
   m_recentMenu->clear();
   for (int i = 0; i < rows.size(); ++i)
   {
     const QString &file = files[i];
     // 1 ... 9 as the letters, then none
-    const QString name = (rows[i].name.isEmpty() ? QFileInfo(file).completeBaseName() : rows[i].name).replace('&', "&&");
+    QString name = rows[i].name.isEmpty() ? QFileInfo(file).completeBaseName() : rows[i].name;
+    // and its project, if it lies in one
+    if (const QString project = BasketWidget::projectOf(file, m_basket->folder()); !project.isEmpty())
+      name += QStringLiteral(" \u2013 ") + BasketWidget::projectName(project);
+    name.replace('&', "&&");
     QAction *a = m_recentMenu->addAction(i < 9 ? QString("&%1 %2").arg(i + 1).arg(name) : name);
     a->setToolTip(rows[i].tooltip.isEmpty() ? QDir::toNativeSeparators(file) : rows[i].tooltip);
     a->setEnabled(QFileInfo::exists(file));
     connect(a, &QAction::triggered, this, [this, file] { loadWorkspaceFile(file); });
   }
   m_recentMenu->setToolTipsVisible(true);
-  m_recentMenu->menuAction()->setEnabled(!files.isEmpty());
+  m_recentMenu->menuAction()->setEnabled(!files.isEmpty() && !noDevices);
   if (files.isEmpty())
     return;
   m_recentMenu->addSeparator();
@@ -3098,7 +4950,7 @@ int MainWindow::em() const
 
 QSize MainWindow::growthFor(QMdiSubWindow *win) const
 {
-  if (win == m_graphWin)
+  if (graphViewOf(win))
     return QSize(0, 18 * em());    // below the instruments
   if (isColumn(win))
     return QSize(19 * em(), 0);    // a column on the right
@@ -3265,9 +5117,17 @@ void MainWindow::setDesign(int design)
   for (QMdiSubWindow *win : std::as_const(m_panelWins))
     applyFrame(win->widget());
   const Designs::GraphColors g = Designs::graphColors(d);
-  m_wid->graph()->setThemeColors(g.background, g.grid, g.labels, g.data);
+  for (const GraphView *view : std::as_const(m_graphViews))
+    view->graph()->setThemeColors(g.background, g.grid, g.labels, g.data);
   for (QMdiSubWindow *win : poincareWindows())
     applyPoincareColors(static_cast<PoincarePlot *>(win->widget()));
+  for (QMdiSubWindow *win : xyWindows())
+    applyPlotColors(static_cast<GraphCommon *>(win->widget()));
+  for (QMdiSubWindow *win : histogramWindows())
+    applyPlotColors(static_cast<GraphCommon *>(win->widget()));
+  for (QMdiSubWindow *win : heatmapWindows())
+    if (HeatmapView *view = heatmapViewOf(win))
+      applyPlotColors(view->plot());
   for (QAction *a : m_designMenu->actions())
     a->setChecked(a->data().toInt() == design);
   // at once, so the settings dialog shows the design of the menu (and its
@@ -3285,6 +5145,20 @@ void MainWindow::applyPoincareColors(PoincarePlot *plot)
   // graph's: it stands next to the display and the meter. Not on a texture
   // though, the points would get lost in it: there on the graph's
   QBrush background = frame.style() != Qt::NoBrush ? frame : QApplication::palette().window();
+  if (frame.style() == Qt::TexturePattern)
+    background = g.background;
+  plot->setThemeColors(background, g.grid, g.labels, g.data);
+}
+
+// The side plots on QCustomPlot (XY diagram, histogram, heatmap) on the
+// design's frame, the graph's background where that is a texture: the points
+// would get lost in it
+void MainWindow::applyPlotColors(GraphCommon *plot)
+{
+  const Designs::Design d = Designs::current();
+  const QBrush frame = Designs::frameBrush(d);
+  const Designs::GraphColors g = Designs::graphColors(d);
+  QBrush background = frame.style() != Qt::NoBrush ? frame : QApplication::palette().base();
   if (frame.style() == Qt::TexturePattern)
     background = g.background;
   plot->setThemeColors(background, g.grid, g.labels, g.data);
@@ -3335,7 +5209,7 @@ void MainWindow::setupIcons()
   QIcon iconConnectOff = QIcon::fromTheme("network-disconnect");
 
   this->action_Connect->setIcon(iconConnectOff);
-  connect(this->action_Connect, &QAction::toggled, this, [ = ](bool checked)
+  connect(this->action_Connect, &QAction::toggled, this, [=, this](bool checked)
   {
     this->action_Connect->setIcon(checked ? iconConnectOn : iconConnectOff);
   });

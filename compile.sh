@@ -13,6 +13,8 @@ usage: compile.sh <install|clean|qt6>
    ctest   : build and run ctest
    doxygen : generate the developer documentation (build/doxygen/html)
    install : install system wide
+   neoqcp  : a trial: draw the XY diagram, histogram and heatmap with NeoQCP
+             instead of QCustomPlot (fetches its sources into .neoqcp/)
    pack    : create packages (DEB and source)
    run     : run qtdmm after successfull build
 
@@ -21,6 +23,11 @@ usage: compile.sh <install|clean|qt6>
 
  Another Qt than the system's: QTDMM_QT_DIR=~/Qt/6.8.3/gcc_64 ./compile.sh
  (switching between Qts needs "clean").
+
+ NeoQCP needs Qt 6.7 or newer with the Qt Shader Tools, e.g.
+   aqt install-qt linux desktop 6.8.3 linux_gcc_64 -m qtshadertools -O ~/Qt
+ Another revision of it: QTDMM_NEOQCP_REV=<commit> ./compile.sh neoqcp
+ A build without the word "neoqcp" draws with QCustomPlot again.
 
 EOF
 	exit 0
@@ -32,6 +39,7 @@ PACK=false
 CTEST=false
 APPIMG=false
 DOXYGEN=false
+NEOQCP=false
 
 for arg in $*
 do
@@ -43,6 +51,7 @@ do
 	[ "$arg" = "pack"     ] && PACK=true
 	[ "$arg" = "appimage" ] && APPIMG=true
 	[ "$arg" = "doxygen"  ] && DOXYGEN=true
+	[ "$arg" = "neoqcp"   ] && NEOQCP=true
 	[ "$arg" = "help"     ] && usage
 done
 
@@ -84,6 +93,32 @@ then
 	CMAKE_PARAMS="${CMAKE_PARAMS} -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
 fi
 
+# NeoQCP for a trial: its sources at a fixed revision (the one
+# cmake/neoqcp-qt6.8.patch is made for), fetched once. Named on every run, so
+# a build without "neoqcp" goes back to QCustomPlot
+NEOQCP_DIR=.neoqcp
+NEOQCP_REV="${QTDMM_NEOQCP_REV:-e9daa0cf16a1383e0d4973d0420ba7fdfaebe501}"
+if ${NEOQCP}
+then
+	if [ "$(git -C ${NEOQCP_DIR} rev-parse HEAD 2>/dev/null)" != "${NEOQCP_REV}" ]
+	then
+		echo "-- fetching NeoQCP ${NEOQCP_REV} into ${NEOQCP_DIR}/ --"
+		rm -rf ${NEOQCP_DIR}
+		git init -q ${NEOQCP_DIR} \
+			&& git -C ${NEOQCP_DIR} fetch -q --depth 1 https://github.com/SciQLop/NeoQCP.git "${NEOQCP_REV}" \
+			&& git -C ${NEOQCP_DIR} checkout -q FETCH_HEAD
+		if [ "$(git -C ${NEOQCP_DIR} rev-parse HEAD 2>/dev/null)" != "${NEOQCP_REV}" ]
+		then
+			echo "fetching NeoQCP failed" >&2
+			rm -rf ${NEOQCP_DIR}
+			exit 1
+		fi
+	fi
+	CMAKE_PARAMS="${CMAKE_PARAMS} -DQTDMM_WITH_NEOQCP=ON -DQTDMM_NEOQCP_DIR=${PWD}/${NEOQCP_DIR}"
+else
+	CMAKE_PARAMS="${CMAKE_PARAMS} -DQTDMM_WITH_NEOQCP=OFF"
+fi
+
 cmake ${CMAKE_PARAMS} -DBUILD_TESTING=$(${CTEST} && echo "ON" || echo "OFF") \
 	-DQTDMM_WERROR=$(${CTEST} && echo "ON" || echo "OFF") -B build || exit 1
 echo "${QTDMM_QT_DIR}" > ${QT_STAMP}
@@ -111,7 +146,7 @@ fi
 if ${CTEST}
 then
 	echo
-	ctest --test-dir . --output-on-failure --timeout 300 || exit 1
+	ctest --test-dir . --output-on-failure --timeout 300 --parallel 4 || exit 1
 	echo
 fi
 
@@ -147,10 +182,36 @@ then
 		file="$(basename ${tool}).AppImage"
 		if [ ! -x "${file}" ]
 		then
-			wget -q --https-only "https://github.com/linuxdeploy/$(dirname ${tool})/releases/download/continuous/${file}" || exit 1
+			# a failed download says so; it used to end the build without a word
+			url="https://github.com/linuxdeploy/$(dirname ${tool})/releases/download/continuous/${file}"
+			# HTTPS only, also where GitHub redirects the release download to
+			if ! curl -fsSL --proto '=https' --proto-redir '=https' --retry 5 --retry-delay 10 --retry-all-errors \
+				-o "${file}" "${url}"
+			then
+				echo "download failed: ${url}" >&2
+				rm -f "${file}"
+				exit 1
+			fi
 			chmod +x "${file}"
 		fi
 	done
+	# the AppImage runtime, fetched here: appimagetool would take it from the
+	# "continuous" release itself, and a 504 there failed the build. A fixed
+	# release, checked by its SHA-256 (GitHub's digest of the asset)
+	runtime="runtime-x86_64-20251108"
+	runtime_sha256="2fca8b443c92510f1483a883f60061ad09b46b978b2631c807cd873a47ec260d"
+	if ! echo "${runtime_sha256}  ${runtime}" | sha256sum -c --status 2>/dev/null
+	then
+		url="https://github.com/AppImage/type2-runtime/releases/download/20251108/runtime-x86_64"
+		if ! curl -fsSL --proto '=https' --proto-redir '=https' --retry 5 --retry-delay 10 --retry-all-errors \
+			-o "${runtime}" "${url}" || ! echo "${runtime_sha256}  ${runtime}" | sha256sum -c --status
+		then
+			echo "download failed or checksum wrong: ${url}" >&2
+			rm -f "${runtime}"
+			exit 1
+		fi
+	fi
+	export LDAI_RUNTIME_FILE="${PWD}/${runtime}"
 	DESTDIR=AppDir cmake --install .
 	# appimagetool looks the metadata up by the desktop file's name (the
 	# application id), as .appdata.xml

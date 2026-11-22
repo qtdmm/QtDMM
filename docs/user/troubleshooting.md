@@ -156,12 +156,82 @@ with their current values and the open devices. Remember that a name is
 written in lower case with `_` for other characters than letters and
 digits. *Formula
 error at position n* means the formula does not parse; the position is
-counted from 1.
+counted from 1. If it waits for another calculated value, that one's
+own reason is in the tooltip of its status LED.
 
 ## Readings look right on the meter but wrong in QtDMM
 
 Check the model of the device (*Settings...* in the sidebar, Shift+F8) — several meters share a protocol and
 differ only in range or resolution, and a near match can decode with a wrong
 factor. If the model is right and a specific range or function still decodes
-wrongly, please report it with the meter model and, if possible, the debug
-output (`qtdmm --debug` prints every frame as hex) on the project page.
+wrongly, please report it with a capture of the meter's frames on the project
+page.
+
+### Capturing the frames of a meter
+
+Right-click the device in the sidebar - on the bench or under My devices,
+which connects it first - and choose *Capture...*. The window lists the
+last 500 frames the meter sent: the time, the bytes and what QtDMM read
+from them as a display would show it, or *not understood*.
+
+1. Set the meter to the range or function QtDMM reads wrongly.
+2. Type what its display shows into *The meter shows* — the value, the unit
+   and what else is lit, e.g. `-1.234 V DC AUTO HOLD` — and press *Keep*
+   (or Enter). The newest frame is kept with your text; with a frame
+   selected in the list (*Pause* first, *Continue* goes on), that one.
+3. Repeat for every reading that is wrong; a reading that is right helps too.
+4. *Export...* writes a `.yaml` file, in the folder you choose (it is
+   remembered for the next time). Attach it to the report.
+
+The file has the meter's vendor, model, protocol and the kind of connection,
+and the kept frames in the form of the test vectors in
+`docs/protocols/spec`, so a developer can add them as they are. It holds no
+port name, Bluetooth address or key. *Export also all frames of the list*
+adds the whole list, which helps when a reading changes over time.
+
+#### Guided steps
+
+For a multimeter, clamp meter, thermometer, luxmeter or sound level meter
+the window walks you through the meter's functions under *Guided steps*:
+DC V, negative DC V, AC V, Ω, Ω open (OL), diode, continuity, capacitance,
+Hz and mA, then HOLD, REL, MIN/MAX and a range chosen by hand (a clamp meter
+also AC A through its clamp; the other kinds have shorter lists).
+
+- Each step says what to set the meter to. Once the meter shows something
+  new for a second, QtDMM puts what it read into *The meter shows*. Correct
+  it to what the display shows and press Enter: the frame is kept and the
+  next step comes. QtDMM never keeps a frame by itself.
+- If QtDMM reads something else than the step wants (Ω where the step asks
+  for DC V), a hint says so. If the meter shows what the step wants, keep the
+  frame anyway: that is the fault the capture is for.
+- *Skip* leaves out a step the meter has no function for, or that you cannot
+  measure now. AC V only with a source that is safe to measure, the current
+  step only with a small circuit, never a voltage source directly.
+- A step with a key (HOLD, REL, ...) has *Send ...* when QtDMM can press the
+  key over the meter's connection; else press it on the meter.
+- *Back* goes to the step before. Uncheck *Guided steps* to keep frames by
+  hand as above.
+
+#### A meter QtDMM does not know
+
+For a meter whose protocol QtDMM does not know yet, set the device's model
+to *Manual* and the protocol to *Unknown meter: bytes only, for a capture*,
+with the port settings of its cable (baud rate, parity) or its USB-HID cable.
+QtDMM reads no value then; the status bar and the front panel say *Capture only*, and *Capture...*
+is in bold in the device's context menu. Bluetooth LE meters cannot be
+captured this way yet.
+
+- A frame is everything the meter sent before a pause of 50 ms (at most 256
+  bytes).
+- The window has no *QtDMM reads* column and proposes nothing: type what the
+  display shows for each step and press Enter, the newest frame is kept (or
+  the one selected).
+- The export says `protocol: RawCapture`. These pairs of bytes and display
+  are what a new decoder is written from: attach the file to an issue.
+
+In the file, each frame kept in a step has the step's name above it
+(`# step dc_v_neg`), with a note where QtDMM read something else, and the
+skipped steps are listed at the end.
+
+`qtdmm --debug` still prints every frame as hex on the console
+([Command line](command-line.md)).

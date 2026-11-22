@@ -22,7 +22,7 @@ BuildOption:	-DQTDMM_EMBED_TRANSLATIONS=OFF
 # Copr (.copr/Makefile) setzt hier sein eigenes Archiv aus dem Checkout ein
 Source0:	https://github.com/qtdmm/QtDMM/releases/download/%{tag}/QtDMM-%{tag}.tar.gz
 BuildRequires:	appdata-tools desktop-file-utils gcc-c++
-BuildRequires:	cmake(Qt6Bluetooth) cmake(Qt6Charts) cmake(Qt6LinguistTools) cmake(Qt6Multimedia) cmake(Qt6SerialPort) cmake(Qt6Svg)
+BuildRequires:	cmake(Qt6Bluetooth) cmake(Qt6LinguistTools) cmake(Qt6Multimedia) cmake(Qt6SerialPort) cmake(Qt6Svg)
 BuildRequires:	cmake(hidapi)
 BuildRequires:	pkgconfig(cups)
 Suggests:	sigrok-cli

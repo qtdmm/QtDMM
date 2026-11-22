@@ -1,325 +1,177 @@
-//======================================================================
-// File:		graphwidget_export.cpp (from dmmgraph.cpp)
-// Author:	Matthias Toussaint
-// Created:	Tue Apr 10 17:45:35 CEST 2001
-//----------------------------------------------------------------------
-// This file is part of QtDMM.
+// Copyright (c) 2026 The QtDMM developers
+// SPDX-License-Identifier: GPL-3.0-or-later
 //
-// QtDMM is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// QtDMM is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with QtDMM.  If not, see <http://www.gnu.org/licenses/>.
-//----------------------------------------------------------------------
-// Copyright (c) 2001 Matthias Toussaint
-//======================================================================
-//
-// GraphWidget, part: printing, CSV export and import, and the graph as an image.
-// The class is in graphwidget.h, its other parts in graphwidget*.cpp.
-
-#include <QtGui>
-#include <QtWidgets>
-#include <QSvgGenerator>
-#include <QPdfWriter>
+// GraphWidget: pictures of the graph - a file (SVG, PDF, PNG, JPEG), the
+// clipboard, a printed page.
 
 #include "ui/views/graphwidget.h"
-#include "core/settings.h"
-#include "recording/recordingfile.h"
 
-void GraphWidget::print(QPrinter *prt, const QString &title, const QString &comment)
+#include "recording/recordingstore.h"
+#include "ui/views/graphlegend.h"
+#include "ui/views/graphstatestrip.h"
+#include "ui/views/graphtimebar.h"
+#include "ui/views/qcp.h"
+
+#include <QClipboard>
+#include <QCoreApplication>
+#include <QFileInfo>
+#include <QGuiApplication>
+#include <QImage>
+#include <QPageSize>
+#include <QPdfWriter>
+#include <QPicture>
+#include <QPrinter>
+#include <QSvgGenerator>
+
+namespace
 {
-  if (!title.isEmpty())
-    prt->setDocName(title);
-  else
-    prt->setDocName(tr("QtDMM: %1").arg(QDateTime::currentDateTime().toString()));
+// a word of the context GraphWidget looked up through a variable (graphwords.h keeps it)
+QString word(const char *text)
+{
+  return QCoreApplication::translate("GraphWidget", text);
+}
+}
 
-  prt->setCreator("QtDMM: (c) 2001 Matthias Toussaint");
-  prt->setPrintProgram("QtDMM: (c) 2001 Matthias Toussaint");
+QSize GraphWidget::pictureSize() const
+{
+  const GraphLegend *legend = m_timeBar->legend();
+  const int above = legend->isVisibleTo(m_timeBar) ? legend->height() : 0;
+  return QSize(qMax(1, m_plot->width()), qMax(1, above + m_plot->height()));
+}
 
-  QPainter p;
-  p.begin(prt);
+void GraphWidget::paintPicture(QCPPainter *painter, const QRectF &target)
+{
+  // the crosshair follows the mouse: it does not belong in the picture
+  hideCrosshair();
+  const QSize natural = pictureSize();
+  const GraphLegend *legend = m_timeBar->legend();
+  const int above = natural.height() - m_plot->height();
+  const double k = qMin(target.width() / natural.width(), target.height() / natural.height());
+  painter->save();
+  painter->translate(target.topLeft());
+  painter->scale(k, k);
+  painter->fillRect(QRect(QPoint(0, 0), natural), m_look.theme.background.style() == Qt::NoBrush ? m_plot->palette().base()
+                                                                                                 : m_look.theme.background);
+  if (above > 0)
+    const_cast<GraphLegend *>(legend)->render(painter, QPoint(0, 0), QRegion(), QWidget::DrawChildren);
+  painter->translate(0, above);
+  // the plot as QCustomPlot draws it, vectors where the device keeps them
+  m_plot->toPainter(painter, m_plot->width(), m_plot->height());
+  // the states' strip is a widget over the plot
+  if (m_stateStrip && m_stateStrip->isVisibleTo(this))
+    m_stateStrip->render(painter, m_stateStrip->pos(), QRegion(), QWidget::DrawChildren);
+  painter->restore();
+}
 
-  int w = prt->width();
-  int h = prt->height();
-
-  p.setFont(QFont("Helvetica", 16));
-
-  QRect tRect = p.boundingRect(0, 0, w, h, Qt::AlignTop | Qt::AlignHCenter | Qt::TextWordWrap, title);
-
-  p.drawText(tRect, Qt::AlignTop | Qt::AlignHCenter | Qt::TextWordWrap, title);
-
-  p.setFont(QFont("Helvetica", 10));
-
-  QFontMetrics fm = p.fontMetrics();
-  int maxWidth = qMax(fm.horizontalAdvance(tr("Sampling start:")),
-                      fm.horizontalAdvance(tr("Sampling resolution:")));
-  int tHeight = fm.height();
-
-  p.drawText(0, tRect.height() + 10, maxWidth, tHeight, Qt::AlignLeft | Qt::AlignVCenter,
-             tr("Sampling start:"));
-  p.drawText(maxWidth + 10, tRect.height() + 10, w - maxWidth - 10, tHeight, Qt::AlignLeft | Qt::AlignVCenter,
-             m_store->startDateTime().toString());
-
-  p.drawText(0, tRect.height() + 10 + tHeight, maxWidth, tHeight, Qt::AlignLeft | Qt::AlignVCenter,
-             tr("Sampling resolution:"));
-  p.drawText(maxWidth + 10, tRect.height() + 10 + tHeight,
-             w - maxWidth - 10, tHeight, Qt::AlignLeft | Qt::AlignVCenter,
-             tr("%1 Seconds").arg(m_store->sampleTime() / 10.0));
-
-  QRect cRect = p.boundingRect(0, 0, w, h, Qt::AlignTop | Qt::AlignLeft | Qt::TextWordWrap, comment);
-
-  p.drawText(0, tRect.height() + 20 + 2 * tHeight, w, cRect.height(),
-             Qt::AlignLeft | Qt::AlignTop | Qt::TextWordWrap, comment);
-
-  h -= tRect.height() + 30 + 2 * tHeight + cRect.height();
-
-  QRectF chartRect(0, tRect.height() + 30 + 2 * tHeight + cRect.height(), w, h);
-  m_chartView->render(&p, chartRect);
-
+// The picture recorded once, at the screen's resolution as the widget lays
+// it out; played into any device - a file, the clipboard, a page - it keeps
+// that layout, scaled, its texts too
+QPicture GraphWidget::picture()
+{
+  QPicture picture;
+  QCPPainter p(&picture);
+  p.setMode(QCPPainter::pmVectorized);
+  p.setMode(QCPPainter::pmNoCaching);
+  paintPicture(&p, QRectF(QPointF(0, 0), QSizeF(pictureSize())));
   p.end();
+  return picture;
 }
 
-bool GraphWidget::exportDataSLOT()
+// @p picture into @p painter's @p target, its proportions kept
+static void play(QPainter &painter, const QPicture &picture, const QSize &size, const QRectF &target)
 {
-  // the export goes by the graph's meter: without its readings nothing to write
-  if (m_store->count() <= 0)
-  {
-    Q_EMIT error(tr("Nothing to export: the graph's meter has no readings; show a value of the meter that recorded"));
-    return false;
-  }
-  bool raw = false;
-  const QString fn = askExportFile(&raw);
-  return !fn.isEmpty() && exportCsvFile(fn, raw);
+  // drawPicture() already scales from the picture's resolution to the device's
+  const double kx = double(picture.logicalDpiX()) / painter.device()->logicalDpiX();
+  const double ky = double(picture.logicalDpiY()) / painter.device()->logicalDpiY();
+  const double k = qMin(target.width() / size.width(), target.height() / size.height());
+  painter.save();
+  painter.translate(target.topLeft());
+  painter.scale(k * kx, k * ky);
+  painter.drawPicture(0, 0, picture);
+  painter.restore();
 }
 
-QString GraphWidget::askExportFile(bool *raw)
+QImage GraphWidget::pictureImage()
 {
-  QFileInfo fileInfo(m_cfg->getString("QtDMM/LastUsesPath"));
-  QStringList validSuffixes = { "csv", "xlsx", "ods" };
-  QString fnSuffix = validSuffixes.contains(fileInfo.suffix()) ? fileInfo.suffix() : "csv";
-  QString fn = fileInfo.baseName().isEmpty() ? "untitled." + fnSuffix : fileInfo.absolutePath() + "/untitled." + fnSuffix;
-  const QString csvFilter = tr("CSV (*.csv)"), xlsxFilter = tr("Excel (*.xlsx)"), odsFilter = tr("OpenDocument (*.ods)");
-  // every reading at its time instead of the sample time's grid
-  const QString rawFilter = tr("CSV, every reading (*.csv)");
-  QString filter = fnSuffix == "xlsx" ? xlsxFilter : fnSuffix == "ods" ? odsFilter : csvFilter;
-  fn = QFileDialog::getSaveFileName(this, tr("Export data"), fn,
-                                    csvFilter + ";;" + xlsxFilter + ";;" + odsFilter + ";;" + rawFilter, &filter);
-
-  if (fn.isNull())
-    return QString();
-  // the chosen filter decides when no suffix was typed
-  if (QFileInfo(fn).suffix().isEmpty())
-    fn += filter == xlsxFilter ? ".xlsx" : filter == odsFilter ? ".ods" : ".csv";
-  *raw = filter == rawFilter;
-  m_cfg->setString("QtDMM/LastUsesPath", QDir().absoluteFilePath(fn));
-  return fn;
+  const QSize size = pictureSize();
+  QImage image(size, QImage::Format_ARGB32_Premultiplied);
+  image.fill(Qt::white);
+  QPainter p(&image);
+  p.setRenderHint(QPainter::Antialiasing);
+  p.setRenderHint(QPainter::TextAntialiasing);
+  play(p, picture(), size, QRectF(QPointF(0, 0), QSizeF(size)));
+  return image;
 }
 
-bool GraphWidget::exportCsvFile(const QString &fileName, bool raw)
+bool GraphWidget::exportImageFile(const QString &fileName)
 {
-  if (m_store->count() <= 0)
-    return false;
-
-  m_cfg->setString("QtDMM/LastUsesPath", QDir().absoluteFilePath(fileName));
-
-  // the other values the graph shows (right-click menu, Values), a column
-  // group each
-  QList<int> extras;
-  for (int i = 0; i < m_store->extraCount(); ++i)
-    if (m_shownValues.contains(m_store->extra(i).id))
-      extras << i;
-  // and the values of other meters it shows, a column group each
-  QList<RecordingStore::Foreign> foreign;
-  for (const OtherCurve &c : m_otherCurves)
-    if (c.store)
-      foreign << RecordingStore::Foreign{ c.store, c.value.id, otherName(c.value.source) };
-  QString err;
-  // every column after its meter, this one's too
-  const QString device = !m_sourceFile.isEmpty() ? m_sourceDevice
-                         : m_baseSource.isEmpty() ? QString() : otherName(m_baseSource);
-  if (!m_store->write(fileName, &err, raw, extras, foreign, device))
-  {
-    Q_EMIT error(err);
-    return false;
-  }
-  return true;
-}
-
-void GraphWidget::importDataSLOT()
-{
-  // unsaved data: InstanceWidget::importSLOT() asks first
-  QString fn = QFileDialog::getOpenFileName(this, tr("Import data"), m_cfg->getString("QtDMM/LastUsesPath", tr("CSV (*.csv);;All files (*)")));
-
-  if (!fn.isNull())
-    importCsvFile(fn);
-}
-
-bool GraphWidget::importCsvFile(const QString &fileName)
-{
-  m_cfg->setString("QtDMM/LastUsesPath", QDir().absoluteFilePath(fileName));
-
-  QString err;
-  const std::optional<Recording> rec = RecordingFile::read(fileName, &err);
-  if (!rec)
-  {
-    Q_EMIT error(err);
-    return false;
-  }
-
-  setUnit(rec->unit);
-  m_store->setSampleTime(rec->sampleTimeTenths);
-  const int cnt = int(rec->values.size());
-  if (cnt > 1)
-    Q_EMIT sampleTime(m_store->sampleTime());
-
-  m_scaleMin =  1e40;
-  m_scaleMax = -1e40;
-
-  m_sourceFile = QFileInfo(fileName).fileName();
-  m_sourceDevice = rec->device;
-  // this meter's columns into the store, another meter's into one of its own
-  m_store->load(RecordingFile::devicePart(*rec, rec->device));
-  // all its values shown, so a new export writes them again; without a
-  // device the main curve was off
-  if (m_store->count() > 0)
-    setValueShown(0, true);
-  for (int i = 0; i < m_store->extraCount(); ++i)
-    setValueShown(m_store->extra(i).id, true);
-  setFileStores(*rec);
-  Q_EMIT valuesChanged();
-  updateStateLabel();
-
-  setScale(true, true, 0, 0);
-  // the graph shows the import by itself
-  rebuildSeries();
-  updateScrollRange();
-  scrollbar->setValue(0);
-  updateXAxisRange();
-  updateTimeButtons();
-
-  Q_EMIT error(fileName);
-  update();
-  return true;
-}
-
-void GraphWidget::copyImageSLOT()
-{
-  QGuiApplication::clipboard()->setPixmap(m_chartView->grab());
-}
-
-bool GraphWidget::exportImageSLOT()
-{
-  QFileInfo fileInfo(m_cfg->getString("QtDMM/LastImagePath"));
-  const QStringList suffixes = { "svg", "pdf", "png", "jpg" };
-  const QString suffix = suffixes.contains(fileInfo.suffix().toLower()) ? fileInfo.suffix().toLower() : "svg";
-  const QString name = fileInfo.baseName().isEmpty() ? QString("untitled")
-                                                     : fileInfo.absolutePath() + "/" + fileInfo.baseName();
-  const QString svgFilter = tr("Scalable vector graphics (*.svg)"), pdfFilter = tr("PDF (*.pdf)"),
-                pngFilter = tr("PNG image (*.png)"), jpgFilter = tr("JPEG image (*.jpg)");
-  QString filter = suffix == "pdf" ? pdfFilter : suffix == "png" ? pngFilter
-                 : suffix == "jpg" ? jpgFilter : svgFilter;
-  QString fn = QFileDialog::getSaveFileName(this, tr("Export image"), name + "." + suffix,
-                                            svgFilter + ";;" + pdfFilter + ";;" + pngFilter + ";;" + jpgFilter,
-                                            &filter);
-  if (fn.isNull())
-    return false;
-  // the dialog leaves the name alone when the user typed one: follow the
-  // chosen filter, so picking "PDF" and typing "plot" does write a PDF
-  const QString chosen = filter == pdfFilter ? "pdf" : filter == pngFilter ? "png"
-                       : filter == jpgFilter ? "jpg" : "svg";
-  if (!suffixes.contains(QFileInfo(fn).suffix().toLower()))
-    fn += "." + chosen;
-
-  m_cfg->setString("QtDMM/LastImagePath", QDir().absoluteFilePath(fn));
-  return exportImageFile(fn);
-}
-
-bool GraphWidget::exportImageFile(const QString &fileName, QSize size)
-{
-  // the crosshair follows the mouse and would be baked into the picture at
-  // whatever point the user right-clicked
-  const bool crosshairShown = m_crosshairVLine->isVisible() || m_crosshairHLine->isVisible();
-  if (crosshairShown)
-  {
-    m_crosshairVLine->hide();
-    m_crosshairHLine->hide();
-  }
-  const bool ok = writeImage(fileName, size);
-  if (crosshairShown)
-  {
-    m_crosshairVLine->show();
-    m_crosshairHLine->show();
-  }
-  return ok;
-}
-
-bool GraphWidget::writeImage(const QString &fileName, QSize size)
-{
-  if (size.isEmpty())
-    size = m_chartView->size();
-  if (size.isEmpty())
-    size = QSize(1024, 640);
+  const QSize size = pictureSize();
   const QString suffix = QFileInfo(fileName).suffix().toLower();
-
   if (suffix == "svg")
   {
     QSvgGenerator svg;
     svg.setFileName(fileName);
     svg.setSize(size);
     svg.setViewBox(QRect(QPoint(0, 0), size));
-    svg.setTitle(m_store->startDateTime().isValid()
-                 ? tr("QtDMM recording, %1").arg(m_store->startDateTime().toString(Qt::ISODate))
-                 : tr("QtDMM graph"));
-    svg.setDescription(tr("%1 readings, unit %2").arg(m_store->count()).arg(m_store->unit()));
+    svg.setTitle(m_store && m_store->startDateTime().isValid()
+                 ? word("QtDMM recording, %1").arg(m_store->startDateTime().toString(Qt::ISODate)) : word("QtDMM graph"));
     QPainter p;
     if (!p.begin(&svg))
-    {
-      Q_EMIT error(tr("Could not write %1").arg(fileName));
       return false;
-    }
-    // into the requested size, as PDF and PNG: at the view's own size the
-    // drawing sat in a corner of a larger viewBox
-    m_chartView->render(&p, QRectF(QPointF(0, 0), QSizeF(size)));
-    p.end();
+    play(p, picture(), size, QRectF(QPointF(0, 0), QSizeF(size)));
+    return p.end();
   }
-  else if (suffix == "pdf")
+  if (suffix == "pdf")
   {
     QPdfWriter pdf(fileName);
-    pdf.setTitle(tr("QtDMM graph"));
+    pdf.setTitle(word("QtDMM graph"));
     pdf.setCreator("QtDMM");
     // the page takes the graph's proportions, so nothing is stretched
-    pdf.setPageSize(QPageSize(QSizeF(size.width(), size.height()), QPageSize::Point,
-                              QString(), QPageSize::ExactMatch));
+    pdf.setPageSize(QPageSize(QSizeF(size.width(), size.height()), QPageSize::Point, QString(), QPageSize::ExactMatch));
     pdf.setPageMargins(QMarginsF(0, 0, 0, 0));
     QPainter p;
     if (!p.begin(&pdf))
-    {
-      Q_EMIT error(tr("Could not write %1").arg(fileName));
       return false;
-    }
-    m_chartView->render(&p, QRectF(QPointF(0, 0), QSizeF(pdf.width(), pdf.height())));
-    p.end();
+    play(p, picture(), size, QRectF(0, 0, pdf.width(), pdf.height()));
+    return p.end();
   }
-  else
-  {
-    QPixmap pixmap(size);
-    pixmap.fill(Qt::white);
-    QPainter p(&pixmap);
-    m_chartView->render(&p, QRectF(QPointF(0, 0), QSizeF(size)));
-    p.end();
-    if (!pixmap.save(fileName))
-    {
-      Q_EMIT error(tr("Could not write %1").arg(fileName));
-      return false;
-    }
-  }
-  Q_EMIT info(tr("Graph written to %1").arg(QFileInfo(fileName).fileName()));
-  return true;
+  return pictureImage().save(fileName);
+}
+
+void GraphWidget::copyImage()
+{
+  QGuiApplication::clipboard()->setImage(pictureImage());
+}
+
+// The page: the title, when the recording started
+// and its sample time, the comment, the picture in the rest of the page
+void GraphWidget::print(QPrinter *printer, const QString &title, const QString &comment)
+{
+  printer->setDocName(!title.isEmpty() ? title : word("QtDMM: %1").arg(QDateTime::currentDateTime().toString()));
+  printer->setCreator("QtDMM");
+  QPainter p;
+  if (!p.begin(printer))
+    return;
+  const int w = printer->width();
+  const int h = printer->height();
+  p.setFont(QFont("Helvetica", 16));
+  const QRect tRect = p.boundingRect(0, 0, w, h, Qt::AlignTop | Qt::AlignHCenter | Qt::TextWordWrap, title);
+  p.drawText(tRect, Qt::AlignTop | Qt::AlignHCenter | Qt::TextWordWrap, title);
+  p.setFont(QFont("Helvetica", 10));
+  const QFontMetrics fm = p.fontMetrics();
+  const QString start = word("Sampling start:"), resolution = word("Sampling resolution:");
+  const int label = qMax(fm.horizontalAdvance(start), fm.horizontalAdvance(resolution));
+  const int line = fm.height();
+  const int top = tRect.height() + 10;
+  p.drawText(0, top, label, line, Qt::AlignLeft | Qt::AlignVCenter, start);
+  p.drawText(label + 10, top, w - label - 10, line, Qt::AlignLeft | Qt::AlignVCenter,
+             m_store ? m_store->startDateTime().toString() : QString());
+  p.drawText(0, top + line, label, line, Qt::AlignLeft | Qt::AlignVCenter, resolution);
+  p.drawText(label + 10, top + line, w - label - 10, line, Qt::AlignLeft | Qt::AlignVCenter,
+             word("%1 Seconds").arg(m_store ? m_store->sampleTime() / 10.0 : 0.0));
+  const QRect cRect = p.boundingRect(0, 0, w, h, Qt::AlignTop | Qt::AlignLeft | Qt::TextWordWrap, comment);
+  p.drawText(0, top + 10 + 2 * line, w, cRect.height(), Qt::AlignLeft | Qt::AlignTop | Qt::TextWordWrap, comment);
+  const int below = top + 20 + 2 * line + cRect.height();
+  play(p, picture(), pictureSize(), QRectF(0, below, w, h - below));
+  p.end();
 }

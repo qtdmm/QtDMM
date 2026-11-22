@@ -3,19 +3,12 @@
 
 #include "device/metersetup.h"
 
-#include "core/calcexpr.h"
 #include "core/sampletypes.h"
 #include "device/protocols.h"
 #include "device/victronble.h"
 #ifdef QTDMM_WITH_BLE
 #include "device/transports/blegatt.h"
 #endif
-
-const char *const MeterSetup::kVirtualDefaults[3][2] = {
-  { "A", "0.5 + 0.2 * sin(2 * pi * t / 13)" },
-  { "W", "v1 * v2" },
-  { "°C", "21 + 2 * sin(2 * pi * t / 300)" },
-};
 
 FrameFormat::DataFormat MeterSetup::formatFromSetting(const QVariant &value)
 {
@@ -90,6 +83,11 @@ MeterSetup MeterSetup::fromKeys(const QVariantMap &keys, const QString &sigrokEx
     {
       s.info = cfg;
       s.knownModel = true;
+      if (cfg.baudChoosable() && cfgInt("Port settings/baud") > 0)
+        s.info.baud = cfgInt("Port settings/baud");
+      if (cfg.unitsChoosable())
+        for (int i = 1; i <= kMaxValues; ++i)
+          s.info.units << cfgString(QString("DMM/unit-%1").arg(i)).trimmed();
       break;
     }
   if (!s.knownModel)
@@ -146,28 +144,6 @@ MeterSetup MeterSetup::fromKeys(const QVariantMap &keys, const QString &sigrokEx
       s.device += QString(" %1 %2").arg(fields[2], fields[3]);
     // main and second value, and the third and fourth chosen
     s.valueCount = info.valueCount() + extra;
-  }
-  else if (known && isCalculated(info))
-    s.device = QString("calc %1 %2").arg(cfgString("DMM/calc-unit", "W").trimmed(), cfgString("DMM/calc-expression").trimmed());
-  else if (known && isVirtual(info))
-  {
-    const int wave = cfgInt("DMM/virtual-waveform", 2);
-    const QString formula = wave == CalcExpr::Custom
-                              ? cfgString("DMM/virtual-formula")
-                              : CalcExpr::waveformFormula(static_cast<CalcExpr::Waveform>(wave), cfgString("DMM/virtual-min", "0"),
-                                                          cfgString("DMM/virtual-max", "10"), cfgString("DMM/virtual-period", "20"),
-                                                          cfgString("DMM/virtual-noise", "0"));
-    // the other values after ';' (CalcDevice)
-    s.valueCount = qBound(1, cfgInt("DMM/virtual-values", 1), kMaxValues);
-    s.device = QString("calc %1/%2 %3").arg(cfgString("DMM/virtual-unit", "V").trimmed(), cfgString("DMM/virtual-coupling", "DC"),
-                                            formula.trimmed());
-    for (int i = 0; i < s.valueCount - 1; ++i)
-    {
-      const QString n = QString::number(i + 2);
-      s.device += QString("; %1/%2 %3").arg(cfgString("DMM/virtual-unit" + n, kVirtualDefaults[i][0]).trimmed(),
-                                            cfgString("DMM/virtual-coupling" + n, "DC"),
-                                            cfgString("DMM/virtual-formula" + n, kVirtualDefaults[i][1]).trimmed());
-    }
   }
   else if (!stored.section(' ', 0, 0).startsWith("ble", Qt::CaseInsensitive))
     s.device = stored;   // a Bluetooth meter's string is no port for a cable meter

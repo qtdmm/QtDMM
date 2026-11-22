@@ -13,7 +13,6 @@ struct RawPoint
 {
   qint64  t = 0;            ///< ms since the start of the recording (core clock)
   double  value = 0;        ///< SI base units; NaN = none (an overload, or a gap)
-  double  integral = 0;     ///< the integral of the values above the threshold up to t, unit x s; NaN in a gap
   Quality quality = Quality::Valid;   ///< Overload, Stale (a gap) or Valid
   quint32 flags = 0;        ///< SampleFlag of the reading
 
@@ -37,7 +36,6 @@ public:
   QString unit;    ///< base unit without SI prefix ("V")
   int     id = 0;  ///< which value of the meter (Reading::id): 0 the main value, 1.. the others
   QString name;    ///< the meter's own name of the value (Reading::name), empty when none
-  double  runningIntegral = 0;   ///< the integral up to the last point, carried over gaps (the store's)
 
   int      count() const { return int(m_points.size()) - m_head; }
   bool     isEmpty() const { return count() == 0; }
@@ -64,6 +62,8 @@ public:
   int holding(qint64 t) const { return lowerBound(t + 1) - 1; }
 
   void append(const RawPoint &p) { m_points.append(p); }
+  /// More flags for the last point (a gap's cause known only later).
+  void addLastFlags(quint32 flags) { m_points.last().flags |= flags; }
   /// Drops the @p n oldest points.
   void removeFirst(int n)
   {

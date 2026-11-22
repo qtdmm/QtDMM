@@ -57,6 +57,9 @@ void FrameReader::setHandle(QIODevice *handle)
   m_port = handle;
 
   m_readValue = false;
+  m_gapFrame.clear();
+  if (m_gapTimer)
+    m_gapTimer->stop();
 
   if (m_port)
   {
@@ -66,9 +69,60 @@ void FrameReader::setHandle(QIODevice *handle)
 }
 
 
+void FrameReader::setDecoder(std::shared_ptr<DmmDecoder> decoder)
+{
+  m_decoder = decoder;
+  m_gapFrame.clear();
+  if (m_gapTimer)
+    m_gapTimer->stop();
+}
+
 void FrameReader::socketClose()
 {
   m_id = 0;
+  m_gapFrame.clear();
+  if (m_gapTimer)
+    m_gapTimer->stop();
+}
+
+void FrameReader::readByGap()
+{
+  const QByteArray bytes = m_port->readAll();
+  if (bytes.isEmpty())
+    return;
+  if (!m_gapTimer)
+  {
+    m_gapTimer = new QTimer(this);
+    m_gapTimer->setSingleShot(true);
+    connect(m_gapTimer, &QTimer::timeout, this, &FrameReader::emitGapFrame);
+  }
+  for (const char byte : bytes)
+  {
+    if (m_gapFrame.isEmpty())
+    {
+      // the time of the frame's first byte: the pause only ends it
+      m_gapT = Sample::now();
+      m_gapWall = QDateTime::currentMSecsSinceEpoch();
+    }
+    m_gapFrame.append(byte);
+    if (m_gapFrame.size() >= kMaxGapFrame)
+      emitGapFrame();
+  }
+  if (m_gapFrame.isEmpty())
+    m_gapTimer->stop();
+  else
+    m_gapTimer->start(m_decoder->frameGapMs());
+}
+
+void FrameReader::emitGapFrame()
+{
+  if (m_gapFrame.isEmpty())
+    return;
+  const QByteArray frame = m_gapFrame;
+  m_gapFrame.clear();
+  m_sendRequest = true;
+  Q_EMIT readEvent(frame, m_id, m_gapT, m_gapWall);
+  m_id = (m_id + 1) % m_framesPerReading;
 }
 
 void FrameReader::start()
@@ -95,6 +149,12 @@ void FrameReader::startRead()
 
 void FrameReader::socketNotifierSLOT()
 {
+  if (m_decoder != nullptr && m_decoder->frameGapMs() > 0)
+  {
+    readByGap();
+    return;
+  }
+
   int r;
   char byte;
 

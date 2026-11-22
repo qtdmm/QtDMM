@@ -2,10 +2,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "ui/controlbar.h"
 
+#include <cmath>
+
 #include <QFrame>
 #include <QHBoxLayout>
 #include <QMouseEvent>
 #include <QPainter>
+#include <QPainterPath>
 #include <QElapsedTimer>
 #include <QToolButton>
 
@@ -15,9 +18,9 @@ namespace
 {
 constexpr int kGap = 6;   // between groups and rows
 constexpr int kBottomMargin = 6;  // below the last row
+}
 
-// A key in a colour of its own: darker while pressed or on, faded while off
-QString keyColour(const QColor &face, const QColor &text)
+QString ControlBar::keyColour(const QColor &face, const QColor &text)
 {
   QColor faded = face;
   faded.setAlpha(90);
@@ -27,7 +30,6 @@ QString keyColour(const QColor &face, const QColor &text)
                  " QToolButton:disabled { background: %4; color: %5; }")
     .arg(face.name(), text.name(), face.darker(135).name(), faded.name(QColor::HexArgb),
          QColor(text.red(), text.green(), text.blue(), 120).name(QColor::HexArgb));
-}
 }
 
 ControlBar::ControlBar(QWidget *parent) :
@@ -49,13 +51,15 @@ ControlBar::ControlBar(QWidget *parent) :
       { "fn_diode", QT_TR_NOOP("Diode"), QT_TR_NOOP("Diode and continuity"), false },
       { "fn_hz", QT_TR_NOOP("Hz"), QT_TR_NOOP("Frequency"), false } },
     { { "select1", QT_TR_NOOP("SELECT"), QT_TR_NOOP("The meter's SELECT key (the orange one): the next function on this switch position"), false },
-      { "select2", QT_TR_NOOP("Hz/%"), QT_TR_NOOP("Frequency and duty cycle"), false } },
+      { "select2", QT_TR_NOOP("Hz/%"), QT_TR_NOOP("Frequency and duty cycle"), false },
+      { "lpf", QT_TR_NOOP("LPF"), QT_TR_NOOP("Low-pass filter: AC voltage of a motor drive without its switching noise"), false } },
     { { "range", QT_TR_NOOP("RANGE"), QT_TR_NOOP("The next range (switches to manual ranging)"), false },
       { "auto", QT_TR_NOOP("AUTO"), QT_TR_NOOP("Automatic ranging"), true } },
     { { "rel", QT_TR_NOOP("REL"), QT_TR_NOOP("Relative reading: the current value becomes zero"), true },
       { "zero", QT_TR_NOOP("ZERO"), QT_TR_NOOP("Zero the capacitance reading, with the leads open"), false },
       { "minmax", QT_TR_NOOP("MIN/MAX"), QT_TR_NOOP("The meter's own minimum and maximum"), true },
-      { "peak", QT_TR_NOOP("PEAK"), QT_TR_NOOP("Peak minimum and maximum"), true } },
+      { "peak", QT_TR_NOOP("PEAK"), QT_TR_NOOP("Peak minimum and maximum"), true },
+      { "inrush", QT_TR_NOOP("INRUSH"), QT_TR_NOOP("Inrush current: the peak when a motor starts"), true } },
     // the UNI-T iENV meters (UT333BT, UT353BT, UT363BT, UT383BT): a key for each mode
     { { "max", QT_TR_NOOP("MAX"), QT_TR_NOOP("The meter shows its maximum"), true },
       { "min", QT_TR_NOOP("MIN"), QT_TR_NOOP("The meter shows its minimum"), true },
@@ -65,7 +69,8 @@ ControlBar::ControlBar(QWidget *parent) :
       { "weighting", QT_TR_NOOP("FAST/SLOW"), QT_TR_NOOP("Fast or slow time weighting"), false } },
     // HOLD on the right, as on the UT60BT, where it shares its key with LIGHT
     { { "lamp", QT_TR_NOOP("LIGHT"), QT_TR_NOOP("The display backlight"), false },
-      { "hold", QT_TR_NOOP("HOLD"), QT_TR_NOOP("Freeze the display"), true } },
+      { "hold", QT_TR_NOOP("HOLD"), QT_TR_NOOP("Freeze the display"), true },
+      { "autohold", QT_TR_NOOP("A-HOLD"), QT_TR_NOOP("Auto hold: the display freezes once the reading is steady"), true } },
   };
   for (const QList<Key> &keys : groups)
   {
@@ -128,7 +133,7 @@ ControlBar::ControlBar(QWidget *parent) :
       if (key == "select1" || key == "fn_a")
         b->setStyleSheet(keyColour(QColor(0xff, 0xc6, 0x1c), QColor(0x20, 0x20, 0x20)));
       else if (key == "hold" || key == "fn_ohm")
-        b->setStyleSheet(keyColour(QColor(0x3c, 0x9a, 0xff), Qt::white));
+        b->setStyleSheet(keyColour(holdColour(), Qt::white));
       else if (key == "fn_v")
         b->setStyleSheet(keyColour(QColor(0xe0, 0x3c, 0x31), Qt::white));
       if (key == "hold")
@@ -159,6 +164,9 @@ bool ControlBar::supported(const DmmDecoder::DMMInfo &info)
 {
   return info.protocol == FrameFormat::UniTiDMM || info.protocol == FrameFormat::UniTUT61Plus
          || info.protocol == FrameFormat::UniTUT202BT || info.protocol == FrameFormat::UniTiENV
+         || info.protocol == FrameFormat::UniTUT381A || info.protocol == FrameFormat::UniTUT372D
+         || info.protocol == FrameFormat::UniTUT382A || info.protocol == FrameFormat::UniTUT325F
+         || info.protocol == FrameFormat::UniTUT117C || info.protocol == FrameFormat::UniTUT219PV
          || info.protocol == FrameFormat::ZotekBLE || info.protocol == FrameFormat::OwonBLE
          || info.protocol == FrameFormat::OwonBLE15 || info.protocol == FrameFormat::UniTUT181A
          || info.protocol == FrameFormat::VoltcraftVC880 || info.protocol == FrameFormat::VoltcraftVC890
@@ -167,6 +175,7 @@ bool ControlBar::supported(const DmmDecoder::DMMInfo &info)
 
 void ControlBar::setConnected(bool connected)
 {
+  m_connected = connected;
   for (QToolButton *b : std::as_const(m_keys))
     b->setEnabled(connected);
 }
@@ -174,6 +183,8 @@ void ControlBar::setConnected(bool connected)
 void ControlBar::setProtocol(FrameFormat::DataFormat format, const QString &model)
 {
   const std::shared_ptr<DmmDecoder> decoder = DmmDecoder::getInstance(format);
+  m_decoder = decoder;
+  m_model = model;
   for (QToolButton *b : std::as_const(m_keys))
     b->setVisible(decoder && decoder->hasKey(b->property("key").toString(), model));
   // a key held sends its long key only where the meter has one; NCV held
@@ -214,6 +225,10 @@ void ControlBar::showReading(const Reading &reading)
   m_max->setChecked(reading.flags & SampleFlag::Max);
   m_min->setChecked(reading.flags & SampleFlag::Min);
   m_avg->setChecked(reading.flags & SampleFlag::Avg);
+  // a key the meter ignores in this mode: grey, so a press is not lost
+  if (m_decoder)
+    for (QToolButton *b : { m_hold, m_rel, m_minmax })
+      b->setEnabled(m_connected && m_decoder->keyWorks(b->property("key").toString(), m_model, reading));
 }
 
 int ControlBar::layoutGroups(int width, bool apply) const
@@ -310,7 +325,7 @@ void ControlBar::relayout()
 FoldButton::FoldButton(QWidget *parent) :
   QWidget(parent)
 {
-  setFixedSize(20, 20);
+  setFixedSize(44, 12);
   setCursor(Qt::PointingHandCursor);
   setFolded(false);
 }
@@ -326,16 +341,29 @@ void FoldButton::paintEvent(QPaintEvent *)
 {
   QPainter p(this);
   p.setRenderHint(QPainter::Antialiasing);
+  // a tab darker than the metal around it, rounded at the top
+  const QRectF r = QRectF(rect()).adjusted(0.5, 0.5, -0.5, 0);
+  QPainterPath tab;
+  tab.moveTo(r.bottomLeft());
+  tab.lineTo(r.left(), r.top() + 5);
+  tab.quadTo(r.topLeft(), r.topLeft() + QPointF(5, 0));
+  tab.lineTo(r.right() - 5, r.top());
+  tab.quadTo(r.topRight(), r.topRight() + QPointF(0, 5));
+  tab.lineTo(r.bottomRight());
   p.setPen(Qt::NoPen);
-  p.setBrush(palette().color(m_hover ? QPalette::WindowText : QPalette::Mid));
-  // ▾ open, ▸ folded
-  const QPointF c = rect().center();
-  QPolygonF tri;
-  if (m_folded)
-    tri << c + QPointF(-3, -5) << c + QPointF(4, 0) << c + QPointF(-3, 5);
-  else
-    tri << c + QPointF(-5, -3) << c + QPointF(5, -3) << c + QPointF(0, 4);
-  p.drawPolygon(tri);
+  p.setBrush(QColor(0, 0, 0, m_hover ? 110 : 70));
+  p.drawPath(tab);
+  // ︽ open (folds up), ︾ folded (unfolds down)
+  p.setPen(QPen(palette().color(m_hover ? QPalette::WindowText : QPalette::Mid), 1.4, Qt::SolidLine, Qt::RoundCap,
+                Qt::RoundJoin));
+  p.setBrush(Qt::NoBrush);
+  const QPointF c = r.center() + QPointF(0, 0.5);
+  const double dir = m_folded ? 1 : -1;
+  for (double dy : { -2.0, 2.0 })
+  {
+    const QPointF m = c + QPointF(0, dy);
+    p.drawPolyline(QPolygonF({ m + QPointF(-4, -1.5 * dir), m + QPointF(0, 1.5 * dir), m + QPointF(4, -1.5 * dir) }));
+  }
 }
 
 void FoldButton::enterEvent(QEnterEvent *)
@@ -356,4 +384,66 @@ void FoldButton::mousePressEvent(QMouseEvent *event)
     return;
   setFolded(!m_folded);
   Q_EMIT toggled(m_folded);
+}
+
+PanelGear::PanelGear(QWidget *parent) :
+  QWidget(parent)
+{
+  setObjectName("ui_panelGear");
+  setFixedSize(16, 16);
+  setCursor(Qt::PointingHandCursor);
+  setToolTip(tr("Info and settings"));
+}
+
+void PanelGear::setInk(const QColor &rest, const QColor &hover)
+{
+  m_rest = rest;
+  m_hoverInk = hover;
+  update();
+}
+
+void PanelGear::paintEvent(QPaintEvent *)
+{
+  QPainter p(this);
+  p.setRenderHint(QPainter::Antialiasing);
+  // eight teeth around a ring, the hole in the middle left open
+  const QPointF c = QRectF(rect()).center();
+  const double outer = qMin(width(), height()) * 0.47;
+  const double inner = outer * 0.72;
+  QPainterPath gear;
+  constexpr int kTeeth = 8;
+  for (int i = 0; i < kTeeth * 4; ++i)
+  {
+    const double a = (i - 0.5) * M_PI / (kTeeth * 2);
+    const double rad = (i % 4 < 2) ? outer : inner;
+    const QPointF pt = c + QPointF(std::cos(a) * rad, std::sin(a) * rad);
+    if (i == 0)
+      gear.moveTo(pt);
+    else
+      gear.lineTo(pt);
+  }
+  gear.closeSubpath();
+  gear.addEllipse(c, outer * 0.33, outer * 0.33);
+  gear.setFillRule(Qt::OddEvenFill);
+  p.setPen(Qt::NoPen);
+  p.setBrush(m_hover ? m_hoverInk : m_rest);
+  p.drawPath(gear);
+}
+
+void PanelGear::enterEvent(QEnterEvent *)
+{
+  m_hover = true;
+  update();
+}
+
+void PanelGear::leaveEvent(QEvent *)
+{
+  m_hover = false;
+  update();
+}
+
+void PanelGear::mouseReleaseEvent(QMouseEvent *event)
+{
+  if (event->button() == Qt::LeftButton && rect().contains(event->position().toPoint()))
+    Q_EMIT clicked();
 }

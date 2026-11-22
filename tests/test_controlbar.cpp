@@ -133,6 +133,30 @@ int main(int argc, char **argv)
   bar.showReading(second);
   check(!key(bar, "hold")->isChecked(), "states: a secondary value is ignored");
 
+  // --- 3a. a key the UT61+ ignores in a mode is grey (dmm-tools' dead lists) ---
+  auto inMode = [](Quantity q, const QString &base, quint32 flags = 0)
+  {
+    Reading m;
+    m.port.quantity = q;
+    m.baseUnit = base;
+    m.flags = flags;
+    return m;
+  };
+  bar.showReading(inMode(Quantity::Continuity, "Ohm"));
+  check(key(bar, "hold")->isEnabled() && !key(bar, "rel")->isEnabled() && !key(bar, "minmax")->isEnabled(),
+        "continuity: HOLD works, REL and MIN/MAX grey");
+  bar.showReading(inMode(Quantity::Capacitance, "F"));
+  check(key(bar, "rel")->isEnabled() && !key(bar, "minmax")->isEnabled(), "capacitance: REL works, MIN/MAX grey");
+  bar.showReading(inMode(Quantity::Unknown, ""));
+  check(!key(bar, "hold")->isEnabled() && !key(bar, "rel")->isEnabled(), "NCV: HOLD and REL grey");
+  bar.showReading(inMode(Quantity::Voltage, "V", SampleFlag::DC));
+  check(key(bar, "hold")->isEnabled() && key(bar, "rel")->isEnabled() && key(bar, "minmax")->isEnabled(),
+        "DC V: all three work again");
+  bar.setProtocol(FrameFormat::UniTiDMM, "UT60BT");
+  bar.showReading(inMode(Quantity::Continuity, "Ohm"));
+  check(key(bar, "rel")->isEnabled(), "UT60BT: no dead list, REL stays");
+  bar.setProtocol(FrameFormat::UniTUT61Plus, "UT61E+");
+
   // --- 3b. another meter at the same size: the groups placed anew, none
   //         over another, each as wide as its keys (they overlapped until
   //         the window was resized) ---

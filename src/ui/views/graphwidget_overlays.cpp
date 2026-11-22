@@ -1,316 +1,454 @@
-//======================================================================
-// File:		graphwidget_overlays.cpp (from dmmgraph.cpp)
-// Author:	Matthias Toussaint
-// Created:	Tue Apr 10 17:45:35 CEST 2001
-//----------------------------------------------------------------------
-// This file is part of QtDMM.
+// Copyright (c) 2026 The QtDMM developers
+// SPDX-License-Identifier: GPL-3.0-or-later
 //
-// QtDMM is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// QtDMM is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with QtDMM.  If not, see <http://www.gnu.org/licenses/>.
-//----------------------------------------------------------------------
-// Copyright (c) 2001 Matthias Toussaint
-//======================================================================
-//
-// GraphWidget, part: what lies over the curves: time cursors, the reference
-// line, threshold lines, alarm marks and flags.
-// The class is in graphwidget.h, its other parts in graphwidget*.cpp.
-
-#include <QtGui>
-#include <QtWidgets>
-#include <QPen>
-#include <cmath>
-#include <limits>
-#include <numeric>
-
+// GraphWidget: what lies over the curves to read them - the crosshair on a
+// reading, the time cursors A and B, the reference lines with their
+// crossings, the limit band, the start threshold - and the statistics column.
 #include "ui/views/graphwidget.h"
-#include "ui/views/graphwidget_p.h"
-#include "core/nicestep.h"
-#include "ui/views/graphflags.h"
+
 #include "core/siprefix.h"
+#include "recording/recordingstore.h"
+#include "ui/views/graphstatspanel.h"
+#include "ui/views/graphtimebar.h"
+#include "ui/views/qcp.h"
 
-void GraphWidget::hideCrosshair()
+#include <QCoreApplication>
+#include <QDialog>
+#include <QDialogButtonBox>
+#include <QDoubleSpinBox>
+#include <QFormLayout>
+#include <QInputDialog>
+#include <QPushButton>
+#include <QElapsedTimer>
+#include <QLayout>
+#include <cmath>
+
+namespace
 {
-  m_crosshairVLine->setVisible(false);
-  m_crosshairHLine->setVisible(false);
-  if (m_cursorLabel)
-    m_cursorLabel->hide();
+// A word of the context GraphWidget looked up through a variable ("mean",
+// "alarm"); graphwords.h keeps it for lupdate.
+QString word(const char *text)
+{
+  return QCoreApplication::translate("GraphWidget", text);
 }
 
-double GraphWidget::valueAt(const RecordingSeries *series, qint64 t, const RecordingStore *store) const
+/// Horizontal lines at values of an axis with a label at the right, a band
+/// between two values and the triangles of crossings: one item draws what
+/// GraphWidget::updateLevels() gave it, at the place the axes have now.
+class LevelLines : public QCPAbstractItem
 {
-  const int i = series ? series->holding(t) : -1;
-  if (i < 0 || t > (store ? store : m_store)->duration() || series->at(i).gap())
-    return std::nan("");
-  return series->at(i).value;
-}
-
-int GraphWidget::drawnExtra(int id, qint64 t, bool leftOnly) const
-{
-  // the series whose reading holds at t is the one with the latest reading
-  // up to t: one that went on after another (moved to the end) has an older
-  // one, its gap where the other began
-  int best = -1;
-  qint64 bestT = -1;
-  for (int i = 0; i < m_store->extraCount() && i < int(m_extraCurves.size()); ++i)
+public:
+  struct Line
   {
-    const RecordingSeries &s = m_store->extra(i);
-    const ExtraCurve &c = m_extraCurves[size_t(i)];
-    const int j = s.id == id && c.shown && !(leftOnly && c.side > 0) ? s.holding(t) : -1;
-    if (j >= 0 && s.at(j).t >= bestT)
+    QCPAxis *axis = nullptr;
+    double   value = 0;     ///< the axis' unit
+    QPen     pen;
+    QString  label;         ///< empty: none
+  };
+  struct Mark
+  {
+    double t = 0;           ///< time axis
+    double value = 0;       ///< left axis
+    bool   up = false;
+  };
+
+  explicit LevelLines(QCustomPlot *plot) : QCPAbstractItem(plot) {}
+  double selectTest(const QPointF &, bool, QVariant *) const override { return -1; }
+  void clear()
+  {
+    lines.clear();
+    marks.clear();
+    band = false;
+  }
+
+  QList<Line> lines;
+  QList<Mark> marks;
+  bool   band = false;
+  double bandLow = 0;       ///< left axis' unit; infinite: to the edge
+  double bandHigh = 0;
+  QBrush bandBrush;
+  QColor ink;               ///< labels and the triangles' outline
+  QFont  font;
+
+protected:
+  void draw(QCPPainter *painter) override
+  {
+    const QRectF r = parentPlot()->axisRect()->rect();
+    const QCPAxis *left = parentPlot()->yAxis;
+    if (band)
     {
-      best = i;
-      bestT = s.at(j).t;
+      const double top = std::isfinite(bandHigh) ? left->coordToPixel(bandHigh) : r.top();
+      const double bottom = std::isfinite(bandLow) ? left->coordToPixel(bandLow) : r.bottom();
+      if (bottom > top)
+        painter->fillRect(QRectF(QPointF(r.left(), qMax(top, r.top())), QPointF(r.right(), qMin(bottom, r.bottom()))), bandBrush);
     }
-  }
-  return best;
-}
-
-GraphWidget::RefSeries GraphWidget::refSeries(qint64 t) const
-{
-  RefSeries r;
-  const int id = referenceId();
-  if (id >= 0)
-  {
-    r.store = m_store;
-    const int i = id > 0 ? drawnExtra(id, t, true) : -1;
-    r.series = id == 0 ? &m_store->series() : i < 0 ? nullptr : &m_store->extra(i);
-    return r;
-  }
-  // another meter's on the left: its series that holds at t, on its time
-  const int other = referenceOther();
-  if (other < 0)
-    return r;
-  const OtherCurve &c = m_otherCurves[size_t(other)];
-  r.store = c.store;
-  r.shift = m_store->offsetOf(*c.store);
-  if (c.value.id == 0)
-    r.series = &c.store->series();
-  else
-  {
-    qint64 latest = -1;
-    for (int j = 0; j < c.store->extraCount(); ++j)
+    painter->setFont(font);
+    const QFontMetricsF metrics(font);
+    for (const Line &line : std::as_const(lines))
     {
-      const RecordingSeries &s = c.store->extra(j);
-      const int k = s.id == c.value.id ? s.holding(t - r.shift) : -1;
-      if (k >= 0 && s.at(k).t >= latest)
+      const double y = line.axis->coordToPixel(line.value);
+      if (line.pen.style() != Qt::NoPen)
       {
-        r.series = &s;
-        latest = s.at(k).t;
+        painter->setPen(line.pen);
+        painter->drawLine(QLineF(r.left(), y, r.right(), y));
       }
+      if (line.label.isEmpty())
+        continue;
+      // above the line, unless that leaves the plot
+      const QSizeF size = metrics.size(Qt::TextSingleLine, line.label);
+      const double top = y - size.height() - 1 >= r.top() ? y - size.height() - 1 : y + 1;
+      painter->setPen(ink);
+      painter->drawText(QRectF(r.right() - size.width() - 3, top, size.width(), size.height()), Qt::AlignCenter, line.label);
+    }
+    if (marks.isEmpty())
+      return;
+    // hollow, in the lettering's colour: seen on a curve of any colour
+    painter->setAntialiasing(true);
+    painter->setPen(QPen(ink, 1.5));
+    painter->setBrush(ink.lightness() > 128 ? Qt::black : Qt::white);
+    for (const Mark &mark : std::as_const(marks))
+    {
+      const double x = parentPlot()->xAxis->coordToPixel(mark.t), y = left->coordToPixel(mark.value);
+      const double d = mark.up ? 1 : -1;   // the tip up when it rose (pixels grow down)
+      painter->drawPolygon(QPolygonF({ QPointF(x - 5, y - d * 2), QPointF(x + 5, y - d * 2), QPointF(x, y - d * 11) }));
     }
   }
-  return r;
+};
+}
+
+void GraphWidget::setupOverlays()
+{
+  // band and lines over the grid and under the curves; labels and crossings over them
+  auto *levels = new LevelLines(m_plot);
+  levels->setLayer(QStringLiteral("grid"));
+  levels->setSelectable(false);
+  m_levels = levels;
+  auto *marks = new LevelLines(m_plot);
+  marks->setLayer(QStringLiteral("axes"));
+  marks->setSelectable(false);
+  m_levelMarks = marks;
+  for (int i = 0; i < 2; ++i)
+  {
+    m_cursorLine[i] = new QCPItemStraightLine(m_plot);
+    m_cursorLevel[i] = new QCPItemStraightLine(m_plot);
+    for (QCPAbstractItem *item : std::initializer_list<QCPAbstractItem *>{ m_cursorLine[i], m_cursorLevel[i] })
+    {
+      item->setSelectable(false);
+      item->setVisible(false);
+    }
+  }
+  m_statsPanel = new GraphStatsPanel(this);
+  m_statsPanel->hide();
+  m_statsTimer.setSingleShot(true);
+  m_statsTimer.setInterval(250);
+  connect(&m_statsTimer, &QTimer::timeout, this, &GraphWidget::updateStats);
+  connect(m_timeBar, &GraphTimeBar::statsToggled, this, &GraphWidget::setStatsVisible);
+}
+
+int GraphWidget::leftCurve() const
+{
+  for (int i = 0; i < m_curves.size(); ++i)
+    if (m_curves.at(i).axis == 0)
+      return i;
+  return -1;
+}
+
+GraphStats::Curve GraphWidget::statsCurve(int curve) const
+{
+  GraphStats::Curve out;
+  if (curve < 0 || curve >= m_curves.size())
+    return out;
+  const Curve &c = m_curves.at(curve);
+  // with several meters their names say whose value it is
+  bool several = false;
+  for (const Curve &other : m_curves)
+    several = several || other.value.source != c.value.source;
+  out.name = c.label.isEmpty() ? c.meter : several && !c.meter.isEmpty() ? c.meter + " · " + c.label : c.label;
+  out.unit = c.unit;
+  out.colour = colorOf(curve);
+  out.store = c.store;
+  out.parts = seriesOf(c);
+  out.shift = qRound64(c.shift * 1000);
+  if (m_outliers.active())
+    out.hidden = [rule = m_outliers, unit = c.unit](const RecordingSeries &s, int i) { return GraphOutliers::isOutlier(rule, s, i, unit); };
+  return out;
+}
+
+GraphStats::Input GraphWidget::statsInput() const
+{
+  GraphStats::Input input;
+  for (int i = 0; i < m_curves.size(); ++i)
+    if (m_curves.at(i).axis >= 0)
+      input.curves << statsCurve(i);
+  input.cursor[0] = m_cursorT[0];
+  input.cursor[1] = m_cursorT[1];
+  input.from = windowStart();
+  input.to = input.from + qint64(m_windowSeconds) * 1000;
+  input.end = m_store ? m_store->duration() : 0;
+  input.outliersHidden = m_outliersHidden;
+  return input;
+}
+
+void GraphWidget::setOutliers(const GraphOutliers::Rule &rule)
+{
+  if (rule == m_outliers)
+    return;
+  m_outliers = rule;
+  Q_EMIT outliersChanged();
+  m_dirty = true;   // every curve, and with them the bands and the crossings
+  countOutliers();
+  scheduleRefresh();
+}
+
+// The hidden readings of the curves drawn in the time shown
+void GraphWidget::countOutliers()
+{
+  QElapsedTimer cost;
+  cost.start();
+  int n = 0;
+  if (m_outliers.active())
+  {
+    const qint64 from = windowStart(), to = from + qint64(m_windowSeconds) * 1000;
+    for (int c = 0; c < m_curves.size(); ++c)
+    {
+      const Curve &curve = m_curves.at(c);
+      if (curve.axis < 0 || !curve.store)
+        continue;
+      const qint64 shift = qRound64(curve.shift * 1000);
+      for (const RecordingSeries *s : seriesOf(curve))
+        for (int i = qMax(0, s->lowerBound(from - shift)), end = qMin(s->lowerBound(to - shift + 1), s->count()); i < end; ++i)
+          n += GraphOutliers::isOutlier(m_outliers, *s, i, curve.unit) ? 1 : 0;
+    }
+  }
+  m_outlierCountCost = cost.elapsed();
+  if (n != m_outliersHidden)
+  {
+    m_outliersHidden = n;
+    updateTimeBar();
+    scheduleStats();
+  }
+}
+
+// After a picture, at most four times a second; over millions of readings
+// (σ asks 50 neighbours each) a tenth of the time at most
+void GraphWidget::scheduleOutlierCount()
+{
+  if (!m_outliers.active() || m_outlierCountPending)
+    return;
+  m_outlierCountPending = true;
+  QTimer::singleShot(qMax<qint64>(250, m_outlierCountCost * 10), this, [this]
+  {
+    m_outlierCountPending = false;
+    countOutliers();
+  });
+}
+
+// On the reading of the left axis' value that holds under the mouse, or
+// the next one when that is nearer: the vertical line at the mouse, the
+// horizontal one on the value. In a gap it says why there is no value.
+QcpPlotBase::CrosshairAt GraphWidget::crosshairAt(double x, double y)
+{
+  CrosshairAt at{ x, y, false, QString() };
+  const qint64 t = qRound64(x * 1000);
+  const GraphStats::Curve curve = statsCurve(leftCurve());
+  qint64 when = t;
+  const RawPoint *reading = curve.readingNear(t, &when);
+  // the time as the axis counts it; the clock time in the tooltip
+  at.text = GraphStats::timeText(reading ? when : t);
+  m_plot->setToolTip(m_store ? m_store->startDateTime().addMSecs(reading ? when : t).time().toString("HH:mm:ss.zzz") : QString());
+  if (!reading)
+    return at;
+  if (reading->gap())
+  {
+    at.text += "   " + (reading->quality == Quality::Overload ? QStringLiteral("OL") : GraphStats::gapCause(*reading));
+    return at;
+  }
+  at.y = reading->value / m_axes.first().factor;
+  at.horizontal = true;
+  QString prefix;
+  const QString number = SiPrefix::format(reading->value, curve.unit, &prefix);
+  at.text += "   " + QString("%1 %2").arg(number, SiPrefix::displayText(prefix + curve.unit));
+  // what the meter said about it: a frozen or stored value, a difference
+  if (const QString state = GraphStats::stateWords(reading->flags, Quality::Valid); !state.isEmpty())
+    at.text += "   " + state;
+  return at;
+}
+
+QString GraphWidget::crosshairTextAt(const QPoint &pos)
+{
+  return crosshairAt(m_plot->xAxis->pixelToCoord(pos.x()), m_plot->yAxis->pixelToCoord(pos.y())).text;
 }
 
 void GraphWidget::setTimeCursor(int which, qint64 t)
 {
-  m_cursorT[which & 1] = t < 0 ? -1 : qBound(m_store->origin(), t, qMax(m_store->origin(), m_store->duration()));
-  updateTimeCursors();
+  which &= 1;
+  if (t >= 0 && m_store)
+    t = qBound(m_store->origin(), t, qMax(m_store->origin(), m_store->duration()));
+  else
+    t = -1;
+  if (t == m_cursorT[which])
+    return;
+  m_cursorT[which] = t;
+  updateCursors();
+  m_plot->replot(QCustomPlot::rpQueuedReplot);
+  updateStats();
+  Q_EMIT cursorsChanged();
 }
 
 void GraphWidget::clearTimeCursors()
 {
-  m_cursorT[0] = m_cursorT[1] = -1;
-  updateTimeCursors();
-}
-
-// "250 ms", "12.5 s", "1:05:09"
-static QString spanText(qint64 ms)
-{
-  if (ms < 1000)
-    return QString("%1 ms").arg(ms);
-  if (ms < 60000)
-    return QString("%1 s").arg(QString::number(ms / 1000.0, 'f', ms < 10000 ? 3 : 2));
-  return durationText(qRound64(ms / 1000.0));
-}
-
-QString GraphWidget::timeCursorText() const
-{
-  auto withUnit = [](double v, const QString &unit)
-  {
-    if (!std::isfinite(v))
-      return QStringLiteral("--");
-    QString prefix;
-    const double x = SiPrefix::scale(v, unit, &prefix);
-    return QString("%1 %2%3").arg(QString::number(x, 'g', 4), prefix, unit).trimmed();
-  };
-  // the values drawn, the main one first: of each the series that holds at
-  // the time
-  auto drawn = [&](qint64 t)
-  {
-    QList<std::pair<int, const RecordingSeries *>> out;
-    if (m_mainShown)
-      out << std::pair{ 0, &m_store->series() };
-    for (int id : shownValues())
-      if (const int i = drawnExtra(id, t, false); i >= 0)
-        out << std::pair{ id, &m_store->extra(i) };
-    return out;
-  };
-  auto unitOf = [&](const RecordingSeries *s) { return s == &m_store->series() ? m_store->unit() : SiPrefix::displayText(s->unit); };
-  QStringList lines;
-  for (int i = 0; i < 2; ++i)
-    if (m_cursorT[i] >= 0)
-    {
-      QString line = QString("%1  %2").arg(i ? "B" : "A", m_store->startDateTime().addMSecs(m_cursorT[i]).time().toString("HH:mm:ss.zzz"));
-      for (const auto &[id, s] : drawn(m_cursorT[i]))
-        line += QStringLiteral("  ") + withUnit(valueAt(s, m_cursorT[i]), unitOf(s));
-      lines << line;
-    }
-  if (m_cursorT[0] < 0 || m_cursorT[1] < 0)
-    return lines.join('\n');
-  lines << QString("%1 %2").arg(QChar(0x0394) + QStringLiteral("t"), spanText(std::abs(m_cursorT[1] - m_cursorT[0])));
-  // a line per value, its series the one at the later cursor
-  for (const auto &[id, s] : drawn(qMax(m_cursorT[0], m_cursorT[1])))
-  {
-    const QString base = unitOf(s);
-    const RecordingStore::Stats st = m_store->statsOf(*s, m_cursorT[0], m_cursorT[1]);
-    QString line = QString("%1 %2  ").arg(QChar(0x0394), withUnit(valueAt(s, m_cursorT[1]) - valueAt(s, m_cursorT[0]), base))
-                   + tr("mean %1").arg(withUnit(st.mean, base));
-    // the integral: in hours for a current or a power (Ah, Wh, VAh), x s
-    // for the value of the integration curve, else none
-    const bool hours = base == QLatin1String("A") || base == QLatin1String("W") || base == QLatin1String("VA");
-    if (hours || (m_showIntegration && id == m_intValueId))
-    {
-      const QString integral = hours ? withUnit(st.integral / 3600, base + "h")
-                                     : withUnit(st.integral, base.isEmpty() ? QStringLiteral("s") : base + QStringLiteral("·s"));
-      line += QString("  %1 %2").arg(QChar(0x222b), st.count ? integral : QStringLiteral("--"));
-    }
-    lines << line;
-  }
-  return lines.join('\n');
-}
-
-void GraphWidget::updateTimeCursors()
-{
-  if (!m_cursorLine[0])
+  if (m_cursorT[0] < 0 && m_cursorT[1] < 0)
     return;
-  const QRectF plot = m_chart->plotArea();
-  const double min = m_xAxis->min(), max = m_xAxis->max();
-  const double yMin = m_yAxis->min(), yMax = m_yAxis->max();
+  m_cursorT[0] = m_cursorT[1] = -1;
+  updateCursors();
+  m_plot->replot(QCustomPlot::rpQueuedReplot);
+  updateStats();
+  Q_EMIT cursorsChanged();
+}
+
+// Each cursor a line at its time, and the level of the left axis' value
+// there - none in a gap. Its letter is a flag among those of the marks.
+void GraphWidget::updateCursors()
+{
+  const GraphStats::Curve curve = statsCurve(leftCurve());
   for (int i = 0; i < 2; ++i)
   {
+    const bool shown = m_cursorT[i] >= 0;
     const double x = m_cursorT[i] / 1000.0;
-    const bool shown = m_cursorT[i] >= 0 && max > min && x >= min && x <= max;
     m_cursorLine[i]->setVisible(shown);
-    m_cursorName[i]->setVisible(false);   // placed below, with the other flag
-    // the level: only for a value inside the scale (none in a gap)
-    const RefSeries r = shown ? refSeries(m_cursorT[i]) : RefSeries();
-    const double v = r.series ? valueAt(r.series, m_cursorT[i] - r.shift, r.store) : qQNaN();
-    const bool level = std::isfinite(v) && yMax > yMin && v >= yMin && v <= yMax;
-    m_cursorLevel[i]->setVisible(level);
-    if (level)
-    {
-      const double py = plot.bottom() - (v - yMin) / (yMax - yMin) * plot.height();
-      m_cursorLevel[i]->setLine(plot.left(), py, plot.right(), py);
-    }
+    const double v = shown ? curve.valueAt(m_cursorT[i]) : qQNaN();
+    m_cursorLevel[i]->setVisible(std::isfinite(v));
     if (!shown)
       continue;
-    const double px = plot.left() + (x - min) / (max - min) * plot.width();
-    m_cursorLine[i]->setLine(px, plot.top(), px, plot.bottom());
+    m_cursorLine[i]->point1->setCoords(x, 0);
+    m_cursorLine[i]->point2->setCoords(x, 1);
+    if (std::isfinite(v))
+    {
+      const double y = v / m_axes.first().factor;
+      m_cursorLevel[i]->point1->setCoords(0, y);
+      m_cursorLevel[i]->point2->setCoords(1, y);
+    }
   }
-  updateFlags();
-  if (!m_cursorInfo)
+  updateMarks();   // the flags share a row
+}
+
+int GraphWidget::cursorAt(const QPoint &pos) const
+{
+  if (!m_plot->axisRect()->rect().contains(pos))
+    return -1;
+  for (int i = 1; i >= 0; --i)
+    if (m_cursorT[i] >= 0 && std::abs(m_plot->xAxis->coordToPixel(m_cursorT[i] / 1000.0) - pos.x()) <= 4)
+      return i;
+  return -1;
+}
+
+double GraphWidget::cursorLevel(int which) const
+{
+  const QCPItemStraightLine *level = m_cursorLevel[which & 1];
+  return level->visible() ? level->point1->coords().y() : qQNaN();
+}
+
+int GraphWidget::cursorPixel(int which) const
+{
+  const qint64 t = m_cursorT[which & 1];
+  return t < 0 ? -1 : qRound(m_plot->xAxis->coordToPixel(t / 1000.0));
+}
+
+void GraphWidget::setStatsVisible(bool on)
+{
+  if (on == m_statsOn)
     return;
-  const QString text = timeCursorText();
-  m_cursorInfo->setVisible(!text.isEmpty());
-  if (text.isEmpty())
+  m_statsOn = on;
+  m_timeBar->setStatsChecked(on);
+  layoutStats();
+  updateStats();
+  Q_EMIT statsVisibleChanged(on);
+}
+
+void GraphWidget::scheduleStats()
+{
+  if (m_statsOn && !m_statsTimer.isActive())
+    m_statsTimer.start();
+}
+
+void GraphWidget::updateStats()
+{
+  if (!m_statsOn)
     return;
-  m_cursorInfo->setText(text);
-  m_cursorInfo->adjustSize();
-  // top right in the plot, below the time buttons
-  const QPoint topRight = m_chartView->mapFromScene(plot.topRight());
-  m_cursorInfo->move(topRight.x() - m_cursorInfo->width() - 6, topRight.y() + 4);
-  m_cursorInfo->raise();
+  QElapsedTimer cost;
+  cost.start();
+  const GraphStats::Input input = statsInput();
+  m_statsPanel->setInput(input);
+  // the column follows its widest row: the names cut for the new width
+  const int before = m_statsPanel->width();
+  layoutStats();
+  if (m_statsPanel->width() != before)
+    m_statsPanel->setInput(input);
+  // the cursors' clock times, which the column gives as the axis counts
+  QStringList clock;
+  for (int i = 0; i < 2; ++i)
+    if (m_cursorT[i] >= 0 && m_store)
+      clock << QString("%1  %2").arg(i ? "B" : "A", m_store->startDateTime().addMSecs(m_cursorT[i]).time().toString("HH:mm:ss.zzz"));
+  m_statsPanel->setClockText(clock.join('\n'));
+  // over millions of readings they take a while (about 50 ms per million
+  // and curve): then less often, a tenth of the time at most
+  m_statsTimer.setInterval(qMax(250, int(cost.elapsed()) * 10));
 }
 
-double GraphWidget::referenceY() const
+void GraphWidget::layoutStats()
 {
-  const double min = m_yAxis->min(), max = m_yAxis->max();
-  const QRectF plot = m_chart->plotArea();
-  if (m_referenceKind == RefOff || leftValue().id < 0 || !(m_reference > min && m_reference < max) || plot.height() <= 0)
-    return std::nan("");
-  return plot.bottom() - (m_reference - min) / (max - min) * plot.height();
+  const int side = m_statsOn ? m_statsPanel->wantedWidth(width() / 2) : 0;
+  const bool left = m_lookSettings.statsLeft;
+  layout()->setContentsMargins(left ? side : 0, 0, left ? 0 : side, 0);
+  m_statsPanel->setGeometry(left ? 0 : width() - side, 0, side, height());
+  m_statsPanel->setVisible(m_statsOn);
 }
 
-bool GraphWidget::referenceShown() const
+QString GraphWidget::statsText() const
 {
-  return std::isfinite(referenceY());
+  return GraphStats::text(statsInput());
 }
 
-RecordingStore::Stats GraphWidget::windowStats() const
+ValueRef GraphWidget::leftValue() const
 {
-  // the reference's series at the end of the window
-  const qint64 from = qRound64(m_xAxis->min() * 1000), to = qRound64(m_xAxis->max() * 1000);
-  const RefSeries r = refSeries(qMin(to, m_store->duration()));
-  return r.series ? r.store->statsOf(*r.series, from - r.shift, to - r.shift) : RecordingStore::Stats();
+  const int curve = leftCurve();
+  return curve < 0 || m_ownStore ? ValueRef(-1) : m_curves.at(curve).value;
 }
 
-void GraphWidget::setReference(ReferenceKind kind, double value)
+void GraphWidget::setReference(const GraphReference::Line &line)
 {
-  if (kind == RefValue && value == 0)
-    kind = RefZero;
-  const bool changed = kind != m_referenceKind || ((kind == RefValue || kind == RefAlarm) && value != m_reference);
-  m_referenceKind = kind;
-  if (kind == RefZero)
-    m_reference = 0;
-  else if (kind == RefValue || kind == RefAlarm)
-    m_reference = value;
-  updateReferenceLine();
-  if (changed)
-    Q_EMIT referenceChanged();
+  if (line == m_reference)
+    return;
+  m_reference = line;
+  m_followedAge.invalidate();
+  redraw();
+  Q_EMIT referenceChanged();
 }
 
-QString GraphWidget::referenceSetting() const
+void GraphWidget::setReferenceLines(const QList<double> &values)
 {
-  switch (m_referenceKind)
-  {
-    case RefMean:  return QStringLiteral("mean");
-    case RefMin:   return QStringLiteral("min");
-    case RefMax:   return QStringLiteral("max");
-    case RefAlarm: return QStringLiteral("alarm ") + QString::number(m_reference, 'g', 12);
-    case RefValue: return QString::number(m_reference, 'g', 12);
-    case RefOff:   return QStringLiteral("off");
-    case RefZero:  break;
-  }
-  return QString();
+  const QList<double> lines = GraphReference::lines(values);
+  if (lines == m_referenceLines)
+    return;
+  m_referenceLines = lines;
+  redraw();
+  Q_EMIT referenceChanged();
 }
 
-void GraphWidget::setReferenceSetting(const QString &text)
+void GraphWidget::setCrossingsVisible(bool on)
 {
-  const QString t = text.trimmed();
-  bool ok = false;
-  if (t == QLatin1String("mean"))
-    setReference(RefMean);
-  else if (t == QLatin1String("min"))
-    setReference(RefMin);
-  else if (t == QLatin1String("max"))
-    setReference(RefMax);
-  else if (t == QLatin1String("off"))
-    setReference(RefOff);
-  else if (const double v = t.section(' ', 1).toDouble(&ok); t.startsWith(QLatin1String("alarm ")) && ok)
-    setReference(RefAlarm, v);
-  else if (const double v = t.toDouble(&ok); ok && std::isfinite(v))
-    setReference(RefValue, v);
-  else
-    setReference(RefZero);
+  if (on == m_crossingsOn)
+    return;
+  m_crossingsOn = on;
+  redraw();
+  Q_EMIT referenceChanged();
 }
 
 void GraphWidget::setAlarmThresholds(const QList<double> &values)
 {
   m_alarmThresholds = values;
-  if (m_referenceKind == RefAlarm && !values.contains(m_reference))
-    m_referenceKind = RefValue;
-  updateReferenceLine();
+  if (m_reference.kind == GraphReference::Alarm && !values.contains(m_reference.value))
+    setReference(GraphReference::line(GraphReference::Value, m_reference.value));
 }
 
 void GraphWidget::setLimits(const ValueRef &value, double low, double high)
@@ -318,248 +456,356 @@ void GraphWidget::setLimits(const ValueRef &value, double low, double high)
   m_limitValue = value;
   m_limitLow = low;
   m_limitHigh = high;
-  updateLimitBand();
+  redraw();
 }
 
-void GraphWidget::updateLimitBand()
+// As the axis' numbers: four digits with the prefix that suits the value
+QString GraphWidget::levelText(double value) const
 {
-  const double min = m_yAxis->min(), max = m_yAxis->max();
-  const QRectF plot = m_chart->plotArea();
-  const ValueRef ref = leftValue();
-  // another value on the left axis: its limit band, if it has one
-  if (ref != m_lastReference)
-  {
-    m_lastReference = ref;
-    Q_EMIT leftValueChanged(ref);
-  }
-  const bool on = m_limitValue.id >= 0 && m_limitValue == m_lastReference && max > min && plot.height() > 0;
-  auto sceneY = [&](double v) { return plot.bottom() - (v - min) / (max - min) * plot.height(); };
-  const double bounds[2] = { m_limitLow, m_limitHigh };
-  for (int i = 0; i < 2; ++i)
-  {
-    const double v = bounds[i];
-    const bool shown = on && std::isfinite(v) && v > min && v < max;
-    m_limitLines[i]->setVisible(shown);
-    if (shown)
-      m_limitLines[i]->setLine(plot.left(), sceneY(v), plot.right(), sceneY(v));
-  }
-  // an open side reaches the edge; nothing of the band in the scale: none
-  const double lo = std::isfinite(m_limitLow) ? m_limitLow : -std::numeric_limits<double>::infinity();
-  const double hi = std::isfinite(m_limitHigh) ? m_limitHigh : std::numeric_limits<double>::infinity();
-  const double top = std::min(hi, max), bottom = std::max(lo, min);
-  m_limitBand->setVisible(on && top > bottom);
-  if (m_limitBand->isVisible())
-    m_limitBand->setRect(QRectF(QPointF(plot.left(), sceneY(top)), QPointF(plot.right(), sceneY(bottom))));
-}
-
-void GraphWidget::dragReference(double y)
-{
-  const QRectF plot = m_chart->plotArea();
-  const double min = m_yAxis->min(), max = m_yAxis->max();
-  if (!(max > min) || plot.height() <= 0)
-    return;
-  auto sceneY = [&](double v) { return plot.bottom() - (v - min) / (max - min) * plot.height(); };
-  QList<std::pair<ReferenceKind, double>> snaps { { RefZero, 0.0 } };
-  const RecordingStore::Stats st = windowStats();
-  if (st.count > 0)
-    snaps << std::pair{ RefMean, st.mean } << std::pair{ RefMin, st.min } << std::pair{ RefMax, st.max };
-  // the alarms drawn are the main value's
-  for (double a : referenceId() == 0 ? m_alarmThresholds : QList<double>())
-    snaps << std::pair{ RefAlarm, a };
-  if (m_limitLines[0]->isVisible())
-    snaps << std::pair{ RefValue, m_limitLow };
-  if (m_limitLines[1]->isVisible())
-    snaps << std::pair{ RefValue, m_limitHigh };
-  for (const auto &[kind, v] : snaps)
-    if (std::abs(sceneY(v) - y) <= 6)
-    {
-      setReference(kind, v);
-      return;
-    }
-  const double step = niceStep((max - min) / 100);
-  const double v = min + (plot.bottom() - y) / plot.height() * (max - min);
-  setReference(RefValue, std::round(v / step) * step);
-}
-
-void GraphWidget::updateReferenceLine()
-{
-  if (!m_referenceLine)
-    return;
-  // the limit band moves with the same axis
-  updateLimitBand();
-  // the window's statistics follow the readings and the window
-  if (m_referenceKind == RefMean || m_referenceKind == RefMin || m_referenceKind == RefMax)
-  {
-    const RecordingStore::Stats st = windowStats();
-    m_reference = m_referenceKind == RefMean ? st.mean : m_referenceKind == RefMin ? st.min : st.max;
-  }
-  const double y = referenceY();
-  const bool shown = std::isfinite(y);
-  // phosphor draws it with its centre axis
-  m_referenceLine->setVisible(shown && !phosphor());
-  m_referenceLabel->setVisible(shown);
-  updateCentreTicks();
-  if (!shown)
-    return;
-  const QRectF plot = m_chart->plotArea();
-  m_referenceLine->setLine(plot.left(), y, plot.right(), y);
-  // as the y labels: 4 digits with the prefix that suits the value
+  const int curve = leftCurve();
+  const QString base = curve < 0 ? QString() : m_curves.at(curve).unit;
   QString prefix;
-  const QString base = leftUnit();
-  const double v = SiPrefix::scale(m_reference, base, &prefix);
-  QString what;
-  switch (m_referenceKind)
+  const double v = SiPrefix::scale(value, base, &prefix);
+  return base.isEmpty() ? QString::number(v, 'g', 4) : QString("%1 %2").arg(QString::number(v, 'g', 4), SiPrefix::displayText(prefix + base));
+}
+
+// Over millions of readings the statistics of the window take a while:
+// then not with every picture, a tenth of the time at most
+double GraphWidget::followedValue()
+{
+  if (m_followedAge.isValid() && m_followedAge.elapsed() < m_followedCost * 10)
+    return m_followed;
+  QElapsedTimer cost;
+  cost.start();
+  m_followed = qQNaN();
+  const GraphStats::Curve curve = statsCurve(leftCurve());
+  const qint64 from = windowStart(), to = from + qint64(m_windowSeconds) * 1000;
+  // the series at the end of the time shown
+  if (const RecordingSeries *series = curve.seriesAt(qMin(to, m_store ? m_store->duration() : to)); series && curve.store)
   {
-    case RefMean:  what = tr("mean") + ' '; break;
-    case RefMin:   what = tr("min") + ' '; break;
-    case RefMax:   what = tr("max") + ' '; break;
-    case RefAlarm: what = tr("alarm") + ' '; break;
-    default: break;
+    const RecordingStore::Stats st = curve.statsOf(*series, from, to);
+    if (st.count > 0)
+      m_followed = m_reference.kind == GraphReference::Mean ? st.mean : m_reference.kind == GraphReference::Min ? st.min : st.max;
   }
-  m_referenceLabel->setText(what + (base.isEmpty() ? QString::number(v, 'g', 4)
-                                                   : QString("%1 %2%3").arg(QString::number(v, 'g', 4), prefix, base)));
-  m_referenceLabel->setFont(m_yAxis->labelsFont());
-  const QRectF r = m_referenceLabel->boundingRect();
-  // above the line, unless that leaves the plot
-  const double top = y - r.height() - 1 >= plot.top() ? y - r.height() - 1 : y + 1;
-  m_referenceLabel->setPos(plot.right() - r.width() - 3, top);
+  m_followedCost = cost.elapsed();
+  m_followedAge.start();
+  return m_followed;
 }
 
-void GraphWidget::updateThresholdLinesVisibility()
+void GraphWidget::updateLevels()
 {
-  // the trigger compares the main value: on its axis, hidden with it
-  // on the main value's axis: a trigger on another value has no line there
-  m_triggerLine->setVisible((mode() == Raising || mode() == Falling) && m_mainShown && m_store->triggerValue().id == 0);
-  m_integrationLine->setVisible(m_showIntegration && (m_intValueId != 0 || m_mainShown));
-
-  updateThresholdLinePositions();
-}
-
-void GraphWidget::updateThresholdLinePositions()
-{
-  QRectF plot = m_chart->plotArea();
-
-  // the trigger compares the main value; the integration threshold is on
-  // the axis of the value integrated
-  auto positionLine = [&](QGraphicsLineItem *item, double value, QLineSeries *on)
+  // another value on the left: its alarms and its limit band
+  if (const ValueRef left = leftValue(); left != m_lastLeft)
   {
-    if (!item->isVisible())
-      return;
-    double y = m_chart->mapToPosition(QPointF(m_xAxis->min(), value), on).y();
-    item->setLine(plot.left(), y, plot.right(), y);
-  };
-
-  positionLine(m_triggerLine, mode() == Raising ? m_store->raisingThreshold() : m_store->fallingThreshold(),
-               m_dataSeries);
-  positionLine(m_integrationLine, m_store->integrationThreshold(), m_intLine->first());
-  updateMarkPositions();
-}
-
-// The flags of the time cursors and of the marks share the row of the
-// time labels: laid out together, they never cover each other. A mark's
-// flag carries its number and, as room allows, its name.
-void GraphWidget::updateFlags()
-{
-  if (!m_cursorName[0])
-    return;
-  const QRectF plot = m_chart->plotArea();
-  const QFont font = m_xAxis->labelsFont();
-  const QFontMetricsF fm(font);
-  QList<GraphFlags::Flag> flags;
-  QList<GraphFlagItem *> items;
-  for (int i = 0; i < 2; ++i)
+    m_lastLeft = left;
+    Q_EMIT leftValueChanged();
+  }
+  auto *levels = static_cast<LevelLines *>(m_levels);
+  auto *marks = static_cast<LevelLines *>(m_levelMarks);
+  levels->clear();
+  marks->clear();
+  // labels and crossings in the lettering's colour, as the axes' numbers
+  marks->ink = m_look.theme.labels.isValid() ? m_look.theme.labels : palette().color(QPalette::Text);
+  marks->font = m_plot->yAxis->tickLabelFont();
+  m_levelsDrawn.clear();
+  m_bandDrawn = false;
+  m_triggerLevel = qQNaN();
+  m_triggerCurve = -1;
+  const int curve = leftCurve();
+  const Axis &axis = m_axes.first();
+  const double lo = axis.axis->range().lower * axis.factor, hi = axis.axis->range().upper * axis.factor;
+  const double from = m_plot->xAxis->range().lower, to = m_plot->xAxis->range().upper;
+  const double width = m_plot->axisRect()->width();
+  if (curve >= 0 && hi > lo)
   {
-    m_cursorName[i]->setVisible(false);
-    if (m_cursorLine[i]->isVisible())
+    // the reference line, then the added ones, dashed apart from it
+    const QColor labels = marks->ink;
+    const QPen pen(QColor(labels.red(), labels.green(), labels.blue(), 150), 1);
+    QPen dashed = pen;
+    dashed.setStyle(Qt::DashLine);
+    auto add = [&](int line, double value, const QString &what, bool counted)
     {
-      flags << GraphFlags::Flag{ m_cursorLine[i]->line().x1(), m_cursorName[i]->text(), {}, {}, {} };
-      items << m_cursorName[i];
+      if (!(value > lo && value < hi))
+        return;
+      Level level{ line, value, what + levelText(value), 0 };
+      if (counted && m_crossingsOn && width > 0)
+      {
+        const QList<GraphReference::Crossing> found
+          = GraphReference::crossings(m_curves.at(curve).points, from, to, 3 * (to - from) / width, value);
+        for (const GraphReference::Crossing &c : found)
+          marks->marks << LevelLines::Mark{ c.t, value / axis.factor, c.up };
+        level.crossings = int(found.size());
+        if (level.crossings > 0)
+          level.label += QString(" · %1×").arg(level.crossings);
+      }
+      levels->lines << LevelLines::Line{ axis.axis, value / axis.factor, line < 0 ? pen : dashed, QString() };
+      marks->lines << LevelLines::Line{ axis.axis, value / axis.factor, QPen(Qt::NoPen), level.label };
+      m_levelsDrawn << level;
+    };
+    using namespace GraphReference;
+    if (m_reference.kind != Off)
+    {
+      const double value = m_reference.follows() ? followedValue() : m_reference.value;
+      const QString what = m_reference.kind == Mean ? word("mean") : m_reference.kind == Min ? word("min")
+                           : m_reference.kind == Max ? word("max") : m_reference.kind == Alarm ? word("alarm") : QString();
+      // not counted on the window's mean, minimum or maximum: they follow
+      // the curve, a noisy one crosses its mean at every other reading
+      add(-1, value, what.isEmpty() ? what : what + ' ', !m_reference.follows());
+    }
+    for (int i = 0; i < m_referenceLines.size(); ++i)
+      add(i, m_referenceLines.at(i), QString(), true);
+    // the limit test's band
+    if (m_limitValue.id >= 0 && m_limitValue == leftValue())
+    {
+      const QPen green(QColor(0x3c, 0xb0, 0x4a), 1, Qt::DashLine);
+      for (double bound : { m_limitLow, m_limitHigh })
+        if (std::isfinite(bound) && bound > lo && bound < hi)
+          levels->lines << LevelLines::Line{ axis.axis, bound / axis.factor, green, QString() };
+      const double low = std::isfinite(m_limitLow) ? m_limitLow : -qInf(), high = std::isfinite(m_limitHigh) ? m_limitHigh : qInf();
+      // nothing of the band in the scale: none
+      if (qMin(high, hi) > qMax(low, lo))
+      {
+        levels->band = m_bandDrawn = true;
+        levels->bandLow = low / axis.factor;
+        levels->bandHigh = high / axis.factor;
+        levels->bandBrush = QColor(0x3c, 0xb0, 0x4a, 28);
+      }
     }
   }
-  const QList<RecordingStore::Mark> marks = m_store->marks();
-  // "Alarm Peak" says "Peak" on the flag: every mark is an alarm's, the
-  // word would take the room (the tooltip keeps it)
-  const QString alarmWord = QCoreApplication::translate("Alarm", "Alarm") + ' ';
-  for (int i = 0; i < m_markFlags.size() && i < m_marks.size() && i < marks.size(); ++i)
+  // the start threshold of a recording waiting for it, on the axis of the value it compares
+  for (int i = 0; i < m_curves.size(); ++i)
   {
-    m_markFlags[i]->setVisible(false);
-    if (m_marks[i]->isVisible())
-    {
-      QString note = marks[i].name;
-      if (note.startsWith(alarmWord, Qt::CaseInsensitive) && note.size() > alarmWord.size())
-        note = note.mid(alarmWord.size());
-      flags << GraphFlags::Flag{ m_marks[i]->line().x1(), QString::number(i + 1), note, {}, {} };
-      items << m_markFlags[i];
-    }
-  }
-  QList<int> order(flags.size());
-  std::iota(order.begin(), order.end(), 0);
-  std::stable_sort(order.begin(), order.end(), [&](int a, int b) { return flags[a].x < flags[b].x; });
-  QList<GraphFlags::Flag> sorted;
-  for (int i : order)
-    sorted << flags[i];
-  GraphFlags::layout(sorted, plot, fm.height() + 2, [&](const QString &t) { return fm.horizontalAdvance(t); });
-  for (qsizetype j = 0; j < sorted.size(); ++j)
-  {
-    GraphFlagItem *flag = items[order[j]];
-    flag->setFont(font);
-    flag->setText(sorted[j].text);
-    flag->setPlace(sorted[j].rect, sorted[j].x);
-    flag->setVisible(!sorted[j].rect.isEmpty());
-  }
-}
-
-void GraphWidget::addMark(const QColor &color, const QString &name)
-{
-  m_store->addMark(color.rgba(), name);
-}
-
-void GraphWidget::syncMarks()
-{
-  qDeleteAll(m_marks);
-  m_marks.clear();
-  qDeleteAll(m_markFlags);
-  m_markFlags.clear();
-  for (const RecordingStore::Mark &m : m_store->marks())
-  {
-    auto *line = new QGraphicsLineItem(m_chart);
-    line->setPen(QPen(QColor::fromRgba(m.color), 2, Qt::DashLine));
-    line->setZValue(999);
-    line->setToolTip(m.name);
-    m_marks << line;
-    auto *flag = new GraphFlagItem(m_chart);
-    flag->setColor(QColor::fromRgba(m.color));
-    flag->setToolTip(m.name);
-    flag->setZValue(999);
-    flag->setData(0, QStringLiteral("mark-flag"));
-    flag->setVisible(false);
-    m_markFlags << flag;
-  }
-  updateMarkPositions();
-  updateCentreTicks();   // phosphor: the trigger's mark is the vertical centre
-}
-
-void GraphWidget::updateMarkPositions()
-{
-  const QRectF plot = m_chart->plotArea();
-  const QList<RecordingStore::Mark> marks = m_store->marks();
-  for (int i = 0; i < m_marks.size() && i < marks.size(); i++)
-  {
-    QGraphicsLineItem *line = m_marks[i];
-    const double x = marks[i].t / 1000.0;
-    const bool inView = x >= m_xAxis->min() && x <= m_xAxis->max();
-    line->setVisible(inView);
-    if (!inView)
+    const Curve &c = m_curves.at(i);
+    if (m_ownStore || c.axis < 0 || !c.store)
       continue;
-    const double px = m_chart->mapToPosition(QPointF(x, m_yAxis->min()), m_dataSeries).x();
-    line->setLine(px, plot.top(), px, plot.bottom());
+    const RecordingStore::StartMode mode = c.store->startMode();
+    const ValueRef trigger = c.store->triggerValue();
+    if ((mode != RecordingStore::Raising && mode != RecordingStore::Falling) || trigger.id != c.value.id
+        || !(trigger.source.isEmpty() || trigger.source == c.value.source))
+      continue;
+    m_triggerLevel = mode == RecordingStore::Raising ? c.store->raisingThreshold() : c.store->fallingThreshold();
+    m_triggerCurve = i;
+    const Axis &on = m_axes.at(c.axis);
+    levels->lines << LevelLines::Line{ on.axis, m_triggerLevel / on.factor, QPen(m_look.trigger, 1, m_look.oneHue ? Qt::DashLine : Qt::SolidLine), QString() };
+    break;
   }
-  updateFlags();
 }
 
-void GraphWidget::setThresholds(double falling, double raising)
+double GraphWidget::referenceValue(int line) const
 {
-  m_store->setThresholds(falling, raising);
+  for (const Level &level : m_levelsDrawn)
+    if (level.line == line)
+      return level.value;
+  return qQNaN();
+}
 
-  updateThresholdLinesVisibility();
+QString GraphWidget::referenceLabel(int line) const
+{
+  for (const Level &level : m_levelsDrawn)
+    if (level.line == line)
+      return level.label;
+  return QString();
+}
+
+int GraphWidget::crossingCount(int line) const
+{
+  for (const Level &level : m_levelsDrawn)
+    if (level.line == line)
+      return level.crossings;
+  return 0;
+}
+
+int GraphWidget::referencePixel(int line) const
+{
+  if (line == kTriggerLine)
+  {
+    if (m_triggerCurve < 0 || m_triggerCurve >= m_curves.size() || !std::isfinite(m_triggerLevel))
+      return -1;
+    const Axis &on = m_axes.at(qMax(0, m_curves.at(m_triggerCurve).axis));
+    return qRound(on.axis->coordToPixel(m_triggerLevel / on.factor));
+  }
+  const double value = referenceValue(line);
+  return std::isfinite(value) ? qRound(m_plot->yAxis->coordToPixel(value / m_axes.first().factor)) : -1;
+}
+
+bool GraphWidget::limitBand(double *low, double *high) const
+{
+  if (m_bandDrawn && low)
+    *low = std::isfinite(m_limitLow) ? m_limitLow : -qInf();
+  if (m_bandDrawn && high)
+    *high = std::isfinite(m_limitHigh) ? m_limitHigh : qInf();
+  return m_bandDrawn;
+}
+
+int GraphWidget::levelAt(const QPoint &pos) const
+{
+  if (!m_plot->axisRect()->rect().contains(pos))
+    return kNoLine;
+  for (const Level &level : m_levelsDrawn)
+    if (std::abs(referencePixel(level.line) - pos.y()) <= 4)
+      return level.line;
+  if (const int trigger = referencePixel(kTriggerLine); trigger >= 0 && std::abs(trigger - pos.y()) <= 4)
+    return kTriggerLine;
+  return kNoLine;
+}
+
+double GraphWidget::roundedValueAt(const QPoint &globalPos) const
+{
+  const Axis &axis = m_axes.first();
+  const QRect rect = m_plot->axisRect()->rect();
+  const QPoint pos = m_plot->mapFromGlobal(globalPos);
+  const double y = rect.contains(pos) ? pos.y() : rect.center().y();
+  return GraphReference::rounded(axis.axis->pixelToCoord(y) * axis.factor, axis.axis->range().size() * axis.factor);
+}
+
+// The reference line snaps to 0, to the mean, minimum and maximum of the
+// time shown, to the alarm thresholds and to the limits drawn
+void GraphWidget::dragLevel(int line, double y)
+{
+  if (line == kTriggerLine)
+  {
+    // the start threshold: a round value, into the store whose start waits for it
+    if (m_triggerCurve < 0 || m_triggerCurve >= m_curves.size())
+      return;
+    const Curve &c = m_curves.at(m_triggerCurve);
+    const Axis &on = m_axes.at(qMax(0, c.axis));
+    if (!c.store || !(on.axis->range().size() > 0))
+      return;
+    const double value = GraphReference::rounded(on.axis->pixelToCoord(y) * on.factor, on.axis->range().size() * on.factor);
+    if (c.store->startMode() == RecordingStore::Raising)
+      c.store->setRaisingThreshold(value);
+    else
+      c.store->setFallingThreshold(value);
+    Q_EMIT startThresholdDragged(value);
+    redraw();
+    return;
+  }
+  const Axis &axis = m_axes.first();
+  const double span = axis.axis->range().size() * axis.factor, height = m_plot->axisRect()->height();
+  if (!(span > 0) || height <= 0)
+    return;
+  const double value = axis.axis->pixelToCoord(y) * axis.factor;
+  if (line >= 0)
+  {
+    QList<double> lines = m_referenceLines;
+    if (line < lines.size())
+      lines[line] = GraphReference::rounded(value, span);
+    setReferenceLines(lines);
+    return;
+  }
+  using namespace GraphReference;
+  QList<Snap> snaps{ Snap{ Zero, 0 } };
+  const GraphStats::Curve curve = statsCurve(leftCurve());
+  const qint64 from = windowStart(), to = from + qint64(m_windowSeconds) * 1000;
+  if (const RecordingSeries *series = curve.seriesAt(qMin(to, m_store ? m_store->duration() : to)); series && curve.store)
+    if (const RecordingStore::Stats st = curve.statsOf(*series, from, to); st.count > 0)
+      snaps << Snap{ Mean, st.mean } << Snap{ Min, st.min } << Snap{ Max, st.max };
+  if (leftValue().id >= 0)
+    for (double a : std::as_const(m_alarmThresholds))
+      snaps << Snap{ Alarm, a };
+  if (m_bandDrawn)
+    for (double bound : { m_limitLow, m_limitHigh })
+      if (std::isfinite(bound))
+        snaps << Snap{ Value, bound };
+  setReference(dragged(value, span, span / height, snaps));
+}
+
+// How outliers are hidden; Jump and Limits ask in the left axis' unit
+void GraphWidget::askOutliers(GraphOutliers::Mode mode)
+{
+  auto word = [](const char *text) { return QCoreApplication::translate("GraphWidget", text); };
+  const QString unit = m_axes.isEmpty() ? QString() : m_axes.first().unit;
+  const double factor = m_axes.isEmpty() ? 1 : m_axes.first().factor;
+  const QCPRange shown = m_axes.isEmpty() ? QCPRange(0, 1) : m_axes.first().axis->range();
+  bool ok = true;
+  switch (mode)
+  {
+    case GraphOutliers::Shown:
+      setOutliers({});
+      return;
+    case GraphOutliers::Sigma:
+    {
+      const double n = QInputDialog::getDouble(this, word("Hide outliers"), word("More than n σ from their neighbours, n:"),
+                                               m_outliers.mode == GraphOutliers::Sigma ? m_outliers.a : 3.0, 1.0, 20.0, 1, &ok);
+      if (ok)
+        setOutliers({ GraphOutliers::Sigma, n, 0, QString() });
+      return;
+    }
+    case GraphOutliers::Jump:
+    {
+      const double x = QInputDialog::getDouble(this, word("Hide outliers"),
+                                               word("Spikes larger than (%1):").arg(SiPrefix::displayText(unit)),
+                                               m_outliers.mode == GraphOutliers::Jump ? m_outliers.a : shown.size() * factor / 4,
+                                               0, 1e12, 6, &ok);
+      if (ok && x > 0)
+        setOutliers({ GraphOutliers::Jump, x, 0, unit });
+      return;
+    }
+    case GraphOutliers::Limits:
+    {
+      double lo = m_outliers.mode == GraphOutliers::Limits ? m_outliers.a : shown.lower * factor;
+      double hi = m_outliers.mode == GraphOutliers::Limits ? m_outliers.b : shown.upper * factor;
+      if (askMinMax(word("Hide outliers outside [%1]").arg(SiPrefix::displayText(unit)), unit, lo, hi))
+        setOutliers({ GraphOutliers::Limits, lo, hi, unit });
+      return;
+    }
+  }
+}
+
+QStringList GraphWidget::axisUnits() const
+{
+  QStringList units;
+  for (const Axis &a : m_axes)
+    if (!a.unit.isEmpty())
+      units << a.unit;
+  return units;
+}
+
+bool GraphWidget::askFixedRange(const QString &unit, double &min, double &max, bool given)
+{
+  if (!given)
+    for (const Axis &a : std::as_const(m_axes))
+      if (a.unit == unit)
+      {
+        min = a.axis->range().lower * a.factor;
+        max = a.axis->range().upper * a.factor;
+      }
+  return askMinMax(QCoreApplication::translate("GraphWidget", "Fixed range [%1]").arg(unitText(unit)),
+                   unit, min, max);
+}
+
+bool GraphWidget::askMinMax(const QString &title, const QString &unit, double &min, double &max)
+{
+  auto word = [](const char *text) { return QCoreApplication::translate("GraphWidget", text); };
+  QDialog dlg(this);
+  dlg.setWindowTitle(title);
+  auto *form = new QFormLayout(&dlg);
+  auto spin = [&](double v)
+  {
+    auto *s = new QDoubleSpinBox(&dlg);
+    s->setDecimals(6);
+    s->setRange(-1e12, 1e12);
+    s->setSuffix(unit == kNoUnit ? QString() : " " + SiPrefix::displayText(unit));
+    s->setValue(v);
+    return s;
+  };
+  QDoubleSpinBox *low = spin(min);
+  QDoubleSpinBox *high = spin(max);
+  low->setObjectName("ui_axisMin");
+  high->setObjectName("ui_axisMax");
+  form->addRow(word("M&inimum:"), low);
+  form->addRow(word("M&aximum:"), high);
+  auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dlg);
+  connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
+  connect(buttons, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
+  form->addRow(buttons);
+  auto valid = [=] { buttons->button(QDialogButtonBox::Ok)->setEnabled(high->value() > low->value()); };
+  connect(low, &QDoubleSpinBox::valueChanged, &dlg, valid);
+  connect(high, &QDoubleSpinBox::valueChanged, &dlg, valid);
+  valid();
+  if (dlg.exec() != QDialog::Accepted)
+    return false;
+  min = low->value();
+  max = high->value();
+  return true;
 }

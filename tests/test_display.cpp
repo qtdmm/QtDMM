@@ -69,6 +69,10 @@ int main(int argc, char **argv)
     check(SiPrefix::split(whole).prefix.isEmpty() && SiPrefix::split(whole).baseUnit == whole,
           QString("%1 stays whole").arg(whole));
   check(SiPrefix::split("mV").prefix == "m" && SiPrefix::split("kOhm").baseUnit == "Ohm", "mV, kOhm split");
+  // an integral of a unit of its own over hours stays whole: ppmh is no pico "pmh"
+  check(SiPrefix::split("ppmh").prefix.isEmpty() && SiPrefix::split("ppmh").baseUnit == "ppmh"
+          && !SiPrefix::takesPrefix("ppmh") && SiPrefix::split("kWh").prefix == "k" && SiPrefix::split("mAh").baseUnit == "Ah",
+        "ppmh whole, kWh and mAh with their prefixes");
 
   // ... and take no prefix, nor do °C/°F, % and no unit: 1200 ppm, not 1.2 kppm
   for (const char *plain : { "ppm", "%RH", "m/s", "dBA", "cosphi", "%", "C", "dF", "°C", "" })
@@ -261,8 +265,27 @@ int main(int argc, char **argv)
     check(!scalableFont || qFuzzyCompare(l.flagsPx, l.flags.height() * 0.75), "wide panel: annunciator font is the row's");
   }
 
+  // the battery: nothing while unknown, the symbol with 1-3 bars as told
+  {
+    w.setBattery(Battery::Unknown);
+    const QImage none = render(w, size);
+    w.setBattery(Battery::Low);
+    const QImage low = render(w, size);
+    w.setBattery(Battery::Full);
+    const QImage full = render(w, size);
+    w.setBattery(Battery::Unknown);
+    check(none != low && low != full && render(w, size) == none, "battery symbol: off, low, full differ; off again");
+  }
+
   if (!dump.isEmpty())
   {
+    for (const auto &[battery, name] : { std::pair{ Battery::Low, "low" }, std::pair{ Battery::Mid, "mid" },
+                                         std::pair{ Battery::Full, "full" } })
+    {
+      w.setBattery(battery);
+      render(w, size).save(QDir(dump).filePath(QString("display_battery_%1.png").arg(name)));
+    }
+    w.setBattery(Battery::Unknown);
     w.setValue(0, "0.L");
     w.setUnit(0, "Ohm");
     w.setMode(0, 0, Quantity::Resistance);

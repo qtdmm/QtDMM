@@ -3,6 +3,7 @@
 #pragma once
 
 #include <QDateTime>
+#include <QJsonObject>
 #include <QList>
 #include <QString>
 #include <QStringList>
@@ -33,8 +34,9 @@ struct RecordingColumn
   QString unit;               ///< without SI prefix
   QVector<double> values;     ///< NaN for anything but Ok
   QVector<CellState> states;  ///< one per row
-  /// The limit test's verdict per row as SampleFlag::Limit* bits (LimitTest);
-  /// empty: the value had no test.
+  /// The limit test's verdict per row as SampleFlag::Limit* bits (LimitTest)
+  /// and what the meter said about the value (SampleFlag::State: HOLD, MIN,
+  /// MAX, REL ...); empty: the value had neither.
   QVector<quint32> limits;
 };
 
@@ -56,10 +58,17 @@ struct Recording
   QVector<CellState> states;
   /// ms since start for each value; empty = value i at i x the sample time
   QVector<qint64> times;
-  /// The limit test's verdict per row, as RecordingColumn::limits.
+  /// The limit test's verdict and the meter's states per row, as RecordingColumn::limits.
   QVector<quint32> limits;
   /// The other values, a column group each (value 2, value 3 ...).
   QList<RecordingColumn> extra;
+  /// What a QtDMM recording (*.qtdmm-rec) keeps beyond the columns, its
+  /// meta.json: "marks" [{t ms since start, color "#aarrggbb", name}],
+  /// "devices" [{name, model, protocol, values [{id, unit, quantity, name}], alarms,
+  /// limit-test}] (MeterController::recordingInfo()) and what the writer
+  /// adds (format, qtdmm, written, start, end, sample-time in s). Empty for
+  /// a CSV.
+  QJsonObject meta;
 
   /// The time of value @p i, ms since start.
   qint64 timeAt(int i) const { return times.isEmpty() ? qint64(i) * sampleTimeTenths * 100 : times[i]; }
@@ -91,15 +100,39 @@ struct Recording
 /// main value) or `limit 2` ... at the end of the row: `PASS`, `FAIL HI`,
 /// `FAIL LO` or empty. The values of other meters recorded with it follow,
 /// their columns named after the meter: `Sim B: value;Sim B: unit;Sim B:
-/// status`, `Sim B: value 2` ..., `Sim B: limit`.
+/// status`, `Sim B: value 2` ..., `Sim B: limit`. A recording with marks
+/// (Recording::meta "marks") ends each row with `mark;note`: the title and
+/// text of the marks nearest to that row's time, several joined by ` | `,
+/// quoted as RFC 4180 where they hold `;`, `"` or a line break; read back
+/// they are notes at the row's time. Not in the CSV of a `.qtdmm-rec`, whose
+/// meta.json keeps them exactly.
 /// Read: that format, the one before it without status
 /// (`timestamp;time (s);value;unit`, `nan` a gap), and the legacy
 /// tab-separated export of QtDMM < 0.9
 /// (`21.09.2026<TAB>14:03:05[:250]<TAB>value<TAB>unit`). The sample time is
 /// derived from the time span and the row count; a CSV row keeps its time
 /// (Recording::times).
+///
+/// A QtDMM recording (`*.qtdmm-rec`) is a ZIP of that CSV as `recording.csv`
+/// and `meta.json` (Recording::meta): unpacked, the CSV reads anywhere.
+///
+/// A CSV for LabPlot (`*.labplot.csv`, written only) has numbers alone:
+/// `time[s];value [V];value 2 [A];Sim B: value [V]`, each value in its unit
+/// without SI prefix, an empty cell where it is no number. No timestamp,
+/// status or limit columns: LabPlot's import takes every column as a number.
+/// A LabPlot project (`*.lml`, LabPlotProject) has the same columns and a
+/// graph of them, it opens without the import.
 namespace RecordingFile
 {
+/// The suffix of a QtDMM recording.
+inline constexpr const char *kSuffix = "qtdmm-rec";
+/// The colour of a note's mark (RecordingStore::kNoteColor); a CSV's marks
+/// come back as notes.
+inline constexpr quint32 kNoteColor = 0xff1e90ff;
+/// The suffix of a CSV for LabPlot, after the dot ("x.labplot.csv").
+inline constexpr const char *kLabPlotSuffix = "labplot.csv";
+/// The suffix of a LabPlot project.
+inline constexpr const char *kLabPlotProjectSuffix = "lml";
 /// Reads @p path; on failure returns nothing and sets @p error (translated).
 std::optional<Recording> read(const QString &path, QString *error = nullptr);
 /// Writes @p recording to @p path; false with @p error on failure or when
@@ -107,8 +140,22 @@ std::optional<Recording> read(const QString &path, QString *error = nullptr);
 bool write(const Recording &recording, const QString &path, QString *error = nullptr);
 /// The same columns as an Excel (.xlsx) or OpenDocument (.ods) sheet, with
 /// real date and number cells (SpreadsheetWriter); the format follows the
-/// suffix. Falls back to CSV for any other suffix.
+/// suffix; `.qtdmm-rec` writes a QtDMM recording, `.labplot.csv` a CSV for
+/// LabPlot, `.lml` a LabPlot project. Falls back to CSV for any other suffix.
 bool writeAny(const Recording &recording, const QString &path, QString *error = nullptr);
+
+/// A value of a recording as numbers alone, for LabPlot: its name ("value",
+/// "Sim B: value 2"), its unit without SI prefix and a number per row, NaN
+/// where it is none (OL, a gap, before it began).
+struct NumberColumn
+{
+  QString name;
+  QString unit;
+  QVector<double> values;
+};
+/// The values of @p recording as NumberColumn, the main value first; the
+/// times of the rows in s.
+QList<NumberColumn> numberColumns(const Recording &recording, QVector<double> *seconds = nullptr);
 
 /// The other meters in @p recording (RecordingColumn::device, not
 /// Recording::device), in order.

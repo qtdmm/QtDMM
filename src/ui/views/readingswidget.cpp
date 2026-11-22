@@ -23,6 +23,7 @@
 #include <QToolButton>
 #include <QVBoxLayout>
 
+#include "core/projectfolder.h"
 #include "core/siprefix.h"
 
 // The rows of the values the table shows (ReadingsModel::hiddenValues()).
@@ -182,8 +183,15 @@ ReadingsWidget::ReadingsWidget(QWidget *parent) :
     measureRows(0, -1);
   });
   connect(m_log, &QAbstractItemModel::rowsInserted, this, &ReadingsWidget::followSLOT);
-  connect(m_log, &QAbstractItemModel::rowsInserted, this, &ReadingsWidget::updateStats);
-  connect(m_log, &QAbstractItemModel::rowsRemoved, this, &ReadingsWidget::updateStats);
+  // the line goes over all rows: not at each reading, several meters come fast.
+  // A running timer stays as it is, a steady stream must not put it off
+  m_statsTimer = new QTimer(this);
+  m_statsTimer->setSingleShot(true);
+  m_statsTimer->setInterval(250);
+  connect(m_statsTimer, &QTimer::timeout, this, &ReadingsWidget::updateStats);
+  auto statsLater = [this] { if (!m_statsTimer->isActive()) m_statsTimer->start(); };
+  connect(m_log, &QAbstractItemModel::rowsInserted, this, statsLater);
+  connect(m_log, &QAbstractItemModel::rowsRemoved, this, statsLater);
   connect(m_log, &QAbstractItemModel::modelReset, this, &ReadingsWidget::updateStats);
   // scrolling away from the end pauses following; scrolling back resumes it
   connect(m_view->verticalScrollBar(), &QScrollBar::valueChanged, this, [this](int value)
@@ -398,7 +406,8 @@ void ReadingsWidget::exportSLOT()
 {
   const QString csvFilter = tr("CSV (*.csv)"), xlsxFilter = tr("Excel (*.xlsx)"), odsFilter = tr("OpenDocument (*.ods)");
   QString filter = csvFilter;
-  QString path = QFileDialog::getSaveFileName(this, tr("Export readings"), QString(),
+  const ProjectFolder::Proposal where(QString(), ProjectFolder::Recordings);
+  QString path = QFileDialog::getSaveFileName(this, tr("Export readings"), where.path(),
                                               csvFilter + ";;" + xlsxFilter + ";;" + odsFilter, &filter);
   if (path.isEmpty())
     return;

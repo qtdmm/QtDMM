@@ -340,6 +340,123 @@ vectors:
     bytes: 30 30 30 30 30 31 39 33 30 0D 0A
     reading: {value: "00.000", unit: "A", coupling: AC+DC, range_mode: manual, range_label: "10A"}
 
+  # UT71D captured over CH9325 by a dmm-tools user (dmm-tools issue #22,
+  # golden files crates/dmm-lib/tests/golden/ut71cde/ in 6874b45), each
+  # matched on the LCD there. The meter sends 7O1: the bytes here are
+  # without the parity bit, as the serial port and the CH9325 hand them on.
+  - source_line: "AC 00.000 A"
+    source: "dmm-tools 6874b45, UT71D capture (dmm-tools #22)"
+    bytes: 30 30 30 30 30 31 39 31 30 0D 0A
+    reading: {value: "00.000", unit: "A", coupling: AC, range_mode: manual}
+  - source_line: "AC+DC 0.0436 V AUTO"
+    source: "dmm-tools 6874b45, UT71D capture (dmm-tools #22)"
+    bytes: 30 30 34 33 36 31 32 33 31 0D 0A
+    reading: {value: "0.0436", unit: "V", coupling: AC+DC, range_mode: auto}
+    remark: "the yellow key on V"
+  - source_line: "AC 00.000 mA AUTO"
+    source: "dmm-tools 6874b45, UT71D capture (dmm-tools #22)"
+    bytes: 30 30 30 30 30 30 38 31 31 0D 0A
+    reading: {value: "00.000", unit: "mA", coupling: AC, range_mode: auto}
+  - source_line: "AC 000.00 µA AUTO"
+    source: "dmm-tools 6874b45, UT71D capture (dmm-tools #22)"
+    bytes: 30 30 30 30 30 30 37 31 31 0D 0A
+    reading: {value: "000.00", unit: "µA", coupling: AC, range_mode: auto}
+  - source_line: "AC 0.0897 V AUTO"
+    source: "dmm-tools 6874b45, UT71D capture (dmm-tools #22)"
+    bytes: 30 30 38 39 37 31 32 31 31 0D 0A
+    reading: {value: "0.0897", unit: "V", coupling: AC, range_mode: auto}
+  - source_line: "00.007 nF AUTO"
+    source: "dmm-tools 6874b45, UT71D capture (dmm-tools #22)"
+    bytes: 30 30 30 30 37 31 35 30 31 0D 0A
+    reading: {value: "00.007", unit: "nF", range_mode: auto}
+    remark: "stray capacitance of the leads"
+  - source_line: "0.L Ohm continuity"
+    source: "dmm-tools 6874b45, UT71D capture (dmm-tools #22)"
+    bytes: 3A 3A 30 3C 3A 30 3A 30 30 0D 0A
+    reading: {value: "0.L", unit: "Ohm", function: continuity, range_mode: manual}
+    expect: {val: "OL"}
+  - source_line: "DC 00.000 A"
+    source: "dmm-tools 6874b45, UT71D capture (dmm-tools #22)"
+    bytes: 30 30 30 30 30 31 39 30 30 0D 0A
+    reading: {value: "00.000", unit: "A", coupling: DC, range_mode: manual}
+  - source_line: "DC 00.000 mA AUTO"
+    source: "dmm-tools 6874b45, UT71D capture (dmm-tools #22)"
+    bytes: 30 30 30 30 30 30 38 30 31 0D 0A
+    reading: {value: "00.000", unit: "mA", coupling: DC, range_mode: auto}
+  - source_line: "DC 364.99 mV"
+    source: "dmm-tools 6874b45, UT71D capture (dmm-tools #22)"
+    bytes: 33 36 34 39 39 30 33 30 30 0D 0A
+    reading: {value: "364.99", unit: "mV", coupling: DC, range_mode: manual}
+  - source_line: "DC 000.00 µA AUTO"
+    source: "dmm-tools 6874b45, UT71D capture (dmm-tools #22)"
+    bytes: 30 30 30 30 30 30 37 30 31 0D 0A
+    reading: {value: "000.00", unit: "µA", coupling: DC, range_mode: auto}
+  - source_line: "DC 0.000 V AUTO (4000 counts)"
+    source: "dmm-tools 6874b45, UT71D capture (dmm-tools #22)"
+    bytes: 30 30 30 30 3A 31 31 30 31 0D 0A
+    reading: {value: "0.000", unit: "V", coupling: DC, range_mode: auto}
+    remark: "4000 counts: the blue key held at power-on, the fifth digit blank"
+  - source_line: "DC 0.0001 V AUTO"
+    source: "dmm-tools 6874b45, UT71D capture (dmm-tools #22)"
+    bytes: 30 30 30 30 31 31 31 30 31 0D 0A
+    reading: {value: "0.0001", unit: "V", coupling: DC, range_mode: auto}
+  - source_line: "DC -1.2928 V AUTO"
+    source: "dmm-tools 6874b45, UT71D capture (dmm-tools #22)"
+    bytes: 31 32 39 32 38 31 31 30 35 0D 0A
+    reading: {value: "-1.2928", unit: "V", coupling: DC, range_mode: auto}
+    remark: "leads reversed on a battery"
+  - source_line: "DC -0.0020 V MAN REL"
+    source: "dmm-tools 6874b45, UT71D capture (dmm-tools #22)"
+    bytes: 30 30 30 32 30 31 31 30 36 0D 0A
+    reading: {value: "-0.0020", unit: "V", coupling: DC, range_mode: manual, flags: [Rel]}
+    remark: "REL is not transmitted; it turns AUTO off"
+  - source_line: ".0L V diode"
+    source: "dmm-tools 6874b45, UT71D capture (dmm-tools #22)"
+    bytes: 3A 3A 30 3C 3A 30 3B 30 30 0D 0A
+    reading: {value: ".0L", unit: "V", function: diode, range_mode: manual}
+    expect: {val: "OL"}
+  - source_line: "000.00 % duty AUTO"
+    source: "dmm-tools 6874b45, UT71D capture (dmm-tools #22)"
+    bytes: 30 30 30 30 30 30 3C 30 35 0D 0A
+    reading: {value: "000.00", unit: "%", function: duty cycle, range_mode: auto}
+    remark: "the blue key on Hz: the frequency code with the sign bit"
+  - source_line: "00.000 Hz AUTO"
+    source: "dmm-tools 6874b45, UT71D capture (dmm-tools #22)"
+    bytes: 30 30 30 30 30 30 3C 30 31 0D 0A
+    reading: {value: "00.000", unit: "Hz", range_mode: auto}
+  - source_line: "L0. % 4-20 mA loop"
+    source: "dmm-tools 6874b45, UT71D capture (dmm-tools #22)"
+    bytes: 3A 3C 30 3A 3A 30 3F 30 30 0D 0A
+    reading: {value: "LO", unit: "%", shown: none, range_mode: manual}
+    expect: {special: "PC"}
+    remark: "below the 4-20 mA loop"
+  - source_line: "L0. % 4-20 mA loop, still AC"
+    source: "dmm-tools 5bbf178 (unit test)"
+    bytes: 3A 3C 30 3A 3A 30 3F 31 30 0D 0A
+    reading: {value: "LO", unit: "%", shown: none, range_mode: manual}
+    expect: {special: "PC"}
+    remark: "turning from AC mA to the loop %: one frame keeps the AC bit (dmm-tools 5bbf178, from its unit test)"
+  - source_line: "2.7015 MOhm AUTO"
+    source: "dmm-tools 6874b45, UT71D capture (dmm-tools #22)"
+    bytes: 32 37 30 31 35 35 34 30 31 0D 0A
+    reading: {value: "2.7015", unit: "MOhm", range_mode: auto}
+    remark: "through the body"
+  - source_line: ".0L MOhm AUTO"
+    source: "dmm-tools 6874b45, UT71D capture (dmm-tools #22)"
+    bytes: 3A 3A 30 3C 3A 36 34 30 31 0D 0A
+    reading: {value: ".0L", unit: "MOhm", range_mode: auto}
+    expect: {val: "OL"}
+    remark: "open leads, 40 MOhm range"
+  - source_line: "0026.4 °C"
+    source: "dmm-tools 6874b45, UT71D capture (dmm-tools #22)"
+    bytes: 30 30 32 36 34 30 36 30 30 0D 0A
+    reading: {value: "0026.4", unit: "°C", range_mode: manual}
+  - source_line: "0079.5 °F"
+    source: "dmm-tools 6874b45, UT71D capture (dmm-tools #22)"
+    bytes: 30 30 37 39 35 30 3D 30 30 0D 0A
+    reading: {value: "0079.5", unit: "°F", range_mode: manual}
+    remark: "the blue key on °C"
+
 skipped:
   - source_line: "AC  0.0585 V AUTO BG TR"
     bytes: 30 30 35 38 34 31 32 31 31 0D 0A

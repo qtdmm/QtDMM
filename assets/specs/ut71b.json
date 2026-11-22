@@ -1,0 +1,721 @@
+{
+ "source": "dmm-tools 766d4da",
+ "device": "ut71b",
+ "models": [
+  "Uni-Trend UT71B"
+ ],
+ "model": "UNI-T UT71B",
+ "tables": [
+  {
+   "input_impedance": "About 2.5GΩ",
+   "notes": [],
+   "overload_protection": "1000V",
+   "page": 63,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.05%+5",
+       "freq_range": null
+      }
+     ],
+     "range": "200mV",
+     "resolution": "0.01mV"
+    }
+   ],
+   "table": "A. DC Voltage"
+  },
+  {
+   "input_impedance": "About 10MΩ",
+   "notes": [],
+   "overload_protection": "1000V",
+   "page": 63,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.08%+5",
+       "freq_range": null
+      }
+     ],
+     "range": "2V",
+     "resolution": "0.0001V"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.08%+5",
+       "freq_range": null
+      }
+     ],
+     "range": "20V",
+     "resolution": "0.001V"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.08%+5",
+       "freq_range": null
+      }
+     ],
+     "range": "200V",
+     "resolution": "0.01V"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.1%+8",
+       "freq_range": null
+      }
+     ],
+     "range": "1000V",
+     "resolution": "0.1V"
+    }
+   ],
+   "table": "A. DC Voltage"
+  },
+  {
+   "input_impedance": "About 10MΩ",
+   "notes": [
+    "True RMS valid 10%–100% of range; crest factor ≤3.0 (1000V: 1.5)",
+    "Shorted leads: residual 80 digits, accuracy unaffected",
+    "Below 100kHz: accuracy guaranteed 10%–100%",
+    "AC+DC: add 1%+35 digits to accuracy"
+   ],
+   "overload_protection": "1000V",
+   "page": 64,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.6%+40",
+       "freq_range": "45Hz~1kHz"
+      },
+      {
+       "accuracy": "3%+40",
+       "freq_range": "1kHz~10kHz"
+      },
+      {
+       "accuracy": "7%+40",
+       "freq_range": "10kHz~100kHz"
+      }
+     ],
+     "range": "2V",
+     "resolution": "0.0001V"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.6%+40",
+       "freq_range": "45Hz~1kHz"
+      },
+      {
+       "accuracy": "3%+40",
+       "freq_range": "1kHz~10kHz"
+      },
+      {
+       "accuracy": "7%+40",
+       "freq_range": "10kHz~100kHz"
+      }
+     ],
+     "range": "20V",
+     "resolution": "0.001V"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.6%+40",
+       "freq_range": "45Hz~1kHz"
+      },
+      {
+       "accuracy": "5%+40",
+       "freq_range": "1kHz~10kHz"
+      },
+      {
+       "accuracy": "Not specified",
+       "freq_range": "10kHz~100kHz"
+      }
+     ],
+     "range": "200V",
+     "resolution": "0.01V"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "1.2%+40",
+       "freq_range": "45Hz~1kHz"
+      },
+      {
+       "accuracy": "6%+40",
+       "freq_range": "1kHz~5kHz"
+      },
+      {
+       "accuracy": "10%+40",
+       "freq_range": "5kHz~10kHz"
+      }
+     ],
+     "range": "1000V",
+     "resolution": "0.1V"
+    }
+   ],
+   "table": "B. AC Voltage (AC+DC measurement is available)"
+  },
+  {
+   "input_impedance": null,
+   "notes": [
+    "10A: ≤5A continuous; 5A–10A max. 10s, then rest >15min"
+   ],
+   "overload_protection": "Fuse 0.5A 1000V",
+   "page": 66,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.15%+20",
+       "freq_range": null
+      }
+     ],
+     "range": "200µA",
+     "resolution": "0.01µA"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.15%+20",
+       "freq_range": null
+      }
+     ],
+     "range": "2000µA",
+     "resolution": "0.1µA"
+    }
+   ],
+   "table": "C. DC Current"
+  },
+  {
+   "input_impedance": null,
+   "notes": [
+    "10A: ≤5A continuous; 5A–10A max. 10s, then rest >15min"
+   ],
+   "overload_protection": "Fuse 0.5A 1000V",
+   "page": 66,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.15%+20",
+       "freq_range": null
+      }
+     ],
+     "range": "20mA",
+     "resolution": "0.001mA"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.15%+20",
+       "freq_range": null
+      }
+     ],
+     "range": "200mA",
+     "resolution": "0.01mA"
+    }
+   ],
+   "table": "C. DC Current"
+  },
+  {
+   "input_impedance": null,
+   "notes": [
+    "10A: ≤5A continuous; 5A–10A max. 10s, then rest >15min"
+   ],
+   "overload_protection": "Fuse 10A 1000V",
+   "page": 66,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.7%+30",
+       "freq_range": null
+      }
+     ],
+     "range": "10A",
+     "resolution": "0.001A"
+    }
+   ],
+   "table": "C. DC Current"
+  },
+  {
+   "input_impedance": null,
+   "notes": [
+    "True RMS valid 10%–100% of range; crest factor ≤3.0",
+    "Shorted leads: residual 80 digits, accuracy unaffected",
+    "AC+DC: add 1%+35 digits to accuracy",
+    "10A: ≤5A continuous; 5A–10A max. 10s, then rest >15min"
+   ],
+   "overload_protection": "Fuse 0.5A 1000V",
+   "page": 67,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.8%+15",
+       "freq_range": "45Hz~1kHz"
+      },
+      {
+       "accuracy": "1.5%+40",
+       "freq_range": "1kHz~10kHz"
+      }
+     ],
+     "range": "200µA",
+     "resolution": "0.01µA"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.8%+15",
+       "freq_range": "45Hz~1kHz"
+      },
+      {
+       "accuracy": "1.5%+40",
+       "freq_range": "1kHz~10kHz"
+      }
+     ],
+     "range": "2000µA",
+     "resolution": "0.1µA"
+    }
+   ],
+   "table": "D. AC Current (AC+DC measurement is available)"
+  },
+  {
+   "input_impedance": null,
+   "notes": [
+    "True RMS valid 10%–100% of range; crest factor ≤3.0",
+    "Shorted leads: residual 80 digits, accuracy unaffected",
+    "AC+DC: add 1%+35 digits to accuracy",
+    "10A: ≤5A continuous; 5A–10A max. 10s, then rest >15min"
+   ],
+   "overload_protection": "Fuse 0.5A 1000V",
+   "page": 67,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.8%+15",
+       "freq_range": "45Hz~1kHz"
+      },
+      {
+       "accuracy": "1.5%+40",
+       "freq_range": "1kHz~10kHz"
+      }
+     ],
+     "range": "20mA",
+     "resolution": "0.001mA"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.8%+15",
+       "freq_range": "45Hz~1kHz"
+      },
+      {
+       "accuracy": "1.5%+40",
+       "freq_range": "1kHz~10kHz"
+      }
+     ],
+     "range": "200mA",
+     "resolution": "0.01mA"
+    }
+   ],
+   "table": "D. AC Current (AC+DC measurement is available)"
+  },
+  {
+   "input_impedance": null,
+   "notes": [
+    "True RMS valid 10%–100% of range; crest factor ≤3.0",
+    "Shorted leads: residual 80 digits, accuracy unaffected",
+    "AC+DC: add 1%+35 digits to accuracy",
+    "10A: ≤5A continuous; 5A–10A max. 10s, then rest >15min"
+   ],
+   "overload_protection": "Fuse 10A 1000V",
+   "page": 67,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "2%+20",
+       "freq_range": "45Hz~1kHz"
+      },
+      {
+       "accuracy": "6%+40",
+       "freq_range": "1kHz~10kHz"
+      }
+     ],
+     "range": "10A",
+     "resolution": "0.001A"
+    }
+   ],
+   "table": "D. AC Current (AC+DC measurement is available)"
+  },
+  {
+   "input_impedance": null,
+   "notes": [
+    "200Ω: accuracy + test-lead short-circuit resistance"
+   ],
+   "overload_protection": "1000V",
+   "page": 68,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.4%+20",
+       "freq_range": null
+      }
+     ],
+     "range": "200Ω",
+     "resolution": "0.01Ω"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.4%+20",
+       "freq_range": null
+      }
+     ],
+     "range": "2kΩ",
+     "resolution": "0.0001kΩ"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.4%+20",
+       "freq_range": null
+      }
+     ],
+     "range": "20kΩ",
+     "resolution": "0.001kΩ"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.8%+20",
+       "freq_range": null
+      }
+     ],
+     "range": "200kΩ",
+     "resolution": "0.01kΩ"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "1%+40",
+       "freq_range": null
+      }
+     ],
+     "range": "2MΩ",
+     "resolution": "0.0001MΩ"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "1.5%+40",
+       "freq_range": null
+      }
+     ],
+     "range": "20MΩ",
+     "resolution": "0.001MΩ"
+    }
+   ],
+   "table": "E. Resistance"
+  },
+  {
+   "input_impedance": null,
+   "notes": [
+    "Open circuit ≈-1.2V",
+    "Silent >60Ω",
+    "Beeps continuously ≤40Ω"
+   ],
+   "overload_protection": "1000V",
+   "page": 68,
+   "ranges": [
+    {
+     "accuracy": [],
+     "range": "•)))",
+     "resolution": "0.01Ω"
+    }
+   ],
+   "table": "F. Continuity Test"
+  },
+  {
+   "input_impedance": null,
+   "notes": [
+    "Open circuit ≈2.8V",
+    "Good silicon junction: 0.5V–0.8V"
+   ],
+   "overload_protection": "1000V",
+   "page": 69,
+   "ranges": [
+    {
+     "accuracy": [],
+     "range": "▶|",
+     "resolution": "0.0001V"
+    }
+   ],
+   "table": "G. Diode Test"
+  },
+  {
+   "input_impedance": null,
+   "notes": [
+    "20nF: accuracy + open-circuit test-lead capacitance"
+   ],
+   "overload_protection": "1000V",
+   "page": 69,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "1.2%+20",
+       "freq_range": null
+      }
+     ],
+     "range": "20nF",
+     "resolution": "0.001nF"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "1.2%+20",
+       "freq_range": null
+      }
+     ],
+     "range": "200nF",
+     "resolution": "0.01nF"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "1.2%+20",
+       "freq_range": null
+      }
+     ],
+     "range": "2µF",
+     "resolution": "0.0001µF"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "1.2%+40",
+       "freq_range": null
+      }
+     ],
+     "range": "20µF",
+     "resolution": "0.001µF"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "1.5%+40",
+       "freq_range": null
+      }
+     ],
+     "range": "200µF",
+     "resolution": "0.01µF"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "5%+40",
+       "freq_range": null
+      }
+     ],
+     "range": "2mF",
+     "resolution": "0.0001mF"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "Not specified",
+       "freq_range": null
+      }
+     ],
+     "range": "20mF",
+     "resolution": "0.001mF"
+    }
+   ],
+   "table": "H. Capacitance"
+  },
+  {
+   "input_impedance": null,
+   "notes": [
+    "Input 10Hz–40MHz: 200mV–30V rms",
+    "Input at zero DC level; >40MHz not specified"
+   ],
+   "overload_protection": "1000V",
+   "page": 70,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.1%+15",
+       "freq_range": null
+      }
+     ],
+     "range": "20Hz",
+     "resolution": "0.001Hz"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.1%+15",
+       "freq_range": null
+      }
+     ],
+     "range": "200Hz",
+     "resolution": "0.01Hz"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.1%+15",
+       "freq_range": null
+      }
+     ],
+     "range": "2kHz",
+     "resolution": "0.0001kHz"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.1%+15",
+       "freq_range": null
+      }
+     ],
+     "range": "20kHz",
+     "resolution": "0.001kHz"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.1%+15",
+       "freq_range": null
+      }
+     ],
+     "range": "200kHz",
+     "resolution": "0.01kHz"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.1%+15",
+       "freq_range": null
+      }
+     ],
+     "range": "2MHz",
+     "resolution": "0.0001MHz"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "0.1%+15",
+       "freq_range": null
+      }
+     ],
+     "range": "20MHz",
+     "resolution": "0.001MHz"
+    },
+    {
+     "accuracy": [
+      {
+       "accuracy": "Not specified",
+       "freq_range": null
+      }
+     ],
+     "range": "200MHz",
+     "resolution": "0.01MHz"
+    }
+   ],
+   "table": "I. Frequency"
+  },
+  {
+   "input_impedance": null,
+   "notes": [
+    "Included K-type point-contact probe: below 230°C only",
+    "Above 230°C: use the rod-type probe"
+   ],
+   "overload_protection": "1000V",
+   "page": 71,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "3%+30",
+       "freq_range": "-40°C~40°C"
+      },
+      {
+       "accuracy": "1%+30",
+       "freq_range": "40°C~400°C"
+      },
+      {
+       "accuracy": "2.5%",
+       "freq_range": "400°C~1000°C"
+      }
+     ],
+     "range": "Degrees Celsius",
+     "resolution": "0.1°C"
+    }
+   ],
+   "table": "J. Temperature (UT71B/C/D/E)"
+  },
+  {
+   "input_impedance": null,
+   "notes": [
+    "Included K-type point-contact probe: below 230°C only",
+    "Above 230°C: use the rod-type probe"
+   ],
+   "overload_protection": "1000V",
+   "page": 71,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "4%+50",
+       "freq_range": "-40°F~32°F"
+      },
+      {
+       "accuracy": "1.5%+50",
+       "freq_range": "32°F~752°F"
+      },
+      {
+       "accuracy": "3%",
+       "freq_range": "752°F~1832°F"
+      }
+     ],
+     "range": "Fahrenheit",
+     "resolution": "0.1°F"
+    }
+   ],
+   "table": "J. Temperature (UT71B/C/D/E)"
+  },
+  {
+   "input_impedance": null,
+   "notes": [
+    "<4mA: display shows LO",
+    "4mA shows 0%; 20mA shows 100%",
+    ">20mA: display shows HI"
+   ],
+   "overload_protection": "Fuse 0.5A 1000V",
+   "page": 72,
+   "ranges": [
+    {
+     "accuracy": [
+      {
+       "accuracy": "1%+50",
+       "freq_range": null
+      }
+     ],
+     "range": "(4~20mA)%",
+     "resolution": "0.01%"
+    }
+   ],
+   "table": "K. 4~20 mA loop current (UT71B/C/D/E)"
+  }
+ ]
+}

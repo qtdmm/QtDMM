@@ -1,991 +1,687 @@
-//======================================================================
-// File:		dmmgraph.h
-// Author:	Matthias Toussaint
-// Created:	Tue Apr 10 17:43:46 CEST 2001
-//----------------------------------------------------------------------
-// This file is part of QtDMM.
-//
-// QtDMM is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// QtDMM is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with QtDMM.  If not, see <http://www.gnu.org/licenses/>.
-//----------------------------------------------------------------------
-// Copyright (c) 2001 Matthias Toussaint
-//======================================================================
-
+// Copyright (c) 2026 The QtDMM developers
+// SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
 
-#include <array>
+#include "ui/views/qcpplotbase.h"
 
-#include <QtGui>
-#include <QtWidgets>
-#include <QPrinter>
-#include <QChartView>
-#include <QChart>
-#include <QLineSeries>
-#include <QScatterSeries>
-#include <QValueAxis>
-#include <QGraphicsLineItem>
-
-#include "ui/views/gapline.h"
-#include "recording/recordingstore.h"
-#include "core/valueref.h"
+#include <QDateTime>
+#include <QImage>
+#include <QPicture>
+#include <QElapsedTimer>
+#include <QHash>
+#include <QList>
+#include <QMap>
+#include <QPointF>
 #include <QPointer>
 #include <functional>
 
-class GraphFlagItem;
-class GraphLegend;
-class GraphMinimap;
-class Settings;
-struct Recording;
+#include "core/valueref.h"
+#include "recording/seriesdecimator.h"
+#include "ui/views/graphlook.h"
+#include "ui/views/graphreference.h"
+#include "ui/views/graphoutliers.h"
+#include "ui/views/graphstates.h"
+#include "ui/views/graphstats.h"
 
-/// The recorder's view: plots the curve a RecordingStore keeps.
+class GraphMinimap;
+class GraphStateStrip;
+class GraphStatsPanel;
+class GraphTimeBar;
+class QCPAbstractItem;
+class QCPAxis;
+class QCPGraph;
+class QCPItemStraightLine;
+class QCPPainter;
+class QMouseEvent;
+class QPrinter;
+class QRubberBand;
+class QPrinter;
+class QScrollBar;
+class QWheelEvent;
+class RecordingSeries;
+class RecordingStore;
+
+/// The graph of a recording drawn with QCustomPlot: the successor of
+/// GraphWidget, growing next to it until it can do all of it.
 ///
-/// The store does the recording (every reading with its time, triggers,
-/// integral, marks); the graph shows a window of it in time (scrollable),
-/// scales the y axis, and draws the integral with its scale and offset, the
-/// cursor and threshold lines and the marks. The x axis is the time since
-/// the start of the recording; more readings than pixel columns are thinned
-/// to the minimum and maximum of each column. Rendering uses Qt Charts; the
-/// cursor and threshold lines are QGraphicsLineItems on top of the chart.
-/// The recorder settings (setSampleTime(), setMode(), setThresholds(), ...)
-/// are passed on to the store, so the graph can still be driven as a whole.
-/// Data can be exported/imported as CSV and printed.
+/// It draws from a RecordingStore and keeps no readings itself, only the
+/// thinned points of the curve (SeriesDecimator): a new reading replaces the
+/// points of its bucket, the plot is drawn at the pace of QcpPlotBase. It
+/// never changes the store: Record, Stop, Live and Clear are the session's.
 ///
-/// The store's state shows: in Live the window follows the newest reading
-/// (the scroll bar rests), while recording "● REC 0:42 / 5:00" stands top
-/// left in the plot, in View where the curve comes from (the start of the
-/// recording or the file).
+/// The time shown is a window of windowSeconds(): at the newest reading
+/// while it follows (Live, Record), or where it was put (showFrom(): the
+/// scrollbar, a drag, the keys) - in Live the store runs on meanwhile. "All"
+/// (setFollowAll()) is a window over the whole recording that grows with it.
+/// A frame drawn with Shift zooms time and left axis; Escape takes it back.
 ///
-/// The sample time is in tenths of a second, like the settings: the grid
-/// of the export, not the rate the graph shows.
-class GraphWidget : public QWidget
+/// It draws values (setValues()) of any meters: each is a curve from the
+/// store of its meter (setSources()), on the time of the first value's
+/// store. A store given with setStore() is drawn instead - a file loaded.
+///
+/// The value axes are a list, one per unit: the left one first, the others
+/// on the right, outwards. A value goes to the axis chosen for it or, on
+/// Auto, to the axis of its unit, else to the next free one. kMaxAxes says
+/// how many there are; nothing else knows the number. A unit that finds no
+/// axis is not drawn (notice()).
+///
+/// Its look is a colour variant (GraphLook) on the window design, with the
+/// settings' line, points and width: setTheme() gives the design,
+/// setVariant() and setLookSettings() the rest.
+///
+/// To read it: the crosshair under the mouse sits on the reading of the
+/// left axis' value that holds there; a click sets the time cursor A,
+/// Shift and a click B (lines one can drag, each with the level of that
+/// value); the statistics column (GraphStats) has the values at the
+/// cursors, what the curves did from A to B and over the time shown.
+///
+/// A reference line (GraphReference) lies on the left axis' value: at 0,
+/// at a value it was dragged to, at an alarm threshold, or following the
+/// mean, minimum or maximum of the time shown; up to four lines more at
+/// fixed values. Where the curve crosses a fixed line a small triangle
+/// stands, the line's label counts them. The limit test's band and the
+/// start threshold of the recording are drawn on the axis of their value.
+///
+/// The marks of the recordings shown - alarms, the trigger of a
+/// pre-triggered recording, the user's notes - are dashed lines at their
+/// time, each with a flag in the row of the time labels (GraphFlags), the
+/// time cursors' letters among them. A note is set with N (not in a file only looked at), edited with a
+/// double click on its flag and dragged along the time.
+///
+/// Below the plot the overview (GraphMinimap) of the left axis' value over
+/// the whole recording takes the scrollbar's place; at the bottom of the
+/// plot the states its meter reported lie as a strip (GraphStateStrip). A
+/// curve with more points than pixel columns is drawn as a band from its
+/// lowest to its highest value per column (GraphBand); the min/max band
+/// behind the left axis' curve is the same over a few columns more.
+///
+/// So far: lines with gaps, the time axis, the value axes fitted to what is
+/// shown or fixed by unit, the legend, the time buttons and the state above
+/// the plot, the scrollbar below, zoom, hold and the crosshair.
+///
+/// The code that names QCustomPlot's types is in graphwidget_<part>.cpp
+/// (curves, axes, input, theme, overlays, marks, overview); nothing outside knows them, for the move to NeoQCP.
+class GraphWidget : public QcpPlotBase
 {
   Q_OBJECT
 public:
-  /// How recording is started.
-  enum SampleMode
-  {
-    Manual = 0,   ///< Start button
-    Time,         ///< at setStartTime()
-    Raising,      ///< when the reading rises through the raising threshold
-    Falling       ///< when the reading falls through the falling threshold
-  };
+  explicit GraphWidget(QWidget *parent = nullptr);
 
-  /// Marker drawn at each sample.
-  enum PointMode
-  {
-    NoPoint = 0,
-    Circle,
-    Square,
-    Diamond,
-    X,
-    LargeCircle,
-    LargeSquare,
-    LargeDiamond,
-    LargeX
-  };
+  /// The most value axes: one on the left, the others on the right.
+  static constexpr int kMaxAxes = 3;
+  /// GraphModel::kAxisAuto.
+  static constexpr int kAxisAuto = -1;
 
-  /// Line style between samples.
-  enum LineMode
-  {
-    NoLine = 0,
-    Solid,
-    Dot
-  };
+  /// @name What is drawn
+  /// @{
+  /// Where the values' stores come from: the store of a meter by its source
+  /// (nullptr: not open) and the meter's name for the legend.
+  void        setSources(std::function<RecordingStore *(const QString &source)> storeOf,
+                         std::function<QString(const QString &source)> nameOf);
+  /// A meter opened or closed: the stores are asked for again.
+  void        sourcesChanged();
+  /// The values drawn, each a curve; the first one whose meter is open gives the time.
+  void        setValues(const QList<ValueRef> &values);
+  QList<ValueRef> values() const { return m_values; }
+  /// The axes chosen for values (place in the list, 0 the left one); the others are on Auto.
+  void        setValueAxes(const QHash<ValueRef, int> &axes);
+  /// Fixed ranges of the axes by base unit; a unit without one fits its values.
+  void        setFixedRanges(const QMap<QString, QPair<double, double>> &ranges);
+  /// A recording of its own drawn instead of the values' (its main value);
+  /// nullptr: the values again.
+  void        setStore(RecordingStore *store);
+  /// The store that gives the time: setStore()'s, else the first value's; nullptr: an empty graph.
+  RecordingStore *store() const { return m_store; }
+  /// A unit that found no axis ("Hz: no free axis"); empty when all are drawn.
+  QString     notice() const { return m_notice; }
+  /// @}
+  /// The name of the file the store was loaded from, for the state text; empty: a meter's.
+  void        setSourceName(const QString &name);
 
-  /// Which horizontal line the mouse is dragging.
-  enum CursorMode
-  {
-    NoCursor = 0,
-    Trigger,      ///< recording start threshold
-    Integration,  ///< integration threshold
-    Reference,    ///< the reference line
-    TimeCursorA,  ///< the time cursor set with a click
-    TimeCursorB   ///< the one set with Shift+click
-  };
+  /// @name The time shown
+  /// @{
+  /// The window, seconds (at least 1); another one ends "All".
+  void        setWindowSeconds(int seconds);
+  int         windowSeconds() const { return m_windowSeconds; }
+  /// "All": the window is the whole recording and grows with it.
+  void        setFollowAll(bool on);
+  bool        followAll() const { return m_followAll; }
+  /// The window from @p start (ms since the start of the recording), within
+  /// what the store keeps; at its end it follows again.
+  void        showFrom(qint64 start);
+  /// The window at the newest reading, following it.
+  void        followEnd();
+  /// Whether the window is at the newest reading and stays there.
+  bool        following() const { return m_followEnd; }
+  /// The start of the window, ms since the start of the recording.
+  qint64      windowStart() const;
+  /// The seconds the time axis spans: the window; on "All" at the end of a
+  /// recording shorter than the window only the recording (at least 10 s),
+  /// so it fills the width and grows with it.
+  double      shownSeconds() const;
+  /// The window narrower (@p factor > 1) or wider; ends "All".
+  void        zoomBy(double factor);
+  /// The window over the whole recording, once (not growing as "All").
+  void        zoomFit();
+  /// The frame @p rect (plot widget pixels): its time as the window, its
+  /// values as the left axis, until endZoom().
+  void        zoomToRect(const QRect &rect);
+  /// The left axis fits again; with @p restoreWindow the time as before the first frame.
+  void        endZoom(bool restoreWindow);
+  bool        zoomed() const { return m_zoomed; }
+  /// @}
 
-  /// What the reference line stands at: 0 (the default), a value of its
-  /// own (dragged there), the mean, minimum or maximum of the window shown
-  /// - those follow the readings - or an alarm threshold; or no line.
-  enum ReferenceKind
-  {
-    RefZero = 0,
-    RefValue,
-    RefMean,
-    RefMin,
-    RefMax,
-    RefAlarm,
-    RefOff
-  };
+  /// @name The look
+  /// @{
+  /// The window design's colours: what the Neutral variant shows.
+  void        setTheme(const PlotTheme &theme) override;
+  void        setVariant(GraphLook::Variant variant);
+  GraphLook::Variant variant() const { return m_variant; }
+  /// The settings page's colours, line, points and width.
+  void        setLookSettings(const GraphLook::Settings &settings);
+  /// Each curve after the first with a dash pattern of its own.
+  void        setPatternedLines(bool on);
+  bool        patternedLines() const { return m_patterns; }
+  const GraphLook::Look &look() const { return m_look; }
+  /// @}
 
-  /// The graph's colours (context menu "Graph colours", Graph/variant).
-  /// Each brings background, grid, lettering and curve colours; a curve
-  /// colour chosen in the settings stays. Custom is the colours from the
-  /// settings page, as before the variants.
-  enum ColorVariant
-  {
-    Neutral,         ///< follows the window design
-    ScopeBlue,       ///< oscilloscope, blue screen
-    PhosphorGreen,   ///< green phosphor tube: one colour, 10 x 8 divisions
-    PhosphorAmber,   ///< the same in amber
-    ChartRecorder,   ///< paper and ink
-    Custom           ///< the colours from the settings page
-  };
+  /// @name Reading it
+  /// @{
+  /// The time cursor @p which (0: A, 1: B) at @p t, ms since the start of
+  /// the recording, within what the store keeps; negative: none.
+  void        setTimeCursor(int which, qint64 t);
+  qint64      timeCursor(int which) const { return m_cursorT[which & 1]; }
+  void        clearTimeCursors();
+  /// The statistics column next to the plot.
+  void        setStatsVisible(bool on);
+  bool        statsVisible() const { return m_statsOn; }
+  /// @}
 
-  /// Entries of the context menu.
-  enum PopupID
-  {
-    IDConnect = 1,
-    IDDisconnect,
-    IDStopRecorder,
-    IDStartRecorder,
-    IDClearGraph,
-    IDConfigure,
-    IDExportData,
-    IDImportData,
-    IDCopyImage,
-    IDExportImage,
-    IDColorVariant,  ///< property "variant" says which
-    IDLive,
-    IDReference,     ///< properties "kind" and "value"
-    IDClearCursors,
-    IDMinimap,
-    IDEnvelope
-  };
-
-  GraphWidget(QWidget *parent, Settings *settings);
-  GraphWidget(QWidget *parent = nullptr);
-  ~GraphWidget();
-  /// The window from the settings, in seconds (also how wide Live is
-  /// without a recording length). A window other than the last one ends
-  /// "All"; the same one keeps it, and the window of "All" stays.
-  void             setGraphSize(int size);
-  /// The visible window in seconds: the settings' one, or that of "All".
-  int              windowSeconds() const { return m_windowSeconds; }
-  /// The recorder behind the graph.
-  RecordingStore  *store() const { return m_store; }
-  /// Shows @p store instead of the graph's own one (the MeterController's
-  /// recorder). The graph does not take ownership; the store has to outlive it.
-  void             setStore(RecordingStore *store);
-  /// Unit of the recorded quantity for the axis label; the SI prefix is
-  /// stripped because values arrive in base units (see DmmDecoder::DmmChannel).
-  void             setUnit(const QString &);
-  /// Sample time in tenths of a second.
-  /// The window and the length are kept in seconds: a new sample time
-  /// recounts them in samples, so the order of the two calls does not matter.
-  void             setSampleTime(int v);
-  /// Recording duration in tenths of a second after which recording stops
-  /// on its own (0 = until stopped).
-  void             setSampleLength(int v);
-  /// Clock time for SampleMode::Time.
-  void             setStartTime(const QTime &time) { m_store->setStartTime(time); }
-  void             setMode(GraphWidget::SampleMode mode);
-  /// Prints the curve with title and comment.
-  void             print(QPrinter *prt, const QString &, const QString &);
-  /// Thresholds for the Raising/Falling start modes.
-  void             setThresholds(double falling, double raising);
-  /// Y axis: automatic (optionally always including zero) or fixed min/max.
-  void             setScale(bool autoScale, bool includeZero, double min, double max);
-  void             setColors(const QColor &bg, const QColor &grid,
-                             const QColor &data, const QColor &cursor,
-                             const QColor &start,
-                             const QColor &integration, const QColor &intThreshold);
-  /// Colours of the window design (background, grid, axis lettering); a
-  /// background of Qt::NoBrush means the colours from the settings. @p data
-  /// replaces the curve colour only while that is the default blue.
-  void             setThemeColors(const QBrush &background, const QColor &grid, const QColor &labels,
-                                  const QColor &data = QColor());
-  /// The colours in use: @p variant for this graph (context menu), or
-  /// the default from the settings page when @p variant is -1.
-  void             setColorVariant(ColorVariant defaultVariant, int variant = -1);
-  ColorVariant     colorVariant() const { return m_variant; }
-  int              colorOverride() const { return m_variantOverride; }
-  /// "neutral", "scope", "phosphor-green", "phosphor-amber", "recorder", "custom"
-  static QString   variantName(ColorVariant variant);
-  static ColorVariant variantFromName(const QString &name);
-  /// The variant's name in the menus ("Scope blue").
-  static QString   variantTitle(ColorVariant variant);
-  /// The smallest time step (..., 1, 2, 5, 10, 15, 30 s, 1, 2, 5, 10, 15,
-  /// 30 min, 1, 2, 3, 6, 12 h, days) that is at least @p v seconds: the
-  /// x division. Public for the tests.
-  static double    timeStep(double v);
-  /// Puts the reference line at @p kind; @p value for RefValue and
-  /// RefAlarm (a value of 0 is RefZero).
-  void             setReference(ReferenceKind kind, double value = 0);
-  ReferenceKind    referenceKind() const { return m_referenceKind; }
-  /// Where the line is now, in base units; NaN when the mean, minimum or
-  /// maximum has no reading in the window.
-  double           referenceValue() const { return m_reference; }
-  /// Whether the line is drawn: in the scale, and its value (referenceId()) shown.
-  bool             referenceShown() const;
-  /// The reference as kept per window (Windows/graph-reference, the
-  /// workspace): "" for 0, "mean", "min", "max", "alarm <value>", "<value>",
-  /// "off".
-  QString          referenceSetting() const;
-  void             setReferenceSetting(const QString &text);
-  /// The alarms' thresholds (base units): the reference line snaps to them.
+  /// @name Lines on the left axis' value
+  /// @{
+  /// The value on the left axis, which reference line, crossings, limit
+  /// band and cursor levels go by; an id of -1: none (a file's is none too).
+  ValueRef    leftValue() const;
+  void        setReference(const GraphReference::Line &line);
+  GraphReference::Line reference() const { return m_reference; }
+  /// Further lines at fixed values (base unit), GraphReference::kMaxLines at most.
+  void        setReferenceLines(const QList<double> &values);
+  QList<double> referenceLines() const { return m_referenceLines; }
+  /// The triangles where the curve crosses a fixed line, and their count in its label.
+  void        setCrossingsVisible(bool on);
+  bool        crossingsVisible() const { return m_crossingsOn; }
+  /// The alarm thresholds on the left value (base unit): the dragged line snaps to them.
   /// A line on a threshold that went stays where it is.
-  void             setAlarmThresholds(const QList<double> &values);
-  /// The limit test's band (PASS/FAIL) of the value @p value, base units:
-  /// two dashed green lines at @p low and @p high, faintly green between,
-  /// while that value is the left axis' (leftValue()). An id of -1
-  /// takes it away; an open side (NaN or infinite) has no line, the band
-  /// reaches the edge. The reference line snaps to the lines.
-  void             setLimits(const ValueRef &value, double low = 0, double high = 0);
-  void             setLimits(int id, double low = 0, double high = 0) { setLimits(ValueRef(id), low, high); }
-  /// @name Time cursors
-  /// A click into the graph sets cursor A, Shift+click cursor B; both can
-  /// be dragged, Esc and the context menu take them away. A alone says the
-  /// time and the value there; with B the graph says the time and the
-  /// change of the value between them, their mean and the integral (Ah for
-  /// a current, Wh for a power).
-  /// @{
-  /// Puts cursor @p which (0 = A, 1 = B) at @p t, ms since the start of
-  /// the recording; -1 takes it away.
-  void             setTimeCursor(int which, qint64 t);
-  qint64           timeCursor(int which) const { return m_cursorT[which & 1]; }
-  void             clearTimeCursors();
-  /// What the cursors say, as shown top right in the plot; empty without
-  /// cursor. Public for the tests.
-  QString          timeCursorText() const;
+  void        setAlarmThresholds(const QList<double> &values);
+  QList<double> alarmThresholds() const { return m_alarmThresholds; }
+  /// The limit test's band of @p value: two dashed green lines at @p low
+  /// and @p high, faintly green between, while that value is the left
+  /// one. An open side (NaN or infinite) has no line, the band reaches the
+  /// edge. An id of -1 takes it away.
+  void        setLimits(const ValueRef &value, double low = 0, double high = 0);
+  /// The left axis' value at @p globalPos on a round step, for a line added
+  /// there; outside the plot the middle of the axis.
+  double      roundedValueAt(const QPoint &globalPos) const;
+  /// "1.234 mV": a value of the left axis as its numbers.
+  QString     levelText(double value) const;
   /// @}
-  /// @name The overview strip below the graph (GraphMinimap)
-  /// All the store keeps, the window between two brackets; in place of
-  /// the scroll bar while it is shown (context menu "Overview", kept per
-  /// window as Windows/graph-minimap). Moved back from the newest reading
-  /// in Live, the window stays where it is ("Live paused") until the
-  /// strip, a time button or Live bring it back.
-  /// @{
-  void             setMinimapVisible(bool on);
-  /// Entries of the window around the graph ("Hide window"), first in its
-  /// context menu; not owned.
-  void             setWindowActions(const QList<QAction *> &actions) { m_windowActions = actions; }
-  /// Printing in the context menu, after Export image (the window's action).
-  void             setPrintAction(QAction *action) { m_printAction = action; }
-  bool             minimapVisible() const { return m_minimapOn; }
-  GraphMinimap    *minimap() const { return m_minimap; }
-  /// @}
-  /// How often the curves were built anew from the whole store (for the tests).
-  int              rebuilds() const { return m_rebuilds; }
-  /// Where the time axis starts, s since the start of the recording (for the tests).
-  double           timeAxisStart() const;
-  /// @name The min/max band behind the curve
-  /// Per pixel column the lowest and the highest value of the columns
-  /// within kEnvelopeColumns either side: a band as wide on screen whatever
-  /// the window, which shows the spread around the curve. Off by default
-  /// (context menu "Min/max band", kept per window as
-  /// Windows/graph-envelope).
-  /// @{
-  void             setEnvelopeVisible(bool on);
-  bool             envelopeVisible() const { return m_envelopeOn; }
-  /// The band's outline in scene coordinates, empty while off. For the tests.
-  QPainterPath     envelopePath() const;
-  static constexpr int kEnvelopeColumns = 4;
-  /// @}
-  /// @name The meter's other values
-  /// A curve for each series of the store's other values
-  /// (RecordingStore::extra(), a second display), in a colour of its own.
-  /// A value in the main value's unit shares its axis; the first other unit
-  /// gets an axis on the right with a scale of its own, a third unit a third
-  /// axis outside it; values in a fourth unit are not drawn. The titles of
-  /// the right axes are in the colour of their first curve. A legend names
-  /// the curves. They are off until
-  /// switched on (the sidebar's value menu, kept per window as
-  /// Windows/graph-shown-values): the graph shows the main value, as it
-  /// always did. The store records them all the same.
-  /// Reference line, band and cursor levels are of the value of the left
-  /// axis (referenceId()), so is the overview (minimapValue()); the
-  /// triggers stay the main value's.
-  /// @{
-  int              extraCurveCount() const { return int(m_extraCurves.size()); }
-  /// The first segment of the curve of extra(@p i) (for the tests).
-  QLineSeries     *extraCurve(int i) const { return m_extraCurves[size_t(i)].series; }
-  bool             extraCurveShown(int i) const { return m_extraCurves[size_t(i)].shown; }
-  bool             extraCurveOnRight(int i) const { return m_extraCurves[size_t(i)].side == 1; }
-  /// The axis of curve @p i: 0 left, 1 right, 2 the third axis.
-  int              extraCurveSide(int i) const { return m_extraCurves[size_t(i)].side; }
-  QValueAxis      *rightAxis() const { return m_right[0].axis; }
-  /// The third axis, outside the right one.
-  QValueAxis      *thirdAxis() const { return m_right[1].axis; }
-  /// The left axis' title, "[mV]".
-  QString          leftAxisTitle() const { return m_yTitle->text(); }
-  /// Its title, "[°C]" (empty while it is hidden).
-  QString          rightAxisTitle() const { return sideTitle(1); }
-  QString          thirdAxisTitle() const { return sideTitle(2); }
-  /// The colour of the right (1) or third (2) axis' title.
-  QColor           sideTitleColor(int side) const { return m_right[size_t(side - 1)].title->brush().color(); }
-  /// The legend's text, empty while there is only the main value.
-  QString          legendText() const;
-  /// Value @p id on or off (0 the main value; the sidebar's value menu).
-  /// Each change sets the view afresh: axes, scales and prefixes from the
-  /// curves shown; the recording is not touched. At most two units are
-  /// drawn: a value in a fourth one waits until another goes off, or until
-  /// an axis is chosen for it (setValueAxis()).
-  void             setValueShown(int id, bool shown);
-  /// The axis of a value (the sidebar's value menu): Left, Right or Third
-  /// puts it there - a unit the axis has already joins it, another one takes
-  /// the axis; the curves of the old unit on it move to a free right axis
-  /// when they are on Auto, else they go off (notice()). Auto, for the
-  /// layouts from before: the first unit left, the second right, the third
-  /// on the third axis, a unit there already on its axis. The main value is
-  /// always on the left.
-  enum ValueAxis { AxisAuto, AxisLeft, AxisRight, AxisThird };
-  void             setValueAxis(int id, ValueAxis axis);
-  ValueAxis        valueAxis(int id) const { return id <= 0 ? AxisLeft : m_valueAxes.value(id, AxisAuto); }
-  /// Whether value @p id is drawn: switched on and its unit on an axis.
-  bool             valueDrawn(int id) const;
-  /// The colour of value @p id's curve (also while it is off).
-  QColor           valueColor(int id) const { return id <= 0 ? dataColor() : extraColor(id); }
-  /// The axis value @p id is drawn on, AxisAuto while it is not drawn.
-  ValueAxis        valueSide(int id) const;
-  /// The value of this meter the overview draws: the one of the left axis
-  /// (referenceId()), with none there the lowest on the right, with none
-  /// drawn the main value. Another meter's value on the left axis comes
-  /// before one of this meter's on the right (leftValue()).
-  int              minimapValue() const;
-  /// The value of the left axis: this meter's (referenceId()), with none
-  /// of them there the first other meter's curve on it; id -1 with none.
-  /// Reference line, band, cursor levels, the limit band and the overview
-  /// go by it.
-  ValueRef         leftValue() const;
-  /// The other values shown (ids > 0).
-  QList<int>       shownValues() const;
 
-  /// Start, stop, Live and Clear of a recording of several meters
-  /// (DeviceSession): the graph's store may follow another one. Without
-  /// them they act on the graph's store.
-  struct Control
-  {
-    std::function<void()> start, stop, live, clear;
-  };
-  void             setControl(const Control &control) { m_control = control; }
+  /// @name Marks and notes
+  /// @{
+  /// The marks of all recordings shown, in the order of their time; a
+  /// mark is named by its place in it.
+  int         markCount() const { return int(m_marks.size()); }
+  /// Whether notes can be set and marks changed: not in a recording that
+  /// is only looked at and not kept (a file loaded into the view).
+  void        setMarksEditable(bool on);
+  bool        marksEditable() const { return m_marksEditable; }
+  /// The mark whose flag is at @p pos (plot widget pixels), or the note whose line is there; -1: none.
+  int         markAt(const QPoint &pos) const;
+  int         markAtGlobal(const QPoint &globalPos) const;
+  bool        markIsNote(int mark) const;
+  /// Asks for a note (NoteDlg) at @p t (ms on the graph's time; -1: now,
+  /// or the newest reading of a recording stopped) and sets it in the
+  /// recording of the left axis' value. Its place in the marks, -1 when
+  /// the dialog was left or there is no recording. Says noteAdded().
+  int         askNote(qint64 t = -1);
+  /// Sets a note without asking; as askNote(), without noteAdded().
+  int         addNote(qint64 t, const QString &title, const QString &note);
+  /// Asks for another title and text of @p mark.
+  bool        editMark(int mark);
+  void        removeMark(int mark);
+  /// Moves the note @p mark to @p t (ms on the graph's time, within its
+  /// recording); its new place in the marks.
+  int         moveMark(int mark, qint64 t);
+  /// Title, time and text of @p mark as the tooltip shows them (HTML).
+  QString     markTip(int mark) const;
+  /// The time at @p globalPos, ms on the graph's time; -1 outside the plot.
+  qint64      timeAt(const QPoint &globalPos) const;
+  /// @}
 
-  /// @name Values of other meters
-  /// Curves of meters open beside the window's (DeviceSession), each from
-  /// that meter's own store, shifted to this store's time by their starts
-  /// (RecordingStore::offsetOf()). On the left axis in its unit, else on
-  /// the right one while that is free or has its unit; otherwise not
-  /// drawn. A value of a meter not open is kept without a curve. Minimap,
-  /// envelope, integral and the cursors' figures stay with this store's.
-  /// A file viewed (importCsvFile()) shows the other meters in it instead,
-  /// as curves of their own, until Live or a recording.
+  /// @name Overview, states, bands
   /// @{
-  /// Where they are: the store of a meter by its source (Reading::source),
-  /// nullptr while it is not open, and its name for the legend.
-  void             setOtherStores(std::function<RecordingStore *(const QString &source)> store,
-                                  std::function<QString(const QString &source)> name);
-  void             setOtherValues(const QList<ValueRef> &values);
-  QList<ValueRef>  otherValues() const;
-  /// Shows or hides one of them (at the end of otherValues()).
-  void             setOtherValueShown(const ValueRef &value, bool shown);
-  /// The axis chosen for another meter's value; AxisAuto: left in its unit,
-  /// else right while free. A chosen axis with another unit leaves the curve
-  /// out, with a notice().
-  void             setOtherValueAxis(const ValueRef &value, ValueAxis axis);
-  ValueAxis        otherValueAxis(const ValueRef &value) const { return m_otherAxes.value(value, AxisAuto); }
-  /// Where it is drawn now; AxisAuto while it is not.
-  ValueAxis        otherValueSide(const ValueRef &value) const;
-  /// Its curve's colour while it is drawn, else invalid.
-  QColor           otherValueColor(const ValueRef &value) const;
-  /// A meter was opened or closed: the stores anew.
-  void             otherStoresChanged();
-  int              otherCurveCount() const { return int(m_otherCurves.size()); }
-  bool             otherCurveShown(int i) const { return m_otherCurves[size_t(i)].shown; }
-  bool             otherCurveOnRight(int i) const { return m_otherCurves[size_t(i)].side == 1; }
-  int              otherCurveSide(int i) const { return m_otherCurves[size_t(i)].side; }
-  /// The points of curve @p i as drawn, in this store's seconds.
-  QList<QPointF>   otherCurvePoints(int i) const { return m_otherCurves[size_t(i)].points; }
+  /// The overview strip below the plot instead of the scrollbar.
+  void        setMinimapVisible(bool on);
+  bool        minimapVisible() const { return m_minimapOn; }
+  /// The strip of the meter's states at the bottom of the plot.
+  void        setStatesVisible(bool on);
+  bool        statesVisible() const { return m_statesOn; }
+  /// The min/max band behind the curve of the left axis' value.
+  void        setEnvelopeVisible(bool on);
+  bool        envelopeVisible() const { return m_envelopeOn; }
   /// @}
-  bool             mainShown() const { return m_mainShown; }
 
-  /// @name The values, of any meter (ValueRef)
-  /// One list for the graph's own meter and the others: a value of the
-  /// meter of the store (baseSource(); an empty source is that meter too)
-  /// is its main curve or one of its other values, one of another meter a
-  /// curve from that meter's store. The graph does not choose its store:
-  /// the caller makes the meter of the first value its base (setStore(),
-  /// setBaseSource()).
+  /// @name Outliers
   /// @{
-  void             setBaseSource(const QString &source) { m_baseSource = source; }
-  /// @p value with the meter an empty source means: the base.
-  ValueRef         resolved(const ValueRef &value) const
-  {
-    return value.source.isEmpty() ? ValueRef(value.id, m_baseSource) : value;
-  }
-  /// Another meter's store becomes the graph's (@p source its meter): the
-  /// values and their axes stay, its values become the main curve and the
-  /// other values, the ones of the meter before curves of another meter.
-  void             setBase(RecordingStore *store, const QString &source);
-  QString          baseSource() const { return m_baseSource; }
-  bool             isBase(const ValueRef &value) const { return resolved(value).source == m_baseSource; }
-  /// The values shown, the base meter's first (with its source), in order.
-  QList<ValueRef>  values() const;
-  void             setValues(const QList<ValueRef> &values);
-  bool             valueShown(const ValueRef &value) const;
-  void             setValueShown(const ValueRef &value, bool shown);
-  ValueAxis        valueAxis(const ValueRef &value) const;
-  void             setValueAxis(const ValueRef &value, ValueAxis axis);
-  /// Where it is drawn now; AxisAuto while it is not.
-  ValueAxis        valueSide(const ValueRef &value) const;
-  /// Its curve's colour while it is drawn, else invalid.
-  QColor           drawnColor(const ValueRef &value) const;
+  /// Readings not drawn and left out of the statistics; the store keeps them.
+  void        setOutliers(const GraphOutliers::Rule &rule);
+  GraphOutliers::Rule outliers() const { return m_outliers; }
+  /// How many readings in the time shown are hidden (counted at most four times a second).
+  int         outliersHidden() const { return m_outliersHidden; }
+  /// Counts them now (the tests).
+  void        countOutliers();
+  /// Asks for the rule's figures (Jump and Limits in the left axis' unit) and sets it.
+  void        askOutliers(GraphOutliers::Mode mode);
   /// @}
-  /// The unit of the left axis: the main value's, or while it is hidden
-  /// the one of the lowest value shown (its newest series).
-  QString          leftUnit() const;
-  /// The value of the left axis, which the reference line, the band and the
-  /// cursor levels are of: 0 (the main one), while it is hidden the lowest
-  /// value shown, -1 with none. The trigger line stays the main value's.
-  int              referenceId() const;
-  /// @}
+
+  /// The units of the value axes drawn, the left one first.
+  QStringList axisUnits() const;
+  /// The axis key of values that have readings but no unit (a
+  /// microcontroller's numbers): they get an axis of their own like a unit.
+  static inline const QString kNoUnit = QStringLiteral("1");
+  /// @p unit of an axis as shown: SiPrefix::displayText(), "no unit" for kNoUnit.
+  static QString unitText(const QString &unit);
+  /// Asks for a fixed range of the axis of @p unit (base unit), with
+  /// @p min and @p max at first; without them what the axis shows now.
+  /// False when cancelled.
+  bool        askFixedRange(const QString &unit, double &min, double &max, bool given);
+
+  void        setHold(bool hold) override;
+  /// Draws the store anew; the readings are the store's and stay.
+  void        clear() override;
+
+  /// @name Pictures
+  /// What a picture of the graph shows: the legend, the plot with its axes,
+  /// lines and flags, and the states' strip; not the buttons, the overview
+  /// or the statistics. SVG and PDF keep the plot as vectors.
   /// @{
-  /// Live, but the window held where the overview put it.
-  bool             livePaused() const { return m_liveHold; }
+  /// The picture's natural size: the plot's, with the legend's row above it.
+  QSize       pictureSize() const;
+  /// The picture into @p target of @p painter, scaled to it, its proportions kept.
+  void        paintPicture(QCPPainter *painter, const QRectF &target);
+  /// The picture, recorded at the screen's resolution, to be played anywhere.
+  QPicture    picture();
+  /// The picture as an image at its natural size.
+  QImage      pictureImage();
+  /// The picture as a file, by its suffix: svg, pdf, png or jpg. False: not written.
+  bool        exportImageFile(const QString &fileName);
+  /// The picture on the clipboard.
+  void        copyImage();
+  /// A page: @p title, when the recording started, its sample time, @p comment, the picture below.
+  void        print(QPrinter *printer, const QString &title, const QString &comment);
+  /// The colour @p value is drawn in; invalid while it is not drawn (not
+  /// shown, or no axis for its unit).
+  QColor      drawnColor(const ValueRef &value) const;
   /// @}
-  /// Line widths of the data and the integration curve.
-  void             setLine(int d, int i);
-  /// Draws a vertical mark at the current sample (an alarm raised); marks
-  /// move with the data and go with clearSLOT().
-  void             addMark(const QColor &color, const QString &name);
-  int              markCount() const { return int(m_marks.size()); }
-  /// Unsaved recorded data in memory.
-  bool             dirty() const { return m_store->dirty(); }
-  void             setAlertUnsaved(bool on) { m_alertUnsaved = on; }
-  void             setCrosshair(bool on) { m_crosshair = on; }
-  /// LineMode and PointMode for the data and the integration curve.
-  void             setLineStyle(int, int, int, int);
-  /// Integration curve: shown, scale factor, threshold (values at or below
-  /// it reset the sum) and offset.
-  void             setIntegration(bool, double, double, double);
-  /// Which value of the meter the integration curve integrates: 0 the main
-  /// value, 1 the second display (Graph/int-value). Without that value the
-  /// curve is not drawn; it goes on the axis its value is on.
-  void             setIntegrationValue(int id);
-  int              integrationValue() const { return m_intValueId; }
-  void             setSettings(Settings *settings) { m_cfg = settings; }
-  /// Since 26.2 the integral is one over time (unit x s), no longer the sum
-  /// of the samples. Once per settings file Graph/int-scale is divided by
-  /// the sample time in seconds, so the curve stays as it was;
-  /// Graph/int-scale-per-second marks it done. True when the scale changed.
-  static bool      migrateIntegralScale(Settings *cfg);
+
+  /// @name For tests
+  /// @{
+  int         curveCount() const { return int(m_curves.size()); }
+  /// The points of curve @p i as thinned (x in s since the start, y in the
+  /// base unit; a gap is NaN), all the store keeps.
+  QList<QPointF> curvePoints(int i = 0) const;
+  /// The points handed to the plot: those of the time shown, y in its axis' unit.
+  QList<QPointF> drawnPoints(int i = 0) const;
+  /// The place of curve @p i's axis in the list, -1 while it is not drawn.
+  int         curveAxis(int i) const;
+  QColor      curveColor(int i) const;
+  /// The pen curve @p i is drawn with, and whether its readings have markers now.
+  QPen        curvePen(int i) const;
+  bool        curveMarkers(int i) const;
+  /// The pen it is drawn with now: solid where its points are too close for dashes.
+  QPen        drawnPen(int i) const;
+  /// The colour of axis @p i's numbers: its curve's when it has one alone.
+  QColor      axisColor(int i) const;
+  /// The grid lines of axis @p i now (10 x 8 divisions: 9 across the plot).
+  int         axisTickCount(int i) const;
+  /// The axes in use, the left one included also without a unit.
+  int         axisCount() const;
+  /// Axis @p i: its title ("[mV]") and its limits in that unit.
+  QString     axisTitle(int i) const;
+  double      axisMin(int i) const;
+  double      axisMax(int i) const;
+  QString     legendText() const;
+  /// The time axis, s since the start of the recording.
+  double      timeAxisStart() const;
+  double      timeAxisEnd() const;
+  QString     leftAxisTitle() const { return axisTitle(0); }
+  double      leftAxisMin() const { return axisMin(0); }
+  double      leftAxisMax() const { return axisMax(0); }
+  QString     stateText() const;
+  /// The statistics as plain text, as they are now (not waiting for the column's pace).
+  QString     statsText() const;
+  /// What the crosshair says for the mouse at @p pos (plot widget pixels), and where its lines are.
+  QString     crosshairTextAt(const QPoint &pos);
+  /// The level line of cursor @p which: its value on the left axis (that axis' unit); NaN while it has none.
+  double      cursorLevel(int which) const;
+  /// The x of cursor @p which in the plot widget, -1 while it is not shown.
+  int         cursorPixel(int which) const;
+  /// Line @p line (-1 the reference line, 0.. the added ones): its value now
+  /// (base unit; NaN while it is not drawn), its label, its crossings, its
+  /// y in the plot widget (-1 while it is not drawn).
+  double      referenceValue(int line = -1) const;
+  QString     referenceLabel(int line = -1) const;
+  int         crossingCount(int line = -1) const;
+  /// The pixel row of line @p line (as referenceValue(), or kTriggerLine); -1: not drawn.
+  int         referencePixel(int line = -1) const;
+  /// The limit band drawn: its edges (base unit, infinite for an open side); false: none.
+  bool        limitBand(double *low, double *high) const;
+  /// The start threshold's line (base unit); NaN: none.
+  double      triggerLevel() const { return m_triggerLevel; }
+  /// referencePixel() and levelAt(): no line, and the start threshold's.
+  static constexpr int kNoLine = -2;
+  static constexpr int kTriggerLine = -3;
+  /// Mark @p mark: its time on the graph's time (ms), its title, its
+  /// colour, the x of its line in the plot widget (-1 while it is not
+  /// shown), its flag below the plot (empty while it has none) and what
+  /// the flag says.
+  qint64      markTime(int mark) const;
+  QString     markName(int mark) const;
+  QColor      markColor(int mark) const;
+  int         markPixel(int mark) const;
+  QRect       markFlagRect(int mark) const;
+  QString     markFlagText(int mark) const;
+  /// The flag of cursor @p which below the plot; empty while it has none.
+  QRect       cursorFlagRect(int which) const;
+  GraphMinimap *minimap() const { return m_minimap; }
+  /// The states in the time shown ("HOLD 3.0-5.0 | OL 8.0-9.0"), whether the strip is shown or not.
+  QString     statesText() const;
+  /// Whether curve @p i is drawn as a band now.
+  bool        curveBanded(int i) const;
+  /// The band of curve @p i (-1: the min/max band) at @p t (ms on the
+  /// graph's time): its lowest and highest value, base unit; false where it has none.
+  bool        bandAt(int i, qint64 t, double *lo, double *hi) const;
+  QScrollBar *scrollBar() const { return m_scrollBar; }
+  GraphTimeBar *timeBar() const { return m_timeBar; }
+  /// The rectangle of the axes in the plot widget, for zoomToRect().
+  QRect       plotRect() const;
+  /// Draws what is pending now instead of at the drawing pace.
+  void        refreshNow();
+  /// @}
 
 Q_SIGNALS:
-  /// values() changed (setValues(), setValueShown()).
-  void             valuesChanged();
-  /// Status bar text: sample time, window and remaining length.
-  void             info(const QString &);
-  void             error(const QString &);
-  /// Recording started/stopped.
-  void             running(bool);
-  /// The store's state changed (RecordingStore::State).
-  void             stateChanged(int state);
-  /// A short hint for the status bar ("Current off: the left axis shows V now").
-  void             notice(const QString &);
-  /// Window/total size changed by zooming (seconds).
-  /// Sample time changed by a CSV import (tenths of a second).
-  void             sampleTime(int);
-  /// The context menu chose this graph's colours: a ColorVariant, or -1
-  /// for the default from the settings page.
-  void             colorVariantChanged(int variant);
-  void             zoomIn(double);
-  void             zoomOut(double);
-  /// Show the whole recording (key 0).
-  /// A time button asks for this visible window (seconds).
-  void             windowRequested(int seconds);
-  /// A threshold line was dragged with the mouse.
-  void             thresholdChanged(GraphWidget::CursorMode, double);
-  /// The reference line was dragged or chosen in the context menu.
-  void             referenceChanged();
-  /// leftValue() is another one (the limit band to show).
-  void             leftValueChanged(const ValueRef &value);
-  /// @name Context menu requests, handled by InstanceWidget
-  /// @{
-  void             connectDMM(bool);
-  void             configure();
-  /// "Clear graph" in the context menu: the window asks about unsaved data
-  /// first (InstanceWidget::clearSLOT()).
-  void             clearRequested();
-  /// "Start recording" (true) or "Stop recording" in the context menu: the
-  /// window starts it as its Record button does (MainWindow::startSLOT()).
-  void             recordRequested(bool start);
-  /// "Live" in the context menu (InstanceWidget::liveSLOT()).
-  void             liveRequested();
-  void             exportData();
-  void             importData();
-  /// @}
-
-public Q_SLOTS:
-  /// Discards the recorded data.
-  void             clearSLOT();
-  /// @name Keyboard zoom/pan, also reachable from MainWindow's shortcuts
-  /// @{
-  void             zoomInSLOT()  { leaveAll(); Q_EMIT zoomIn(1.25); }
-  void             zoomOutSLOT() { leaveAll(); Q_EMIT zoomOut(1.25); }
-  /// The window as long as what there is (kept in the settings, unlike "All").
-  void             zoomFitSLOT() { m_followAll = false; Q_EMIT windowRequested(allTarget(false)); }
-  /// Shifts the visible window by a fraction of its width (negative = back).
-  void             pan(double fraction);
-  void             scrollToStart();
-  void             scrollToEnd();
-  /// Puts a picture of the graph on the clipboard.
-  void             copyImageSLOT();
-  /// Writes the graph to a file chosen in a dialog (SVG, PDF, PNG).
-  bool             exportImageSLOT();
-  /// @}
-  void             startSLOT();
-  void             stopSLOT();
-  /// The store goes Live (RecordingStore::live()), the curve viewed goes.
-  void             liveSLOT();
-  /// The recording settings of the store changed (DeviceSession): the time
-  /// buttons and the threshold lines anew.
-  void             recordingSetupChanged();
-  /// Export with a file dialog; returns false when cancelled or failed.
-  bool             exportDataSLOT();
-  /// The export's file dialog: the file chosen (with its suffix), empty when
-  /// cancelled; @p raw for "every reading".
-  QString          askExportFile(bool *raw);
-  /// A file is viewed (importCsvFile()), not a recording.
-  bool             showsFile() const { return !m_sourceFile.isEmpty(); }
-  void             importDataSLOT();
-  void             connectSLOT(bool on) { m_connected = on; }
-
-  /// File-path-driven, non-interactive halves of export/importDataSLOT (no QFileDialog),
-  /// split out so the CSV parsing/writing logic can be exercised from tests.
-  bool             exportCsvFile(const QString &fileName, bool raw = false);
-  bool             importCsvFile(const QString &fileName);
-  /// The text top left in the plot: "● REC 0:42 / 5:00", the source of what
-  /// is viewed, or empty (Live). Public for the tests.
-  QString          stateText() const;
-  /// Writes the graph to @p fileName, format taken from the suffix (svg, pdf,
-  /// png, jpg, bmp). SVG and PDF keep the curve, the axes and their labels as
-  /// vectors; @p size is the drawing size in points, the widget's own when
-  /// empty. Non-interactive half of exportImageSLOT(), for the test.
-  bool             exportImageFile(const QString &fileName, QSize size = QSize());
-
-protected Q_SLOTS:
-  void             popupSLOT(QAction *action);
+  /// The window or "All" changed, by the graph itself too (zoom, "All" growing).
+  void        windowChanged(int seconds);
+  void        followAllChanged(bool on);
+  void        statsVisibleChanged(bool on);
+  void        cursorsChanged();
+  /// The reference line, the added lines or the crossings' switch changed, by a drag too.
+  void        referenceChanged();
+  /// Another value is on the left axis.
+  void        leftValueChanged();
+  /// Overview, states or the min/max band were switched.
+  void        overviewChanged();
+  /// The rule for outliers changed (setOutliers(), askOutliers()).
+  void        outliersChanged();
+  /// The start threshold was dragged to @p value (base unit): the settings take it.
+  void        startThresholdDragged(double value);
+  /// A note was set at @p when (askNote()): the readings table marks its reading.
+  void        noteAdded(const QDateTime &when, const QString &title);
+  /// A note was dragged from @p from to @p to: the readings table moves its mark.
+  void        noteMoved(const QDateTime &from, const QDateTime &to, const QString &title);
 
 protected:
-  /// exportImageFile() without hiding the crosshair.
-  bool             writeImage(const QString &fileName, QSize size);
-
-  QScrollBar      *scrollbar;
-  GraphMinimap    *m_minimap = nullptr;
-  bool             m_minimapOn = true;
-  bool             m_envelopeOn = false;
-  QGraphicsPathItem *m_envelope = nullptr;
-  /// The curve's points (pointsOf(), gaps as NaN) for the band
-  QList<QPointF>   m_curvePts;
-  void             updateEnvelope();
-  bool             m_liveHold = false;   ///< Live, the window held at m_holdStart
-  qint64           m_holdStart = 0;      ///< ms since the start of the recording
-  /// The chart, and below it the overview or the scroll bar.
-  void             layoutParts();
-  /// The overview asks for the window to start at @p start.
-  void             showFrom(qint64 start);
-  /// The window follows the newest reading again (Live), or goes to the end.
-  void             followEnd();
-  /// The overview asks for a window of @p width ms from @p start.
-  void             showSpan(qint64 start, qint64 width, bool atEnd);
-  /// Tells the overview the window shown.
-  void             updateMinimapView();
-  qint64           m_bucket = 1;    ///< ms per drawn min/max pair (see bucketSize())
-  int              m_tailData = 0;  ///< points the newest bucket gave the data line (1 or 2; a gap is 1)
-  int              m_tailInt = 0;   ///< the same for the integral
-  int              m_windowSeconds = 600;   ///< the visible window, applyWindow()
-  int              m_savedWindow = 0;       ///< the settings' window, setGraphSize(); 0 = none yet
-  int              m_rebuilds = 0;          ///< rebuildSeries() calls, see onAppended()
-  /// @name Time buttons (All / 1 min / 5 min / 30 min) top right in the graph
-  /// @{
-  QWidget         *m_timeBar = nullptr;
-  QList<QToolButton *> m_timeButtons;   ///< property "seconds": 0 = All
-  /// Time and value under the crosshair, fixed top left above the plot (a
-  /// tooltip window trailed behind the mouse).
-  QLabel          *m_cursorLabel = nullptr;
-  void             hideCrosshair();
-  bool             m_followAll = false;   ///< "All": the window grows with the recording
-  void             timeButtonClicked(int seconds);
-  /// "All": a window that holds the recording so far (plus room to grow
-  /// when @p grow), at least 10 s and at most the recording length.
-  int              allTarget(bool grow) const;
-  /// "All": shows allTarget() - in the graph only, the settings keep
-  /// their window (it would be saved with them).
-  void             requestAll(bool grow);
-  /// Shows a window of @p seconds (setGraphSize(), requestAll()).
-  void             applyWindow(int seconds);
-  /// A zoom from "All" starts from the window shown: it goes to the
-  /// settings first.
-  void             leaveAll();
-  void             updateTimeButtons();
-  /// The longest window worth a time button, in seconds (0 = none).
-  int              lengthLimit() const;
-  /// The scroll bar over what the store keeps.
-  void             updateScrollRange();
-  void             placeTimeBar();
-  /// @}
-  double           m_scaleMin;
-  double           m_scaleMax;
-  bool             m_autoScale;
-  RecordingStore  *m_store;
-  SampleMode       mode() const { return SampleMode(m_store->startMode()); }
-  bool             m_connected;
-  /// The store's signals: a new reading, discarded or replaced readings.
-  void             connectStore();
-  /// Where the window starts (ms since the start of the recording).
-  qint64           windowStart() const;
-  /// The start of a window that has the newest reading at its right edge.
-  qint64           followStart() const;
-  /// Whether the window moves on with the time: Live (not held by the
-  /// overview), or a recording seen at its end.
-  bool             following() const;
-  /// FrameClock: wanted while the graph is shown and Live or recording.
-  void             updateClockWant();
-  /// A tick of the FrameClock: the time axis on to now, between readings.
-  void             frameTick();
-  qint64           bucketSize() const;
-  int              bucketStart(int i) const;
-  void             appendToSeries();
-  void             appendIntegral(const RecordingSeries &series, int first, int last, bool filling);
-  void             onAppended(bool shifted);
-  void             onCleared();
-  void             onStateChanged();
-  /// @name The state top left in the plot (stateText())
-  /// @{
-  QLabel          *m_stateLabel = nullptr;
-  QColor           m_stateColor;          ///< the lettering colour, for View
-  QString          m_sourceFile;          ///< the file viewed (importCsvFile()), empty = a recording
-  QString          m_sourceDevice;        ///< the meter of its main value (Recording::device)
-  void             updateStateLabel();
-  /// @}
-  /// The mark lines anew from the store's marks.
-  void             syncMarks();
-  QPoint           m_mpos;
-  bool             m_mouseDown;
-  bool             m_mousePan;
-  CursorMode       m_cursorMode;
-  QColor           m_bgColor;
-  QColor           m_gridColor;
-  QColor           m_dataColor;
-  QColor           m_cursorColor;
-  QColor           m_startColor;
-  QColor           m_intColor;
-  QColor           m_intThresholdColor;
-  int              m_lineWidth;
-  int              m_intLineWidth;
-  bool             m_alertUnsaved;
-  bool             m_crosshair;
-  PointMode        m_pointMode;
-  PointMode        m_intPointMode;
-  LineMode         m_lineMode;
-  LineMode         m_intLineMode;
-  double           m_integrationScale;
-  double           m_integrationOffset;
-  bool             m_showIntegration;
-  bool             m_includeZero;
-  QMenu           *m_popup;
-  QList<QAction *> m_windowActions;   ///< setWindowActions()
-  QAction         *m_printAction = nullptr;   ///< setPrintAction()
-
-  // Qt Charts based rendering (core curve + axes, plus the integration curve
-  // and the cursor/threshold overlays reintroduced as QGraphicsLineItems on
-  // top of the chart scene).
-  QChartView      *m_chartView = nullptr;
-  QChart          *m_chart;
-  QLineSeries     *m_dataSeries;   ///< the data line's first segment (positions map with it)
-  QScatterSeries  *m_dataPoints;
-  QLineSeries     *m_intSeries;
-  QScatterSeries  *m_intPoints;
-  std::unique_ptr<GapLine> m_dataLine;   ///< the data line, split at the gaps
-  std::unique_ptr<GapLine> m_intLine;
-  /// A curve of one of the store's other series; kept for reuse when there
-  /// are fewer.
-  struct ExtraCurve
-  {
-    QLineSeries *series = nullptr;   ///< the first segment
-    std::unique_ptr<GapLine> line;
-    int  tail = 0;                   ///< points the newest bucket gave (see m_tailData)
-    int  side = 0;                   ///< its axis: 0 left, 1 right, 2 third
-    bool shown = false;              ///< drawn: an axis has its unit, not hidden
-    QList<QPointF> points;           ///< as drawn, for the band (m_curvePts)
-  };
-  std::vector<ExtraCurve> m_extraCurves;
-  /// A value of another meter (setOtherValues()).
-  struct OtherCurve
-  {
-    ValueRef     value;
-    QPointer<RecordingStore> store;   ///< nullptr while its meter is not open
-    QLineSeries *series = nullptr;
-    std::unique_ptr<GapLine> line;
-    int          side = 0;   ///< as ExtraCurve::side
-    bool         shown = false;
-    QString      unit;
-    QString      name;    ///< in the legend: the meter's name and the value's
-    QList<QPointF> points;
-  };
-  std::vector<OtherCurve> m_otherCurves;
-  QHash<ValueRef, ValueAxis> m_otherAxes;   ///< setOtherValueAxis(), missing: AxisAuto
-  QList<QPointer<RecordingStore>> m_otherConnected;   ///< the stores connected to
-  std::function<RecordingStore *(const QString &)> m_otherStore;
-  std::function<QString(const QString &)> m_otherName;
-  /// The other meters of a file viewed (importCsvFile()), a store each, and
-  /// their values among the curves (source "file:<index>"), not in otherValues().
-  QList<RecordingStore *> m_fileStores;
-  QStringList      m_fileDevices;   ///< their names, as m_fileStores
-  QList<ValueRef>  m_fileValues;
-  /// The curves of @p values anew.
-  void             makeOtherCurves(const QList<ValueRef> &values);
-  /// The store of another meter's value: of the file viewed, or open beside
-  /// (not while a file is viewed).
-  RecordingStore  *otherStore(const QString &source) const;
-  QString          otherName(const QString &source) const;
-  /// The other meters of the file viewed go (Live, a recording, another file).
-  void             dropFileStores();
-  /// The other meters of the file @p rec, as curves.
-  void             setFileStores(const Recording &rec);
-  QTimer           m_otherTimer;   ///< their new readings, drawn together
-  /// Their stores, connections and curves anew.
-  void             attachOtherStores();
-  /// Their points and axes anew, after rebuildExtras() (the right axis
-  /// may be free); true when the left scale grew.
-  bool             rebuildOtherCurves();
-  /// New readings of theirs (m_otherTimer): their curves, axes, legend.
-  void             onOtherReadings();
-  QColor           otherColor(int i) const;
-  QPen             otherPen(int i) const;
-  /// The axes on the right: [0] the right one, the first unit other than
-  /// the main one; [1] the third, outside it, the next unit.
-  struct SideAxis
-  {
-    QValueAxis              *axis = nullptr;
-    QString                  unit;              ///< empty while it is hidden
-    QGraphicsSimpleTextItem *title = nullptr;   ///< above it, as m_yTitle
-    double                   scaleMin = 1e40;
-    double                   scaleMax = -1e40;
-  };
-  std::array<SideAxis, 2> m_right;
-  /// The y axis of side @p side (0 left, 1 right, 2 third).
-  QValueAxis      *yAxisOf(int side) const { return side == 0 ? m_yAxis : m_right[size_t(side - 1)].axis; }
-  /// Grows the scale of the right axis @p side by @p v; true when it grew.
-  bool             growSide(int side, double v);
-  void             resetSideScales();
-  QString          sideTitle(int side) const;
-  /// The colour of the first curve on side @p side: this meter's lowest
-  /// value there, else the first other meter's curve; the labels' without.
-  QColor           sideColor(int side) const;
-  static int       sideOf(ValueAxis axis) { return axis == AxisRight ? 1 : axis == AxisThird ? 2 : 0; }
-  static ValueAxis axisOfSide(int side) { return side == 1 ? AxisRight : side == 2 ? AxisThird : AxisLeft; }
-  QSet<int>        m_shownValues;        ///< the meter's other values switched on
-  QMap<int, ValueAxis> m_valueAxes;      ///< setValueAxis(), missing: AxisAuto
-  bool             m_mainShown = true;   ///< the main value's curve, setValueShown(0)
-  int              m_intValueId = 0;     ///< setIntegrationValue()
-  GraphLegend     *m_legend = nullptr;
-  QColor           extraColor(int i) const;
-  /// The line of value @p id (1 = value 2 ...): its colour, valueStyle().
-  QPen             extraPen(int id) const;
-  static Qt::PenStyle valueStyle(int id);
-  void             rebuildExtras();
-  void             onExtraAppended(int i);
-  void             rebuildOtherIntegral();
-  /// The integration curve (line and points) on @p axis.
-  void             integralOnAxis(QAbstractAxis *axis);
-  void             updateLegend();
-  /// The right axes from their scales, with the left axis' tick count;
-  /// their titles in the colour of their first curve.
-  void             updateRightAxis();
-  /// The drawn points of readings first..last of @p series, thinned per bucket
-  /// (see the comment at the definition); returns the number of points.
-  int              pointsOf(const RecordingSeries &series, int first, int last, bool integral, QList<QPointF> &out) const;
-  QValueAxis      *m_xAxis;
-  QValueAxis      *m_yAxis;
-  /// The y axis title ("[V]"), written horizontally above the axis: turned
-  /// by 90 degrees a "V" reads like ">".
-  QGraphicsSimpleTextItem *m_yTitle;
-  QBrush           m_themeBackground;   ///< Qt::NoBrush: m_bgColor
-  QColor           m_themeGrid;
-  QColor           m_themeLabels;
-  QColor           m_themeData;         ///< proposed curve colour, invalid = none
-  QColor           dataColor() const;   ///< the curve colour in use
-  /// The unit of value @p id, its newest series with one; empty before one came.
-  QString          valueUnitOf(int id) const;
-  /// Before value @p id goes onto the axis @p axis: the curves of another
-  /// unit on it go off (@p chosenOnly: those with that axis chosen), with a notice().
-  void             makeRoom(int id, ValueAxis axis, bool chosenOnly = false);
-  /// After a value went on or off or to another axis: the view afresh.
-  void             refreshValues();
-  /// The overview draws minimapValue(), in its curve's colour.
-  void             updateMinimapValue();
-  QColor           intColor() const;    ///< the integration curve colour in use
-  ColorVariant     m_variant = Neutral;          ///< in use
-  ColorVariant     m_defaultVariant = Neutral;   ///< from the settings page
-  int              m_variantOverride = -1;       ///< this graph's choice, -1 = default
-  /// Scope, phosphor and recorder: 10 x 8 divisions of 1-2-5 steps.
-  bool             divisions() const;
-  bool             phosphor() const { return m_variant == PhosphorGreen || m_variant == PhosphorAmber; }
-  /// The y range, widened to 8 whole divisions of 1-2-5 steps when divisions().
-  void             setYRange(double min, double max);
-  /// Phosphor: 5 fine ticks per division on the reference line (else the
-  /// bottom edge) and on the trigger's mark (else the left edge).
-  QGraphicsPathItem *m_centreTicks;
-  void             updateCentreTicks();
-  /// @name The reference line
-  /// Across the plot at the reference value (0) while that lies inside the
-  /// y range, with the value small at its right end ("0 A"): a current
-  /// that charges and discharges reads against it; without the value in
-  /// range there is no line. Phosphor draws it with its fine ticks
-  /// (updateCentreTicks()).
-  /// @{
-  QGraphicsLineItem       *m_referenceLine = nullptr;
-  QGraphicsSimpleTextItem *m_referenceLabel = nullptr;
-  double           m_reference = 0;
-  ReferenceKind    m_referenceKind = RefZero;
-  QList<double>    m_alarmThresholds;
-  /// The statistics of the window shown, for RefMean, RefMin, RefMax.
-  RecordingStore::Stats windowStats() const;
-  /// The line dragged to @p y in the scene: it snaps to 0, the window's
-  /// mean, minimum and maximum, the alarm thresholds and the limits within a few
-  /// pixels, else takes the value there, rounded to a hundredth of the
-  /// scale.
-  void             dragReference(double y);
-  /// The reference line's y in the scene, NaN when the value is not
-  /// inside the y range (on its edge the axis is the line).
-  double           referenceY() const;
-  void             updateReferenceLine();
-  /// @}
-  /// @name The limit test's band (setLimits())
-  /// @{
-  QGraphicsRectItem *m_limitBand = nullptr;
-  QGraphicsLineItem *m_limitLines[2] = { nullptr, nullptr };   ///< low, high
-  Control          m_control;   ///< setControl()
-  QString          m_baseSource;   ///< setBaseSource()
-  ValueRef         m_limitValue{ -1 };
-  ValueRef         m_lastReference{ -1 };   ///< for leftValueChanged()
-  qint64           m_minimapShift = 0;      ///< where the overview's store begins on this one's time (ms)
-  double           m_limitLow = 0;
-  double           m_limitHigh = 0;
-  void             updateLimitBand();
-  /// @}
-  /// @name Time cursors (setTimeCursor())
-  /// @{
-  qint64           m_cursorT[2] = { -1, -1 };      ///< ms since the start, -1 = none
-  QGraphicsLineItem *m_cursorLine[2] = {};
-  GraphFlagItem    *m_cursorName[2] = {};   ///< "A" and "B" as flags under the lines
-  /// across the plot at the value under each cursor: the change is the
-  /// distance between the two
-  QGraphicsLineItem *m_cursorLevel[2] = {};
-  QLabel          *m_cursorInfo = nullptr;          ///< timeCursorText(), top right in the plot
-  QPoint           m_pressPos;                      ///< where the left button went down
-  bool             m_clickCandidate = false;        ///< a press that may become a click: sets a cursor
-  bool             m_pressShift = false;
-  /// Places the lines and the text anew.
-  void             updateTimeCursors();
-  /// The value of @p series that holds at @p t; NaN in a gap, outside or
-  /// without a series. @p store: the one it belongs to, null this one.
-  double           valueAt(const RecordingSeries *series, qint64 t, const RecordingStore *store = nullptr) const;
-  /// The series of value @p id (> 0) drawn that holds at @p t (Hz, then %:
-  /// the one of the time), with @p leftOnly one on the left axis; -1 with none.
-  int              drawnExtra(int id, qint64 t, bool leftOnly) const;
-  /// The series of leftValue() at @p t, its store and where that
-  /// store's time 0 lies on this one's (ms); no series with none.
-  struct RefSeries
-  {
-    const RecordingStore *store = nullptr;
-    const RecordingSeries *series = nullptr;
-    qint64 shift = 0;
-  };
-  RefSeries        refSeries(qint64 t) const;
-  /// The curve of another meter that is leftValue(), -1 with none.
-  int              referenceOther() const;
-  /// The points of leftValue()'s curve as drawn, for the band.
-  QList<QPointF>   referencePoints() const;
-  /// @}
-  QColor           m_defaultAxisLine;   ///< the chart's own axis line colour
-  void             applyThemeColors();
-  void             placeYTitle();
-  void             showUnit();
-  /// @name x labels in s, min or h
-  /// Qt's axis can only print the seconds; its own labels are kept for the
-  /// layout but drawn invisible, these are drawn over them at every tick.
-  /// @{
-  QList<QGraphicsSimpleTextItem *> m_xLabels;
-  double           m_xStep = 0;         ///< seconds between the x ticks
-  QColor           m_xLabelColor;
-  void             updateXLabels();
-  /// @}
-  /// @name y labels with the SI prefix of the reading
-  /// The same for the y axis: Qt's labels can only print base units
-  /// (0.35 V), these print them with the prefix the meter shows (350 mV).
-  /// @{
-  QList<QGraphicsSimpleTextItem *> m_yLabels;
-  QString          m_yPrefix;           ///< the prefix the y labels use now
-  /// The meter's prefix while it measures what the store holds; else the
-  /// one that suits the axis range.
-  QString          yPrefix() const;
-  QString          m_livePrefix;        ///< the prefix of the meter's unit (setUnit()), for an axis without readings
-  QString          m_liveBase;          ///< and its base unit
-  void             updateYLabels();
-  /// @}
-  QGraphicsLineItem *m_crosshairVLine;
-  QGraphicsLineItem *m_crosshairHLine;
-  QGraphicsLineItem *m_triggerLine;
-  QGraphicsLineItem *m_integrationLine;
-  /// Alarm marks: a vertical line at the sample the alarm raised on, one
-  /// per RecordingStore::marks() in the same order.
-  QList<QGraphicsLineItem *> m_marks;
-  QList<GraphFlagItem *> m_markFlags;   ///< number and name under each mark
-  /// The flags under the plot, the cursors' and the marks', in one row.
-  void             updateFlags();
-  void             updateMarkPositions();
-
-  void             resizeEvent(QResizeEvent *)Q_DECL_OVERRIDE;
-  void             showEvent(QShowEvent *) override;
-  void             hideEvent(QHideEvent *) override;
-  bool             eventFilter(QObject *watched, QEvent *event) Q_DECL_OVERRIDE;
-
-  void             handleChartMousePress(QMouseEvent *);
-  void             handleChartMouseMove(QMouseEvent *);
-  void             handleChartMouseRelease(QMouseEvent *);
-  void             handleChartWheel(QWheelEvent *);
-  /// Returns true when the key was used.
-  bool             handleChartKey(QKeyEvent *);
-
-  void             emitInfo();
-  void             rebuildSeries();
-  /// Whether the points of the curve and of the integral are drawn. Hidden
-  /// ones get no points: Qt Charts lays out a scatter series anew with every
-  /// change, also a hidden one (that was most of the time of a reading).
-  bool             pointsShown() const { return m_pointMode != NoPoint; }
-  bool             intPointsShown() const { return m_showIntegration && m_intPointMode != NoPoint; }
-  /// The time axis, what depends on the window's readings too (mean line,
-  /// band).
-  void             updateXAxisRange();
-  /// The time axis alone: range, ticks, labels, time cursors, the
-  /// overview's window. Cheap enough for each FrameClock tick.
-  void             updateTimeAxis();
-  /// "All" while it runs and the window is not full: the axis ends now and
-  /// stretches with the clock (stretchedSeconds() wide, at least 10 s), the
-  /// curve reaches the right edge; the window grows in steps for the buckets.
-  bool             stretching() const;
-  double           stretchedSeconds() const;
-  /// The lines get the points around the time axis' range, and the hold
-  /// to now while the window follows the readings (GapLine).
-  void             updateLineSpans();
-  void             updateSeriesAppearance();
-  void             updateThresholdLinesVisibility();
-  void             updateThresholdLinePositions();
-  QString          formatEngineeringValue(double value, QString *unit = nullptr) const;
+  void        refreshPlot() override;
+  CrosshairAt crosshairAt(double x, double y) override;
+  void        resizeEvent(QResizeEvent *event) override;
+  void        keyPressEvent(QKeyEvent *event) override;
+  /// As narrow as the row above still holds its buttons and one short
+  /// legend entry; the arrangement of the windows keeps to it.
+  QSize       minimumSizeHint() const override;
 
 private:
-  Qt::PenStyle     penStyle(LineMode);
-  Settings        *m_cfg;
+  /// One value drawn.
+  struct Curve
+  {
+    ValueRef    value;
+    QPointer<RecordingStore> store;
+    QString     meter;           ///< its meter's name, for the legend
+    QString     unit;            ///< base unit, of its newest series
+    QString     label;           ///< "Voltage DC (V)"
+    int         axis = -1;       ///< place in m_axes; -1: not drawn
+    double      shift = 0;       ///< its store's time 0 on the graph's time, s
+    const RecordingSeries *newest = nullptr;   ///< the series a reading goes to
+    QCPGraph   *graph = nullptr;
+    QPen        pen;             ///< its line; Qt::NoPen: none (styleCurves())
+    QList<QPointF> points;       ///< thinned, all the store keeps, on the graph's time
+    int         tail = 0;        ///< how many of them are the newest bucket's
+    bool        banded = false;  ///< too dense for a line: drawn as a band (drawCurves())
+    bool        unitless = false; ///< readings, but no unit: on the axis of kNoUnit
+  };
+  /// One value axis: the unit it has now, and the frame zoomed on.
+  struct Axis
+  {
+    QCPAxis    *axis = nullptr;
+    QString     unit;            ///< base unit; empty: free
+    double      factor = 1;      ///< base unit per unit of the axis
+    double      zoomMin = 0;     ///< while m_zoomed, base unit
+    double      zoomMax = 0;
+    bool        divided = false; ///< its ticker is the one of the 8 divisions
+  };
 
+  // graphwidget_curves.cpp
+  /// The curves anew from values and sources: stores, plot graphs, connections.
+  void        makeCurves();
+  /// The series of @p curve's value, oldest first.
+  QList<const RecordingSeries *> seriesOf(const Curve &curve) const;
+  /// How often @p curve turns between @p from and @p to (s, graph time) by
+  /// at least GraphBand::kTurnPixels on its axis as it stands now.
+  int         turnsIn(const Curve &curve, double from, double to) const;
+  /// The bucket for the time shown on the plot's width.
+  qint64      bucketNow() const;
+  /// All points anew, and which axis each curve has.
+  void        rebuildPoints();
+  void        rebuildCurve(Curve &curve);
+  /// The newest reading of @p series went into @p curve: a new bucket adds
+  /// its points, one still filling replaces them.
+  void        appendTail(Curve &curve, const RecordingSeries &series);
+  /// The decimator's options for @p series of @p curve: its hidden outliers.
+  SeriesDecimator::Options decimation(const Curve &curve, const RecordingSeries &series) const;
+  /// countOutliers() after a picture, at most four times a second and a tenth of the time.
+  void        scheduleOutlierCount();
+  void        mainAppended(RecordingStore *store, bool shifted);
+  void        extraAppended(RecordingStore *store, int index);
+  /// What a store did other than a reading at the end.
+  void        storeChanged();
+  void        drawCurves(double from, double to);
+  void        updateLegend();
+  /// A store is gone: its curves go, without asking the sources.
+  void        storeGone(QObject *store);
+  // graphwidget_theme.cpp
+  void        setupTheme();
+  /// The look from variant, design and settings, onto the plot and the curves.
+  void        applyLook();
+  /// Which curve @p curve is for its colour and dashes: its place among the values, its meter.
+  GraphLook::CurveKey keyOf(int curve) const;
+  QColor      colorOf(int curve) const;
+  /// Pens of the curves and the colours of the axes' numbers.
+  void        styleCurves();
+  /// Curve @p curve with @p shown points on the plot's width: markers
+  /// while they are few; dense, neither smoothing nor dashes - a band of
+  /// strokes shows neither, and both cost (a dashed or smoothed wide line
+  /// of thousands of strokes takes seconds).
+  void        styleDensity(const Curve &curve, int shown);
+  /// The 8 divisions of an axis showing @p lo .. @p hi (its unit): the range widened to whole 1-2-5 steps.
+  static void divide(double &lo, double &hi, double &step);
+  // graphwidget_axes.cpp
+  void        setupAxes();
+  /// Each curve on the axis chosen for it or of its unit, else the next free one.
+  void        assignAxes();
+  /// The window without telling "All" (it sets its own).
+  void        applyWindow(int seconds);
+  /// "All": the window of the whole recording; with @p grow only when the recording outgrew it.
+  void        fitAll(bool grow);
+  /// The latest start of the window: its end at the newest reading.
+  qint64      lastStart() const;
+  /// The lowest and highest value on axis @p axis from @p from to @p to (s); false: none.
+  bool        valueSpan(int axis, double from, double to, double &lo, double &hi) const;
+  void        updateAxes(double &from, double &to);
+  void        updateScrollBar();
+  void        updateTimeBar();
+  /// After the window moved: the picture now, unless it is held.
+  void        redraw();
+  // graphwidget_overlays.cpp
+  void        setupOverlays();
+  /// A dialog for a minimum and a maximum in @p unit (base unit), titled
+  /// @p title; false when cancelled.
+  bool        askMinMax(const QString &title, const QString &unit, double &min, double &max);
+  /// The curve the crosshair, the cursors' levels and later the reference line go by: the first on the left axis; -1: none.
+  int         leftCurve() const;
+  GraphStats::Curve statsCurve(int curve) const;
+  GraphStats::Input statsInput() const;
+  /// The cursors' lines, flags and levels where the axes are now.
+  void        updateCursors();
+  /// The statistics soon, not with every reading.
+  void        scheduleStats();
+  void        updateStats();
+  /// The column at its side, as wide as it wants; the rest for the plot.
+  void        layoutStats();
+  /// Reference line, added lines, crossings, limit band and start threshold where the axes are now.
+  void        updateLevels();
+  /// The value the reference line follows (mean, minimum, maximum of the time shown); NaN: none.
+  double      followedValue();
+  /// The line at @p pos one can drag: -1 the reference line, 0.. an added one, kTriggerLine; kNoLine: none.
+  int         levelAt(const QPoint &pos) const;
+  /// The line dragged to @p y (plot widget pixels): the reference line snaps, an added one and
+  /// the start threshold take a round value.
+  void        dragLevel(int line, double y);
+  /// The cursor whose line is at @p pos (plot widget pixels): 0, 1, or -1.
+  int         cursorAt(const QPoint &pos) const;
+  // graphwidget_overview.cpp
+  void        setupOverview();
+  /// The overview's store, value and window, the strip, the bands: as the curves are now.
+  void        updateOverview();
+  /// The strip at the bottom of the axes' rectangle.
+  void        placeStates();
+  // graphwidget_marks.cpp
+  void        setupMarks();
+  /// The marks anew from the stores, and the flags of marks and cursors.
+  void        updateMarks();
+  /// The recording a note goes to - the left value's, else the one of the
+  /// time - and its time 0 on the graph's time (ms); nullptr: none.
+  RecordingStore *noteStore(qint64 *shift = nullptr) const;
+  /// The place of mark @p index of @p store in the marks; -1: not there.
+  int         markOf(const RecordingStore *store, int index) const;
+  /// The mark pressed on, in its store's marks now - other marks may have
+  /// come meanwhile; -1: it is gone.
+  int         draggedIndex() const;
+  /// Ends the drag of a note: it stays (noteMoved()) or goes back (@p cancel).
+  void        endMarkDrag(bool cancel);
+  // graphwidget_input.cpp
+  void        setupInput();
+  void        mouseDoubleClicked(QMouseEvent *event);
+  void        mousePressed(QMouseEvent *event);
+  void        mouseMoved(QMouseEvent *event);
+  void        mouseReleased(QMouseEvent *event);
+  void        wheelTurned(QWheelEvent *event);
+  /// The window moved by @p fraction of itself.
+  void        pan(double fraction);
+
+  std::function<RecordingStore *(const QString &source)> m_storeOf;
+  std::function<QString(const QString &source)> m_nameOf;
+  QList<ValueRef> m_values;
+  QHash<ValueRef, int> m_valueAxes;
+  QMap<QString, QPair<double, double>> m_fixedRanges;
+  QPointer<RecordingStore> m_ownStore;   ///< setStore()
+  QPointer<RecordingStore> m_store;      ///< the store of the time
+  QList<QPointer<RecordingStore>> m_watched;   ///< the stores connected
+  QString     m_sourceName;
+  QString     m_notice;
+  QList<Curve> m_curves;
+  QList<Axis> m_axes;                    ///< kMaxAxes of them, the left one first
+  PlotTheme   m_design;                  ///< setTheme(): the window design
+  GraphLook::Variant m_variant = GraphLook::Neutral;
+  GraphLook::Settings m_lookSettings;
+  GraphLook::Look m_look;
+  bool        m_patterns = false;
+  QCPAbstractItem *m_centreTicks = nullptr;   ///< the phosphor tubes' fine ticks
+  GraphTimeBar *m_timeBar = nullptr;
+  QScrollBar *m_scrollBar = nullptr;
+  QRubberBand *m_zoomBand = nullptr;
+  GraphStatsPanel *m_statsPanel = nullptr;
+  QTimer      m_statsTimer;
+  bool        m_statsOn = false;
+  qint64      m_cursorT[2] = { -1, -1 };   ///< ms since the start of the recording, -1: none
+  QCPItemStraightLine *m_cursorLine[2] = {};
+  QCPItemStraightLine *m_cursorLevel[2] = {};
+  /// A mark of a store shown.
+  struct Mark
+  {
+    QPointer<RecordingStore> store;
+    int         index = 0;       ///< in the store's marks
+    qint64      shift = 0;       ///< the store's time 0 on the graph's time, ms
+    qint64      t = 0;           ///< on the graph's time, ms
+    quint32     color = 0;
+    QString     name;
+    QString     note;
+    QString     meter;           ///< its meter's name while several are shown
+    bool        isNote = false;
+  };
+  GraphMinimap *m_minimap = nullptr;
+  qint64      m_minimapShift = 0;        ///< its store's time 0 on the graph's time, ms
+  GraphStates::Cache m_statesCache;   ///< the strip's spans, each reading scanned once
+  GraphStateStrip *m_stateStrip = nullptr;
+  QCPAbstractItem *m_bands = nullptr;    ///< dense curves and the min/max band
+  bool        m_minimapOn = true;
+  bool        m_statesOn = true;
+  bool        m_envelopeOn = false;
+  QList<Mark> m_marks;                   ///< by time
+  QCPAbstractItem *m_markItem = nullptr; ///< their lines and the flags
+  QPointer<RecordingStore> m_dragStore;  ///< Drag::Mark: the note dragged, its store,
+  int         m_dragIndex = -1;          ///< its place in the store's marks
+  qint64      m_dragFrom = 0;            ///< and its time before, the store's
+  qint64      m_dragT = 0;               ///< where it is now, and its title: it is known by them
+  QString     m_dragName;
+  bool        m_marksEditable = true;
+  int         m_tipMark = -1;            ///< the mark whose tooltip is up
+  GraphReference::Line m_reference;
+  QList<double> m_referenceLines;
+  bool        m_crossingsOn = true;
+  GraphOutliers::Rule m_outliers;
+  int         m_outliersHidden = 0;
+  bool        m_outlierCountPending = false;
+  qint64      m_outlierCountCost = 0;   ///< ms the last count took
+  QList<double> m_alarmThresholds;
+  ValueRef    m_limitValue{ -1 };
+  double      m_limitLow = 0;
+  double      m_limitHigh = 0;
+  ValueRef    m_lastLeft{ -1 };          ///< leftValueChanged() was said for it
+  QCPAbstractItem *m_levels = nullptr;      ///< band and lines, under the curves
+  QCPAbstractItem *m_levelMarks = nullptr;  ///< labels and crossings, over them
+  /// A line drawn: which (-1 the reference line, 0.. added), its value, its label, its crossings.
+  struct Level { int line = -1; double value = 0; QString label; int crossings = 0; };
+  QList<Level> m_levelsDrawn;
+  bool        m_bandDrawn = false;
+  double      m_triggerLevel = qQNaN();
+  int         m_triggerCurve = -1;       ///< the curve whose store's start threshold is drawn
+  double      m_followed = qQNaN();      ///< followedValue(), kept while it costs
+  QElapsedTimer m_followedAge;
+  qint64      m_followedCost = 0;        ///< ms the last one took
+  qint64      m_bucket = 1;      ///< the bucket the points were thinned with, ms
+  bool        m_dirty = true;    ///< the points are to be built anew
+  int         m_windowSeconds = 600;
+  bool        m_followAll = false;
+  bool        m_followEnd = true;   ///< the window ends at the newest reading
+  qint64      m_start = 0;          ///< its start while it does not, ms
+  /// A frame was zoomed on: the axes keep its values (Axis::zoomMin), and the window before.
+  bool        m_zoomed = false;
+  struct { qint64 start = 0; int seconds = 0; bool all = false; bool atEnd = true; } m_zoomBefore;
+  /// The mouse: a drag moves the time, with Shift it draws the zoom frame.
+  enum class Drag { None, Pan, Frame, Cursor, Level, Mark };
+  Drag        m_drag = Drag::None;
+  QPoint      m_pressPos;
+  qint64      m_pressStart = 0;
+  bool        m_moved = false;      ///< the mouse went more than a slip since the press: no click
+  int         m_dragCursor = 0;     ///< Drag::Cursor: which one
+  int         m_dragLevel = -1;     ///< Drag::Level: which line (levelAt())
 };
-
