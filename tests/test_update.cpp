@@ -75,7 +75,7 @@ int main(int argc, char **argv)
   check(UpdateCheck::fileKind(UpdateCheck::Install::WindowsInstaller) == "windows-installer"
           && UpdateCheck::fileKind(UpdateCheck::Install::Source).isEmpty(),
         "file kinds");
-  qputenv("APPIMAGE", "/tmp/QtDMM.AppImage");
+  qputenv("APPIMAGE", "QtDMM.AppImage");   // only looked at, never opened
   check(UpdateCheck::installKind() == UpdateCheck::Install::AppImage, "$APPIMAGE: an AppImage");
   qunsetenv("APPIMAGE");
 

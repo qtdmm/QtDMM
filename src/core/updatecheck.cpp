@@ -68,18 +68,17 @@ UpdateCheck::Install UpdateCheck::installKind()
     return Install::AppImage;
   if (QFile::exists("/.flatpak-info"))
     return Install::Flatpak;
+  Install kind = Install::Source;
 #if defined(Q_OS_WIN)
   // Inno Setup puts its uninstaller at the top of the installation, the
   // program is in bin/ below it
   const QDir dir(QCoreApplication::applicationDirPath());
-  if (dir.exists("unins000.exe") || dir.exists("../unins000.exe"))
-    return Install::WindowsInstaller;
-  return Install::WindowsZip;
+  kind = dir.exists("unins000.exe") || dir.exists("../unins000.exe") ? Install::WindowsInstaller : Install::WindowsZip;
 #elif defined(Q_OS_MACOS)
   if (QCoreApplication::applicationDirPath().endsWith(".app/Contents/MacOS"))
-    return Install::MacBundle;
+    kind = Install::MacBundle;
 #endif
-  return Install::Source;
+  return kind;
 }
 
 QString UpdateCheck::fileKind(Install kind)
