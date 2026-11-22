@@ -82,6 +82,8 @@
 static const char *kWorkspaceSuffix = "qtdmm-workspace";
 #include "ui/views/readingswidget.h"
 #include "ui/dialogs/capturedlg.h"
+#include "ui/dialogs/photodlg.h"
+#include "core/photostore.h"
 #include "ui/dialogs/logdlg.h"
 #include "ui/dialogs/panelvaluesdlg.h"
 #include "ui/dialogs/sourcesdlg.h"
@@ -500,8 +502,12 @@ void MainWindow::createViews()
     // a closed project leaves nothing to show in its window
     if (folder.isEmpty() && m_basketAction)
       m_basketAction->setChecked(false);
+    // the photos went into the project of before
+    if (m_photoDlg && m_photoDlg->project() != folder)
+      m_photoDlg->close();
   });
   connect(m_basket, &BasketWidget::error, m_wid, &InstanceWidget::error);
+  connect(m_basket, &BasketWidget::photoRequested, this, &MainWindow::photoSetup);
   // made, opened or imported: its window shows (a bench switching the
   // project leaves the windows as the bench has them)
   connect(m_basket, &BasketWidget::projectOpened, this, [this] { m_basketAction->setChecked(true); });
@@ -861,13 +867,17 @@ QMdiSubWindow *MainWindow::addGraphWindow(const QString &name, const QString &ti
       const qint64 t = graph->markTime(mark);
       const QString name = graph->markName(mark);
       QMenu menu(this);
+      const QString photo = graph->markPhoto(mark);
+      const QAction *show = photo.isEmpty() ? nullptr : menu.addAction(tr("Show &photo"));
       const QAction *edit = menu.addAction(QCoreApplication::translate("GraphWidget", "&Edit note..."));
       const QAction *remove = menu.addAction(QCoreApplication::translate("GraphWidget", "&Remove mark"));
       const QAction *chosen = menu.exec(globalPos);
       // an alarm may have come meanwhile: only the mark the menu was opened on
       if (!chosen || graph->markTime(mark) != t || graph->markName(mark) != name)
         return;
-      if (chosen == edit)
+      if (chosen == show)
+        showPhoto(photo);
+      else if (chosen == edit)
         graph->editMark(mark);
       else if (chosen == remove)
         graph->removeMark(mark);
@@ -875,6 +885,7 @@ QMdiSubWindow *MainWindow::addGraphWindow(const QString &name, const QString &ti
     }
     windowMenu(win, globalPos);
   });
+  connect(graph, &GraphWidget::photoClicked, this, &MainWindow::showPhoto);
   // a note set in the graph marks its reading in the table
   connect(graph, &GraphWidget::noteAdded, this, [this](const QDateTime &when, const QString &title)
   {
@@ -3007,6 +3018,8 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
   {
     GraphWidget *graph = graphView->graph();
     auto word = [](const char *text) { return QCoreApplication::translate("GraphWidget", text); };
+    if (const QString photo = graph->markPhoto(graphMark); !photo.isEmpty())
+      connect(menu.addAction(tr("Show &photo")), &QAction::triggered, this, [this, photo] { showPhoto(photo); });
     if (graph->markIsNote(graphMark) && graph->marksEditable())
       connect(menu.addAction(word("&Edit note...")), &QAction::triggered, graph, [graph, graphMark] { graph->editMark(graphMark); });
     if (graph->marksEditable())
@@ -4514,6 +4527,39 @@ void MainWindow::graphToBasket()
 {
   // the graph used last, else the first one
   graphToBasketOf(pictureGraph() ? pictureGraph() : graphViewOf(m_graphWin));
+}
+
+void MainWindow::photoSetup()
+{
+  const QString project = m_basket->folder();
+  if (project.isEmpty())
+    return;
+  if (!m_photoDlg)
+  {
+    m_photoDlg = new PhotoDlg(project, this);
+    m_photoDlg->setAttribute(Qt::WA_DeleteOnClose);
+    connect(m_photoDlg, &PhotoDlg::error, m_wid, &InstanceWidget::error);
+    // each photo: a note in the graph at its time, and in the table
+    connect(m_photoDlg, &PhotoDlg::photoAdded, this, [this](const QString &path, const QDateTime &when)
+    {
+      const QString title = tr("Photo");
+      GraphView *view = currentGraph();
+      if (!view || view->graph()->addNote(-1, title, QFileInfo(path).fileName(),
+                                          PhotoStore::relative(m_basket->folder(), path)) < 0)
+        return;
+      m_readings->log()->markAt(when, QColor::fromRgba(RecordingStore::kNoteColor), title);
+    });
+  }
+  m_photoDlg->show();
+  m_photoDlg->raise();
+  m_photoDlg->activateWindow();
+}
+
+void MainWindow::showPhoto(const QString &photo)
+{
+  const QString path = PhotoStore::absolute(m_basket->folder(), photo);
+  if (!PhotoView::showPhoto(path, this))
+    m_wid->error(tr("The photo %1 cannot be shown: not found in the open project.").arg(QDir::toNativeSeparators(photo)));
 }
 
 GraphView *MainWindow::currentGraph() const

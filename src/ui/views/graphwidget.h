@@ -245,7 +245,8 @@ public:
   /// the dialog was left or there is no recording. Says noteAdded().
   int         askNote(qint64 t = -1);
   /// Sets a note without asking; as askNote(), without noteAdded().
-  int         addNote(qint64 t, const QString &title, const QString &note);
+  /// @p photo: the photo it shows (PhotoStore::relative()).
+  int         addNote(qint64 t, const QString &title, const QString &note, const QString &photo = QString());
   /// Asks for another title and text of @p mark.
   bool        editMark(int mark);
   void        removeMark(int mark);
@@ -387,6 +388,8 @@ public:
   /// the flag says.
   qint64      markTime(int mark) const;
   QString     markName(int mark) const;
+  /// Its photo (RecordingStore::Mark::photo), empty for none.
+  QString     markPhoto(int mark) const;
   QColor      markColor(int mark) const;
   int         markPixel(int mark) const;
   QRect       markFlagRect(int mark) const;
@@ -429,6 +432,9 @@ Q_SIGNALS:
   void        noteAdded(const QDateTime &when, const QString &title);
   /// A note was dragged from @p from to @p to: the readings table moves its mark.
   void        noteMoved(const QDateTime &from, const QDateTime &to, const QString &title);
+  /// A click on the flag of a note with a photo: @p photo, its path in the
+  /// project (RecordingStore::Mark::photo).
+  void        photoClicked(const QString &photo);
 
 protected:
   void        refreshPlot() override;
@@ -626,6 +632,7 @@ private:
     QString     note;
     QString     meter;           ///< its meter's name while several are shown
     bool        isNote = false;
+    QString     photo;           ///< a note's photo, its path in the project
   };
   GraphMinimap *m_minimap = nullptr;
   qint64      m_minimapShift = 0;        ///< its store's time 0 on the graph's time, ms

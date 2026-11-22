@@ -260,8 +260,12 @@ int main(int argc, char **argv)
           "notes: by time, after those of the same time; -1 at the newest reading");
     store.setMarkText(1, "Alarm Hi", "fuse checked");
     store.removeMark(2);
+    check(store.addNote(3000, "Photo", "photo_1.jpg", "photos/photo_1.jpg") == 3, "notes: one with a photo");
     const QJsonArray marks = store.toRecording().meta.value("marks").toArray();
-    check(marks.size() == 3 && marks.at(0).toObject().value("kind").toString() == "note"
+    check(marks.size() == 4 && marks.at(3).toObject().value("photo").toString() == "photos/photo_1.jpg"
+            && !marks.at(0).toObject().contains("photo"),
+          "notes: the photo's path in meta.json, none without");
+    check(marks.at(0).toObject().value("kind").toString() == "note"
             && marks.at(0).toObject().value("note").toString() == "R1 10 k"
             && !marks.at(1).toObject().contains("kind") && marks.at(1).toObject().value("note").toString() == "fuse checked",
           "notes: kind and text in meta.json, an alarm's mark without kind");
@@ -269,7 +273,8 @@ int main(int argc, char **argv)
     again.meta["marks"] = marks;
     RecordingStore back;
     back.load(again);
-    check(back.marks().size() == 3 && back.marks().at(0).kind == RecordingStore::MarkKind::Note
+    check(back.marks().size() == 4 && back.marks().at(3).photo == "photos/photo_1.jpg" && back.marks().at(0).photo.isEmpty()
+            && back.marks().at(0).kind == RecordingStore::MarkKind::Note
             && back.marks().at(0).note == "R1 10 k" && back.marks().at(0).color == RecordingStore::kNoteColor
             && back.marks().at(1).note == "fuse checked",
           "notes: read back");

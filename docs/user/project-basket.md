@@ -87,6 +87,26 @@ is about; the window shows it under the name.
 
 A file is never overwritten: a second `ripple.csv` becomes `ripple (2).csv`.
 
+### Photos of the setup
+
+The camera button next to **Add...** opens **Photo of the setup**: a
+picture of how the meter was connected, kept with the measurement.
+
+- **Add file...** takes a picture in, or drop pictures onto the dialog.
+  The dialog shows the newest one and keeps the others of this time in a
+  strip below it; a click there shows one again.
+- Each photo goes into the folder `photos`, named by the time it came:
+  `photos/photo_2026-11-22_14-03-12.jpg`. It is kept as it came, its EXIF
+  data too; a photo taken upright is shown upright.
+- Each photo sets a note **Photo** in the graph used last, at the time it
+  came, and a mark in the readings table. A click on the note's flag shows
+  the photo, so does **Show photo** in the flag's menu. The recording keeps
+  the photo's path in the project; the photo is found again as long as the
+  project is open.
+
+The button is there only while a project is open. Closing the project
+closes the dialog.
+
 ### Folders by kind
 
 The files of a project sort themselves into folders:
@@ -98,6 +118,7 @@ The files of a project sort themselves into folders:
 | `images` | pictures of the graph and the Poincaré plot, any picture |
 | `analysis` | LabPlot projects and their CSV |
 | `documents` | PDF, printouts, the log, any other file |
+| `photos` | photos of the setup (**Photo of the setup**) |
 
 A folder is made with the first file of its kind, a new project starts
 empty. On disk the folders are always named in English, so a project passed

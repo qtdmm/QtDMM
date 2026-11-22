@@ -123,6 +123,7 @@ public:
     QString name;    ///< the title, on the flag
     QString note = QString();   ///< longer text, may be empty
     MarkKind kind = MarkKind::Alarm;
+    QString photo = QString();  ///< a note's photo: its path in the project (PhotoStore), may be empty
   };
 
   /// The most readings a series keeps; the oldest go beyond it.
@@ -391,8 +392,9 @@ public Q_SLOTS:
   void        addMark(quint32 argb, const QString &name);
   /// A note at @p t (ms of the recording; -1: where addMark() would put
   /// it) titled @p title; the marks stay in the order of their time.
-  /// Returns its index in marks().
-  int         addNote(qint64 t, const QString &title, const QString &note);
+  /// Returns its index in marks(). @p photo: the photo it shows
+  /// (PhotoStore::relative()).
+  int         addNote(qint64 t, const QString &title, const QString &note, const QString &photo = QString());
   /// The time a mark set now gets: now while recording or live, else the
   /// newest reading.
   qint64      markTime() const;

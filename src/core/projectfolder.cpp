@@ -40,6 +40,7 @@ const KindNames kNames[] = {
   { ProjectFolder::Images, "images", "Bilder", "Images", "Imágenes", "Obrazy" },
   { ProjectFolder::Analysis, "analysis", "Auswertung", "Analyse", "Análisis", "Analiza" },
   { ProjectFolder::Documents, "documents", "Dokumente", "Documents", "Documentos", "Dokumenty" },
+  { ProjectFolder::Photos, "photos", "Fotos", "Photos", "Fotos", "Zdjęcia" },
 };
 
 // project.json, empty when there is none; none when it is no JSON object

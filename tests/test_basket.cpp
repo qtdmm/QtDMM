@@ -4,6 +4,9 @@
 // BasketWidget: the folder of a project, copies in under free names.
 
 #include <QApplication>
+#include <QBuffer>
+#include <QImage>
+#include <QToolButton>
 #include <QCryptographicHash>
 #include <QDir>
 #include <QFile>
@@ -18,7 +21,9 @@
 #include <QTreeView>
 #include <QFileSystemModel>
 
+#include "core/photostore.h"
 #include "core/projectfolder.h"
+#include "ui/dialogs/photodlg.h"
 #include "recording/zipfile.h"
 #include "ui/views/basketwidget.h"
 #include "testutil.h"
@@ -399,6 +404,66 @@ int main(int argc, char **argv)
     else
       check(false, "the list's model");
     QLocale::setDefault(QLocale(QLocale::English));
+  }
+
+  // photos of the setup: into "photos", named by their time, kept as they came
+  {
+    ProjectFolder::setByType(true);
+    const QString proj = QDir(dir.filePath("Photos")).absolutePath();
+    QDir().mkpath(proj);
+    BasketWidget::writeProjectFile(proj);
+    QImage wide(40, 20, QImage::Format_RGB32);
+    wide.fill(Qt::red);
+    QByteArray png;
+    {
+      QBuffer buffer(&png);
+      buffer.open(QIODevice::WriteOnly);
+      wide.save(&buffer, "PNG");
+    }
+    QString suffix;
+    check(PhotoStore::isPhoto(png, &suffix) && suffix == "png" && !PhotoStore::isPhoto("no picture"), "photo: a picture or not");
+    const QDateTime when(QDate(2026, 11, 22), QTime(14, 3, 12));
+    QString why;
+    const QString first = PhotoStore::save(proj, png, when, &why);
+    const QString second = PhotoStore::save(proj, png, when, &why);
+    check(first == proj + "/photos/photo_2026-11-22_14-03-12.png" && second == proj + "/photos/photo_2026-11-22_14-03-12_2.png",
+          "photo: in photos, named by its time, a second one of the second counts on " + first + " " + second);
+    QFile saved(first);
+    check(saved.open(QIODevice::ReadOnly) && saved.readAll() == png, "photo: kept as it came");
+    check(BasketWidget::readProject(proj).value("folders").toObject().value("photos").toObject().value("de").toString() == "Fotos",
+          "photo: the folder's names in project.json");
+    check(PhotoStore::save(proj, "no picture", when, &why).isEmpty() && !why.isEmpty(), "photo: no picture, not saved");
+    check(PhotoStore::relative(proj, first) == "photos/photo_2026-11-22_14-03-12.png"
+            && PhotoStore::absolute(proj, "photos/photo_2026-11-22_14-03-12.png") == first
+            && PhotoStore::relative(proj, dir.filePath("elsewhere.png")) == dir.filePath("elsewhere.png")
+            && PhotoStore::absolute(proj, dir.filePath("elsewhere.png")) == dir.filePath("elsewhere.png"),
+          "photo: its path in the project and back, outside it stays full");
+    check(PhotoStore::load(first).size() == QSize(40, 20), "photo: loaded");
+
+    // the dialog: a file taken in, shown, said
+    PhotoDlg dlg(proj);
+    QSignalSpy added(&dlg, &PhotoDlg::photoAdded);
+    QSignalSpy failedSpy(&dlg, &PhotoDlg::error);
+    const QString src = dir.filePath("camera.png");
+    write(src, png);
+    write(dir.filePath("broken.jpg"), "no picture");
+    check(dlg.addFile(src) && added.size() == 1 && dlg.photoCount() == 1
+            && QFileInfo(added.at(0).at(0).toString()).dir().absolutePath() == proj + "/photos",
+          "dialog: a file into the photos");
+    check(!dlg.addFile(dir.filePath("broken.jpg")) && failedSpy.size() == 1 && dlg.photoCount() == 1,
+          "dialog: no picture, an error");
+
+    // the project window's button asks for it
+    BasketWidget photoBasket;
+    photoBasket.setFolder(proj);
+    QSignalSpy asked(&photoBasket, &BasketWidget::photoRequested);
+    if (auto *button = photoBasket.findChild<QToolButton *>("ui_basketPhoto"))
+    {
+      button->click();
+      check(asked.size() == 1, "project window: the photo button");
+    }
+    else
+      check(false, "project window: the photo button");
   }
 
   if (failed == 0)

@@ -175,6 +175,15 @@ BasketWidget::BasketWidget(QWidget *parent) :
   add->setAutoRaise(true);
   add->setToolTip(tr("Copy files into the project"));
   connect(add, &QToolButton::clicked, this, &BasketWidget::addSLOT);
+  // a photo of the setup: into "photos", with a note in the graph (PhotoDlg)
+  auto *photo = new QToolButton(page);
+  photo->setObjectName("ui_basketPhoto");
+  photo->setText(tr("&Photo..."));
+  photo->setIcon(QIcon::fromTheme("camera-photo"));
+  photo->setToolButtonStyle(Qt::ToolButtonIconOnly);
+  photo->setAutoRaise(true);
+  photo->setToolTip(tr("Photo of the setup into the project, with a note in the graph"));
+  connect(photo, &QToolButton::clicked, this, &BasketWidget::photoRequested);
   auto *open = new QToolButton(page);
   open->setText(tr("Open &folder"));
   open->setIcon(QIcon::fromTheme("document-open", style()->standardIcon(QStyle::SP_DirOpenIcon)));
@@ -188,6 +197,7 @@ BasketWidget::BasketWidget(QWidget *parent) :
   });
   bar->addWidget(m_title, 1);
   bar->addWidget(add);
+  bar->addWidget(photo);
   bar->addWidget(open);
   layout->addLayout(bar);
   m_description = new QLabel(page);

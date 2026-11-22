@@ -99,6 +99,8 @@ Q_SIGNALS:
   /// A file to open (double click, Open): the receiver loads a bench or a
   /// QtDMM recording, anything else goes to openWithSystem().
   void        openRequested(const QString &path);
+  /// The button for a photo of the setup (PhotoDlg) was clicked.
+  void        photoRequested();
   void        error(const QString &text);
 
 public Q_SLOTS:

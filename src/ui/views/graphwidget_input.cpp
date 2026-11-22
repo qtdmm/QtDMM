@@ -136,8 +136,10 @@ void GraphWidget::mouseReleased(QMouseEvent *event)
   const Drag drag = m_drag;
   if (drag == Drag::Mark)
   {
-    // a click: its note (a tooltip goes with the press)
-    if (const int mark = markOf(m_dragStore, draggedIndex()); !m_moved && mark >= 0)
+    // a click: its photo, or its note (a tooltip goes with the press)
+    if (const int mark = markOf(m_dragStore, draggedIndex()); !m_moved && mark >= 0 && !markPhoto(mark).isEmpty())
+      Q_EMIT photoClicked(markPhoto(mark));
+    else if (!m_moved && mark >= 0)
       QToolTip::showText(event->globalPosition().toPoint(), markTip(mark), m_plot);
     endMarkDrag(false);
     return;
