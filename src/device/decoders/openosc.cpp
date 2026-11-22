@@ -7,10 +7,10 @@
 
 #include <cmath>
 
-// OpenOSC's multimeter (issue #603): tried by a user, not by us, so "*".
+// OpenOSC's multimeter (issue #603): confirmed on the meter by the issue's author.
 // USB CDC, the baud rate is ignored; 25000 counts.
 static const bool registered = []() {
-  DmmDecoder::addConfig({"ZOTEK", "ZT-703S OpenOSC *", "", 115200, FrameFormat::OpenOSC, 8, 1, 1, 0, 25000, 0, 0, 0});
+  DmmDecoder::addConfig({"ZOTEK", "ZT-703S OpenOSC", "", 115200, FrameFormat::OpenOSC, 8, 1, 1, 0, 25000, 0, 0, 0});
   return true;
 }();
 
@@ -109,6 +109,12 @@ std::optional<DmmDecoder::DmmResponse> DecoderOpenOSC::decode(const QByteArray &
   }
   if (fields.isEmpty())
     return std::nullopt;
+  // polled faster than the meter measures: the same reading again. Not
+  // while HOLD, which freezes seq too: the held display still counts
+  const QString seq = fields[9].trimmed();
+  if (seq == m_lastSeq && fields[7].trimmed() != "1")
+    return std::nullopt;
+  m_lastSeq = seq;
   bool ok = false;
   const Function *fn = function(fields[0].toInt(&ok));
   if (!ok || !fn)

@@ -77,6 +77,24 @@ int main(int argc, char **argv)
   const QString text = cross ? cross->text() : QString();
   check(cross && text.contains("20 readings"), "half way up a bar of 20: 20 readings, got " + text);
 
+  // the System design leaves the colours to the platform (issue #603, Windows
+  // dark mode): bars and grid from the palette, not black on dark grey
+  QPalette dark = histogram.palette();
+  dark.setColor(QPalette::Base, QColor(32, 32, 32));
+  dark.setColor(QPalette::Text, QColor(230, 230, 230));
+  dark.setColor(QPalette::Mid, QColor(90, 90, 90));
+  dark.setColor(QPalette::Highlight, QColor(0, 120, 212));
+  histogram.setPalette(dark);
+  histogram.setThemeColors(Qt::NoBrush, QColor(), QColor(), QColor());
+  check(bars->brush().color() == QColor(0, 120, 212), "System design: the bars in the highlight colour");
+  check(plot->xAxis->grid()->pen().color() == QColor(90, 90, 90), "System design: the grid in the palette's mid");
+  check(plot->xAxis->tickLabelColor() == QColor(230, 230, 230), "System design: the labels in the palette's text");
+  if (qEnvironmentVariableIsSet("QTDMM_SHOT"))
+  {
+    plot->replot();
+    histogram.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/histogram_system_dark.png");
+  }
+
   if (failed == 0)
     qInfo() << "All histogram tests passed.";
   return failed == 0 ? 0 : 1;

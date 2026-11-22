@@ -93,9 +93,10 @@ bool QcpGraphCommon::eventFilter(QObject *watched, QEvent *event)
 
 void QcpGraphCommon::setTheme(const PlotTheme &theme)
 {
-  m_titleElement->setTextColor(theme.labels);
+  const QColor labels = theme.resolved(palette()).labels;
+  m_titleElement->setTextColor(labels);
   for (QCPItemText *text : { m_noData, m_holdItem })
-    text->setColor(theme.labels);
+    text->setColor(labels);
   QcpPlotBase::setTheme(theme);
 }
 

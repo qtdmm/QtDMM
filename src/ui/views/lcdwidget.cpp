@@ -1137,11 +1137,10 @@ void LcdWidget::showReading(const Reading &r)
   if (r.id >= m_numValues && r.id < kMaxValues)
     setValueCount(r.id + 1);
   setMode(r.id, r.flags, r.port.quantity);
-  if (!r.hold)
-  {
-    setValue(r.id, r.text);
-    setUnit(r.id, r.unit);
-  }
+  // what the meter's display shows, held or not: a held value is the same
+  // again, an auto-hold (OpenOSC) takes the next stable one while HOLD stays
+  setValue(r.id, r.text);
+  setUnit(r.id, r.unit);
   update();
 }
 

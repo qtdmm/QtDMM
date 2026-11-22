@@ -59,8 +59,9 @@ void QcpPlotBase::setTheme(const PlotTheme &theme)
 {
   GraphCommon::setTheme(theme);
   theme.applyTo(m_plot);
-  m_crossText->setColor(theme.labels);
-  const QPen cross(theme.labels, 1, Qt::DotLine);
+  const QColor labels = theme.resolved(palette()).labels;
+  m_crossText->setColor(labels);
+  const QPen cross(labels, 1, Qt::DotLine);
   m_crossX->setPen(cross);
   m_crossY->setPen(cross);
   m_plot->replot(QCustomPlot::rpQueuedReplot);

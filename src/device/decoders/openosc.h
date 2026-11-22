@@ -22,6 +22,10 @@
 /// for the ZT703S, 25000 counts). Spec and vectors in
 /// docs/protocols/spec/openosc.yaml, from issue #603.
 ///
+/// The meter measures about 3 times a second (seq counts them): polled every
+/// 200 ms, a line with the seq of the one before is that reading again and
+/// dropped (not while HOLD, which freezes seq).
+///
 /// Frames are variable-length lines (getPacketLength() 0).
 class DecoderOpenOSC : public DmmDecoder
 {
@@ -33,4 +37,8 @@ public:
   QByteArray pollRequest() const override { return QByteArrayLiteral("SYST:DMM:RES?\n"); }
   bool checkFormat(const char *data, size_t idx) override;
   size_t getPacketLength() override { return 0; }
+  int pollInterval() const override { return 200; }
+
+private:
+  QString m_lastSeq;   ///< field 10 of the last line decoded
 };

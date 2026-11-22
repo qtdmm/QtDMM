@@ -235,11 +235,11 @@ void PoincarePlot::paintEvent(QPaintEvent *)
 
 void PoincarePlot::render(QPainter &p, const QRect &area)
 {
-  const QPalette pal = palette();
-  const QBrush background = theme().background.style() != Qt::NoBrush ? theme().background : pal.base();
-  const QColor grid = theme().grid.isValid() ? theme().grid : pal.color(QPalette::Mid);
-  const QColor labels = theme().labels.isValid() ? theme().labels : pal.color(QPalette::Text);
-  const QColor data = theme().data.isValid() ? theme().data : pal.color(QPalette::Highlight);
+  const PlotTheme t = theme().resolved(palette());
+  const QBrush &background = t.background;
+  const QColor &grid = t.grid;
+  const QColor &labels = t.labels;
+  const QColor &data = t.data;
   p.setRenderHint(QPainter::Antialiasing);
   p.fillRect(area, background);
   p.setFont(font());

@@ -20,8 +20,9 @@ HistogramPlot::HistogramPlot(QWidget *parent) : QcpGraphCommon(parent, tr("No re
 
 void HistogramPlot::setTheme(const PlotTheme &theme)
 {
-  m_bars->setPen(QPen(theme.data.darker(115)));
-  m_bars->setBrush(theme.data);
+  const QColor data = theme.resolved(palette()).data;
+  m_bars->setPen(QPen(data.darker(115)));
+  m_bars->setBrush(data);
   QcpGraphCommon::setTheme(theme);
 }
 
