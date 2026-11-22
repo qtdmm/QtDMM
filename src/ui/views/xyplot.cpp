@@ -22,7 +22,8 @@ XYPlot::XYPlot(QWidget *parent) : QcpGraphCommon(parent, tr("No XY data yet"))
 
 void XYPlot::setTheme(const PlotTheme &theme)
 {
-  m_graph->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, QPen(theme.data), QBrush(theme.data), 5));
+  const QColor data = theme.resolved(palette()).data;
+  m_graph->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, QPen(data), QBrush(data), 5));
   QcpGraphCommon::setTheme(theme);
 }
 
