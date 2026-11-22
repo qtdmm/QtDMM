@@ -41,6 +41,8 @@ NAMES = [
     "input-keyboard",
     # the project list: folders and file types
     "application-pdf", "folder", "image-x-generic", "text-csv", "text-x-generic", "x-office-spreadsheet",
+    # the project window: a photo of the setup
+    "camera-photo",
 ]
 # Oxygen has these under another name (chosen by eye, paket_26_2 §1a)
 OXYGEN_ALIAS = {

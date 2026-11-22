@@ -149,7 +149,7 @@ void GraphWidget::updateMarks()
     {
       const RecordingStore::Mark &m = marks.at(i);
       m_marks << Mark{ c.store, i, shift, m.t + shift, m.color, m.name, m.note, several ? c.meter : QString(),
-                       m.kind == RecordingStore::MarkKind::Note };
+                       m.kind == RecordingStore::MarkKind::Note, m.photo };
     }
   }
   std::stable_sort(m_marks.begin(), m_marks.end(), [](const Mark &a, const Mark &b) { return a.t < b.t; });
@@ -239,13 +239,13 @@ bool GraphWidget::markIsNote(int mark) const
   return mark >= 0 && mark < m_marks.size() && m_marks.at(mark).isNote;
 }
 
-int GraphWidget::addNote(qint64 t, const QString &title, const QString &note)
+int GraphWidget::addNote(qint64 t, const QString &title, const QString &note, const QString &photo)
 {
   qint64 shift = 0;
   RecordingStore *store = noteStore(&shift);
   if (!store)
     return -1;
-  const int index = store->addNote(t < 0 ? -1 : qBound(store->origin(), t - shift, qMax(store->origin(), store->duration())), title, note);
+  const int index = store->addNote(t < 0 ? -1 : qBound(store->origin(), t - shift, qMax(store->origin(), store->duration())), title, note, photo);
   return markOf(store, index);
 }
 
@@ -324,6 +324,8 @@ QString GraphWidget::markTip(int mark) const
     html += "<br>" + m.meter.toHtmlEscaped();
   if (!m.note.isEmpty())
     html += "<p>" + m.note.toHtmlEscaped().replace('\n', "<br>") + "</p>";
+  if (!m.photo.isEmpty())
+    html += "<p><i>" + tr("Click to show the photo").toHtmlEscaped() + "</i></p>";
   return html;
 }
 
@@ -341,6 +343,11 @@ qint64 GraphWidget::markTime(int mark) const
 QString GraphWidget::markName(int mark) const
 {
   return mark >= 0 && mark < m_marks.size() ? m_marks.at(mark).name : QString();
+}
+
+QString GraphWidget::markPhoto(int mark) const
+{
+  return mark >= 0 && mark < m_marks.size() ? m_marks.at(mark).photo : QString();
 }
 
 QColor GraphWidget::markColor(int mark) const

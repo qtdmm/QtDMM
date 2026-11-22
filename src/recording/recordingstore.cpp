@@ -474,6 +474,8 @@ Recording RecordingStore::toRecording(bool raw, const QList<int> &extras, const 
       o["note"] = m.note;
     if (m.kind != MarkKind::Alarm)
       o["kind"] = m.kind == MarkKind::Note ? "note" : "trigger";
+    if (!m.photo.isEmpty())
+      o["photo"] = m.photo;
     marks.append(o);
   }
   if (!marks.isEmpty())
@@ -571,7 +573,8 @@ void RecordingStore::load(const Recording &rec)
     const QString kind = m.value("kind").toString();
     m_marks.append(Mark{ qint64(m.value("t").toDouble()), m.value("color").toString().mid(1).toUInt(nullptr, 16),
                          m.value("name").toString(), m.value("note").toString(),
-                         kind == "note" ? MarkKind::Note : kind == "trigger" ? MarkKind::Trigger : MarkKind::Alarm });
+                         kind == "note" ? MarkKind::Note : kind == "trigger" ? MarkKind::Trigger : MarkKind::Alarm,
+                         m.value("photo").toString() });
   }
   Q_EMIT marksChanged();
   Q_EMIT loaded();
@@ -1190,14 +1193,14 @@ void RecordingStore::addMark(quint32 argb, const QString &name)
   Q_EMIT marksChanged();
 }
 
-int RecordingStore::addNote(qint64 t, const QString &title, const QString &note)
+int RecordingStore::addNote(qint64 t, const QString &title, const QString &note, const QString &photo)
 {
   if (t < 0)
     t = markTime();
   // after the marks of the same time: numbered as they came
   const auto at = std::upper_bound(m_marks.begin(), m_marks.end(), t, [](qint64 v, const Mark &m) { return v < m.t; });
   const int index = int(at - m_marks.begin());
-  m_marks.insert(index, Mark { t, kNoteColor, title, note, MarkKind::Note });
+  m_marks.insert(index, Mark { t, kNoteColor, title, note, MarkKind::Note, photo });
   Q_EMIT marksChanged();
   return index;
 }

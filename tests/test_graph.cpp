@@ -1573,6 +1573,19 @@ static void testMarks()
     QTest::mouseMove(plotWidget, onAlarm + QPoint(40, 0));
     QTest::mouseRelease(plotWidget, Qt::LeftButton, Qt::NoModifier, onAlarm + QPoint(40, 0));
     check(graph.markTime(0) == 5000 && moved == 1, "an alarm's flag cannot be dragged");
+    // a note with a photo: a click on its flag asks for the photo
+    QStringList photos;
+    const QMetaObject::Connection clicked = QObject::connect(&graph, &GraphWidget::photoClicked, &graph,
+                                                             [&](const QString &photo) { photos << photo; });
+    const int withPhoto = graph.addNote(17000, "Photo", "photo_1.jpg", "photos/photo_1.jpg");
+    check(withPhoto == 2 && graph.markPhoto(2) == "photos/photo_1.jpg" && graph.markPhoto(1).isEmpty()
+            && graph.markTip(2).contains("photo"), "a note with a photo: its path, a hint in its tooltip");
+    const QPoint onPhoto = graph.markFlagRect(2).center();
+    QTest::mouseClick(plotWidget, Qt::LeftButton, Qt::NoModifier, onPhoto);
+    QTest::mouseClick(plotWidget, Qt::LeftButton, Qt::NoModifier, graph.markFlagRect(1).center());
+    check(photos == QStringList{ "photos/photo_1.jpg" }, "a click on its flag: photoClicked(), not on another note's");
+    QObject::disconnect(clicked);
+    graph.removeMark(2);
     QObject::disconnect(heard);   // it writes to this block's variables
   }
   else

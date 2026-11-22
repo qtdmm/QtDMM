@@ -474,6 +474,12 @@ protected:
   /// first opened, gone with the device.
   QHash<QString, QPointer<CaptureDlg>> m_captureDlgs;
   QString     m_configId;
+  QPointer<class PhotoDlg> m_photoDlg;   ///< "Photo of the setup", while open
+
+  /// Opens "Photo of the setup" for the open project.
+  void        photoSetup();
+  /// A note's photo @p photo (its path in the project) in a window of its own.
+  void        showPhoto(const QString &photo);
 
   void        setupIcons();
   void        createActions();

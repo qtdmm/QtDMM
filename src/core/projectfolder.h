@@ -21,7 +21,8 @@ enum Kind
   Recordings,   ///< recordings, readings, any CSV
   Images,       ///< pictures of the graph, the Poincaré plot
   Analysis,     ///< LabPlot projects and their CSV
-  Documents     ///< PDF, log, anything else
+  Documents,    ///< PDF, log, anything else
+  Photos        ///< photos of the setup (PhotoStore), not by suffix
 };
 
 /// The basket's folder, empty for none (BasketWidget::setFolder()).
