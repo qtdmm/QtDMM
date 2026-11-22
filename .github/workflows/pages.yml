@@ -6,6 +6,8 @@ name: GitHub Pages
 #   /repos/   own package repositories: the signed Flatpak repository, made
 #             from the newest release bundles (a page saying "not online yet"
 #             while there is no signing key or no release with a bundle)
+#   latest.json  the newest release and pre-release for QtDMM's update check
+#             (tools/make-update-feed.py)
 #   404.html  sends old links to API pages (/QtDMM/classFoo.html) to api/
 # Every deployment replaces the whole site, so everything is built here in one
 # job, on every merge and on every published release. Pages must be set to
@@ -22,6 +24,7 @@ on:
       - "assets/pages/**"
       - "assets/icons/app/qtdmm.svg"
       - "tools/build-flatpak-repo.sh"
+      - "tools/make-update-feed.py"
       - ".github/workflows/pages.yml"
   release:
     types: [ published ]
@@ -128,6 +131,17 @@ jobs:
         [ "$stable" != - ] || sed -i '/data-stable/d' site/repos/index.html
         [ "$beta" != - ] || sed -i '/data-beta/d' site/repos/index.html
         rm -f site/repos/pending.html
+
+    # what QtDMM's update check reads: newest release and pre-release with
+    # their files and SHA256. A failed request stops the run, rather than
+    # publishing a feed without releases
+    - name: Update feed
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" > releases.json
+        tools/make-update-feed.py releases.json site/latest.json
+        head -n 12 site/latest.json
 
     - uses: actions/upload-pages-artifact@v3
       with:

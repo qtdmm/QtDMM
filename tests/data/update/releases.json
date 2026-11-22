@@ -1,0 +1,241 @@
+[
+ {
+  "assets": [
+   {
+    "browser_download_url": "https://github.com/qtdmm/QtDMM/releases/download/27.1/QtDMM-27.1-macos.dmg",
+    "digest": "sha256:b5aab6464d87325244d63fc7081f931a919004ef8daca3d56dacd47a819e9f0a",
+    "name": "QtDMM-27.1-macos.dmg",
+    "size": 55723273
+   },
+   {
+    "browser_download_url": "https://github.com/qtdmm/QtDMM/releases/download/27.1/QtDMM-27.1-windows-x64.exe",
+    "digest": "sha256:e9174f0dc429fa118ee89e653b6641f27d2c3fc1eb5b909bd1acea28b0644c58",
+    "name": "QtDMM-27.1-windows-x64.exe",
+    "size": 50914102
+   },
+   {
+    "browser_download_url": "https://github.com/qtdmm/QtDMM/releases/download/27.1/QtDMM-27.1-windows-x64.zip",
+    "digest": "sha256:202fdcb005af994e2b707c86de3ff159692a09d1b4613a8d81aa04a36a02a6dd",
+    "name": "QtDMM-27.1-windows-x64.zip",
+    "size": 63215654
+   },
+   {
+    "browser_download_url": "https://github.com/qtdmm/QtDMM/releases/download/27.1/QtDMM-27.1-x86_64.AppImage",
+    "digest": "sha256:e36cf9b8a4f3a016bfa4183eafe57cc9cf4c522744c6da6ddaf4323d8eb14e49",
+    "name": "QtDMM-27.1-x86_64.AppImage",
+    "size": 59509240
+   },
+   {
+    "browser_download_url": "https://github.com/qtdmm/QtDMM/releases/download/27.1/QtDMM-27.1-x86_64.flatpak",
+    "digest": "sha256:aad3674b3533630f8e4105df47e6b58462c858c68e94343ed917120f14c17a84",
+    "name": "QtDMM-27.1-x86_64.flatpak",
+    "size": 2904520
+   },
+   {
+    "browser_download_url": "https://github.com/qtdmm/QtDMM/releases/download/27.1/QtDMM-27.1.tar.gz",
+    "digest": "sha256:394598cabceb2dbbd2211fa6479cb950f86b53cfb16f76ebe6395cd65dda064c",
+    "name": "QtDMM-27.1.tar.gz",
+    "size": 10227487
+   }
+  ],
+  "draft": true,
+  "html_url": "https://github.com/qtdmm/QtDMM/releases/tag/27.1",
+  "prerelease": false,
+  "published_at": "2026-11-22T00:11:48Z",
+  "tag_name": "27.1"
+ },
+ {
+  "assets": [
+   {
+    "browser_download_url": "https://github.com/qtdmm/QtDMM/releases/download/27.1-rc1/QtDMM-27.1-rc1-macos.dmg",
+    "digest": "sha256:940bc6ed0d71499b053bd9b3d2d934cb4a02b9b3acbc20dc72961937933b8f0c",
+    "name": "QtDMM-27.1-rc1-macos.dmg",
+    "size": 55711362
+   },
+   {
+    "browser_download_url": "https://github.com/qtdmm/QtDMM/releases/download/27.1-rc1/QtDMM-27.1-rc1-windows-x64.exe",
+    "digest": "sha256:ceb796c54e5506f8fda10b6d858ca4dcf78578005e847aa5d4ac66cc6fcdf129",
+    "name": "QtDMM-27.1-rc1-windows-x64.exe",
+    "size": 50800188
+   },
+   {
+    "browser_download_url": "https://github.com/qtdmm/QtDMM/releases/download/27.1-rc1/QtDMM-27.1-rc1-windows-x64.zip",
+    "digest": "sha256:90c0b38ab1fc49d323b33ed5d38c092e9b55a3fa52be71121957f9ec9f697dc2",
+    "name": "QtDMM-27.1-rc1-windows-x64.zip",
+    "size": 63090585
+   },
+   {
+    "browser_download_url": "https://github.com/qtdmm/QtDMM/releases/download/27.1-rc1/QtDMM-27.1-rc1-x86_64.AppImage",
+    "digest": "sha256:884bdafdcc136984b812d0d93c4cd586aa611cd893a3736e4464ba16c03a2954",
+    "name": "QtDMM-27.1-rc1-x86_64.AppImage",
+    "size": 59517432
+   },
+   {
+    "browser_download_url": "https://github.com/qtdmm/QtDMM/releases/download/27.1-rc1/QtDMM-27.1-rc1-x86_64.flatpak",
+    "digest": "sha256:259ade1be2491ca6e08c55c5cb50acc42ad74d07112d6c9724ac0b3eb9a35fb7",
+    "name": "QtDMM-27.1-rc1-x86_64.flatpak",
+    "size": 2907376
+   },
+   {
+    "browser_download_url": "https://github.com/qtdmm/QtDMM/releases/download/27.1-rc1/QtDMM-27.1-rc1.tar.gz",
+    "digest": "sha256:a7a41bde7af3a5e5fbc8b57c4444b4932f3f62444392220ea5586efe78be714c",
+    "name": "QtDMM-27.1-rc1.tar.gz",
+    "size": 10226984
+   }
+  ],
+  "draft": false,
+  "html_url": "https://github.com/qtdmm/QtDMM/releases/tag/27.1-rc1",
+  "prerelease": true,
+  "published_at": "2027-01-10T23:03:12Z",
+  "tag_name": "27.1-rc1"
+ },
+ {
+  "assets": [],
+  "draft": false,
+  "html_url": "https://github.com/qtdmm/QtDMM/releases/tag/26.3",
+  "prerelease": false,
+  "published_at": "2026-10-28T05:56:11Z",
+  "tag_name": "27.1-dev"
+ },
+ {
+  "assets": [
+   {
+    "browser_download_url": "https://github.com/qtdmm/QtDMM/releases/download/26.4/QtDMM-26.4-macos.dmg",
+    "digest": "sha256:b5aab6464d87325244d63fc7081f931a919004ef8daca3d56dacd47a819e9f0a",
+    "name": "QtDMM-26.4-macos.dmg",
+    "size": 55723273
+   },
+   {
+    "browser_download_url": "https://github.com/qtdmm/QtDMM/releases/download/26.4/QtDMM-26.4-windows-x64.exe",
+    "digest": "sha256:e9174f0dc429fa118ee89e653b6641f27d2c3fc1eb5b909bd1acea28b0644c58",
+    "name": "QtDMM-26.4-windows-x64.exe",
+    "size": 50914102
+   },
+   {
+    "browser_download_url": "https://github.com/qtdmm/QtDMM/releases/download/26.4/QtDMM-26.4-windows-x64.zip",
+    "digest": "sha256:202fdcb005af994e2b707c86de3ff159692a09d1b4613a8d81aa04a36a02a6dd",
+    "name": "QtDMM-26.4-windows-x64.zip",
+    "size": 63215654
+   },
+   {
+    "browser_download_url": "https://github.com/qtdmm/QtDMM/releases/download/26.4/QtDMM-26.4-x86_64.AppImage",
+    "digest": "sha256:e36cf9b8a4f3a016bfa4183eafe57cc9cf4c522744c6da6ddaf4323d8eb14e49",
+    "name": "QtDMM-26.4-x86_64.AppImage",
+    "size": 59509240
+   },
+   {
+    "browser_download_url": "https://github.com/qtdmm/QtDMM/releases/download/26.4/QtDMM-26.4-x86_64.flatpak",
+    "digest": "sha256:aad3674b3533630f8e4105df47e6b58462c858c68e94343ed917120f14c17a84",
+    "name": "QtDMM-26.4-x86_64.flatpak",
+    "size": 2904520
+   },
+   {
+    "browser_download_url": "https://github.com/qtdmm/QtDMM/releases/download/26.4/QtDMM-26.4.tar.gz",
+    "digest": "sha256:394598cabceb2dbbd2211fa6479cb950f86b53cfb16f76ebe6395cd65dda064c",
+    "name": "QtDMM-26.4.tar.gz",
+    "size": 10227487
+   },
+   {
+    "name": "notes.txt",
+    "size": 3,
+    "digest": null,
+    "browser_download_url": "https://example.invalid/notes.txt"
+   }
+  ],
+  "draft": false,
+  "html_url": "https://github.com/qtdmm/QtDMM/releases/tag/26.4",
+  "prerelease": false,
+  "published_at": "2026-11-22T00:11:48Z",
+  "tag_name": "26.4"
+ },
+ {
+  "assets": [
+   {
+    "browser_download_url": "https://github.com/qtdmm/QtDMM/releases/download/26.4-rc1/QtDMM-26.4-rc1-macos.dmg",
+    "digest": "sha256:940bc6ed0d71499b053bd9b3d2d934cb4a02b9b3acbc20dc72961937933b8f0c",
+    "name": "QtDMM-26.4-rc1-macos.dmg",
+    "size": 55711362
+   },
+   {
+    "browser_download_url": "https://github.com/qtdmm/QtDMM/releases/download/26.4-rc1/QtDMM-26.4-rc1-windows-x64.exe",
+    "digest": "sha256:ceb796c54e5506f8fda10b6d858ca4dcf78578005e847aa5d4ac66cc6fcdf129",
+    "name": "QtDMM-26.4-rc1-windows-x64.exe",
+    "size": 50800188
+   },
+   {
+    "browser_download_url": "https://github.com/qtdmm/QtDMM/releases/download/26.4-rc1/QtDMM-26.4-rc1-windows-x64.zip",
+    "digest": "sha256:90c0b38ab1fc49d323b33ed5d38c092e9b55a3fa52be71121957f9ec9f697dc2",
+    "name": "QtDMM-26.4-rc1-windows-x64.zip",
+    "size": 63090585
+   },
+   {
+    "browser_download_url": "https://github.com/qtdmm/QtDMM/releases/download/26.4-rc1/QtDMM-26.4-rc1-x86_64.AppImage",
+    "digest": "sha256:884bdafdcc136984b812d0d93c4cd586aa611cd893a3736e4464ba16c03a2954",
+    "name": "QtDMM-26.4-rc1-x86_64.AppImage",
+    "size": 59517432
+   },
+   {
+    "browser_download_url": "https://github.com/qtdmm/QtDMM/releases/download/26.4-rc1/QtDMM-26.4-rc1-x86_64.flatpak",
+    "digest": "sha256:259ade1be2491ca6e08c55c5cb50acc42ad74d07112d6c9724ac0b3eb9a35fb7",
+    "name": "QtDMM-26.4-rc1-x86_64.flatpak",
+    "size": 2907376
+   },
+   {
+    "browser_download_url": "https://github.com/qtdmm/QtDMM/releases/download/26.4-rc1/QtDMM-26.4-rc1.tar.gz",
+    "digest": "sha256:a7a41bde7af3a5e5fbc8b57c4444b4932f3f62444392220ea5586efe78be714c",
+    "name": "QtDMM-26.4-rc1.tar.gz",
+    "size": 10226984
+   }
+  ],
+  "draft": false,
+  "html_url": "https://github.com/qtdmm/QtDMM/releases/tag/26.4-rc1",
+  "prerelease": true,
+  "published_at": "2026-11-07T23:03:12Z",
+  "tag_name": "26.4-rc1"
+ },
+ {
+  "assets": [
+   {
+    "browser_download_url": "https://github.com/qtdmm/QtDMM/releases/download/26.3/QtDMM-26.3-macos.dmg",
+    "digest": "sha256:2ba77d64feb30a367c5d033d42dfedfb0710304db83974bb976e4bb7024eed55",
+    "name": "QtDMM-26.3-macos.dmg",
+    "size": 32127108
+   },
+   {
+    "browser_download_url": "https://github.com/qtdmm/QtDMM/releases/download/26.3/QtDMM-26.3-windows-x64.exe",
+    "digest": "sha256:468bbd8cc571e52c0fc37d064c0c66be2545afccc1a2cdf6ab3dd37bf39fbfbd",
+    "name": "QtDMM-26.3-windows-x64.exe",
+    "size": 43263992
+   },
+   {
+    "browser_download_url": "https://github.com/qtdmm/QtDMM/releases/download/26.3/QtDMM-26.3-windows-x64.zip",
+    "digest": "sha256:d1adae098fe7ad9b4a30474779a07a72b05fc3e30decdf091f29dbbd31a22b7d",
+    "name": "QtDMM-26.3-windows-x64.zip",
+    "size": 52951749
+   },
+   {
+    "browser_download_url": "https://github.com/qtdmm/QtDMM/releases/download/26.3/QtDMM-26.3-x86_64.AppImage",
+    "digest": "sha256:6f9cdad19ef3be8e4a0c015ce8cac8160f199c78f3bfdc7cf5c63af7cc1a32d5",
+    "name": "QtDMM-26.3-x86_64.AppImage",
+    "size": 39520760
+   },
+   {
+    "browser_download_url": "https://github.com/qtdmm/QtDMM/releases/download/26.3/QtDMM-26.3-x86_64.flatpak",
+    "digest": "sha256:97339ceefb3baf607089c370f7c373afc1c6edba0d5f96e376bf802d1989b2fb",
+    "name": "QtDMM-26.3-x86_64.flatpak",
+    "size": 1764872
+   },
+   {
+    "browser_download_url": "https://github.com/qtdmm/QtDMM/releases/download/26.3/QtDMM-26.3.tar.gz",
+    "digest": "sha256:598d32112996eb331bfd0cc518cef4b5a992646cb36050329e98eee3cd7a84a7",
+    "name": "QtDMM-26.3.tar.gz",
+    "size": 9163956
+   }
+  ],
+  "draft": false,
+  "html_url": "https://github.com/qtdmm/QtDMM/releases/tag/26.3",
+  "prerelease": false,
+  "published_at": "2026-10-28T05:56:11Z",
+  "tag_name": "26.3"
+ }
+]
