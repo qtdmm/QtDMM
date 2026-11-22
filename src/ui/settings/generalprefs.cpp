@@ -113,8 +113,11 @@ GeneralPrefs::GeneralPrefs(QWidget *parent) : SettingsPage(parent)
                               "a newer version; nothing else is sent."));
     ui_updateBeta = check(tr("Also release &candidates"), "ui_updateBeta",
                           tr("Offers the release candidates (rc) of the next version too."));
+    ui_news = check(tr("Show ne&ws from qtdmm.de"), "ui_news",
+                    tr("At start, once a day, the newest entry of the news on qtdmm.de that was not shown yet."));
     form->addRow(QString(), ui_updateCheck);
     form->addRow(QString(), ui_updateBeta);
+    form->addRow(QString(), ui_news);
     connect(ui_updateCheck, &QCheckBox::toggled, ui_updateBeta, &QWidget::setEnabled);
   }
 }
@@ -170,6 +173,7 @@ void GeneralPrefs::defaultsSLOT()
     ui_updateCheck->setChecked(m_cfg->getBool("Update/check"));
     ui_updateBeta->setChecked(m_cfg->getBool("Update/beta"));
     ui_updateBeta->setEnabled(ui_updateCheck->isChecked());
+    ui_news->setChecked(m_cfg->getBool("Update/news", m_cfg->getBool("Update/check")));
   }
 }
 
@@ -186,6 +190,7 @@ void GeneralPrefs::factoryDefaultsSLOT()
   {
     ui_updateCheck->setChecked(false);
     ui_updateBeta->setChecked(false);
+    ui_news->setChecked(false);
   }
 }
 
@@ -203,4 +208,6 @@ void GeneralPrefs::applySLOT()
     m_cfg->setBool("Update/check", ui_updateCheck->isChecked());
   if (ui_updateBeta)
     m_cfg->setBool("Update/beta", ui_updateBeta->isChecked());
+  if (ui_news && (ui_news->isChecked() || !m_cfg->getString("Update/check").isEmpty()))
+    m_cfg->setBool("Update/news", ui_news->isChecked());
 }

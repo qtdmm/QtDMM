@@ -3253,6 +3253,16 @@ y cierre la sesión y vuelva a entrar.</translation>
         <translation>Ofrece también las versiones candidatas (rc) de la próxima versión.</translation>
     </message>
     <message>
+        <location filename="../../src/ui/settings/generalprefs.cpp" line="116"/>
+        <source>Show ne&amp;ws from qtdmm.de</source>
+        <translation>Mostrar &amp;noticias de qtdmm.de</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/settings/generalprefs.cpp" line="117"/>
+        <source>At start, once a day, the newest entry of the news on qtdmm.de that was not shown yet.</source>
+        <translation>Al iniciar, una vez al día, la entrada más reciente de las noticias de qtdmm.de que aún no se mostró.</translation>
+    </message>
+    <message>
         <location filename="../../src/ui/settings/generalprefs.cpp" line="49"/>
         <source>The program QtDMM runs for the meters it reads through sigrok; a name is searched in the PATH.</source>
         <translation>El programa que QtDMM ejecuta para los medidores que lee mediante sigrok; un nombre se busca en el PATH.</translation>
@@ -9362,151 +9372,174 @@ Después cierre la sesión y vuelva a iniciarla para que la pertenencia al grupo
 <context>
     <name>UpdateBar</name>
     <message>
-        <location filename="../../src/ui/updatebar.cpp" line="35"/>
+        <location filename="../../src/ui/updatebar.cpp" line="36"/>
         <source>Close</source>
         <translation>Cerrar</translation>
     </message>
     <message>
-        <location filename="../../src/ui/updatebar.cpp" line="44"/>
+        <location filename="../../src/ui/updatebar.cpp" line="45"/>
         <source>Could not look for a new version: %1</source>
         <translation>No se pudo buscar una versión nueva: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/updatebar.cpp" line="90"/>
-        <source>Should QtDMM look for a new version when it starts? Once a day it fetches the list of releases from qtdmm.github.io; nothing else is sent. Settings, General can change it.</source>
-        <translation>¿Debe QtDMM buscar una versión nueva al iniciar? Una vez al día descarga la lista de versiones de qtdmm.github.io; no se envía nada más. Se puede cambiar en Ajustes, General.</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/updatebar.cpp" line="92"/>
+        <location filename="../../src/ui/updatebar.cpp" line="116"/>
         <source>Yes</source>
         <translation>Sí</translation>
     </message>
     <message>
-        <location filename="../../src/ui/updatebar.cpp" line="92"/>
+        <location filename="../../src/ui/updatebar.cpp" line="116"/>
         <source>No</source>
         <translation>No</translation>
     </message>
     <message>
-        <location filename="../../src/ui/updatebar.cpp" line="103"/>
+        <location filename="../../src/ui/updatebar.cpp" line="144"/>
         <source>QtDMM %1 is the newest version.</source>
         <translation>QtDMM %1 es la versión más reciente.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/updatebar.cpp" line="109"/>
+        <location filename="../../src/ui/updatebar.cpp" line="186"/>
         <source>QtDMM %1 is out (this is %2).</source>
         <translation>Ha salido QtDMM %1 (esta es la %2).</translation>
     </message>
     <message>
-        <location filename="../../src/ui/updatebar.cpp" line="115"/>
+        <location filename="../../src/ui/updatebar.cpp" line="192"/>
         <source>Your software centre or &quot;flatpak update&quot; installs it.</source>
         <translation>El centro de software o «flatpak update» la instala.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/updatebar.cpp" line="113"/>
-        <location filename="../../src/ui/updatebar.cpp" line="119"/>
+        <location filename="../../src/ui/updatebar.cpp" line="190"/>
+        <location filename="../../src/ui/updatebar.cpp" line="196"/>
         <source>Install</source>
         <translation>Instalar</translation>
     </message>
     <message>
-        <location filename="../../src/ui/updatebar.cpp" line="121"/>
-        <location filename="../../src/ui/updatebar.cpp" line="202"/>
+        <location filename="../../src/ui/updatebar.cpp" line="113"/>
+        <source>Should QtDMM look for new versions and news when it starts? Once a day it fetches the list of releases from qtdmm.github.io and the news from qtdmm.de; nothing else is sent. Settings, General can change it.</source>
+        <translation>¿Debe QtDMM buscar versiones nuevas y noticias al iniciar? Una vez al día descarga la lista de versiones de qtdmm.github.io y las noticias de qtdmm.de; no se envía nada más. Se puede cambiar en Ajustes, General.</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/updatebar.cpp" line="167"/>
+        <source>New on qtdmm.de: %1</source>
+        <translation>Nuevo en qtdmm.de: %1</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/updatebar.cpp" line="168"/>
+        <source>Read</source>
+        <translation>Leer</translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../../src/ui/updatebar.cpp" line="174"/>
+        <source>(and %n more)</source>
+        <translation>
+            <numerusform>(y %n más)</numerusform>
+            <numerusform>(y %n más)</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/updatebar.cpp" line="175"/>
+        <source>All news</source>
+        <translation>Todas las noticias</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/updatebar.cpp" line="198"/>
+        <location filename="../../src/ui/updatebar.cpp" line="279"/>
         <source>Download</source>
         <translation>Descargar</translation>
     </message>
     <message>
-        <location filename="../../src/ui/updatebar.cpp" line="122"/>
-        <location filename="../../src/ui/updatebar.cpp" line="144"/>
+        <location filename="../../src/ui/updatebar.cpp" line="199"/>
+        <location filename="../../src/ui/updatebar.cpp" line="221"/>
         <source>What&apos;s new</source>
         <translation>Novedades</translation>
     </message>
     <message>
-        <location filename="../../src/ui/updatebar.cpp" line="123"/>
+        <location filename="../../src/ui/updatebar.cpp" line="200"/>
         <source>Skip this version</source>
         <translation>Omitir esta versión</translation>
     </message>
     <message>
-        <location filename="../../src/ui/updatebar.cpp" line="137"/>
-        <location filename="../../src/ui/updatebar.cpp" line="146"/>
+        <location filename="../../src/ui/updatebar.cpp" line="214"/>
+        <location filename="../../src/ui/updatebar.cpp" line="223"/>
         <source>Downloading QtDMM %1 ... %2 %</source>
         <translation>Descargando QtDMM %1 ... %2 %</translation>
     </message>
     <message>
-        <location filename="../../src/ui/updatebar.cpp" line="163"/>
-        <location filename="../../src/ui/updatebar.cpp" line="177"/>
+        <location filename="../../src/ui/updatebar.cpp" line="240"/>
+        <location filename="../../src/ui/updatebar.cpp" line="254"/>
         <source>Updating QtDMM %1 ... %2 %</source>
         <translation>Actualizando QtDMM %1 ... %2 %</translation>
     </message>
     <message>
-        <location filename="../../src/ui/updatebar.cpp" line="171"/>
+        <location filename="../../src/ui/updatebar.cpp" line="248"/>
         <source>QtDMM %1 is not in the Flatpak repository yet; try again later.</source>
         <translation>QtDMM %1 aún no está en el repositorio Flatpak; inténtalo más tarde.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/updatebar.cpp" line="174"/>
+        <location filename="../../src/ui/updatebar.cpp" line="251"/>
         <source>The update failed: %1. Your software centre or &quot;flatpak update&quot; can install it.</source>
         <translation>La actualización ha fallado: %1. El centro de software o «flatpak update» puede instalarla.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/updatebar.cpp" line="190"/>
+        <location filename="../../src/ui/updatebar.cpp" line="267"/>
         <source>QtDMM %1 is downloaded and checked. QtDMM closes for the installation and starts again when it is done.</source>
         <translation>QtDMM %1 está descargado y comprobado. QtDMM se cierra para la instalación y vuelve a iniciarse al terminar.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/updatebar.cpp" line="192"/>
+        <location filename="../../src/ui/updatebar.cpp" line="269"/>
         <source>Install now</source>
         <translation>Instalar ahora</translation>
     </message>
     <message>
-        <location filename="../../src/ui/updatebar.cpp" line="213"/>
+        <location filename="../../src/ui/updatebar.cpp" line="290"/>
         <source>Installing QtDMM %1 ...</source>
         <translation>Instalando QtDMM %1 ...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/updatebar.cpp" line="220"/>
+        <location filename="../../src/ui/updatebar.cpp" line="297"/>
         <source>Open disk image</source>
         <translation>Abrir imagen de disco</translation>
     </message>
     <message>
-        <location filename="../../src/ui/updatebar.cpp" line="168"/>
-        <location filename="../../src/ui/updatebar.cpp" line="193"/>
-        <location filename="../../src/ui/updatebar.cpp" line="207"/>
-        <location filename="../../src/ui/updatebar.cpp" line="225"/>
+        <location filename="../../src/ui/updatebar.cpp" line="245"/>
+        <location filename="../../src/ui/updatebar.cpp" line="270"/>
+        <location filename="../../src/ui/updatebar.cpp" line="284"/>
+        <location filename="../../src/ui/updatebar.cpp" line="302"/>
         <source>Later</source>
         <translation>Más tarde</translation>
     </message>
     <message>
-        <location filename="../../src/ui/updatebar.cpp" line="201"/>
-        <location filename="../../src/ui/updatebar.cpp" line="219"/>
+        <location filename="../../src/ui/updatebar.cpp" line="278"/>
+        <location filename="../../src/ui/updatebar.cpp" line="296"/>
         <source>QtDMM %1 could not replace %2: %3</source>
         <translation>QtDMM %1 no pudo reemplazar %2: %3</translation>
     </message>
     <message>
-        <location filename="../../src/ui/updatebar.cpp" line="166"/>
-        <location filename="../../src/ui/updatebar.cpp" line="205"/>
-        <location filename="../../src/ui/updatebar.cpp" line="223"/>
+        <location filename="../../src/ui/updatebar.cpp" line="243"/>
+        <location filename="../../src/ui/updatebar.cpp" line="282"/>
+        <location filename="../../src/ui/updatebar.cpp" line="300"/>
         <source>QtDMM %1 is installed; it starts with the next start of QtDMM.</source>
         <translation>QtDMM %1 está instalado; se usará en el próximo inicio de QtDMM.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/updatebar.cpp" line="167"/>
-        <location filename="../../src/ui/updatebar.cpp" line="206"/>
-        <location filename="../../src/ui/updatebar.cpp" line="224"/>
+        <location filename="../../src/ui/updatebar.cpp" line="244"/>
+        <location filename="../../src/ui/updatebar.cpp" line="283"/>
+        <location filename="../../src/ui/updatebar.cpp" line="301"/>
         <source>Restart now</source>
         <translation>Reiniciar ahora</translation>
     </message>
     <message>
-        <location filename="../../src/ui/updatebar.cpp" line="142"/>
+        <location filename="../../src/ui/updatebar.cpp" line="219"/>
         <source>The download failed: %1</source>
         <translation>La descarga ha fallado: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/updatebar.cpp" line="143"/>
-        <location filename="../../src/ui/updatebar.cpp" line="175"/>
+        <location filename="../../src/ui/updatebar.cpp" line="220"/>
+        <location filename="../../src/ui/updatebar.cpp" line="252"/>
         <source>Try again</source>
         <translation>Reintentar</translation>
     </message>
     <message>
-        <location filename="../../src/ui/updatebar.cpp" line="147"/>
+        <location filename="../../src/ui/updatebar.cpp" line="224"/>
         <source>Cancel</source>
         <translation>Cancelar</translation>
     </message>

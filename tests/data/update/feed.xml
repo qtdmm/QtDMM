@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+  <title>QtDMM news</title>
+  <link>https://qtdmm.de/news.html</link>
+  <description>Test feed in the form of https://qtdmm.de/feed.xml</description>
+  <item>
+    <title>A meter of the month</title>
+    <link>https://qtdmm.de/news.html#2026-12-01-meter-of-the-month</link>
+    <guid isPermaLink="true">https://qtdmm.de/news.html#2026-12-01-meter-of-the-month</guid>
+    <pubDate>Tue, 01 Dec 2026 00:00:00 +0000</pubDate>
+    <description>&lt;p&gt;Text&lt;/p&gt;</description>
+  </item>
+  <item>
+    <title>QtDMM 26.5: Test Release</title>
+    <link>https://qtdmm.de/news.html#2027-01-01-release-26.5</link>
+    <guid isPermaLink="true">https://qtdmm.de/news.html#2027-01-01-release-26.5</guid>
+    <pubDate>Fri, 01 Jan 2027 00:00:00 +0000</pubDate>
+    <description>&lt;p&gt;Text&lt;/p&gt;</description>
+  </item>
+  <item>
+    <title>A new home</title>
+    <link>https://qtdmm.de/news.html#2026-09-24-new-home</link>
+    <guid isPermaLink="true">https://qtdmm.de/news.html#2026-09-24-new-home</guid>
+    <pubDate>Thu, 24 Sep 2026 00:00:00 +0000</pubDate>
+    <description>&lt;p&gt;Text&lt;/p&gt;</description>
+  </item>
+</channel>
+</rss>

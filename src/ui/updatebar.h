@@ -9,6 +9,8 @@
 #include "core/updatecheck.h"
 
 class FlatpakUpdate;
+class NewsFeed;
+struct NewsItem;
 class UpdateDownload;
 
 class QHBoxLayout;
@@ -21,6 +23,12 @@ class Settings;
 /// otherwise. The looking is UpdateCheck's; keys Update/check (unset: not
 /// asked yet), Update/beta, Update/skip, Update/last (ISO date of the last
 /// check at start, at most one a day).
+///
+/// The same question covers the news of qtdmm.de (NewsFeed, Update/news):
+/// at start the newest entry not seen yet (News/seen, the newest guid
+/// shown; the first fetch only remembers it) with Read and All news. A
+/// release's entry is not shown on its own: What's new of the update offer
+/// opens it. While an update is offered the news wait a day.
 ///
 /// A pre-release (rc, dev) is offered pre-releases too, until its release.
 ///
@@ -73,6 +81,11 @@ private:
   void showMessage(const QString &text, const QList<Button> &buttons);
   void ask();
   void checked(const QByteArray &feed);
+  /// The versions (m_feed) and the news fetched: offer, answer, show news.
+  void finish(const QList<NewsItem> &news);
+  void showNews(const QList<NewsItem> &news);
+  /// Update/news, unset: as Update/check.
+  bool newsEnabled() const;
   void offer(const UpdateRelease &release);
   /// Downloads the installer of @p release, the banner shows how far.
   void download(const UpdateRelease &release, const UpdateFile &file);
@@ -87,6 +100,8 @@ private:
   UpdateCheck *m_check;
   UpdateDownload *m_download;
   FlatpakUpdate *m_flatpak;
+  NewsFeed *m_news;
+  QByteArray m_feed;   ///< latest.json of the running check
   UpdateCheck::Install m_kind;
   QLabel *m_text;
   QHBoxLayout *m_buttons;
