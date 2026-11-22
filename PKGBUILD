@@ -30,7 +30,8 @@ pkgver() {
 
 build() {
   cd "$pkgname"
-  ./compile.sh
+  # updates come from pacman: no update check of its own
+  QTDMM_UPDATE_CHECK=OFF ./compile.sh
 }
 
 package() {

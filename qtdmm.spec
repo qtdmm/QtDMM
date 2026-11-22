@@ -17,6 +17,8 @@ BuildOption:	-DBUILD_TESTING=ON
 %endif
 # Übersetzungen als eigene Dateien für %%find_lang
 BuildOption:	-DQTDMM_EMBED_TRANSLATIONS=OFF
+# Updates bringt dnf, keine eigene Prüfung in QtDMM
+BuildOption:	-DQTDMM_UPDATE_CHECK=OFF
 # Release-Tag des Quell-Archivs; für RC's %%{version}-rcX
 %global	tag %{version}
 # Copr (.copr/Makefile) setzt hier sein eigenes Archiv aus dem Checkout ein

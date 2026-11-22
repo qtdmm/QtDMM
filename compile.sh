@@ -27,6 +27,7 @@ usage: compile.sh <install|clean|qt6>
  NeoQCP needs Qt 6.7 or newer with the Qt Shader Tools, e.g.
    aqt install-qt linux desktop 6.8.3 linux_gcc_64 -m qtshadertools -O ~/Qt
  Another revision of it: QTDMM_NEOQCP_REV=<commit> ./compile.sh neoqcp
+ Packages whose updates the package manager brings: QTDMM_UPDATE_CHECK=OFF ./compile.sh
  A build without the word "neoqcp" draws with QCustomPlot again.
 
 EOF
@@ -79,6 +80,10 @@ fi
 if [ -n "${QTDMM_QT_DIR}" ]
 then
 	CMAKE_PARAMS="${CMAKE_PARAMS} -DCMAKE_PREFIX_PATH=${QTDMM_QT_DIR}"
+fi
+if [ -n "${QTDMM_UPDATE_CHECK}" ]
+then
+	CMAKE_PARAMS="${CMAKE_PARAMS} -DQTDMM_UPDATE_CHECK=${QTDMM_UPDATE_CHECK}"
 fi
 
 # Ninja and ccache when installed: the tests build many sources again, a

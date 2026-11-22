@@ -88,6 +88,7 @@ static const char *kWorkspaceSuffix = "qtdmm-workspace";
 #include "core/settings.h"
 #include "core/alarm.h"
 #include "ui/alarmbar.h"
+#include "ui/updatebar.h"
 #include "ui/alarmservice.h"
 #include "ui/mdiarranger.h"
 #include "service/metercontroller.h"
@@ -265,6 +266,9 @@ MainWindow::MainWindow(QCommandLineParser &parser, QWidget *parent)
 
   // the meters connected last time
   QTimer::singleShot(1000, this, &MainWindow::openPending);
+  // a new version: once a day, when allowed, after the start has settled
+  connect(m_updateAction, &QAction::triggered, m_updateBar, &UpdateBar::checkNow);
+  QTimer::singleShot(5000, m_updateBar, &UpdateBar::startupCheck);
   // --connect <id> (--also before 26.4): more of "My devices", after those of last time
   QTimer::singleShot(1000, this, [this, ids = parser.values("connect") + parser.values("also")]
   {
@@ -316,6 +320,8 @@ void MainWindow::createViews()
   centralLayout->setSpacing(0);
   m_alarmBar = new AlarmBar(central);
   centralLayout->addWidget(m_alarmBar);
+  m_updateBar = new UpdateBar(m_wid->settings(), central);
+  centralLayout->addWidget(m_updateBar);
   m_mdi = new QMdiArea(central);
   m_mdi->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
   m_mdi->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
@@ -2418,6 +2424,11 @@ void MainWindow::createActions()
 void MainWindow::createExtraActions()
 {
   // beside the windows, to look into a fault or attach to a report
+  m_updateAction = new QAction(tr("Check for &updates..."), this);
+  m_updateAction->setObjectName("action_CheckUpdates");
+  m_updateAction->setVisible(UpdateCheck::enabled());
+  m_updateAction->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">Check for updates</span></p>"
+                                  "<p>Looks whether a newer QtDMM is out and offers it.</p></body></html>"));
   m_logAction = new QAction(tr("&Log..."), this);
   m_logAction->setObjectName("action_Log");
   m_logAction->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">Log</span></p>"
@@ -2715,6 +2726,7 @@ void MainWindow::on_action_Menu_triggered()
     m_menu->addAction(action_Direct_help);
     m_menu->addAction(m_logAction);
     m_menu->addAction(action_About);
+    m_menu->addAction(m_updateAction);
     m_menu->addSeparator();
     m_menu->addAction(action_Quit);
   }

@@ -80,6 +80,8 @@ if (BUILD_TESTING)
 
 	## logic nodes: the common form, a node as a source of the session (triggered, inputs missing or old, bypass, loops)
 	qtdmm_add_test(logic_node test_logicnode tests/test_logicnode.cpp)
+	## the update check and its banner, on the feed of tools/make-update-feed.py
+	qtdmm_add_test(update_check test_update tests/test_update.cpp "${TEST_DATA}/update")
 	qtdmm_add_test(formula_node_dialog test_formulanodedlg tests/test_formulanodedlg.cpp)
 	qtdmm_add_test(legacy_nodes test_legacynodes tests/test_legacynodes.cpp)
 

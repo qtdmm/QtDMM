@@ -1,0 +1,133 @@
+// Copyright (c) 2026 The QtDMM developers
+// SPDX-License-Identifier: GPL-3.0-or-later
+// The update check: the version order, what latest.json offers to which
+// version (tests/data/update/latest.json, written by tools/make-update-feed.py
+// from real releases: stable 26.4, beta 27.1-rc1), fetching it, and the
+// banner asking first and offering then.
+#include "core/settings.h"
+#include "core/updatecheck.h"
+#include "ui/updatebar.h"
+
+#include "testutil.h"
+
+#include <QApplication>
+#include <QFile>
+#include <QLabel>
+#include <QPushButton>
+#include <QTemporaryDir>
+
+namespace
+{
+QStringList buttons(const UpdateBar &bar)
+{
+  QStringList texts;
+  for (const QPushButton *b : bar.findChildren<QPushButton *>())
+    if (!b->isHidden())
+      texts << b->text();
+  return texts;
+}
+}   // namespace
+
+int main(int argc, char **argv)
+{
+  qputenv("QT_QPA_PLATFORM", "offscreen");
+  QApplication app(argc, argv);
+  const QString data = QString(argv[1]);
+
+  // the order of versions
+  auto less = [](const char *a, const char *b) { return UpdateCheck::compareVersions(a, b) < 0; };
+  check(less("26.4-dev.14+g1234abc", "26.4-alpha1") && less("26.4-alpha1", "26.4-beta1")
+          && less("26.4-beta1", "26.4-rc1") && less("26.4-rc1", "26.4-rc1.3+g1234abc")
+          && less("26.4-rc1.3+g1234abc", "26.4-rc2") && less("26.4-rc2", "26.4") && less("26.4", "26.4.1")
+          && less("26.4.1", "26.5-dev.1+gabc") && less("26.9", "26.10") && less("26.10", "27.1-rc1"),
+        "dev < alpha < beta < rc < release < patch < next");
+  check(UpdateCheck::compareVersions("26.4", "26.4") == 0, "equal");
+  check(less("0.9.6-git", "26.1") && less("", "0.1"), "no version: before all");
+  check(UpdateCheck::isPreRelease("27.1-rc1") && UpdateCheck::isPreRelease("27.1-dev.4+gabc")
+          && !UpdateCheck::isPreRelease("26.4") && !UpdateCheck::isPreRelease("26.4.1"),
+        "pre-releases");
+
+  // what the feed offers
+  QFile file(data + "/latest.json");
+  check(file.open(QIODevice::ReadOnly), "latest.json");
+  const QByteArray feed = file.readAll();
+  auto offered = [&](const QString &current, bool beta, const QString &skipped = {}) {
+    const auto r = UpdateCheck::offer(feed, current, beta, skipped);
+    return r ? r->version : QString("-");
+  };
+  check(offered("26.3", false) == "26.4", "26.3: the release");
+  check(offered("26.3", true) == "27.1-rc1", "26.3 with beta: the newer candidate");
+  check(offered("26.4", false) == "-", "26.4: nothing");
+  check(offered("26.4-rc1", true) == "27.1-rc1", "26.4-rc1: the next candidate");
+  check(offered("27.1-rc1", true) == "-", "the candidate itself: nothing");
+  check(offered("27.1-dev.3+gabc", true) == "27.1-rc1", "a dev build: the candidate");
+  check(offered("26.3", false, "26.4") == "-", "a skipped version is not offered");
+  check(offered("26.3", true, "27.1-rc1") == "26.4", "a skipped candidate: the release");
+  check(!UpdateCheck::offer("{}", "26.3", true) && !UpdateCheck::offer("no json", "26.3", true),
+        "no feed: nothing");
+  const auto r = UpdateCheck::offer(feed, "26.3", false);
+  const UpdateFile appimage = r ? r->files.value("appimage") : UpdateFile();
+  check(r && r->date == QDate(2026, 11, 22) && r->notes.toString().endsWith("/releases/tag/26.4"),
+        "date and release page");
+  check(appimage.url.toString().endsWith("QtDMM-26.4-x86_64.AppImage") && appimage.sha256.size() == 64
+          && appimage.size > 1000000,
+        "the AppImage: url, SHA256, size");
+  check(UpdateCheck::fileKind(UpdateCheck::Install::WindowsInstaller) == "windows-installer"
+          && UpdateCheck::fileKind(UpdateCheck::Install::Source).isEmpty(),
+        "file kinds");
+  qputenv("APPIMAGE", "QtDMM.AppImage");   // only looked at, never opened
+  check(UpdateCheck::installKind() == UpdateCheck::Install::AppImage, "$APPIMAGE: an AppImage");
+  qunsetenv("APPIMAGE");
+
+  // fetching: the feed from a file
+  qputenv("QTDMM_UPDATE_URL", QUrl::fromLocalFile(data + "/latest.json").toString().toUtf8());
+  UpdateCheck fetch;
+  QByteArray fetched;
+  QObject::connect(&fetch, &UpdateCheck::checked, [&](const QByteArray &f) { fetched = f; });
+  fetch.check();
+  check(waitFor([&] { return !fetched.isEmpty(); }) && fetched == feed, "fetched from QTDMM_UPDATE_URL");
+
+  // the banner: asks first, No leaves it at that
+  QTemporaryDir cfg;
+  Settings settings("update", cfg.path());
+  QCoreApplication::setApplicationVersion("26.3");
+  UpdateBar bar(&settings);
+  bar.startupCheck();
+  check(!bar.isHidden() && buttons(bar) == QStringList({ "Yes", "No" }), "first start: asks");
+  bar.findChildren<QPushButton *>().last()->click();
+  check(bar.isHidden() && settings.getString("Update/check") == "false", "No: not looked");
+  bar.startupCheck();
+  check(bar.isHidden(), "asked once");
+  // Yes: looks at once, offers the release
+  settings.remove("Update/check");
+  bar.startupCheck();
+  bar.findChildren<QPushButton *>().first()->click();
+  const bool shown = waitFor([&] { return buttons(bar).contains("Skip this version"); });
+  const QString text = bar.findChild<QLabel *>()->text();
+  check(shown && text.contains("26.4") && settings.getString("Update/last") == QDate::currentDate().toString(Qt::ISODate),
+        "Yes: 26.4 offered: " + text);
+  check(!buttons(bar).contains("Download") || UpdateCheck::installKind() != UpdateCheck::Install::Source,
+        "a source build: no download");
+  // skipped: not at start, but when asked for
+  for (QPushButton *b : bar.findChildren<QPushButton *>())
+    if (!b->isHidden() && b->text() == "Skip this version")
+      b->click();
+  check(bar.isHidden() && settings.getString("Update/skip") == "26.4", "skipped");
+  settings.setString("Update/last", "2000-01-01");
+  settings.save();
+  bar.startupCheck();
+  waitFor([] { return false; }, 300);
+  check(bar.isHidden(), "the skipped version: no banner at start");
+  bar.checkNow();
+  check(waitFor([&] { return !bar.isHidden(); }) && bar.findChild<QLabel *>()->text().contains("26.4"),
+        "Check for updates: offered all the same");
+  // up to date, and a rc gets candidates
+  QCoreApplication::setApplicationVersion("27.1-rc1");
+  check(bar.beta(), "a candidate gets candidates");
+  bar.checkNow();
+  check(waitFor([&] { return bar.findChild<QLabel *>()->text().contains("newest"); }), "27.1-rc1: the newest");
+
+  if (failed == 0)
+    qInfo() << "All update tests passed.";
+  return failed == 0 ? 0 : 1;
+}

@@ -39,7 +39,7 @@
           qt6.qtwayland
         ];
 
-        cmakeFlags = [ "-DBUILD_TESTING=OFF" ];
+        cmakeFlags = [ "-DBUILD_TESTING=OFF" "-DQTDMM_UPDATE_CHECK=OFF" ];
 
         preConfigure = ''
           printf '%s\n' "" "${day}" "${count}" "${rev}" > .tarball-version

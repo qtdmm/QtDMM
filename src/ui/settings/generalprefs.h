@@ -11,7 +11,9 @@ class QLineEdit;
 /// unsaved data, keep the window's position and size) and the programs it
 /// runs (sigrok-cli, LabPlot), the folder for new project baskets. Keys
 /// Alert/unsaved-file, Save/window-pos, Save/window-size,
-/// Port settings/sigrok_exe, Programs/labplot, Basket/base-dir, Basket/by-type.
+/// Port settings/sigrok_exe, Programs/labplot, Basket/base-dir, Basket/by-type,
+/// and whether to look for a new version (Update/check, Update/beta; not in
+/// package builds, see UpdateCheck::enabled()).
 class GeneralPrefs : public SettingsPage
 {
   Q_OBJECT
@@ -37,6 +39,7 @@ public Q_SLOTS:
 private:
   QCheckBox *ui_alertUnsavedData, *ui_saveWindowPos, *ui_saveWindowSize;
   QCheckBox *ui_byType;   ///< Basket/by-type
+  QCheckBox *ui_updateCheck = nullptr, *ui_updateBeta = nullptr;   ///< Update/check, Update/beta
   QLineEdit *ui_sigrokExe;
   QLineEdit *ui_labPlotExe;
   QLineEdit *ui_basketBase;

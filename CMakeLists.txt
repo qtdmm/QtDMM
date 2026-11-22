@@ -333,6 +333,13 @@ if (QTDMM_WITH_MULTIMEDIA)
 	target_compile_definitions(qtdmm_core PUBLIC QTDMM_WITH_MULTIMEDIA)
 endif()
 
+## the update check (core/updatecheck.h): off in packages whose updates the
+## package manager brings (Copr, Arch, Nix)
+option(QTDMM_UPDATE_CHECK "Look for new QtDMM releases (off for distribution packages)" ON)
+if (NOT QTDMM_UPDATE_CHECK)
+	target_compile_definitions(qtdmm_core PUBLIC QTDMM_NO_UPDATE_CHECK)
+endif()
+
 if (QTDMM_WITH_NEOQCP)
 	# its headers as a system's: their warnings are not QtDMM's (QTDMM_WERROR)
 	target_link_libraries(qtdmm_core PUBLIC NeoQCP::NeoQCP)
