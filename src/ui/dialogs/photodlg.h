@@ -7,6 +7,7 @@
 #include <QImage>
 #include <QLabel>
 
+class PhotoCamera;
 class PhotoServer;
 class QComboBox;
 class QListWidget;
@@ -35,8 +36,9 @@ private:
 /// "Photo of the setup": pictures into the open project's photos
 /// (PhotoStore), each with a note in the graph at the time it came
 /// (photoAdded()). From the phone - it opens a page of PhotoServer through
-/// the QR code shown, the server runs only while that tab shows - or from a
-/// file, chosen or dropped onto the dialog.
+/// the QR code shown, the server runs only while that tab shows -, from a
+/// camera of the computer (PhotoCamera, with Qt Multimedia, running only
+/// while its tab shows) or from a file, chosen or dropped onto the dialog.
 class PhotoDlg : public QDialog
 {
   Q_OBJECT
@@ -73,6 +75,8 @@ private:
   bool        taken(const QString &path, const QDateTime &when, const QString &why);
   /// Starts the server and shows its code while the phone's tab shows, stops it otherwise.
   void        updatePhone();
+  /// Runs the camera while its tab shows.
+  void        updateCamera();
 
   QString      m_project;
   PhotoView   *m_preview;
@@ -83,4 +87,6 @@ private:
   QLabel      *m_url;
   QLabel      *m_phoneState;
   PhotoServer *m_server;
+  QWidget     *m_phoneTab;
+  PhotoCamera *m_camera = nullptr;   ///< none without Qt Multimedia
 };

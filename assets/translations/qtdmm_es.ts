@@ -7040,89 +7040,137 @@ DMM connected and switched on?</source>
     </message>
 </context>
 <context>
+    <name>PhotoCamera</name>
+    <message>
+        <location filename="../../src/ui/dialogs/photocamera.cpp" line="30"/>
+        <source>&amp;Device:</source>
+        <translation>&amp;Dispositivo:</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/photocamera.cpp" line="36"/>
+        <source>&amp;Take photo</source>
+        <translation>Tomar &amp;foto</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/photocamera.cpp" line="83"/>
+        <source>The photo could not be stored: %1</source>
+        <translation>No se pudo guardar la foto: %1</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/photocamera.cpp" line="87"/>
+        <source>The camera took no photo: %1</source>
+        <translation>La cámara no tomó ninguna foto: %1</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/photocamera.cpp" line="93"/>
+        <source>No camera found.</source>
+        <translation>No se encontró ninguna cámara.</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/photocamera.cpp" line="145"/>
+        <source>Waiting for the permission to use the camera...</source>
+        <translation>Esperando el permiso para usar la cámara…</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/photocamera.cpp" line="153"/>
+        <source>QtDMM may not use the camera: allow it in the system settings (privacy, camera).</source>
+        <translation>QtDMM no puede usar la cámara: permítalo en los ajustes del sistema (privacidad, cámara).</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/photocamera.cpp" line="167"/>
+        <source>The camera does not start: %1</source>
+        <translation>La cámara no se inicia: %1</translation>
+    </message>
+</context>
+<context>
     <name>PhotoDlg</name>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="94"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="95"/>
         <source>Photo of the setup</source>
         <translation>Foto del montaje</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="169"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="179"/>
         <source>No photo yet</source>
         <translation>Aún no hay fotos</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="97"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="98"/>
         <source>The photos go into the project&apos;s folder &quot;photos&quot;, each with a note in the graph.</source>
         <translation>Las fotos van a la carpeta «Fotos» del proyecto, cada una con una nota en el gráfico.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="112"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="113"/>
         <source>Scan the code with the phone&apos;s camera and open the link. Its page takes photos and sends each one here at once.</source>
         <translation>Escanee el código con la cámara del teléfono y abra el enlace. Su página toma fotos y envía cada una aquí al instante.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="118"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="119"/>
         <source>&amp;Network:</source>
         <translation>&amp;Red:</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="121"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="122"/>
         <source>The address of this computer the phone opens: one in the network the phone is in</source>
         <translation>La dirección de este ordenador que abre el teléfono: una de la red en la que está el teléfono</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="135"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="136"/>
         <source>Phone and computer must be in the same network; a guest WLAN often keeps them apart. A firewall may ask whether QtDMM may accept connections.</source>
         <translation>El teléfono y el ordenador deben estar en la misma red; una WLAN de invitados suele separarlos. Un cortafuegos puede preguntar si QtDMM puede aceptar conexiones.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="143"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="144"/>
         <source>&amp;Phone</source>
         <translation>&amp;Teléfono</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="146"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="150"/>
+        <source>&amp;Webcam</source>
+        <translation>&amp;Webcam</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="155"/>
         <source>Add a picture from a file, or drop pictures onto this dialog.</source>
         <translation>Añada una imagen desde un archivo o suelte imágenes en este diálogo.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="149"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="158"/>
         <source>&amp;Add file...</source>
         <translation>&amp;Añadir archivo…</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="154"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="163"/>
         <source>From &amp;file</source>
         <translation>Desde arc&amp;hivo</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="163"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="173"/>
         <source>The phone is connected.</source>
         <translation>El teléfono está conectado.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="233"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="243"/>
         <source>No network found: connect the computer to the phone&apos;s network.</source>
         <translation>No se encontró ninguna red: conecte el ordenador a la red del teléfono.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="241"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="251"/>
         <source>Cannot wait for the phone: %1</source>
         <translation>No se puede esperar al teléfono: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="247"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="257"/>
         <source>Waiting for the phone...</source>
         <translation>Esperando al teléfono…</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="267"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="285"/>
         <source>Add photos</source>
         <translation>Añadir fotos</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="269"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="287"/>
         <source>Pictures (%1)</source>
         <translation>Imágenes (%1)</translation>
     </message>
@@ -10013,57 +10061,59 @@ Después cierre la sesión y vuelva a iniciarla para que la pertenencia al grupo
 <context>
     <name>Vxi11Server</name>
     <message>
-        <location filename="../../src/service/vxi11server.cpp" line="74"/>
+        <location filename="../../src/service/vxi11server.cpp" line="75"/>
         <source>core channel: %1</source>
         <translation>canal core: %1</translation>
     </message>
     <message>
-        <location filename="../../src/service/vxi11server.cpp" line="80"/>
+        <location filename="../../src/service/vxi11server.cpp" line="81"/>
         <source>abort channel: %1</source>
         <translation>canal abort: %1</translation>
     </message>
     <message>
-        <location filename="../../src/service/vxi11server.cpp" line="106"/>
+        <location filename="../../src/service/vxi11server.cpp" line="107"/>
         <source>no rpcbind is running on this computer</source>
         <translation>no hay ningún rpcbind en marcha en este ordenador</translation>
     </message>
     <message>
-        <location filename="../../src/service/vxi11server.cpp" line="121"/>
+        <location filename="../../src/service/vxi11server.cpp" line="122"/>
         <source>port %1 is in use by another program</source>
         <translation>el puerto %1 lo usa otro programa</translation>
     </message>
     <message>
-        <location filename="../../src/service/vxi11server.cpp" line="122"/>
+        <location filename="../../src/service/vxi11server.cpp" line="123"/>
         <source>port %1 is not allowed for this program (a privileged port: see the handbook, SCPI server, VXI-11)</source>
         <translation>el puerto %1 no está permitido para este programa (un puerto privilegiado: véase el manual, Servidor SCPI, VXI-11)</translation>
     </message>
     <message>
-        <location filename="../../src/service/vxi11server.cpp" line="129"/>
+        <location filename="../../src/service/vxi11server.cpp" line="130"/>
+        <location filename="../../src/service/vxi11server.cpp" line="158"/>
         <source>UDP port %1: %2</source>
         <translation>puerto UDP %1: %2</translation>
     </message>
     <message>
-        <location filename="../../src/service/vxi11server.cpp" line="144"/>
+        <location filename="../../src/service/vxi11server.cpp" line="149"/>
         <source>UDP: %1</source>
         <translation>UDP: %1</translation>
     </message>
     <message>
-        <location filename="../../src/service/vxi11server.cpp" line="152"/>
+        <location filename="../../src/service/vxi11server.cpp" line="151"/>
+        <location filename="../../src/service/vxi11server.cpp" line="156"/>
         <source>TCP port %1: %2</source>
         <translation>Puerto TCP %1: %2</translation>
     </message>
     <message>
-        <location filename="../../src/service/vxi11server.cpp" line="180"/>
+        <location filename="../../src/service/vxi11server.cpp" line="206"/>
         <source>another program or QtDMM offers VXI-11 already (port %1); there can be only one per computer</source>
         <translation>otro programa o QtDMM ya ofrece VXI-11 (puerto %1); solo puede haber uno por ordenador</translation>
     </message>
     <message>
-        <location filename="../../src/service/vxi11server.cpp" line="193"/>
+        <location filename="../../src/service/vxi11server.cpp" line="219"/>
         <source>rpcbind refused the registration over TCP; it takes it over its Unix socket (/run/rpcbind.sock), which is missing</source>
         <translation>rpcbind rechazó el registro por TCP; lo acepta por su socket Unix (/run/rpcbind.sock), que falta</translation>
     </message>
     <message>
-        <location filename="../../src/service/vxi11server.cpp" line="195"/>
+        <location filename="../../src/service/vxi11server.cpp" line="221"/>
         <source>rpcbind refused the registration</source>
         <translation>rpcbind rechazó el registro</translation>
     </message>

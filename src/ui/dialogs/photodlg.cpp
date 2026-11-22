@@ -4,6 +4,7 @@
 
 #include "core/photostore.h"
 #include "service/photoserver.h"
+#include "ui/dialogs/photocamera.h"
 #include "ui/qrcodeimage.h"
 
 #include <QComboBox>
@@ -20,6 +21,7 @@
 #include <QHBoxLayout>
 #include <QScreen>
 #include <QStandardPaths>
+#include <QStyle>
 #include <QTabWidget>
 #include <QVBoxLayout>
 
@@ -126,7 +128,9 @@ PhotoDlg::PhotoDlg(const QString &project, QWidget *parent) : QDialog(parent), m
   m_url = new QLabel(phone);
   m_url->setObjectName("ui_photoUrl");
   m_url->setTextInteractionFlags(Qt::TextSelectableByMouse);
-  m_url->setWordWrap(true);
+  // in one line, to type it in: a link wrapped at its first break would
+  // leave "http://" alone
+  m_url->setWordWrap(false);
   phoneText->addWidget(m_url);
   m_phoneState = new QLabel(phone);
   m_phoneState->setObjectName("ui_photoState");
@@ -141,6 +145,14 @@ PhotoDlg::PhotoDlg(const QString &project, QWidget *parent) : QDialog(parent), m
   phoneText->addStretch();
   phoneLayout->addLayout(phoneText, 1);
   m_sources->addTab(phone, QIcon::fromTheme("smartphone"), tr("&Phone"));
+  m_phoneTab = phone;
+  // a camera of the computer, with Qt Multimedia
+  if (PhotoCamera::supported())
+  {
+    m_camera = new PhotoCamera(m_sources);
+    m_sources->addTab(m_camera, QIcon::fromTheme("camera-web"), tr("&Webcam"));
+    connect(m_camera, &PhotoCamera::photoTaken, this, [this](const QByteArray &jpeg) { addData(jpeg); });
+  }
   auto *fromFile = new QWidget(m_sources);
   auto *fileLayout = new QVBoxLayout(fromFile);
   auto *fileHint = new QLabel(tr("Add a picture from a file, or drop pictures onto this dialog."), fromFile);
@@ -160,6 +172,7 @@ PhotoDlg::PhotoDlg(const QString &project, QWidget *parent) : QDialog(parent), m
     m_address->addItem(QString("%1 (%2)").arg(a.address, a.card), a.address);
   connect(m_address, &QComboBox::currentIndexChanged, this, &PhotoDlg::updatePhone);
   connect(m_sources, &QTabWidget::currentChanged, this, &PhotoDlg::updatePhone);
+  connect(m_sources, &QTabWidget::currentChanged, this, &PhotoDlg::updateCamera);
   connect(m_server, &PhotoServer::visited, this, [this] { m_phoneState->setText(tr("The phone is connected.")); });
   connect(m_server, &PhotoServer::received, this, [this](const QByteArray &data) { addData(data); });
 
@@ -176,8 +189,14 @@ PhotoDlg::PhotoDlg(const QString &project, QWidget *parent) : QDialog(parent), m
   m_strip->setFlow(QListView::LeftToRight);
   m_strip->setWrapping(false);
   m_strip->setIconSize(QSize(96, 72));
-  m_strip->setFixedHeight(110);
   m_strip->setMovement(QListView::Static);
+  m_strip->setSpacing(4);
+  // pictures without a line of text: the choice is a frame around the
+  // picture, not a bar below it, and the picture keeps its colours
+  m_strip->setStyleSheet("QListWidget::item { border: 2px solid transparent; padding: 1px; }"
+                         "QListWidget::item:selected { background: transparent; border-color: palette(highlight); }");
+  m_strip->setFixedHeight(72 + 2 * (2 + 1 + 4) + m_strip->style()->pixelMetric(QStyle::PM_ScrollBarExtent)
+                          + 2 * m_strip->frameWidth() + 4);
   m_strip->hide();
   layout->addWidget(m_strip);
   connect(m_strip, &QListWidget::currentItemChanged, this, [this](const QListWidgetItem *item)
@@ -224,7 +243,7 @@ bool PhotoDlg::taken(const QString &path, const QDateTime &when, const QString &
 
 void PhotoDlg::updatePhone()
 {
-  const bool on = isVisible() && m_sources->currentIndex() == 0 && m_address->count() > 0;
+  const bool on = isVisible() && m_sources->currentWidget() == m_phoneTab && m_address->count() > 0;
   if (!on)
   {
     m_server->stop();
@@ -247,16 +266,24 @@ void PhotoDlg::updatePhone()
   m_phoneState->setText(tr("Waiting for the phone..."));
 }
 
+void PhotoDlg::updateCamera()
+{
+  if (m_camera)
+    m_camera->setActive(isVisible() && m_sources->currentWidget() == m_camera);
+}
+
 void PhotoDlg::showEvent(QShowEvent *event)
 {
   QDialog::showEvent(event);
   updatePhone();
+  updateCamera();
 }
 
 void PhotoDlg::hideEvent(QHideEvent *event)
 {
   QDialog::hideEvent(event);
   updatePhone();   // not visible any more: the server stops
+  updateCamera();  // and the camera
 }
 
 void PhotoDlg::chooseFiles()
@@ -275,9 +302,11 @@ void PhotoDlg::present(const QString &path, const QImage &image)
 {
   m_preview->setEnabled(true);
   m_preview->setText(QString());
-  auto *item = new QListWidgetItem(QIcon(QPixmap::fromImage(image.scaled(m_strip->iconSize(), Qt::KeepAspectRatio,
-                                                                         Qt::SmoothTransformation))),
-                                   QString());
+  const QPixmap thumb = QPixmap::fromImage(image.scaled(m_strip->iconSize(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+  QIcon icon(thumb);
+  icon.addPixmap(thumb, QIcon::Selected);   // not tinted when chosen
+  auto *item = new QListWidgetItem(icon, QString());
+  item->setSizeHint(m_strip->iconSize() + QSize(6, 6));
   item->setData(Qt::UserRole, path);
   item->setToolTip(QFileInfo(path).fileName());
   m_strip->insertItem(0, item);

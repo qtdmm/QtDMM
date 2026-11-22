@@ -97,6 +97,11 @@ picture of how the meter was connected, kept with the measurement.
   phone's camera; each photo is sent to QtDMM at once, and the page stays
   open for the next one. **Choose from the gallery** sends photos taken
   before. No app is needed.
+- **Webcam**: a camera of the computer. Choose it under **Device**; its
+  live picture shows in the tab, **Take photo** takes one. The camera is
+  on only while this tab shows. macOS asks once whether QtDMM may use the
+  camera (*System Settings → Privacy & Security → Camera* changes it
+  later). Not there in builds without Qt Multimedia.
 - **From file**: **Add file...** takes a picture in, or drop pictures onto
   the dialog.
 - The dialog shows the newest photo and keeps the others of this time in a
