@@ -277,7 +277,9 @@ int main(int argc, char **argv)
   check(!UpdateCheck::replaceBundle(bundles.filePath(".missing"), bundle).isEmpty()
           && readFile(bundle + "/Contents/MacOS/qtdmm") == "new",
         "a failed swap: the bundle as it was");
-  check(UpdateCheck::bundlePath().isEmpty(), "the test is no bundle");
+  // on macOS the test itself is built as a bundle, elsewhere there is none
+  const QString ownBundle = UpdateCheck::bundlePath();
+  check(ownBundle.isEmpty() || ownBundle.endsWith("/test_update.app"), "the bundle of the program: " + ownBundle);
   // the banner: downloaded and checked, a disk image that cannot be put in
   // place (no bundle here, not mountable) opens in the Finder instead
   bar.setInstallKind(UpdateCheck::Install::MacBundle);
