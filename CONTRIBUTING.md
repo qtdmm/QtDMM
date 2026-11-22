@@ -111,6 +111,11 @@ QtDMM is developed with the help of AI assistants, and contributions made
 with them are welcome. Please say so in the pull request, and check and
 test the result as you would your own code: you are its author.
 
+Pull requests made by bots without a person behind them (bounty hunters,
+automated "fix" generators) are closed without review. An issue labelled
+*help wanted* asks for someone to try, measure or report something; a pull
+request that only rewords the issue and "closes" it does not help.
+
 ## License
 
 QtDMM is licensed under the GNU General Public License, version 3 or later
