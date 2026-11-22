@@ -905,9 +905,9 @@ int main(int argc, char **argv)
             length = (length + 1) % FIFO_LENGTH;
         }
       }
-      // 12 ticks each: one CONF? (two before the switch: the first poll and
-      // the tenth), the rest values; the tick of the switch shows nothing
-      if (volts != 10 || ohms < 9 || wrong != 0)
+      // 12 ticks each: one CONF? (the first poll, the next only on the
+      // 50th), the rest values; the tick of the switch shows nothing
+      if (volts != 11 || ohms < 9 || wrong != 0)
       {
         qWarning() << "KeysightU12xx: polling loop gave" << volts << "V," << ohms << "Ohm," << wrong << "wrong";
         ++problems;

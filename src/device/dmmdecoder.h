@@ -167,7 +167,8 @@ public:
   virtual QByteArray pollRequest() const { return QByteArray(); }
   /// How often pollRequest() is sent, in ms. Below a second the next request
   /// goes out at this pace once the meter has answered (OpenOSC: 3 readings
-  /// a second); a lost answer is asked again after a second.
+  /// a second); a request without a frame for an answer, or a lost one, is
+  /// asked again after two such ticks.
   virtual int                        pollInterval() const { return 1000; }
   /// Bytes that press the meter's key @p key once (ControlBar's names,
   /// keyNames()); empty when the meter has no such key, cannot be

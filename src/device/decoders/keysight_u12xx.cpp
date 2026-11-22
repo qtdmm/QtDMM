@@ -36,10 +36,10 @@ static const bool registered = []() {
 QByteArray DecoderKeysightU12xx::pollRequest() const
 {
   // the function now and then even without a switch message, in case one
-  // got lost; the terminator as libsigrok sends it. Its answer is no frame
+  // got lost (every 10 s at 5 Hz); the terminator as libsigrok sends it. Its answer is no frame
   // of its own (it comes with the next value), so asking once is enough.
   const int n = m_polls++;
-  if (m_needConf.exchange(false) || n % 10 == 0)
+  if (m_needConf.exchange(false) || n % 50 == 0)
     return QByteArrayLiteral("CONF?\n\r\n");
   return QByteArrayLiteral("FETC?\n\r\n");
 }

@@ -143,10 +143,15 @@ void FrameReader::timer()
 {
   if (!m_readValue)
     return;
-  sendReadRequest();
   // a meter polled faster than once a second is asked again as soon as it
-  // has answered (m_sendRequest); MeterConnection's second re-arms a lost one
-  if (pollInterval() >= 1000)
+  // has answered (m_sendRequest). A request without a frame for an answer
+  // (Keysight's CONF?) or a lost one: asked again after two ticks, not only
+  // on MeterConnection's second
+  const bool fast = pollInterval() < 1000;
+  if (fast && !m_sendRequest && ++m_waitTicks >= 2)
+    m_sendRequest = true;
+  sendReadRequest();
+  if (!fast)
     m_readValue = false;
 }
 
@@ -223,4 +228,5 @@ void FrameReader::sendReadRequest()
     return;
   m_port->write(request);
   m_sendRequest = false;
+  m_waitTicks = 0;
 }

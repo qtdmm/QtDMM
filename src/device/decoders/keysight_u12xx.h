@@ -25,7 +25,10 @@
 /// A frame is the line with the value (getPacketLength() 0, as Fluke45):
 /// the `CONF?` answer before it stays in the reader's buffer, so decode()
 /// gets both and reads them in order. pollRequest() asks `CONF?` first,
-/// once after a switch and every tenth time, otherwise `FETC?`.
+/// once after a switch and every 50th time, otherwise `FETC?`. Polled every
+/// 200 ms (pollInterval()): the meters measure 5 times a second (the U128x
+/// up to 40 in its high-speed mode, not used); after `CONF?`, which has no
+/// frame of its own, FrameReader asks `FETC?` two ticks later.
 ///
 /// Not read: STAT? (hold, min/max, the U123x temperature and continuity
 /// modes, which `CONF?` reports as MV and RES), the second display and
@@ -40,6 +43,7 @@ public:
   QByteArray pollRequest() const override;
   bool checkFormat(const char *data, size_t idx) override;
   size_t getPacketLength() override { return 0; }
+  int pollInterval() const override { return 200; }
 
 private:
   /// What `CONF?` said; empty unit: not known (yet), no value is shown.

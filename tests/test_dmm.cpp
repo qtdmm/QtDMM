@@ -11,6 +11,7 @@
 #include <QtCore>
 #include <QtNetwork>
 
+#include "device/framereader.h"
 #include "device/meterconnection.h"
 #include "testutil.h"
 
@@ -300,6 +301,74 @@ int main(int argc, char **argv)
     check(waitFor([&] { return polls >= 9; }, 2500), QString("openosc polled faster than once a second: %1 polls").arg(polls));
     check(readings >= 2 && readings < polls, QString("openosc: each seq once, %1 readings of %2 polls").arg(readings).arg(polls));
     check(!states.join('|').contains("Error"), "openosc: the reading before again is no error: " + states.join('|'));
+    meter.close();
+  }
+
+  // --- 8c. FrameReader polling faster than once a second: a request whose
+  //          answer is no frame (Keysight's CONF?) is followed by the next
+  //          two ticks later, not only on MeterConnection's next second ---
+  {
+    FrameReader reader(nullptr);
+    QBuffer port;
+    port.open(QIODevice::ReadWrite);
+    reader.setHandle(&port);
+    reader.setDecoder(DmmDecoder::getInstance(FrameFormat::KeysightU12xx));
+    reader.startRead();
+    auto tick = [&] { QMetaObject::invokeMethod(&reader, "timer"); };
+    auto sent = [&] { return QString::fromLatin1(port.data()).simplified(); };
+    tick();
+    check(sent() == "CONF?", "fast poll: CONF? first, sent " + sent());
+    tick();
+    check(sent() == "CONF?", "fast poll: one tick later nothing yet, sent " + sent());
+    tick();
+    check(sent() == "CONF? FETC?", "fast poll: FETC? two ticks after CONF? without a frame, sent " + sent());
+  }
+
+  // --- 8d. Keysight U12xx: polled every 200 ms; CONF? has no frame of its
+  //          own, FETC? follows two ticks later, not only on the next second ---
+  {
+    QTcpServer bench;
+    check(bench.listen(QHostAddress::LocalHost, 0), "keysight server listens");
+    QTcpSocket *client = nullptr;
+    QByteArray received;
+    int confs = 0, fetches = 0;
+    QObject::connect(&bench, &QTcpServer::newConnection, [&]
+    {
+      client = bench.nextPendingConnection();
+      QObject::connect(client, &QTcpSocket::readyRead, [&]
+      {
+        received += client->readAll();
+        for (int at; (at = received.indexOf("\n\r\n")) >= 0; received.remove(0, at + 3))
+        {
+          const QByteArray command = received.left(at);
+          if (command.endsWith("CONF?"))   // the first after RFC 2217 negotiation bytes
+          {
+            ++confs;
+            client->write("\"VOLT:DC +6.000000E+00,+1.000000E-04\"\r\n");
+          }
+          else if (command.endsWith("FETC?"))
+          {
+            ++fetches;
+            // a turn of the rotary switch after the third value: CONF? again
+            client->write(fetches == 4 ? "*3\r\n+1.20000000E+00\r\n" : "+1.20000000E+00\r\n");
+          }
+          client->flush();
+        }
+      });
+    });
+
+    MeterConnection meter(nullptr);
+    DmmDecoder::DMMInfo info;
+    info.baud = 9600;
+    info.bits = 8;
+    meter.setDmmInfo(info);
+    meter.setFormat(FrameFormat::KeysightU12xx);
+    meter.setDevice(QString("RFC2217 127.0.0.1:%1").arg(bench.serverPort()));
+    int readings = 0;
+    QObject::connect(&meter, &MeterConnection::value, [&] { ++readings; });
+    check(meter.open(), "keysight open()");
+    check(waitFor([&] { return readings >= 10; }, 4000), QString("keysight: 10 readings at 5 Hz, got %1").arg(readings));
+    check(confs >= 2, QString("keysight: CONF? at the start and after the switch: %1").arg(confs));
     meter.close();
   }
 
