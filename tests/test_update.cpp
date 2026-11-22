@@ -207,6 +207,8 @@ int main(int argc, char **argv)
         "a wrong SHA256: failed, nothing left: " + bar.findChild<QLabel *>()->text());
   check(UpdateCheck::installerArguments().contains("/QTDMMRESTART=1"), "the installer starts QtDMM again");
 
+  QString restart;
+  QObject::connect(&bar, &UpdateBar::restartReady, [&](const QString &path) { restart = path; });
 #ifndef Q_OS_WIN
   // the AppImage: downloaded, checked and put in place of $APPIMAGE at once,
   // executable as before, nothing left beside it; Restart now hands it on.
@@ -220,8 +222,6 @@ int main(int argc, char **argv)
   old.setPermissions(QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner | QFile::ReadGroup | QFile::ExeGroup);
   qputenv("APPIMAGE", appImage.toUtf8());
   bar.setInstallKind(UpdateCheck::Install::AppImage);
-  QString restart;
-  QObject::connect(&bar, &UpdateBar::restartReady, [&](const QString &path) { restart = path; });
   bar.checkNow();
   check(waitFor([&] { return buttons(bar).contains("Install"); }), "the AppImage: Install");
   click(bar, "Install");
