@@ -81,7 +81,8 @@ int main(int argc, char **argv)
 
   // the page, with the token only
   Reply r = request(port, "GET /" + token + "/ HTTP/1.1\r\nHost: x\r\n");
-  check(r.status == 200 && r.body.contains("capture=\"environment\"") && !r.body.contains("{{") && visited.size() == 1,
+  check(r.status == 200 && r.body.contains("capture=\"environment\"") && !r.body.contains("{{") && visited.size() == 1
+          && r.body.contains("<html lang=\"en\">"),
         QString("GET with the token: the page, words filled in (%1)").arg(r.status));
   r = request(port, "GET / HTTP/1.1\r\nHost: x\r\n");
   check(r.status == 403 && visited.size() == 1, QString("without the token: 403 (%1)").arg(r.status));

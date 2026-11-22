@@ -49,8 +49,8 @@ public:
   /// bridges, VPN and container networks last. Each with the card's name.
   struct Address
   {
-    QHostAddress address;
-    QString      card;   ///< the network card's name ("wlan0", "Ethernet")
+    QString address;   ///< IPv4, as text ("192.168.1.20"); QString moves without throwing
+    QString card;      ///< the network card's name ("wlan0", "Ethernet")
   };
   static QList<Address> addresses();
   /// The order of addresses(): lower first. A private address on a card

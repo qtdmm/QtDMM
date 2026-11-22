@@ -129,11 +129,11 @@ QList<PhotoServer::Address> PhotoServer::addresses()
     {
       const QHostAddress a = entry.ip();
       if (a.protocol() == QAbstractSocket::IPv4Protocol && !a.isLoopback() && !a.isLinkLocal())
-        list << Address{ a, card.humanReadableName() };
+        list << Address{ a.toString(), card.humanReadableName() };
     }
   }
   std::stable_sort(list.begin(), list.end(), [](const Address &x, const Address &y)
-                   { return rank(x.address, x.card) < rank(y.address, y.card); });
+                   { return rank(QHostAddress(x.address), x.card) < rank(QHostAddress(y.address), y.card); });
   return list;
 }
 
@@ -145,6 +145,9 @@ QByteArray PhotoServer::page()
   QByteArray html = file.readAll();
   // the words, as the program speaks; HTML-escaped
   const QList<std::pair<const char *, QString>> words = {
+    // the language the words come in: the one of the translation loaded,
+    // English without one (the system's language may have none)
+    { "{{LANG}}", tr("en", "the language code (BCP 47) of this translation, for the phone's page") },
     { "{{TITLE}}", tr("Photo for QtDMM") },
     { "{{TAKE}}", tr("Take a photo") },
     { "{{GALLERY}}", tr("Choose from the gallery") },

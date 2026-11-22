@@ -7130,57 +7130,63 @@ DMM connected and switched on?</source>
 <context>
     <name>PhotoServer</name>
     <message>
-        <location filename="../../src/service/photoserver.cpp" line="148"/>
+        <location filename="../../src/service/photoserver.cpp" line="150"/>
+        <source>en</source>
+        <comment>the language code (BCP 47) of this translation, for the phone&apos;s page</comment>
+        <translation>es</translation>
+    </message>
+    <message>
+        <location filename="../../src/service/photoserver.cpp" line="151"/>
         <source>Photo for QtDMM</source>
         <translation>Foto para QtDMM</translation>
     </message>
     <message>
-        <location filename="../../src/service/photoserver.cpp" line="149"/>
+        <location filename="../../src/service/photoserver.cpp" line="152"/>
         <source>Take a photo</source>
         <translation>Tomar una foto</translation>
     </message>
     <message>
-        <location filename="../../src/service/photoserver.cpp" line="150"/>
+        <location filename="../../src/service/photoserver.cpp" line="153"/>
         <source>Choose from the gallery</source>
         <translation>Elegir de la galería</translation>
     </message>
     <message>
-        <location filename="../../src/service/photoserver.cpp" line="151"/>
+        <location filename="../../src/service/photoserver.cpp" line="154"/>
         <source>Each photo goes straight into the open project in QtDMM, with a note in the graph. Keep this page open for more.</source>
         <translation>Cada foto va directamente al proyecto abierto en QtDMM, con una nota en el gráfico. Deje esta página abierta para enviar más.</translation>
     </message>
     <message>
-        <location filename="../../src/service/photoserver.cpp" line="153"/>
+        <location filename="../../src/service/photoserver.cpp" line="156"/>
         <source>Sending...</source>
         <translation>Enviando…</translation>
     </message>
     <message>
-        <location filename="../../src/service/photoserver.cpp" line="154"/>
+        <location filename="../../src/service/photoserver.cpp" line="157"/>
         <source>Sent</source>
         <translation>Enviada</translation>
     </message>
     <message>
-        <location filename="../../src/service/photoserver.cpp" line="155"/>
+        <location filename="../../src/service/photoserver.cpp" line="158"/>
         <source>Not sent</source>
         <translation>No enviada</translation>
     </message>
     <message>
-        <location filename="../../src/service/photoserver.cpp" line="156"/>
+        <location filename="../../src/service/photoserver.cpp" line="159"/>
         <source>QtDMM no longer takes photos: the dialog was closed. Open it again and scan the new code.</source>
         <translation>QtDMM ya no acepta fotos: se cerró el diálogo. Ábralo de nuevo y escanee el código nuevo.</translation>
     </message>
     <message>
-        <location filename="../../src/service/photoserver.cpp" line="241"/>
+        <location filename="../../src/service/photoserver.cpp" line="244"/>
         <source>This link no longer works. Scan the code in QtDMM again.</source>
         <translation>Este enlace ya no funciona. Vuelva a escanear el código en QtDMM.</translation>
     </message>
     <message>
-        <location filename="../../src/service/photoserver.cpp" line="246"/>
+        <location filename="../../src/service/photoserver.cpp" line="249"/>
         <source>The photo is larger than %1 MB.</source>
         <translation>La foto supera los %1 MB.</translation>
     </message>
     <message>
-        <location filename="../../src/service/photoserver.cpp" line="273"/>
+        <location filename="../../src/service/photoserver.cpp" line="276"/>
         <source>QtDMM cannot read this picture (try JPEG).</source>
         <translation>QtDMM no puede leer esta imagen (pruebe con JPEG).</translation>
     </message>

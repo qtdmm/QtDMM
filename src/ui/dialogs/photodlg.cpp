@@ -157,7 +157,7 @@ PhotoDlg::PhotoDlg(const QString &project, QWidget *parent) : QDialog(parent), m
   // the server for the phone: only while its tab shows
   m_server = new PhotoServer(this);
   for (const PhotoServer::Address &a : PhotoServer::addresses())
-    m_address->addItem(QString("%1 (%2)").arg(a.address.toString(), a.card), a.address.toString());
+    m_address->addItem(QString("%1 (%2)").arg(a.address, a.card), a.address);
   connect(m_address, &QComboBox::currentIndexChanged, this, &PhotoDlg::updatePhone);
   connect(m_sources, &QTabWidget::currentChanged, this, &PhotoDlg::updatePhone);
   connect(m_server, &PhotoServer::visited, this, [this] { m_phoneState->setText(tr("The phone is connected.")); });
