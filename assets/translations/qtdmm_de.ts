@@ -7042,34 +7042,153 @@ Ist das DMM angeschlossen und eingeschaltet?</translation>
 <context>
     <name>PhotoDlg</name>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="91"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="94"/>
         <source>Photo of the setup</source>
         <translation>Foto vom Messaufbau</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="94"/>
-        <source>The photos go into the project&apos;s folder &quot;photos&quot;, each with a note in the graph. Add a picture from a file or drop it here.</source>
-        <translation>Die Fotos kommen in den Ordner „Fotos“ des Projekts, jedes mit einer Notiz im Graphen. Ein Bild aus einer Datei hinzufügen oder hierher ziehen.</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="102"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="169"/>
         <source>No photo yet</source>
         <translation>Noch kein Foto</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="122"/>
-        <source>Add &amp;file...</source>
-        <translation>&amp;Datei hinzufügen…</translation>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="97"/>
+        <source>The photos go into the project&apos;s folder &quot;photos&quot;, each with a note in the graph.</source>
+        <translation>Die Fotos kommen in den Ordner „Fotos“ des Projekts, jedes mit einer Notiz im Graphen.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="156"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="112"/>
+        <source>Scan the code with the phone&apos;s camera and open the link. Its page takes photos and sends each one here at once.</source>
+        <translation>Den Code mit der Kamera des Handys scannen und den Link öffnen. Die Seite nimmt Fotos auf und schickt jedes sofort hierher.</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="118"/>
+        <source>&amp;Network:</source>
+        <translation>&amp;Netzwerk:</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="121"/>
+        <source>The address of this computer the phone opens: one in the network the phone is in</source>
+        <translation>Die Adresse dieses Computers, die das Handy öffnet: eine im Netzwerk, in dem das Handy ist</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="135"/>
+        <source>Phone and computer must be in the same network; a guest WLAN often keeps them apart. A firewall may ask whether QtDMM may accept connections.</source>
+        <translation>Handy und Computer müssen im selben Netzwerk sein; ein Gast-WLAN trennt sie oft. Eine Firewall fragt vielleicht, ob QtDMM Verbindungen annehmen darf.</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="143"/>
+        <source>&amp;Phone</source>
+        <translation>&amp;Handy</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="146"/>
+        <source>Add a picture from a file, or drop pictures onto this dialog.</source>
+        <translation>Ein Bild aus einer Datei hinzufügen oder Bilder auf diesen Dialog ziehen.</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="149"/>
+        <source>&amp;Add file...</source>
+        <translation>Datei hin&amp;zufügen…</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="154"/>
+        <source>From &amp;file</source>
+        <translation>Aus &amp;Datei</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="163"/>
+        <source>The phone is connected.</source>
+        <translation>Das Handy ist verbunden.</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="233"/>
+        <source>No network found: connect the computer to the phone&apos;s network.</source>
+        <translation>Kein Netzwerk gefunden: den Computer mit dem Netzwerk des Handys verbinden.</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="241"/>
+        <source>Cannot wait for the phone: %1</source>
+        <translation>Kann nicht auf das Handy warten: %1</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="247"/>
+        <source>Waiting for the phone...</source>
+        <translation>Warte auf das Handy …</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="267"/>
         <source>Add photos</source>
         <translation>Fotos hinzufügen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="157"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="269"/>
         <source>Pictures (%1)</source>
         <translation>Bilder (%1)</translation>
+    </message>
+</context>
+<context>
+    <name>PhotoServer</name>
+    <message>
+        <location filename="../../src/service/photoserver.cpp" line="150"/>
+        <source>en</source>
+        <comment>the language code (BCP 47) of this translation, for the phone&apos;s page</comment>
+        <translation>de</translation>
+    </message>
+    <message>
+        <location filename="../../src/service/photoserver.cpp" line="151"/>
+        <source>Photo for QtDMM</source>
+        <translation>Foto für QtDMM</translation>
+    </message>
+    <message>
+        <location filename="../../src/service/photoserver.cpp" line="152"/>
+        <source>Take a photo</source>
+        <translation>Foto aufnehmen</translation>
+    </message>
+    <message>
+        <location filename="../../src/service/photoserver.cpp" line="153"/>
+        <source>Choose from the gallery</source>
+        <translation>Aus der Galerie wählen</translation>
+    </message>
+    <message>
+        <location filename="../../src/service/photoserver.cpp" line="154"/>
+        <source>Each photo goes straight into the open project in QtDMM, with a note in the graph. Keep this page open for more.</source>
+        <translation>Jedes Foto kommt direkt ins offene Projekt in QtDMM, mit einer Notiz im Graphen. Die Seite für weitere Fotos offen lassen.</translation>
+    </message>
+    <message>
+        <location filename="../../src/service/photoserver.cpp" line="156"/>
+        <source>Sending...</source>
+        <translation>Wird gesendet …</translation>
+    </message>
+    <message>
+        <location filename="../../src/service/photoserver.cpp" line="157"/>
+        <source>Sent</source>
+        <translation>Gesendet</translation>
+    </message>
+    <message>
+        <location filename="../../src/service/photoserver.cpp" line="158"/>
+        <source>Not sent</source>
+        <translation>Nicht gesendet</translation>
+    </message>
+    <message>
+        <location filename="../../src/service/photoserver.cpp" line="159"/>
+        <source>QtDMM no longer takes photos: the dialog was closed. Open it again and scan the new code.</source>
+        <translation>QtDMM nimmt keine Fotos mehr an: der Dialog wurde geschlossen. Ihn wieder öffnen und den neuen Code scannen.</translation>
+    </message>
+    <message>
+        <location filename="../../src/service/photoserver.cpp" line="244"/>
+        <source>This link no longer works. Scan the code in QtDMM again.</source>
+        <translation>Dieser Link gilt nicht mehr. Den Code in QtDMM neu scannen.</translation>
+    </message>
+    <message>
+        <location filename="../../src/service/photoserver.cpp" line="249"/>
+        <source>The photo is larger than %1 MB.</source>
+        <translation>Das Foto ist größer als %1 MB.</translation>
+    </message>
+    <message>
+        <location filename="../../src/service/photoserver.cpp" line="276"/>
+        <source>QtDMM cannot read this picture (try JPEG).</source>
+        <translation>QtDMM kann dieses Bild nicht lesen (JPEG versuchen).</translation>
     </message>
 </context>
 <context>

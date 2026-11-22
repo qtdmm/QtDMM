@@ -1,0 +1,85 @@
+<!doctype html>
+<!-- Copyright (c) 2026 The QtDMM developers
+     SPDX-License-Identifier: GPL-3.0-or-later
+     The page a phone opens through the QR code of "Photo of the setup"
+     (PhotoServer). The words in double braces are replaced by those of QtDMM's language. -->
+<html lang="{{LANG}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}}</title>
+<style>
+  :root { --bg: #f4f5f7; --fg: #1c1e21; --muted: #5f6368; --accent: #1e90ff; --ok: #2e9b3a; --bad: #d03030; --card: #ffffff; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #17191c; --fg: #eff0f1; --muted: #a0a4a8; --card: #23262a; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 16px; background: var(--bg); color: var(--fg);
+         font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  h1 { font-size: 20px; margin: 4px 0 12px; }
+  .button { display: block; width: 100%; padding: 22px 16px; margin: 0 0 12px; border: 0; border-radius: 14px;
+            background: var(--accent); color: #fff; font-size: 20px; font-weight: 600; text-align: center; cursor: pointer; }
+  .button.second { background: var(--card); color: var(--fg); font-size: 16px; padding: 14px 16px; font-weight: 500; }
+  input[type=file] { display: none; }
+  p { color: var(--muted); margin: 4px 0 16px; }
+  ul { list-style: none; margin: 0; padding: 0; }
+  li { display: flex; align-items: center; gap: 12px; background: var(--card); border-radius: 10px; padding: 8px; margin: 0 0 8px; }
+  li img { width: 64px; height: 48px; object-fit: cover; border-radius: 6px; }
+  li .state { flex: 1; }
+  li.ok .state { color: var(--ok); }
+  li.bad .state { color: var(--bad); }
+  #gone { display: none; background: var(--bad); color: #fff; border-radius: 10px; padding: 12px; margin: 0 0 12px; }
+</style>
+</head>
+<body>
+<h1>{{TITLE}}</h1>
+<div id="gone">{{GONE}}</div>
+<label class="button" for="camera">{{TAKE}}</label>
+<input id="camera" type="file" accept="image/*" capture="environment">
+<label class="button second" for="gallery">{{GALLERY}}</label>
+<input id="gallery" type="file" accept="image/*" multiple>
+<p>{{HINT}}</p>
+<ul id="list"></ul>
+<span id="t-sending" hidden>{{SENDING}}</span><span id="t-sent" hidden>{{SENT}}</span><span id="t-failed" hidden>{{FAILED}}</span>
+<script>
+  // the words from the page itself: escaped as HTML, safe in any language
+  const word = (id) => document.getElementById(id).textContent;
+  const list = document.getElementById('list');
+  async function send(file) {
+    const row = document.createElement('li');
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(file);
+    const state = document.createElement('span');
+    state.className = 'state';
+    state.textContent = word('t-sending');
+    row.append(img, state);
+    list.prepend(row);
+    try {
+      const r = await fetch('upload', { method: 'POST', headers: { 'Content-Type': file.type || 'image/jpeg' }, body: file });
+      if (r.ok) {
+        row.className = 'ok';
+        state.textContent = word('t-sent');
+        return;
+      }
+      if (r.status === 403)
+        document.getElementById('gone').style.display = 'block';
+      row.className = 'bad';
+      state.textContent = word('t-failed') + ': ' + (await r.text());
+    } catch (e) {
+      // the server is gone with the dialog
+      document.getElementById('gone').style.display = 'block';
+      row.className = 'bad';
+      state.textContent = word('t-failed');
+    }
+  }
+  for (const id of ['camera', 'gallery']) {
+    const input = document.getElementById(id);
+    input.addEventListener('change', async () => {
+      for (const f of Array.from(input.files))
+        await send(f);
+      input.value = '';   // the same photo may be chosen again
+    });
+  }
+</script>
+</body>
+</html>

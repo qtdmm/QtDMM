@@ -163,6 +163,10 @@ if (BUILD_TESTING)
 	## the project basket: its folder, copies under free names
 	qtdmm_add_test(basket test_basket tests/test_basket.cpp)
 
+	## the phone's photos: HTTP server, token, QR code (the page is a resource)
+	qtdmm_add_test(photo_server test_photoserver tests/test_photoserver.cpp)
+	target_link_libraries(test_photoserver PRIVATE qtdmm_resources)
+
 	## the readings table model, without its widget
 	qtdmm_add_test(reading_log test_readinglog tests/test_readinglog.cpp)
 

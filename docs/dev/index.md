@@ -144,7 +144,8 @@ installer, both produced by CPack from the same install tree
 domain, the Victron decryption) and miniz (MIT, deflate and CRC for the
 XLSX/ODS export - the ZIP container itself is written by
 `SpreadsheetWriter`, since LibreOffice rejects miniz's data descriptors on
-the ODS mimetype entry) and QCustomPlot 2.1.1 in Wireshark's fork
+the ODS mimetype entry), qrcodegen (MIT, Project Nayuki, v1.8.0 unchanged:
+the QR code of "Photo of the setup", `ui/qrcodeimage.*`) and QCustomPlot 2.1.1 in Wireshark's fork
 (GPL-2.0-or-later, trimmed of old Qt code paths; the XY diagram, histogram
 and heatmap draw with it, on top of `QcpGraphCommon`, and the graph,
 `GraphWidget` (`ui/graphview.*`, `ui/graphmodel.*`,
