@@ -108,6 +108,8 @@ Bluetooth meter, the other open devices - is under `QTDMM:`.
 | `QTDMM:LIMit:VERDict?` | the PASS/FAIL test's verdict on the last reading of its value: `PASS`, `HI`, `LO`, `NONE` (off, not connected, no number) |
 | `QTDMM:LIMit:COUNt?` | the verdicts counted since the last reset: `<pass>,<high>,<low>` |
 | `QTDMM:MARK "title"[,"text"]` | a note at the newest reading: in the graph with its title on the flag and the text on a click, and a mark in the readings table (`SCPI` without title) |
+| `QTDMM:PHOTo:LAST?` | the newest photo of the setup in the open project (*Photo of the setup*, see [Project](project-basket.md#photos-of-the-setup)): its path and when it was taken, `"C:\Users\me\Documents\QtDMM\Ripple\photos\photo_2026-11-22_14-03-12.jpg","2026-11-22T14:03:12"`; `"",""` without one |
+| `QTDMM:PHOTo:DATA?` | that photo itself, the file as it is (JPEG, PNG ...), in an IEEE 488.2 block; error -230 without one |
 | `QTDMM:NODE:RESet` | sets an integral (or another calculated value with a state) to 0; error -241 for a device |
 | `QTDMM:KEY "hold"`, `QTDMM:KEY:CATalog?` | presses a key of the meter (UNI-T UT60BT, UT61B+/D+/E+, UT161, UT202BT, the iENV meters UT333BT, UT353BT, UT363BT, UT383BT, the ZOTEK and OWON Bluetooth meters), lists the keys it has: `"SELECT1","RANGE","AUTO","HOLD",...`; a meter without keys gives error -241, a key not sent (the meter not connected) -240 |
 | `QTDMM:CHANnel:CATalog?` | the channels of `READ? (@n)`: number, what it measures and unit - `1,"carbon_dioxide","ppm",2,"temperature","C"`; empty strings before a channel's first reading |

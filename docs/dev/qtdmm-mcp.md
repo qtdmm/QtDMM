@@ -69,6 +69,7 @@ QT_QPA_PLATFORM=offscreen qtdmm --config-dir /tmp/qtdmm-test --config-id mcp
 | `alarms` | `QTDMM:ALARm:LIST?` | each alarm with its state: `off`, `pending`, `raised`, `acknowledged` |
 | `limit_test` | `CALCulate:LIMit:…?`, `QTDMM:LIMit:VERDict?`, `QTDMM:LIMit:COUNt?` | the PASS/FAIL test: on or off, lower and upper limit in base units, the verdict (`pass`, `high`, `low`, `none`) and the count since the last reset |
 | `keys` | `QTDMM:KEY:CATalog?` | the meter's keys QtDMM can press, empty for most meters |
+| `last_photo` | `QTDMM:PHOTo:LAST?`, `QTDMM:PHOTo:DATA?` | the newest photo of the setup in the open project (*Photo of the setup*): when it was taken, its path and the picture, for a model that sees images; an error without one |
 
 ### Control
 

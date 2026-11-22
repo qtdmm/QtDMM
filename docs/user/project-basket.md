@@ -118,6 +118,11 @@ picture of how the meter was connected, kept with the measurement.
 The button is there only while a project is open. Closing the project
 closes the dialog.
 
+The newest photo is also there for programs: `QTDMM:PHOTo:LAST?` and
+`QTDMM:PHOTo:DATA?` of the [SCPI server](scpi-server.md), and the tool
+`last_photo` of qtdmm-mcp, through which an AI assistant can look at the
+setup.
+
 **The phone's connection.** Phone and computer must be in the same
 network. QtDMM waits for the phone only while the dialog shows the
 **Phone** tab, on one address of the computer: **Network** lists them,

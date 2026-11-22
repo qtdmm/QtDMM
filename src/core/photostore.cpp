@@ -10,6 +10,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QImageReader>
+#include <QRegularExpression>
 #include <QSaveFile>
 
 namespace
@@ -92,4 +93,30 @@ QImage PhotoStore::load(const QString &path)
   QImageReader reader(path);
   reader.setAutoTransform(true);
   return reader.read();
+}
+
+PhotoStore::Photo PhotoStore::newest(const QString &project)
+{
+  if (project.isEmpty())
+    return {};
+  // the names sort by time; a second photo of the same second ends in _2
+  // and comes after the first
+  static const QRegularExpression name(R"(^photo_(\d{4}-\d\d-\d\d_\d\d-\d\d-\d\d)(?:_(\d+))?\.\w+$)");
+  Photo best;
+  QString bestKey;
+  for (const QString &dir : { QDir(project).filePath(ProjectFolder::folderName(ProjectFolder::Photos)), project })
+  {
+    for (const QFileInfo &f : QDir(dir).entryInfoList({ "photo_*" }, QDir::Files))
+    {
+      const QRegularExpressionMatch m = name.match(f.fileName());
+      if (!m.hasMatch())
+        continue;
+      const QString key = m.captured(1) + QString("%1").arg(m.captured(2).toInt(), 6, 10, QChar('0'));
+      if (key <= bestKey)
+        continue;
+      bestKey = key;
+      best = { f.absoluteFilePath(), QDateTime::fromString(m.captured(1), "yyyy-MM-dd_HH-mm-ss") };
+    }
+  }
+  return best;
 }

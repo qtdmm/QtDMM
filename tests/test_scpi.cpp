@@ -13,6 +13,7 @@
 #include "service/mdnsbrowser.h"
 #include "service/mdnsresponder.h"
 #include "service/scpiserver.h"
+#include "core/projectfolder.h"
 #include "testutil.h"
 
 static QString ask(ScpiServer &s, const char *msg)
@@ -327,6 +328,35 @@ int main(int argc, char **argv)
     q.process("QTDMM:MARK \"Load on\",\"R1 changed, 10 k\"");
     q.process("QTDMM:MARK 'a,b'");
     check(marks == QStringList({ "Load on/R1 changed, 10 k", "a,b" }), "MARK with a text, a comma in quotes " + marks.join('|'));
+
+    // the newest photo of the open project: its path and time, the file in a block
+    {
+      QTemporaryDir project;
+      ProjectFolder::set({});
+      check(ask(q, "QTDMM:PHOTo:LAST?") == "\"\",\"\"", "PHOTo:LAST? without a project");
+      ProjectFolder::set(project.path());
+      check(ask(q, "QTDMM:PHOTo:LAST?") == "\"\",\"\"", "PHOTo:LAST? without a photo");
+      q.process("QTDMM:PHOTo:DATA?");
+      check(ask(q, "SYST:ERR?").startsWith("-230,"), "PHOTo:DATA? without a photo: -230");
+      QDir(project.path()).mkpath("photos");
+      auto put = [&](const QString &name, const QByteArray &data)
+      {
+        QFile f(QDir(project.path()).filePath(name));
+        check(f.open(QIODevice::WriteOnly) && f.write(data) == data.size(), "photo written " + name);
+      };
+      put("photos/photo_2026-11-22_14-03-12.jpg", "first");
+      put("photos/photo_2026-11-22_14-03-12_2.jpg", "second of that second");
+      put("photos/photo_2026-11-22_09-00-00.png", "older");
+      put("photos/notes.txt", "no photo");
+      put("photo_2026-11-21_08-00-00.jpg", "older, in the project itself");
+      const QString newest = QDir::toNativeSeparators(QDir(project.path()).filePath("photos/photo_2026-11-22_14-03-12_2.jpg"));
+      check(ask(q, "QTDMM:PHOTo:LAST?") == "\"" + newest + "\",\"2026-11-22T14:03:12\"",
+            "PHOTo:LAST? the newest by its name, _2 after the first " + ask(q, "QTDMM:PHOTo:LAST?"));
+      check(q.process("QTDMM:PHOTo:DATA?") == ScpiServer::block("second of that second") + '\n', "PHOTo:DATA? its file in a block");
+      q.process("QTDMM:PHOTo:LAST");
+      check(ask(q, "SYST:ERR?").startsWith("-100,"), "PHOTo:LAST without ? is no command");
+      ProjectFolder::set({});
+    }
 
     check(ask(q, "QTDMM:KEY:CATalog?") == "\"RANGE\",\"HOLD\"", "KEY:CATalog?");
     q.process("QTDMM:KEY \"HOLD\"");

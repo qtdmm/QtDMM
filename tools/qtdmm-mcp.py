@@ -243,6 +243,20 @@ def recording() -> dict:
 
 
 @mcp.tool()
+def last_photo() -> list:
+    """The newest photo of the setup in the open project (QTDMM:PHOTo:LAST?, QTDMM:PHOTo:DATA?):
+    when it was taken and where it lies, and the picture itself - to see how the meter is
+    connected. An error when the project has no photo (or no project is open)."""
+    with Scpi() as s:
+        path, taken = split_list(s.query("QTDMM:PHOTo:LAST?"))
+        if not path:
+            raise ToolError("no photo in the open project (or no project open)")
+        data = s.block("QTDMM:PHOTo:DATA?")
+    kind = path.rsplit(".", 1)[-1].lower()
+    return [f"photo taken {taken}: {path}", Image(data=data, format="jpeg" if kind == "jpg" else kind)]
+
+
+@mcp.tool()
 def recording_data(count: int = 100, channel: int = 1) -> dict:
     """The last count readings of the graph (QTDMM:RECord:DATA?, at most 10000), oldest first:
     seconds since the start and the value in SI base units, "overload" or "gap". Channel 1 is the

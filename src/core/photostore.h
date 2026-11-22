@@ -30,4 +30,15 @@ QString relative(const QString &project, const QString &photo);
 QString absolute(const QString &project, const QString &path);
 /// The picture, turned as the camera said (EXIF orientation); null when unreadable.
 QImage  load(const QString &path);
+
+/// A photo in a project: its full path and when it was taken.
+struct Photo
+{
+  QString   path;
+  QDateTime when;
+};
+/// The newest photo of @p project (in "photos", or in the project itself
+/// when files are not sorted by kind), by the time in its name; an empty
+/// path when there is none.
+Photo   newest(const QString &project);
 }
