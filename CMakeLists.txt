@@ -170,6 +170,12 @@ if (QTDMM_WITH_MULTIMEDIA)
 	endif()
 endif()
 
+## the Flatpak's update through its portal (core/flatpakupdate.h): D-Bus,
+## on Linux only; without it the banner points to the software centre
+if (UNIX AND NOT APPLE)
+	find_package(Qt6 COMPONENTS DBus)
+endif()
+
 if (NOT QTDMM_WITH_BLE)
 	list(FILTER SRC_FILES EXCLUDE REGEX "transports/ble(gatt)?\\.(h|cpp)$")
 endif()
@@ -331,6 +337,11 @@ if (QTDMM_WITH_BLE)
 endif()
 if (QTDMM_WITH_MULTIMEDIA)
 	target_compile_definitions(qtdmm_core PUBLIC QTDMM_WITH_MULTIMEDIA)
+endif()
+
+if (Qt6DBus_FOUND)
+	target_link_libraries(qtdmm_core PUBLIC Qt6::DBus)
+	target_compile_definitions(qtdmm_core PUBLIC QTDMM_WITH_DBUS)
 endif()
 
 ## the update check (core/updatecheck.h): off in packages whose updates the

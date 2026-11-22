@@ -8,6 +8,7 @@
 
 #include "core/updatecheck.h"
 
+class FlatpakUpdate;
 class UpdateDownload;
 
 class QHBoxLayout;
@@ -28,7 +29,9 @@ class Settings;
 /// now hands it to the window (installReady()), which closes and starts it.
 /// The AppImage replaces $APPIMAGE at once (UpdateCheck::replaceAppImage());
 /// Restart now asks the window to close and start it (restartReady()).
-/// Other kinds download in the browser.
+/// The Flatpak is updated by Flatpak's portal (FlatpakUpdate) from our
+/// repository; Restart now starts the new version (restartReady() with an
+/// empty path). Other kinds download in the browser.
 class UpdateBar : public QWidget
 {
   Q_OBJECT
@@ -44,13 +47,16 @@ public:
   bool beta() const;
   /// How this copy is installed (UpdateCheck::installKind(); tests set another).
   void setInstallKind(UpdateCheck::Install kind) { m_kind = kind; }
+  /// The Flatpak's update (tests set a stand-in); the bar owns it.
+  void setFlatpakUpdate(FlatpakUpdate *update);
 
 Q_SIGNALS:
   /// The installer @p path is downloaded and checked, and the user wants it
   /// now: close QtDMM and run it (UpdateCheck::runInstaller()).
   void installReady(const QString &path);
-  /// The AppImage @p path was replaced by the new version and the user wants
-  /// it now: close QtDMM and start it (UpdateCheck::restartAppImage()).
+  /// The AppImage @p path was replaced by the new version, or the Flatpak
+  /// updated (@p path empty), and the user wants it now: close QtDMM and
+  /// start it (UpdateCheck::restartAppImage(), FlatpakUpdate::restart()).
   void restartReady(const QString &path);
 
 private:
@@ -66,12 +72,15 @@ private:
   void offer(const UpdateRelease &release);
   /// Downloads the installer of @p release, the banner shows how far.
   void download(const UpdateRelease &release, const UpdateFile &file);
+  /// The Flatpak through its portal, the banner shows how far.
+  void updateFlatpak(const UpdateRelease &release);
   /// The download @p path is checked: install or offer it.
   void downloaded(const UpdateRelease &release, const UpdateFile &file, const QString &path);
 
   Settings *m_settings;
   UpdateCheck *m_check;
   UpdateDownload *m_download;
+  FlatpakUpdate *m_flatpak;
   UpdateCheck::Install m_kind;
   QLabel *m_text;
   QHBoxLayout *m_buttons;

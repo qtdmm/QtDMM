@@ -7,6 +7,7 @@
 // and checked against its SHA256.
 #include "core/settings.h"
 #include "core/updatecheck.h"
+#include "core/flatpakupdate.h"
 #include "core/updatedownload.h"
 #include "ui/updatebar.h"
 
@@ -25,6 +26,22 @@
 
 namespace
 {
+/// The portal's part of a Flatpak update, played: some progress, then done
+/// or nothing to pull.
+class FakeFlatpak : public FlatpakUpdate
+{
+public:
+  bool newer = true;
+  void update() override
+  {
+    Q_EMIT progress(40);
+    if (newer)
+      Q_EMIT done();
+    else
+      Q_EMIT upToDate();
+  }
+};
+
 void click(const UpdateBar &bar, const QString &text)
 {
   for (QPushButton *b : bar.findChildren<QPushButton *>())
@@ -226,6 +243,28 @@ int main(int argc, char **argv)
         "read-only folder: " + bar.findChild<QLabel *>()->text());
   QFile::setPermissions(apps.path(), QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner);
   qunsetenv("APPIMAGE");
+
+  // the Flatpak: Install has the portal pull it, Restart now with no path
+  // (FlatpakUpdate::restart() starts the latest version)
+  if (FlatpakUpdate::supported())
+  {
+    auto *flatpak = new FakeFlatpak;
+    bar.setFlatpakUpdate(flatpak);
+    bar.setInstallKind(UpdateCheck::Install::Flatpak);
+    restart = "-";
+    bar.checkNow();
+    check(waitFor([&] { return buttons(bar).contains("Install"); }), "the Flatpak: Install");
+    click(bar, "Install");
+    check(buttons(bar).contains("Restart now"), "updated: " + bar.findChild<QLabel *>()->text());
+    click(bar, "Restart now");
+    check(restart.isEmpty(), "Restart now: no path, the Flatpak's latest version");
+    flatpak->newer = false;
+    bar.checkNow();
+    waitFor([&] { return buttons(bar).contains("Install"); });
+    click(bar, "Install");
+    check(bar.findChild<QLabel *>()->text().contains("not in the Flatpak repository yet"),
+          "nothing to pull: " + bar.findChild<QLabel *>()->text());
+  }
 
   if (failed == 0)
     qInfo() << "All update tests passed.";

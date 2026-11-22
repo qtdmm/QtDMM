@@ -10,11 +10,13 @@
 #include <QPushButton>
 #include <QToolButton>
 
+#include "core/flatpakupdate.h"
 #include "core/settings.h"
 #include "core/updatedownload.h"
 
 UpdateBar::UpdateBar(Settings *settings, QWidget *parent)
   : QWidget(parent), m_settings(settings), m_check(new UpdateCheck(this)), m_download(new UpdateDownload(this)),
+    m_flatpak(new FlatpakUpdate(this)),
     m_kind(UpdateCheck::installKind())
 {
   setAutoFillBackground(true);
@@ -103,7 +105,9 @@ void UpdateBar::offer(const UpdateRelease &release)
   QString text = tr("QtDMM %1 is out (this is %2).").arg(release.version, QCoreApplication::applicationVersion());
   QList<Button> buttons;
   const UpdateFile file = release.files.value(UpdateCheck::fileKind(kind));
-  if (kind == UpdateCheck::Install::Flatpak)
+  if (kind == UpdateCheck::Install::Flatpak && FlatpakUpdate::supported())
+    buttons.append({ tr("Install"), [this, release] { updateFlatpak(release); } });
+  else if (kind == UpdateCheck::Install::Flatpak)
     text += ' ' + tr("Your software centre or \"flatpak update\" installs it.");
   else if ((kind == UpdateCheck::Install::WindowsInstaller || kind == UpdateCheck::Install::AppImage)
            && !file.url.isEmpty())
@@ -137,6 +141,36 @@ void UpdateBar::download(const UpdateRelease &release, const UpdateFile &file)
   showMessage(tr("Downloading QtDMM %1 ... %2 %").arg(version).arg(0),
               { { tr("Cancel"), [this] { m_download->cancel(); hide(); } } });
   m_download->start(file);
+}
+
+void UpdateBar::setFlatpakUpdate(FlatpakUpdate *update)
+{
+  delete m_flatpak;
+  m_flatpak = update;
+  m_flatpak->setParent(this);
+}
+
+void UpdateBar::updateFlatpak(const UpdateRelease &release)
+{
+  const QString version = release.version;
+  disconnect(m_flatpak, nullptr, this, nullptr);
+  connect(m_flatpak, &FlatpakUpdate::progress, this, [this, version](int percent) {
+    m_text->setText(tr("Updating QtDMM %1 ... %2 %").arg(version).arg(percent));
+  });
+  connect(m_flatpak, &FlatpakUpdate::done, this, [this, version] {
+    showMessage(tr("QtDMM %1 is installed; it starts with the next start of QtDMM.").arg(version),
+                { { tr("Restart now"), [this] { hide(); Q_EMIT restartReady(QString()); } },
+                  { tr("Later"), [this] { hide(); } } });
+  });
+  connect(m_flatpak, &FlatpakUpdate::upToDate, this, [this, version] {
+    showMessage(tr("QtDMM %1 is not in the Flatpak repository yet; try again later.").arg(version), {});
+  });
+  connect(m_flatpak, &FlatpakUpdate::failed, this, [this, release](const QString &error) {
+    showMessage(tr("The update failed: %1. Your software centre or \"flatpak update\" can install it.").arg(error),
+                { { tr("Try again"), [this, release] { updateFlatpak(release); } } });
+  });
+  showMessage(tr("Updating QtDMM %1 ... %2 %").arg(version).arg(0), {});
+  m_flatpak->update();
 }
 
 void UpdateBar::downloaded(const UpdateRelease &release, const UpdateFile &file, const QString &path)
@@ -177,6 +211,7 @@ void UpdateBar::showMessage(const QString &text, const QList<Button> &buttons)
     auto *button = new QPushButton(b.text, this);
     connect(button, &QPushButton::clicked, this, b.action);
     m_buttons->addWidget(button);
+    button->show();   // at once, also in a banner already shown
   }
   m_text->setText(text);
   show();
