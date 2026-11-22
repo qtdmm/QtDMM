@@ -454,6 +454,21 @@ int main(int argc, char **argv)
     check(t.layout().verdict.isEmpty() && t.verdict() == LimitTest::NoVerdict, "limit test off: no column, no verdict");
   }
 
+  // --- 1j. HOLD: the LCD shows what the meter sends; an auto-hold (OpenOSC,
+  //         issue #603) takes the next stable value while HOLD stays on ---
+  {
+    LcdWidget lcd;
+    Reading r;
+    r.id = 0;
+    r.unit = "V";
+    r.text = "5.001";
+    r.hold = true;
+    lcd.showReading(r);
+    r.text = "8.178";
+    lcd.showReading(r);
+    check(lcd.lineValue(0) == "8.178", "HOLD: a new held value is shown, got " + lcd.lineValue(0));
+  }
+
   if (failed == 0)
     qInfo() << "All digital display tests passed.";
   else
