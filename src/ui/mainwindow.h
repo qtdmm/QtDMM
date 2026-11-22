@@ -321,6 +321,7 @@ protected:
   HeatmapPlot *m_heatmap = nullptr;
   QHash<HeatmapPlot *, HeatmapView *> m_heatmapViews;
   AlarmBar   *m_alarmBar;
+  class UpdateBar *m_updateBar;
   class AlarmService *m_alarmService;
   QMdiArea   *m_mdi;
   MdiArranger *m_arranger;
@@ -467,6 +468,7 @@ protected:
   QAction    *m_arrangeEntry = nullptr;   ///< Arrange in m_menu, shown while the toolbar is hidden
   HelpDlg    *m_helpDlg;
   QAction    *m_logAction = nullptr;
+  QAction    *m_updateAction = nullptr;   ///< Check for updates (not in package builds)
   LogDlg     *m_logDlg = nullptr;   ///< made when first opened
   /// The capture windows of the open devices by their sidebar id, made when
   /// first opened, gone with the device.

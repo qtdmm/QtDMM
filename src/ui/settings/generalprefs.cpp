@@ -11,6 +11,7 @@
 #include <QToolButton>
 
 #include "core/settings.h"
+#include "core/updatecheck.h"
 
 GeneralPrefs::GeneralPrefs(QWidget *parent) : SettingsPage(parent)
 {
@@ -102,6 +103,20 @@ GeneralPrefs::GeneralPrefs(QWidget *parent) : SettingsPage(parent)
                     tr("Benches, recordings, images, analysis and documents each go into a folder of their own in "
                        "the project, made with the first file. Files already there stay where they are."));
   form->addRow(QString(), ui_byType);
+
+  // a new version: the banner asks at the first start (ui/updatebar.h)
+  if (UpdateCheck::enabled())
+  {
+    addSection(form, tr("Updates"));
+    ui_updateCheck = check(tr("Look for a &new version at start"), "ui_updateCheck",
+                           tr("Once a day QtDMM fetches the list of releases from qtdmm.github.io and offers "
+                              "a newer version; nothing else is sent."));
+    ui_updateBeta = check(tr("Also release &candidates"), "ui_updateBeta",
+                          tr("Offers the release candidates (rc) of the next version too."));
+    form->addRow(QString(), ui_updateCheck);
+    form->addRow(QString(), ui_updateBeta);
+    connect(ui_updateCheck, &QCheckBox::toggled, ui_updateBeta, &QWidget::setEnabled);
+  }
 }
 
 QString GeneralPrefs::defaultBasketBase()
@@ -150,6 +165,12 @@ void GeneralPrefs::defaultsSLOT()
   ui_labPlotExe->setText(QDir::toNativeSeparators(m_cfg->getString("Programs/labplot")));
   ui_basketBase->setText(QDir::toNativeSeparators(m_cfg->getString("Basket/base-dir")));
   ui_byType->setChecked(m_cfg->getBool("Basket/by-type", true));
+  if (ui_updateCheck)
+  {
+    ui_updateCheck->setChecked(m_cfg->getBool("Update/check"));
+    ui_updateBeta->setChecked(m_cfg->getBool("Update/beta"));
+    ui_updateBeta->setEnabled(ui_updateCheck->isChecked());
+  }
 }
 
 void GeneralPrefs::factoryDefaultsSLOT()
@@ -161,6 +182,11 @@ void GeneralPrefs::factoryDefaultsSLOT()
   ui_labPlotExe->clear();
   ui_basketBase->clear();
   ui_byType->setChecked(true);
+  if (ui_updateCheck)
+  {
+    ui_updateCheck->setChecked(false);
+    ui_updateBeta->setChecked(false);
+  }
 }
 
 void GeneralPrefs::applySLOT()
@@ -172,4 +198,9 @@ void GeneralPrefs::applySLOT()
   m_cfg->setString("Programs/labplot", labPlotExecutable());
   m_cfg->setString("Basket/base-dir", ui_basketBase->text().trimmed().isEmpty() ? QString() : basketBase());
   m_cfg->setBool("Basket/by-type", ui_byType->isChecked());
+  // not asked yet and left off: the banner still asks
+  if (ui_updateCheck && (ui_updateCheck->isChecked() || !m_cfg->getString("Update/check").isEmpty()))
+    m_cfg->setBool("Update/check", ui_updateCheck->isChecked());
+  if (ui_updateBeta)
+    m_cfg->setBool("Update/beta", ui_updateBeta->isChecked());
 }
