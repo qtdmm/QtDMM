@@ -4,7 +4,8 @@
 
 #include "core/siprefix.h"
 
-// The models libsigrok's agilent-dmm knows; no meter at hand, so "*".
+// The models libsigrok's agilent-dmm knows; no meter at hand, so "*", but
+// the U1282A is confirmed by a user (issue #603).
 // Display counts from the data sheets' "counts" (U123x 6000, U124x 10000,
 // U125x 50000, U127x 30000, U128x 60000).
 static const bool registered = []() {
@@ -28,7 +29,7 @@ static const bool registered = []() {
   DmmDecoder::addConfig({"Agilent", "U1273A *", "", 9600, FrameFormat::KeysightU12xx, 8, 1, 1, 0, 30000, 0, 0, 0});
   DmmDecoder::addConfig({"Keysight", "U1273AX *", "", 9600, FrameFormat::KeysightU12xx, 8, 1, 1, 0, 30000, 0, 0, 0});
   DmmDecoder::addConfig({"Keysight", "U1281A *", "", 9600, FrameFormat::KeysightU12xx, 8, 1, 1, 0, 60000, 0, 0, 0});
-  DmmDecoder::addConfig({"Keysight", "U1282A *", "", 9600, FrameFormat::KeysightU12xx, 8, 1, 1, 0, 60000, 0, 0, 0});
+  DmmDecoder::addConfig({"Keysight", "U1282A", "", 9600, FrameFormat::KeysightU12xx, 8, 1, 1, 0, 60000, 0, 0, 0});
   return true;
 }();
 

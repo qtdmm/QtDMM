@@ -240,7 +240,7 @@ meter working, please report it on the
 | Keysight | U1242C ¹ | Handheld multimeter | - | `KeysightU12xx` | 9600 8N1 | - | 10000 |
 | Keysight | U1273AX ¹ | Handheld multimeter | - | `KeysightU12xx` | 9600 8N1 | - | 30000 |
 | Keysight | U1281A ¹ | Handheld multimeter | - | `KeysightU12xx` | 9600 8N1 | - | 60000 |
-| Keysight | U1282A ¹ | Handheld multimeter | - | `KeysightU12xx` | 9600 8N1 | - | 60000 |
+| Keysight | U1282A | Handheld multimeter | - | `KeysightU12xx` | 9600 8N1 | - | 60000 |
 | KPS | DCM7000BT ¹ | Clamp meter | - | `AppaDmm` | Bluetooth LE | - | 6000 |
 | KPS | DCM8000BT ¹ | Clamp meter | - | `AppaDmm` | Bluetooth LE | - | 6000 |
 | KPS | DMM3500BT ¹ | Handheld multimeter | - | `AppaDmm` | Bluetooth LE | - | 6000 |
