@@ -2,7 +2,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "service/scpiserver.h"
 
+#include "core/photostore.h"
+#include "core/projectfolder.h"
+
 #include <QDateTime>
+#include <QDir>
+#include <QFile>
 #include <QLoggingCategory>
 #include <QRegularExpression>
 #include <QTcpServer>
@@ -478,6 +483,26 @@ QByteArray ScpiServer::handle(const Command &cmd, bool &isQuery)
   }
   if (matches(head, "QTDMM") && depth == 3 && matches(cmd.path[1], "RECord") && matches(cmd.path[2], "DATA"))
     return recordingData(cmd, isQuery);
+  // QTDMM:PHOTo:DATA? the newest photo of the open project, as it is on
+  // disk (JPEG, PNG ...), in a definite-length block
+  if (matches(head, "QTDMM") && depth == 3 && matches(cmd.path[1], "PHOTo") && matches(cmd.path[2], "DATA"))
+  {
+    isQuery = cmd.query;
+    if (!cmd.query)
+    {
+      pushError(-100, "Command error");
+      isQuery = false;
+      return {};
+    }
+    QFile file(PhotoStore::newest(ProjectFolder::current()).path);
+    if (file.fileName().isEmpty() || !file.open(QIODevice::ReadOnly))
+    {
+      pushError(-230, "Data corrupt or stale; no photo in the open project");
+      isQuery = false;
+      return {};
+    }
+    return block(file.readAll());
+  }
   return handleText(cmd, isQuery).toUtf8();
 }
 
@@ -684,6 +709,16 @@ QString ScpiServer::handleQtdmm(const Command &cmd, bool &isQuery)
       return QString("%1,%2,%3").arg(c.pass).arg(c.high).arg(c.low);
     }
     return refuse(isQuery, -113, "Undefined header");
+  }
+
+  // QTDMM:PHOTo:LAST? - "<path>","<taken>" of the newest photo of the open
+  // project (PhotoStore), "","" when there is none
+  if (matches(sub, "PHOTo") && depth == 3 && matches(leaf, "LAST"))
+  {
+    if (!queryOnly(cmd, isQuery))
+      return {};
+    const PhotoStore::Photo p = PhotoStore::newest(ProjectFolder::current());
+    return quoted(QDir::toNativeSeparators(p.path)) + ',' + quoted(p.when.isValid() ? p.when.toString(Qt::ISODate) : QString());
   }
 
   // QTDMM:MARK "title"[,"text"]: a note at the newest reading

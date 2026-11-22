@@ -134,6 +134,8 @@ qtdmm-mcp tool offers them only with `--allow-control`.
 | `CALCulate:LIMit:LOWer?` `…:UPPer?` `[MIN\|MAX]` | NR3 | the limits as the test uses them (`LimitTest::low()`/`high()`), also for nominal ± tolerance |
 | `CALCulate:FUNCtion?` | `LIM` | the only function |
 | `QTDMM:LIMit:VERDict?` | `PASS\|HI\|LO\|NONE` | `MeterController::verdict()`, on the last reading of the tested value |
+| `QTDMM:PHOTo:LAST?` | `"<path>","<taken>"` | the newest photo of the open project (`PhotoStore::newest(ProjectFolder::current())`): in `photos` (or the project itself, files not sorted by kind), by the time in its name `photo_<date>_<time>[_n]`; taken as ISO 8601 local time; `"",""` without one or without a project |
+| `QTDMM:PHOTo:DATA?` | definite-length block | that photo's file as it is on disk (JPEG, PNG ...); `-230` without one |
 | `QTDMM:LIMit:COUNt?` | `<pass>,<high>,<low>` | `LimitTest::Count` since the last reset (new test, min/max reset, `CALC:LIM:CLE`) |
 | `QTDMM:KEY:CATalog?` | `"<KEY>",…` | upper case, `""` for none |
 | `QTDMM:CHANnel:CATalog?` | `<n>,"<port>","<unit>",…` | the channels of `READ? (@n)`: what each measures (`PortKey`: `voltage.dc`, `temperature`, `carbon_dioxide`) and its unit, empty strings before its first reading |
@@ -183,7 +185,7 @@ The queue holds 20 entries; when full, the last one becomes
 | `-104` | Data type error | `QTDMM:RECord:DATA? lots`, a broken channel list (`(@`, `(@3:1)`) |
 | `-222` | Data out of range | `QTDMM:RECord:DATA? 0`, `READ? (@4)` on a meter with 3 values |
 | `-224` | Illegal parameter value | `INPut MAYBE`, `QTDMM:KEY "peak"` on a meter without PEAK |
-| `-230` | Data corrupt or stale | a reading query answered `9.91E+37` |
+| `-230` | Data corrupt or stale | a reading query answered `9.91E+37`; `QTDMM:PHOTo:DATA?` without a photo |
 | `-240` | Hardware error | `HCOPy:SDUMp:DATA?` when no window is there to dump; `QTDMM:KEY` not sent (meter not connected) |
 | `-241` | Hardware missing | `QTDMM:KEY` for a meter without keys |
 | `-350` | Queue overflow | more than 20 errors unread |
