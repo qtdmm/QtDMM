@@ -48,6 +48,7 @@ Type ofProtocol(FrameFormat::DataFormat protocol)
     case FrameFormat::VoltcraftVC890:
     case FrameFormat::Eevblog121GW:
     case FrameFormat::BrymenBM78xBT:
+    case FrameFormat::OpenOSC:
     case FrameFormat::RawCapture:   // not known yet: mostly a multimeter, and its capture gets the multimeter steps
       return HandheldDmm;
     case FrameFormat::Voltcraft15Continuous:

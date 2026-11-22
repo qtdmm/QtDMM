@@ -78,6 +78,7 @@
 
 ### Meters
 
+- **ZOYI ZT-703S with the OpenOSC firmware** — read over USB (the meter's CDC serial port, SCPI `SYST:DMM:RES?`): DC and AC volts, millivolts, amps and milliamps, resistance, continuity, diode, capacitance and type K temperature, with the digits of the meter's range, overload, "no number", HOLD and REL; protocol `OpenOSC`. Thanks to the issue's author for the captures (#603).
 - **Graph menu shorter** — the right-click menu of a graph starts with what the click point means (note, cursors), then recording and picture; the switches and looks are under *Display*, pictures and files under *Output*; *Note now* is gone from the menu (N stays).
 - **Graph in a narrow window** — the legend wraps into more lines instead of covering the time buttons, and the graph keeps a minimum width for its row of buttons: the automatic arrangement makes the instruments or the table narrower instead.
 - **Battery on the display** — the LCD shows the meter's battery as a symbol with one bar (low), two (half full) or three (full); meters that only report a low battery (about 90 models, now also the UT61E and the UT60BT/UT61+/UT161 family) show it with one bar when low. UT381A, UT382A and UT325F send their level (0–5). The sidebar's tooltip names the level.
