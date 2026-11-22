@@ -4,10 +4,12 @@
 // version (tests/data/update/latest.json, written by tools/make-update-feed.py
 // from real releases: stable 26.4, beta 27.1-rc1), fetching it, and the
 // banner asking first and offering then; the Windows installer downloaded
-// and checked against its SHA256.
+// and checked against its SHA256; the news of qtdmm.de
+// (tests/data/update/feed.xml, out of order on purpose).
 #include "core/settings.h"
 #include "core/updatecheck.h"
 #include "core/flatpakupdate.h"
+#include "core/newsfeed.h"
 #include "core/updatedownload.h"
 #include "ui/updatebar.h"
 
@@ -15,6 +17,8 @@
 
 #include <QApplication>
 #include <QCryptographicHash>
+#include <QDesktopServices>
+#include <QTimeZone>
 #include <QDir>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -23,6 +27,16 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QTemporaryDir>
+
+/// Takes the URLs the banner opens instead of a browser.
+class UrlCatcher : public QObject
+{
+  Q_OBJECT
+public:
+  QUrl opened;
+public Q_SLOTS:
+  void open(const QUrl &url) { opened = url; }
+};
 
 namespace
 {
@@ -68,6 +82,11 @@ int main(int argc, char **argv)
   qputenv("QT_QPA_PLATFORM", "offscreen");
   QApplication app(argc, argv);
   const QString data = QString(argv[1]);
+  // no network, no browser
+  qputenv("QTDMM_NEWS_URL", QUrl::fromLocalFile(data + "/feed.xml").toString().toUtf8());
+  UrlCatcher catcher;
+  QDesktopServices::setUrlHandler("https", &catcher, "open");
+  QDesktopServices::setUrlHandler("file", &catcher, "open");
 
   // the order of versions
   auto less = [](const char *a, const char *b) { return UpdateCheck::compareVersions(a, b) < 0; };
@@ -321,7 +340,61 @@ int main(int argc, char **argv)
           "nothing to pull: " + bar.findChild<QLabel *>()->text());
   }
 
+  // the news: read newest first, release entries known, what was not seen
+  QFile rss(data + "/feed.xml");
+  check(rss.open(QIODevice::ReadOnly), "feed.xml");
+  const QList<NewsItem> items = NewsFeed::parse(rss.readAll());
+  check(items.size() == 3 && items[0].title == "QtDMM 26.5: Test Release" && items[1].title == "A meter of the month"
+          && items[0].date == QDateTime(QDate(2027, 1, 1), QTime(0, 0), QTimeZone::UTC),
+        "three entries, newest first");
+  check(items.size() == 3 && items[0].isRelease() && items[0].isReleaseOf("26.5") && !items[0].isReleaseOf("26.4")
+          && !items[1].isRelease(),
+        "a release's entry");
+  check(items.size() == 3 && NewsFeed::unseen(items, items[2].guid).size() == 2
+          && NewsFeed::unseen(items, "gone").size() == 3 && NewsFeed::unseen(items, items[0].guid).isEmpty(),
+        "what was not seen");
+  check(NewsFeed::parse("<rss><item><title>x").isEmpty(), "no RSS: nothing");
+  if (items.size() == 3)
+  {
+    // no update (26.5 is the newest), the oldest seen: the other news shown,
+    // not the release's; Read opens it
+    auto startAgain = [&](const QString &version, const QString &seen) {
+      QCoreApplication::setApplicationVersion(version);
+      settings.setString("News/seen", seen);
+      settings.setString("Update/last", "2000-01-01");
+      settings.setString("Update/skip", "");
+      settings.save();
+      bar.hide();
+      bar.startupCheck();
+    };
+    bar.setInstallKind(UpdateCheck::Install::Source);
+    startAgain("26.5", items[2].guid);
+    auto label = [&] { return bar.findChild<QLabel *>()->text(); };
+    check(waitFor([&] { return label().contains("A meter of the month"); }) && !label().contains("more"),
+          "the news shown, not the release's: " + label());
+    check(settings.getString("News/seen") == items[0].guid, "seen up to the newest");
+    click(bar, "Read");
+    check(bar.isHidden() && catcher.opened == items[1].link, "Read opens it: " + catcher.opened.toString());
+    // an update offered: What's new is the release's article, the news wait
+    startAgain("26.4", items[2].guid);
+    check(waitFor([&] { return buttons(bar).contains("What's new"); }), "26.5 offered: " + label());
+    click(bar, "What's new");
+    check(catcher.opened == items[0].link, "What's new: the article on qtdmm.de: " + catcher.opened.toString());
+    check(settings.getString("News/seen") == items[2].guid, "the news wait while an update is offered");
+    // a new user: the first fetch only remembers
+    startAgain("26.5", "");
+    waitFor([&] { return settings.getString("News/seen") == items[0].guid; });
+    check(bar.isHidden() && settings.getString("News/seen") == items[0].guid, "first fetch: nothing shown");
+    // news without the versions: still looked at
+    settings.setBool("Update/check", false);
+    settings.setBool("Update/news", true);
+    startAgain("26.5", items[2].guid);
+    check(waitFor([&] { return label().contains("A meter of the month") && !bar.isHidden(); }), "news only");
+  }
+
   if (failed == 0)
     qInfo() << "All update tests passed.";
   return failed == 0 ? 0 : 1;
 }
+
+#include "test_update.moc"

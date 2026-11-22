@@ -12,12 +12,13 @@
 #include <QToolButton>
 
 #include "core/flatpakupdate.h"
+#include "core/newsfeed.h"
 #include "core/settings.h"
 #include "core/updatedownload.h"
 
 UpdateBar::UpdateBar(Settings *settings, QWidget *parent)
   : QWidget(parent), m_settings(settings), m_check(new UpdateCheck(this)), m_download(new UpdateDownload(this)),
-    m_flatpak(new FlatpakUpdate(this)),
+    m_flatpak(new FlatpakUpdate(this)), m_news(new NewsFeed(this)),
     m_kind(UpdateCheck::installKind())
 {
   setAutoFillBackground(true);
@@ -42,7 +43,23 @@ UpdateBar::UpdateBar(Settings *settings, QWidget *parent)
     qInfo("update check: %s", qPrintable(error));
     if (m_manual)
       showMessage(tr("Could not look for a new version: %1").arg(error), {});
+    else if (newsEnabled())
+    {
+      m_feed.clear();
+      m_news->fetch();
+    }
   });
+  connect(m_news, &NewsFeed::fetched, this, &UpdateBar::finish);
+  connect(m_news, &NewsFeed::failed, this, [this](const QString &error) {
+    qInfo("news: %s", qPrintable(error));
+    finish({});
+  });
+}
+
+bool UpdateBar::newsEnabled() const
+{
+  // asked before there was news: as for the versions
+  return m_settings->getBool("Update/news", m_settings->getBool("Update/check"));
 }
 
 bool UpdateBar::beta() const
@@ -63,13 +80,18 @@ void UpdateBar::startupCheck()
     return;
   }
   const QString today = QDate::currentDate().toString(Qt::ISODate);
-  if (!m_settings->getBool("Update/check") || m_settings->getString("Update/last") == today)
+  const bool versions = m_settings->getBool("Update/check");
+  if ((!versions && !newsEnabled()) || m_settings->getString("Update/last") == today)
     return;
   // saved at once: the reads see the file only
   m_settings->setString("Update/last", today);
   m_settings->save();
   m_manual = false;
-  m_check->check();
+  m_feed.clear();
+  if (versions)
+    m_check->check();
+  else
+    m_news->fetch();
 }
 
 void UpdateBar::checkNow()
@@ -82,25 +104,80 @@ void UpdateBar::ask()
 {
   auto answer = [this](bool yes) {
     m_settings->setBool("Update/check", yes);
+    m_settings->setBool("Update/news", yes);
     m_settings->save();
     hide();
     if (yes)
       startupCheck();
   };
-  showMessage(tr("Should QtDMM look for a new version when it starts? Once a day it fetches the list of "
-                 "releases from qtdmm.github.io; nothing else is sent. Settings, General can change it."),
+  showMessage(tr("Should QtDMM look for new versions and news when it starts? Once a day it fetches the list "
+                 "of releases from qtdmm.github.io and the news from qtdmm.de; nothing else is sent. "
+                 "Settings, General can change it."),
               { { tr("Yes"), [answer] { answer(true); } }, { tr("No"), [answer] { answer(false); } } });
 }
 
 void UpdateBar::checked(const QByteArray &feed)
 {
+  m_feed = feed;
+  // at start the news too, to show them and for the release's article
+  if (!m_manual && newsEnabled())
+    m_news->fetch();
+  else
+    finish({});
+}
+
+void UpdateBar::finish(const QList<NewsItem> &news)
+{
   const QString current = QCoreApplication::applicationVersion();
-  const auto release =
-    UpdateCheck::offer(feed, current, beta(), m_manual ? QString() : m_settings->getString("Update/skip"));
+  auto release = m_feed.isEmpty() ? std::nullopt
+                                  : UpdateCheck::offer(m_feed, current, beta(),
+                                                       m_manual ? QString() : m_settings->getString("Update/skip"));
   if (release)
+  {
+    // What's new: the release's article on qtdmm.de rather than GitHub's page
+    for (const NewsItem &item : news)
+      if (item.isReleaseOf(release->version))
+        release->notes = item.link;
     offer(*release);
+  }
   else if (m_manual)
     showMessage(tr("QtDMM %1 is the newest version.").arg(current), {});
+  if (m_manual || news.isEmpty())
+    return;
+
+  // the news: the first fetch only remembers the newest, so that a new user
+  // does not get the old ones; with an update offered they wait a day
+  const QString seen = m_settings->getString("News/seen");
+  if (!seen.isEmpty() && release)
+    return;
+  m_settings->setString("News/seen", news.first().guid);
+  m_settings->save();
+  if (seen.isEmpty())
+    return;
+  QList<NewsItem> fresh;
+  for (const NewsItem &item : NewsFeed::unseen(news, seen))
+    if (!item.isRelease())   // a release's news: the update offer says it
+      fresh.append(item);
+  if (!fresh.isEmpty())
+    showNews(fresh);
+}
+
+void UpdateBar::showNews(const QList<NewsItem> &news)
+{
+  QString text = tr("New on qtdmm.de: %1").arg(news.first().title);
+  QList<Button> buttons{ { tr("Read"), [this, url = news.first().link] {
+                            QDesktopServices::openUrl(url);
+                            hide();
+                          } } };
+  if (news.size() > 1)
+  {
+    text += ' ' + tr("(and %n more)", nullptr, int(news.size() - 1));
+    buttons.append({ tr("All news"), [this] {
+                      QDesktopServices::openUrl(QUrl("https://qtdmm.de/news.html"));
+                      hide();
+                    } });
+  }
+  showMessage(text, buttons);
 }
 
 void UpdateBar::offer(const UpdateRelease &release)
