@@ -4539,15 +4539,14 @@ void MainWindow::photoSetup()
     m_photoDlg = new PhotoDlg(project, this);
     m_photoDlg->setAttribute(Qt::WA_DeleteOnClose);
     connect(m_photoDlg, &PhotoDlg::error, m_wid, &InstanceWidget::error);
-    // each photo: a note in the graph at its time, and in the table
+    // each photo: a mark in the table at its time, and a note in the graph
+    // where one is shown
     connect(m_photoDlg, &PhotoDlg::photoAdded, this, [this](const QString &path, const QDateTime &when)
     {
       const QString title = tr("Photo");
-      GraphView *view = currentGraph();
-      if (!view || view->graph()->addNote(-1, title, QFileInfo(path).fileName(),
-                                          PhotoStore::relative(m_basket->folder(), path)) < 0)
-        return;
       m_readings->log()->markAt(when, QColor::fromRgba(RecordingStore::kNoteColor), title);
+      if (GraphView *view = currentGraph())
+        view->graph()->addNote(-1, title, QFileInfo(path).fileName(), PhotoStore::relative(m_basket->folder(), path));
     });
   }
   m_photoDlg->show();

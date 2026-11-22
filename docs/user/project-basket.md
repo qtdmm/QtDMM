@@ -109,9 +109,11 @@ picture of how the meter was connected, kept with the measurement.
 - Each photo goes into the folder `photos`, named by the time it came:
   `photos/photo_2026-11-22_14-03-12.jpg`. It is kept as it came, its EXIF
   data too; a photo taken upright is shown upright.
-- Each photo sets a note **Photo** in the graph used last, at the time it
-  came, and a mark in the readings table. A click on the note's flag shows
-  the photo, so does **Show photo** in the flag's menu. The recording keeps
+- Each photo sets a mark in the readings table at the time it came, and a
+  note **Photo** in the graph used last, if a graph is shown. A click on the
+  note's flag shows the photo, so does **Show photo** in the flag's menu.
+  Photos taken at once (a series on the phone) share one flag, "3–5 · 3
+  photos"; a click on it lists them to choose from. The recording keeps
   the photo's path in the project; the photo is found again as long as the
   project is open.
 

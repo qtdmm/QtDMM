@@ -16,6 +16,7 @@
 #include <QDateTime>
 #include <QDialog>
 #include <QLineEdit>
+#include <QMenu>
 #include <QScrollBar>
 #include <QTemporaryDir>
 #include <QToolButton>
@@ -1584,6 +1585,34 @@ static void testMarks()
     QTest::mouseClick(plotWidget, Qt::LeftButton, Qt::NoModifier, onPhoto);
     QTest::mouseClick(plotWidget, Qt::LeftButton, Qt::NoModifier, graph.markFlagRect(1).center());
     check(photos == QStringList{ "photos/photo_1.jpg" }, "a click on its flag: photoClicked(), not on another note's");
+    // a series of photos in the same second: one flag, the click asks which
+    graph.addNote(17000, "Photo", "photo_2.jpg", "photos/photo_2.jpg");
+    graph.addNote(17000, "Photo", "photo_3.jpg", "photos/photo_3.jpg");
+    graph.refreshNow();
+    const QString together = graph.markFlagText(2);
+    check(graph.markGroup(2) == QList<int>{ 2, 3, 4 } && graph.markGroup(4) == QList<int>{ 2, 3, 4 } && graph.markFlagRect(3).isEmpty()
+            && together.startsWith(QString("3") + QChar(0x2013) + "5") && graph.markPixel(4) >= 0,
+          "three photos at once: one flag \"3-5 · 3 photos\": " + together);
+    check(graph.markGroup(1) == QList<int>{ 1 }, "a note alone: its own flag");
+    if (qEnvironmentVariableIsSet("QTDMM_SHOT"))
+    {
+      QCoreApplication::processEvents();
+      graph.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/graph_photos.png");
+    }
+    photos.clear();
+    int entries = 0;
+    QTimer::singleShot(0, &graph, [&] {
+      if (auto *menu = qobject_cast<QMenu *>(QApplication::activePopupWidget()))
+      {
+        entries = int(menu->actions().size());
+        menu->setActiveAction(menu->actions().at(1));
+        QTest::keyClick(menu, Qt::Key_Return);
+      }
+    });
+    QTest::mouseClick(plotWidget, Qt::LeftButton, Qt::NoModifier, graph.markFlagRect(2).center());
+    check(entries == 3 && photos == QStringList{ "photos/photo_2.jpg" }, QString("a click on it: a menu of the three, the one chosen shows its photo (%1 entries)").arg(entries));
+    graph.removeMark(4);
+    graph.removeMark(3);
     QObject::disconnect(clicked);
     graph.removeMark(2);
     QObject::disconnect(heard);   // it writes to this block's variables

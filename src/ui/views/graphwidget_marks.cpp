@@ -13,6 +13,7 @@
 #include "ui/views/qcp.h"
 
 #include <QCoreApplication>
+#include <QMenu>
 #include <QPainterPath>
 #include <QToolTip>
 #include <algorithm>
@@ -46,6 +47,7 @@ public:
     QString note;
     QColor  color;
     QPen    pen;           ///< its line; Qt::NoPen: none (a cursor has its own)
+    bool    photo = false; ///< a note with a photo
   };
   struct Placed
   {
@@ -53,13 +55,20 @@ public:
     double  x = 0;         ///< pixels
     QRectF  rect;          ///< the tag; empty: none
     QString text;
+    QList<int> group;      ///< the marks on this flag, id first; several where their lines fall together
   };
+
+  /// Marks this close (pixels) share one flag: closer than a click on the
+  /// lines tells them apart (markAt() takes a line within 3 px).
+  static constexpr double kTogether = 3;
 
   explicit FlagLines(QCustomPlot *plot) : QCPAbstractItem(plot) { setClipToAxisRect(false); }
   double selectTest(const QPointF &, bool, QVariant *) const override { return -1; }
 
   QList<Entry> entries;    ///< ascending x
   QFont  font;
+  /// The note of a flag for @p n marks ("3 photos" where @p photos).
+  std::function<QString(int n, bool photos)> groupNote;
 
   /// The entries of the time shown, with their flags.
   QList<Placed> place() const
@@ -67,18 +76,38 @@ public:
     const QCPAxis *time = parentPlot()->xAxis;
     const QFontMetricsF metrics(font);
     QList<GraphFlags::Flag> flags;
-    QList<int> ids;
+    QList<QList<int>> groups;
+    QString last;     // the label of the group's last mark
+    bool photos = false;
+    const auto close = [&] {
+      if (groups.isEmpty() || groups.last().size() < 2)
+        return;
+      flags.last().label += QChar(0x2013) + last;
+      flags.last().note = groupNote ? groupNote(int(groups.last().size()), photos) : QString();
+    };
     for (const Entry &e : entries)
       if (e.x >= time->range().lower && e.x <= time->range().upper)
       {
-        flags << GraphFlags::Flag{ time->coordToPixel(e.x), e.label, e.note, {}, {} };
-        ids << e.id;
+        // marks taken at once (a series of photos): one flag "4-6 · 3 photos"
+        const double px = time->coordToPixel(e.x);
+        if (e.id >= 0 && !groups.isEmpty() && groups.last().first() >= 0 && px - flags.last().x <= kTogether)
+        {
+          groups.last() << e.id;
+          last = e.label;
+          photos = photos && e.photo;
+          continue;
+        }
+        close();
+        flags << GraphFlags::Flag{ px, e.label, e.note, {}, {} };
+        groups << QList<int>{ e.id };
+        photos = e.photo;
       }
+    close();
     GraphFlags::layout(flags, QRectF(parentPlot()->axisRect()->rect()), metrics.height() + 2,
                        [&](const QString &text) { return metrics.horizontalAdvance(text); });
     QList<Placed> out;
     for (qsizetype i = 0; i < flags.size(); ++i)
-      out << Placed{ ids.at(i), flags.at(i).x, flags.at(i).rect, flags.at(i).text };
+      out << Placed{ groups.at(i).first(), flags.at(i).x, flags.at(i).rect, flags.at(i).text, groups.at(i) };
     return out;
   }
 
@@ -86,16 +115,19 @@ protected:
   void draw(QCPPainter *painter) override
   {
     const QRectF r = parentPlot()->axisRect()->rect();
+    const QCPAxis *time = parentPlot()->xAxis;
     const QList<Placed> placed = place();
     QHash<int, const Entry *> byId;
     for (const Entry &e : entries)
       byId.insert(e.id, &e);
+    // every line, also those of the marks sharing a flag
     painter->setAntialiasing(false);
-    for (const Placed &p : placed)
-      if (const Entry *e = byId.value(p.id); e->pen.style() != Qt::NoPen)
+    for (const Entry &e : entries)
+      if (e.pen.style() != Qt::NoPen && e.x >= time->range().lower && e.x <= time->range().upper)
       {
-        painter->setPen(e->pen);
-        painter->drawLine(QLineF(p.x, r.top(), p.x, r.bottom()));
+        const double x = time->coordToPixel(e.x);
+        painter->setPen(e.pen);
+        painter->drawLine(QLineF(x, r.top(), x, r.bottom()));
       }
     painter->setAntialiasing(true);
     painter->setFont(font);
@@ -125,6 +157,7 @@ void GraphWidget::setupMarks()
   auto *item = new FlagLines(m_plot);
   item->setLayer(QStringLiteral("overlay"));
   item->setSelectable(false);
+  item->groupNote = [](int n, bool photos) { return photos ? tr("%n photos", nullptr, n) : tr("%n marks", nullptr, n); };
   m_markItem = item;
   connect(m_timeBar, &GraphTimeBar::noteClicked, this, [this] { askNote(); });
 }
@@ -166,7 +199,7 @@ void GraphWidget::updateMarks()
     if (note.startsWith(alarmWord, Qt::CaseInsensitive) && note.size() > alarmWord.size())
       note = note.mid(alarmWord.size());
     item->entries << FlagLines::Entry{ i, m.t / 1000.0, QString::number(i + 1), note, QColor::fromRgba(m.color),
-                                       QPen(QColor::fromRgba(m.color), 2, Qt::DashLine) };
+                                       QPen(QColor::fromRgba(m.color), 2, Qt::DashLine), !m.photo.isEmpty() };
   }
   for (int i = 0; i < 2; ++i)
     if (m_cursorT[i] >= 0)
@@ -358,9 +391,53 @@ QColor GraphWidget::markColor(int mark) const
 int GraphWidget::markPixel(int mark) const
 {
   for (const FlagLines::Placed &p : static_cast<const FlagLines *>(m_markItem)->place())
-    if (p.id == mark)
-      return qRound(p.x);
+    if (p.group.contains(mark))
+      return qRound(m_plot->xAxis->coordToPixel(m_marks.at(mark).t / 1000.0));
   return -1;
+}
+
+QList<int> GraphWidget::markGroup(int mark) const
+{
+  for (const FlagLines::Placed &p : static_cast<const FlagLines *>(m_markItem)->place())
+    if (p.group.contains(mark))
+      return p.group;
+  return {};
+}
+
+QString GraphWidget::flagTip(int mark) const
+{
+  const QList<int> group = markGroup(mark);
+  if (group.size() < 2)
+    return markTip(mark);
+  // one line per mark; the click asks which one
+  QStringList lines;
+  for (int m : group)
+    if (const Mark &one = m_marks.at(m); one.store)
+      lines << QString("<b>%1 · %2</b> %3").arg(m + 1).arg(one.name.toHtmlEscaped(),
+                                                          one.store->startDateTime().addMSecs(one.t - one.shift).toString("HH:mm:ss"));
+  return lines.join("<br>") + "<p><i>" + tr("Click to choose one").toHtmlEscaped() + "</i></p>";
+}
+
+void GraphWidget::chooseMark(const QList<int> &group, const QPoint &globalPos)
+{
+  // what each entry does, taken now: the marks may change while the menu is open
+  QMenu menu(m_plot);
+  for (int m : group)
+  {
+    const Mark &one = m_marks.at(m);
+    if (!one.store)
+      continue;
+    QAction *action = menu.addAction(QString("%1 · %2  %3").arg(m + 1).arg(one.name, one.store->startDateTime().addMSecs(one.t - one.shift).toString("HH:mm:ss")));
+    action->setData(QStringList{ one.photo, markTip(m) });
+  }
+  const QAction *chosen = menu.exec(globalPos);
+  if (!chosen)
+    return;
+  const QStringList what = chosen->data().toStringList();
+  if (!what.value(0).isEmpty())
+    Q_EMIT photoClicked(what.value(0));
+  else
+    QToolTip::showText(globalPos, what.value(1), m_plot);
 }
 
 QRect GraphWidget::markFlagRect(int mark) const
