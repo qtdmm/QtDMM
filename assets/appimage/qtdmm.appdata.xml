@@ -40,6 +40,12 @@
   <update_contact>hello@qtdmm.de</update_contact>
   <content_rating type="oars-1.1" />
   <releases>
+    <release version="26.4" date="2026-11-22">
+      <description>
+        <p>QtDMM 26.4: many meters on one bench, each with its own front panel, in one graph and one recording; more needle meters and Poincaré plots, a third graph axis, PASS/FAIL test, alarm sounds, the designs Light Metal and Dark Metal, and many new meters. Since the release candidate: windows in Fixed mode return to their place, older benches keep their values, and the Flatpak may use the home folder.</p>
+      </description>
+      <url>https://github.com/qtdmm/QtDMM/releases/tag/26.4</url>
+    </release>
     <release version="26.4~rc1" date="2026-11-08" type="development">
       <description>
         <p>First release candidate for QtDMM 26.4: many meters on one bench, each with its own front panel, in one graph and one recording; more needle meters and Poincaré plots, a third graph axis, PASS/FAIL test, alarm sounds, the designs Light Metal and Dark Metal, and many new meters.</p>
