@@ -259,6 +259,50 @@ int main(int argc, char **argv)
     meter.close();
   }
 
+  // --- 8b. OpenOSC (issue #603): polled every 200 ms, faster than it
+  //          measures; the reading before again is no "Error" ---
+  {
+    QTcpServer bench;
+    check(bench.listen(QHostAddress::LocalHost, 0), "openosc server listens");
+    QTcpSocket *client = nullptr;
+    QByteArray received;
+    int polls = 0;
+    QObject::connect(&bench, &QTcpServer::newConnection, [&]
+    {
+      client = bench.nextPendingConnection();
+      QObject::connect(client, &QTcpSocket::readyRead, [&]
+      {
+        received += client->readAll();
+        while (received.contains("SYST:DMM:RES?\n"))
+        {
+          received.remove(0, received.indexOf("SYST:DMM:RES?\n") + 14);
+          ++polls;
+          // a new reading on every third poll only, as the meter's 3 Hz
+          const int seq = 700 + polls / 3;
+          client->write(QByteArray("0,5.001,0,NAN,0,2,1,0,0,") + QByteArray::number(seq) + ",1000\n");
+          client->flush();
+        }
+      });
+    });
+
+    MeterConnection meter(nullptr);
+    DmmDecoder::DMMInfo info;
+    info.baud = 115200;
+    info.bits = 8;
+    meter.setDmmInfo(info);
+    meter.setFormat(FrameFormat::OpenOSC);
+    meter.setDevice(QString("RFC2217 127.0.0.1:%1").arg(bench.serverPort()));
+    int readings = 0;
+    QObject::connect(&meter, &MeterConnection::value, [&] { ++readings; });
+    QStringList states;
+    QObject::connect(&meter, &MeterConnection::error, [&](const QString &text) { states << text; });
+    check(meter.open(), "openosc open()");
+    check(waitFor([&] { return polls >= 9; }, 2500), QString("openosc polled faster than once a second: %1 polls").arg(polls));
+    check(readings >= 2 && readings < polls, QString("openosc: each seq once, %1 readings of %2 polls").arg(readings).arg(polls));
+    check(!states.join('|').contains("Error"), "openosc: the reading before again is no error: " + states.join('|'));
+    meter.close();
+  }
+
 #ifdef Q_OS_UNIX
   // --- 9. sigrok-cli without blocking: a fake one (shell script) ---
   // open() does not wait for it to start, close() not for it to end; one that

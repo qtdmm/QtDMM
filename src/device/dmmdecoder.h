@@ -208,6 +208,10 @@ public:
   /// (ZotekBLE: the layout, modelsFromFrame()) or its device information
   /// (OwonBLE: modelsFromInfo()).
   virtual bool tellsModel() const { return false; }
+  /// True after a decode() that gave nothing because the frame repeats the
+  /// reading before (a meter polled faster than it measures, OpenOSC): no
+  /// new reading, but no error either.
+  bool repeated() const { return m_repeated; }
   /// The meter chosen (DMMInfo::model), for a protocol whose models read a
   /// frame differently; set before the first frame, from the GUI thread.
   virtual void setModel(const QString &model) { Q_UNUSED(model); }
@@ -281,6 +285,7 @@ protected:
 
   static std::vector<DMMInfo> &configurations();
   DmmResponse m_result;
+  bool m_repeated = false;   ///< repeated(); the decoder sets it in decode()
   FrameFormat::DataFormat m_type;
   QString m_name;
 };
