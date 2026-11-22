@@ -29,6 +29,9 @@ class Settings;
 /// now hands it to the window (installReady()), which closes and starts it.
 /// The AppImage replaces $APPIMAGE at once (UpdateCheck::replaceAppImage());
 /// Restart now asks the window to close and start it (restartReady()).
+/// The macOS bundle is replaced from the disk image while QtDMM runs
+/// (UpdateCheck::installDmg()), Restart now as for the AppImage; where it
+/// may not write, the disk image opens in the Finder instead.
 /// The Flatpak is updated by Flatpak's portal (FlatpakUpdate) from our
 /// repository; Restart now starts the new version (restartReady() with an
 /// empty path). Other kinds download in the browser.
@@ -54,9 +57,10 @@ Q_SIGNALS:
   /// The installer @p path is downloaded and checked, and the user wants it
   /// now: close QtDMM and run it (UpdateCheck::runInstaller()).
   void installReady(const QString &path);
-  /// The AppImage @p path was replaced by the new version, or the Flatpak
-  /// updated (@p path empty), and the user wants it now: close QtDMM and
-  /// start it (UpdateCheck::restartAppImage(), FlatpakUpdate::restart()).
+  /// The AppImage or the macOS bundle @p path (….app) was replaced by the
+  /// new version, or the Flatpak updated (@p path empty), and the user wants
+  /// it now: close QtDMM and start it (UpdateCheck::restartAppImage(),
+  /// UpdateCheck::restartBundle(), FlatpakUpdate::restart()).
   void restartReady(const QString &path);
 
 private:
@@ -74,6 +78,8 @@ private:
   void download(const UpdateRelease &release, const UpdateFile &file);
   /// The Flatpak through its portal, the banner shows how far.
   void updateFlatpak(const UpdateRelease &release);
+  /// macOS: the checked disk image @p dmg over the running bundle.
+  void installDmg(const UpdateRelease &release, const QString &dmg);
   /// The download @p path is checked: install or offer it.
   void downloaded(const UpdateRelease &release, const UpdateFile &file, const QString &path);
 

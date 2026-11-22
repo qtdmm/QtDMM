@@ -12,6 +12,7 @@
 #include <QNetworkReply>
 #include <QProcess>
 #include <QRegularExpression>
+#include <QTemporaryDir>
 
 #include <array>
 #include <filesystem>
@@ -201,6 +202,84 @@ bool UpdateCheck::restartAppImage(const QString &path)
   if (!folder.isEmpty())
     process.setWorkingDirectory(folder);
   return process.startDetached();
+}
+
+QString UpdateCheck::bundlePath()
+{
+  QDir dir(QCoreApplication::applicationDirPath());   // …/QtDMM.app/Contents/MacOS
+  if (!dir.cdUp() || !dir.cdUp() || !dir.dirName().endsWith(".app"))
+    return {};
+  return dir.absolutePath();
+}
+
+QString UpdateCheck::installDmg(const QString &dmg, const QString &target)
+{
+#ifdef Q_OS_MACOS
+  auto run = [](const QString &program, const QStringList &args, QString *output = nullptr) {
+    QProcess p;
+    p.start(program, args);
+    if (!p.waitForFinished(120000) || p.exitStatus() != QProcess::NormalExit || p.exitCode() != 0)
+      return QString("%1: %2").arg(program, QString::fromLocal8Bit(p.readAllStandardError()).trimmed());
+    if (output)
+      *output = QString::fromLocal8Bit(p.readAllStandardOutput());
+    return QString();
+  };
+  QTemporaryDir mount;
+  if (!mount.isValid())
+    return mount.errorString();
+  QString error = run("hdiutil", { "attach", "-nobrowse", "-readonly", "-noautoopen", "-mountpoint", mount.path(), dmg });
+  if (!error.isEmpty())
+    return error;
+  const QStringList apps = QDir(mount.path()).entryList({ "*.app" }, QDir::Dirs);
+  const QFileInfo old(target);
+  const QString staged = old.dir().filePath("." + old.fileName() + ".update");
+  if (apps.isEmpty())
+    error = tr("The disk image holds no program");
+  else
+  {
+    QDir(staged).removeRecursively();
+    error = run("ditto", { QDir(mount.path()).filePath(apps.first()), staged });
+  }
+  run("hdiutil", { "detach", "-quiet", mount.path() });
+  if (error.isEmpty())
+    error = replaceBundle(staged, target);
+  if (!error.isEmpty())
+    QDir(staged).removeRecursively();
+  else
+    QFile::remove(dmg);
+  return error;
+#else
+  Q_UNUSED(dmg)
+  Q_UNUSED(target)
+  return tr("Only on macOS");
+#endif
+}
+
+QString UpdateCheck::replaceBundle(const QString &staged, const QString &target)
+{
+  const QFileInfo info(target);
+  QDir parent = info.dir();
+  const QString old = "." + info.fileName() + ".old";
+  QDir(parent.filePath(old)).removeRecursively();
+  if (!parent.rename(info.fileName(), old))
+    return tr("Cannot write into %1").arg(QDir::toNativeSeparators(parent.absolutePath()));
+  if (!parent.rename(QFileInfo(staged).fileName(), info.fileName()))
+  {
+    parent.rename(old, info.fileName());
+    return tr("Cannot write into %1").arg(QDir::toNativeSeparators(parent.absolutePath()));
+  }
+  return {};
+}
+
+void UpdateCheck::removeOldBundle(const QString &target)
+{
+  const QFileInfo info(target);
+  QDir(info.dir().filePath("." + info.fileName() + ".old")).removeRecursively();
+}
+
+bool UpdateCheck::restartBundle(const QString &path)
+{
+  return QProcess::startDetached("open", { "-n", path });
 }
 
 QUrl UpdateCheck::feedUrl()

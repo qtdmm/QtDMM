@@ -276,9 +276,15 @@ MainWindow::MainWindow(QCommandLineParser &parser, QWidget *parent)
       QMessageBox::warning(nullptr, tr("Update"),
                            tr("The installer could not be started: %1").arg(QDir::toNativeSeparators(path)));
   });
-  // the AppImage replaced or the Flatpak updated: closes as at Quit, the new one starts
+  // the AppImage or the macOS bundle replaced, the Flatpak updated: closes
+  // as at Quit, the new one starts
   connect(m_updateBar, &UpdateBar::restartReady, this, [this](const QString &path) {
-    if (close() && !(path.isEmpty() ? FlatpakUpdate::restart() : UpdateCheck::restartAppImage(path)))
+    auto restart = [&path] {
+      if (path.isEmpty())
+        return FlatpakUpdate::restart();
+      return path.endsWith(".app") ? UpdateCheck::restartBundle(path) : UpdateCheck::restartAppImage(path);
+    };
+    if (close() && !restart())
       QMessageBox::warning(nullptr, tr("Update"),
                            tr("QtDMM could not be started again: %1").arg(QDir::toNativeSeparators(path)));
   });
