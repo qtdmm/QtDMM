@@ -15,6 +15,8 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QLabel>
+#include <QListWidget>
+#include <QTabWidget>
 #include <QSignalSpy>
 #include <QTemporaryDir>
 #include <QTest>
@@ -452,6 +454,50 @@ int main(int argc, char **argv)
           "dialog: a file into the photos");
     check(!dlg.addFile(dir.filePath("broken.jpg")) && failedSpy.size() == 1 && dlg.photoCount() == 1,
           "dialog: no picture, an error");
+
+    // deleted: into the trash (or gone where there is none), out of the
+    // strip, said; what lands in the trash is taken out of it again
+    QDir trash;
+    const auto untrash = [&](const QString &name) {
+      if (trash.path() == ".")
+        return;
+      QFile::remove(trash.filePath(name));
+      QFile::remove(trash.filePath("../info/" + name + ".trashinfo"));
+    };
+    {
+      const QString doomed = PhotoStore::save(proj, png, when, &why);
+      QString trashed;
+      check(PhotoStore::remove(doomed, &trashed, &why) && !QFileInfo::exists(doomed), "photo: removed");
+      if (!trashed.isEmpty())
+        trash = QFileInfo(trashed).dir();
+      untrash(QFileInfo(trashed).fileName());
+    }
+    QSignalSpy removed(&dlg, &PhotoDlg::photoRemoved);
+    check(dlg.addFile(src) && dlg.photoCount() == 2, "dialog: a second photo");
+    const QString newest = added.last().at(0).toString();
+    const QString older = added.first().at(0).toString();
+    // shown, on the file's tab: the strip has its places, no server runs
+    auto *sources = dlg.findChild<QTabWidget *>("ui_photoSources");
+    sources->setCurrentIndex(sources->count() - 1);
+    dlg.show();
+    check(QTest::qWaitForWindowExposed(&dlg), "dialog: shown");
+    auto *strip = dlg.findChild<QListWidget *>("ui_photoStrip");
+    if (qEnvironmentVariableIsSet("QTDMM_SHOT"))
+      dlg.grab().save(qEnvironmentVariable("QTDMM_SHOT") + "/photo_delete.png");
+    const QRect button = dlg.removeRect(0);
+    check(!button.isEmpty() && strip->visualItemRect(strip->item(0)).contains(button), "dialog: a delete button on the picture");
+    QTest::mouseClick(strip->viewport(), Qt::LeftButton, Qt::NoModifier, button.center());
+    check(removed.size() == 1 && removed.at(0).at(0).toString() == newest && !QFileInfo::exists(newest)
+            && QFileInfo::exists(older) && dlg.photoCount() == 1 && strip->currentRow() == 0,
+          "dialog: its button deletes the newest, the other one shows");
+    untrash(QFileInfo(newest).fileName());
+    strip->setFocus();
+    QTest::keyClick(strip, Qt::Key_Delete);
+    check(removed.size() == 2 && !QFileInfo::exists(older) && dlg.photoCount() == 0 && strip->isHidden()
+            && dlg.findChild<QLabel *>("ui_photoPreview")->text() == "No photo yet",
+          "dialog: Del deletes the one chosen; none left, the strip goes");
+    untrash(QFileInfo(older).fileName());
+    dlg.hide();
 
     // the project window's button asks for it
     BasketWidget photoBasket;

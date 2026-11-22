@@ -56,10 +56,18 @@ public:
   PhotoServer *server() const { return m_server; }
   /// How many photos were added while the dialog is open.
   int         photoCount() const;
+  /// The photo of the strip at @p row (0: the newest) goes to the trash
+  /// (PhotoStore::remove()), out of the strip: photoRemoved(). False when
+  /// it stays (error()).
+  bool        removePhoto(int row);
+  /// Where the delete button of the strip's picture at @p row is, in the strip's viewport (tests).
+  QRect       removeRect(int row) const;
 
 Q_SIGNALS:
   /// A photo saved at @p path (full path), taken at @p when.
   void        photoAdded(const QString &path, const QDateTime &when);
+  /// The photo at @p path, added at @p when, was deleted: its marks go too.
+  void        photoRemoved(const QString &path, const QDateTime &when);
   void        error(const QString &text);
 
 protected:
@@ -67,10 +75,11 @@ protected:
   void        hideEvent(QHideEvent *event) override;
   void        dragEnterEvent(QDragEnterEvent *event) override;
   void        dropEvent(QDropEvent *event) override;
+  bool        eventFilter(QObject *watched, QEvent *event) override;
 
 private:
   void        chooseFiles();
-  void        present(const QString &path, const QImage &image);
+  void        present(const QString &path, const QImage &image, const QDateTime &when);
   /// A photo saved at @p path (empty: not, @p why says why).
   bool        taken(const QString &path, const QDateTime &when, const QString &why);
   /// Starts the server and shows its code while the phone's tab shows, stops it otherwise.

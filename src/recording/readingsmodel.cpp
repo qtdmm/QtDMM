@@ -329,6 +329,11 @@ void ReadingsModel::moveMark(const QDateTime &from, const QDateTime &to, const Q
   m_store->markReadingAt(to.toMSecsSinceEpoch(), color.rgba(), name);
 }
 
+void ReadingsModel::unmarkAt(const QDateTime &when, const QString &name)
+{
+  m_store->unmarkReadingAt(when.toMSecsSinceEpoch(), name);
+}
+
 void ReadingsModel::clear()
 {
   m_store->clearReadings();

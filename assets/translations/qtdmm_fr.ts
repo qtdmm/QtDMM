@@ -4718,7 +4718,7 @@ Pas de permission ? Le capteur a besoin d’une règle udev pour l’ID USB %1:%
     </message>
     <message>
         <location filename="../../src/ui/instancewidget.cpp" line="394"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="4583"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4594"/>
         <source>nothing recorded</source>
         <translation>rien d&apos;enregistré</translation>
     </message>
@@ -5593,7 +5593,7 @@ Pas de permission ? Le capteur a besoin d’une règle udev pour l’ID USB %1:%
         <location filename="../../src/ui/mainwindow.cpp" line="1600"/>
         <location filename="../../src/ui/mainwindow.cpp" line="1606"/>
         <location filename="../../src/ui/mainwindow.cpp" line="3698"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="4827"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4838"/>
         <source>%1: %2</source>
         <translation>%1 : %2</translation>
     </message>
@@ -5916,64 +5916,64 @@ Pas de permission ? Le capteur a besoin d’une règle udev pour l’ID USB %1:%
         <translation>%1 connecté</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4667"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4678"/>
         <source>Exported to %1</source>
         <translation>Exporté vers %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4589"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="4669"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4600"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4680"/>
         <source>Export failed: %1</source>
         <translation>Échec de l&apos;export : %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4685"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4696"/>
         <source>Live in LabPlot: start a recording first</source>
         <translation>En direct dans LabPlot : démarrez d&apos;abord un enregistrement</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4699"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4710"/>
         <source>live</source>
         <translation>direct</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4717"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4728"/>
         <source>Live in LabPlot: the recording ended, the file has all of it</source>
         <translation>En direct dans LabPlot : l&apos;enregistrement est terminé, le fichier le contient en entier</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4723"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="4729"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4734"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4740"/>
         <source>Live in LabPlot: %1</source>
         <translation>En direct dans LabPlot : %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4897"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4908"/>
         <source>Bench loaded</source>
         <translation>Banc de mesure chargé</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4908"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4919"/>
         <source>project %1 closed: the bench is not in it</source>
         <translation>projet %1 fermé : le banc de mesure n&apos;en fait pas partie</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4909"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4920"/>
         <source>project %1 opened: the bench is in it</source>
         <translation>projet %1 ouvert : le banc de mesure en fait partie</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4912"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4923"/>
         <source>back in My devices: %1</source>
         <translation>de retour dans Mes appareils : %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4914"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4925"/>
         <source>the programs of their alarms were left out, set them again in Alarms...</source>
         <translation>les programmes de leurs alarmes ont été omis, à redéfinir dans Alarmes...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4916"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4927"/>
         <source>%1 without its key: enter it in the device settings</source>
         <translation>%1 sans sa clé : saisissez-la dans les réglages de l&apos;appareil</translation>
     </message>
@@ -6561,79 +6561,80 @@ Configurez à nouveau sa formule.</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="4546"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4554"/>
         <source>Photo</source>
         <translation>Photo</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4561"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4572"/>
         <source>The photo %1 cannot be shown: not found in the open project.</source>
         <translation>Impossible d&apos;afficher la photo %1 : introuvable dans le projet ouvert.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4601"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4612"/>
         <source>Project: cannot write %1</source>
         <translation>Projet : impossible d&apos;écrire %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4603"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="4739"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4614"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4750"/>
         <source>Into the project: %1</source>
         <translation>Dans le projet : %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4715"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4726"/>
         <source>Live in LabPlot: cannot write %1, stopped</source>
         <translation>En direct dans LabPlot : impossible d&apos;écrire %1, arrêté</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4737"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4748"/>
         <source>Project: cannot write %1: %2</source>
         <translation>Projet : impossible d&apos;écrire %1 : %2</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4770"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4781"/>
         <source>Save bench</source>
         <translation>Enregistrer le banc de mesure</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4771"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="4815"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4782"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4826"/>
         <source>QtDMM bench (*.%1)</source>
         <translation>Banc de mesure QtDMM (*.%1)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4795"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4806"/>
         <source>QtDMM: Save bench</source>
         <translation>QtDMM : Enregistrer le banc de mesure</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4802"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4813"/>
         <source>Bench saved to %1</source>
         <translation>Banc de mesure enregistré dans %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4814"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4825"/>
         <source>Load bench</source>
         <translation>Charger le banc de mesure</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4827"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="4844"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4838"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4855"/>
         <source>QtDMM: Load bench</source>
         <translation>QtDMM : Charger le banc de mesure</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4845"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4856"/>
         <source>The bench closes %1, its recording is not saved.</source>
         <translation>Le banc de mesure ferme %1, son enregistrement n&apos;est pas sauvegardé.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4795"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4806"/>
         <source>Could not write %1.</source>
         <translation>Impossible d&apos;écrire %1.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="5028"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5039"/>
         <source>&amp;Clear list</source>
         <translation>&amp;Vider la liste</translation>
     </message>
@@ -7106,92 +7107,98 @@ Le multimètre est-il branché et allumé ?</translation>
 <context>
     <name>PhotoDlg</name>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="96"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="140"/>
         <source>Photo of the setup</source>
         <translation>Photo du montage</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="182"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="226"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="285"/>
         <source>No photo yet</source>
         <translation>Pas encore de photo</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="99"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="143"/>
         <source>The photos go into the project&apos;s folder &quot;photos&quot;, each with a note in the graph.</source>
         <translation>Les photos vont dans le dossier « Photos » du projet, chacune avec une note dans le graphique.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="114"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="158"/>
         <source>Scan the code with the phone&apos;s camera and open the link. Its page takes photos and sends each one here at once.</source>
         <translation>Scannez le code avec l&apos;appareil photo du téléphone et ouvrez le lien. Sa page prend des photos et envoie chacune ici aussitôt.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="120"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="164"/>
         <source>&amp;Network:</source>
         <translation>&amp;Réseau :</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="123"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="167"/>
         <source>The address of this computer the phone opens: one in the network the phone is in</source>
         <translation>L&apos;adresse de cet ordinateur que le téléphone ouvre : une du réseau où se trouve le téléphone</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="139"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="183"/>
         <source>Phone and computer must be in the same network; a guest WLAN often keeps them apart. A firewall may ask whether QtDMM may accept connections.</source>
         <translation>Le téléphone et l&apos;ordinateur doivent être sur le même réseau ; un Wi-Fi invité les sépare souvent. Un pare-feu peut demander si QtDMM peut accepter des connexions.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="147"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="191"/>
         <source>&amp;Phone</source>
         <translation>&amp;Téléphone</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="153"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="197"/>
         <source>&amp;Webcam</source>
         <translation>&amp;Webcam</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="158"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="202"/>
         <source>Add a picture from a file, or drop pictures onto this dialog.</source>
         <translation>Ajoutez une image depuis un fichier, ou déposez des images sur cette boîte de dialogue.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="161"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="205"/>
         <source>&amp;Add file...</source>
         <translation>&amp;Ajouter un fichier…</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="166"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="210"/>
         <source>From &amp;file</source>
         <translation>Depuis un fic&amp;hier</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="176"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="220"/>
         <source>The phone is connected.</source>
         <translation>Le téléphone est connecté.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="252"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="311"/>
+        <source>Delete photo (to the trash)</source>
+        <translation>Supprimer la photo (vers la corbeille)</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="364"/>
         <source>No network found: connect the computer to the phone&apos;s network.</source>
         <translation>Aucun réseau trouvé : connectez l&apos;ordinateur au réseau du téléphone.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="260"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="372"/>
         <source>Cannot wait for the phone: %1</source>
         <translation>Impossible d&apos;attendre le téléphone : %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="266"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="378"/>
         <source>Waiting for the phone...</source>
         <translation>En attente du téléphone…</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="294"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="406"/>
         <source>Add photos</source>
         <translation>Ajouter des photos</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/photodlg.cpp" line="296"/>
+        <location filename="../../src/ui/dialogs/photodlg.cpp" line="408"/>
         <source>Pictures (%1)</source>
         <translation>Images (%1)</translation>
     </message>
@@ -7276,6 +7283,11 @@ Le multimètre est-il branché et allumé ?</translation>
         <location filename="../../src/core/photostore.cpp" line="70"/>
         <source>Could not read %1: %2</source>
         <translation>Impossible de lire %1 : %2</translation>
+    </message>
+    <message>
+        <location filename="../../src/core/photostore.cpp" line="137"/>
+        <source>Could not delete %1: %2</source>
+        <translation>Impossible de supprimer %1 : %2</translation>
     </message>
 </context>
 <context>
@@ -8048,19 +8060,19 @@ Puis déconnectez-vous et reconnectez-vous pour que l&apos;appartenance au group
     </message>
     <message>
         <location filename="../../src/recording/readingsmodel.cpp" line="254"/>
-        <location filename="../../src/recording/readingsmodel.cpp" line="488"/>
+        <location filename="../../src/recording/readingsmodel.cpp" line="493"/>
         <source>HOLD</source>
         <translation>HOLD</translation>
     </message>
     <message>
         <location filename="../../src/recording/readingsmodel.cpp" line="268"/>
-        <location filename="../../src/recording/readingsmodel.cpp" line="475"/>
+        <location filename="../../src/recording/readingsmodel.cpp" line="480"/>
         <source>Time</source>
         <translation>Heure</translation>
     </message>
     <message>
         <location filename="../../src/recording/readingsmodel.cpp" line="269"/>
-        <location filename="../../src/recording/readingsmodel.cpp" line="477"/>
+        <location filename="../../src/recording/readingsmodel.cpp" line="482"/>
         <source>Device</source>
         <translation>Appareil</translation>
     </message>
@@ -8071,58 +8083,58 @@ Puis déconnectez-vous et reconnectez-vous pour que l&apos;appartenance au group
     </message>
     <message>
         <location filename="../../src/recording/readingsmodel.cpp" line="271"/>
-        <location filename="../../src/recording/readingsmodel.cpp" line="475"/>
+        <location filename="../../src/recording/readingsmodel.cpp" line="480"/>
         <source>Value</source>
         <translation>Valeur</translation>
     </message>
     <message>
         <location filename="../../src/recording/readingsmodel.cpp" line="272"/>
-        <location filename="../../src/recording/readingsmodel.cpp" line="475"/>
+        <location filename="../../src/recording/readingsmodel.cpp" line="480"/>
         <source>Unit</source>
         <translation>Unité</translation>
     </message>
     <message>
         <location filename="../../src/recording/readingsmodel.cpp" line="273"/>
-        <location filename="../../src/recording/readingsmodel.cpp" line="475"/>
+        <location filename="../../src/recording/readingsmodel.cpp" line="480"/>
         <source>Mode</source>
         <translation>Mode</translation>
     </message>
     <message>
         <location filename="../../src/recording/readingsmodel.cpp" line="274"/>
-        <location filename="../../src/recording/readingsmodel.cpp" line="475"/>
+        <location filename="../../src/recording/readingsmodel.cpp" line="480"/>
         <source>Range</source>
         <translation>Gamme</translation>
     </message>
     <message>
         <location filename="../../src/recording/readingsmodel.cpp" line="275"/>
-        <location filename="../../src/recording/readingsmodel.cpp" line="475"/>
+        <location filename="../../src/recording/readingsmodel.cpp" line="480"/>
         <source>Hold</source>
         <translation>Hold</translation>
     </message>
     <message>
         <location filename="../../src/recording/readingsmodel.cpp" line="276"/>
-        <location filename="../../src/recording/readingsmodel.cpp" line="479"/>
+        <location filename="../../src/recording/readingsmodel.cpp" line="484"/>
         <source>Limit</source>
         <translation>Limite</translation>
     </message>
     <message>
-        <location filename="../../src/recording/readingsmodel.cpp" line="442"/>
-        <location filename="../../src/recording/readingsmodel.cpp" line="471"/>
+        <location filename="../../src/recording/readingsmodel.cpp" line="447"/>
+        <location filename="../../src/recording/readingsmodel.cpp" line="476"/>
         <source>Nothing to export.</source>
         <translation>Rien à exporter.</translation>
     </message>
     <message>
-        <location filename="../../src/recording/readingsmodel.cpp" line="445"/>
+        <location filename="../../src/recording/readingsmodel.cpp" line="450"/>
         <source>Cannot open file.</source>
         <translation>Impossible d&apos;ouvrir le fichier.</translation>
     </message>
     <message>
-        <location filename="../../src/recording/readingsmodel.cpp" line="474"/>
+        <location filename="../../src/recording/readingsmodel.cpp" line="479"/>
         <source>Readings</source>
         <translation>Mesures</translation>
     </message>
     <message>
-        <location filename="../../src/recording/readingsmodel.cpp" line="475"/>
+        <location filename="../../src/recording/readingsmodel.cpp" line="480"/>
         <source>Alarm</source>
         <translation>Alarme</translation>
     </message>
