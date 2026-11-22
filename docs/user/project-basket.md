@@ -105,7 +105,10 @@ picture of how the meter was connected, kept with the measurement.
 - **From file**: **Add file...** takes a picture in, or drop pictures onto
   the dialog.
 - The dialog shows the newest photo and keeps the others of this time in a
-  strip below it; a click there shows one again.
+  strip below it; a click there shows one again. A photo that did not turn
+  out well goes with the delete button in its corner (or **Del** on the one
+  chosen): the file goes to the trash, its marks in the graph and the
+  table go too.
 - Each photo goes into the folder `photos`, named by the time it came:
   `photos/photo_2026-11-22_14-03-12.jpg`. It is kept as it came, its EXIF
   data too; a photo taken upright is shown upright.

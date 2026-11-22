@@ -4548,6 +4548,17 @@ void MainWindow::photoSetup()
       if (GraphView *view = currentGraph())
         view->graph()->addNote(-1, title, QFileInfo(path).fileName(), PhotoStore::relative(m_basket->folder(), path));
     });
+    // a photo deleted in the dialog: its marks go along, in every graph
+    connect(m_photoDlg, &PhotoDlg::photoRemoved, this, [this](const QString &path, const QDateTime &when)
+    {
+      m_readings->log()->unmarkAt(when, tr("Photo"));
+      const QString photo = PhotoStore::relative(m_basket->folder(), path);
+      for (QMdiSubWindow *w : m_mdi->subWindowList())
+        if (GraphView *view = graphViewOf(w))
+          for (int mark = view->graph()->markCount() - 1; mark >= 0; --mark)
+            if (view->graph()->markPhoto(mark) == photo)
+              view->graph()->removeMark(mark);
+    });
   }
   m_photoDlg->show();
   m_photoDlg->raise();

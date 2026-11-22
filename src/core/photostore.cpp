@@ -120,3 +120,20 @@ PhotoStore::Photo PhotoStore::newest(const QString &project)
   }
   return best;
 }
+
+bool PhotoStore::remove(const QString &path, QString *trashed, QString *error)
+{
+  QString where;
+  const bool inTrash = QFile::moveToTrash(path, &where);
+  if (trashed)
+    *trashed = inTrash ? where : QString();
+  if (inTrash)
+    return true;
+  // no trash here (or none for this disk): gone for good
+  QFile file(path);
+  if (file.remove())
+    return true;
+  if (error)
+    *error = QCoreApplication::translate("PhotoStore", "Could not delete %1: %2").arg(QDir::toNativeSeparators(path), file.errorString());
+  return false;
+}

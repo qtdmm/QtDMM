@@ -30,6 +30,10 @@ QString relative(const QString &project, const QString &photo);
 QString absolute(const QString &project, const QString &path);
 /// The picture, turned as the camera said (EXIF orientation); null when unreadable.
 QImage  load(const QString &path);
+/// Moves the photo @p path to the trash, or deletes it where there is
+/// none. False when it stays (@p error says why); @p trashed gets its path
+/// in the trash, empty when it was deleted.
+bool    remove(const QString &path, QString *trashed = nullptr, QString *error = nullptr);
 
 /// A photo in a project: its full path and when it was taken.
 struct Photo

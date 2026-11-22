@@ -16,17 +16,61 @@
 #include <QGuiApplication>
 #include <QImageReader>
 #include <QListWidget>
+#include <QKeyEvent>
 #include <QMimeData>
+#include <QMouseEvent>
+#include <QPainter>
 #include <QPushButton>
 #include <QHBoxLayout>
 #include <QScreen>
 #include <QStandardPaths>
 #include <QStyle>
+#include <QStyledItemDelegate>
 #include <QTabWidget>
 #include <QVBoxLayout>
 
 namespace
 {
+constexpr int kWhen = Qt::UserRole + 1;   // a strip item's time, beside its path (Qt::UserRole)
+
+// the delete button in the top right corner of a picture in the strip
+QRect removeCorner(const QRect &item)
+{
+  constexpr int size = 22;
+  return QRect(item.right() - size - 3, item.top() + 4, size, size);
+}
+
+// a picture of the strip with its delete button: a round plate in the
+// window's colour under the theme's icon, readable on any photo
+class StripDelegate : public QStyledItemDelegate
+{
+public:
+  using QStyledItemDelegate::QStyledItemDelegate;
+  void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override
+  {
+    QStyledItemDelegate::paint(painter, option, index);
+    const QRect r = removeCorner(option.rect);
+    painter->save();
+    painter->setRenderHint(QPainter::Antialiasing);
+    QColor plate = option.palette.color(QPalette::Window);
+    plate.setAlpha(240);
+    painter->setPen(option.palette.color(QPalette::Mid));
+    painter->setBrush(plate);
+    painter->drawEllipse(QRectF(r).adjusted(0.5, 0.5, -0.5, -0.5));
+    if (const QIcon icon = QIcon::fromTheme("edit-delete"); !icon.isNull())
+      icon.paint(painter, r.adjusted(3, 3, -3, -3));
+    else
+    {
+      // a theme without it: a cross
+      painter->setPen(QPen(option.palette.color(QPalette::WindowText), 2));
+      const QRectF x = QRectF(r).adjusted(7, 7, -7, -7);
+      painter->drawLine(x.topLeft(), x.bottomRight());
+      painter->drawLine(x.topRight(), x.bottomLeft());
+    }
+    painter->restore();
+  }
+};
+
 // the files among @p mime's that are pictures, by suffix: read when taken in
 QStringList pictureFiles(const QMimeData *mime)
 {
@@ -197,6 +241,10 @@ PhotoDlg::PhotoDlg(const QString &project, QWidget *parent) : QDialog(parent), m
                          "QListWidget::item:selected { background: transparent; border-color: palette(highlight); }");
   m_strip->setFixedHeight(72 + 2 * (2 + 1 + 4) + m_strip->style()->pixelMetric(QStyle::PM_ScrollBarExtent)
                           + 2 * m_strip->frameWidth() + 4);
+  m_strip->setItemDelegate(new StripDelegate(m_strip));
+  m_strip->setMouseTracking(true);
+  m_strip->viewport()->installEventFilter(this);
+  m_strip->installEventFilter(this);
   m_strip->hide();
   layout->addWidget(m_strip);
   connect(m_strip, &QListWidget::currentItemChanged, this, [this](const QListWidgetItem *item)
@@ -213,6 +261,70 @@ PhotoDlg::PhotoDlg(const QString &project, QWidget *parent) : QDialog(parent), m
 int PhotoDlg::photoCount() const
 {
   return m_strip->count();
+}
+
+bool PhotoDlg::removePhoto(int row)
+{
+  const QListWidgetItem *item = m_strip->item(row);
+  if (!item)
+    return false;
+  const QString path = item->data(Qt::UserRole).toString();
+  const QDateTime when = item->data(kWhen).toDateTime();
+  QString why;
+  if (!PhotoStore::remove(path, nullptr, &why))
+  {
+    Q_EMIT error(why);
+    return false;
+  }
+  delete m_strip->takeItem(row);
+  // the next one shows above, or none
+  if (m_strip->count() == 0)
+  {
+    m_strip->hide();
+    m_preview->setImage(QImage());
+    m_preview->setText(tr("No photo yet"));
+    m_preview->setEnabled(false);
+  }
+  Q_EMIT photoRemoved(path, when);
+  return true;
+}
+
+QRect PhotoDlg::removeRect(int row) const
+{
+  const QListWidgetItem *item = m_strip->item(row);
+  return item ? removeCorner(m_strip->visualItemRect(item)) : QRect();
+}
+
+bool PhotoDlg::eventFilter(QObject *watched, QEvent *event)
+{
+  if (watched == m_strip->viewport())
+  {
+    // the delete button of a picture: taken before the strip chooses it
+    if (event->type() == QEvent::MouseButtonPress || event->type() == QEvent::MouseMove)
+    {
+      const QPoint pos = static_cast<QMouseEvent *>(event)->position().toPoint();
+      const QListWidgetItem *item = m_strip->itemAt(pos);
+      const bool onButton = item && removeCorner(m_strip->visualItemRect(item)).contains(pos);
+      if (event->type() == QEvent::MouseMove)
+      {
+        m_strip->viewport()->setCursor(onButton ? Qt::PointingHandCursor : Qt::ArrowCursor);
+        m_strip->viewport()->setToolTip(onButton ? tr("Delete photo (to the trash)") : QString());
+        return false;
+      }
+      if (onButton && static_cast<QMouseEvent *>(event)->button() == Qt::LeftButton)
+      {
+        removePhoto(m_strip->row(item));
+        return true;
+      }
+    }
+  }
+  else if (watched == m_strip && event->type() == QEvent::KeyPress
+           && static_cast<QKeyEvent *>(event)->key() == Qt::Key_Delete && m_strip->currentRow() >= 0)
+  {
+    removePhoto(m_strip->currentRow());
+    return true;
+  }
+  return QDialog::eventFilter(watched, event);
 }
 
 bool PhotoDlg::addFile(const QString &file)
@@ -236,7 +348,7 @@ bool PhotoDlg::taken(const QString &path, const QDateTime &when, const QString &
     Q_EMIT error(why);
     return false;
   }
-  present(path, PhotoStore::load(path));
+  present(path, PhotoStore::load(path), when);
   Q_EMIT photoAdded(path, when);
   return true;
 }
@@ -298,7 +410,7 @@ void PhotoDlg::chooseFiles()
     addFile(f);
 }
 
-void PhotoDlg::present(const QString &path, const QImage &image)
+void PhotoDlg::present(const QString &path, const QImage &image, const QDateTime &when)
 {
   m_preview->setEnabled(true);
   m_preview->setText(QString());
@@ -308,6 +420,7 @@ void PhotoDlg::present(const QString &path, const QImage &image)
   auto *item = new QListWidgetItem(icon, QString());
   item->setSizeHint(m_strip->iconSize() + QSize(6, 6));
   item->setData(Qt::UserRole, path);
+  item->setData(kWhen, when);
   item->setToolTip(QFileInfo(path).fileName());
   m_strip->insertItem(0, item);
   m_strip->show();

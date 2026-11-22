@@ -99,6 +99,8 @@ public:
   void markAt(const QDateTime &when, const QColor &color, const QString &name);
   /// A note dragged in the graph from @p from to @p to: its mark moves along.
   void moveMark(const QDateTime &from, const QDateTime &to, const QColor &color, const QString &name);
+  /// The mark @p name set by markAt() at @p when goes (a photo deleted).
+  void unmarkAt(const QDateTime &when, const QString &name);
 
 public Q_SLOTS:
   /// A reading from the MeterController.
