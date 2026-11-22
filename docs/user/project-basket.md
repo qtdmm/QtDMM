@@ -92,8 +92,14 @@ A file is never overwritten: a second `ripple.csv` becomes `ripple (2).csv`.
 The camera button next to **Add...** opens **Photo of the setup**: a
 picture of how the meter was connected, kept with the measurement.
 
-- **Add file...** takes a picture in, or drop pictures onto the dialog.
-  The dialog shows the newest one and keeps the others of this time in a
+- **Phone**: scan the QR code with the phone's camera and open the link.
+  The page that opens has a big **Take a photo** button, which opens the
+  phone's camera; each photo is sent to QtDMM at once, and the page stays
+  open for the next one. **Choose from the gallery** sends photos taken
+  before. No app is needed.
+- **From file**: **Add file...** takes a picture in, or drop pictures onto
+  the dialog.
+- The dialog shows the newest photo and keeps the others of this time in a
   strip below it; a click there shows one again.
 - Each photo goes into the folder `photos`, named by the time it came:
   `photos/photo_2026-11-22_14-03-12.jpg`. It is kept as it came, its EXIF
@@ -106,6 +112,23 @@ picture of how the meter was connected, kept with the measurement.
 
 The button is there only while a project is open. Closing the project
 closes the dialog.
+
+**The phone's connection.** Phone and computer must be in the same
+network. QtDMM waits for the phone only while the dialog shows the
+**Phone** tab, on one address of the computer: **Network** lists them,
+your LAN or WLAN first; pick the one of the network the phone is in. The
+link is shown below the code too, to type it in. Each time the dialog
+opens the link is a new one with a random key in it, and it stops working
+when the dialog closes; without the key QtDMM sends nothing and takes
+nothing. Only pictures are taken, up to 25 MB each. It is plain HTTP inside
+your network, nothing goes through the internet.
+
+If the phone cannot open the page: a guest WLAN usually keeps its devices
+apart from the rest of the network; a firewall on the computer (Windows
+asks the first time) has to let QtDMM accept connections; a VPN on the
+phone may route the address elsewhere. iPhones send photos as JPEG; a
+picture QtDMM cannot read (some HEIC files) is refused with a message on
+the phone.
 
 ### Folders by kind
 

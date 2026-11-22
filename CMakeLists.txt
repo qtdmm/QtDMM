@@ -111,6 +111,11 @@ foreach(file_path IN LISTS LABPLOT_FILES)
 endforeach()
 set(RES_CONTENT "${RES_CONTENT}    </qresource>\n")
 
+## the page a phone opens to send photos of the setup (PhotoServer)
+set(RES_CONTENT "${RES_CONTENT}    <qresource prefix=\"/photo\">\n")
+set(RES_CONTENT "${RES_CONTENT}        <file alias=\"upload.html\">${CMAKE_SOURCE_DIR}/assets/photo/upload.html</file>\n")
+set(RES_CONTENT "${RES_CONTENT}    </qresource>\n")
+
 ## specification data of some meters from their manuals (dmm-tools, via
 ## tools/update_device_specs.py) for the Data tab of a device's info
 file(GLOB SPEC_FILES CONFIGURE_DEPENDS assets/specs/*.json)
@@ -384,7 +389,7 @@ option(QTDMM_WERROR "Treat compiler warnings in QtDMM's own code as errors" OFF)
 
 if(QTDMM_WERROR)
 	# bundled third-party code keeps its warnings; they are not ours to fix
-	set(_third_party src/3rdparty/miniz/miniz.c src/3rdparty/tiny-aes/aes.c)
+	set(_third_party src/3rdparty/miniz/miniz.c src/3rdparty/tiny-aes/aes.c src/3rdparty/qrcodegen/qrcodegen.cpp)
 	if (NOT QTDMM_WITH_NEOQCP)
 		list(APPEND _third_party src/3rdparty/qcustomplot/qcustomplot.cpp)
 	endif()
