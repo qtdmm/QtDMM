@@ -140,7 +140,7 @@ jobs:
         GH_TOKEN: ${{ github.token }}
       run: |
         gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" > releases.json
-        tools/make-update-feed.py releases.json site/latest.json
+        tools/make-update-feed.py < releases.json > site/latest.json
         head -n 12 site/latest.json
 
     - uses: actions/upload-pages-artifact@v3
