@@ -95,6 +95,7 @@ private:
   QIODevice *m_port;
   QTimer    *m_gapTimer = nullptr;   ///< frameGapMs(): fires after the pause
   QTimer    *m_pollTimer = nullptr;  ///< sends the poll requests (start())
+  int        m_waitTicks = 0;        ///< poll ticks since the last request without its frame
   QByteArray m_gapFrame;             ///< frameGapMs(): the bytes since the last frame
   qint64     m_gapT = 0;             ///< frameGapMs(): Sample::now() of its first byte
   qint64     m_gapWall = 0;
