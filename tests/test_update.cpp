@@ -159,7 +159,7 @@ int main(int argc, char **argv)
     const QJsonObject stable{ { "version", "26.5" }, { "date", "2027-01-01" }, { "notes", "https://example.invalid/" },
                               { "files", QJsonObject{ { "windows-installer", file } } } };
     QFile f(web.filePath("latest.json"));
-    f.open(QIODevice::WriteOnly | QIODevice::Truncate);
+    check(f.open(QIODevice::WriteOnly | QIODevice::Truncate), "the feed on the 'server'");
     f.write(QJsonDocument(QJsonObject{ { "format", 1 }, { "stable", stable }, { "beta", QJsonValue() } }).toJson());
   };
   const QString sha = QString::fromLatin1(QCryptographicHash::hash(setup, QCryptographicHash::Sha256).toHex());
