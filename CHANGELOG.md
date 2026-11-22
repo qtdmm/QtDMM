@@ -107,6 +107,16 @@
 
 - **Qt Charts is no longer needed** — the graph draws with QCustomPlot (bundled) now, so building and packaging need one Qt module less (CMake, Arch PKGBUILD, RPM spec, Nix flake, INSTALL, the CI).
 
+## v26.4 — Many Meters, One Bench (2026-11-22)
+
+Changes after rc1; the release candidate below lists everything new before.
+
+### Bug fixes
+
+- **Windows in Fixed mode come back to their place** — windows that left the arrangement one after the other came back swapped, because each place only knew its neighbour, which could be gone too. The arrangement is now kept as a whole until it is changed.
+- **A bench from before 26.4 keeps its values** — a view of an older file showed the main value of a meter connected again instead of the value chosen there.
+- **The Flatpak reads and writes in your home folder** — files saved without a dialog (`QTDMM:RECord:SAVE` into Documents/QtDMM), benches and recent files by their path stayed inside the sandbox and were lost.
+
 ## v26.4-rc1 — Many Meters, One Bench (2026-11-08)
 
 ### Multi-meter core
@@ -214,7 +224,6 @@
 
 ### Platforms and build
 
-- **The Flatpak reads and writes in your home folder** — files saved without a dialog (`QTDMM:RECord:SAVE` into Documents/QtDMM), benches and recent files by their path stayed inside the sandbox and were lost.
 - **The Linux AppImage brings Qt 6.8.3** — instead of Ubuntu's Qt 6.4.2. It is built on Ubuntu 26.04 now and needs glibc 2.43 or newer; on older systems take the Flatpak.
 - **`compile.sh` builds with another Qt** — `QTDMM_QT_DIR=<Qt directory> ./compile.sh`; CMake prints the Qt version it found.
 - **Qt Multimedia for sound and video** — built in when found (`QTDMM_WITH_MULTIMEDIA`, for the alarm sounds; without it every sound is the system's beep); the Flatpak may play sound.
