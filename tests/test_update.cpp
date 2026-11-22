@@ -219,13 +219,17 @@ int main(int argc, char **argv)
   click(bar, "Restart now");
   check(bar.isHidden() && restart == appImage, "Restart now: the same path");
   // a folder QtDMM may not write into: says so, the browser download instead
+  // (not as root, who writes there all the same: the FreeBSD CI)
   QFile::setPermissions(apps.path(), QFile::ReadOwner | QFile::ExeOwner);
-  bar.checkNow();
-  waitFor([&] { return buttons(bar).contains("Install"); });
-  click(bar, "Install");
-  check(waitFor([&] { return buttons(bar).contains("Download"); })
-          && bar.findChild<QLabel *>()->text().contains("could not replace"),
-        "read-only folder: " + bar.findChild<QLabel *>()->text());
+  if (!QFileInfo(apps.path()).isWritable())
+  {
+    bar.checkNow();
+    waitFor([&] { return buttons(bar).contains("Install"); });
+    click(bar, "Install");
+    check(waitFor([&] { return buttons(bar).contains("Download"); })
+            && bar.findChild<QLabel *>()->text().contains("could not replace"),
+          "read-only folder: " + bar.findChild<QLabel *>()->text());
+  }
   QFile::setPermissions(apps.path(), QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner);
   qunsetenv("APPIMAGE");
 #endif
