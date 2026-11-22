@@ -3,14 +3,21 @@
 // The update check: the version order, what latest.json offers to which
 // version (tests/data/update/latest.json, written by tools/make-update-feed.py
 // from real releases: stable 26.4, beta 27.1-rc1), fetching it, and the
-// banner asking first and offering then.
+// banner asking first and offering then; the Windows installer downloaded
+// and checked against its SHA256.
 #include "core/settings.h"
 #include "core/updatecheck.h"
+#include "core/updatedownload.h"
 #include "ui/updatebar.h"
 
 #include "testutil.h"
 
 #include <QApplication>
+#include <QCryptographicHash>
+#include <QDir>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QStandardPaths>
 #include <QFile>
 #include <QLabel>
 #include <QPushButton>
@@ -18,6 +25,17 @@
 
 namespace
 {
+void click(const UpdateBar &bar, const QString &text)
+{
+  for (QPushButton *b : bar.findChildren<QPushButton *>())
+    if (!b->isHidden() && b->text() == text)
+    {
+      b->click();
+      return;
+    }
+  check(false, "no button " + text);
+}
+
 QStringList buttons(const UpdateBar &bar)
 {
   QStringList texts;
@@ -126,6 +144,51 @@ int main(int argc, char **argv)
   check(bar.beta(), "a candidate gets candidates");
   bar.checkNow();
   check(waitFor([&] { return bar.findChild<QLabel *>()->text().contains("newest"); }), "27.1-rc1: the newest");
+
+  // the Windows installer: Install downloads it into the cache, checks it
+  // and hands it on; a wrong SHA256 leaves nothing behind
+  QStandardPaths::setTestModeEnabled(true);
+  QTemporaryDir web;
+  const QByteArray setup = QByteArray("MZ fake installer ").repeated(5000);
+  QFile out(web.filePath("QtDMM-26.5-windows-x64.exe"));
+  check(out.open(QIODevice::WriteOnly) && out.write(setup) == setup.size(), "the installer on the 'server'");
+  out.close();
+  auto feedWith = [&](const QString &sha) {
+    const QJsonObject file{ { "url", QUrl::fromLocalFile(out.fileName()).toString() }, { "sha256", sha },
+                            { "size", double(setup.size()) } };
+    const QJsonObject stable{ { "version", "26.5" }, { "date", "2027-01-01" }, { "notes", "https://example.invalid/" },
+                              { "files", QJsonObject{ { "windows-installer", file } } } };
+    QFile f(web.filePath("latest.json"));
+    f.open(QIODevice::WriteOnly | QIODevice::Truncate);
+    f.write(QJsonDocument(QJsonObject{ { "format", 1 }, { "stable", stable }, { "beta", QJsonValue() } }).toJson());
+  };
+  const QString sha = QString::fromLatin1(QCryptographicHash::hash(setup, QCryptographicHash::Sha256).toHex());
+  feedWith(sha);
+  qputenv("QTDMM_UPDATE_URL", QUrl::fromLocalFile(web.filePath("latest.json")).toString().toUtf8());
+  QCoreApplication::setApplicationVersion("26.4");
+  bar.setInstallKind(UpdateCheck::Install::WindowsInstaller);
+  QString ready;
+  QObject::connect(&bar, &UpdateBar::installReady, [&](const QString &path) { ready = path; });
+  bar.checkNow();
+  check(waitFor([&] { return buttons(bar).contains("Install"); }) && !buttons(bar).contains("Download"),
+        "the installer: Install, no Download");
+  click(bar, "Install");
+  check(waitFor([&] { return buttons(bar).contains("Install now"); }), "downloaded and checked: " + bar.findChild<QLabel *>()->text());
+  click(bar, "Install now");
+  QFile got(ready);
+  check(bar.isHidden() && QFileInfo(ready).fileName() == "QtDMM-26.5-windows-x64.exe"
+          && ready.startsWith(UpdateDownload::defaultFolder()) && got.open(QIODevice::ReadOnly) && got.readAll() == setup,
+        "Install now: the checked file handed on: " + ready);
+  got.close();
+  feedWith(QString(64, 'a'));
+  bar.checkNow();
+  waitFor([&] { return buttons(bar).contains("Install"); });
+  click(bar, "Install");
+  check(waitFor([&] { return buttons(bar).contains("Try again"); })
+          && bar.findChild<QLabel *>()->text().contains("SHA256")
+          && QDir(UpdateDownload::defaultFolder()).entryList(QDir::Files).isEmpty(),
+        "a wrong SHA256: failed, nothing left: " + bar.findChild<QLabel *>()->text());
+  check(UpdateCheck::installerArguments().contains("/QTDMMRESTART=1"), "the installer starts QtDMM again");
 
   if (failed == 0)
     qInfo() << "All update tests passed.";

@@ -69,6 +69,16 @@ public:
   static std::optional<UpdateRelease> offer(const QByteArray &feed, const QString &current, bool beta,
                                             const QString &skipped = {});
 
+  /// What QtDMM passes the Windows installer for an update: silent with a
+  /// progress window, the earlier folder and choices (Inno Setup keeps
+  /// them), QtDMM started again afterwards (/QTDMMRESTART=1, read by
+  /// assets/windows/update_restart.iss).
+  static QStringList installerArguments();
+  /// Starts the Windows installer @p path with installerArguments(), through
+  /// the shell so that it can ask for administrator rights. False where it
+  /// could not start, and on other systems.
+  static bool runInstaller(const QString &path);
+
   /// The feed's address: QTDMM_UPDATE_URL, else the Pages site.
   static QUrl feedUrl();
 
