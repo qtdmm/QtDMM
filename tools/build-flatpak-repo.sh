@@ -1,4 +1,6 @@
 #!/bin/sh
+# Copyright (c) 2026 The QtDMM developers
+# SPDX-License-Identifier: GPL-3.0-or-later
 # Builds the signed Flatpak repository of QtDMM from release bundles.
 #
 #   tools/build-flatpak-repo.sh <stable.flatpak|-> <beta.flatpak|-> <out dir> <key id> <base url>

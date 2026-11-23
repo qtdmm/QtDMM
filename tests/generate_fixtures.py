@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The QtDMM developers
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Generate decoder test fixtures from the protocol specs in docs/protocols/spec/.
 
 Each spec YAML holds curated test vectors: the raw frame bytes together with a
