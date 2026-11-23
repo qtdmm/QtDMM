@@ -5,7 +5,7 @@
 site (https://qtdmm.github.io/QtDMM/latest.json), from GitHub's list of
 releases:
 
-    gh api repos/qtdmm/QtDMM/releases | tools/make-update-feed.py > site/latest.json
+    gh api repos/qtdmm/QtDMM/releases | tools/make-update-feed.py [<version> <commit> <date>] > site/latest.json
 
 "stable" is the newest release, "beta" the newest pre-release when it is
 newer than that (else null: a beta user is offered the final release). Each
@@ -15,7 +15,12 @@ kind with its SHA256 (GitHub's digest of the file):
     {"format": 1,
      "stable": {"version": "26.4", "date": "2026-11-22", "notes": "https://...",
                 "files": {"appimage": {"url": ..., "sha256": ..., "size": ...}, ...}},
-     "beta": null}
+     "beta": null,
+     "master": {"version": "27.1-dev.530+gdef5678", "commit": "def5678...", "date": "2026-11-23"}}
+
+"master" is the newest commit on master, for those who build QtDMM from
+its sources: the arguments <version> <commit> <date> (version from
+cmake -P cmake/git_version.cmake), else null.
 
 Drafts and tags that are not versions (YY.N[.P][-alphaK|-betaK|-rcK]) are
 left out.
@@ -70,7 +75,14 @@ def entry(release):
     }
 
 
-def feed(releases):
+def master_entry(args):
+    if len(args) != 3:
+        return None
+    version, commit, date = args
+    return {"version": version, "commit": commit, "date": date}
+
+
+def feed(releases, master=None):
     published = [r for r in releases if not r.get("draft") and version_key(r["tag_name"])]
     published.sort(key=lambda r: version_key(r["tag_name"]), reverse=True)
     stable = next((r for r in published if not r.get("prerelease")), None)
@@ -81,12 +93,13 @@ def feed(releases):
         "format": 1,
         "stable": entry(stable) if stable else None,
         "beta": entry(beta) if beta else None,
+        "master": master,
     }
 
 
 def main():
     # stdin to stdout: no file names to open (the shell does the redirection)
-    json.dump(feed(json.load(sys.stdin)), sys.stdout, indent=1)
+    json.dump(feed(json.load(sys.stdin), master_entry(sys.argv[1:])), sys.stdout, indent=1)
     sys.stdout.write("\n")
 
 

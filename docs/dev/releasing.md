@@ -119,7 +119,9 @@ A clone needs its tags: `git fetch --tags`. The CI checkouts use `fetch-depth: 0
    allowed to deploy to github-pages" (set up for 26.3-rc1).
    The same run writes <https://qtdmm.github.io/QtDMM/latest.json>, which
    QtDMM's update check reads: the newest release and a newer pre-release,
-   with the download and SHA256 of each file (`tools/make-update-feed.py`).
+   with the download and SHA256 of each file (`tools/make-update-feed.py`),
+   and master's newest commit with its version for builds from the sources
+   (written on every merge that changes the program, too).
 9. Tell the website: the download page links the new release.
 
 ## Release branch

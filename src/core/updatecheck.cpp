@@ -14,6 +14,7 @@
 #include <QRegularExpression>
 #include <QTemporaryDir>
 
+#include <algorithm>
 #include <array>
 #include <filesystem>
 
@@ -26,6 +27,8 @@
 namespace
 {
 const char *const kFeedUrl = "https://qtdmm.github.io/QtDMM/latest.json";
+const char *const kRepoUrl = "https://github.com/qtdmm/QtDMM";
+const int kDevRank = 0;   ///< versionParts()[3] of a dev build
 
 /// The parts of a version in the order they compare: year, number, patch,
 /// pre-release rank (dev < alpha < beta < rc < release), its number, the
@@ -119,6 +122,12 @@ bool UpdateCheck::isPreRelease(const QString &version)
   return p && (*p)[3] < 4;
 }
 
+bool UpdateCheck::isDevBuild(const QString &version)
+{
+  const auto p = versionParts(version);
+  return p && (*p)[3] == kDevRank;
+}
+
 std::optional<UpdateRelease> UpdateCheck::offer(const QByteArray &feed, const QString &current, bool beta,
                                                 const QString &skipped)
 {
@@ -140,6 +149,30 @@ std::optional<UpdateRelease> UpdateCheck::offer(const QByteArray &feed, const QS
       best = std::move(r);
   }
   return best;
+}
+
+std::optional<MasterCommit> UpdateCheck::masterOffer(const QByteArray &feed, const QString &current)
+{
+  const QJsonObject root = QJsonDocument::fromJson(feed).object();
+  const QJsonObject o = root.value("master").toObject();
+  const auto mine = versionParts(current);
+  if (root.value("format").toInt() != 1 || !isDevBuild(current))
+    return std::nullopt;
+  MasterCommit m;
+  m.version = o.value("version").toString();
+  m.commit = o.value("commit").toString();
+  m.date = QDate::fromString(o.value("date").toString(), Qt::ISODate);
+  const auto theirs = versionParts(m.version);
+  if (!theirs || m.commit.isEmpty() || compareVersions(m.version, current) <= 0)
+    return std::nullopt;
+  // the same -dev tag: the commit counts after it differ by the new ones
+  if (std::equal(mine->begin(), mine->begin() + 5, theirs->begin()))
+    m.newCommits = (*theirs)[5] - (*mine)[5];
+  static const QRegularExpression hash(R"(\+g([0-9a-f]{7,40})$)");
+  const QRegularExpressionMatch h = hash.match(current.trimmed());
+  m.changes = QUrl(h.hasMatch() ? QString("%1/compare/%2...%3").arg(kRepoUrl, h.captured(1), m.commit)
+                                : QString("%1/commits/master").arg(kRepoUrl));
+  return m;
 }
 
 QStringList UpdateCheck::installerArguments()
