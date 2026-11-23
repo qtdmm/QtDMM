@@ -9,10 +9,12 @@
 // commits for a build from the sources (master 27.2-dev.30+gdef5678 in
 // latest.json).
 #include "core/settings.h"
+#include "core/sourcebuild.h"
 #include "core/updatecheck.h"
 #include "core/flatpakupdate.h"
 #include "core/newsfeed.h"
 #include "core/updatedownload.h"
+#include "ui/dialogs/rebuilddlg.h"
 #include "ui/updatebar.h"
 
 #include "testutil.h"
@@ -223,8 +225,24 @@ int main(int argc, char **argv)
   QCoreApplication::setApplicationVersion("27.2-dev.12+gabc1234");
   bar.checkNow();
   check(waitFor([&] { return bar.findChild<QLabel *>()->text().contains("New commits on master: 18 "); })
-          && buttons(bar) == QStringList({ "Changes", "Later" }),
+          && buttons(bar).mid(buttons(bar).size() - 2) == QStringList({ "Changes", "Later" }),
         "master ahead: " + bar.findChild<QLabel *>()->text());
+  // where the test's own sources are there (a checkout, not Windows):
+  // Update and build opens the dialog, which runs nothing before Start
+  check(buttons(bar).contains("Update and build") == SourceBuild::available(), "Update and build: where the sources are");
+  if (SourceBuild::available())
+  {
+    click(bar, "Update and build");
+    auto *rebuild = bar.findChild<RebuildDlg *>();
+    check(rebuild && rebuild->isVisible() && bar.isHidden()
+            && rebuild->intro().contains(QDir::toNativeSeparators(SourceBuild::builtSourceDir()))
+            && !rebuild->build()->running(),
+          "the dialog says what it will do and waits");
+    if (rebuild)
+      rebuild->reject();
+    bar.checkNow();
+    waitFor([&] { return !bar.isHidden(); });
+  }
   click(bar, "Changes");
   check(catcher.opened.toString().startsWith("https://github.com/qtdmm/QtDMM/compare/abc1234...") && bar.isHidden(),
         "Changes: GitHub's comparison");

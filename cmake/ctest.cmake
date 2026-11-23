@@ -85,6 +85,8 @@ if (BUILD_TESTING)
 	qtdmm_add_test(logic_node test_logicnode tests/test_logicnode.cpp)
 	## the update check and its banner, on the feed of tools/make-update-feed.py
 	qtdmm_add_test(update_check test_update tests/test_update.cpp "${TEST_DATA}/update")
+	## Update and build for builds from the sources, on a git repository of its own
+	qtdmm_add_test(source_build test_sourcebuild tests/test_sourcebuild.cpp "${CMAKE_COMMAND}")
 	qtdmm_add_test(formula_node_dialog test_formulanodedlg tests/test_formulanodedlg.cpp)
 	qtdmm_add_test(legacy_nodes test_legacynodes tests/test_legacynodes.cpp)
 

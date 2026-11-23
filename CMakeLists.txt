@@ -400,6 +400,12 @@ endif()
 option(QTDMM_UPDATE_CHECK "Look for new QtDMM releases (off for distribution packages)" ON)
 if (NOT QTDMM_UPDATE_CHECK)
 	target_compile_definitions(qtdmm_core PUBLIC QTDMM_NO_UPDATE_CHECK)
+else()
+	# a build from the sources updates itself (core/sourcebuild.h): where it
+	# was built, and with which CMake; only in this file, not in distribution
+	# packages (QTDMM_UPDATE_CHECK=OFF)
+	set_source_files_properties(src/core/sourcebuild.cpp PROPERTIES COMPILE_DEFINITIONS
+		"QTDMM_SOURCE_DIR=\"${CMAKE_SOURCE_DIR}\";QTDMM_BUILD_DIR=\"${CMAKE_BINARY_DIR}\";QTDMM_CMAKE_COMMAND=\"${CMAKE_COMMAND}\";QTDMM_CPACK_COMMAND=\"${CMAKE_CPACK_COMMAND}\"")
 endif()
 
 if (QTDMM_WITH_NEOQCP)
