@@ -1,3 +1,6 @@
+// Copyright (c) 2025 The QtDMM developers
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 #include "device/transports/sigrok.h"
 
 #include <QCoreApplication>

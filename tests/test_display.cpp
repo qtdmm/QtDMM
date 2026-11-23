@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The QtDMM developers
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 // Tests for the digital display: seven-segment glyph table and a headless
 // render check. TEST_DISPLAY_DUMP=<dir> writes PNGs for visual review.
 #include <QApplication>

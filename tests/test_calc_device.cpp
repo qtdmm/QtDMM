@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The QtDMM developers
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 // Tests for CalcDevice, the virtual meter that evaluates a formula over the
 // other instances' readings: line format through the real ASCII decoder,
 // missing/stale/invalid inputs, the hyphen/underscore alias, open() errors.

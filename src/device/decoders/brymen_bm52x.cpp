@@ -1,3 +1,8 @@
+// Copyright (c) 2026 The QtDMM developers
+// Copyright (c) 2014 Aurelien Jacobs <aurel@gnuage.org> (libsigrok bm52x.c)
+// Copyright (c) 2019-2020 Gerhard Sittig <gerhard.sittig@gmx.net> (libsigrok bm52x.c)
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 #include "device/decoders/brymen_bm52x.h"
 
 // Brymen BM52x / BM82x over the BU-86X adapter (libsigrok "brymen-bm52x",

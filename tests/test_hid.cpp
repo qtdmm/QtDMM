@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The QtDMM developers
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 // Tests for the HID cable driver's pure parts: chip detection from the port
 // entry and the input report layouts of the CH9325 and CH9329 cables (no
 // hardware needed; the layouts follow sigrok's serial_hid_ch9325.c and PR #298).

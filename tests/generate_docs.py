@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The QtDMM developers
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Generate the documents that must not drift from their source.
 
 1. docs/user/supported-devices.md - the device table, read off the

@@ -1,13 +1,27 @@
-Matthias Toussaint
-Dr. Ralf Wieland (PeakTech-451)
-Michael Petruzelka (Voltcraft M-4660)
-Hubert Mayer (PeakTech-4390, Metex M3850M)
-Jochen Puchalla (PeakTech 4015A)
-Laurent Perez (Tenma 72-7745)
-Erik Hobel (McVoice M-980T)
-Peter Halasz (Digitech QM1462)
-Leif Sandahl (Digitek INO2513)
-Bruce Lilly (RS-22-812)
-Frank Büttner (Qt5 port)
-Florian Evers (Voltcraft VC870)
-tstenner (HP-90EPC)
+QtDMM was written by Matthias Toussaint (2001 ff.).
+"The QtDMM developers" in the copyright notices are the people listed here.
+
+Maintainers
+  Matthias Toussaint          original author
+  Frank Büttner (tuxmaster)   Qt5 port, maintainer from 0.9.5
+  Sarah Mischke (redPanther)  maintainer since 2025
+
+Contributors (git history, GitHub names)
+  Florian Evers               Voltcraft VC870
+  thesteg                     Duratool DO3122
+  luigino                     typo fixes
+
+Device support in the old versions
+  Dr. Ralf Wieland            PeakTech-451
+  Michael Petruzelka          Voltcraft M-4660
+  Hubert Mayer                PeakTech-4390, Metex M3850M
+  Jochen Puchalla             PeakTech 4015A
+  Laurent Perez               Tenma 72-7745
+  Erik Hobel                  McVoice M-980T
+  Peter Halasz                Digitech QM1462
+  Leif Sandahl                Digitek INO2513
+  Bruce Lilly                 RS-22-812
+  tstenner                    HP-90EPC
+
+Since 2025 parts of the code are written with AI assistance (Claude,
+Anthropic); see CONTRIBUTING.md.

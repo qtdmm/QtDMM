@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The QtDMM developers
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 // Baseline behavior tests for GraphWidget, written before the planned QtGraph-based
 // rewrite so the current CSV import/export contract has a regression net to
 // compare the replacement against.

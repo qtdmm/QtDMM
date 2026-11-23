@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The QtDMM developers
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 #include "device/transports/calc.h"
 #include "core/sampletypes.h"
 #include "core/siprefix.h"

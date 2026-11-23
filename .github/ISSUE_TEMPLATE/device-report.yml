@@ -1,3 +1,6 @@
+# Copyright (c) 2026 The QtDMM developers
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 name: Device report
 description: A meter works with QtDMM, or partly - also one that is not in the list yet.
 labels: [device report]

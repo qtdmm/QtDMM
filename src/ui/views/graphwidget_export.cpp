@@ -19,6 +19,7 @@
 // along with QtDMM.  If not, see <http://www.gnu.org/licenses/>.
 //----------------------------------------------------------------------
 // Copyright (c) 2001 Matthias Toussaint
+// SPDX-License-Identifier: GPL-3.0-or-later
 //======================================================================
 //
 // GraphWidget, part: printing, CSV export and import, and the graph as an image.

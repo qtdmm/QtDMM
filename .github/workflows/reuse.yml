@@ -1,0 +1,26 @@
+# Copyright (c) 2026 The QtDMM developers
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+name: REUSE
+
+# Checks that every file states its copyright and licence (REUSE
+# specification, https://reuse.software): a SPDX header in source files,
+# REUSE.toml for data, images and the bundled third-party code, the licence
+# texts in LICENSES/. A new source file without a header fails here.
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+permissions:
+  contents: read
+
+jobs:
+  reuse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: reuse lint
+        run: pipx run reuse==6.3.0 lint
