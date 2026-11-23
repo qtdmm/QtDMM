@@ -343,6 +343,32 @@ int main(int argc, char **argv)
   }
   QFile::setPermissions(apps.path(), QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner);
   qunsetenv("APPIMAGE");
+
+  // the restart: without the AppImage's variables, in the folder it was
+  // started in, with the command line of the running one
+  {
+    QTemporaryDir started;
+    const QString script = started.filePath("QtDMM.AppImage"), out = started.filePath("out");
+    QFile f(script);
+    check(f.open(QIODevice::WriteOnly)
+            && f.write("#!/bin/sh\n{ pwd; echo \"APPIMAGE=$APPIMAGE\"; for a in \"$@\"; do echo \"[$a]\"; done; } > \""
+                       + out.toUtf8() + ".part\"\nmv \"" + out.toUtf8() + ".part\" \"" + out.toUtf8() + "\"\n")
+                 > 0,
+          "the started stand-in");
+    f.close();
+    f.setPermissions(QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner);
+    qputenv("APPIMAGE", script.toUtf8());
+    qputenv("OWD", apps.path().toUtf8());
+    check(UpdateCheck::restartAppImage(script, { "--config-id", "bench 2" }), "restartAppImage starts it");
+    qunsetenv("APPIMAGE");
+    qunsetenv("OWD");
+    QFile result(out);
+    check(waitFor([&] { return result.exists(); }, 5000) && result.open(QIODevice::ReadOnly), "it ran");
+    const QStringList lines = QString::fromUtf8(result.readAll()).split('\n', Qt::SkipEmptyParts);
+    check(lines == QStringList{ QFileInfo(apps.path()).canonicalFilePath(), "APPIMAGE=", "[--config-id]", "[bench 2]" },
+          "restarted with the arguments, in OWD, without APPIMAGE: " + lines.join(" | "));
+  }
+  check(UpdateCheck::restartArguments() == QCoreApplication::arguments().mid(1), "the arguments passed on");
 #endif
 
   // macOS: the new bundle takes the old one's name, the old one waits beside

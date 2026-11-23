@@ -223,7 +223,12 @@ QString UpdateCheck::replaceAppImage(const QString &downloaded, const QString &t
   return {};
 }
 
-bool UpdateCheck::restartAppImage(const QString &path)
+QStringList UpdateCheck::restartArguments()
+{
+  return QCoreApplication::arguments().mid(1);
+}
+
+bool UpdateCheck::restartAppImage(const QString &path, const QStringList &args)
 {
   QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
   const QString folder = env.value("OWD");
@@ -231,6 +236,7 @@ bool UpdateCheck::restartAppImage(const QString &path)
     env.remove(name);
   QProcess process;
   process.setProgram(path);
+  process.setArguments(args);
   process.setProcessEnvironment(env);
   if (!folder.isEmpty())
     process.setWorkingDirectory(folder);
@@ -310,9 +316,9 @@ void UpdateCheck::removeOldBundle(const QString &target)
   QDir(info.dir().filePath("." + info.fileName() + ".old")).removeRecursively();
 }
 
-bool UpdateCheck::restartBundle(const QString &path)
+bool UpdateCheck::restartBundle(const QString &path, const QStringList &args)
 {
-  return QProcess::startDetached("open", { "-n", path });
+  return QProcess::startDetached("open", QStringList{ "-n", path } + (args.isEmpty() ? args : QStringList{ "--args" } + args));
 }
 
 QUrl UpdateCheck::feedUrl()

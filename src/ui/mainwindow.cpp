@@ -281,12 +281,14 @@ MainWindow::MainWindow(QCommandLineParser &parser, QWidget *parent)
   });
   // the AppImage, the macOS bundle or a build from the sources replaced,
   // the Flatpak updated: closes as at Quit, the new one starts (a program
-  // file is started as an AppImage is, without its variables)
+  // file is started as an AppImage is, without its variables), with the
+  // command line of this one (--config-id and the like)
   connect(m_updateBar, &UpdateBar::restartReady, this, [this](const QString &path) {
-    auto restart = [&path] {
+    auto restart = [&path, args = UpdateCheck::restartArguments()] {
       if (path.isEmpty())
-        return FlatpakUpdate::restart();
-      return path.endsWith(".app") ? UpdateCheck::restartBundle(path) : UpdateCheck::restartAppImage(path);
+        return FlatpakUpdate::restart(args);
+      return path.endsWith(".app") ? UpdateCheck::restartBundle(path, args)
+                                   : UpdateCheck::restartAppImage(path, args);
     };
     if (close() && !restart())
       QMessageBox::warning(nullptr, tr("Update"),
