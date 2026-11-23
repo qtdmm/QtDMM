@@ -4,7 +4,7 @@
   <name>QtDMM</name>
   <summary>Read out and record digital multimeters</summary>
   <metadata_license>CC-BY-SA-4.0</metadata_license>
-  <project_license>GPL-3.0-or-later AND LGPL-3.0-or-later</project_license>
+  <project_license>GPL-3.0-or-later AND LGPL-3.0-or-later AND MIT AND Unlicense</project_license>
 
   <description>
     <p>
@@ -40,6 +40,12 @@
   <update_contact>hello@qtdmm.de</update_contact>
   <content_rating type="oars-1.1" />
   <releases>
+    <release version="26.4.1" date="2026-11-23">
+      <description>
+        <p>QtDMM 26.4.1: no new features. Every file now states its copyright and licence (REUSE), the source tarball leaves out the manufacturers' datasheets, and AUTHORS lists who QtDMM's developers are. Preparation for distribution packages such as Debian's.</p>
+      </description>
+      <url>https://github.com/qtdmm/QtDMM/releases/tag/26.4.1</url>
+    </release>
     <release version="26.4" date="2026-11-22">
       <description>
         <p>QtDMM 26.4: many meters on one bench, each with its own front panel, in one graph and one recording; more needle meters and Poincaré plots, a third graph axis, PASS/FAIL test, alarm sounds, the designs Light Metal and Dark Metal, and many new meters. Since the release candidate: windows in Fixed mode return to their place, older benches keep their values, and the Flatpak may use the home folder.</p>
