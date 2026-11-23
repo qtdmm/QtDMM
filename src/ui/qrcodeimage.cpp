@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "ui/qrcodeimage.h"
 
-#include "3rdparty/qrcodegen/qrcodegen.hpp"
+#include <qrcodegen.hpp>
 
 #include <QPainter>
 

@@ -198,8 +198,9 @@ FreeBSD `qt6-connectivity`). Sound and video need Qt6 Multimedia, optional the
 same way: `QTDMM_WITH_MULTIMEDIA` (`qtmultimedia`, Ubuntu `qt6-multimedia-dev`,
 FreeBSD `qt6-multimedia`). `QTDMM_SYSTEM_MINIZ` (off by default) builds with the
 system's miniz (Debian `libminiz-dev`, found by its CMake package or pkg-config)
-instead of `src/3rdparty/miniz`, for distributions that do not want bundled
-libraries. Platform-specific code is limited to the permission
+instead of `src/3rdparty/miniz`, and `QTDMM_SYSTEM_QRCODEGEN` the same for
+qrcodegen (Debian `libqrcodegencpp-dev`, pkg-config `qrcodegencpp`), for
+distributions that do not want bundled libraries. Platform-specific code is limited to the permission
 hint in `src/device/meterconnection.cpp`, the serial port naming in
 `src/device/transports/serial.cpp` and the console attach in `src/main.cpp`.
 
