@@ -113,13 +113,15 @@ int main(int argc, char **argv)
   SourceBuild b;
   b.setExecutable(build + "/qtdmm");
   b.setDirs(src, build);
+  b.setConfigureCommand({ cmake, "-E", "touch", build + "/configured" });
   b.setBuildCommand({ cmake, "-E", "touch", build + "/built" });
   b.setInstallMode(I::BuildDir);
 
   // changes not committed: nothing pulled, nothing built
   write(src + "/a.txt", "mine\n");
   Result r = run(b);
-  check(!r.ok && r.message.contains("not committed") && !QFile::exists(build + "/built")
+  check(!r.ok && r.message.contains("not committed") && !QFile::exists(build + "/configured")
+          && !QFile::exists(build + "/built")
           && read(src + "/a.txt") == "mine\n",
         "changes not committed: stops at once: " + r.message);
   git(src, { "checkout", "-q", "a.txt" });
@@ -127,7 +129,8 @@ int main(int argc, char **argv)
   // pulled and built, started from the build directory
   r = run(b);
   check(r.ok && git(src, { "rev-parse", "HEAD" }) == git(origin, { "rev-parse", "HEAD" })
-          && QFile::exists(build + "/built") && b.restartPath() == build + "/qtdmm" && r.steps.size() == 4,
+          && QFile::exists(build + "/configured") && QFile::exists(build + "/built")
+          && b.restartPath() == build + "/qtdmm" && r.steps.size() == 5,
         "pulled and built: " + r.message + " / " + r.steps.join(", "));
 
   // compile.sh's copy in bin/: copied again, executable as before

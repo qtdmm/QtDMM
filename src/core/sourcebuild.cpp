@@ -101,8 +101,9 @@ void SourceBuild::setDirs(const QString &source, const QString &build)
 {
   m_source = source;
   m_build = build;
-  m_buildCommand = { QString::fromUtf8(QTDMM_CMAKE_COMMAND), "--build", build, "--parallel",
-                     QString::number(QThread::idealThreadCount()) };
+  const QString cmake = QString::fromUtf8(QTDMM_CMAKE_COMMAND);
+  m_configureCommand = { cmake, "-S", source, "-B", build };
+  m_buildCommand = { cmake, "--build", build, "--parallel", QString::number(QThread::idealThreadCount()) };
   m_mode = source.isEmpty() ? Install::None : installMode(m_exe, source, build, debPackaged(m_exe));
 }
 
@@ -136,6 +137,11 @@ void SourceBuild::start()
                    {}, {} });
   m_steps.append({ tr("git pull --ff-only"),
                    [this, git] { return Command{ git, { "pull", "--ff-only" }, m_source }; }, {}, {} });
+  // the version comes from git describe at configure time: without this the
+  // new build would still call itself the old version (and so would its .deb)
+  m_steps.append({ tr("Configuring"),
+                   [this] { return Command{ m_configureCommand.value(0), m_configureCommand.mid(1), m_build }; }, {},
+                   {} });
   m_steps.append({ tr("Building"),
                    [this] { return Command{ m_buildCommand.value(0), m_buildCommand.mid(1), m_build }; }, {}, {} });
 
@@ -166,7 +172,14 @@ void SourceBuild::start()
     break;
   case Install::Deb:
     m_steps.append({ tr("Making the .deb package"),
-                     [this] { return Command{ cpackCommand(), { "-G", "DEB", "--config", "CPackConfig.cmake" }, m_build }; },
+                     [this] {
+                       // an earlier sudo/pkexec cmake --install left its manifest
+                       // owned by root; cpack writes it too
+                       const QString manifest = m_build + "/install_manifest.txt";
+                       if (QFileInfo(manifest).exists() && !QFileInfo(manifest).isWritable())
+                         QFile::remove(manifest);
+                       return Command{ cpackCommand(), { "-G", "DEB", "--config", "CPackConfig.cmake" }, m_build };
+                     },
                      {}, {} });
     if (m_elevator.isEmpty())
       m_done = tr("Built, the package is in %1. To install it, run: sudo apt-get install ./<package>.deb")
