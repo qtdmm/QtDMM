@@ -26,7 +26,7 @@ public:
   /// Starts the update; ends in done(), upToDate() or failed().
   virtual void update();
   /// Starts the newest installed version of QtDMM in a new sandbox.
-  static bool restart();
+  static bool restart(const QStringList &args);
 
 Q_SIGNALS:
   void progress(int percent);

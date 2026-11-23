@@ -104,8 +104,12 @@ public:
   /// old file until it ends. Empty on success, else what went wrong.
   static QString replaceAppImage(const QString &downloaded, const QString &target);
   /// Starts the AppImage @p path anew, without the environment the running
-  /// AppImage set (APPIMAGE, APPDIR, ARGV0, OWD), in the folder it was started in.
-  static bool restartAppImage(const QString &path);
+  /// AppImage set (APPIMAGE, APPDIR, ARGV0, OWD), in the folder it was started in,
+  /// with @p args (the running one's: restartArguments()).
+  static bool restartAppImage(const QString &path, const QStringList &args);
+  /// The command line of the running program without the program itself
+  /// (--config-id and the like): what a restart after an update passes on.
+  static QStringList restartArguments();
 
   /// The running macOS bundle (…/QtDMM.app); empty when not in one.
   static QString bundlePath();
@@ -121,8 +125,8 @@ public:
   static QString replaceBundle(const QString &staged, const QString &target);
   /// Removes what replaceBundle() left of an earlier version beside @p target.
   static void removeOldBundle(const QString &target);
-  /// Starts the bundle @p path anew (open -n).
-  static bool restartBundle(const QString &path);
+  /// Starts the bundle @p path anew (open -n), with @p args.
+  static bool restartBundle(const QString &path, const QStringList &args);
 
   /// The feed's address: QTDMM_UPDATE_URL, else the Pages site.
   static QUrl feedUrl();

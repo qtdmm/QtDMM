@@ -75,7 +75,7 @@ void FlatpakUpdate::onProgress(const QVariantMap &info)
 #endif
 }
 
-bool FlatpakUpdate::restart()
+bool FlatpakUpdate::restart(const QStringList &args)
 {
 #ifdef QTDMM_WITH_DBUS
   using Fds = QMap<uint, QDBusUnixFileDescriptor>;
@@ -86,10 +86,14 @@ bool FlatpakUpdate::restart()
   // byte strings ending in a zero byte
   auto bytes = [](const QString &s) { return QFile::encodeName(s) + '\0'; };
   QDBusMessage call = QDBusMessage::createMethodCall(kService, kPath, kService, "Spawn");
-  call << bytes(QDir::currentPath()) << QVariant::fromValue(QByteArrayList{ bytes("qtdmm") }) << QVariant::fromValue(Fds())
+  QByteArrayList argv{ bytes("qtdmm") };
+  for (const QString &arg : args)
+    argv << bytes(arg);
+  call << bytes(QDir::currentPath()) << QVariant::fromValue(argv) << QVariant::fromValue(Fds())
        << QVariant::fromValue(Envs()) << uint(LatestVersion) << QVariantMap();
   return QDBusConnection::sessionBus().call(call).type() != QDBusMessage::ErrorMessage;
 #else
+  Q_UNUSED(args)
   return false;
 #endif
 }
