@@ -1,3 +1,7 @@
+// Copyright (c) 2001 Matthias Toussaint
+// Copyright (c) 2025 The QtDMM developers
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 #include "device/decoders/cyrustek_es51986.h"
 
 #include "core/sampletypes.h"

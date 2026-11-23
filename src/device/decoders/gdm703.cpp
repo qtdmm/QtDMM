@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The QtDMM developers
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 #include "device/decoders/gdm703.h"
 #include "core/siprefix.h"
 

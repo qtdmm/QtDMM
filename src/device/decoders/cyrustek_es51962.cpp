@@ -1,3 +1,6 @@
+// Copyright (c) 2025 The QtDMM developers
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 #include "device/decoders/cyrustek_es51962.h"
 
 // https://www.mikrocontroller.net/topic/98208

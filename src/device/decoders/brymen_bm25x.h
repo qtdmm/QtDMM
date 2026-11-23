@@ -1,3 +1,7 @@
+// Copyright (c) 2026 The QtDMM developers
+// Copyright (c) 2014 Janne Huttunen <jahuttun@gmail.com> (libsigrok bm25x.c)
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 #pragma once
 
 #include "device/dmmdecoder.h"
