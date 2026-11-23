@@ -50,10 +50,11 @@ public:
   /// Whether dpkg owns the file @p path.
   static bool debPackaged(const QString &path);
 
-  /// Tests: other directories, program, build command, way to install, and
+  /// Tests: other directories, program, configure and build command, way to install, and
   /// what runs a command as root (empty: none there).
   void setDirs(const QString &source, const QString &build);
   void setExecutable(const QString &exe) { m_exe = exe; }
+  void setConfigureCommand(const QStringList &command) { m_configureCommand = command; }
   void setBuildCommand(const QStringList &command) { m_buildCommand = command; }
   void setInstallMode(Install mode) { m_mode = mode; }
   void setElevator(const QString &program) { m_elevator = program; }
@@ -102,6 +103,7 @@ private:
   QString m_source;
   QString m_build;
   QString m_exe;
+  QStringList m_configureCommand;
   QStringList m_buildCommand;
   Install m_mode;
   QString m_elevator;

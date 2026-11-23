@@ -8853,112 +8853,117 @@ Después cierre la sesión y vuelva a iniciarla para que la pertenencia al grupo
 <context>
     <name>SourceBuild</name>
     <message>
-        <location filename="../../src/core/sourcebuild.cpp" line="123"/>
+        <location filename="../../src/core/sourcebuild.cpp" line="124"/>
         <source>Looking for changes not committed</source>
         <translation>Buscando cambios sin commit</translation>
     </message>
     <message>
-        <location filename="../../src/core/sourcebuild.cpp" line="128"/>
+        <location filename="../../src/core/sourcebuild.cpp" line="129"/>
         <source>The sources in %1 have changes not committed; commit or stash them first.</source>
         <translation>Las fuentes en %1 tienen cambios sin commit; haz commit o stash primero.</translation>
     </message>
     <message>
-        <location filename="../../src/core/sourcebuild.cpp" line="132"/>
+        <location filename="../../src/core/sourcebuild.cpp" line="133"/>
         <source>Looking for the branch&apos;s upstream</source>
         <translation>Buscando el upstream de la rama</translation>
     </message>
     <message>
-        <location filename="../../src/core/sourcebuild.cpp" line="137"/>
+        <location filename="../../src/core/sourcebuild.cpp" line="138"/>
         <source>git pull --ff-only</source>
         <translation>git pull --ff-only</translation>
     </message>
     <message>
-        <location filename="../../src/core/sourcebuild.cpp" line="139"/>
+        <location filename="../../src/core/sourcebuild.cpp" line="142"/>
+        <source>Configuring</source>
+        <translation>Configurando</translation>
+    </message>
+    <message>
+        <location filename="../../src/core/sourcebuild.cpp" line="145"/>
         <source>Building</source>
         <translation>Compilando</translation>
     </message>
     <message>
-        <location filename="../../src/core/sourcebuild.cpp" line="147"/>
+        <location filename="../../src/core/sourcebuild.cpp" line="153"/>
         <source>Built. The new version starts with Restart now.</source>
         <translation>Compilado. «Reiniciar ahora» inicia la nueva versión.</translation>
     </message>
     <message>
-        <location filename="../../src/core/sourcebuild.cpp" line="150"/>
+        <location filename="../../src/core/sourcebuild.cpp" line="156"/>
         <source>Copying it to %1</source>
         <translation>Copiando a %1</translation>
     </message>
     <message>
-        <location filename="../../src/core/sourcebuild.cpp" line="153"/>
+        <location filename="../../src/core/sourcebuild.cpp" line="159"/>
         <source>Built and copied. The new version starts with Restart now.</source>
         <translation>Compilado y copiado. «Reiniciar ahora» inicia la nueva versión.</translation>
     </message>
     <message>
-        <location filename="../../src/core/sourcebuild.cpp" line="157"/>
+        <location filename="../../src/core/sourcebuild.cpp" line="163"/>
         <source>Built. To install it, run: sudo %1 --install %2</source>
         <translation>Compilado. Para instalarlo, ejecuta: sudo %1 --install %2</translation>
     </message>
     <message>
-        <location filename="../../src/core/sourcebuild.cpp" line="160"/>
+        <location filename="../../src/core/sourcebuild.cpp" line="166"/>
         <source>Installing (cmake --install)</source>
         <translation>Instalando (cmake --install)</translation>
     </message>
     <message>
-        <location filename="../../src/core/sourcebuild.cpp" line="164"/>
+        <location filename="../../src/core/sourcebuild.cpp" line="170"/>
         <source>Built and installed. The new version starts with Restart now.</source>
         <translation>Compilado e instalado. «Reiniciar ahora» inicia la nueva versión.</translation>
     </message>
     <message>
-        <location filename="../../src/core/sourcebuild.cpp" line="168"/>
+        <location filename="../../src/core/sourcebuild.cpp" line="174"/>
         <source>Making the .deb package</source>
         <translation>Creando el paquete .deb</translation>
     </message>
     <message>
-        <location filename="../../src/core/sourcebuild.cpp" line="172"/>
+        <location filename="../../src/core/sourcebuild.cpp" line="185"/>
         <source>Built, the package is in %1. To install it, run: sudo apt-get install ./&lt;package&gt;.deb</source>
         <translation>Compilado, el paquete está en %1. Para instalarlo, ejecuta: sudo apt-get install ./&lt;paquete&gt;.deb</translation>
     </message>
     <message>
-        <location filename="../../src/core/sourcebuild.cpp" line="176"/>
+        <location filename="../../src/core/sourcebuild.cpp" line="191"/>
         <source>Installing the package (apt-get)</source>
         <translation>Instalando el paquete (apt-get)</translation>
     </message>
     <message>
-        <location filename="../../src/core/sourcebuild.cpp" line="182"/>
+        <location filename="../../src/core/sourcebuild.cpp" line="197"/>
         <source>cpack made no .deb package.</source>
         <translation>cpack no creó ningún paquete .deb.</translation>
     </message>
     <message>
-        <location filename="../../src/core/sourcebuild.cpp" line="184"/>
+        <location filename="../../src/core/sourcebuild.cpp" line="199"/>
         <source>Built and installed as a package. The new version starts with Restart now.</source>
         <translation>Compilado e instalado como paquete. «Reiniciar ahora» inicia la nueva versión.</translation>
     </message>
     <message>
-        <location filename="../../src/core/sourcebuild.cpp" line="188"/>
+        <location filename="../../src/core/sourcebuild.cpp" line="203"/>
         <source>Built in %1.</source>
         <translation>Compilado en %1.</translation>
     </message>
     <message>
-        <location filename="../../src/core/sourcebuild.cpp" line="231"/>
+        <location filename="../../src/core/sourcebuild.cpp" line="246"/>
         <source>%1 could not be started.</source>
         <translation>No se pudo iniciar %1.</translation>
     </message>
     <message>
-        <location filename="../../src/core/sourcebuild.cpp" line="244"/>
+        <location filename="../../src/core/sourcebuild.cpp" line="259"/>
         <source>%1 failed (exit code %2).</source>
         <translation>%1 falló (código de salida %2).</translation>
     </message>
     <message>
-        <location filename="../../src/core/sourcebuild.cpp" line="271"/>
+        <location filename="../../src/core/sourcebuild.cpp" line="286"/>
         <source>Cancelled.</source>
         <translation>Cancelado.</translation>
     </message>
     <message>
-        <location filename="../../src/core/sourcebuild.cpp" line="288"/>
+        <location filename="../../src/core/sourcebuild.cpp" line="303"/>
         <source>%1 could not be copied to %2.</source>
         <translation>No se pudo copiar %1 a %2.</translation>
     </message>
     <message>
-        <location filename="../../src/core/sourcebuild.cpp" line="294"/>
+        <location filename="../../src/core/sourcebuild.cpp" line="309"/>
         <source>%1 could not be replaced.</source>
         <translation>No se pudo reemplazar %1.</translation>
     </message>
