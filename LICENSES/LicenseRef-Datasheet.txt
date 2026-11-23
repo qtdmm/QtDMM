@@ -1,0 +1,5 @@
+Datasheets, brochures and protocol descriptions published by the
+manufacturers of the meters (docs/protocols/sources/). They are copyrighted
+by their publishers and kept in the repository only as the sources the
+decoders were written from. No licence is granted for them; they are not
+part of the program and are not installed.

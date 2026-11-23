@@ -1,5 +1,0 @@
-{
-  "permissions": {
-    "allow": ["Bash(apt-get install:*)"]
-  }
-}
