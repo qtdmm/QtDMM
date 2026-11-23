@@ -4,7 +4,7 @@
 %global	appid io.github.qtdmm.qtdmm
 
 Name:		qtdmm
-Version:	26.4
+Version:	26.4.1
 # Für RC's -p -e rcX
 # Sonst -p -e weglassen
 Release:	%autorelease
