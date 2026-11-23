@@ -43,6 +43,9 @@ class ServiceHost;
 class DeviceSession : public QObject
 {
   Q_OBJECT
+  // MeterController * in a signal: moc needs the whole class (GCC 16
+  // -Wsfinae-incomplete when the moc files are compiled together)
+  Q_MOC_INCLUDE("service/metercontroller.h")
 public:
   explicit DeviceSession(QObject *parent = nullptr);
   /// The meters go first, while the session is whole: what follows their

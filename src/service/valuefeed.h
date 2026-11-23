@@ -23,6 +23,9 @@ class MeterController;
 class ValueFeed : public QObject
 {
   Q_OBJECT
+  // MeterController * in a signal: moc needs the whole class (GCC 16
+  // -Wsfinae-incomplete when the moc files are compiled together)
+  Q_MOC_INCLUDE("service/metercontroller.h")
 public:
   explicit ValueFeed(DeviceSession *session, QObject *parent = nullptr);
 
