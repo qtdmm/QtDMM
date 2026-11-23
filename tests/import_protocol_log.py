@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The QtDMM developers
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Bootstrap a protocol spec from one of the capture logs in docs/protocols/sources/.
 
 The logs pair a label with the raw frame the meter sent for it, one per line:

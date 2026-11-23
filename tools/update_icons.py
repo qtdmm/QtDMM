@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The QtDMM developers
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Builds QtDMM's icon sets in assets/icons/sets/ from installed icon themes.
 
 QtDMM ships the symbols it uses as icon themes compiled into the resources:

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 The QtDMM developers
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 ## The pictures of the kinds of instrument in the manufacturers' colours
 ## (DeviceSymbol), made when CMake runs - no Python in the build.
 ##

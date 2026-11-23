@@ -15,6 +15,9 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with QtDMM.  If not, see <http://www.gnu.org/licenses/>.
+//----------------------------------------------------------------------
+// Copyright (c) 2026 The QtDMM developers
+// SPDX-License-Identifier: GPL-3.0-or-later
 //======================================================================
 
 #include "ui/panelframe.h"

@@ -1,3 +1,8 @@
+// Copyright (c) 2026 The QtDMM developers
+// Copyright (c) 2014 Aurelien Jacobs <aurel@gnuage.org> (libsigrok bm86x.c)
+// Copyright (c) 2019 Gerhard Sittig <gerhard.sittig@gmx.net> (libsigrok bm86x.c)
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 #pragma once
 
 #include "device/dmmdecoder.h"

@@ -5,3 +5,9 @@ docs/protocols/sources/** -text
 
 # GitHub source downloads (git archive) fill in the version, see cmake/git_version.cmake
 .archive-version export-subst
+
+# The manufacturers' datasheets (REUSE.toml: LicenseRef-Datasheet, no licence
+# granted) stay in the repository but not in the source tarballs (release.yml
+# git archive, GitHub's tag archives), which are meant to be DFSG-free
+docs/protocols/sources/*.pdf export-ignore
+docs/protocols/sources/*.PDF export-ignore

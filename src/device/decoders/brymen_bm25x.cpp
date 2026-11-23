@@ -1,3 +1,7 @@
+// Copyright (c) 2026 The QtDMM developers
+// Copyright (c) 2014 Janne Huttunen <jahuttun@gmail.com> (libsigrok bm25x.c)
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 #include "device/decoders/brymen_bm25x.h"
 
 // Brymen BM25x family (libsigrok "brymen-bm25x": 9600/8n1/rts=1/dtr=1).

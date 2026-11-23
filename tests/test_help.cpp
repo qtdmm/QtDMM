@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The QtDMM developers
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 // Checks that the handbook pages under docs/user/ are embedded as resources
 // (:/Help/) and that what index.md links to actually exists and renders - so a
 // renamed or forgotten page fails the build, not the user pressing F1.

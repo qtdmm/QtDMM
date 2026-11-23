@@ -4,6 +4,8 @@
 **                                                                        **
 **  QCustomPlot, an easy to use, modern plotting widget for Qt            **
 **  Copyright (C) 2011-2022 Emanuel Eichhammer                            **
+**  Copyright (C) 2026 The QtDMM developers (QTDMM_CHANGES.md)            **
+**  Copyright (C) The NeoQCP contributors (github.com/SciQLop/NeoQCP)     **
 **                                                                        **
 ****************************************************************************
 **           Author: Emanuel Eichhammer                                   **
@@ -16,7 +18,7 @@
 **                    Date: 22.12.15 (V1.3.2)                             **
 **                          13.09.19 (V2.0.1)                             **
 **                                                                        **
-** SPDX-License-Identifier: GPL-2.0-or-later                              **
+** SPDX-License-Identifier: GPL-2.0-or-later AND GPL-3.0-or-later         **
 ****************************************************************************/
 
 #ifndef QCUSTOMPLOT_H

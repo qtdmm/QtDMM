@@ -1,3 +1,6 @@
+# Copyright (c) 2025 The QtDMM developers
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 # get version
 #
 # QtDMM versions are YY.N[.P][-rcK] (calendar versioning): YY the two-digit year,

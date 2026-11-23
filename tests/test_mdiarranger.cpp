@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The QtDMM developers
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 // Tests for MdiArranger: the automatic layout ("Displays on top") and the
 // title bars on a real QMdiArea (offscreen).
 #include <QApplication>
