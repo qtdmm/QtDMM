@@ -43,6 +43,10 @@ class Settings;
 /// The Flatpak is updated by Flatpak's portal (FlatpakUpdate) from our
 /// repository; Restart now starts the new version (restartReady() with an
 /// empty path). Other kinds download in the browser.
+///
+/// A build from the sources behind master is told of the new commits; with
+/// its sources still there, Update and build pulls, builds and replaces it
+/// (RebuildDlg, SourceBuild), Restart now as for the AppImage.
 class UpdateBar : public QWidget
 {
   Q_OBJECT
@@ -65,8 +69,9 @@ Q_SIGNALS:
   /// The installer @p path is downloaded and checked, and the user wants it
   /// now: close QtDMM and run it (UpdateCheck::runInstaller()).
   void installReady(const QString &path);
-  /// The AppImage or the macOS bundle @p path (….app) was replaced by the
-  /// new version, or the Flatpak updated (@p path empty), and the user wants
+  /// The AppImage, the macOS bundle @p path (….app) or a build from the
+  /// sources was replaced by the new version, or the Flatpak updated
+  /// (@p path empty), and the user wants
   /// it now: close QtDMM and start it (UpdateCheck::restartAppImage(),
   /// UpdateCheck::restartBundle(), FlatpakUpdate::restart()).
   void restartReady(const QString &path);

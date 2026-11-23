@@ -279,8 +279,9 @@ MainWindow::MainWindow(QCommandLineParser &parser, QWidget *parent)
       QMessageBox::warning(nullptr, tr("Update"),
                            tr("The installer could not be started: %1").arg(QDir::toNativeSeparators(path)));
   });
-  // the AppImage or the macOS bundle replaced, the Flatpak updated: closes
-  // as at Quit, the new one starts
+  // the AppImage, the macOS bundle or a build from the sources replaced,
+  // the Flatpak updated: closes as at Quit, the new one starts (a program
+  // file is started as an AppImage is, without its variables)
   connect(m_updateBar, &UpdateBar::restartReady, this, [this](const QString &path) {
     auto restart = [&path] {
       if (path.isEmpty())

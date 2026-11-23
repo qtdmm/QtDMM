@@ -14,7 +14,9 @@
 #include "core/flatpakupdate.h"
 #include "core/newsfeed.h"
 #include "core/settings.h"
+#include "core/sourcebuild.h"
 #include "core/updatedownload.h"
+#include "ui/dialogs/rebuilddlg.h"
 
 UpdateBar::UpdateBar(Settings *settings, QWidget *parent)
   : QWidget(parent), m_settings(settings), m_check(new UpdateCheck(this)), m_download(new UpdateDownload(this)),
@@ -222,11 +224,22 @@ void UpdateBar::offerMaster(const MasterCommit &master)
           .arg(current, master.version)
       : tr("New commits on master (this build is %1, master %2). \"git pull\" and building again bring them.")
           .arg(current, master.version);
-  showMessage(text, { { tr("Changes"), [this, url = master.changes] {
-                         QDesktopServices::openUrl(url);
-                         hide();
-                       } },
-                      { tr("Later"), [this] { hide(); } } });
+  QList<Button> buttons;
+  // the sources it was built from still there: pull and build from here
+  if (SourceBuild::available())
+    buttons.append({ tr("Update and build"), [this] {
+                      hide();
+                      auto *dlg = new RebuildDlg(new SourceBuild, window());
+                      dlg->setAttribute(Qt::WA_DeleteOnClose);
+                      connect(dlg, &RebuildDlg::restartRequested, this, &UpdateBar::restartReady);
+                      dlg->show();
+                    } });
+  buttons.append({ tr("Changes"), [this, url = master.changes] {
+                    QDesktopServices::openUrl(url);
+                    hide();
+                  } });
+  buttons.append({ tr("Later"), [this] { hide(); } });
+  showMessage(text, buttons);
 }
 
 void UpdateBar::download(const UpdateRelease &release, const UpdateFile &file)
