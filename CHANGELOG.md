@@ -109,6 +109,7 @@
 ### Platforms and build
 
 - **Qt Charts is no longer needed** — the graph draws with QCustomPlot (bundled) now, so building and packaging need one Qt module less (CMake, Arch PKGBUILD, RPM spec, Nix flake, INSTALL, the CI).
+- **miniz from the system** — CMake option `QTDMM_SYSTEM_MINIZ=ON` builds with the distribution's miniz (Debian `libminiz-dev`) instead of the bundled copy, for packages that do not want bundled libraries. Off by default.
 
 ## v26.4.1 — Licences in Order (2026-11-23)
 

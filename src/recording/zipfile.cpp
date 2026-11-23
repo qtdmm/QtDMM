@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "recording/zipfile.h"
 
-#include "3rdparty/miniz/miniz.h"
+#include <miniz.h>
 
 #include <limits>
 
