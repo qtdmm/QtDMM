@@ -2,11 +2,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "service/servicehost.h"
 
+#include <QDebug>
 #include <QHostInfo>
 
 #include "service/hislipserver.h"
 #include "service/mdnsresponder.h"
 #include "service/scpiserver.h"
+#include "service/webviewserver.h"
 
 namespace
 {
@@ -24,10 +26,13 @@ ServiceHost::ServiceHost(QObject *parent)
   , m_mdnsHislip(new MdnsResponder(this))
   , m_vxi11(new Vxi11Server(m_scpi->endpoint(), this))
   , m_mdnsVxi11(new MdnsResponder(this))
+  , m_webView(new WebViewServer(this))
 {
   connect(m_scpi, &ScpiServer::clientsChanged, this, [this](int) { updateStatus(); });
   connect(m_hislip, &HislipServer::sessionsChanged, this, [this](int) { updateStatus(); });
   connect(m_vxi11, &Vxi11Server::linksChanged, this, [this](int) { updateStatus(); });
+  connect(m_webView, &WebViewServer::viewersChanged, this, [this](int) { updateStatus(); });
+  m_scpi->setWebViewUrlSource([this] { return webViewUrl(); });
 }
 
 ServiceHost::~ServiceHost() = default;
@@ -159,6 +164,46 @@ void ServiceHost::updateStatus()
   Q_EMIT statusChanged(text);
 }
 
+void ServiceHost::applyWebView(const WebViewConfig &config)
+{
+  const QHostAddress address = config.allInterfaces ? QHostAddress::Any : QHostAddress::LocalHost;
+  m_webView->setInterval(config.interval);
+  if (!config.enabled || config.token.isEmpty())
+  {
+    m_webView->stop();
+    m_webViewError.clear();
+  }
+  else if (m_webView->isRunning() && m_webView->address() == address
+           && m_webView->port() >= config.port && m_webView->port() < config.port + 10)
+    m_webView->setToken(config.token);   // the same server: browsers stay
+  else
+  {
+    m_webView->stop();
+    m_webViewError.clear();
+    for (int port = config.port; port < config.port + 10 && port <= 65535; ++port)
+      if (m_webView->start(address, quint16(port), config.token))
+        break;
+    if (!m_webView->isRunning())
+    {
+      m_webViewError = m_webView->error();
+      Q_EMIT error(tr("The web view could not start: %1").arg(m_webViewError));
+    }
+    else
+      qInfo().noquote() << "Web view:" << webViewUrl();
+  }
+  updateStatus();
+}
+
+QString ServiceHost::webViewUrl() const
+{
+  if (!m_webView->isRunning())
+    return {};
+  if (m_webView->address() == QHostAddress::LocalHost)
+    return m_webView->url("localhost").toString();
+  const QList<HttpServer::Address> lan = HttpServer::addresses();
+  return m_webView->url(lan.isEmpty() ? QHostInfo::localHostName() : lan.first().address).toString();
+}
+
 QList<ServiceState> ServiceHost::services() const
 {
   ServiceState scpi;
@@ -198,7 +243,19 @@ QList<ServiceState> ServiceHost::services() const
   }
   else
     vxi11.error = m_vxi11Error;
-  return { scpi, hislip, vxi11 };
+  ServiceState web;
+  web.id = "webview";
+  web.name = tr("Web view");
+  web.running = m_webView->isRunning();
+  if (web.running)
+  {
+    web.port = m_webView->port();
+    web.address = webViewUrl();
+    web.clients = m_webView->viewers();
+  }
+  else
+    web.error = m_webViewError;
+  return { scpi, hislip, vxi11, web };
 }
 
 QString ServiceHost::vxi11Resource() const

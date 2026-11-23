@@ -373,6 +373,8 @@ protected:
   void        updateOpenDevices();
   /// The node "Services": the SCPI server and HiSLIP of this window.
   void        updateServices();
+  /// The web view's link as a QR code, for a phone or tablet.
+  void        showWebViewCode();
   QTimer     *m_openTimer = nullptr;
   /// The places (DeviceLibrary::place()) the open devices use, with the
   /// meter that uses each.

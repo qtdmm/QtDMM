@@ -98,6 +98,8 @@ public:
   /// encoded in @p format ("PNG", "BMP", "JPG"); empty when not possible.
   using ScreenshotSource = std::function<QByteArray(const QByteArray &format)>;
   void setScreenshotSource(ScreenshotSource source) { m_screenshot = std::move(source); }
+  /// The web view's link for QTDMM:WEB:URL? (empty while it does not run).
+  void setWebViewUrlSource(std::function<QString()> source) { m_webViewUrl = std::move(source); }
   /// Wraps @p data as an IEEE 488.2 definite-length block ("#6123456...").
   static QByteArray block(const QByteArray &data);
 
@@ -179,6 +181,7 @@ private:
   DeviceControl m_deviceControl;
   QList<QPair<int, QString>> m_errors;
   ScreenshotSource m_screenshot;
+  std::function<QString()> m_webViewUrl;
   QByteArray m_screenshotFormat = "PNG";
   QStringList m_lastPath;   ///< for the "compound header" rule of ';'
 };

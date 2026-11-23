@@ -135,6 +135,7 @@ qtdmm-mcp tool offers them only with `--allow-control`.
 | `CALCulate:FUNCtion?` | `LIM` | the only function |
 | `QTDMM:LIMit:VERDict?` | `PASS\|HI\|LO\|NONE` | `MeterController::verdict()`, on the last reading of the tested value |
 | `QTDMM:PHOTo:LAST?` | `"<path>","<taken>"` | the newest photo of the open project (`PhotoStore::newest(ProjectFolder::current())`): in `photos` (or the project itself, files not sorted by kind), by the time in its name `photo_<date>_<time>[_n]`; taken as ISO 8601 local time; `"",""` without one or without a project |
+| `QTDMM:WEB:URL?` | `"<link>"` | `ServiceHost::webViewUrl()`: the web view's link with its token, on all networks with the first LAN address; `""` while it does not run |
 | `QTDMM:PHOTo:DATA?` | definite-length block | that photo's file as it is on disk (JPEG, PNG ...); `-230` without one |
 | `QTDMM:LIMit:COUNt?` | `<pass>,<high>,<low>` | `LimitTest::Count` since the last reset (new test, min/max reset, `CALC:LIM:CLE`) |
 | `QTDMM:KEY:CATalog?` | `"<KEY>",…` | upper case, `""` for none |

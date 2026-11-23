@@ -22,6 +22,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //======================================================================
 
+#include <QDesktopServices>
+#include <QHostInfo>
+#include <QJsonObject>
 #include <QtGui>
 #include <QtWidgets>
 #include <QFrame>
@@ -59,6 +62,7 @@
 #include "device/transport.h"
 #include "device/transports/serial.h"
 #include "core/projectfolder.h"
+#include "service/webviewserver.h"
 #include "core/devicelibrary.h"
 #include "core/sampletypes.h"
 #include "core/siprefix.h"
@@ -94,6 +98,7 @@ static const char *kWorkspaceSuffix = "qtdmm-workspace";
 #include "ui/updatebar.h"
 #include "core/flatpakupdate.h"
 #include "ui/alarmservice.h"
+#include "ui/qrcodeimage.h"
 #include "ui/mdiarranger.h"
 #include "service/metercontroller.h"
 #include "device/devicetype.h"
@@ -402,6 +407,16 @@ void MainWindow::createViews()
   m_alarmService = new AlarmService(m_session, this, this);
   connect(m_alarmService, &AlarmService::bannerChanged, m_alarmBar, &AlarmBar::setAlarms);
   connect(m_alarmBar, &AlarmBar::acknowledged, m_alarmService, &AlarmService::acknowledgeAll);
+
+  // the web view: what the window area shows, made when a browser asks
+  m_session->host()->webView()->setFrameSource([this] { return m_mdi->viewport()->grab().toImage(); });
+  m_session->host()->webView()->setStatusSource([this]
+  {
+    const QString project = ProjectFolder::current();
+    return QJsonObject{ { "host", QHostInfo::localHostName() },
+                        { "project", project.isEmpty() ? QString() : BasketWidget::projectName(project) },
+                        { "alarm", m_alarmService->bannerText().replace('\n', " · ") } };
+  });
 
   // the views; none of them knows another, they show the values of the
   // meters they are given (see InstanceWidget)
@@ -1611,7 +1626,19 @@ void MainWindow::createSidebar()
   connect(m_session, &DeviceSession::opened, this, &MainWindow::updateOpenDevices);
   connect(m_session, &DeviceSession::closed, this, &MainWindow::updateOpenDevices);
   connect(m_sidebar, &DeviceSidebar::addDeviceRequested, this, [this] { addDevice(); });
-  connect(m_sidebar, &DeviceSidebar::serviceSettingsRequested, m_wid, &InstanceWidget::configScpiSLOT);
+  connect(m_sidebar, &DeviceSidebar::serviceSettingsRequested, this, [this](const QString &id)
+  {
+    if (id == QLatin1String("webview"))
+      m_wid->configWebViewSLOT();
+    else
+      m_wid->configScpiSLOT();
+  });
+  connect(m_sidebar, &DeviceSidebar::serviceOpenRequested, this, [this]
+  {
+    if (const QString url = m_session->host()->webViewUrl(); !url.isEmpty())
+      QDesktopServices::openUrl(QUrl(url));
+  });
+  connect(m_sidebar, &DeviceSidebar::serviceCodeRequested, this, &MainWindow::showWebViewCode);
   connect(m_sidebar, &DeviceSidebar::workspaceRequested, this, &MainWindow::loadWorkspaceFile);
   connect(m_sidebar, &DeviceSidebar::newBenchRequested, this, [this] { saveWorkspace(true); });
   connect(m_sidebar, &DeviceSidebar::removeWorkspaceRequested, this, [this](const QString &file)
@@ -3349,6 +3376,10 @@ void MainWindow::updateServices()
       row.tooltip = tr("%1 is off. Double-click for its settings.").arg(state.name);
     else if (state.id == QLatin1String("hislip"))
       row.tooltip = tr("HiSLIP for VISA (NI-VISA, LabVIEW, PyVISA): %1, %2 connected.").arg(state.address, clients);
+    else if (state.id == QLatin1String("webview"))
+      row.tooltip = state.clients == 1
+                      ? tr("Web view: %1, 1 browser watching. Double-click opens it.").arg(state.address)
+                      : tr("Web view: %1, %2 browsers watching. Double-click opens it.").arg(state.address).arg(state.clients);
     else if (state.id == QLatin1String("vxi11"))
       row.tooltip = tr("VXI-11 for VISA and lxi-tools: %1, %2 connected.").arg(state.address, clients);
     else
@@ -3356,6 +3387,32 @@ void MainWindow::updateServices()
     rows << row;
   }
   m_sidebar->setServices(rows);
+}
+
+void MainWindow::showWebViewCode()
+{
+  const QString url = m_session->host()->webViewUrl();
+  if (url.isEmpty())
+    return;
+  auto *dlg = new QDialog(this);
+  dlg->setAttribute(Qt::WA_DeleteOnClose);
+  dlg->setWindowTitle(tr("Web view"));
+  auto *layout = new QVBoxLayout(dlg);
+  auto *code = new QLabel(dlg);
+  code->setPixmap(QPixmap::fromImage(qrCodeImage(url, 6)));
+  code->setAlignment(Qt::AlignCenter);
+  layout->addWidget(code);
+  auto *link = new QLabel(url, dlg);
+  link->setTextInteractionFlags(Qt::TextSelectableByMouse);
+  link->setAlignment(Qt::AlignCenter);
+  layout->addWidget(link);
+  auto *hint = new QLabel(tr("Scan it with a phone or tablet in the same network. Whoever has the link can watch."), dlg);
+  hint->setWordWrap(true);
+  layout->addWidget(hint);
+  auto *buttons = new QDialogButtonBox(QDialogButtonBox::Close, dlg);
+  connect(buttons, &QDialogButtonBox::rejected, dlg, &QDialog::reject);
+  layout->addWidget(buttons);
+  dlg->show();
 }
 
 // A reading as the sidebar shows it: "1.5 V DC", "OL", "" without a number.

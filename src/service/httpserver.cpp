@@ -106,6 +106,11 @@ quint16 HttpServer::port() const
   return isRunning() ? m_server->serverPort() : 0;
 }
 
+QHostAddress HttpServer::address() const
+{
+  return isRunning() ? m_server->serverAddress() : QHostAddress();
+}
+
 QUrl HttpServer::url(const QString &host) const
 {
   if (!isRunning())

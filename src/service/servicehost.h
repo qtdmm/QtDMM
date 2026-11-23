@@ -13,6 +13,7 @@
 class HislipServer;
 class MdnsResponder;
 class ScpiServer;
+class WebViewServer;
 
 /// What the SCPI server should do (from the settings page).
 struct ScpiConfig
@@ -27,15 +28,25 @@ struct ScpiConfig
   Vxi11Server::RpcbindMode vxi11Rpc = Vxi11Server::RpcbindMode::Auto;   ///< system rpcbind or own portmapper
 };
 
+/// What the web view should do (from its settings page).
+struct WebViewConfig
+{
+  bool    enabled = false;
+  bool    allInterfaces = false;   ///< else localhost only
+  quint16 port = 8088;
+  int     interval = 1000;         ///< ms between pictures
+  QString token;                   ///< the link's, kept in the settings
+};
+
 /// One network service of the session (the SCPI server, HiSLIP), as the
 /// sidebar shows it.
 struct ServiceState
 {
-  QString id;               ///< "scpi", "hislip", "vxi11"
-  QString name;             ///< "SCPI", "HiSLIP", "VXI-11"
+  QString id;               ///< "scpi", "hislip", "vxi11", "webview"
+  QString name;             ///< "SCPI", "HiSLIP", "VXI-11", "Web view"
   bool    running = false;
   quint16 port = 0;
-  QString address;          ///< "localhost:5025", "TCPIP::localhost::hislip0::INSTR"
+  QString address;          ///< "localhost:5025", "TCPIP::localhost::hislip0::INSTR", the web view's link
   int     clients = 0;
   QString error;            ///< switched on but not running: why (port taken, ...)
 };
@@ -55,6 +66,8 @@ public:
   ~ServiceHost() override;
 
   ScpiServer *scpi() const { return m_scpi; }
+  /// The web view: its picture and status come from the window (MainWindow).
+  WebViewServer *webView() const { return m_webView; }
 
   /// Starts, restarts or stops the servers; keeps a running server when
   /// nothing about it changed, so its clients stay connected. @p instanceId
@@ -71,7 +84,15 @@ public:
   /// From --vxi11-portmapper-port (tests, development): an own portmapper on this port instead of
   /// 111 for this run (0: any free one). Set before the first apply().
   static void setVxi11PortmapperPort(std::optional<quint16> port);
-  /// The SCPI server, HiSLIP and VXI-11, running or not.
+  /// Starts, restarts or stops the web view; keeps it running (and its
+  /// browsers) when only the interval or the token changed. A port taken:
+  /// the next free of the ten after it.
+  void        applyWebView(const WebViewConfig &config);
+  /// The web view's link with its token (http://192.168.1.20:8088/<token>/),
+  /// empty while it does not run. On all networks the computer's first
+  /// LAN address, else localhost.
+  QString     webViewUrl() const;
+  /// The SCPI server, HiSLIP, VXI-11 and the web view, running or not.
   QList<ServiceState> services() const;
   /// Source of the SCPI screen dump (HCOPy:SDUMp:DATA?): format -> image bytes.
   void        setScreenshotSource(std::function<QByteArray(const QByteArray &)> source);
@@ -91,6 +112,8 @@ private:
   MdnsResponder      *m_mdnsHislip;
   Vxi11Server        *m_vxi11;        ///< and over VXI-11
   MdnsResponder      *m_mdnsVxi11;
+  WebViewServer      *m_webView;
+  QString             m_webViewError;
   QString             m_scpiError;    ///< why the switched-on server is not running
   QString             m_hislipError;
   QString             m_vxi11Error;

@@ -51,6 +51,8 @@ public:
   bool isRunning() const;
   QString error() const { return m_error; }
   quint16 port() const;
+  /// The address listened on (Any, LocalHost ...); null while not running.
+  QHostAddress address() const;
   QString token() const { return m_token; }
   /// Another token while running: links with the old one get 403 from now on.
   void setToken(const QString &token) { m_token = token; }

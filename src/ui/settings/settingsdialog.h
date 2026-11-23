@@ -40,6 +40,7 @@ class GuiPrefs;
 class GraphPrefs;
 class AlarmPrefs;
 class ScpiPrefs;
+class WebViewPrefs;
 class KeyboardPrefs;
 class ShortcutRegistry;
 #include "core/alarm.h"
@@ -67,6 +68,7 @@ public:
     Recorder,
     Alarms,
     Scpi,
+    WebView,    ///< the picture of the window area in a browser
     Keyboard,   ///< the keys of the main window, for all instances
     NumItems,
   };
@@ -83,6 +85,7 @@ public:
   RecorderPrefs        *recorderPage() const { return m_recorder; }
   AlarmPrefs           *alarmPage() const { return m_alarms; }
   ScpiPrefs            *scpiPage() const { return m_scpi; }
+  WebViewPrefs         *webViewPage() const { return m_webView; }
   KeyboardPrefs        *keyboardPage() const { return m_keyboard; }
   /// @}
 
@@ -124,6 +127,7 @@ protected:
   GraphPrefs           *m_graph;
   AlarmPrefs           *m_alarms;
   ScpiPrefs            *m_scpi;
+  WebViewPrefs         *m_webView;
   KeyboardPrefs        *m_keyboard;
   bool                  m_buttonBox_OK;
 
