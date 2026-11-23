@@ -1,0 +1,117 @@
+<!doctype html>
+<!-- Copyright (c) 2026 The QtDMM developers
+     SPDX-License-Identifier: GPL-3.0-or-later
+     The web view (WebViewServer): the picture of QtDMM's window area, new
+     every interval, to look at only. The words in double braces are
+     replaced by those of QtDMM's language. -->
+<html lang="{{LANG}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>{{TITLE}}</title>
+<style>
+  :root { --bar: #23262a; --fg: #eff0f1; --muted: #a0a4a8; --bad: #d03030; --warn: #e0a000; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #000; color: var(--fg);
+               font: 14px/1.3 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  body { display: flex; flex-direction: column; }
+  #bar { display: flex; align-items: center; gap: 12px; padding: 4px 12px; background: var(--bar); min-height: 32px; }
+  #where { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #time { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  #time.stale { color: #fff; background: var(--bad); border-radius: 4px; padding: 0 6px; }
+  #alarm { display: none; color: #000; background: var(--warn); border-radius: 4px; padding: 0 6px; font-weight: 600;
+           white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #space { flex: 1; }
+  button { background: transparent; color: var(--fg); border: 1px solid var(--muted); border-radius: 4px;
+           padding: 2px 10px; font: inherit; cursor: pointer; }
+  #view { flex: 1; min-height: 0; width: 100%; object-fit: contain; display: block; }
+  #gone { display: none; margin: auto; padding: 16px; background: var(--bad); color: #fff; border-radius: 8px; }
+</style>
+</head>
+<body>
+<div id="bar">
+  <span id="where">{{TITLE}}</span>
+  <span id="time"></span>
+  <span id="alarm"></span>
+  <span id="space"></span>
+  <button id="full" type="button">{{FULLSCREEN}}</button>
+</div>
+<img id="view" alt="">
+<div id="gone">{{GONE}}</div>
+<span id="t-stale" hidden>{{STALE}}</span>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const view = $('view'), time = $('time');
+  let interval = 1000;   // the server says its own in status.json
+  let lastOk = 0;        // when the last picture came (this browser's clock)
+  let frameTime = 0;     // when QtDMM made it
+  let shown = null;      // the object URL on screen
+  let gone = false;
+
+  function stopped() {
+    gone = true;
+    view.style.display = 'none';
+    $('gone').style.display = 'block';
+  }
+  function showTime() {
+    if (!frameTime)
+      return;
+    const stale = Date.now() - lastOk > 3 * interval + 2000;
+    time.textContent = (stale ? $('t-stale').textContent + ': ' : '') + new Date(frameTime).toLocaleTimeString();
+    time.className = stale ? 'stale' : '';
+  }
+  async function picture() {
+    const r = await fetch('frame.jpg', { cache: 'no-store' });
+    if (r.status === 403)
+      return stopped();
+    if (!r.ok)
+      return;
+    frameTime = Number(r.headers.get('X-Frame-Time')) || Date.now();
+    const url = URL.createObjectURL(await r.blob());
+    // the old one goes when the new one is there: no flicker
+    view.onload = () => { if (shown && shown !== url) URL.revokeObjectURL(shown); shown = url; };
+    view.src = url;
+    lastOk = Date.now();
+  }
+  async function status() {
+    const r = await fetch('status.json', { cache: 'no-store' });
+    if (r.status === 403)
+      return stopped();
+    if (!r.ok)
+      return;
+    const s = await r.json();
+    if (s.interval)
+      interval = s.interval;
+    const where = [s.host, s.project].filter(Boolean).join(' · ');
+    $('where').textContent = where || document.title;
+    document.title = where ? where + ' – QtDMM' : document.title;
+    $('alarm').textContent = s.alarm || '';
+    $('alarm').style.display = s.alarm ? 'inline' : 'none';
+  }
+  let ticks = 0;
+  async function tick() {
+    // a tab in the background asks for nothing
+    if (document.visibilityState === 'visible') {
+      try { await picture(); } catch (e) { /* QtDMM not there: the time turns red */ }
+      if (!gone && ticks++ % 5 === 0) {
+        try { await status(); } catch (e) { }
+      }
+    }
+    showTime();
+    if (!gone)
+      setTimeout(tick, interval);
+  }
+  const full = $('full');
+  if (!document.fullscreenEnabled)
+    full.style.display = 'none';
+  full.addEventListener('click', () => {
+    if (document.fullscreenElement)
+      document.exitFullscreen();
+    else
+      document.documentElement.requestFullscreen();
+  });
+  tick();
+</script>
+</body>
+</html>

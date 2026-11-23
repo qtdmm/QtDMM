@@ -172,6 +172,10 @@ if (BUILD_TESTING)
 	qtdmm_add_test(photo_server test_photoserver tests/test_photoserver.cpp)
 	target_link_libraries(test_photoserver PRIVATE qtdmm_resources)
 
+	## the web view: token, page, picture once per interval, status, viewers
+	qtdmm_add_test(web_view test_webview tests/test_webview.cpp)
+	target_link_libraries(test_webview PRIVATE qtdmm_resources)
+
 	## the readings table model, without its widget
 	qtdmm_add_test(reading_log test_readinglog tests/test_readinglog.cpp)
 
