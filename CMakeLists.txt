@@ -1,3 +1,6 @@
+# Copyright (c) 2025 The QtDMM developers
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 cmake_minimum_required(VERSION 3.19)
 
 project(qtdmm VERSION "0.0.0" HOMEPAGE_URL "https://qtdmm.de" LANGUAGES C CXX)

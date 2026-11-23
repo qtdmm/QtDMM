@@ -1,3 +1,6 @@
+# Copyright (c) 2026 The QtDMM developers
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 name: Release
 
 # A version tag (26.1-rc1, 26.1, 26.1.1 - see docs/dev/releasing.md) builds the

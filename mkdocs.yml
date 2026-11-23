@@ -1,3 +1,6 @@
+# Copyright (c) 2026 The QtDMM developers
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 site_name: QtDMM
 site_description: Readout and recorder for digital multimeters
 site_url: https://qtdmm.de/docs/

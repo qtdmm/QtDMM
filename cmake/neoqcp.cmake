@@ -1,3 +1,6 @@
+# Copyright (c) 2026 The QtDMM developers
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 ## NeoQCP (QTDMM_WITH_NEOQCP): its sources in QTDMM_NEOQCP_DIR, built as a
 ## static library of this build. Included before the sources are listed.
 
