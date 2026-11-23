@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright (c) 2025 The QtDMM developers
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 import sys
 import json

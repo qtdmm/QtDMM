@@ -1,3 +1,6 @@
+# Copyright (c) 2026 The QtDMM developers
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 # Version scheme YY.N[.P][-rcK] (cmake/git_version.cmake): what a tag, or a
 # commit after it, turns into. Run: cmake -P tests/test_version.cmake
 set(QTDMM_VERSION_TEST ON)

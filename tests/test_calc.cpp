@@ -1,3 +1,6 @@
+// Copyright (c) 2026 The QtDMM developers
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 // Tests for CalcExpr, the formula evaluator of calculated instances.
 #include <QCoreApplication>
 #include <QDebug>

@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The QtDMM developers
+# SPDX-License-Identifier: GPL-3.0-or-later
 """MCP server (stdio) that reads a running QtDMM through its SCPI server.
 
 A development tool: lets an assistant session read values, status, the

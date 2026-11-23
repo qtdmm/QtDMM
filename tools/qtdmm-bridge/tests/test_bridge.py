@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 The QtDMM developers
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Tests for qtdmm_bridge: the telnet/RFC 2217 state machine and the server
 with a fake backend (no serial port, no pyserial needed).
 
