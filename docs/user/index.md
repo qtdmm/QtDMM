@@ -48,6 +48,8 @@ side, one window each, and can be combined into calculated values.
   serial and HID meters over RFC 2217, running it as a service.
 - [SCPI server](scpi-server.md) — the meter as a network instrument: `*IDN?`,
   `READ?` over TCP for lxi-tools, Python or LabVIEW, announced by mDNS.
+- [Web view](web-view.md) — the windows of QtDMM in a browser, to look at:
+  a second screen, a colleague, a kiosk.
 - [Command line](command-line.md) — options, several meters at once, debug output.
 - [Keyboard and mouse](keyboard.md) — shortcuts in the main window and the
   graph, and how to give a command a key of your own.

@@ -3,7 +3,8 @@
 //
 // WebViewServer: the token (403 without it, a new one ends the old link),
 // the page, the picture made once per interval for all browsers, its time,
-// the status, what is refused, the viewers.
+// the status, what is refused, the viewers. ServiceHost: started, kept
+// when only the token changes, the link, QTDMM:WEB:URL?, stopped.
 
 #include <QCoreApplication>
 #include <QGuiApplication>
@@ -11,7 +12,10 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSignalSpy>
+#include <QTcpServer>
 
+#include "service/scpiserver.h"
+#include "service/servicehost.h"
 #include "service/webviewserver.h"
 #include "httprequest.h"
 #include "testutil.h"
@@ -104,6 +108,49 @@ int main(int argc, char **argv)
 
   server.stop();
   check(!server.isRunning() && server.url().isEmpty() && server.token().isEmpty(), "stopped");
+
+  // ServiceHost: the web view as one of the session's services
+  {
+    ServiceHost host;
+    QTcpServer probe;   // a port free now
+    probe.listen(QHostAddress::LocalHost, 0);
+    const quint16 free = probe.serverPort();
+    probe.close();
+    auto webState = [&host] {
+      for (const ServiceState &s : host.services())
+        if (s.id == QLatin1String("webview"))
+          return s;
+      return ServiceState();
+    };
+    auto ask = [&host](const char *msg) { return QString::fromUtf8(host.scpi()->process(msg)).trimmed(); };
+    check(!webState().running && host.webViewUrl().isEmpty() && ask("QTDMM:WEB:URL?") == "\"\"",
+          "off: no link, URL? \"\": " + ask("QTDMM:WEB:URL?"));
+    WebViewConfig config;
+    config.enabled = true;
+    config.port = free;
+    config.token = HttpServer::newToken();
+    host.applyWebView(config);
+    const QString link = QString("http://localhost:%1/%2/").arg(free).arg(config.token);
+    check(webState().running && webState().port == free && host.webViewUrl() == link && webState().address == link,
+          "on, localhost: " + host.webViewUrl() + " " + webState().error);
+    check(ask("QTDMM:WEB:URL?") == '"' + link + '"', "QTDMM:WEB:URL?: " + ask("QTDMM:WEB:URL?"));
+    check(ask("QTDMM:WEB:URL") .isEmpty() && ask("SYST:ERR?").startsWith("-"), "QTDMM:WEB:URL without ?: an error");
+    // a new token, the same server
+    config.token = HttpServer::newToken();
+    config.interval = 2000;
+    host.applyWebView(config);
+    check(host.webView()->port() == free && host.webView()->token() == config.token
+          && host.webView()->interval() == 2000,
+          "a new token: the same server and port, the new token");
+    // the port taken: the next one
+    ServiceHost other;
+    other.applyWebView(config);
+    check(other.webView()->isRunning() && other.webView()->port() > free && other.webView()->port() < free + 10,
+          "port taken: the next free one, " + QString::number(other.webView()->port()));
+    config.enabled = false;
+    host.applyWebView(config);
+    check(!webState().running && host.webViewUrl().isEmpty(), "switched off");
+  }
 
   if (failed == 0)
     qInfo() << "All web view tests passed.";

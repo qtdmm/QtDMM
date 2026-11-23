@@ -165,6 +165,7 @@ public Q_SLOTS:
   void        configGraphSLOT();
   /// Opens the settings dialog on the SCPI server page.
   void        configScpiSLOT();
+  void        configWebViewSLOT();
   /// The print dialog, then @p print with the printer, the title and the comment.
   void        printWith(const std::function<void(QPrinter *, const QString &, const QString &)> &print);
   /// Writes what Export writes into @p file, without the dialog; the format
@@ -217,6 +218,7 @@ protected:
   void        readConfig();
   /// The SCPI page's settings to the session's services (ServiceHost::apply()).
   void        applyScpi();
+  void        applyWebView();
   QRect       parentRect() const;
 };
 

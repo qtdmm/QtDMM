@@ -174,8 +174,12 @@ Q_SIGNALS:
   void        nodeResetRequested(const QString &id);
   /// The row "+ Add device..." at the end of My devices.
   void        addDeviceRequested();
-  /// The settings of the services (Settings, SCPI server).
-  void        serviceSettingsRequested();
+  /// The settings of the service @p id ("scpi", "webview" ...).
+  void        serviceSettingsRequested(const QString &id);
+  /// The web view's link in the browser.
+  void        serviceOpenRequested(const QString &id);
+  /// The web view's link as a QR code.
+  void        serviceCodeRequested(const QString &id);
   /// A click on the views of a value's row (Value::onPanel, meters ...):
   /// show where it is.
   void        viewsHighlightRequested(const ValueRef &value);

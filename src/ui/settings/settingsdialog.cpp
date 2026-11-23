@@ -29,6 +29,7 @@
 #include "ui/settings/settingspageitem.h"
 #include "ui/settings/alarmprefs.h"
 #include "ui/settings/scpiprefs.h"
+#include "ui/settings/webviewprefs.h"
 #include "ui/settings/keyboardprefs.h"
 #include "ui/settings/graphprefs.h"
 #include "ui/settings/generalprefs.h"
@@ -68,10 +69,12 @@ SettingsDialog::SettingsDialog(Settings* settings, QWidget *parent)
   m_recorder = new RecorderPrefs(ui_stack);
   m_alarms = new AlarmPrefs(ui_stack);
   m_scpi = new ScpiPrefs(ui_stack);
+  m_webView = new WebViewPrefs(ui_stack);
   m_keyboard = new KeyboardPrefs(ui_stack);
   const QList<QPair<SettingsPage *, PageType>> pages = {
     { m_general, General }, { m_gui, GUI }, { m_graph, Graph },
-    { m_recorder, Recorder }, { m_alarms, Alarms }, { m_scpi, Scpi }, { m_keyboard, Keyboard } };
+    { m_recorder, Recorder }, { m_alarms, Alarms }, { m_scpi, Scpi }, { m_webView, WebView },
+    { m_keyboard, Keyboard } };
   for (const auto &[p, id] : pages)
   {
     p->setId(id);

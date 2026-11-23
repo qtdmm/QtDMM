@@ -721,6 +721,15 @@ QString ScpiServer::handleQtdmm(const Command &cmd, bool &isQuery)
     return quoted(QDir::toNativeSeparators(p.path)) + ',' + quoted(p.when.isValid() ? p.when.toString(Qt::ISODate) : QString());
   }
 
+  // QTDMM:WEB:URL? - "<link>" of the web view with its token, "" while it
+  // does not run (a computer without a screen: the link over SSH)
+  if (matches(sub, "WEB") && depth == 3 && matches(leaf, "URL"))
+  {
+    if (!queryOnly(cmd, isQuery))
+      return {};
+    return quoted(m_webViewUrl ? m_webViewUrl() : QString());
+  }
+
   // QTDMM:MARK "title"[,"text"]: a note at the newest reading
   if (matches(sub, "MARK") && depth == 2)
   {

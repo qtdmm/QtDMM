@@ -261,7 +261,12 @@ DeviceSidebar::DeviceSidebar(DeviceLibrary *library, QWidget *parent)
     }
     if (item && item->parent() == m_services)
     {
-      Q_EMIT serviceSettingsRequested();
+      // the running web view: its page; else the service's settings
+      const QString service = item->data(0, Qt::UserRole).toString();
+      if (service == QLatin1String("webview") && !item->data(1, Qt::UserRole).toString().isEmpty())
+        Q_EMIT serviceOpenRequested(service);
+      else
+        Q_EMIT serviceSettingsRequested(service);
       return;
     }
     // a device on the bench or one of its values: its front panel
@@ -577,16 +582,33 @@ void DeviceSidebar::workspaceMenu(QTreeWidgetItem *item, const QPoint &pos)
 
 void DeviceSidebar::serviceMenu(QTreeWidgetItem *item, const QPoint &pos)
 {
+  const QString id = item->data(0, Qt::UserRole).toString();
   const QString address = item->data(1, Qt::UserRole).toString();
+  const bool web = id == QLatin1String("webview");
   QMenu menu(this);
   QAction *settings = menu.addAction(QIcon::fromTheme("configure"), tr("&Settings..."));
-  QAction *copy = menu.addAction(QIcon::fromTheme("edit-copy"), tr("&Copy address"));
+  QAction *open = nullptr;
+  QAction *code = nullptr;
+  if (web)
+  {
+    open = menu.addAction(QIcon::fromTheme("go-next"), tr("&Open in the browser"));
+    code = menu.addAction(tr("Show &QR code..."));
+    open->setEnabled(!address.isEmpty());
+    code->setEnabled(!address.isEmpty());
+  }
+  QAction *copy = menu.addAction(QIcon::fromTheme("edit-copy"), web ? tr("&Copy link") : tr("&Copy address"));
   copy->setEnabled(!address.isEmpty());
   QAction *chosen = menu.exec(pos);
+  if (!chosen)
+    return;
   if (chosen == settings)
-    Q_EMIT serviceSettingsRequested();
+    Q_EMIT serviceSettingsRequested(id);
   else if (chosen == copy)
     QApplication::clipboard()->setText(address);
+  else if (chosen == open)
+    Q_EMIT serviceOpenRequested(id);
+  else if (chosen == code)
+    Q_EMIT serviceCodeRequested(id);
 }
 
 void DeviceSidebar::fill()

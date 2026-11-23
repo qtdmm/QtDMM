@@ -51,6 +51,7 @@
 #include "ui/settings/keyboardprefs.h"
 #include "ui/settings/recorderprefs.h"
 #include "ui/settings/scpiprefs.h"
+#include "ui/settings/webviewprefs.h"
 #include "device/meterconnection.h"
 #include "service/metercontroller.h"
 #include "ui/views/lcdwidget.h"
@@ -158,6 +159,10 @@ InstanceWidget::InstanceWidget(QString instanceId, QString configPath, DeviceSes
   connect(m_session->host(), &ServiceHost::statusChanged, this, [this](const QString &detail)
   {
     m_configDlg->scpiPage()->setStatus(detail);
+    const QList<ServiceState> services = m_session->host()->services();
+    for (const ServiceState &s : services)
+      if (s.id == QLatin1String("webview"))
+        m_configDlg->webViewPage()->setLink(s.address, s.error);
     Q_EMIT servicesChanged();
   });
   // HCOPy:SDUMp:DATA? - the main window as the "instrument screen"
@@ -361,10 +366,16 @@ void InstanceWidget::configScpiSLOT()
   openConfig(SettingsDialog::Scpi);
 }
 
+void InstanceWidget::configWebViewSLOT()
+{
+  openConfig(SettingsDialog::WebView);
+}
+
 void InstanceWidget::applySLOT()
 {
   readConfig();
   applyScpi();
+  applyWebView();
   Q_EMIT configChanged();
 }
 
@@ -383,6 +394,18 @@ void InstanceWidget::applyScpi()
   const QList<MeterController *> all = m_session->controllers();
   m_session->host()->apply(scpi, m_instanceId.isEmpty() ? QString("default") : m_instanceId,
                            all.isEmpty() ? QString() : all.first()->model());
+}
+
+void InstanceWidget::applyWebView()
+{
+  const WebViewPrefs *page = m_configDlg->webViewPage();
+  WebViewConfig web;
+  web.enabled = page->enabled();
+  web.allInterfaces = page->allInterfaces();
+  web.port = quint16(page->port());
+  web.interval = page->interval();
+  web.token = page->token();
+  m_session->host()->applyWebView(web);
 }
 
 bool InstanceWidget::writeRecordingTo(const QString &file, bool everyReading, const QList<ValueRef> &values)
