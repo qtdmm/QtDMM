@@ -51,6 +51,8 @@ class QGroupBox;
 class DeviceSettings : public QWidget, private Ui::UIDeviceSettings
 {
   Q_OBJECT
+  // QGroupBox * in a slot: moc needs the whole class (GCC 16 -Wsfinae-incomplete)
+  Q_MOC_INCLUDE(<QGroupBox>)
 public:
   DeviceSettings(QWidget *parent = nullptr);
   ~DeviceSettings();

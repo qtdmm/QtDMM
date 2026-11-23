@@ -29,6 +29,9 @@ size_t DecoderCyrusTekES51962::getPacketLength()
 
 std::optional<DmmDecoder::DmmResponse> DecoderCyrusTekES51962::decode(const QByteArray &data, int id)
 {
+  // a whole frame (getPacketLength())
+  if (data.size() < 11)
+    return std::nullopt;
   m_result = {};
   m_result.main().id  = id;
   m_result.hold       = false;
@@ -43,7 +46,7 @@ std::optional<DmmDecoder::DmmResponse> DecoderCyrusTekES51962::decode(const QByt
     m_result.main().special+= "DC";
 
 
-  if (!memcmp(data.constData() + 1, "4000", 4) || (data[6] & 1) != 0)
+  if (QByteArrayView(data).sliced(1, 4) == "4000" || (data[6] & 1) != 0)
     m_result.main().val = "  0L";
 
   // Function
