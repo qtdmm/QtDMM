@@ -141,6 +141,22 @@ int main(int argc, char **argv)
   fetch.check();
   check(waitFor([&] { return !fetched.isEmpty(); }) && fetched == feed, "fetched from QTDMM_UPDATE_URL");
 
+  // a package build (CMake QTDMM_UPDATE_CHECK=OFF, Copr, Arch, Nix): the
+  // banner neither asks nor looks; everything below needs the check
+  if (!UpdateCheck::enabled())
+  {
+    QTemporaryDir cfg;
+    Settings settings("update", cfg.path());
+    UpdateBar bar(&settings);
+    bar.startupCheck();
+    waitFor([] { return false; }, 300);
+    check(bar.isHidden() && settings.getString("Update/check").isEmpty() && settings.getString("Update/last").isEmpty(),
+          "package build: no question, no check");
+    if (failed == 0)
+      qInfo() << "All update tests passed (package build: the banner tests left out).";
+    return failed == 0 ? 0 : 1;
+  }
+
   // the banner: asks first, No leaves it at that
   QTemporaryDir cfg;
   Settings settings("update", cfg.path());
