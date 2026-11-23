@@ -1,3 +1,5 @@
+.\" Copyright (c) 2026 The QtDMM developers
+.\" SPDX-License-Identifier: GPL-3.0-or-later
 .\" QtDMM manual page. CMake fills in version and date (docs/qtdmm.1.in).
 .\" The options must match src/main.cpp - tests/generate_docs.py --check
 .\" (ctest docs_generated) compares them.
