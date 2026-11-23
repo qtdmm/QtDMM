@@ -9,13 +9,13 @@
 #include <QtCore>
 
 #include "recording/spreadsheet.h"
-#include "3rdparty/miniz/miniz.h"
+#include <miniz.h>
 #include "testutil.h"
 
 static QStringList zipEntries(const QString &path, QMap<QString, QByteArray> *contents = nullptr, bool *firstStored = nullptr)
 {
   QStringList names;
-  // miniz is built without stdio (MINIZ_NO_STDIO): read the file ourselves
+  // the bundled miniz is built without stdio (MINIZ_NO_STDIO): read the file ourselves
   QFile f(path);
   if (!f.open(QIODevice::ReadOnly))
     return names;

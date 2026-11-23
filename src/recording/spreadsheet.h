@@ -12,7 +12,7 @@
 /// cell types (a QDateTime becomes a date cell with a millisecond format,
 /// a double a number - nothing is text that a spreadsheet would have to
 /// convert). Both formats are ZIP + XML, written directly with the
-/// vendored miniz; no office library involved. One sheet for now, the
+/// miniz (bundled or the system's); no office library involved. One sheet for now, the
 /// structure allows more.
 class SpreadsheetWriter
 {

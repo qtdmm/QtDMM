@@ -204,17 +204,32 @@ endif()
 list(APPEND SRC_FILES src/3rdparty/tiny-aes/aes.c)
 
 ## ZIP writer for the XLSX/ODS export (MIT, miniz). Only deflate and CRC are
-## used - spreadsheet.cpp writes the ZIP container itself - so stdio and the
-## archive writer stay out (the stdio path also prints a "may not support
-## large files" pragma at every build). The archive reader stays for the
-## spreadsheet test, fed from memory.
-list(APPEND SRC_FILES src/3rdparty/miniz/miniz.c)
-set_source_files_properties(src/3rdparty/miniz/miniz.c PROPERTIES
-	COMPILE_DEFINITIONS "MINIZ_NO_STDIO;MINIZ_NO_ARCHIVE_WRITING_APIS;MINIZ_NO_TIME")
-# without the archive writer two of its helpers are unused; clang (macOS)
-# warns about them in every build. miniz itself stays as it came.
-if(NOT MSVC)
-	set_property(SOURCE src/3rdparty/miniz/miniz.c APPEND PROPERTY COMPILE_OPTIONS -Wno-unused-function)
+## used - spreadsheet.cpp writes the ZIP container itself - plus the archive
+## reader, fed from memory (opening recording files, spreadsheet test). Distributions
+## that have miniz (Debian libminiz-dev) build with QTDMM_SYSTEM_MINIZ=ON
+## instead of the copy in src/3rdparty/miniz.
+option(QTDMM_SYSTEM_MINIZ "Use the system's miniz instead of the bundled copy" OFF)
+if(QTDMM_SYSTEM_MINIZ)
+	find_package(miniz CONFIG QUIET)
+	if(TARGET miniz::miniz)
+		set(MINIZ_TARGET miniz::miniz)
+	else()
+		find_package(PkgConfig REQUIRED)
+		pkg_check_modules(MINIZ REQUIRED IMPORTED_TARGET miniz)
+		set(MINIZ_TARGET PkgConfig::MINIZ)
+	endif()
+	message(STATUS "miniz: system (${MINIZ_TARGET})")
+else()
+	# stdio and the archive writer stay out (the stdio path also prints a
+	# "may not support large files" pragma at every build)
+	list(APPEND SRC_FILES src/3rdparty/miniz/miniz.c)
+	set_source_files_properties(src/3rdparty/miniz/miniz.c PROPERTIES
+		COMPILE_DEFINITIONS "MINIZ_NO_STDIO;MINIZ_NO_ARCHIVE_WRITING_APIS;MINIZ_NO_TIME")
+	# without the archive writer two of its helpers are unused; clang (macOS)
+	# warns about them in every build. miniz itself stays as it came.
+	if(NOT MSVC)
+		set_property(SOURCE src/3rdparty/miniz/miniz.c APPEND PROPERTY COMPILE_OPTIONS -Wno-unused-function)
+	endif()
 endif()
 
 ## Translations: the build only compiles the .ts files (lrelease). Updating
@@ -339,6 +354,13 @@ target_link_libraries(qtdmm_core PUBLIC
 	$<$<BOOL:${QTDMM_WITH_BLE}>:Qt6::Bluetooth>
 	$<$<BOOL:${QTDMM_WITH_MULTIMEDIA}>:Qt6::Multimedia>
 )
+
+# miniz.h: the system's or the bundled one, both as <miniz.h>
+if(QTDMM_SYSTEM_MINIZ)
+	target_link_libraries(qtdmm_core PUBLIC ${MINIZ_TARGET})
+else()
+	target_include_directories(qtdmm_core SYSTEM PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/3rdparty/miniz)
+endif()
 
 if (QTDMM_WITH_BLE)
 	target_compile_definitions(qtdmm_core PUBLIC QTDMM_WITH_BLE)
