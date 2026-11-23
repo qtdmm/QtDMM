@@ -4,6 +4,10 @@ QCustomPlot 2.1.1 in the version of Wireshark's fork. Upstream is no longer
 developed; QtDMM maintains this copy. Changes keep the API; each is marked
 `QtDMM:` in `qcustomplot.cpp` and checked by `tests/test_qcplocal.cpp`.
 
+Licence: Wireshark's copy is GPL-2.0-or-later; the fixes taken from NeoQCP
+(GPL-3.0-or-later) make the copy as a whole GPL-3.0-or-later
+(the licence expression `GPL-2.0-or-later AND GPL-3.0-or-later` in the files).
+
 | Where | Change |
 |---|---|
 | `QCPAxisTickerDateTime::getSubTickCount`, `QCPAxisTickerTime::getSubTickCount` | no `qRound()` of a step beyond int's range (Qt 6.10 asserts on it); from NeoQCP `bc948f4a` |
