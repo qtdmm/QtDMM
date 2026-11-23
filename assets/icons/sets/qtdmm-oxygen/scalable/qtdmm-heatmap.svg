@@ -1,15 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 22 22">
-  <style id="current-color-scheme" type="text/css">.ColorScheme-Text { color:#232629; }</style>
-  <!-- the heatmap: a grid whose cells carry different intensities -->
-  <g class="ColorScheme-Text" fill="currentColor" stroke="currentColor" stroke-width="0.6">
-    <path d="M2.5 2.5h4v4h-4z" opacity="0.25"/>
-    <path d="M8.5 2.5h4v4h-4z" opacity="0.45"/>
-    <path d="M14.5 2.5h4v4h-4z" opacity="0.8"/>
-    <path d="M2.5 8.5h4v4h-4z" opacity="0.55"/>
-    <path d="M8.5 8.5h4v4h-4z" opacity="0.9"/>
-    <path d="M14.5 8.5h4v4h-4z" opacity="0.35"/>
-    <path d="M2.5 14.5h4v4h-4z" opacity="0.85"/>
-    <path d="M8.5 14.5h4v4h-4z" opacity="0.3"/>
-    <path d="M14.5 14.5h4v4h-4z" opacity="0.65"/>
-  </g>
+<svg width="291" height="291" viewBox="0 0 291 291" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Reihe 1 -->
+  <rect x="30" y="30" width="62" height="62" fill="#4FC3F7"/>
+  <rect x="112" y="30" width="62" height="62" fill="#26A69A"/>
+  <rect x="194" y="30" width="62" height="62" fill="#F57C00"/>
+  <!-- Reihe 2 -->
+  <rect x="30" y="112" width="62" height="62" fill="#66BB6A"/>
+  <rect x="112" y="112" width="62" height="62" fill="#D32F2F"/>
+  <rect x="194" y="112" width="62" height="62" fill="#29B6F6"/>
+  <!-- Reihe 3 -->
+  <rect x="30" y="194" width="62" height="62" fill="#E53935"/>
+  <rect x="112" y="194" width="62" height="62" fill="#9CCC65"/>
+  <rect x="194" y="194" width="62" height="62" fill="#FBC02D"/>
 </svg>
