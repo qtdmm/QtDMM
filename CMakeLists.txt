@@ -232,6 +232,20 @@ else()
 	endif()
 endif()
 
+## QR code of "Photo of the setup" (MIT, Project Nayuki's qrcodegen). Like
+## miniz: QTDMM_SYSTEM_QRCODEGEN=ON takes the distribution's (Debian
+## libqrcodegencpp-dev, pkg-config qrcodegencpp) instead of src/3rdparty/qrcodegen.
+option(QTDMM_SYSTEM_QRCODEGEN "Use the system's qrcodegen (C++) instead of the bundled copy" OFF)
+if(QTDMM_SYSTEM_QRCODEGEN)
+	find_package(PkgConfig REQUIRED)
+	pkg_check_modules(QRCODEGEN REQUIRED IMPORTED_TARGET qrcodegencpp)
+	# the header as <qrcodegen.hpp>, whichever -I the .pc file gives
+	find_path(QRCODEGEN_INCLUDE_DIR qrcodegen.hpp
+		HINTS ${QRCODEGEN_INCLUDE_DIRS} PATH_SUFFIXES qrcodegen qrcodegencpp REQUIRED)
+	list(FILTER SRC_FILES EXCLUDE REGEX "3rdparty/qrcodegen/")
+	message(STATUS "qrcodegen: system (${QRCODEGEN_INCLUDE_DIR})")
+endif()
+
 ## Translations: the build only compiles the .ts files (lrelease). Updating
 ## them from the sources is a manual step - `cmake --build build --target
 ## update_translations` - because lupdate rewrites files in the source tree,
@@ -360,6 +374,13 @@ if(QTDMM_SYSTEM_MINIZ)
 	target_link_libraries(qtdmm_core PUBLIC ${MINIZ_TARGET})
 else()
 	target_include_directories(qtdmm_core SYSTEM PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/3rdparty/miniz)
+endif()
+# qrcodegen.hpp the same way, as <qrcodegen.hpp>
+if(QTDMM_SYSTEM_QRCODEGEN)
+	target_link_libraries(qtdmm_core PUBLIC PkgConfig::QRCODEGEN)
+	target_include_directories(qtdmm_core SYSTEM PUBLIC ${QRCODEGEN_INCLUDE_DIR})
+else()
+	target_include_directories(qtdmm_core SYSTEM PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/3rdparty/qrcodegen)
 endif()
 
 if (QTDMM_WITH_BLE)
