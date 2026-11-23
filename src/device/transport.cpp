@@ -1,3 +1,6 @@
+// Copyright (c) 2025 The QtDMM developers
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 #include "device/transport.h"
 #include "device/transports/serial.h"
 #include "device/transports/hidserial.h"
