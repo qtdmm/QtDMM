@@ -9,49 +9,17 @@
 #include <QImage>
 #include <QSignalSpy>
 #include <QTabWidget>
-#include <QTcpSocket>
 #include <QTemporaryDir>
 
 #include "service/photoserver.h"
 #include "ui/dialogs/photocamera.h"
 #include "ui/dialogs/photodlg.h"
 #include "ui/qrcodeimage.h"
+#include "httprequest.h"
 #include "testutil.h"
 
 namespace
 {
-// one request, the whole answer (the server closes after an error)
-struct Reply
-{
-  int status = 0;
-  QByteArray body;
-};
-
-Reply request(quint16 port, const QByteArray &head, const QByteArray &body = {})
-{
-  QTcpSocket s;
-  s.connectToHost(QHostAddress::LocalHost, port);
-  if (!s.waitForConnected(2000))
-    return {};
-  s.write(head + "\r\n" + body);
-  QByteArray all;
-  // until the head and the body of its Content-Length are in
-  waitFor([&]
-  {
-    all += s.readAll();
-    const qsizetype end = all.indexOf("\r\n\r\n");
-    if (end < 0)
-      return false;
-    const qsizetype at = all.toLower().indexOf("content-length:");
-    const qsizetype len = at < 0 ? 0 : all.mid(at + 15, all.indexOf("\r\n", at) - at - 15).trimmed().toLongLong();
-    return all.size() >= end + 4 + len;
-  }, 3000);
-  Reply r;
-  r.status = all.mid(9, 3).toInt();
-  r.body = all.mid(all.indexOf("\r\n\r\n") + 4);
-  return r;
-}
-
 QByteArray png()
 {
   QImage image(8, 6, QImage::Format_RGB32);

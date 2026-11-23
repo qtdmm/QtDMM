@@ -7206,63 +7206,63 @@ Le multimètre est-il branché et allumé ?</translation>
 <context>
     <name>PhotoServer</name>
     <message>
-        <location filename="../../src/service/photoserver.cpp" line="150"/>
+        <location filename="../../src/service/photoserver.cpp" line="30"/>
         <source>en</source>
         <comment>the language code (BCP 47) of this translation, for the phone&apos;s page</comment>
         <translation>fr</translation>
     </message>
     <message>
-        <location filename="../../src/service/photoserver.cpp" line="151"/>
+        <location filename="../../src/service/photoserver.cpp" line="31"/>
         <source>Photo for QtDMM</source>
         <translation>Photo pour QtDMM</translation>
     </message>
     <message>
-        <location filename="../../src/service/photoserver.cpp" line="152"/>
+        <location filename="../../src/service/photoserver.cpp" line="32"/>
         <source>Take a photo</source>
         <translation>Prendre une photo</translation>
     </message>
     <message>
-        <location filename="../../src/service/photoserver.cpp" line="153"/>
+        <location filename="../../src/service/photoserver.cpp" line="33"/>
         <source>Choose from the gallery</source>
         <translation>Choisir dans la galerie</translation>
     </message>
     <message>
-        <location filename="../../src/service/photoserver.cpp" line="154"/>
+        <location filename="../../src/service/photoserver.cpp" line="34"/>
         <source>Each photo goes straight into the open project in QtDMM, with a note in the graph. Keep this page open for more.</source>
         <translation>Chaque photo va directement dans le projet ouvert dans QtDMM, avec une note dans le graphique. Gardez cette page ouverte pour en envoyer d&apos;autres.</translation>
     </message>
     <message>
-        <location filename="../../src/service/photoserver.cpp" line="156"/>
+        <location filename="../../src/service/photoserver.cpp" line="36"/>
         <source>Sending...</source>
         <translation>Envoi…</translation>
     </message>
     <message>
-        <location filename="../../src/service/photoserver.cpp" line="157"/>
+        <location filename="../../src/service/photoserver.cpp" line="37"/>
         <source>Sent</source>
         <translation>Envoyée</translation>
     </message>
     <message>
-        <location filename="../../src/service/photoserver.cpp" line="158"/>
+        <location filename="../../src/service/photoserver.cpp" line="38"/>
         <source>Not sent</source>
         <translation>Non envoyée</translation>
     </message>
     <message>
-        <location filename="../../src/service/photoserver.cpp" line="159"/>
+        <location filename="../../src/service/photoserver.cpp" line="39"/>
         <source>QtDMM no longer takes photos: the dialog was closed. Open it again and scan the new code.</source>
         <translation>QtDMM n&apos;accepte plus de photos : la boîte de dialogue a été fermée. Rouvrez-la et scannez le nouveau code.</translation>
     </message>
     <message>
-        <location filename="../../src/service/photoserver.cpp" line="244"/>
+        <location filename="../../src/service/photoserver.cpp" line="48"/>
         <source>This link no longer works. Scan the code in QtDMM again.</source>
         <translation>Ce lien ne fonctionne plus. Scannez à nouveau le code dans QtDMM.</translation>
     </message>
     <message>
-        <location filename="../../src/service/photoserver.cpp" line="249"/>
+        <location filename="../../src/service/photoserver.cpp" line="53"/>
         <source>The photo is larger than %1 MB.</source>
         <translation>La photo dépasse %1 Mo.</translation>
     </message>
     <message>
-        <location filename="../../src/service/photoserver.cpp" line="276"/>
+        <location filename="../../src/service/photoserver.cpp" line="68"/>
         <source>QtDMM cannot read this picture (try JPEG).</source>
         <translation>QtDMM ne peut pas lire cette image (essayez JPEG).</translation>
     </message>
@@ -10369,6 +10369,36 @@ Puis déconnectez-vous et reconnectez-vous pour que l&apos;appartenance au group
         <location filename="../../src/service/vxi11server.cpp" line="221"/>
         <source>rpcbind refused the registration</source>
         <translation>rpcbind a refusé l&apos;enregistrement</translation>
+    </message>
+</context>
+<context>
+    <name>WebViewServer</name>
+    <message>
+        <location filename="../../src/service/webviewserver.cpp" line="49"/>
+        <source>en</source>
+        <comment>the language code (BCP 47) of this translation, for the web view&apos;s page</comment>
+        <translation>fr</translation>
+    </message>
+    <message>
+        <location filename="../../src/service/webviewserver.cpp" line="50"/>
+        <source>QtDMM web view</source>
+        <translation>Vue web de QtDMM</translation>
+    </message>
+    <message>
+        <location filename="../../src/service/webviewserver.cpp" line="51"/>
+        <source>Full screen</source>
+        <translation>Plein écran</translation>
+    </message>
+    <message>
+        <location filename="../../src/service/webviewserver.cpp" line="52"/>
+        <source>No new picture</source>
+        <translation>Pas de nouvelle image</translation>
+    </message>
+    <message>
+        <location filename="../../src/service/webviewserver.cpp" line="53"/>
+        <location filename="../../src/service/webviewserver.cpp" line="62"/>
+        <source>This link no longer works: ask for the new one.</source>
+        <translation>Ce lien ne fonctionne plus : demandez le nouveau.</translation>
     </message>
 </context>
 <context>

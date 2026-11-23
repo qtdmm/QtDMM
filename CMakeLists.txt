@@ -119,6 +119,11 @@ set(RES_CONTENT "${RES_CONTENT}    <qresource prefix=\"/photo\">\n")
 set(RES_CONTENT "${RES_CONTENT}        <file alias=\"upload.html\">${CMAKE_SOURCE_DIR}/assets/photo/upload.html</file>\n")
 set(RES_CONTENT "${RES_CONTENT}    </qresource>\n")
 
+## the web view's page: the picture of the window area in a browser (WebViewServer)
+set(RES_CONTENT "${RES_CONTENT}    <qresource prefix=\"/webview\">\n")
+set(RES_CONTENT "${RES_CONTENT}        <file alias=\"index.html\">${CMAKE_SOURCE_DIR}/assets/webview/index.html</file>\n")
+set(RES_CONTENT "${RES_CONTENT}    </qresource>\n")
+
 ## specification data of some meters from their manuals (dmm-tools, via
 ## tools/update_device_specs.py) for the Data tab of a device's info
 file(GLOB SPEC_FILES CONFIGURE_DEPENDS assets/specs/*.json)
