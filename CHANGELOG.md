@@ -110,6 +110,18 @@
 
 - **Qt Charts is no longer needed** — the graph draws with QCustomPlot (bundled) now, so building and packaging need one Qt module less (CMake, Arch PKGBUILD, RPM spec, Nix flake, INSTALL, the CI).
 
+## v26.4.1 — Licences in Order (2026-11-23)
+
+No new features and no changes to the program; 26.4 with the formal groundwork for distribution packages (Debian).
+
+### Licensing
+
+- **Every file states its copyright and licence** — QtDMM follows the [REUSE](https://reuse.software) specification: a SPDX header in each source file, `REUSE.toml` for data, images and the bundled libraries, the licence texts in `LICENSES/`, and a CI check (`reuse lint`) that keeps it that way.
+- **Copyright holders named** — code that goes back to Matthias Toussaint's original keeps him as holder; the Brymen decoders ported from libsigrok name the libsigrok authors.
+- **AUTHORS up to date** — it says who "The QtDMM developers" in the copyright notices are, and that parts of the code since 2025 are written with AI assistance.
+- **Source tarball without the manufacturers' datasheets** — the PDFs in `docs/protocols/sources/` stay in the repository but are no longer in the release tarball, which is now free of documents without a free licence.
+- **AppStream** — the project licence lists all licences of the code (GPL-3.0-or-later, LGPL-3.0-or-later, MIT, Unlicense).
+
 ## v26.4 — Many Meters, One Bench (2026-11-22)
 
 Changes after rc1; the release candidate below lists everything new before.
