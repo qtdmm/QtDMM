@@ -28,6 +28,16 @@ struct UpdateRelease
   QHash<QString, UpdateFile> files;    ///< by kind: appimage, flatpak, windows-installer, ...
 };
 
+/// master's newest commit in latest.json, for builds from the sources.
+struct MasterCommit
+{
+  QString version;          ///< as a build of it calls itself (27.1-dev.530+gdef5678)
+  QString commit;           ///< the full hash
+  QDate date;
+  int newCommits = -1;      ///< how many the running build lacks; -1 when unknown
+  QUrl changes;             ///< GitHub's list of them
+};
+
 /// Looks for a newer QtDMM in latest.json on the Pages site, which the Pages
 /// workflow writes from the GitHub releases (tools/make-update-feed.py):
 /// "stable" is the newest release, "beta" a newer pre-release. Nothing is
@@ -62,12 +72,21 @@ public:
   static int compareVersions(const QString &a, const QString &b);
   /// Whether @p version is a pre-release (alpha, beta, rc or dev).
   static bool isPreRelease(const QString &version);
+  /// Whether @p version is a dev build: from the sources after a -dev tag
+  /// or a release (master or a branch), not a release or candidate.
+  static bool isDevBuild(const QString &version);
 
   /// The release to offer for @p current from latest.json @p feed: the
   /// newest of "stable" and (with @p beta) "beta" that is newer than
   /// @p current and not @p skipped. None for a feed that cannot be read.
   static std::optional<UpdateRelease> offer(const QByteArray &feed, const QString &current, bool beta,
                                             const QString &skipped = {});
+
+  /// master's commit from latest.json @p feed when @p current is a dev build
+  /// (from the sources, master or a branch) and master is ahead of it.
+  /// The number of new commits is known when both count from the same
+  /// -dev tag. None for a release or release candidate.
+  static std::optional<MasterCommit> masterOffer(const QByteArray &feed, const QString &current);
 
   /// What QtDMM passes the Windows installer for an update: silent with a
   /// progress window, the earlier folder and choices (Inno Setup keeps

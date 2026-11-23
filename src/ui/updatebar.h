@@ -87,6 +87,8 @@ private:
   /// Update/news, unset: as Update/check.
   bool newsEnabled() const;
   void offer(const UpdateRelease &release);
+  /// A build from the sources behind master: what is new, how to get it.
+  void offerMaster(const MasterCommit &master);
   /// Downloads the installer of @p release, the banner shows how far.
   void download(const UpdateRelease &release, const UpdateFile &file);
   /// The Flatpak through its portal, the banner shows how far.

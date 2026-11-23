@@ -255,3 +255,9 @@ endfunction()
 if (NOT QTDMM_VERSION_TEST)
 	get_version_from_git()
 endif()
+
+# cmake -P cmake/git_version.cmake prints the version alone (the Pages
+# workflow puts master's into latest.json for the update check)
+if (CMAKE_SCRIPT_MODE_FILE STREQUAL CMAKE_CURRENT_LIST_FILE AND NOT QTDMM_VERSION_TEST)
+	execute_process(COMMAND ${CMAKE_COMMAND} -E echo "${QTDMM_VERSION}")
+endif()

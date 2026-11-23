@@ -5,7 +5,9 @@
 // from real releases: stable 26.4, beta 27.1-rc1), fetching it, and the
 // banner asking first and offering then; the Windows installer downloaded
 // and checked against its SHA256; the news of qtdmm.de
-// (tests/data/update/feed.xml, out of order on purpose).
+// (tests/data/update/feed.xml, out of order on purpose); master's newer
+// commits for a build from the sources (master 27.2-dev.30+gdef5678 in
+// latest.json).
 #include "core/settings.h"
 #include "core/updatecheck.h"
 #include "core/flatpakupdate.h"
@@ -119,6 +121,25 @@ int main(int argc, char **argv)
   check(offered("26.3", true, "27.1-rc1") == "26.4", "a skipped candidate: the release");
   check(!UpdateCheck::offer("{}", "26.3", true) && !UpdateCheck::offer("no json", "26.3", true),
         "no feed: nothing");
+  // master's commits: for dev builds only, counted from the same -dev tag
+  const QString masterHash = "def5678" + QString(33, '0');
+  const auto m = UpdateCheck::masterOffer(feed, "27.2-dev.12+gabc1234");
+  check(m && m->version == "27.2-dev.30+gdef5678" && m->newCommits == 18 && m->date == QDate(2026, 11, 23)
+          && m->changes.toString() == "https://github.com/qtdmm/QtDMM/compare/abc1234..." + masterHash,
+        "a dev build behind master: 18 new commits, the comparison");
+  const auto older = UpdateCheck::masterOffer(feed, "27.1-dev.500+gabc1234");
+  check(older && older->newCommits == -1, "an older -dev tag: new commits, not how many");
+  const auto noHash = UpdateCheck::masterOffer(feed, "27.2-dev.12");
+  check(noHash && noHash->changes.toString() == "https://github.com/qtdmm/QtDMM/commits/master",
+        "no hash: master's commits");
+  check(!UpdateCheck::masterOffer(feed, "27.2-dev.30+gdef5678") && !UpdateCheck::masterOffer(feed, "27.2-dev.31+g1111111"),
+        "master itself or ahead of it: nothing");
+  check(!UpdateCheck::masterOffer(feed, "26.4") && !UpdateCheck::masterOffer(feed, "27.1-rc1")
+          && !UpdateCheck::masterOffer(R"({"format": 1, "stable": null})", "27.2-dev.12+gabc1234"),
+        "a release, a candidate, a feed without master: nothing");
+  check(UpdateCheck::isDevBuild("27.1-dev.4+gabc") && !UpdateCheck::isDevBuild("27.1-rc1")
+          && !UpdateCheck::isDevBuild("26.4"),
+        "dev builds");
   const auto r = UpdateCheck::offer(feed, "26.3", false);
   const UpdateFile appimage = r ? r->files.value("appimage") : UpdateFile();
   check(r && r->date == QDate(2026, 11, 22) && r->notes.toString().endsWith("/releases/tag/26.4"),
@@ -196,6 +217,26 @@ int main(int argc, char **argv)
   check(bar.beta(), "a candidate gets candidates");
   bar.checkNow();
   check(waitFor([&] { return bar.findChild<QLabel *>()->text().contains("newest"); }), "27.1-rc1: the newest");
+
+  // a build from the sources behind master: its new commits, the comparison
+  bar.setInstallKind(UpdateCheck::Install::Source);
+  QCoreApplication::setApplicationVersion("27.2-dev.12+gabc1234");
+  bar.checkNow();
+  check(waitFor([&] { return bar.findChild<QLabel *>()->text().contains("New commits on master: 18 "); })
+          && buttons(bar) == QStringList({ "Changes", "Later" }),
+        "master ahead: " + bar.findChild<QLabel *>()->text());
+  click(bar, "Changes");
+  check(catcher.opened.toString().startsWith("https://github.com/qtdmm/QtDMM/compare/abc1234...") && bar.isHidden(),
+        "Changes: GitHub's comparison");
+  QCoreApplication::setApplicationVersion("27.2-dev.30+gdef5678");
+  bar.checkNow();
+  check(waitFor([&] { return bar.findChild<QLabel *>()->text().contains("master has no commits"); }),
+        "master's commit itself: nothing new");
+  QCoreApplication::setApplicationVersion("27.2-dev.12+gabc1234");
+  bar.setInstallKind(UpdateCheck::Install::AppImage);
+  bar.checkNow();
+  check(waitFor([&] { return bar.findChild<QLabel *>()->text().contains("newest"); }),
+        "an AppImage of a dev build: no master commits (it cannot be rebuilt)");
 
   // the Windows installer: Install downloads it into the cache, checks it
   // and hands it on; a wrong SHA256 leaves nothing behind

@@ -132,6 +132,9 @@ void UpdateBar::finish(const QList<NewsItem> &news)
   auto release = m_feed.isEmpty() ? std::nullopt
                                   : UpdateCheck::offer(m_feed, current, beta(),
                                                        m_manual ? QString() : m_settings->getString("Update/skip"));
+  // a build from the sources: master's newer commits, when no release is newer
+  const bool source = m_kind == UpdateCheck::Install::Source;
+  const auto master = release || !source ? std::nullopt : UpdateCheck::masterOffer(m_feed, current);
   if (release)
   {
     // What's new: the release's article on qtdmm.de rather than GitHub's page
@@ -140,6 +143,10 @@ void UpdateBar::finish(const QList<NewsItem> &news)
         release->notes = item.link;
     offer(*release);
   }
+  else if (master)
+    offerMaster(*master);
+  else if (m_manual && source && UpdateCheck::isDevBuild(current))
+    showMessage(tr("No newer release, and master has no commits that this build (%1) lacks.").arg(current), {});
   else if (m_manual)
     showMessage(tr("QtDMM %1 is the newest version.").arg(current), {});
   if (m_manual || news.isEmpty())
@@ -148,7 +155,7 @@ void UpdateBar::finish(const QList<NewsItem> &news)
   // the news: the first fetch only remembers the newest, so that a new user
   // does not get the old ones; with an update offered they wait a day
   const QString seen = m_settings->getString("News/seen");
-  if (!seen.isEmpty() && release)
+  if (!seen.isEmpty() && (release || master))
     return;
   m_settings->setString("News/seen", news.first().guid);
   m_settings->save();
@@ -203,6 +210,23 @@ void UpdateBar::offer(const UpdateRelease &release)
                     hide();
                   } });
   showMessage(text, buttons);
+}
+
+void UpdateBar::offerMaster(const MasterCommit &master)
+{
+  const QString current = QCoreApplication::applicationVersion();
+  const QString text =
+    master.newCommits > 0
+      ? tr("New commits on master: %n (this build is %1, master %2). \"git pull\" and building again bring them.",
+           nullptr, master.newCommits)
+          .arg(current, master.version)
+      : tr("New commits on master (this build is %1, master %2). \"git pull\" and building again bring them.")
+          .arg(current, master.version);
+  showMessage(text, { { tr("Changes"), [this, url = master.changes] {
+                         QDesktopServices::openUrl(url);
+                         hide();
+                       } },
+                      { tr("Later"), [this] { hide(); } } });
 }
 
 void UpdateBar::download(const UpdateRelease &release, const UpdateFile &file)
