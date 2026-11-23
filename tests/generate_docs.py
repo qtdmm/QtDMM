@@ -298,6 +298,26 @@ def hid_cable_drift():
     return problems
 
 
+def modalias_drift():
+    """The USB devices of assets/linux/70-qtdmm.rules (written by udevRules(),
+    compared by ctest device_discovery) must be <modalias> entries of the
+    AppStream metadata, so that software centres suggest QtDMM for them.
+    Returns the problems."""
+    rules = {(v.lower(), p.lower()) for v, p in re.findall(
+        r'ATTRS\{idVendor\}=="([0-9a-fA-F]{4})", ATTRS\{idProduct\}=="([0-9a-fA-F]{4})"',
+        (REPO / "assets" / "linux" / "70-qtdmm.rules").read_text(encoding="utf-8"))}
+    meta = {(v.lower(), p.lower()) for v, p in re.findall(
+        r"<modalias>usb:v([0-9a-fA-F]{4})p([0-9a-fA-F]{4})d\*</modalias>",
+        (REPO / "assets" / "appimage" / "qtdmm.appdata.xml").read_text(encoding="utf-8"))}
+    problems = []
+    for v, p in sorted(rules - meta):
+        problems.append(f"USB {v}:{p} (70-qtdmm.rules) has no <modalias>usb:v{v.upper()}p{p.upper()}d*</modalias> "
+                        "in assets/appimage/qtdmm.appdata.xml")
+    for v, p in sorted(meta - rules):
+        problems.append(f"assets/appimage/qtdmm.appdata.xml provides USB {v}:{p}, which 70-qtdmm.rules does not have")
+    return problems
+
+
 def option_drift():
     """The command-line options exist in src/main.cpp and are described twice,
     in docs/qtdmm.1.in (the man page) and docs/user/command-line.md. Returns
@@ -342,7 +362,7 @@ def main():
             path.write_text(text, encoding="utf-8")
             print(f"wrote    {rel}")
 
-    for problem in protocol_drift() + transport_drift() + hid_cable_drift() + option_drift():
+    for problem in protocol_drift() + transport_drift() + hid_cable_drift() + option_drift() + modalias_drift():
         print(f"DRIFT    {problem}", file=sys.stderr)
         stale += 1
 

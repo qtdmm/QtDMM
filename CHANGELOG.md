@@ -110,6 +110,7 @@
 
 - **Qt Charts is no longer needed** — the graph draws with QCustomPlot (bundled) now, so building and packaging need one Qt module less (CMake, Arch PKGBUILD, RPM spec, Nix flake, INSTALL, the CI).
 - **miniz from the system** — CMake option `QTDMM_SYSTEM_MINIZ=ON` builds with the distribution's miniz (Debian `libminiz-dev`) instead of the bundled copy, for packages that do not want bundled libraries. Off by default. `QTDMM_SYSTEM_QRCODEGEN=ON` does the same for qrcodegen (Debian `libqrcodegencpp-dev`).
+- **Software centres know QtDMM's cables** — the AppStream metadata lists the USB cables and sensors of the udev rule as `modalias`, so GNOME Software, Discover and the like can suggest QtDMM when one is plugged in.
 
 ## v26.4.1 — Licences in Order (2026-11-23)
 

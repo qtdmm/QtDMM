@@ -32,6 +32,15 @@
   <launchable type="desktop-id">io.github.qtdmm.qtdmm.desktop</launchable>
   <provides>
     <binary>qtdmm</binary>
+    <!-- the USB cables and sensors of assets/linux/70-qtdmm.rules, so that a
+         software centre suggests QtDMM when one is plugged in
+         (tests/generate_docs.py compares both) -->
+    <modalias>usb:v1A86pE008d*</modalias> <!-- WCH CH9325 (UNI-T UT-D04) -->
+    <modalias>usb:v04FAp2490d*</modalias> <!-- Hoitek HE2325U (UNI-T UT-D04) -->
+    <modalias>usb:v10C4pEA80d*</modalias> <!-- SiLabs CP2110 (UNI-T UT-D09) -->
+    <modalias>usb:v1A86pE429d*</modalias> <!-- WCH CH9329 (UNI-T UT-D09) -->
+    <modalias>usb:v0820p0001d*</modalias> <!-- Brymen BU-86X -->
+    <modalias>usb:v04D9pA052d*</modalias> <!-- Holtek (TFA AIRCO2NTROL) -->
   </provides>
   <url type="homepage">https://qtdmm.de</url>
   <url type="bugtracker">https://github.com/qtdmm/QtDMM/issues</url>
