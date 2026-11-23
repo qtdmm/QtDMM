@@ -30,10 +30,25 @@ path = "assets/textures/*.jpg"
 SPDX-FileCopyrightText = "The QtDMM developers (AI-generated)"
 SPDX-License-Identifier = "GPL-3.0-or-later"
 
-# Alarm sounds from freesound.org, CC0 (assets/sounds/README.md)
+# Alarm sounds from freesound.org, CC0 (sources per file in assets/sounds/README.md)
 [[annotations]]
-path = "assets/sounds/*.wav"
-SPDX-FileCopyrightText = "NONE"
+path = ["assets/sounds/alarm_warn.wav", "assets/sounds/alarm_crit.wav"]
+SPDX-FileCopyrightText = "deleted_user_2906614 (freesound.org #262861)"
+SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
+path = "assets/sounds/alarm_high.wav"
+SPDX-FileCopyrightText = "Entershift (freesound.org #704134)"
+SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
+path = "assets/sounds/alarm_low.wav"
+SPDX-FileCopyrightText = "BIONN (freesound.org #562773)"
+SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
+path = "assets/sounds/alarm_ok.wav"
+SPDX-FileCopyrightText = "thirteenthfail (freesound.org #268162)"
 SPDX-License-Identifier = "CC0-1.0"
 
 # Icon themes copied from KDE (tools/update_icons.py)
