@@ -5101,50 +5101,53 @@ Pas de permission ? Le capteur a besoin d’une règle udev pour l’ID USB %1:%
     </message>
 </context>
 <context>
-    <name>LcdWidget</name>
+    <name>LcdPanel</name>
     <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="740"/>
-        <source>AUTO</source>
-        <translation>AUTO</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="740"/>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="767"/>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="934"/>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="950"/>
-        <source>MAX</source>
-        <translation>MAX</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="741"/>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="949"/>
-        <source>MIN</source>
-        <translation>MIN</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="741"/>
-        <source>AVG</source>
-        <translation>AVG</translation>
-    </message>
-    <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="900"/>
+        <location filename="../../src/ui/views/lcdpanel.cpp" line="457"/>
         <source>FAIL</source>
         <translation>FAIL</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="900"/>
+        <location filename="../../src/ui/views/lcdpanel.cpp" line="457"/>
         <source>PASS</source>
         <translation>PASS</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="906"/>
+        <location filename="../../src/ui/views/lcdpanel.cpp" line="463"/>
         <source>HI</source>
         <translation>HI</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="906"/>
+        <location filename="../../src/ui/views/lcdpanel.cpp" line="463"/>
         <source>LO</source>
         <translation>LO</translation>
+    </message>
+</context>
+<context>
+    <name>LcdWidget</name>
+    <message>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="323"/>
+        <source>AUTO</source>
+        <translation>AUTO</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="323"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="350"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="458"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="474"/>
+        <source>MAX</source>
+        <translation>MAX</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="324"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="473"/>
+        <source>MIN</source>
+        <translation>MIN</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="324"/>
+        <source>AVG</source>
+        <translation>AVG</translation>
     </message>
 </context>
 <context>
