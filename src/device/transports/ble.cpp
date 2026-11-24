@@ -11,6 +11,7 @@
 #include <QProcess>
 #include <QSet>
 
+#include "device/decoders/bthome.h"
 #include "device/victronble.h"
 
 Q_LOGGING_CATEGORY(lcBle, "qtdmm.ble", QtWarningMsg)
@@ -39,8 +40,8 @@ void bleHelperScan(QBluetoothDeviceDiscoveryAgent *agent, int ms)
 #endif
 }
 
-BleAdvertisementDevice::BleAdvertisementDevice(const DmmDecoder::DMMInfo &, const QString &device, QObject *parent)
-  : BufferedDevice(parent)
+BleAdvertisementDevice::BleAdvertisementDevice(const DmmDecoder::DMMInfo &info, const QString &device, QObject *parent)
+  : BufferedDevice(parent), m_protocol(info.protocol)
 {
   // "<address> <key> [<main field> <second field> [<third> <fourth>]]"
   const QStringList parts = device.simplified().split(' ');
@@ -61,7 +62,7 @@ bool BleAdvertisementDevice::open(OpenMode mode)
     setErrorString(tr("No Bluetooth address configured."));
     return false;
   }
-  if (m_key.size() != 16)
+  if (m_protocol != FrameFormat::BTHome && m_key.size() != 16)
   {
     setErrorString(tr("The encryption key must be 32 hex digits (VictronConnect: Product info, Instant readout via Bluetooth)."));
     return false;
@@ -105,6 +106,7 @@ bool BleAdvertisementDevice::open(OpenMode mode)
   m_lastIv = -1;
   m_keyMismatches = 0;
   m_failed = false;
+  m_lastServiceData.clear();
   return QIODevice::open(mode | QIODevice::Unbuffered);
 }
 
@@ -125,6 +127,11 @@ void BleAdvertisementDevice::onDevice(const QBluetoothDeviceInfo &info)
 {
   if (m_failed || info.address().toString().toUpper() != m_address)
     return;
+  if (m_protocol == FrameFormat::BTHome)
+  {
+    onBtHome(info);
+    return;
+  }
   const QByteArray data = info.manufacturerData(VictronBle::CompanyId);
   const auto adv = VictronBle::parse(data);
   if (!adv)
@@ -146,15 +153,32 @@ void BleAdvertisementDevice::onDevice(const QBluetoothDeviceInfo &info)
   m_keyMismatches = 0;
   m_lastIv = adv->iv;
   qCDebug(lcBle) << VictronBle::modelName(adv->model) << "type" << adv->readoutType << "iv" << adv->iv << plain->toHex();
-  if (!appendToBuffer(VictronBle::frame(adv->readoutType, *plain, m_fields)))
+  appendFrame(VictronBle::frame(adv->readoutType, *plain, m_fields));
+}
+
+void BleAdvertisementDevice::onBtHome(const QBluetoothDeviceInfo &info)
+{
+  const QByteArray data = info.serviceData(QBluetoothUuid(quint16(DecoderBTHome::kServiceUuid)));
+  // the same advertisement again (the packet id with it, when it sends one)
+  if (data.isEmpty() || data == m_lastServiceData)
+    return;
+  m_lastServiceData = data;
+  qCDebug(lcBle) << "BTHome" << m_address << data.toHex(' ');
+  appendFrame(DecoderBTHome::frame(data));
+}
+
+bool BleAdvertisementDevice::appendFrame(const QByteArray &line)
+{
+  if (!appendToBuffer(line))
   {
     m_failed = true;
     const QString reason = tr("Bluetooth receive buffer limit exceeded.");
     setErrorString(reason);
     Q_EMIT finished(reason);
-    return;
+    return false;
   }
   Q_EMIT readyRead();
+  return true;
 }
 
 qint64 BleAdvertisementDevice::writeData(const char *, qint64 len)
@@ -162,7 +186,7 @@ qint64 BleAdvertisementDevice::writeData(const char *, qint64 len)
   return len;   // nothing to say to a broadcaster
 }
 
-QStringList BleAdvertisementDevice::scan(int ms, QString *error)
+QStringList BleAdvertisementDevice::scan(int ms, QString *error, FrameFormat::DataFormat format)
 {
   QBluetoothDeviceDiscoveryAgent agent;
   QObject::connect(&agent, &QBluetoothDeviceDiscoveryAgent::errorOccurred, [&]
@@ -174,7 +198,10 @@ QStringList BleAdvertisementDevice::scan(int ms, QString *error)
   QMap<QString, QString> found;
   QObject::connect(&agent, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered, [&](const QBluetoothDeviceInfo &info)
   {
-    if (info.manufacturerIds().contains(VictronBle::CompanyId))
+    const bool match = format == FrameFormat::BTHome
+                         ? !info.serviceData(QBluetoothUuid(quint16(DecoderBTHome::kServiceUuid))).isEmpty()
+                         : info.manufacturerIds().contains(VictronBle::CompanyId);
+    if (match)
       found[info.address().toString()] = info.name();
   });
   agent.setLowEnergyDiscoveryTimeout(ms);

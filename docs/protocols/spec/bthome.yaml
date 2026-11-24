@@ -1,0 +1,64 @@
+protocol: BTHome
+decoder: src/device/decoders/bthome.cpp
+devices: [BTHome v2 sensor *]
+frames_per_reading: 1
+sources:
+  - "TEMP01, an ESP32 with ArduinoBLE and the BtHomeV2Device library (Sarah, 24.11.2026; bluetoothctl info)"
+  - "bthome.io/format: the BTHome v2 format, its object ids and its examples"
+
+# BTHome v2 sends its values in Bluetooth LE advertisements, no connection:
+# the service data of UUID 0xFCD2. The first byte is the device info -
+# bit 0 encrypted, bit 2 sent on a trigger, bits 5-7 the version (2, so
+# 0x40 unencrypted). Then objects in the order of their ids, each an id
+# and a little endian value of a fixed length (text and raw data: a
+# length byte first):
+#   0x00 packet id (uint8)        0x01 battery % (uint8)
+#   0x02 temperature 0.01 °C (s16) 0x03 humidity 0.01 % (u16)
+#   0x04 pressure 0.01 hPa (u24)  0x05 illuminance 0.01 lx (u24)
+#   0x0C voltage 0.001 V (u16)    0x12 CO2 ppm (u16)
+#   0x3E count (u32) ... the full list in the decoder.
+# QtDMM's BleAdvertisementDevice hands each new service data over as one
+# line "BTHOME <hex>"; the decoder gives the objects in their order, up to
+# four, the first as the main value. The packet id, device information,
+# text, raw data and events are no values. An encrypted advertisement
+# (bindkey, AES-CCM) is not read yet: an error says so.
+vectors:
+  - source_line: "40 02 fa 03 3e ed 00 00 00"   # TEMP01: 10.18 °C, count 237
+    bytes: 42 54 48 4F 4D 45 20 34 30 30 32 66 61 30 33 33 65 65 64 30 30 30 30 30 30 0A
+    reading: {value: "10.18", unit: "C", function: temperature}
+    expect: {special: TE, val: "10.18", id: 0, val2: "237", unit2: "", dval2: 237, id2: 1}
+  - source_line: "40 02 ca 09 03 bf 13"   # bthome.io: 25.06 °C, 50.55 %
+    source: "bthome.io/format"
+    bytes: 42 54 48 4F 4D 45 20 34 30 30 32 63 61 30 39 30 33 62 66 31 33 0A
+    reading: {value: "25.06", unit: "C", function: temperature}
+    expect: {val: "25.06", val2: "50.55", unit2: "%RH", dval2: 50.55}
+  - source_line: "40 04 13 8a 01"   # bthome.io: pressure 1008.83 hPa
+    source: "bthome.io/format"
+    bytes: 42 54 48 4F 4D 45 20 34 30 30 34 31 33 38 61 30 31 0A
+    reading: {value: "1008.83", unit: "hPa"}
+    expect: {val: "1008.83"}
+  - source_line: "40 0c 02 0c"   # bthome.io: 3.074 V
+    source: "bthome.io/format"
+    bytes: 42 54 48 4F 4D 45 20 34 30 30 63 30 32 30 63 0A
+    reading: {value: "3.074", unit: "V", coupling: DC}
+    expect: {special: DC, val: "3.074"}
+  - source_line: "40 01 61"   # bthome.io: battery 97 %
+    source: "bthome.io/format"
+    bytes: 42 54 48 4F 4D 45 20 34 30 30 31 36 31 0A
+    reading: {value: "97", unit: "%"}
+    expect: {special: BAT, val: "97", port: "state_of_charge"}
+  - source_line: "40 00 09 02 a4 fe"   # the packet id first (no value), then -3.48 °C
+    source: "bthome.io/format"
+    bytes: 42 54 48 4F 4D 45 20 34 30 30 30 30 39 30 32 61 34 66 65 0A
+    reading: {value: "-3.48", unit: "C", function: temperature}
+    expect: {val: "-3.48", id: 0}
+  - source_line: "40 12 e2 04"   # CO2 1250 ppm
+    source: "bthome.io/format"
+    bytes: 42 54 48 4F 4D 45 20 34 30 31 32 65 32 30 34 0A
+    reading: {value: "1250", unit: "ppm"}
+    expect: {special: CO2, val: "1250"}
+  - source_line: "41 a4 72 66 c9 5f 73 00 11 22 33 44 55"   # encrypted (bindkey): not read
+    source: "bthome.io/format"
+    bytes: 42 54 48 4F 4D 45 20 34 31 61 34 37 32 36 36 63 39 35 66 37 33 30 30 31 31 32 32 33 33 34 34 35 35 0A
+    reading: {value: "----", unit: "", shown: none}
+    expect: {error: "Encrypted (a bindkey): not read yet"}

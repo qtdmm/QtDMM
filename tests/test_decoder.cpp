@@ -17,6 +17,7 @@
 #include "device/protocols.h"
 #include "device/decoders/uni_t_ienv.h"
 #include "device/decoders/text_lines.h"
+#include "device/decoders/bthome.h"
 #include "device/decoders/uni_t_ut117c.h"
 #include "device/decoders/uni_t_ut219pv.h"
 #include "device/decoders/uni_t_ut320i.h"
@@ -287,6 +288,36 @@ int main(int argc, char **argv)
         bad("the next seq is not read");
       if (!osc->decode("0,5.002,0,NAN,0,2,1,1,0,701,1300\n", 0) || !osc->decode("0,5.002,0,NAN,0,2,1,1,0,701,1300\n", 0))
         bad("a held reading (seq frozen) is dropped");
+    }
+    // BTHome v2: the parser on its own - an unknown object ends it (its
+    // length is unknown), a binary sensor, another version, a packet id
+    // alone gives no reading, a cut-off advertisement
+    {
+      auto bad = [&](const char *what)
+      {
+        qWarning() << "BTHome:" << what;
+        ++problems;
+      };
+      const auto unknown = DecoderBTHome::parse(QByteArray::fromHex("4002fa03ff0102"));
+      if (!unknown || unknown->complete || unknown->objects.size() != 1 || unknown->objects[0].value != 10.18)
+        bad("an unknown object: the ones before it, marked incomplete");
+      const auto binary = DecoderBTHome::parse(QByteArray::fromHex("401101"));
+      if (!binary || binary->objects.size() != 1 || binary->objects[0].value != 1 || binary->objects[0].name != "Opening")
+        bad("opening sensor 0x11: 1");
+      const auto v1 = DecoderBTHome::parse(QByteArray::fromHex("2002fa03"));
+      if (!v1 || v1->version != 1 || !v1->objects.isEmpty())
+        bad("version 1: not read");
+      auto bt = DmmDecoder::getInstance(FrameFormat::BTHome);
+      if (bt->decode("BTHOME 400007\n", 0))
+        bad("only a packet id: no reading");
+      const auto cut = DecoderBTHome::parse(QByteArray::fromHex("4002fa"));
+      if (!cut || cut->complete || !cut->objects.isEmpty())
+        bad("cut off: nothing, incomplete");
+      const auto old = bt->decode("BTHOME 2002fa03\n", 0);
+      if (!old || !old->error.contains("version 1"))
+        bad("version 1: the error says so");
+      if (DecoderBTHome::frame(QByteArray::fromHex("4002fa03")) != "BTHOME 4002fa03\n")
+        bad("the transport's line");
     }
     // OWON SPM (programming manual): the supply's and the multimeter's
     // question in turn; the supply's line gives three values, P third; an

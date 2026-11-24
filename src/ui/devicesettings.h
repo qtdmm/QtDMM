@@ -112,6 +112,8 @@ public:
   /// Victron over Bluetooth LE: the Bluetooth group replaces the port.
   bool           isBluetooth() const;
   bool           isGatt() const;
+  /// A BTHome sensor (an ESP32's own values): Bluetooth without key or choice of values.
+  bool        isBtHome() const;
   /// A bench meter read through sigrok-cli: the sigrok group replaces the port.
   bool           isSigrokMeter() const;
   /// The names the meter gave its values 1..4 (empty: none yet), shown

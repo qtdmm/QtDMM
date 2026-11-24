@@ -102,6 +102,7 @@ public:
     TextLines,
     OpenOSC,
     OwonSPM,
+    BTHome,
     EndOfList              // new stuff always before!
   };
 

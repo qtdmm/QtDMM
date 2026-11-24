@@ -78,6 +78,7 @@ Type ofProtocol(FrameFormat::DataFormat protocol)
     case FrameFormat::UniTUT372D:
       return Tachometer;
     case FrameFormat::TextLines:
+    case FrameFormat::BTHome:   // a board's own values (ESP32); a sensor of its own is listed below when one is
       return Microcontroller;
     case FrameFormat::VictronBLE:
       return BatteryMonitor;

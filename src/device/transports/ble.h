@@ -11,13 +11,17 @@ class QBluetoothDeviceDiscoveryAgent;
 class QBluetoothDeviceInfo;
 
 /// Bluetooth LE port for devices that broadcast their readings in their
-/// advertisements - today Victron's Instant Readout (SmartShunt, MPPT). No
+/// advertisements - Victron's Instant Readout (SmartShunt, MPPT) and
+/// BTHome v2 (ESP32 and other boards, sensors; DecoderBTHome). No
 /// connection is made: a low-energy scan runs for as long as the port is
 /// open, advertisements of the configured address are decrypted with the
 /// configured key and each new one becomes one text line for the reader
 /// (VictronBle::frame). Port string: "<address> <key> [<main> <second>]"
 /// with the field ids the decoder should show, e.g.
-/// "CB:09:E4:16:33:DB 2ac4... SOC V". finished() reports a lost adapter or a
+/// "CB:09:E4:16:33:DB 2ac4... SOC V". A BTHome device has neither key nor
+/// fields: "<address>"; its service data (UUID 0xFCD2) becomes the line
+/// (DecoderBTHome::frame()), the same advertisement seen again is
+/// dropped. finished() reports a lost adapter or a
 /// wrong key; silence is left to MeterConnection's watchdog. Built only with
 /// QTDMM_WITH_BLE (Qt6::Bluetooth).
 class BleAdvertisementDevice : public BufferedDevice
@@ -31,10 +35,12 @@ public:
   void close() override;
   bool isSequential() const override { return true; }
 
-  /// Names of Victron devices seen in a short scan, as "<address> <name>";
-  /// the settings dialog fills its combo with them. Blocks for @p ms; when
-  /// the scan fails, @p error (if given) says why.
-  static QStringList scan(int ms = 5000, QString *error = nullptr);
+  /// Names of the devices of @p format (VictronBLE or BTHome) seen in a
+  /// short scan, as "<address> <name>"; the settings dialog fills its combo
+  /// with them. Blocks for @p ms; when the scan fails, @p error (if given)
+  /// says why.
+  static QStringList scan(int ms = 5000, QString *error = nullptr,
+                          FrameFormat::DataFormat format = FrameFormat::VictronBLE);
 
 Q_SIGNALS:
   /// The scan cannot go on (adapter gone) or the key does not match; the
@@ -45,8 +51,13 @@ private:
   void onDevice(const QBluetoothDeviceInfo &info);
   qint64 writeData(const char *data, qint64 len) override;
 
+  void onBtHome(const QBluetoothDeviceInfo &info);
+  bool appendFrame(const QByteArray &line);
+
+  FrameFormat::DataFormat m_protocol;
   QString m_address;
   QByteArray m_key;
+  QByteArray m_lastServiceData;   ///< BTHome: the advertisement taken last
   QStringList m_fields;   ///< main, second (, third, fourth) value: field ids, "-" for none
   QBluetoothDeviceDiscoveryAgent *m_agent = nullptr;
   int m_lastIv = -1;

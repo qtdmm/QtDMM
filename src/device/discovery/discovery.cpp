@@ -20,6 +20,7 @@
 #include <QBluetoothLocalDevice>
 #include "device/transports/ble.h"
 #include "device/transports/blegatt.h"
+#include "device/decoders/bthome.h"
 #include "device/victronble.h"
 
 #include <QLoggingCategory>
@@ -483,7 +484,25 @@ void BleDiscoverer::start()
     Candidate c;
     c.kind = Candidate::Bluetooth;
     c.key = address;
-    if (info.manufacturerIds().contains(VictronBle::CompanyId))
+    const QByteArray btHome = info.serviceData(QBluetoothUuid(quint16(DecoderBTHome::kServiceUuid)));
+    if (!btHome.isEmpty())
+    {
+      // a board or sensor that sends BTHome v2: what it sends, as a hint
+      c.title = info.name().isEmpty() ? QCoreApplication::translate("Discovery", "BTHome device") : info.name();
+      c.models = Families::models(FrameFormat::BTHome, false);
+      QStringList what;
+      if (const auto adv = DecoderBTHome::parse(btHome))
+      {
+        if (adv->encrypted)
+          what << QCoreApplication::translate("Discovery", "encrypted (not read yet)");
+        for (const DecoderBTHome::Object &o : adv->objects)
+          if (o.isValue)
+            what << o.name;
+      }
+      c.hint = what.isEmpty() ? QCoreApplication::translate("Discovery", "Sends BTHome v2.")
+                              : QCoreApplication::translate("Discovery", "Sends BTHome v2: %1.").arg(what.join(", "));
+    }
+    else if (info.manufacturerIds().contains(VictronBle::CompanyId))
     {
       c.title = info.name().isEmpty() ? QCoreApplication::translate("Discovery", "Victron device") : QCoreApplication::translate("Discovery", "Victron %1").arg(info.name());
       c.hint = QCoreApplication::translate("Discovery", "The device key is in the VictronConnect app: Product info, Instant readout.");
