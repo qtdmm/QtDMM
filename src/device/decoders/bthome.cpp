@@ -113,9 +113,12 @@ const Kind *kind(quint8 id)
   return nullptr;
 }
 
-// @p n bytes little endian from @p p, signed if asked
+// @p n bytes little endian from @p p, signed if asked; 1 to 8 bytes (the
+// objects' fixed lengths), anything else is no value
 double readValue(const unsigned char *p, int n, bool isSigned)
 {
+  if (n < 1 || n > 8)
+    return 0;
   quint64 raw = 0;
   for (int i = n - 1; i >= 0; --i)
     raw = (raw << 8) | p[i];
