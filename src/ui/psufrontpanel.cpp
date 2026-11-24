@@ -2,15 +2,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "ui/psufrontpanel.h"
 
-#include <QEvent>
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QMessageBox>
-#include <QPainter>
 #include <QTimer>
 #include <QToolButton>
-#include <QVBoxLayout>
 
 #include "core/powersupply.h"
 #include "ui/controlbar.h"
@@ -19,19 +16,6 @@
 
 namespace
 {
-// the OUT key's LED: green while the output is on
-QIcon led(bool on)
-{
-  QPixmap pm(12, 12);
-  pm.fill(Qt::transparent);
-  QPainter p(&pm);
-  p.setRenderHint(QPainter::Antialiasing, true);
-  p.setPen(QPen(QColor(0x10, 0x10, 0x10), 1));
-  p.setBrush(on ? QColor(0x30, 0xe0, 0x40) : QColor(0x3a, 0x40, 0x3a));
-  p.drawEllipse(QRectF(1, 1, 10, 10));
-  return QIcon(pm);
-}
-
 PsuLcdWidget::Mode lcdMode(PowerSupply::Mode mode)
 {
   return mode == PowerSupply::Mode::CV ? PsuLcdWidget::Mode::CV
@@ -41,34 +25,16 @@ PsuLcdWidget::Mode lcdMode(PowerSupply::Mode mode)
 }
 
 PsuFrontPanel::PsuFrontPanel(PowerSupply *supply, QWidget *parent)
-  : QWidget(parent)
+  : OutputFront(parent)
   , m_supply(supply)
   , m_display(new PsuLcdWidget(this))
-  , m_controls(new QWidget(this))
-  , m_grid(new QGridLayout(m_controls))
-  , m_fold(new FoldButton(this))
-  , m_gear(new PanelGear(m_display))
+  , m_grid(new QGridLayout(controls()))
   , m_send(new QTimer(this))
 {
-  auto *layout = new QVBoxLayout(this);
-  layout->setContentsMargins(0, 0, 0, 0);
-  layout->setSpacing(4);
-  layout->addWidget(m_display, 1);
-  layout->addWidget(m_controls);
-  layout->addWidget(m_fold, 0, Qt::AlignHCenter);
+  setDisplay(m_display);
   m_grid->setContentsMargins(4, 0, 4, 0);
   m_grid->setHorizontalSpacing(8);
   m_grid->setVerticalSpacing(4);
-
-  m_gear->setInk(m_display->plateInk(false), m_display->plateInk(true));
-  m_gear->hide();
-  connect(m_gear, &PanelGear::clicked, this, &PsuFrontPanel::settingsRequested);
-  m_display->installEventFilter(this);
-  connect(m_fold, &FoldButton::toggled, this, [this](bool folded)
-  {
-    setFolded(folded);
-    Q_EMIT foldToggled(folded);
-  });
 
   // the first turn goes at once, the next at most every kSendInterval
   m_send->setSingleShot(true);
@@ -81,12 +47,6 @@ PsuFrontPanel::PsuFrontPanel(PowerSupply *supply, QWidget *parent)
     connect(m_supply, &PowerSupply::settingsChanged, this, &PsuFrontPanel::rebuild);
   }
   rebuild();
-}
-
-void PsuFrontPanel::setCaption(const QString &caption)
-{
-  m_display->setCaption(caption);
-  placeCorner();
 }
 
 RotaryKnob *PsuFrontPanel::knob(int ch) const
@@ -103,23 +63,6 @@ QToolButton *PsuFrontPanel::outputKey(int ch) const
     if (s.ch == ch)
       return s.out;
   return nullptr;
-}
-
-void PsuFrontPanel::setFolded(bool folded)
-{
-  m_fold->setFolded(folded);
-  m_controls->setVisible(!folded);
-}
-
-bool PsuFrontPanel::isFolded() const
-{
-  return m_fold->isFolded();
-}
-
-int PsuFrontPanel::controlsHeight() const
-{
-  const int spacing = layout()->spacing();
-  return (isFolded() ? 0 : m_controls->sizeHint().height() + spacing) + m_fold->sizeHint().height() + spacing;
 }
 
 // ---------------------------------------------------------------- building
@@ -161,7 +104,7 @@ void PsuFrontPanel::rebuild()
     const PowerSupply::ChannelSettings set = m_supply->settings(ch);
     Strip s;
     s.ch = ch;
-    s.box = new QWidget(m_controls);
+    s.box = new QWidget(controls());
     auto *row = new QHBoxLayout(s.box);
     row->setContentsMargins(0, 0, 0, 0);
     row->setSpacing(6);
@@ -204,7 +147,7 @@ void PsuFrontPanel::rebuild()
   }
   if (shown.size() > 1)
   {
-    m_allOff = new QToolButton(m_controls);
+    m_allOff = new QToolButton(controls());
     m_allOff->setText(tr("ALL OUT"));
     m_allOff->setToolTip(tr("Every output shown off"));
     m_allOff->setStyleSheet(ControlBar::keyColour(QColor(0xb0, 0x30, 0x30), Qt::white));
@@ -302,29 +245,4 @@ bool PsuFrontPanel::mayTurnOn()
     return true;
   return QMessageBox::question(this, tr("Output on"), tr("Switch the output on? The voltage reaches what is connected."))
          == QMessageBox::Yes;
-}
-
-// ---------------------------------------------------------------- the gear
-
-bool PsuFrontPanel::eventFilter(QObject *watched, QEvent *event)
-{
-  if (watched == m_display && event->type() == QEvent::Resize)
-    placeCorner();
-  return QWidget::eventFilter(watched, event);
-}
-
-void PsuFrontPanel::placeCorner()
-{
-  // at the right end of the name plate, as high as its letters (FrontPanel)
-  const QRectF band = m_display->plateBand();
-  if (band.isEmpty())
-  {
-    m_gear->hide();
-    return;
-  }
-  const int size = qBound(10, int(band.height() * 0.8), 18);
-  m_gear->setFixedSize(size, size);
-  m_gear->move(int(band.right() - size), int(band.center().y() - size / 2.0));
-  m_gear->show();
-  m_display->setPlateReserve(size + 6);
 }

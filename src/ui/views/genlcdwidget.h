@@ -4,6 +4,7 @@
 
 #include <QElapsedTimer>
 #include <QList>
+#include <QPainterPath>
 
 #include <limits>
 
@@ -82,6 +83,8 @@ public:
   QString frequencyUnit(int ch) const;
   /// The word for the shape ("SINE"), for the annunciators and the tests.
   QString shapeWord(int ch) const;
+  /// One period of @p shape in @p r, as the LCD draws it (the front's keys too).
+  static QPainterPath shapePath(Shape shape, const QRectF &r);
 
   /// Where a block's parts are (test_gen_lcd checks they stay apart).
   struct Block

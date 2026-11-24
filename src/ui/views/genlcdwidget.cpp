@@ -4,7 +4,6 @@
 
 #include <QFontMetricsF>
 #include <QPainter>
-#include <QPainterPath>
 #include <QTimer>
 
 #include <cmath>
@@ -375,9 +374,8 @@ void GenLcdWidget::drawFlags(QPainter &p, const Block &b, int ch) const
                   !s.error.isEmpty() || (setShown(ch) && m_blinkOn), fontPx);
 }
 
-void GenLcdWidget::drawShape(QPainter &p, const QRectF &r, Shape shape, bool on) const
+QPainterPath GenLcdWidget::shapePath(Shape shape, const QRectF &r)
 {
-  // one period of the shape, drawn like a segment
   QPainterPath path;
   const double l = r.left(), w = r.width(), top = r.top(), bottom = r.bottom(), mid = r.center().y();
   switch (shape)
@@ -415,6 +413,13 @@ void GenLcdWidget::drawShape(QPainter &p, const QRectF &r, Shape shape, bool on)
       path.cubicTo(l + w * 0.6, top - r.height() * 0.2, l + w * 0.8, mid, l + w, bottom);
       break;
   }
+  return path;
+}
+
+void GenLcdWidget::drawShape(QPainter &p, const QRectF &r, Shape shape, bool on) const
+{
+  // one period of the shape, drawn like a segment
+  const QPainterPath path = shapePath(shape, r);
   p.save();
   p.setRenderHint(QPainter::Antialiasing);
   p.setPen(QPen(on ? ink() : ghost(), qMax(1.0, r.height() * 0.14), Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
