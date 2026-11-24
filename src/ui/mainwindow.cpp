@@ -3147,9 +3147,14 @@ void MainWindow::windowMenu(QMdiSubWindow *win, const QPoint &globalPos)
     hold->setCheckable(true);
     hold->setChecked(graph->hold());
     connect(hold, &QAction::toggled, graph, [graph](bool on) { graph->setHold(on); });
-    // as Clear in the toolbar: the recording goes (asked first when not
-    // saved), a recording or a file viewed: Live again
-    connect(menu.addAction(tr("&Reset")), &QAction::triggered, action_Clear, &QAction::trigger);
+    // this graph's: a file it shows closes; else, outside a recording, the
+    // readings of the devices whose values it shows go (asked first when not
+    // saved) - not the leading meter's, which another graph may show
+    connect(menu.addAction(tr("&Reset")), &QAction::triggered, this, [this, graphView = QPointer<GraphView>(graphView)]
+    {
+      if (graphView)
+        resetGraph(graphView);
+    });
     menu.addSeparator();
     {
       // what it shows: the switches, then its looks (own texts: the letters
@@ -4682,6 +4687,35 @@ void MainWindow::showPhoto(const QString &photo)
   const QString path = PhotoStore::absolute(m_basket->folder(), photo);
   if (!PhotoView::showPhoto(path, this))
     m_wid->error(tr("The photo %1 cannot be shown: not found in the open project.").arg(QDir::toNativeSeparators(photo)));
+}
+
+void MainWindow::resetGraph(GraphView *view)
+{
+  if (view->showsFile())
+  {
+    view->closeFile();
+    return;
+  }
+  // a recording under way is the session's, one time base, saved as one:
+  // all of it goes, as Clear in the toolbar
+  if (m_session->isRecording())
+  {
+    action_Clear->trigger();
+    return;
+  }
+  QStringList sources;
+  bool unsaved = false;
+  for (const ValueRef &v : view->model()->values())
+    if (!sources.contains(v.source))
+    {
+      sources << v.source;
+      if (const MeterController *ctl = m_session->controller(v.source))
+        unsaved = unsaved || !m_session->unsavedRecordings(ctl->deviceId()).isEmpty();
+    }
+  if (unsaved && !m_wid->keepUnsavedData(QCoreApplication::translate("InstanceWidget", "Clear deletes it."),
+                                         QCoreApplication::translate("InstanceWidget", "Clear without saving")))
+    return;
+  m_session->resetRecordings(sources);
 }
 
 GraphView *MainWindow::currentGraph() const

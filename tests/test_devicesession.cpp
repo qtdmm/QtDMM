@@ -218,6 +218,29 @@ int main(int argc, char **argv)
   }
   lead->stop();
 
+  // a graph's Reset outside a recording: only the meters it names - not the
+  // leading one, whose readings another graph may show
+  lead->live();
+  check(waitFor([&] { return mine->count() >= 2; }, 4000), "Live again: readings here");
+  // the window's meter is disconnected here: two readings by hand
+  for (int i = 0; i < 2; ++i)
+  {
+    ReadingAdapter adapter;
+    lead->setReading(ReadingAdapter::reading(adapter.adaptValue(1, "1.000", "V", "DC", "AUTO", false, true, false, 0,
+                                                                QDateTime::currentMSecsSinceEpoch())));
+    waitFor([] { return false; }, 20);
+  }
+  const int leadBefore = lead->count();
+  check(leadBefore > 0, QString("the window's meter has readings: %1").arg(leadBefore));
+  session.resetRecordings({ "device:" + sim });
+  check(mine->count() == 0 && lead->count() == leadBefore, QString("reset of the meter here only: %1 here, the window's kept %2")
+                                                              .arg(mine->count()).arg(lead->count()));
+  session.resetRecordings({ "device:unknown" });
+  check(lead->count() == leadBefore, "an unknown source: nothing reset");
+  // the window's readings by hand gone again for what follows
+  lead->clear();
+  lead->forgetReading();
+
   // 5. closed: the window's meter alone
   session.close(sim);
   check(!session.controller("device:" + sim), "closed");

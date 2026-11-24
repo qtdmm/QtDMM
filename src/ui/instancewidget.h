@@ -70,6 +70,11 @@ public:
   /// Saves the settings and asks about unsaved data. Returns false when the
   /// user cancels; MainWindow then ignores the close event.
   bool        closeWin();
+  /// Asks about unsaved readings before they are lost (@p text says how,
+  /// @p discard is the button that drops them): export first, drop or
+  /// cancel. True when the caller may go on - nothing unsaved, exported or
+  /// dropped; false for Cancel or a failed export.
+  bool        keepUnsavedData(const QString &reason, const QString &discard);
   /// The settings dialog: its pages hold what MainWindow reads (the window
   /// at exit, the analog meter's style, the shown display, the keys).
   SettingsDialog *settingsDialog() const { return m_configDlg; }
@@ -202,11 +207,6 @@ protected:
   /// The meters' values by name: the recording's choice of trigger value.
   void        updateValueNames();
   Settings    *m_settings;
-  /// Asks about unsaved readings before they are lost (@p text says how,
-  /// @p discard is the button that drops them): export first, drop or
-  /// cancel. True when the caller may go on - nothing unsaved, exported or
-  /// dropped; false for Cancel or a failed export.
-  bool        keepUnsavedData(const QString &reason, const QString &discard);
   /// Export with a file dialog: the session's recording with every meter
   /// that recorded; false when cancelled or failed.
   bool        exportRecording();
