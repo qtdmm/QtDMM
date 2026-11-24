@@ -20,7 +20,7 @@ WebViewPrefs::WebViewPrefs(QWidget *parent) : SettingsPage(parent)
 {
   m_label = tr("Web view");
   m_description = tr("Shows the windows of QtDMM in a browser, to look at only: a second screen, a colleague, a kiosk.");
-  m_iconName = "image-x-generic";
+  m_iconName = "internet-web-browser";
 
   QFormLayout *form = createForm();
   addSection(form, tr("Web view"));

@@ -591,7 +591,7 @@ void DeviceSidebar::serviceMenu(QTreeWidgetItem *item, const QPoint &pos)
   QAction *code = nullptr;
   if (web)
   {
-    open = menu.addAction(QIcon::fromTheme("go-next"), tr("&Open in the browser"));
+    open = menu.addAction(QIcon::fromTheme("internet-web-browser"), tr("&Open in the browser"));
     code = menu.addAction(tr("Show &QR code..."));
     open->setEnabled(!address.isEmpty());
     code->setEnabled(!address.isEmpty());

@@ -45,7 +45,14 @@ NAMES = [
     "application-pdf", "folder", "image-x-generic", "text-csv", "text-x-generic", "x-office-spreadsheet",
     # the project window: a photo of the setup
     "camera-photo", "smartphone", "camera-web",
+    # the web view's settings page and sidebar entry
+    "internet-web-browser",
 ]
+# Breeze has these under another name: its browser icon is coloured, the globe
+# fits the monochrome set
+BREEZE_ALIAS = {
+    "internet-web-browser": "globe",
+}
 # Oxygen has these under another name (chosen by eye, paket_26_2 §1a)
 OXYGEN_ALIAS = {
     "edit-clear-history": "edit-clear",   # the broom; Oxygen's own is an hourglass
@@ -100,9 +107,9 @@ def breeze(system: pathlib.Path, own: pathlib.Path, sets: pathlib.Path, theme: s
     (out / "index.theme").write_text(index(theme, "Breeze symbols used by QtDMM (LGPL-3.0-or-later, KDE)",
                                            ["22"], SCALABLE_DIR.format(dir="22")))
     for name in NAMES:
-        p = find(system / src, name, "22", ".svg")
+        p = find(system / src, BREEZE_ALIAS.get(name, name), "22", ".svg")
         if not p:
-            sys.exit(f"{name}.svg not found in {system / src}")
+            sys.exit(f"{name} ({BREEZE_ALIAS.get(name, name)}).svg not found in {system / src}")
         shutil.copyfile(p, out / "22" / (name + ".svg"))
     for svg in sorted((own / "breeze").glob("*.svg")):
         data = svg.read_text()

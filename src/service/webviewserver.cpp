@@ -38,28 +38,45 @@ void WebViewServer::setInterval(int ms)
   m_interval = std::clamp(ms, kMinInterval, kMaxInterval);
 }
 
-QByteArray WebViewServer::page()
+// @p file from the resources with the words in double braces replaced,
+// HTML-escaped
+QByteArray WebViewServer::fill(const QString &file, const QList<std::pair<const char *, QString>> &words)
 {
-  QFile file(":/webview/index.html");
-  if (!file.open(QIODevice::ReadOnly))
+  QFile f(file);
+  if (!f.open(QIODevice::ReadOnly))
     return {};
-  QByteArray html = file.readAll();
-  // the words, as the program speaks; HTML-escaped
-  const QList<std::pair<const char *, QString>> words = {
+  QByteArray html = f.readAll();
+  const QList<std::pair<const char *, QString>> common = {
     { "{{LANG}}", tr("en", "the language code (BCP 47) of this translation, for the web view's page") },
     { "{{TITLE}}", tr("QtDMM web view") },
-    { "{{FULLSCREEN}}", tr("Full screen") },
-    { "{{STALE}}", tr("No new picture") },
-    { "{{GONE}}", tr("This link no longer works: ask for the new one.") },
   };
-  for (const auto &[key, text] : words)
+  for (const auto &[key, text] : common + words)
     html.replace(key, text.toHtmlEscaped().toUtf8());
   return html;
 }
 
-QByteArray WebViewServer::forbidden() const
+QByteArray WebViewServer::page()
 {
-  return tr("This link no longer works: ask for the new one.").toUtf8();
+  return fill(":/webview/index.html", {
+    { "{{FULLSCREEN}}", tr("Full screen") },
+    { "{{STALE}}", tr("No new picture") },
+    { "{{GONE}}", tr("This link no longer works: ask for the new one.") },
+  });
+}
+
+QByteArray WebViewServer::hintPage()
+{
+  return fill(":/webview/hint.html", {
+    { "{{NOLINK}}", tr("This address needs the whole link, with its secret part.") },
+    { "{{WHERE}}", tr("QtDMM gives the link: in the sidebar under Services, the entry \"Web view\" "
+                      "(Copy link or Show QR code). Without a screen: QTDMM:WEB:URL? over SCPI.") },
+    { "{{OLD}}", tr("A link that worked before was replaced by a new one.") },
+  });
+}
+
+void WebViewServer::refuse(QTcpSocket *socket)
+{
+  answer(socket, 403, "text/html; charset=utf-8", hintPage(), kHeaders);
 }
 
 QByteArray WebViewServer::frame()

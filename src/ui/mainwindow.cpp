@@ -3379,9 +3379,13 @@ void MainWindow::updateServices()
     else if (state.id == QLatin1String("hislip"))
       row.tooltip = tr("HiSLIP for VISA (NI-VISA, LabVIEW, PyVISA): %1, %2 connected.").arg(state.address, clients);
     else if (state.id == QLatin1String("webview"))
+    {
       row.tooltip = state.clients == 1
                       ? tr("Web view: %1, 1 browser watching. Double-click opens it.").arg(state.address)
                       : tr("Web view: %1, %2 browsers watching. Double-click opens it.").arg(state.address).arg(state.clients);
+      if (!state.announced.isEmpty())
+        row.tooltip += ' ' + tr("Announced as \"%1\" (without the link's secret).").arg(state.announced);
+    }
     else if (state.id == QLatin1String("vxi11"))
       row.tooltip = tr("VXI-11 for VISA and lxi-tools: %1, %2 connected.").arg(state.address, clients);
     else

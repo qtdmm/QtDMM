@@ -8,6 +8,7 @@
 #include <QJsonObject>
 
 #include <functional>
+#include <utility>
 
 class QTimer;
 
@@ -17,7 +18,7 @@ class QTimer;
 ///
 /// The token is the caller's and stays (the settings keep it): the link can
 /// be kept as a bookmark or on a kiosk screen until a new token is set.
-/// Without it every path gets 403.
+/// Without it every path gets 403 with hintPage(): where the link is.
 ///
 /// Paths after /<token>/:
 /// - "" the page (assets/webview/index.html): a line with where it comes
@@ -56,15 +57,19 @@ public:
 
   /// The page with the words in the language of the program.
   static QByteArray page();
+  /// The answer to a request without the right token (a bare address, as
+  /// mDNS gives it, or an old link): where to get the link.
+  static QByteArray hintPage();
 
 Q_SIGNALS:
   void viewersChanged(int viewers);
 
 protected:
   void handle(QTcpSocket *socket, const Request &request) override;
-  QByteArray forbidden() const override;
+  void refuse(QTcpSocket *socket) override;
 
 private:
+  static QByteArray fill(const QString &file, const QList<std::pair<const char *, QString>> &words);
   QByteArray frame();
   void seen(const QHostAddress &peer);
   void prune();
