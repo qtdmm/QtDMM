@@ -4028,9 +4028,9 @@ void MainWindow::editPanelValues(FrontPanel *panel)
   QPointer<MeterController> meter(ctl);
   if (dlg.exec() != QDialog::Accepted || !open || !meter)
     return;
-  panel->setValue(ValueRef(dlg.main(), ctl->source()));
+  panel->setValue(ValueRef(dlg.mainValue(), ctl->source()));
   // its min/max memory follows the big line
-  ctl->setMinMaxValue(dlg.main());
+  ctl->setMinMaxValue(dlg.mainValue());
   panel->setSecondaries(dlg.secondaries());
   updateOpenDevices();
 }

@@ -26,6 +26,13 @@ class Bands : public QCPAbstractItem
 public:
   struct Entry
   {
+    Entry() = default;   ///< declared with the moves below, so spelled out
+    /// The fields in the order of the members.
+    Entry(int curveIndex, int sourceIndex, QCPAxis *valueAxis, double unitFactor, int columnCount, const QBrush &brush,
+          const QPen &outline)
+      : curve(curveIndex), source(sourceIndex), axis(valueAxis), factor(unitFactor), columns(columnCount), fill(brush), pen(outline)
+    {
+    }
     int      curve = 0;      ///< -1: the min/max band
     int      source = 0;     ///< the curve whose points it draws
     QCPAxis *axis = nullptr;
@@ -33,6 +40,11 @@ public:
     int      columns = 0;    ///< the columns either side that widen it
     QBrush   fill;
     QPen     pen;
+    // the moves and copies of the compiler, marked noexcept (SonarCloud S5018)
+    Entry(const Entry &) = default;
+    Entry &operator=(const Entry &) = default;
+    Entry(Entry &&) noexcept = default;
+    Entry &operator=(Entry &&) noexcept = default;
   };
 
   explicit Bands(QCustomPlot *plot) : QCPAbstractItem(plot) {}

@@ -20,7 +20,7 @@ public:
   PanelValuesDlg(const QStringList &names, int main, const QList<int> &secondaries, QWidget *parent = nullptr);
 
   /// The big line's value.
-  int        main() const;
+  int        mainValue() const;
   /// The small line's, left to right.
   QList<int> secondaries() const;
 

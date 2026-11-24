@@ -149,8 +149,12 @@ void FrameReader::timer()
   // (Keysight's CONF?) or a lost one: asked again after two ticks, not only
   // on MeterConnection's second
   const bool fast = pollInterval() < 1000;
-  if (fast && !m_sendRequest && ++m_waitTicks >= 2)
-    m_sendRequest = true;
+  if (fast && !m_sendRequest)
+  {
+    ++m_waitTicks;
+    if (m_waitTicks >= 2)
+      m_sendRequest = true;
+  }
   sendReadRequest();
   if (!fast)
     m_readValue = false;
