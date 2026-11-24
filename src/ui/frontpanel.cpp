@@ -7,7 +7,6 @@
 #include <QVBoxLayout>
 
 #include <cmath>
-#include <memory>
 
 #include "core/functiongenerator.h"
 #include "core/powersupply.h"
@@ -259,14 +258,16 @@ void FrontPanel::followOutputs()
     connect(generator, &FunctionGenerator::settingsChanged, m_output, [this] { Q_EMIT keysChanged(); });
     // another shape: a duty or symmetry knob comes or goes, the controls'
     // width may change (not on every turn of a knob)
-    connect(generator, &FunctionGenerator::stateChanged, m_output,
-            [this, generator, shapes = std::make_shared<QList<int>>()](int ch)
+    m_outputShapes.clear();
+    connect(generator, &FunctionGenerator::stateChanged, m_output, [this, generator](int ch)
     {
-      shapes->resize(qMax(int(shapes->size()), ch + 1), -1);
-      const int shape = int(generator->state(ch).shape);
-      if ((*shapes)[ch] == shape)
+      if (ch < 0)
         return;
-      (*shapes)[ch] = shape;
+      m_outputShapes.resize(qMax(int(m_outputShapes.size()), ch + 1), -1);
+      const int shape = int(generator->state(ch).shape);
+      if (m_outputShapes[ch] == shape)
+        return;
+      m_outputShapes[ch] = shape;
       Q_EMIT keysChanged();
     });
   }

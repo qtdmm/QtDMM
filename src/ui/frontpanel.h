@@ -120,6 +120,7 @@ private:
   PanelGear  *m_gear;
   OutputFront *m_output = nullptr;
   QObject    *m_outputDevice = nullptr;   ///< the supply or generator m_output works on
+  QList<int>  m_outputShapes;   ///< a generator's shape per channel as last laid out (followOutputs())
   /// The bar under the LCD now: the meter's keys or the node's.
   QWidget    *bar() const;
   /// The gear at the right end of the LCD's name plate.
