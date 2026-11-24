@@ -424,7 +424,7 @@ void LcdWidget::drawMain(QPainter &p, const Layout &l) const
     p.save();
     p.setOpacity(1);   // not faded as a stale value: it is no value
     p.setFont(font);
-    p.setPen(segmentColor());
+    p.setPen(ink());
     p.drawText(l.main, Qt::AlignCenter, m_notice);
     p.restore();
     return;
@@ -457,7 +457,7 @@ void LcdWidget::drawMinMax(QPainter &p, const Layout &l) const
   auto block = [&](double x, const QString &label, const QString &value, const QString &unit)
   {
     p.setFont(sansFont(fontPx));
-    p.setPen(value.isEmpty() ? ghost() : segmentColor());
+    p.setPen(value.isEmpty() ? ghost() : ink());
     p.drawText(QRectF(x, y, labelW, h), Qt::AlignLeft | Qt::AlignVCenter, label);
     x += labelW;
     x += drawNumber(p, QPointF(x, y), h, value, digits, !value.isEmpty());
@@ -519,11 +519,11 @@ void LcdWidget::drawBar(QPainter &p, const Layout &l, bool staticPart) const
     {
       const double x = x0 + c * step;
       const bool major = (c % 5) == 0;
-      p.setPen(QPen(segmentColor(), major ? 1.5 : 1.0));
+      p.setPen(QPen(ink(), major ? 1.5 : 1.0));
       p.drawLine(QPointF(x, tickTop + (major ? 0 : tickH * 0.5)), QPointF(x, tickTop + tickH));
       if (c % 10 == 0)
       {
-        p.setPen(segmentColor());
+        p.setPen(ink());
         p.drawText(QRectF(x - fontPx * 2, l.bar.top() - fontPx * 0.1, fontPx * 4, fontPx * 1.2), Qt::AlignCenter, QString::number(c));
       }
     }
@@ -545,7 +545,7 @@ void LcdWidget::drawBar(QPainter &p, const Layout &l, bool staticPart) const
   const double percent = qBound(0.0, val.toDouble() / m_counts, 1.0);
   const int lit = int(std::lround(percent * divisions));
   p.setPen(Qt::NoPen);
-  p.setBrush(segmentColor());
+  p.setBrush(ink());
   for (int c = 0; c < lit; ++c)
     p.drawRect(QRectF(x0 + c * step + 1, blockTop, step - 2, blockH));
 }

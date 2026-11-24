@@ -110,16 +110,30 @@ protected:
   static QFont sansFont(double px, bool bold = true);
   /// The colour of an unlit segment or annunciator.
   QColor ghost() const;
+  /// Light or dark segments, whichever reads better on @p face.
+  static QColor segmentsOn(const QColor &face);
+  /// Until resetInk() the kit draws with @p segment on @p face instead of
+  /// the panel's colours, as on an alarm's colour (for one part of the
+  /// panel: a power supply's channel). The face itself is the caller's to fill.
+  void setInk(const QColor &face, const QColor &segment) const;
+  void resetInk() const;
+  /// The colours the kit draws with now.
+  QColor ink() const { return m_inkSegment.isValid() ? m_inkSegment : m_segment; }
+  QColor inkFace() const { return m_inkFace.isValid() ? m_inkFace : m_face; }
+  /// Drawn on an alarm's colour (the panel's, or one part's by setInk()).
+  bool onAlert() const { return m_inkFace.isValid() || m_alert.isValid(); }
   void drawDigit(QPainter &p, const QPointF &origin, double h, int mask) const;
   /// A number right-aligned in a field of @p minDigits digits, at digit
   /// height @p h: leading cells ghosted, the sign in its own cell, the
   /// decimal point between cells. Unlit (@p lit false): only ghosts.
-  /// Returns the field's width, numberWidth().
-  double drawNumber(QPainter &p, const QPointF &origin, double h, const QString &text, int minDigits, bool lit) const;
+  /// Returns the field's width, numberWidth(). Without @p signCell (a
+  /// power supply's values) the field starts with the first digit.
+  double drawNumber(QPainter &p, const QPointF &origin, double h, const QString &text, int minDigits, bool lit,
+                    bool signCell = true) const;
   /// The unit after a number of digit height @p h; returns its width.
   double drawUnit(QPainter &p, const QPointF &origin, double h, const QString &unit) const;
   /// Width of a number field: sign cell, @p digits digits, one decimal point.
-  static double numberWidth(double h, int digits);
+  static double numberWidth(double h, int digits, bool signCell = true);
   /// The width annunciator @p t takes at font size @p fontPx.
   static double flagWidth(const QString &t, const QFontMetricsF &fm, double fontPx);
   /// An annunciator in @p r, lit or as a ghost; kBatteryFlag shows
@@ -140,6 +154,8 @@ private:
   QColor m_alert;   ///< an alarm's colour over the variant, invalid when none
   QColor m_segment;
   QColor m_customFace;             ///< setFaceColor()
+  mutable QColor m_inkFace;        ///< setInk(), invalid: the panel's
+  mutable QColor m_inkSegment;
   LcdVariant m_variant = Classic;
   bool m_stale = false;
   QString m_caption;   ///< setCaption()
