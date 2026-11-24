@@ -20,8 +20,8 @@ class QBluetoothDeviceInfo;
 /// with the field ids the decoder should show, e.g.
 /// "CB:09:E4:16:33:DB 2ac4... SOC V". A BTHome device has neither key nor
 /// fields: "<address>"; its service data (UUID 0xFCD2) becomes the line
-/// (DecoderBTHome::frame()), the same advertisement seen again is
-/// dropped. finished() reports a lost adapter or a
+/// (DecoderBTHome::frame()); one with the packet id of the one before is
+/// dropped as seen again. finished() reports a lost adapter or a
 /// wrong key; silence is left to MeterConnection's watchdog. Built only with
 /// QTDMM_WITH_BLE (Qt6::Bluetooth).
 class BleAdvertisementDevice : public BufferedDevice

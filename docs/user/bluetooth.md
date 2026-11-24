@@ -257,11 +257,12 @@ those broadcasts and shows the values like a meter's.
 **Add device**, *Bluetooth*: a board or sensor that sends BTHome shows up
 with its name and what it sends ("Sends BTHome v2: Temperature, Count").
 Choose it; the model is **BTHome v2 sensor**. There is no key and no
-choice of values: QtDMM takes the values in the order the sensor sends
-them - by their object ids, so a temperature (0x02) comes before a count
+choice of values: QtDMM takes the values the sensor sends, in their
+order - by their object ids, so a temperature (0x02) comes before a count
 (0x3E) - up to four, the first as the main value, each named by what it
-is (Temperature, Humidity, Voltage, Battery, CO2, Count ...). The packet
-id only tells a new advertisement from a repeated one.
+is (Temperature, Humidity, Voltage, Battery, CO2, Count ...). Only those
+it sends are shown. The packet id is no value: it only tells a new
+advertisement from a repeated one.
 
 Not read yet: **encrypted** advertisements (a bindkey; the status line
 says so), and events (buttons, a dimmer) as a state.
@@ -270,8 +271,7 @@ says so), and events (buttons, a dimmer) as a state.
 
 With the Arduino libraries **ArduinoBLE** and **BtHomeV2Device** (both in
 the Arduino library manager) an ESP32 sends a temperature - here a sine
-from 10 to 20 °C over five minutes, to watch it come in - and a counter,
-once a second:
+from 10 to 20 °C over five minutes, to watch it come in - once a second:
 
 ```cpp
 #include <BtHomeV2Device.h>
@@ -280,7 +280,6 @@ once a second:
 
 constexpr uint32_t UPDATE_MS = 1000;  // one advertisement a second
 uint32_t lastUpdate = 0;
-uint8_t packetId = 0;
 
 void setup() {
   Serial.begin(115200);
@@ -305,7 +304,6 @@ void loop() {
 
   // not encrypted; name and id "TEMP01"
   BtHomeV2Device device("TEMP01", "TEMP01", false);
-  device.addCount_0_4294967295(packetId++);
   device.addTemperature_neg327_to_327_Resolution_0_01(temperature);
 
   const size_t size = device.getAdvertisementData(advertisementData);
@@ -323,9 +321,12 @@ void loop() {
 }
 ```
 
-`TEMP01` then appears in *Add device* under *Bluetooth*; its values are
-the temperature in °C and the count. Change the `add...()` calls to send
-other values: the library has one for each BTHome object.
+`TEMP01` then appears in *Add device* under *Bluetooth* with its
+temperature in °C. Add `add...()` calls to send more values: the library
+has one for each BTHome object, and QtDMM shows each one the board sends,
+up to four. A *count* (`addCount...`) is a measured value, as an impulse
+counter's, and shows as one - not a number of the advertisement: that is
+BTHome's packet id, which QtDMM leaves out.
 
 ## Requirements
 

@@ -159,8 +159,13 @@ void BleAdvertisementDevice::onDevice(const QBluetoothDeviceInfo &info)
 void BleAdvertisementDevice::onBtHome(const QBluetoothDeviceInfo &info)
 {
   const QByteArray data = info.serviceData(QBluetoothUuid(quint16(DecoderBTHome::kServiceUuid)));
-  // the same advertisement again (the packet id with it, when it sends one)
-  if (data.isEmpty() || data == m_lastServiceData)
+  if (data.isEmpty())
+    return;
+  // with a packet id the same advertisement is one seen again; without
+  // one it may be a new reading of the same values (a steady sensor), and
+  // dropping it would look like silence
+  const auto adv = DecoderBTHome::parse(data);
+  if (adv && adv->packetId && data == m_lastServiceData)
     return;
   m_lastServiceData = data;
   qCDebug(lcBle) << "BTHome" << m_address << data.toHex(' ');

@@ -13,7 +13,9 @@
 // device: an ESP32 with ArduinoBLE, ESPHome, a Shelly sensor. Tried with
 // an ESP32 sending a temperature and a count (24.11.2026).
 static const bool registered = []() {
-  DmmDecoder::addConfig({"BTHome", "v2 sensor *", "", 0, FrameFormat::BTHome, 8, 1, 1, 0, 0, 0, 0, 0, "", "", 4});
+  // one value at first, more as the advertisements bring them (as a board's
+  // text lines): only what the sensor sends is shown
+  DmmDecoder::addConfig({"BTHome", "v2 sensor *", "", 0, FrameFormat::BTHome, 8, 1, 1, 0, 0, 0, 0, 0, "", "", 1});
   return true;
 }();
 
