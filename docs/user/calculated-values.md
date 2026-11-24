@@ -148,6 +148,49 @@ All 0 at first, **A worse supply** makes it less than ideal:
 Current, a current limit with CV/CC, a load and protection (OVP, OCP) will
 follow; so will real supplies on the same front panel.
 
+## Simulated function generator
+
+A function generator to try a setup before the real one is there (the
+generator of the OWON SDS215S has the same limits): *Add device*, the tile
+**Simulated**, in its list **Function generator**. It has one or two
+channels and is operated on its front panel:
+
+- **The LCD** has a block for each channel shown: its name, the shape as a
+  symbol and a word (`SINE`, `SQUARE`, `RAMP`, `PULSE`, or the name of one
+  of the other shapes), `OUT`, `EXT` and `SET`; the frequency big with its
+  prefix (Hz, kHz, MHz), amplitude (peak to peak) and offset below it, and
+  the duty cycle of a pulse or the symmetry of a ramp in the last row.
+- **The shape keys** choose sine, square, ramp or pulse; the key after them
+  opens a menu of the other shapes (sinc, gauss, stairs up and down,
+  exponential rise, haversine).
+- **The knobs** set frequency, amplitude, offset and - for a pulse or a
+  ramp - duty cycle or symmetry. The frequency knob steps 1-2-5 (1 kHz,
+  2 kHz, 5 kHz, 10 kHz), with Shift by 1 in its third digit; a double click
+  opens a field that takes `2.5k` or `1 MHz`. The others turn in steps
+  (*Amplitude step*, *Offset step*), with Shift in fine ones. Offset and
+  amplitude leave room for each other: the output stays within ±3 V.
+- **OUT** switches the output; the outputs are always off when the
+  generator is opened. **ALL OFF** in the status line (see above) reaches
+  it too.
+
+QtDMM reads every 250 ms and cannot show a 1 kHz sine. So the generator
+gives what a meter at its output would read, as values like a meter's -
+at most four in all, chosen in its settings under **Values**:
+`CH1 Vrms` (the AC part's RMS, as a true RMS meter), `CH1 Vpp`, `CH1 f`,
+`CH1 mean` (the DC part: the offset, a pulse's mean with its duty cycle)
+and `CH1 u`, the voltage at this moment - up to 0.5 Hz only, where the
+graph then shows the real curve. With one channel Vrms, f, mean and u are
+given at first, with two Vrms and f of each. An output off gives 0 V; the
+frequency stays.
+
+Its settings (the gear on the front panel, or *Settings...* in the sidebar)
+have per channel: **shown**, its **colour**, the **highest amplitude** and
+**highest offset** the knobs may set (to protect what is connected) and the
+knobs' **steps**; the **Values** each channel gives; and, all 0 at first,
+**A worse generator**: a **frequency error** (ppm), an **amplitude error**
+(%), a **cutoff** above which the amplitude falls (first order, -3 dB
+there) and **noise** on the voltages.
+
 ## Integral
 
 The energy a load took, the charge into a battery, the light a plant got:

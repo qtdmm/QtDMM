@@ -170,7 +170,7 @@ Drag a device within My devices to change the order.
 **Add device...** (the device symbol with a + at the left of the toolbar,
 or **+ Add device...** at the end of My devices in the sidebar) asks step
 by step: how the meter is connected - *Cable*, *Bluetooth*, *Network* or
-*sigrok*, or *Simulated* (test signals, a power supply) or *Calculated* (a formula, an integral ...) -,
+*sigrok*, or *Simulated* (test signals, a power supply, a function generator) or *Calculated* (a formula, an integral ...) -,
 which meter it is (or what to calculate), with a name, and
 whether to connect it now: **Connect** keeps it in My devices and connects
 it at once, **Save only** keeps it in My devices without connecting. The page of the meter offers only the models of that

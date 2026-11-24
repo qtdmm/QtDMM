@@ -120,10 +120,11 @@ int main(int argc, char **argv)
       // Simulated: its own kinds, test signals first
       kinds.findChild<QToolButton *>("ui_connection" + QString::number(AddDeviceDlg::SimKinds))->click();
       check(kinds.page() == AddDeviceDlg::KindPage
-              && kinds.nodeKinds() == QList<AddDeviceDlg::Connection>({ AddDeviceDlg::Simulated, AddDeviceDlg::SimulatedPsu })
+              && kinds.nodeKinds() == QList<AddDeviceDlg::Connection>({ AddDeviceDlg::Simulated, AddDeviceDlg::SimulatedPsu,
+                                                                        AddDeviceDlg::SimulatedGen })
               && kinds.markedKind() == AddDeviceDlg::Simulated,
-            "Simulated: test signals and the power supply, the signals marked");
-      kinds.searchKinds("knob");
+            "Simulated: test signals, the power supply and the generator, the signals marked");
+      kinds.searchKinds("ripple");
       check(kinds.nodeKinds() == QList<AddDeviceDlg::Connection>({ AddDeviceDlg::SimulatedPsu }),
             "the search within the tile's kinds: the power supply by its text");
       kinds.back();
@@ -168,15 +169,15 @@ int main(int argc, char **argv)
         wide.back();
       }
     }
-    for (AddDeviceDlg::Connection c : { AddDeviceDlg::Simulated, AddDeviceDlg::SimulatedPsu, AddDeviceDlg::Calculated,
-                                        AddDeviceDlg::Integral })
+    for (AddDeviceDlg::Connection c : { AddDeviceDlg::Simulated, AddDeviceDlg::SimulatedPsu, AddDeviceDlg::SimulatedGen,
+                                        AddDeviceDlg::Calculated, AddDeviceDlg::Integral })
     {
       AddDeviceDlg node(&library);
       node.setDiscoverers([](AddDeviceDlg::Connection) { return QList<Discoverer *>(); });
       node.chooseConnection(c);
       check(node.result() != QDialog::Accepted && node.page() == AddDeviceDlg::NodePage && node.nodeEditor(),
             "a node: its settings on the node page");
-      const bool simulated = c == AddDeviceDlg::Simulated || c == AddDeviceDlg::SimulatedPsu;
+      const bool simulated = c == AddDeviceDlg::Simulated || c == AddDeviceDlg::SimulatedPsu || c == AddDeviceDlg::SimulatedGen;
       check(node.canGoNext() == simulated, "Next only when complete (a generator, a supply is at once)");
       if (c == AddDeviceDlg::SimulatedPsu)
       {
@@ -184,6 +185,14 @@ int main(int argc, char **argv)
         check(node.keys().value("DMM/model").toString() == "QtDMM Power supply"
                 && node.keys().value("Node/json").toString().contains("simpsu") && node.name() == "Power supply",
               "a supply: its keys and name, " + node.name());
+        continue;
+      }
+      if (c == AddDeviceDlg::SimulatedGen)
+      {
+        node.next();
+        check(node.keys().value("DMM/model").toString() == "QtDMM Function generator"
+                && node.keys().value("Node/json").toString().contains("simgen") && node.name() == "Function generator",
+              "a generator: its keys and name, " + node.name());
         continue;
       }
       if (!simulated)

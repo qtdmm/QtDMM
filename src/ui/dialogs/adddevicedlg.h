@@ -40,13 +40,14 @@ class AddDeviceDlg : public QDialog
 {
   Q_OBJECT
 public:
-  /// Simulated, SimulatedPsu, Calculated, Integral: a generator, a
-  /// simulated power supply, a formula over values or an integral of one
+  /// Simulated, SimulatedPsu, SimulatedGen, Calculated, Integral: a
+  /// generator of test signals, a simulated power supply or function
+  /// generator, a formula over values or an integral of one
   /// (logic nodes), set up on the NodePage. NodeKinds: the tile Calculated,
   /// the KindPage to choose one of the nodes with inputs; SimKinds: the
   /// tile Simulated, the KindPage with what can be simulated.
   enum Connection { Cable, Bluetooth, Network, Sigrok, Simulated, Calculated, Integral, NodeKinds, SimKinds,
-                    SimulatedPsu };
+                    SimulatedPsu, SimulatedGen };
   enum Page { ConnectionPage, PortPage, DevicePage, TargetPage, NodePage, KindPage };
   /// Page 4: into My devices and connected at once, or into My devices only.
   enum Target { NoTarget, Connect, SaveOnly };
@@ -78,7 +79,7 @@ public:
   void        setNodeEditors(std::function<NodeEditor *(Connection kind)> make) { m_makeEditor = std::move(make); }
   /// Page 1: the connection; goes on to the next page.
   void        chooseConnection(Connection connection);
-  /// Whether @p connection is a logic node (Simulated, SimulatedPsu, Calculated, Integral).
+  /// Whether @p connection is a logic node (Simulated, SimulatedPsu, SimulatedGen, Calculated, Integral).
   static bool isNode(Connection connection);
   /// The node page's editor, null for a device.
   NodeEditor *nodeEditor() const { return m_editor; }

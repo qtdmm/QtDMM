@@ -9,6 +9,7 @@
 #include <QJsonObject>
 
 #include "core/devicelibrary.h"
+#include "core/functiongenerator.h"
 #include "core/outputregistry.h"
 #include "core/powersupply.h"
 #include "core/siprefix.h"
@@ -78,6 +79,16 @@ NodeRunner::NodeRunner(DeviceSession *session, MeterController *ctl, std::unique
     connect(supply, &PowerSupply::setpointChanged, &m_store, qOverload<>(&QTimer::start));
     connect(supply, &PowerSupply::settingsChanged, &m_store, qOverload<>(&QTimer::start));
   }
+  // a simulated generator likewise: what it is set to with its entry
+  if (FunctionGenerator *generator = m_node->functionGenerator())
+  {
+    OutputRegistry::instance().add(generator);
+    m_store.setSingleShot(true);
+    m_store.setInterval(500);
+    connect(&m_store, &QTimer::timeout, this, &NodeRunner::store, Qt::UniqueConnection);
+    connect(generator, &FunctionGenerator::setpointChanged, &m_store, qOverload<>(&QTimer::start));
+    connect(generator, &FunctionGenerator::settingsChanged, &m_store, qOverload<>(&QTimer::start));
+  }
   follow();
 }
 
@@ -102,6 +113,8 @@ NodeRunner::~NodeRunner()
   // closed: no longer a device with outputs
   if (PowerSupply *supply = m_node->powerSupply())
     OutputRegistry::instance().remove(supply);
+  if (FunctionGenerator *generator = m_node->functionGenerator())
+    OutputRegistry::instance().remove(generator);
 }
 
 QString NodeRunner::inputName(const ValueRef &ref) const

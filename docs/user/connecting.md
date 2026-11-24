@@ -9,8 +9,8 @@ meter - the first start - shows nothing but a big **Add device** button.
 
 1. **How is it connected?** *Cable* (USB cable of the meter, USB-serial
    adapter, serial port), *Bluetooth*, *Network* or *sigrok*; also
-   *Simulated* - test signals or a power supply, to try QtDMM without
-   hardware - and
+   *Simulated* - test signals, a power supply or a function generator, to
+   try QtDMM without hardware - and
    *Calculated*: a list of what can be calculated from your devices
    (*Formula*, *Integral*), with what each does and a search. Their
    settings follow on one page, then step 4 (see

@@ -14,6 +14,7 @@
 #include "core/sampletypes.h"
 #include "core/valueref.h"
 
+class FunctionGenerator;
 class PowerSupply;
 
 /// A logic node: a source of values computed from other values (concept
@@ -113,6 +114,8 @@ public:
   /// The power supply it simulates (SimPsuNode), for its front panel; none
   /// for the others. The node keeps it.
   virtual PowerSupply *powerSupply() { return nullptr; }
+  /// The function generator it simulates (SimGenNode), likewise.
+  virtual FunctionGenerator *functionGenerator() { return nullptr; }
   /// Its own parameters (formula, unit, ...), stored with the entry; the
   /// common ones (inputs, leading, max age, period, on) are the runner's.
   virtual QJsonObject parameters() const { return {}; }
