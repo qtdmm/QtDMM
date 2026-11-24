@@ -1,20 +1,14 @@
 // Copyright (c) 2026 The QtDMM developers
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "core/powersupply.h"
+#include "core/requestdeadlines.h"
 
-#include <QDateTime>
 #include <QJsonArray>
-#include <QTimer>
 
 #include <cmath>
 
 namespace
 {
-qint64 now()
-{
-  return QDateTime::currentMSecsSinceEpoch();
-}
-
 // NaN as no entry: JSON has no NaN
 void putNumber(QJsonObject &o, const char *key, double v)
 {
@@ -68,10 +62,20 @@ PowerSupply::ChannelSettings PowerSupply::ChannelSettings::fromJson(const QJsonO
 
 // ---------------------------------------------------------------- the supply
 
-PowerSupply::PowerSupply(QObject *parent) : QObject(parent), m_timer(new QTimer(this))
+PowerSupply::PowerSupply(QObject *parent) : QObject(parent), m_deadlines(new RequestDeadlines(this))
 {
-  m_timer->setSingleShot(true);
-  connect(m_timer, &QTimer::timeout, this, &PowerSupply::timeout);
+  m_deadlines->setTimeout(kDefaultConfirmTimeout);
+  connect(m_deadlines, &RequestDeadlines::expired, this, &PowerSupply::expired);
+}
+
+int PowerSupply::confirmTimeout() const
+{
+  return m_deadlines->timeout();
+}
+
+void PowerSupply::setConfirmTimeout(int ms)
+{
+  m_deadlines->setTimeout(ms);
 }
 
 PowerSupply::~PowerSupply() = default;
@@ -163,10 +167,7 @@ bool PowerSupply::requestVoltage(int ch, double u)
   s.requested = v;
   s.setState = SetState::Pending;
   s.error.clear();
-  m_deadline[ch] = now() + m_timeout;
-  // the earliest deadline wakes the timer
-  if (!m_timer->isActive() || m_timer->remainingTime() > m_timeout)
-    m_timer->start(m_timeout);
+  m_deadlines->start(ch);
   Q_EMIT stateChanged(ch);
   sendVoltage(ch, v);
   return true;
@@ -186,21 +187,10 @@ void PowerSupply::allOff()
     requestOutput(ch, false);
 }
 
-void PowerSupply::timeout()
+void PowerSupply::expired(int ch)
 {
-  const qint64 t = now();
-  qint64 next = 0;
-  for (int ch = 0; ch < int(m_states.size()); ++ch)
-  {
-    if (m_states[ch].setState != SetState::Pending || m_deadline[ch] == 0)
-      continue;
-    if (m_deadline[ch] <= t)
-      failVoltage(ch, tr("No answer"));
-    else
-      next = next == 0 ? m_deadline[ch] : qMin(next, m_deadline[ch]);
-  }
-  if (next > 0)
-    m_timer->start(int(next - t));
+  if (valid(ch) && m_states[ch].setState == SetState::Pending)
+    failVoltage(ch, tr("No answer"));
 }
 
 // ---------------------------------------------------------------- the backend's answers
@@ -214,7 +204,7 @@ void PowerSupply::confirmVoltage(int ch, double u)
   s.setpoint = u;
   s.setState = SetState::Confirmed;
   s.error.clear();
-  m_deadline[ch] = 0;
+  m_deadlines->clear(ch);
   Q_EMIT stateChanged(ch);
   if (changed)
     Q_EMIT setpointChanged(ch);
@@ -226,7 +216,7 @@ void PowerSupply::failVoltage(int ch, const QString &error)
     return;
   m_states[ch].setState = SetState::Failed;
   m_states[ch].error = error;
-  m_deadline[ch] = 0;
+  m_deadlines->clear(ch);
   Q_EMIT stateChanged(ch);
 }
 
@@ -279,7 +269,7 @@ void PowerSupply::channelsChanged()
   const int n = qBound(0, channelCount(), kMaxChannels);
   m_states.resize(n);
   m_settings.resize(n);
-  m_deadline.resize(n);
+  m_deadlines->resize(n);
   for (int ch = 0; ch < n; ++ch)
     Q_EMIT settingsChanged(ch);
 }
