@@ -29,7 +29,8 @@ nothing.
 
 The link looks like `http://192.168.1.20:8088/3f9c…e1/`: the computer's
 address in the network, the port and a secret of 32 characters. Without
-the secret QtDMM answers *This link no longer works*.
+the secret, or with an old one, QtDMM answers with a page that says where to
+get the link.
 
 The secret stays the same when QtDMM or the computer starts again. Keep the
 link as a bookmark, write it on the kiosk screen's start page, give it to a
@@ -52,6 +53,16 @@ Where to get the link:
 ```sh
 printf 'QTDMM:WEB:URL?\n' | nc raspi 5025
 ```
+
+## Found in the network
+
+With *All network interfaces* QtDMM announces the web view over mDNS
+(DNS-SD) as `_http._tcp`, with the same name as the SCPI server, for example
+*QtDMM raspi*. Browsers and tools that list web services in the network find
+it there (`avahi-browse -r _http._tcp`, the Bonjour list of Safari, KDE's
+*Network* folder). The announcement holds only the address and port, not the
+secret: what it opens is the page that says where the link is. With *This
+computer only* nothing is announced.
 
 ## The page
 

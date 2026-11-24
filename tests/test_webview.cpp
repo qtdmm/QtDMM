@@ -1,10 +1,12 @@
 // Copyright (c) 2026 The QtDMM developers
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// WebViewServer: the token (403 without it, a new one ends the old link),
+// WebViewServer: the token (403 and the hint page without it, a new one
+// ends the old link),
 // the page, the picture made once per interval for all browsers, its time,
 // the status, what is refused, the viewers. ServiceHost: started, kept
-// when only the token changes, the link, QTDMM:WEB:URL?, stopped.
+// when only the token changes, the link, QTDMM:WEB:URL?, stopped; the TXT
+// records of the mDNS announcement without the token.
 
 #include <QCoreApplication>
 #include <QGuiApplication>
@@ -40,9 +42,13 @@ int main(int argc, char **argv)
 
   // the token
   Reply r = get("/");
-  check(r.status == 403 && r.body.contains("no longer works"), "no token: 403");
+  check(r.status == 403 && r.header("content-type").startsWith("text/html")
+          && r.body.contains("<title>QtDMM web view</title>") && r.body.contains("Services")
+          && r.body.contains("QTDMM:WEB:URL?") && !r.body.contains("{{")
+          && r.header("content-security-policy").contains("default-src 'none'"),
+        "no token (a bare address, as mDNS gives it): 403 with the page that says where the link is");
   r = get("/" + HttpServer::newToken().toLatin1() + "/frame.jpg");
-  check(r.status == 403, "a wrong token: 403");
+  check(r.status == 403 && r.body == WebViewServer::hintPage(), "a wrong token: 403, the same page");
 
   // the page
   r = get(base);
@@ -134,6 +140,7 @@ int main(int argc, char **argv)
     check(webState().running && webState().port == free && host.webViewUrl() == link && webState().address == link,
           "on, localhost: " + host.webViewUrl() + " " + webState().error);
     check(ask("QTDMM:WEB:URL?") == '"' + link + '"', "QTDMM:WEB:URL?: " + ask("QTDMM:WEB:URL?"));
+    check(webState().announced.isEmpty(), "localhost only: not announced over mDNS");
     check(ask("QTDMM:WEB:URL") .isEmpty() && ask("SYST:ERR?").startsWith("-"), "QTDMM:WEB:URL without ?: an error");
     // a new token, the same server
     config.token = HttpServer::newToken();
@@ -150,6 +157,14 @@ int main(int argc, char **argv)
     config.enabled = false;
     host.applyWebView(config);
     check(!webState().running && host.webViewUrl().isEmpty(), "switched off");
+  }
+
+  // the mDNS records: found by DNS-SD browsers, but without the link's secret
+  {
+    const QMap<QString, QString> txt = ServiceHost::webViewTxt("bench");
+    check(txt.value("path") == "/" && txt.value("instance") == "bench" && txt.value("txtvers") == "1"
+            && !txt.contains("token") && txt.keys() == QStringList({ "instance", "path", "txtvers", "version" }),
+          "TXT: path /, no token: " + QStringList(txt.keys()).join(','));
   }
 
   if (failed == 0)

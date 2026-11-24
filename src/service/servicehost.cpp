@@ -27,6 +27,7 @@ ServiceHost::ServiceHost(QObject *parent)
   , m_vxi11(new Vxi11Server(m_scpi->endpoint(), this))
   , m_mdnsVxi11(new MdnsResponder(this))
   , m_webView(new WebViewServer(this))
+  , m_mdnsWebView(new MdnsResponder(this))
 {
   connect(m_scpi, &ScpiServer::clientsChanged, this, [this](int) { updateStatus(); });
   connect(m_hislip, &HislipServer::sessionsChanged, this, [this](int) { updateStatus(); });
@@ -118,8 +119,7 @@ void ServiceHost::apply(const ScpiConfig &config, const QString &instanceId, con
   txt["model"] = m_model;
   txt["version"] = APP_VERSION;
   txt["instance"] = m_instanceId;
-  const QString instance = QString("QtDMM %1").arg(m_instanceId == "default"
-                                                   ? QHostInfo::localHostName() : m_instanceId);
+  const QString instance = announcedName();
   if (m_scpi->isListening() && config.mdns && !m_mdns->isActive())
     m_mdns->start("_scpi-raw._tcp", instance, m_scpi->port(), txt);
   else if (!config.mdns)
@@ -170,6 +170,7 @@ void ServiceHost::applyWebView(const WebViewConfig &config)
   m_webView->setInterval(config.interval);
   if (!config.enabled || config.token.isEmpty())
   {
+    m_mdnsWebView->stop();
     m_webView->stop();
     m_webViewError.clear();
   }
@@ -178,6 +179,7 @@ void ServiceHost::applyWebView(const WebViewConfig &config)
     m_webView->setToken(config.token);   // the same server: browsers stay
   else
   {
+    m_mdnsWebView->stop();
     m_webView->stop();
     m_webViewError.clear();
     for (int port = config.port; port < config.port + 10 && port <= 65535; ++port)
@@ -191,7 +193,28 @@ void ServiceHost::applyWebView(const WebViewConfig &config)
     else
       qInfo().noquote() << "Web view:" << webViewUrl();
   }
+  // announced only where others can reach it; the token stays out of the
+  // records: who finds the address gets the page that says where the link is
+  if (m_webView->isRunning() && m_webView->address() == QHostAddress::Any && !m_mdnsWebView->isActive())
+    m_mdnsWebView->start("_http._tcp", announcedName(), m_webView->port(), webViewTxt(m_instanceId));
+  else if (!m_webView->isRunning() || m_webView->address() != QHostAddress::Any)
+    m_mdnsWebView->stop();
   updateStatus();
+}
+
+QMap<QString, QString> ServiceHost::webViewTxt(const QString &instanceId)
+{
+  QMap<QString, QString> txt;
+  txt["txtvers"] = "1";
+  txt["version"] = APP_VERSION;
+  txt["instance"] = instanceId;
+  txt["path"] = "/";
+  return txt;
+}
+
+QString ServiceHost::announcedName() const
+{
+  return QString("QtDMM %1").arg(m_instanceId == "default" ? QHostInfo::localHostName() : m_instanceId);
 }
 
 QString ServiceHost::webViewUrl() const
@@ -252,6 +275,8 @@ QList<ServiceState> ServiceHost::services() const
     web.port = m_webView->port();
     web.address = webViewUrl();
     web.clients = m_webView->viewers();
+    if (m_mdnsWebView->isActive())
+      web.announced = m_mdnsWebView->instanceName();
   }
   else
     web.error = m_webViewError;

@@ -152,6 +152,11 @@ QList<HttpServer::Address> HttpServer::addresses()
   return list;
 }
 
+void HttpServer::refuse(QTcpSocket *socket)
+{
+  answer(socket, 403, "text/plain; charset=utf-8", forbidden());
+}
+
 QByteArray HttpServer::forbidden() const
 {
   return "Forbidden";
@@ -242,7 +247,7 @@ void HttpServer::onData(QTcpSocket *socket)
     const QByteArray prefix = '/' + m_token.toLatin1() + '/';
     if (m_token.isEmpty() || !path.startsWith(prefix))
     {
-      answer(socket, 403, "text/plain; charset=utf-8", forbidden());
+      refuse(socket);
       return;
     }
     if (c.length > maxBody())

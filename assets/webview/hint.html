@@ -1,0 +1,30 @@
+<!doctype html>
+<!-- Copyright (c) 2026 The QtDMM developers
+     SPDX-License-Identifier: GPL-3.0-or-later
+     The web view's answer to a request without the right token (WebViewServer::hintPage):
+     a bare address as mDNS announces it, or an old link. The words in double braces are
+     replaced by those of QtDMM's language. -->
+<html lang="{{LANG}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>{{TITLE}}</title>
+<style>
+  html, body { margin: 0; min-height: 100%; background: #23262a; color: #eff0f1;
+               font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 36em; margin: 0 auto; padding: 32px 16px; }
+  h1 { font-size: 1.3em; margin: 0 0 16px; }
+  p { margin: 0 0 12px; }
+  .muted { color: #a0a4a8; }
+</style>
+</head>
+<body>
+<main>
+  <h1>{{TITLE}}</h1>
+  <p>{{NOLINK}}</p>
+  <p>{{WHERE}}</p>
+  <p class="muted">{{OLD}}</p>
+</main>
+</body>
+</html>

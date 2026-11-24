@@ -72,6 +72,8 @@ protected:
   };
   /// One request with the right token; answer it with answer().
   virtual void handle(QTcpSocket *socket, const Request &request) = 0;
+  /// The answer to a request without the right token: 403 with forbidden().
+  virtual void refuse(QTcpSocket *socket);
   /// The body of the 403 to a wrong token (text/plain).
   virtual QByteArray forbidden() const;
   /// The largest body taken (bytes); larger ones get 413 with tooLarge().

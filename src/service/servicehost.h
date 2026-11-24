@@ -3,6 +3,7 @@
 #pragma once
 
 #include <QList>
+#include <QMap>
 #include <QObject>
 #include <QString>
 #include <functional>
@@ -49,6 +50,7 @@ struct ServiceState
   QString address;          ///< "localhost:5025", "TCPIP::localhost::hislip0::INSTR", the web view's link
   int     clients = 0;
   QString error;            ///< switched on but not running: why (port taken, ...)
+  QString announced;        ///< the mDNS instance name, empty when not announced
 };
 
 /// The network services of a QtDMM process, once however many meters it
@@ -92,6 +94,9 @@ public:
   /// empty while it does not run. On all networks the computer's first
   /// LAN address, else localhost.
   QString     webViewUrl() const;
+  /// The web view's DNS-SD TXT records: no token, "path" is "/" (the hint
+  /// page). Public for the test.
+  static QMap<QString, QString> webViewTxt(const QString &instanceId);
   /// The SCPI server, HiSLIP, VXI-11 and the web view, running or not.
   QList<ServiceState> services() const;
   /// Source of the SCPI screen dump (HCOPy:SDUMp:DATA?): format -> image bytes.
@@ -105,6 +110,8 @@ Q_SIGNALS:
 
 private:
   void        updateStatus();
+  /// "QtDMM <host>" or "QtDMM <instance id>", the name every announcement uses.
+  QString     announcedName() const;
 
   ScpiServer         *m_scpi;
   MdnsResponder      *m_mdns;
@@ -113,6 +120,7 @@ private:
   Vxi11Server        *m_vxi11;        ///< and over VXI-11
   MdnsResponder      *m_mdnsVxi11;
   WebViewServer      *m_webView;
+  MdnsResponder      *m_mdnsWebView;    ///< "_http._tcp", only on all interfaces
   QString             m_webViewError;
   QString             m_scpiError;    ///< why the switched-on server is not running
   QString             m_hislipError;

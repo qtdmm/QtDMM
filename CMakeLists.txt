@@ -122,6 +122,7 @@ set(RES_CONTENT "${RES_CONTENT}    </qresource>\n")
 ## the web view's page: the picture of the window area in a browser (WebViewServer)
 set(RES_CONTENT "${RES_CONTENT}    <qresource prefix=\"/webview\">\n")
 set(RES_CONTENT "${RES_CONTENT}        <file alias=\"index.html\">${CMAKE_SOURCE_DIR}/assets/webview/index.html</file>\n")
+set(RES_CONTENT "${RES_CONTENT}        <file alias=\"hint.html\">${CMAKE_SOURCE_DIR}/assets/webview/hint.html</file>\n")
 set(RES_CONTENT "${RES_CONTENT}    </qresource>\n")
 
 ## specification data of some meters from their manuals (dmm-tools, via
