@@ -19,8 +19,10 @@
 namespace
 {
 constexpr int kTimeoutMs = 1000;   ///< for an answer
+#ifdef Q_OS_LINUX
 constexpr int kSliceMs = 100;      ///< a wait for an answer looks at stop() this often (not on usbtmc)
 constexpr int kChunk = 65536;      ///< read at once; a longer answer takes more reads
+#endif
 }
 
 // ---------------------------------------------------------------- worker
@@ -30,6 +32,10 @@ UsbTmcWorker::~UsbTmcWorker()
 #ifdef Q_OS_LINUX
   if (m_fd >= 0)
     ::close(m_fd);
+#else
+  // never opened elsewhere (UsbTmcDevice::open() fails first)
+  Q_UNUSED(m_fd)
+  Q_UNUSED(m_usbtmc)
 #endif
 }
 
