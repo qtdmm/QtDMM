@@ -41,7 +41,10 @@ entered in the **Driver** field.
 On Linux, USB-TMC devices need read/write permission for your user, typically
 a udev rule such as
 `SUBSYSTEM=="usbmisc", KERNEL=="usbtmc*", MODE="0666"` (or the rules file
-that comes with libsigrok, `60-libsigrok.rules`).
+that comes with libsigrok, `60-libsigrok.rules`). QtDMM's own rule covers
+them too. A meter whose protocol QtDMM knows itself is read through its own
+`USBTMC` port type instead, without sigrok-cli
+([USB-TMC instruments](connecting.md#usb-tmc-instruments)).
 
 ## Notes
 

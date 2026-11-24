@@ -7,6 +7,7 @@
 #include "device/transports/hidholtek.h"
 #include "device/transports/rfc2217serial.h"
 #include "device/transports/sigrok.h"
+#include "device/transports/usbtmc.h"
 #ifdef QTDMM_WITH_BLE
 #include "device/transports/ble.h"
 #include "device/transports/blegatt.h"
@@ -25,6 +26,7 @@ bool Transport::create(const DmmDecoder::DMMInfo &spec, PortType t, QString devi
     case PortType::HidHoltek: m_port = new HidHoltekDevice(spec, device); break;
     case PortType::Sigrok: m_port = new SigrokDevice(spec,device);       break;
     case PortType::RFC2217:m_port = new RFC2217SerialDevice(spec,device);break;
+    case PortType::UsbTmc: m_port = new UsbTmcDevice(device);             break;
 #ifdef QTDMM_WITH_BLE
     case PortType::Ble:    m_port = new BleAdvertisementDevice(spec, device); break;
     case PortType::BleGatt: m_port = new BleGattDevice(spec, device); break;
@@ -71,6 +73,7 @@ Transport::PortType Transport::str2portType(const QString str)
   if (str.toLower() == "rfc2217") return PortType::RFC2217;
   if (str.toLower() == "ble")     return PortType::Ble;
   if (str.toLower() == "blegatt") return PortType::BleGatt;
+  if (str.toLower() == "usbtmc")  return PortType::UsbTmc;
 
   return PortType::None;
 }
@@ -92,6 +95,7 @@ QStringList Transport::availablePorts()
   SerialDevice::availablePorts(portlist);
   HIDSerialDevice::availablePorts(portlist);
   HidHoltekDevice::availablePorts(portlist);
+  UsbTmcDevice::availablePorts(portlist);
 
   return portlist;
 }

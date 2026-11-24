@@ -224,7 +224,7 @@ AddDeviceDlg::AddDeviceDlg(DeviceLibrary *library, QWidget *parent)
   m_makeDiscoverers = [](Connection connection) -> QList<Discoverer *>
   {
     if (connection == Cable)
-      return { new UsbDiscoverer, new SerialDiscoverer };
+      return { new UsbDiscoverer, new UsbTmcDiscoverer, new SerialDiscoverer };
     if (connection == Bluetooth)
       return { new BleDiscoverer };
     if (connection == Network)
@@ -777,8 +777,10 @@ void AddDeviceDlg::takePort()
   else if (m_connection == Bluetooth)
     found.insert("Port settings/ble-address", port);
   else
-    found.insert("Port settings/device", port.contains(' ') ? port
-                                         : (m_connection == Network ? "RFC2217 " : "SERIAL ") + port);
+    found.insert("Port settings/device", port.contains(' ')                             ? port
+                                         : m_connection == Network                          ? "RFC2217 " + port
+                                         : port.startsWith(QLatin1String("/dev/usbtmc")) ? "USBTMC " + port
+                                                                                            : "SERIAL " + port);
 
   m_known = m_library ? m_library->findByPlace(found) : QString();
   const std::optional<MyDevice> entry = m_library ? m_library->find(m_known) : std::nullopt;

@@ -77,6 +77,7 @@ The port box lists everything QtDMM found, prefixed with its type:
 | `Sigrok` | any meter that `sigrok-cli` supports; the SCPI bench meters in the model list set this up in their own group ([Bench meters](bench-meters.md)) | `scpi-dmm:conn=/dev/ttyUSB0` |
 | `BLE` | Bluetooth LE broadcasts: Victron SmartShunt / MPPT / Phoenix Inverter ([Bluetooth LE](bluetooth.md)); set up in its own group instead of the port box | `CB:09:E4:16:33:DB` |
 | `BLEGATT` | Bluetooth LE connection: UNI-T UT60BT ([Bluetooth LE](bluetooth.md)); set up in the same group | `18:90:67:F1:AB:9E` |
+| `USBTMC` | instruments that speak SCPI over USB without a serial port (USB-TMC), through the kernel's `usbtmc` driver; Linux only so far ([USB-TMC instruments](#usb-tmc-instruments)) | `USBTMC /dev/usbtmc0` |
 
 RFC2217 and sigrok entries are not detected automatically - except the
 ports of a [qtdmm-bridge](remote-bridge.md) announcing itself by mDNS, which
@@ -123,6 +124,26 @@ does not matter.
 - **The USB port is not isolated from the meter's inputs.** Do not measure
   mains or anything not referenced to the computer's ground while the USB
   cable is connected.
+
+### USB-TMC instruments
+
+Oscilloscopes, bench meters and generators often speak SCPI over USB as a
+*USB Test & Measurement Class* device instead of a serial port. On Linux the
+kernel's `usbtmc` driver makes each one a `/dev/usbtmc0`, `/dev/usbtmc1`, ...;
+*Add device* lists them under *Cable* with the maker and product the
+instrument tells USB, and the port box offers them as `USBTMC /dev/usbtmc0`.
+Choose the model as usual: the instrument's protocol is the model's, USB-TMC
+only carries it.
+
+- QtDMM asks one question at a time and waits up to a second for the
+  answer; a command without a question mark is only sent.
+- Your user needs read and write access to `/dev/usbtmc*`. The packages
+  install QtDMM's udev rule for it; for the AppImage or Flatpak, put
+  `SUBSYSTEM=="usbmisc", KERNEL=="usbtmc*", TAG+="uaccess"` into
+  `/etc/udev/rules.d/70-qtdmm.rules` (*Add device* shows the line and the
+  commands when the access is missing).
+- macOS, Windows and FreeBSD have no such driver; there a USB-TMC
+  instrument can be read through sigrok-cli ([Bench meters](bench-meters.md)).
 
 ### OWON SPM series (power supply with multimeter)
 

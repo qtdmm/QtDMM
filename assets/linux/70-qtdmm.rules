@@ -18,3 +18,6 @@ KERNEL=="hidraw*", ATTRS{idVendor}=="04d9", ATTRS{idProduct}=="a052", TAG+="uacc
 # the stable link: the cable's name and its USB port
 KERNEL=="hidraw*", ENV{QTDMM_CABLE}=="?*", IMPORT{builtin}="path_id"
 KERNEL=="hidraw*", ENV{QTDMM_CABLE}=="?*", ENV{ID_PATH_TAG}=="?*", SYMLINK+="qtdmm/$env{QTDMM_CABLE}-$env{ID_PATH_TAG}"
+
+# USB-TMC instruments (SCPI over USB) through the kernel's usbtmc driver
+SUBSYSTEM=="usbmisc", KERNEL=="usbtmc*", TAG+="uaccess"

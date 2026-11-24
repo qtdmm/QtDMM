@@ -159,6 +159,13 @@ if (BUILD_TESTING)
 	## RFC 2217 client against a fake server: negotiation, telnet filtering, IAC escaping
 	qtdmm_add_test(rfc2217_client test_rfc2217 tests/test_rfc2217.cpp)
 
+	## USB-TMC transport against a pseudo terminal as the instrument: a question
+	## and its answer, a command without one, an instrument that goes away
+	if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+		qtdmm_add_test(usbtmc test_usbtmc tests/test_usbtmc.cpp)
+		target_link_libraries(test_usbtmc PRIVATE util)   # openpty()
+	endif()
+
 	## the recorder's CSV formats, without widgets
 	qtdmm_add_test(recording_file test_recording tests/test_recording.cpp "${TEST_DATA}/graph")
 	target_link_libraries(test_recording PRIVATE qtdmm_resources)   # the LabPlot templates

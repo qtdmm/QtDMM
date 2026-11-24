@@ -129,6 +129,9 @@ int main(int argc, char **argv)
             "access: HID problem and fix:\n" + hid.problem + "\n" + hid.fix);
       const AccessProblem tty = accessProblem(path, false);
       check(tty.fix.contains("usermod -aG"), "access: serial fix is the group:\n" + tty.fix);
+      const AccessProblem tmc = usbTmcAccessProblem(path);
+      check(tmc.problem.contains(path) && tmc.fix.contains("KERNEL==\"usbtmc*\"") && tmc.fix.contains("udevadm"),
+            "access: USB-TMC fix is the udev rule:\n" + tmc.fix);
     }
     check(accessProblem(dir.path() + "/gone", true).problem.isEmpty(), "access: a missing path says nothing");
   }
@@ -138,7 +141,8 @@ int main(int argc, char **argv)
                           "\"10c4\", ATTRS{idProduct}==\"ea80\"", "\"1a86\", ATTRS{idProduct}==\"e429\"",
                           "\"0820\", ATTRS{idProduct}==\"0001\"", "\"04d9\", ATTRS{idProduct}==\"a052\"" })
     check(rules.contains(id), QString("udev rules: %1").arg(id));
-  check(rules.count("TAG+=\"uaccess\"") == 6, "udev rules: uaccess for each");
+  check(rules.count("TAG+=\"uaccess\"") == 7, "udev rules: uaccess for each, and for the USB-TMC instruments");
+  check(rules.contains("SUBSYSTEM==\"usbmisc\", KERNEL==\"usbtmc*\", TAG+=\"uaccess\""), "udev rules: USB-TMC");
   if (argc > 1)
   {
     // the file the packages install is the same as the text the dialog shows

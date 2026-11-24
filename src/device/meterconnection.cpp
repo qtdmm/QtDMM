@@ -36,6 +36,7 @@
 #endif
 #include "device/transports/rfc2217serial.h"
 #include "device/transports/sigrok.h"
+#include "device/transports/usbtmc.h"
 #include <QSerialPort>
 #include "decoders.h"
 
@@ -238,7 +239,7 @@ bool MeterConnection::openPort()
   {
     if (m_portType == Transport::PortType::RFC2217
         || m_portType == Transport::PortType::HidHoltek || m_portType == Transport::PortType::Ble || m_portType == Transport::PortType::BleGatt
-        || m_portType == Transport::PortType::Hid)
+        || m_portType == Transport::PortType::Hid || m_portType == Transport::PortType::UsbTmc)
     {
       // the address or key is malformed, the server refused; the device says why
       m_error = m_portHandler->port()->errorString();
@@ -295,6 +296,8 @@ bool MeterConnection::openPort()
     connect(hid, &HIDSerialDevice::finished, this, [this, hid] { portLost(hid, QString()); });
   else if (auto *htk = dynamic_cast<HidHoltekDevice *>(port))
     connect(htk, &HidHoltekDevice::finished, this, [this, htk] { portLost(htk, QString()); });
+  else if (auto *tmc = dynamic_cast<UsbTmcDevice *>(port))
+    connect(tmc, &UsbTmcDevice::finished, this, [this, tmc] { portLost(tmc, tmc->errorString()); });
   else if (auto *sig = dynamic_cast<SigrokDevice *>(port))
     connect(sig, &SigrokDevice::finished, this, [this, sig] { portLost(sig, sig->errorString()); });
 #ifdef QTDMM_WITH_BLE
