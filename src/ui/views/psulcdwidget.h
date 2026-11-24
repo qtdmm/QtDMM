@@ -27,7 +27,8 @@ class QTimer;
 ///
 /// While the knob turns (showSetpoint()) the block shows the setpoint with
 /// SET blinking, for setpointHold() after the last turn, then the measured
-/// value again: no row of its own for the setpoint.
+/// value again: no row of its own for the setpoint. A request the device
+/// did not take lights ERR in SET's place (setChannelError()).
 ///
 /// An alarm's colour, the stale look and the limit test's verdict are per
 /// block. Proportions: a block keeps kBlockMinAspect..kBlockMaxAspect with
@@ -88,6 +89,9 @@ public:
   /// An alarm's colour for the block (invalid: none).
   void setChannelAlert(int ch, const QColor &color);
   void setChannelStale(int ch, bool stale);
+  /// A request the device did not take (empty: none): ERR in place of SET.
+  void setChannelError(int ch, const QString &error);
+  QString channelError(int ch) const { return valid(ch) ? m_ch[ch].error : QString(); }
   /// The limit test of the channel: on, its verdict and the deviation in
   /// percent (NaN: none). On, the block gets the verdict's column.
   void setChannelVerdict(int ch, bool on, LimitTest::Verdict verdict = LimitTest::NoVerdict,
@@ -130,6 +134,7 @@ private:
     qint64 setUntil = 0;   ///< m_clock time the setpoint is shown until
     QColor alert;
     bool stale = false;
+    QString error;
     bool limitOn = false;
     LimitTest::Verdict verdict = LimitTest::NoVerdict;
     double deviation = kNone;

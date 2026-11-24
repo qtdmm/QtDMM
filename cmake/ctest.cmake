@@ -72,6 +72,7 @@ if (BUILD_TESTING)
 	## the digital display: glyph table and a headless render check
 	qtdmm_add_test(digital_display test_display tests/test_display.cpp)
 	qtdmm_add_test(psu_lcd test_psu_lcd tests/test_psu_lcd.cpp)
+	qtdmm_add_test(power_supply test_powersupply tests/test_powersupply.cpp)
 
 	## the meter's settings widget (DeviceSettings): keys in and out, "Advanced", groups per kind of meter
 	qtdmm_add_test(device_settings test_devicesettings tests/test_devicesettings.cpp)

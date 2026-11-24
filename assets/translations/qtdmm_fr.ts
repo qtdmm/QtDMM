@@ -5103,22 +5103,22 @@ Pas de permission ? Le capteur a besoin d’une règle udev pour l’ID USB %1:%
 <context>
     <name>LcdPanel</name>
     <message>
-        <location filename="../../src/ui/views/lcdpanel.cpp" line="457"/>
+        <location filename="../../src/ui/views/lcdpanel.cpp" line="478"/>
         <source>FAIL</source>
         <translation>FAIL</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/lcdpanel.cpp" line="457"/>
+        <location filename="../../src/ui/views/lcdpanel.cpp" line="478"/>
         <source>PASS</source>
         <translation>PASS</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/lcdpanel.cpp" line="463"/>
+        <location filename="../../src/ui/views/lcdpanel.cpp" line="484"/>
         <source>HI</source>
         <translation>HI</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/lcdpanel.cpp" line="463"/>
+        <location filename="../../src/ui/views/lcdpanel.cpp" line="484"/>
         <source>LO</source>
         <translation>LO</translation>
     </message>
@@ -5126,26 +5126,26 @@ Pas de permission ? Le capteur a besoin d’une règle udev pour l’ID USB %1:%
 <context>
     <name>LcdWidget</name>
     <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="323"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="320"/>
         <source>AUTO</source>
         <translation>AUTO</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="323"/>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="350"/>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="458"/>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="474"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="320"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="347"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="455"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="471"/>
         <source>MAX</source>
         <translation>MAX</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="324"/>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="473"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="321"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="470"/>
         <source>MIN</source>
         <translation>MIN</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="324"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="321"/>
         <source>AVG</source>
         <translation>AVG</translation>
     </message>
@@ -7423,6 +7423,14 @@ Le multimètre est-il branché et allumé ?</translation>
     </message>
 </context>
 <context>
+    <name>PowerSupply</name>
+    <message>
+        <location filename="../../src/core/powersupply.cpp" line="197"/>
+        <source>No answer</source>
+        <translation>Pas de réponse</translation>
+    </message>
+</context>
+<context>
     <name>Protocols</name>
     <message>
         <location filename="../../src/device/protocols.cpp" line="23"/>
@@ -7713,6 +7721,107 @@ Le multimètre est-il branché et allumé ?</translation>
         <location filename="../../src/device/protocols.cpp" line="80"/>
         <source>Unknown meter: bytes only, for a capture (Capture...)</source>
         <translation>Appareil inconnu : octets seuls, pour une capture (Capture…)</translation>
+    </message>
+</context>
+<context>
+    <name>PsuChannelsEditor</name>
+    <message>
+        <location filename="../../src/ui/psuchannelseditor.cpp" line="22"/>
+        <source>Channel</source>
+        <translation>Canal</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psuchannelseditor.cpp" line="22"/>
+        <source>Colour</source>
+        <translation>Couleur</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psuchannelseditor.cpp" line="22"/>
+        <source>Lowest</source>
+        <translation>Minimale</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psuchannelseditor.cpp" line="22"/>
+        <source>Highest</source>
+        <translation>Maximale</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psuchannelseditor.cpp" line="22"/>
+        <source>Step</source>
+        <translation>Pas</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psuchannelseditor.cpp" line="22"/>
+        <source>Fine step</source>
+        <translation>Pas fin</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psuchannelseditor.cpp" line="24"/>
+        <source>Shown on the front, recorded; a channel not shown is never switched by QtDMM</source>
+        <translation>Affiché sur la face avant, enregistré ; QtDMM ne commute jamais un canal non affiché</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psuchannelseditor.cpp" line="25"/>
+        <source>On the LCD, the knob and the key</source>
+        <translation>Sur l’écran LCD, le bouton et la touche</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psuchannelseditor.cpp" line="26"/>
+        <source>The lowest voltage the knob sets</source>
+        <translation>La tension la plus basse que règle le bouton</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psuchannelseditor.cpp" line="27"/>
+        <source>The highest voltage the knob sets</source>
+        <translation>La tension la plus haute que règle le bouton</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psuchannelseditor.cpp" line="28"/>
+        <source>Per wheel step or drag step</source>
+        <translation>Par cran de molette ou pas de glissement</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psuchannelseditor.cpp" line="29"/>
+        <source>Per step with Shift held</source>
+        <translation>Par pas avec Maj enfoncée</translation>
+    </message>
+</context>
+<context>
+    <name>PsuFrontPanel</name>
+    <message>
+        <location filename="../../src/ui/psufrontpanel.cpp" line="173"/>
+        <source>%1: the voltage. Wheel or drag: %2 V a step, with Shift %3 V; double click: type it.</source>
+        <translation>%1 : la tension. Molette ou glisser : %2 V par pas, avec Maj %3 V ; double-clic : la saisir.</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psufrontpanel.cpp" line="179"/>
+        <source>%1: output on or off</source>
+        <translation>%1 : sortie activée ou désactivée</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psufrontpanel.cpp" line="202"/>
+        <source>ALL OUT</source>
+        <translation>ALL OUT</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psufrontpanel.cpp" line="203"/>
+        <source>Every output shown off</source>
+        <translation>Couper toutes les sorties affichées</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psufrontpanel.cpp" line="237"/>
+        <source>%1: the voltage was not set: %2</source>
+        <translation>%1 : la tension n’a pas été réglée : %2</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psufrontpanel.cpp" line="297"/>
+        <source>Output on</source>
+        <translation>Sortie activée</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psufrontpanel.cpp" line="297"/>
+        <source>Switch the output on? The voltage reaches what is connected.</source>
+        <translation>Activer la sortie ? La tension arrive à ce qui est branché.</translation>
     </message>
 </context>
 <context>

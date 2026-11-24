@@ -5107,22 +5107,22 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
 <context>
     <name>LcdPanel</name>
     <message>
-        <location filename="../../src/ui/views/lcdpanel.cpp" line="457"/>
+        <location filename="../../src/ui/views/lcdpanel.cpp" line="478"/>
         <source>FAIL</source>
         <translation>FAIL</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/lcdpanel.cpp" line="457"/>
+        <location filename="../../src/ui/views/lcdpanel.cpp" line="478"/>
         <source>PASS</source>
         <translation>PASS</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/lcdpanel.cpp" line="463"/>
+        <location filename="../../src/ui/views/lcdpanel.cpp" line="484"/>
         <source>HI</source>
         <translation>HI</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/lcdpanel.cpp" line="463"/>
+        <location filename="../../src/ui/views/lcdpanel.cpp" line="484"/>
         <source>LO</source>
         <translation>LO</translation>
     </message>
@@ -5130,26 +5130,26 @@ Brak uprawnień? Czujnik wymaga reguły udev dla identyfikatora USB %1:%2.</tran
 <context>
     <name>LcdWidget</name>
     <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="323"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="320"/>
         <source>AUTO</source>
         <translation>AUTO</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="323"/>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="350"/>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="458"/>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="474"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="320"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="347"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="455"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="471"/>
         <source>MAX</source>
         <translation>MAX</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="324"/>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="473"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="321"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="470"/>
         <source>MIN</source>
         <translation>MIN</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="324"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="321"/>
         <source>AVG</source>
         <translation>AVG</translation>
     </message>
@@ -7429,6 +7429,14 @@ Czy multimetr jest podłączony i włączony?</translation>
     </message>
 </context>
 <context>
+    <name>PowerSupply</name>
+    <message>
+        <location filename="../../src/core/powersupply.cpp" line="197"/>
+        <source>No answer</source>
+        <translation>Brak odpowiedzi</translation>
+    </message>
+</context>
+<context>
     <name>Protocols</name>
     <message>
         <location filename="../../src/device/protocols.cpp" line="23"/>
@@ -7719,6 +7727,107 @@ Czy multimetr jest podłączony i włączony?</translation>
         <location filename="../../src/device/protocols.cpp" line="80"/>
         <source>Unknown meter: bytes only, for a capture (Capture...)</source>
         <translation>Nieznany miernik: tylko bajty, do zapisu ramek (Zapis ramek…)</translation>
+    </message>
+</context>
+<context>
+    <name>PsuChannelsEditor</name>
+    <message>
+        <location filename="../../src/ui/psuchannelseditor.cpp" line="22"/>
+        <source>Channel</source>
+        <translation>Kanał</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psuchannelseditor.cpp" line="22"/>
+        <source>Colour</source>
+        <translation>Kolor</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psuchannelseditor.cpp" line="22"/>
+        <source>Lowest</source>
+        <translation>Najniższe</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psuchannelseditor.cpp" line="22"/>
+        <source>Highest</source>
+        <translation>Najwyższe</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psuchannelseditor.cpp" line="22"/>
+        <source>Step</source>
+        <translation>Krok</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psuchannelseditor.cpp" line="22"/>
+        <source>Fine step</source>
+        <translation>Krok dokładny</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psuchannelseditor.cpp" line="24"/>
+        <source>Shown on the front, recorded; a channel not shown is never switched by QtDMM</source>
+        <translation>Pokazywany na panelu, zapisywany; kanału niepokazywanego QtDMM nigdy nie przełącza</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psuchannelseditor.cpp" line="25"/>
+        <source>On the LCD, the knob and the key</source>
+        <translation>Na LCD, przy pokrętle i przycisku</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psuchannelseditor.cpp" line="26"/>
+        <source>The lowest voltage the knob sets</source>
+        <translation>Najniższe napięcie ustawiane pokrętłem</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psuchannelseditor.cpp" line="27"/>
+        <source>The highest voltage the knob sets</source>
+        <translation>Najwyższe napięcie ustawiane pokrętłem</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psuchannelseditor.cpp" line="28"/>
+        <source>Per wheel step or drag step</source>
+        <translation>Na ząbek kółka lub krok przeciągania</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psuchannelseditor.cpp" line="29"/>
+        <source>Per step with Shift held</source>
+        <translation>Na krok z wciśniętym Shift</translation>
+    </message>
+</context>
+<context>
+    <name>PsuFrontPanel</name>
+    <message>
+        <location filename="../../src/ui/psufrontpanel.cpp" line="173"/>
+        <source>%1: the voltage. Wheel or drag: %2 V a step, with Shift %3 V; double click: type it.</source>
+        <translation>%1: napięcie. Kółko lub przeciąganie: %2 V na krok, z Shift %3 V; dwuklik: wpisać.</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psufrontpanel.cpp" line="179"/>
+        <source>%1: output on or off</source>
+        <translation>%1: wyjście włączone lub wyłączone</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psufrontpanel.cpp" line="202"/>
+        <source>ALL OUT</source>
+        <translation>ALL OUT</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psufrontpanel.cpp" line="203"/>
+        <source>Every output shown off</source>
+        <translation>Wyłącz wszystkie pokazane wyjścia</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psufrontpanel.cpp" line="237"/>
+        <source>%1: the voltage was not set: %2</source>
+        <translation>%1: napięcie nie zostało ustawione: %2</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psufrontpanel.cpp" line="297"/>
+        <source>Output on</source>
+        <translation>Włączenie wyjścia</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/psufrontpanel.cpp" line="297"/>
+        <source>Switch the output on? The voltage reaches what is connected.</source>
+        <translation>Włączyć wyjście? Napięcie trafi do tego, co jest podłączone.</translation>
     </message>
 </context>
 <context>
