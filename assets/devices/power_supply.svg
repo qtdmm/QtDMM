@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-16 -16 432 232" width="432" height="232">
+  <!-- Generic bench power supply. Template: #FF00FF = primary, #00FFFF = secondary, #FFFF00 = outline (replaced at build time; outline dark grey in light design, light in dark design). -->
+  <style>
+    .primary { fill: #FF00FF; }
+    .secondary { fill: #00FFFF; }
+    .bezel { fill: #2B2E32; }
+    .lcd { fill: #1A1D20; }
+    .lcdtext { fill: #E6E8EA; font-weight: bold; font-size: 26px; font-family: monospace; }
+    .lcdsmall { fill: #9AA0A6; font-size: 10px; font-family: monospace; }
+    .light { fill: #E6E8EA; }
+    .key { fill: #8A9096; }
+    .dark { fill: #1E2124; }
+    .label { fill: #E6E8EA; font-size: 8px; font-family: sans-serif; text-anchor: middle; }
+    .plus { fill: #C8352E; }
+    .gnd { fill: #3E8E4A; }
+  </style>
+  <!-- feet -->
+  <rect class="dark" x="24" y="186" stroke="#FFFF00" stroke-width="2" vector-effect="non-scaling-stroke" width="40" height="10" rx="3"/>
+  <rect class="dark" x="24" y="186" width="40" height="10" rx="3"/>
+  <rect class="dark" x="336" y="186" stroke="#FFFF00" stroke-width="2" vector-effect="non-scaling-stroke" width="40" height="10" rx="3"/>
+  <rect class="dark" x="336" y="186" width="40" height="10" rx="3"/>
+  <!-- case -->
+  <rect class="primary" x="4" y="4" stroke="#FFFF00" stroke-width="2" vector-effect="non-scaling-stroke" width="392" height="184" rx="10"/>
+  <rect class="primary" x="4" y="4" width="392" height="184" rx="10"/>
+  <!-- front panel -->
+  <rect class="bezel" x="14" y="14" width="372" height="164" rx="6"/>
+  <rect class="secondary" x="17" y="17" width="366" height="158" rx="5"/>
+  <!-- display: voltage and current -->
+  <rect class="bezel" x="30" y="30" width="170" height="104" rx="4"/>
+  <rect class="lcd" x="34" y="34" width="162" height="96" rx="2"/>
+  <text style="font-weight:bold;font-size:26px;font-family:monospace" class="lcdtext" x="160" y="68" text-anchor="end">12.00</text>
+  <text style="font-size:12px;font-family:monospace" class="lcdsmall" x="166" y="68">V</text>
+  <text style="font-weight:bold;font-size:26px;font-family:monospace" class="lcdtext" x="160" y="108" text-anchor="end">1.500</text>
+  <text style="font-size:12px;font-family:monospace" class="lcdsmall" x="166" y="108">A</text>
+  <text style="font-size:10px;font-family:monospace" class="lcdsmall" x="42" y="124">CV</text>
+  <!-- power -->
+  <rect class="dark" x="30" y="146" width="22" height="18" rx="3"/>
+  <circle class="light" cx="41" cy="155" r="4"/>
+  <!-- keys under display -->
+  <g class="key">
+    <rect x="64" y="148" width="28" height="12" rx="2"/>
+    <rect x="98" y="148" width="28" height="12" rx="2"/>
+    <rect x="132" y="148" width="28" height="12" rx="2"/>
+  </g>
+  <!-- knobs: voltage, current -->
+  <g>
+    <circle class="bezel" cx="238" cy="62" r="20"/><circle class="key" cx="238" cy="62" r="16"/><rect class="light" x="236.5" y="47" width="3" height="10" rx="1"/>
+    <circle class="bezel" cx="238" cy="118" r="20"/><circle class="key" cx="238" cy="118" r="16"/><rect class="light" x="236.5" y="103" width="3" height="10" rx="1"/>
+  </g>
+  <text style="font-size:8px;font-family:sans-serif" class="label" x="238" y="36">V</text>
+  <text style="font-size:8px;font-family:sans-serif" class="label" x="238" y="148">I</text>
+  <!-- output key -->
+  <rect class="light" x="222" y="154" width="32" height="12" rx="3"/>
+  <!-- terminals -->
+  <rect class="bezel" x="276" y="104" width="98" height="62" rx="4"/>
+  <g>
+    <circle class="plus" cx="296" cy="135" r="11"/><circle class="light" cx="296" cy="135" r="3.5"/>
+    <circle class="gnd" cx="325" cy="135" r="8"/><circle class="light" cx="325" cy="135" r="3"/>
+    <circle class="dark" cx="354" cy="135" r="11"/><circle class="light" cx="354" cy="135" r="3.5"/>
+  </g>
+  <text style="font-size:10px;font-family:sans-serif" class="label" x="296" y="160">+</text>
+  <text style="font-size:10px;font-family:sans-serif" class="label" x="354" y="160">−</text>
+  <!-- vents -->
+  <g class="bezel">
+    <rect x="282" y="34" width="86" height="4" rx="2"/>
+    <rect x="282" y="46" width="86" height="4" rx="2"/>
+    <rect x="282" y="58" width="86" height="4" rx="2"/>
+    <rect x="282" y="70" width="86" height="4" rx="2"/>
+    <rect x="282" y="82" width="86" height="4" rx="2"/>
+  </g>
+</svg>

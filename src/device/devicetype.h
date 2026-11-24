@@ -32,6 +32,7 @@ enum Type
   BatteryMonitor,
   SolarCharger,
   Inverter,
+  PowerSupply,     ///< a bench power supply (with a multimeter: OWON SPM)
   Virtual,         ///< QtDMM's own: generators and formulas (logic nodes)
   Generic          ///< not one model: any sigrok SCPI meter, bare DTM0660 boards
 };

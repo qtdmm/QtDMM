@@ -879,7 +879,8 @@
       },
       "types": [
         "handheld_dmm",
-        "clamp_meter"
+        "clamp_meter",
+        "power_supply"
       ]
     }
   },
