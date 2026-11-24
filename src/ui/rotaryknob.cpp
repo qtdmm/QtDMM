@@ -9,15 +9,60 @@
 #include <QRadialGradient>
 #include <QWheelEvent>
 
+#include <QRegularExpression>
+
 #include <cmath>
 #include <numbers>
+
+#include "core/siprefix.h"
 
 namespace
 {
 // the ring's arc: from lower left over the top to lower right
 constexpr double kStartDeg = 225;
 constexpr double kSpanDeg = 270;
+constexpr int kDecadeDigits = 7;   ///< a value in decades is rounded to these
 }
+
+/// The knob's spin box: with a unit, and in decades with SI prefixes in
+/// both directions ("2.5 MHz" shown and read, "1k" read as 1000).
+class SiSpinBox : public QDoubleSpinBox
+{
+public:
+  using QDoubleSpinBox::QDoubleSpinBox;
+  bool    prefixes = false;
+  QString unit;
+
+  QString textFromValue(double value) const override
+  {
+    if (!prefixes)
+      return QDoubleSpinBox::textFromValue(value);
+    QString prefix;
+    const double scaled = SiPrefix::scale(value, &prefix);
+    return QString::number(scaled, 'g', kDecadeDigits) + ' ' + prefix + unit;
+  }
+  double  valueFromText(const QString &text) const override
+  {
+    if (!prefixes)
+      return QDoubleSpinBox::valueFromText(text);
+    // the number, then a prefix letter (the unit may follow or not)
+    static const QRegularExpression re(QStringLiteral("^\\s*([+-]?[0-9]*[.,]?[0-9]+(?:[eE][+-]?[0-9]+)?)\\s*([pnuµmkMG]?)"));
+    const QRegularExpressionMatch m = re.match(text);
+    if (!m.hasMatch())
+      return value();
+    QString number = m.captured(1);
+    number.replace(',', '.');
+    return number.toDouble() * SiPrefix::factor(m.captured(2));
+  }
+  QValidator::State validate(QString &text, int &pos) const override
+  {
+    if (!prefixes)
+      return QDoubleSpinBox::validate(text, pos);
+    // checked when taken: anything may be typed on the way
+    Q_UNUSED(pos)
+    return text.trimmed().isEmpty() ? QValidator::Intermediate : QValidator::Acceptable;
+  }
+};
 
 RotaryKnob::RotaryKnob(QWidget *parent) : QWidget(parent)
 {
@@ -43,6 +88,17 @@ void RotaryKnob::setSteps(double coarse, double fine)
 void RotaryKnob::setDecimals(int decimals)
 {
   m_decimals = qBound(0, decimals, 6);
+}
+
+void RotaryKnob::setDecades(bool decades)
+{
+  m_decades = decades;
+  update();
+}
+
+void RotaryKnob::setUnit(const QString &unit)
+{
+  m_unit = unit;
 }
 
 void RotaryKnob::setValue(double value)
@@ -73,11 +129,77 @@ QSize RotaryKnob::minimumSizeHint() const
 
 void RotaryKnob::step(double steps, bool fine)
 {
-  turnTo(m_value + steps * (fine ? m_fine : m_coarse));
+  if (m_decades)
+    turnTo(decadeStep(m_value, int(steps), fine));
+  else
+    turnTo(m_value + steps * (fine ? m_fine : m_coarse));
+}
+
+double RotaryKnob::decadeStep(double value, int steps, bool fine)
+{
+  double v = value;
+  if (v <= 0 || !std::isfinite(v))
+    return v;
+  for (int n = 0; n < std::abs(steps); ++n)
+  {
+    const bool up = steps > 0;
+    const double decade = std::pow(10.0, std::floor(std::log10(v) + 1e-12));
+    if (fine)
+    {
+      // 1 in the third digit; going down from 1.00 the next decade's
+      const double below = std::abs(v / decade - 1) < 1e-9 && !up ? decade / 10 : decade;
+      v += (up ? 1 : -1) * below / 100;
+      continue;
+    }
+    // the next value of 1-2-5 above or below
+    static const double kSteps[] = { 1, 2, 5, 10 };
+    const double m = v / decade;
+    if (up)
+    {
+      double next = 10;
+      for (double s : kSteps)
+        if (s > m * (1 + 1e-9))
+        {
+          next = s;
+          break;
+        }
+      v = next * decade;
+    }
+    else
+    {
+      double prev = 0.5;
+      for (double s : kSteps)
+        if (s < m * (1 - 1e-9))
+          prev = s;
+      v = prev * decade;
+    }
+  }
+  // seven digits, as the generator takes them
+  const double digits = std::pow(10.0, kDecadeDigits - 1 - std::floor(std::log10(v)));
+  return std::round(v * digits) / digits;
+}
+
+double RotaryKnob::share(double value) const
+{
+  if (m_max <= m_min)
+    return 0;
+  if (m_decades && m_min > 0)
+    return std::log(value / m_min) / std::log(m_max / m_min);
+  return (value - m_min) / (m_max - m_min);
 }
 
 void RotaryKnob::turnTo(double value)
 {
+  if (m_decades)
+  {
+    const double v = qBound(m_min, value, m_max);
+    if (std::abs(v - m_value) <= std::abs(m_value) * 1e-9)
+      return;
+    m_value = v;
+    update();
+    Q_EMIT turned(v);
+    return;
+  }
   const double unit = std::pow(10.0, -m_decimals);
   const double v = qBound(m_min, std::round(value / unit) / std::pow(10.0, m_decimals), m_max);
   if (std::abs(v - m_value) < unit / 2)
@@ -164,12 +286,16 @@ void RotaryKnob::edit()
     return;
   if (!m_editor)
   {
-    m_editor = new QDoubleSpinBox(this);
+    m_editor = new SiSpinBox(this);
     m_editor->setButtonSymbols(QAbstractSpinBox::NoButtons);
     m_editor->setAlignment(Qt::AlignCenter);
     m_editor->installEventFilter(this);
   }
-  m_editor->setDecimals(m_decimals);
+  m_editor->prefixes = m_decades;
+  m_editor->unit = m_unit;
+  m_editor->setSuffix(m_decades || m_unit.isEmpty() ? QString() : ' ' + m_unit);
+  // in decades the spin box keeps what is typed down to a thousandth
+  m_editor->setDecimals(m_decades ? 3 : m_decimals);
   m_editor->setRange(m_min, m_max);
   m_editor->setSingleStep(m_coarse);
   m_editor->setValue(m_value);
@@ -230,7 +356,7 @@ void RotaryKnob::paintEvent(QPaintEvent *)
 
   // the ring: the range as a groove, the value in the channel's colour
   const QRectF arc(c.x() - r - ring * 0.7, c.y() - r - ring * 0.7, 2 * (r + ring * 0.7), 2 * (r + ring * 0.7));
-  const double share = m_max > m_min ? (m_value - m_min) / (m_max - m_min) : 0;
+  const double share = qBound(0.0, this->share(m_value), 1.0);
   p.setPen(QPen(palette().color(QPalette::Mid), ring, Qt::SolidLine, Qt::RoundCap));
   p.drawArc(arc, int(kStartDeg * 16), int(-kSpanDeg * 16));
   p.setPen(QPen(m_color, ring, Qt::SolidLine, Qt::RoundCap));

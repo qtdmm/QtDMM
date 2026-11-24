@@ -3242,6 +3242,174 @@ sudo udevadm control --reload-rules &amp;&amp; sudo udevadm trigger</translation
     </message>
 </context>
 <context>
+    <name>GenChannelsEditor</name>
+    <message>
+        <location filename="../../src/ui/genchannelseditor.cpp" line="22"/>
+        <source>Channel</source>
+        <translation>Kanal</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/genchannelseditor.cpp" line="22"/>
+        <source>Colour</source>
+        <translation>Farbe</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/genchannelseditor.cpp" line="22"/>
+        <source>Highest amplitude</source>
+        <translation>Höchste Amplitude</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/genchannelseditor.cpp" line="22"/>
+        <source>Highest offset</source>
+        <translation>Höchster Offset</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/genchannelseditor.cpp" line="23"/>
+        <source>Amplitude step</source>
+        <translation>Amplitudenschritt</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/genchannelseditor.cpp" line="23"/>
+        <source>Fine step</source>
+        <translation>Feiner Schritt</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/genchannelseditor.cpp" line="23"/>
+        <source>Offset step</source>
+        <translation>Offsetschritt</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/genchannelseditor.cpp" line="25"/>
+        <source>Shown on the front, recorded; a channel not shown is never switched by QtDMM</source>
+        <translation>Auf der Frontplatte gezeigt, aufgezeichnet; einen nicht gezeigten Kanal schaltet QtDMM nie</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/genchannelseditor.cpp" line="26"/>
+        <source>On the LCD, the knobs and the keys</source>
+        <translation>Auf dem LCD, an den Knöpfen und Tasten</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/genchannelseditor.cpp" line="27"/>
+        <source>The highest amplitude (peak to peak) the knob sets: protects what is connected</source>
+        <translation>Die höchste Amplitude (Spitze-Spitze), die der Knopf einstellt: schützt, was angeschlossen ist</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/genchannelseditor.cpp" line="28"/>
+        <source>The highest offset the knob sets, either way; offset and half the amplitude stay within it</source>
+        <translation>Der höchste Offset, den der Knopf einstellt, in beide Richtungen; Offset und halbe Amplitude bleiben darin</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/genchannelseditor.cpp" line="29"/>
+        <location filename="../../src/ui/genchannelseditor.cpp" line="31"/>
+        <source>Per wheel step or drag step</source>
+        <translation>Je Rastung des Mausrads oder Ziehschritt</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/genchannelseditor.cpp" line="30"/>
+        <location filename="../../src/ui/genchannelseditor.cpp" line="32"/>
+        <source>Per step with Shift held</source>
+        <translation>Je Schritt bei gehaltener Umschalttaste</translation>
+    </message>
+</context>
+<context>
+    <name>GenFrontPanel</name>
+    <message>
+        <location filename="../../src/ui/genfrontpanel.cpp" line="43"/>
+        <source>Sine</source>
+        <translation>Sinus</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/genfrontpanel.cpp" line="44"/>
+        <source>Square</source>
+        <translation>Rechteck</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/genfrontpanel.cpp" line="45"/>
+        <source>Ramp (triangle; its symmetry on the last knob)</source>
+        <translation>Rampe (Dreieck; ihre Symmetrie am letzten Knopf)</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/genfrontpanel.cpp" line="46"/>
+        <source>Pulse (its duty cycle on the last knob)</source>
+        <translation>Puls (sein Tastgrad am letzten Knopf)</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/genfrontpanel.cpp" line="47"/>
+        <source>The generator&apos;s other shapes</source>
+        <translation>Die weiteren Kurvenformen des Generators</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/genfrontpanel.cpp" line="160"/>
+        <source>ALL OUT</source>
+        <translation>ALL OUT</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/genfrontpanel.cpp" line="161"/>
+        <source>Every output shown off</source>
+        <translation>Alle gezeigten Ausgänge aus</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/genfrontpanel.cpp" line="240"/>
+        <source>%1: output on or off</source>
+        <translation>%1: Ausgang an oder aus</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/genfrontpanel.cpp" line="261"/>
+        <source>Frequency</source>
+        <translation>Frequenz</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/genfrontpanel.cpp" line="261"/>
+        <source>1-2-5 a step, with Shift by 1 in the third digit; double click: type it (&quot;1kHz&quot;)</source>
+        <translation>1-2-5 je Schritt, mit Umschalttaste um 1 in der dritten Stelle; Doppelklick: eintippen („1kHz“)</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/genfrontpanel.cpp" line="263"/>
+        <source>Amplitude</source>
+        <translation>Amplitude</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/genfrontpanel.cpp" line="263"/>
+        <source>Peak to peak. Wheel or drag: %1 V a step, with Shift %2 V</source>
+        <translation>Spitze-Spitze. Mausrad oder Ziehen: %1 V je Schritt, mit Umschalttaste %2 V</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/genfrontpanel.cpp" line="265"/>
+        <source>Offset</source>
+        <translation>Offset</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/genfrontpanel.cpp" line="265"/>
+        <source>Wheel or drag: %1 V a step, with Shift %2 V</source>
+        <translation>Mausrad oder Ziehen: %1 V je Schritt, mit Umschalttaste %2 V</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/genfrontpanel.cpp" line="267"/>
+        <source>Duty cycle</source>
+        <translation>Tastgrad</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/genfrontpanel.cpp" line="267"/>
+        <source>Of the pulse: 1 % a step, with Shift 0.1 %</source>
+        <translation>Des Pulses: 1 % je Schritt, mit Umschalttaste 0,1 %</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/genfrontpanel.cpp" line="269"/>
+        <source>Symmetry</source>
+        <translation>Symmetrie</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/genfrontpanel.cpp" line="269"/>
+        <source>Of the ramp, rising part: 1 % a step, with Shift 0.1 %</source>
+        <translation>Der Rampe, steigender Teil: 1 % je Schritt, mit Umschalttaste 0,1 %</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/genfrontpanel.cpp" line="336"/>
+        <source>%1: not set: %2</source>
+        <translation>%1: nicht gesetzt: %2</translation>
+    </message>
+</context>
+<context>
     <name>GeneralPrefs</name>
     <message>
         <location filename="../../src/ui/settings/generalprefs.cpp" line="18"/>
@@ -7906,37 +8074,37 @@ Ist das DMM angeschlossen und eingeschaltet?</translation>
 <context>
     <name>PsuFrontPanel</name>
     <message>
-        <location filename="../../src/ui/psufrontpanel.cpp" line="179"/>
+        <location filename="../../src/ui/psufrontpanel.cpp" line="122"/>
         <source>%1: the voltage. Wheel or drag: %2 V a step, with Shift %3 V; double click: type it.</source>
         <translation>%1: die Spannung. Mausrad oder Ziehen: %2 V je Schritt, mit Umschalttaste %3 V; Doppelklick: eintippen.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/psufrontpanel.cpp" line="185"/>
+        <location filename="../../src/ui/psufrontpanel.cpp" line="128"/>
         <source>%1: output on or off</source>
         <translation>%1: Ausgang an oder aus</translation>
     </message>
     <message>
-        <location filename="../../src/ui/psufrontpanel.cpp" line="208"/>
+        <location filename="../../src/ui/psufrontpanel.cpp" line="151"/>
         <source>ALL OUT</source>
         <translation>ALL OUT</translation>
     </message>
     <message>
-        <location filename="../../src/ui/psufrontpanel.cpp" line="209"/>
+        <location filename="../../src/ui/psufrontpanel.cpp" line="152"/>
         <source>Every output shown off</source>
         <translation>Alle gezeigten Ausgänge aus</translation>
     </message>
     <message>
-        <location filename="../../src/ui/psufrontpanel.cpp" line="243"/>
+        <location filename="../../src/ui/psufrontpanel.cpp" line="186"/>
         <source>%1: the voltage was not set: %2</source>
         <translation>%1: die Spannung wurde nicht eingestellt: %2</translation>
     </message>
     <message>
-        <location filename="../../src/ui/psufrontpanel.cpp" line="303"/>
+        <location filename="../../src/ui/psufrontpanel.cpp" line="246"/>
         <source>Output on</source>
         <translation>Ausgang an</translation>
     </message>
     <message>
-        <location filename="../../src/ui/psufrontpanel.cpp" line="303"/>
+        <location filename="../../src/ui/psufrontpanel.cpp" line="246"/>
         <source>Switch the output on? The voltage reaches what is connected.</source>
         <translation>Ausgang einschalten? Die Spannung liegt dann an dem an, was angeschlossen ist.</translation>
     </message>
