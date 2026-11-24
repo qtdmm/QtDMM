@@ -52,6 +52,7 @@ struct Settings
 /// What a graph draws with.
 struct Look
 {
+  Look() = default;   ///< declared with the moves below, so spelled out
   Variant   variant = Neutral;
   PlotTheme theme;            ///< around the plot: background, grid colour, lettering, the first curve
   QBrush    plot;             ///< the plot's area; Qt::NoBrush: the background
@@ -68,6 +69,11 @@ struct Look
   double    lineWidth = 2;
   int       lineMode = 1;
   int       pointMode = 0;
+  // the moves and copies of the compiler, marked noexcept (SonarCloud S5018)
+  Look(const Look &) = default;
+  Look &operator=(const Look &) = default;
+  Look(Look &&) noexcept = default;
+  Look &operator=(Look &&) noexcept = default;
 };
 
 /// The look of @p variant on the window design @p design with the settings @p settings.

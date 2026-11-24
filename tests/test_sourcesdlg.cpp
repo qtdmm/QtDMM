@@ -26,7 +26,7 @@ int main(int argc, char **argv)
   {
     PanelValuesDlg dlg({ "V", "A", "W", "Hz" }, 0, { 1 });
     check(dlg.place(2) && !dlg.place(3), "the big line and two on the small one");
-    check(dlg.main() == 0 && dlg.secondaries() == QList<int>({ 1 }), "as the panel has them");
+    check(dlg.mainValue() == 0 && dlg.secondaries() == QList<int>({ 1 }), "as the panel has them");
     auto choose = [&](int place, int id)
     {
       QComboBox *box = dlg.place(place);
@@ -36,11 +36,11 @@ int main(int argc, char **argv)
     choose(2, 2);
     check(dlg.secondaries() == QList<int>({ 1, 2 }), "a third value on the right");
     choose(0, 1);
-    check(dlg.main() == 1 && dlg.secondaries() == QList<int>({ 0, 2 }), "the value on the left to the big line: they swap");
+    check(dlg.mainValue() == 1 && dlg.secondaries() == QList<int>({ 0, 2 }), "the value on the left to the big line: they swap");
     choose(1, -1);
-    check(dlg.main() == 1 && dlg.secondaries() == QList<int>({ 2 }), "None leaves its place empty");
+    check(dlg.mainValue() == 1 && dlg.secondaries() == QList<int>({ 2 }), "None leaves its place empty");
     PanelValuesDlg two({ "V", "A" }, 1, { 0 });
-    check(two.place(1) && !two.place(2) && two.main() == 1, "two values: one place on the small line");
+    check(two.place(1) && !two.place(2) && two.mainValue() == 1, "two values: one place on the small line");
   }
 
   // 1. several: what was ticked, more ticked

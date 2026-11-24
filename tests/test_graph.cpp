@@ -2082,8 +2082,12 @@ static void testStatesCache()
     {
       const QString kept = cut(cache.spans(curve, from, to), from, to);
       const QString anew = cut(GraphStates::spans(curve, from, to), from, to);
-      if (kept != anew && bad++ == 0)
-        first = QString("at %1 (%2..%3): %4 / %5").arg(i).arg(from).arg(to).arg(kept, anew);
+      if (kept != anew)
+      {
+        if (bad == 0)
+          first = QString("at %1 (%2..%3): %4 / %5").arg(i).arg(from).arg(to).arg(kept, anew);
+        ++bad;
+      }
     }
   }
   check(bad == 0, QString("the kept spans are the counted ones (%1 differ) %2").arg(bad).arg(first));

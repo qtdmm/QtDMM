@@ -46,7 +46,7 @@ void PanelValuesDlg::swapInto(int place)
     m_chosen[i] = m_places[i]->currentData().toInt();
 }
 
-int PanelValuesDlg::main() const
+int PanelValuesDlg::mainValue() const
 {
   return m_places.first()->currentData().toInt();
 }

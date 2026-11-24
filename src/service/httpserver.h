@@ -63,12 +63,18 @@ public:
 protected:
   struct Request
   {
+    Request() = default;   ///< declared with the moves below, so spelled out
     QByteArray method;
     QByteArray path;    ///< after /<token>/, without the query
     QByteArray query;   ///< after '?'
     QByteArray type;    ///< Content-Type, lower case
     QByteArray body;
     QHostAddress peer;
+  // the moves and copies of the compiler, marked noexcept (SonarCloud S5018)
+  Request(const Request &) = default;
+  Request &operator=(const Request &) = default;
+  Request(Request &&) noexcept = default;
+  Request &operator=(Request &&) noexcept = default;
   };
   /// One request with the right token; answer it with answer().
   virtual void handle(QTcpSocket *socket, const Request &request) = 0;
@@ -86,10 +92,16 @@ protected:
 private:
   struct Client
   {
+    Client() = default;   ///< declared with the moves below, so spelled out
     QByteArray head;   ///< up to the empty line
     QByteArray body;
     Request request;
     qint64 length = -1;   ///< Content-Length, -1 before the head is read
+  // the moves and copies of the compiler, marked noexcept (SonarCloud S5018)
+  Client(const Client &) = default;
+  Client &operator=(const Client &) = default;
+  Client(Client &&) noexcept = default;
+  Client &operator=(Client &&) noexcept = default;
   };
 
   void onConnection();
