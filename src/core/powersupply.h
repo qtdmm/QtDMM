@@ -10,7 +10,7 @@
 
 #include <limits>
 
-class QTimer;
+class RequestDeadlines;
 
 /// A power supply QtDMM operates: the simulated one (SimPsuNode), later
 /// real ones (OWON SPM6103, SCPI-client supplies). Without UI; the front
@@ -141,8 +141,8 @@ public:
   /// Every shown channel's output off.
   void    allOff();
   /// Within this the device answers a request, else it failed (ms).
-  int     confirmTimeout() const { return m_timeout; }
-  void    setConfirmTimeout(int ms) { m_timeout = ms; }
+  int     confirmTimeout() const;
+  void    setConfirmTimeout(int ms);
   /// For real devices later: an output goes on only after the user
   /// confirmed it (the front asks), and only while the project lets QtDMM
   /// control devices. The simulation needs neither.
@@ -181,13 +181,11 @@ protected:
 private:
   bool    valid(int ch) const { return ch >= 0 && ch < int(m_states.size()); }
   bool    sendable(int ch) const;
-  void    timeout();
+  void    expired(int ch);
 
   QList<ChannelState> m_states;
   QList<ChannelSettings> m_settings;
-  QList<qint64> m_deadline;   ///< per channel: when a pending request fails (ms since the epoch), 0 none
-  int     m_timeout = kDefaultConfirmTimeout;
-  QTimer *m_timer;
+  RequestDeadlines *m_deadlines;   ///< per channel: when a pending request fails
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(PowerSupply::Capabilities)

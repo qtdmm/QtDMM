@@ -3234,6 +3234,14 @@ sudo udevadm control --reload-rules &amp;&amp; sudo udevadm trigger</translation
     </message>
 </context>
 <context>
+    <name>FunctionGenerator</name>
+    <message>
+        <location filename="../../src/core/functiongenerator.cpp" line="337"/>
+        <source>No answer</source>
+        <translation>Sin respuesta</translation>
+    </message>
+</context>
+<context>
     <name>GeneralPrefs</name>
     <message>
         <location filename="../../src/ui/settings/generalprefs.cpp" line="18"/>
@@ -7529,7 +7537,7 @@ DMM connected and switched on?</source>
 <context>
     <name>PowerSupply</name>
     <message>
-        <location filename="../../src/core/powersupply.cpp" line="198"/>
+        <location filename="../../src/core/powersupply.cpp" line="193"/>
         <source>No answer</source>
         <translation>Sin respuesta</translation>
     </message>
@@ -10476,27 +10484,27 @@ Después cierre la sesión y vuelva a iniciarla para que la pertenencia al grupo
 <context>
     <name>UsbTmcDevice</name>
     <message>
-        <location filename="../../src/device/transports/usbtmc.cpp" line="185"/>
+        <location filename="../../src/device/transports/usbtmc.cpp" line="196"/>
         <source>No access to %1: it needs the udev rule of QtDMM for USB-TMC instruments.</source>
         <translation>Sin acceso a %1: necesita la regla udev de QtDMM para instrumentos USB-TMC.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/usbtmc.cpp" line="186"/>
+        <location filename="../../src/device/transports/usbtmc.cpp" line="197"/>
         <source>Cannot open %1: %2</source>
         <translation>No se puede abrir %1: %2</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/usbtmc.cpp" line="206"/>
+        <location filename="../../src/device/transports/usbtmc.cpp" line="217"/>
         <source>USB-TMC instruments can only be read on Linux so far (%1).</source>
         <translation>Por ahora los instrumentos USB-TMC solo se pueden leer en Linux (%1).</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/usbtmc.cpp" line="264"/>
+        <location filename="../../src/device/transports/usbtmc.cpp" line="280"/>
         <source>Receive buffer limit exceeded.</source>
         <translation>Se superó el límite del búfer de recepción.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/usbtmc.cpp" line="274"/>
+        <location filename="../../src/device/transports/usbtmc.cpp" line="290"/>
         <source>%1: %2</source>
         <translation>%1: %2</translation>
     </message>
