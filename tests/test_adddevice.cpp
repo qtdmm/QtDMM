@@ -65,11 +65,11 @@ int main(int argc, char **argv)
     dlg.back();
     check(dlg.page() == AddDeviceDlg::ConnectionPage, "back to page 1");
 
-    // page 1: six tiles, Simulated among the devices; Calculated goes on
-    // to the kinds of logic nodes with inputs, their settings on the node
-    // page, then page 4
+    // page 1: six tiles, Simulated among the devices; Simulated and
+    // Calculated go on to their kinds of logic nodes, their settings on the
+    // node page, then page 4
     for (AddDeviceDlg::Connection c : { AddDeviceDlg::Cable, AddDeviceDlg::Bluetooth, AddDeviceDlg::Network,
-                                        AddDeviceDlg::Sigrok, AddDeviceDlg::Simulated, AddDeviceDlg::NodeKinds })
+                                        AddDeviceDlg::Sigrok, AddDeviceDlg::SimKinds, AddDeviceDlg::NodeKinds })
       check(dlg.findChild<QToolButton *>("ui_connection" + QString::number(c)), "page 1 has the tile " + QString::number(c));
     check(!dlg.findChild<QToolButton *>("ui_connection" + QString::number(AddDeviceDlg::Integral))
             && !dlg.findChild<QToolButton *>("ui_connection" + QString::number(AddDeviceDlg::Calculated)),
@@ -117,6 +117,19 @@ int main(int argc, char **argv)
             "back: the kind page, the integral marked");
       kinds.back();
       check(kinds.page() == AddDeviceDlg::ConnectionPage && search->isHidden(), "back: page 1, no search");
+      // Simulated: its own kinds, test signals first
+      kinds.findChild<QToolButton *>("ui_connection" + QString::number(AddDeviceDlg::SimKinds))->click();
+      check(kinds.page() == AddDeviceDlg::KindPage
+              && kinds.nodeKinds() == QList<AddDeviceDlg::Connection>({ AddDeviceDlg::Simulated, AddDeviceDlg::SimulatedPsu })
+              && kinds.markedKind() == AddDeviceDlg::Simulated,
+            "Simulated: test signals and the power supply, the signals marked");
+      kinds.searchKinds("knob");
+      check(kinds.nodeKinds() == QList<AddDeviceDlg::Connection>({ AddDeviceDlg::SimulatedPsu }),
+            "the search within the tile's kinds: the power supply by its text");
+      kinds.back();
+      kinds.findChild<QToolButton *>("ui_connection" + QString::number(AddDeviceDlg::NodeKinds))->click();
+      check(kinds.nodeKinds() == QList<AddDeviceDlg::Connection>({ AddDeviceDlg::Calculated, AddDeviceDlg::Integral }),
+            "Calculated again: its kinds, the search of before gone");
     }
     // the kind page from the keyboard: typing goes into the search, the
     // arrows move in the list, Enter goes on
@@ -155,15 +168,25 @@ int main(int argc, char **argv)
         wide.back();
       }
     }
-    for (AddDeviceDlg::Connection c : { AddDeviceDlg::Simulated, AddDeviceDlg::Calculated, AddDeviceDlg::Integral })
+    for (AddDeviceDlg::Connection c : { AddDeviceDlg::Simulated, AddDeviceDlg::SimulatedPsu, AddDeviceDlg::Calculated,
+                                        AddDeviceDlg::Integral })
     {
       AddDeviceDlg node(&library);
       node.setDiscoverers([](AddDeviceDlg::Connection) { return QList<Discoverer *>(); });
       node.chooseConnection(c);
       check(node.result() != QDialog::Accepted && node.page() == AddDeviceDlg::NodePage && node.nodeEditor(),
             "a node: its settings on the node page");
-      check(node.canGoNext() == (c == AddDeviceDlg::Simulated), "Next only when complete (a generator is at once)");
-      if (c != AddDeviceDlg::Simulated)
+      const bool simulated = c == AddDeviceDlg::Simulated || c == AddDeviceDlg::SimulatedPsu;
+      check(node.canGoNext() == simulated, "Next only when complete (a generator, a supply is at once)");
+      if (c == AddDeviceDlg::SimulatedPsu)
+      {
+        node.next();
+        check(node.keys().value("DMM/model").toString() == "QtDMM Power supply"
+                && node.keys().value("Node/json").toString().contains("simpsu") && node.name() == "Power supply",
+              "a supply: its keys and name, " + node.name());
+        continue;
+      }
+      if (!simulated)
       {
         // straight to it ("Integrate..."): back to the kinds, it marked
         node.back();
@@ -171,7 +194,7 @@ int main(int argc, char **argv)
         continue;
       }
       node.back();
-      check(node.page() == AddDeviceDlg::ConnectionPage, "a generator: back to page 1");
+      check(node.page() == AddDeviceDlg::KindPage, "a generator: back to the kinds");
       node.chooseConnection(c);
       node.next();
       check(node.page() == AddDeviceDlg::TargetPage, "Next: page 4");

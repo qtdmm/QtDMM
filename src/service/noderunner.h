@@ -48,6 +48,8 @@ Q_SIGNALS:
   void        controlsChanged();
 
 private:
+  /// The node as it is now into its entry of My devices (a supply's setpoints).
+  void        store();
   /// The inputs' sources again: after one opened or closed, or a start.
   void        bind();
   void        onReading(int input, const Reading &r);
@@ -82,5 +84,6 @@ private:
   QList<int>       m_sameFrame;   ///< inputs that are nodes on the leading device (bind())
   std::optional<std::pair<qint64, qint64>> m_pending;   ///< a frame waiting for them: t, wall
   QTimer           m_clock;
+  QTimer           m_store;   ///< store() a moment after a supply's setpoint changed
   bool             m_running = false;
 };

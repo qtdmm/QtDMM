@@ -84,8 +84,8 @@ Examples:
 ## Simulated values
 
 For trying QtDMM without a multimeter, for demonstrations or for feeding a
-known signal into a calculation: *Add device*, the tile **Simulated**. It
-has no inputs and makes up to four values on a clock (every 250 ms by
+known signal into a calculation: *Add device*, the tile **Simulated**, in
+its list **Test signals**. It has no inputs and makes up to four values on a clock (every 250 ms by
 default), each with:
 
 - **Name**, **Unit** and **AC/DC** - what the display and the graph label
@@ -98,6 +98,50 @@ default), each with:
   *Formula*: one of your own over `t` and the values above it (`y1` ...).
 
 Each value shows where it is right now.
+
+## Simulated power supply
+
+A power supply to try a setup before the real one is there, or to feed a
+known voltage into a calculation: *Add device*, the tile **Simulated**, in
+its list **Power supply**. It has one to four channels (*Channels*; a dual
+supply has two), each 0 to 30 V in steps of 10 mV, and is operated on its
+front panel:
+
+- **The LCD** has a block for each channel shown: its name on its colour,
+  the annunciators `OUT` (output on), `CV`, `EXT`, `SET`, and the voltage
+  measured. With two channels they stand side by side, with three or four
+  as 2×2.
+- **The knob** of a channel sets its voltage: the mouse wheel, dragging up
+  or down or the arrow keys turn it in steps (*Step*), with Shift held in
+  fine steps (*Fine step*); a double click opens a field on the knob to
+  type the voltage, Enter takes it, Esc leaves it. While it turns the LCD
+  shows the setpoint with `SET` blinking, two seconds after the last turn
+  the measured voltage again.
+- **OUT** switches the channel's output; its LED is green while it is on.
+  **ALL OUT** switches every output off. The outputs are always off when
+  the supply is opened; the setpoints stay as they were.
+
+Each channel's measured voltage is a value as a meter's, `CH1 U` ... in V:
+in the graph, the table, alarms, the limit test (its verdict shows in the
+channel's block) and calculated values. An output off gives 0 V.
+
+Its settings (the gear on the front panel, or *Settings...* in the sidebar)
+have per channel: **shown** (a channel not shown is neither on the front
+panel nor recorded, and QtDMM never switches it), its **colour**, the
+**lowest** and **highest** voltage the knob sets, and the knob's **steps**.
+All 0 at first, **A worse supply** makes it less than ideal:
+
+- **Rise time** - from 0 V to the setpoint when the output goes on (and per
+  step up); **Fall time** to 0 V when it goes off (and per step down).
+- **Overshoot** - above the setpoint after a rise, in percent of the step;
+  it settles within about one rise time.
+- **Ripple** (mV peak to peak) and **Noise** (mV) while the output is on.
+  A new value comes every 250 ms, too seldom to show a 100 Hz hum: the
+  ripple shows as a band of random values, not as a sine.
+- **Drift** - mV per minute away from the setpoint since the output went on.
+
+Current, a current limit with CV/CC, a load and protection (OVP, OCP) will
+follow; so will real supplies on the same front panel.
 
 ## Integral
 

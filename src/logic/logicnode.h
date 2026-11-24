@@ -14,6 +14,8 @@
 #include "core/sampletypes.h"
 #include "core/valueref.h"
 
+class PowerSupply;
+
 /// A logic node: a source of values computed from other values (concept
 /// tmp/redesign/logikknoten_konzept.md §5-§8). It is a source like a device
 /// - its outputs are readings of its own source, recorded, shown, exported
@@ -108,6 +110,9 @@ public:
   /// Whether off (isOn() false) is a state of its own, kept with the entry
   /// (an integral's HOLD); for the others off is no more than disconnected.
   virtual bool holds() const { return false; }
+  /// The power supply it simulates (SimPsuNode), for its front panel; none
+  /// for the others. The node keeps it.
+  virtual PowerSupply *powerSupply() { return nullptr; }
   /// Its own parameters (formula, unit, ...), stored with the entry; the
   /// common ones (inputs, leading, max age, period, on) are the runner's.
   virtual QJsonObject parameters() const { return {}; }

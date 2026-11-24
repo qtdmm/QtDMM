@@ -8,13 +8,18 @@
 
 #include <cmath>
 
+#include "core/powersupply.h"
 #include "core/reading.h"
 #include "device/meterconnection.h"
+#include "logic/logicnode.h"
 #include "service/metercontroller.h"
+#include "service/noderunner.h"
 #include "service/valuefeed.h"
 #include "ui/controlbar.h"
 #include "ui/nodebar.h"
+#include "ui/psufrontpanel.h"
 #include "ui/views/lcdwidget.h"
+#include "ui/views/psulcdwidget.h"
 
 FrontPanel::FrontPanel(DeviceSession *session, QWidget *parent)
   : QWidget(parent)
@@ -50,6 +55,17 @@ FrontPanel::FrontPanel(DeviceSession *session, QWidget *parent)
   connect(m_feed, &ValueFeed::reading, m_display, &LcdWidget::showReading);
   connect(m_feed, &ValueFeed::reading, m_controls, &ControlBar::showReading);
   connect(m_feed, &ValueFeed::staleChanged, m_display, &LcdWidget::setStale);
+  connect(m_feed, &ValueFeed::staleChanged, this, [this](bool stale)
+  {
+    if (m_psu)
+      m_psu->display()->setStale(stale);
+  });
+  // the menu of the LCD shown, wherever it is
+  m_display->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(m_display, &QWidget::customContextMenuRequested, this, [this](const QPoint &pos)
+  {
+    Q_EMIT menuRequested(m_display->mapToGlobal(pos));
+  });
   connect(m_feed, &ValueFeed::minimumChanged, m_display, &LcdWidget::showMinimum);
   connect(m_feed, &ValueFeed::maximumChanged, m_display, &LcdWidget::showMaximum);
   connect(m_feed, &ValueFeed::minMaxReset, m_display, &LcdWidget::clearMinMax);
@@ -137,6 +153,9 @@ void FrontPanel::attach(MeterController *ctl)
     m_rules << connect(ctl, &MeterController::limitTestChanged, this, [this](const LimitTest &test)
     {
       m_display->setLimitTest(test.enabled);
+      if (m_psu)
+        for (int k = 0; k < m_psu->display()->channelCount(); ++k)
+          m_psu->display()->setChannelVerdict(k, test.enabled && k == test.value.id);
       showLimitCount(m_ctl->limitCount());
     });
     m_rules << connect(ctl, &MeterController::limitCountChanged, this, &FrontPanel::showLimitCount);
@@ -154,6 +173,9 @@ void FrontPanel::setBlink(bool blink)
 void FrontPanel::showVerdict(int id, LimitTest::Verdict v, double deviation)
 {
   m_display->setVerdict(id == m_display->primaryShown() ? v : LimitTest::NoVerdict, deviation);
+  // a supply: in the block of that value
+  if (m_psu)
+    m_psu->display()->setChannelVerdict(id, m_ctl && m_ctl->limitTest().enabled, v, deviation);
   const bool tint = m_ctl && m_ctl->limitTest().tint;
   m_limitColor = !tint || v == LimitTest::NoVerdict ? QColor()
                  : v == LimitTest::Pass ? QColor(0x3c, 0xb0, 0x4a) : QColor(0xd8, 0x22, 0x22);
@@ -187,12 +209,88 @@ void FrontPanel::showAlert()
   }
   // the alarm's colour over the limit test's; the colour is never the only
   // sign (banner, sound)
-  m_display->setAlertColor(m_alertColor.isValid() ? (m_phase ? m_alertColor : QColor()) : m_limitColor);
+  const QColor color = m_alertColor.isValid() ? (m_phase ? m_alertColor : QColor()) : m_limitColor;
+  m_display->setAlertColor(color);
+  if (m_psu)
+    m_psu->display()->setAlertColor(color);
+}
+
+void FrontPanel::followSupply()
+{
+  PowerSupply *supply = nullptr;
+  if (m_ctl && m_ctl->isNode())
+    if (NodeRunner *runner = NodeRunner::of(m_ctl))
+      supply = runner->node()->powerSupply();
+  if (m_psu && m_psu->supply() == supply)
+    return;
+  delete m_psu;
+  m_psu = nullptr;
+  m_display->setVisible(!supply);
+  if (!supply)
+    return;
+  m_psu = new PsuFrontPanel(supply, this);
+  static_cast<QVBoxLayout *>(layout())->insertWidget(0, m_psu, 1);
+  m_psu->setCaption(m_ctl->deviceName());
+  connect(m_ctl, &MeterController::deviceNameChanged, m_psu, &PsuFrontPanel::setCaption);
+  // channels shown or not: the LCD's proportions and the controls' height change
+  connect(supply, &PowerSupply::settingsChanged, m_psu, [this] { Q_EMIT keysChanged(); });
+  connect(m_psu, &PsuFrontPanel::settingsRequested, this, [this]
+  {
+    if (m_ctl)
+      Q_EMIT settingsRequested(m_ctl->deviceId());
+  });
+  connect(m_psu, &PsuFrontPanel::foldToggled, this, [this](bool folded)
+  {
+    Q_EMIT foldToggled(folded);
+    Q_EMIT keysChanged();
+  });
+  m_psu->display()->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(m_psu->display(), &QWidget::customContextMenuRequested, this, [this](const QPoint &pos)
+  {
+    Q_EMIT menuRequested(m_psu->display()->mapToGlobal(pos));
+  });
+  syncLook();
+  const LimitTest test = m_ctl->limitTest();
+  for (int k = 0; k < m_psu->display()->channelCount(); ++k)
+    m_psu->display()->setChannelVerdict(k, test.enabled && k == test.value.id);
+  m_psu->display()->setStale(m_display->isStale());
+  showAlert();
+}
+
+void FrontPanel::syncLook()
+{
+  if (!m_psu)
+    return;
+  m_psu->display()->setFaceColor(m_display->customFaceColor());
+  m_psu->display()->setLcdVariant(m_display->lcdVariant());
+}
+
+double FrontPanel::minAspect() const
+{
+  return m_psu ? m_psu->display()->minimumAspect() : LcdWidget::kMinAspect;
+}
+
+double FrontPanel::maxAspect() const
+{
+  return m_psu ? m_psu->display()->maximumAspect() : LcdWidget::kMaxAspect;
 }
 
 void FrontPanel::updateKeys()
 {
   const bool before = keysShown();
+  followSupply();
+  if (m_psu)
+  {
+    // the supply's front has its knobs, gear and fold itself
+    m_keysSupported = true;
+    m_controls->hide();
+    m_nodeBar->hide();
+    m_fold->hide();
+    m_gear->hide();
+    if (keysShown() != before)
+      Q_EMIT keysChanged();
+    return;
+  }
   // a meter with keys QtDMM can press, or a logic node with its bar
   const bool node = m_ctl && m_ctl->isNode();
   m_keysSupported = node || (m_ctl && m_ctl->dmm() && ControlBar::supported(m_ctl->sourceInfo()));
@@ -217,6 +315,13 @@ void FrontPanel::updateConnected()
 void FrontPanel::setFolded(bool folded)
 {
   const bool before = keysShown();
+  if (m_psu)
+  {
+    m_psu->setFolded(folded);
+    if (keysShown() != before)
+      Q_EMIT keysChanged();
+    return;
+  }
   m_fold->setFolded(folded);
   const bool node = m_ctl && m_ctl->isNode();
   m_controls->setVisible(keysShown() && !node);
@@ -227,16 +332,18 @@ void FrontPanel::setFolded(bool folded)
 
 bool FrontPanel::isFolded() const
 {
-  return m_fold->isFolded();
+  return m_psu ? m_psu->isFolded() : m_fold->isFolded();
 }
 
 bool FrontPanel::keysShown() const
 {
-  return m_keysSupported && !m_fold->isFolded();
+  return m_keysSupported && !isFolded();
 }
 
 int FrontPanel::keysHeight() const
 {
+  if (m_psu)
+    return m_psu->controlsHeight();
   // the keys while shown, the handle under them while there are any
   return (keysShown() ? bar()->sizeHint().height() + 4 : 0) + (m_keysSupported ? m_fold->height() + 4 : 0);
 }

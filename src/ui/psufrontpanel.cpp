@@ -116,6 +116,12 @@ bool PsuFrontPanel::isFolded() const
   return m_fold->isFolded();
 }
 
+int PsuFrontPanel::controlsHeight() const
+{
+  const int spacing = layout()->spacing();
+  return (isFolded() ? 0 : m_controls->sizeHint().height() + spacing) + m_fold->sizeHint().height() + spacing;
+}
+
 // ---------------------------------------------------------------- building
 
 void PsuFrontPanel::rebuild()

@@ -40,10 +40,13 @@ class AddDeviceDlg : public QDialog
 {
   Q_OBJECT
 public:
-  /// Simulated, Calculated, Integral: a generator, a formula over values or
-  /// an integral of one (logic nodes), set up on the NodePage. NodeKinds:
-  /// the tile Calculated, the KindPage to choose one of the nodes with inputs.
-  enum Connection { Cable, Bluetooth, Network, Sigrok, Simulated, Calculated, Integral, NodeKinds };
+  /// Simulated, SimulatedPsu, Calculated, Integral: a generator, a
+  /// simulated power supply, a formula over values or an integral of one
+  /// (logic nodes), set up on the NodePage. NodeKinds: the tile Calculated,
+  /// the KindPage to choose one of the nodes with inputs; SimKinds: the
+  /// tile Simulated, the KindPage with what can be simulated.
+  enum Connection { Cable, Bluetooth, Network, Sigrok, Simulated, Calculated, Integral, NodeKinds, SimKinds,
+                    SimulatedPsu };
   enum Page { ConnectionPage, PortPage, DevicePage, TargetPage, NodePage, KindPage };
   /// Page 4: into My devices and connected at once, or into My devices only.
   enum Target { NoTarget, Connect, SaveOnly };
@@ -75,12 +78,12 @@ public:
   void        setNodeEditors(std::function<NodeEditor *(Connection kind)> make) { m_makeEditor = std::move(make); }
   /// Page 1: the connection; goes on to the next page.
   void        chooseConnection(Connection connection);
-  /// Whether @p connection is a logic node (Simulated, Calculated, Integral).
+  /// Whether @p connection is a logic node (Simulated, SimulatedPsu, Calculated, Integral).
   static bool isNode(Connection connection);
   /// The node page's editor, null for a device.
   NodeEditor *nodeEditor() const { return m_editor; }
-  /// The KindPage: the kinds of logic nodes with inputs offered (by their
-  /// Connection), in their order, without the ones the search hides.
+  /// The KindPage: the kinds offered (by their Connection) for the tile
+  /// that led there, in their order, without the ones the search hides.
   QList<Connection> nodeKinds() const;
   /// The KindPage: the kind marked, NodeKinds for none.
   Connection  markedKind() const;
@@ -156,6 +159,7 @@ private:
   QTreeWidget    *m_kindList = nullptr;   ///< the KindPage: groups, their kinds
   QLabel         *m_kindAbout = nullptr;  ///< what the kind marked does
   QLineEdit      *m_kindSearch = nullptr; ///< in the title row, on the KindPage only
+  Connection      m_kindTile = NodeKinds; ///< the tile that led to the KindPage: its group of kinds
   QWidget        *m_nodePage = nullptr;
   NodeEditor     *m_editor = nullptr;   ///< on m_nodePage, for a logic node
   std::function<NodeEditor *(Connection)> m_makeEditor;

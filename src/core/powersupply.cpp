@@ -156,8 +156,9 @@ bool PowerSupply::requestVoltage(int ch, double u)
 {
   if (!sendable(ch) || m_states[ch].external || !(channel(ch).caps & SetVoltage) || std::isnan(u))
     return false;
-  const double step = std::pow(10.0, -channel(ch).uDecimals);
-  const double v = qBound(minVoltage(ch), std::round(u / step) * step, maxVoltage(ch));
+  // rounded by division: 3.3 stays 3.3
+  const double scale = std::pow(10.0, channel(ch).uDecimals);
+  const double v = qBound(minVoltage(ch), std::round(u * scale) / scale, maxVoltage(ch));
   ChannelState &s = m_states[ch];
   s.requested = v;
   s.setState = SetState::Pending;
@@ -209,11 +210,14 @@ void PowerSupply::confirmVoltage(int ch, double u)
   if (!valid(ch))
     return;
   ChannelState &s = m_states[ch];
+  const bool changed = !same(s.setpoint, u);
   s.setpoint = u;
   s.setState = SetState::Confirmed;
   s.error.clear();
   m_deadline[ch] = 0;
   Q_EMIT stateChanged(ch);
+  if (changed)
+    Q_EMIT setpointChanged(ch);
 }
 
 void PowerSupply::failVoltage(int ch, const QString &error)

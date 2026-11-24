@@ -9,6 +9,7 @@
 #include <QJsonObject>
 
 #include "core/devicelibrary.h"
+#include "core/powersupply.h"
 #include "core/siprefix.h"
 #include "service/devicesession.h"
 #include "service/metercontroller.h"
@@ -64,7 +65,33 @@ NodeRunner::NodeRunner(DeviceSession *session, MeterController *ctl, std::unique
       bind();
   });
   connect(m_ctl, &MeterController::linkStateChanged, this, &NodeRunner::follow);
+  // a simulated supply's setpoints and channel settings with its entry, a
+  // moment after the knob stopped
+  if (PowerSupply *supply = m_node->powerSupply())
+  {
+    m_store.setSingleShot(true);
+    m_store.setInterval(500);
+    connect(&m_store, &QTimer::timeout, this, &NodeRunner::store);
+    connect(supply, &PowerSupply::setpointChanged, &m_store, qOverload<>(&QTimer::start));
+    connect(supply, &PowerSupply::settingsChanged, &m_store, qOverload<>(&QTimer::start));
+  }
   follow();
+}
+
+void NodeRunner::store()
+{
+  DeviceLibrary *library = m_session->library();
+  if (!library)
+    return;
+  const std::optional<MyDevice> entry = library->find(m_ctl->deviceId());
+  if (!entry || !entry->isNode())
+    return;
+  const QString json = m_node->toJsonText();
+  if (entry->keys.value("Node/json").toString() == json)
+    return;
+  QVariantMap keys = entry->keys;
+  keys.insert("Node/json", json);
+  library->update(m_ctl->deviceId(), keys);
 }
 
 NodeRunner::~NodeRunner() = default;

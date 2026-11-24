@@ -79,7 +79,7 @@ void RotaryKnob::step(double steps, bool fine)
 void RotaryKnob::turnTo(double value)
 {
   const double unit = std::pow(10.0, -m_decimals);
-  const double v = qBound(m_min, std::round(value / unit) * unit, m_max);
+  const double v = qBound(m_min, std::round(value / unit) / std::pow(10.0, m_decimals), m_max);
   if (std::abs(v - m_value) < unit / 2)
     return;
   m_value = v;

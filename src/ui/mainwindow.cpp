@@ -58,6 +58,7 @@
 #include "ui/dialogs/integralnodedlg.h"
 #include "logic/legacynodes.h"
 #include "ui/dialogs/generatornodedlg.h"
+#include "ui/dialogs/simpsunodedlg.h"
 #include "ui/dialogs/limitdlg.h"
 #include "device/transport.h"
 #include "device/transports/serial.h"
@@ -803,12 +804,10 @@ void MainWindow::addPanel(MeterController *ctl)
     statusBar()->showMessage(tr("%1: the key did not reach the meter: it is not connected yet.")
                              .arg(panel->controller() ? panel->controller()->deviceName() : QString()), 4000);
   });
-  panel->display()->setContextMenuPolicy(Qt::CustomContextMenu);
-  connect(panel->display(), &QWidget::customContextMenuRequested, this, [this, panel, win](const QPoint &pos)
+  connect(panel, &FrontPanel::menuRequested, this, [this, win](const QPoint &at)
   {
     // not from inside the display's event: its device may close while the
     // menu is open, and the panel with it
-    const QPoint at = panel->display()->mapToGlobal(pos);
     QTimer::singleShot(0, this, [this, at, w = QPointer<QMdiSubWindow>(win)]
     {
       if (w)
@@ -1469,6 +1468,7 @@ void MainWindow::applyLcdLook(FrontPanel *panel)
     lcd->setDisplayMode(info.display, gui->showMinMax(), gui->showBar() && !ctl->isNode(), ctl->valueCount());
     lcd->setLook(LcdWidget::lookOf(DeviceType::of(info)));
   }
+  panel->syncLook();
 }
 
 void MainWindow::setPanelLcdVariant(const QString &source, std::optional<int> variant)
@@ -2187,6 +2187,8 @@ void MainWindow::addDevice(int start, const ValueRef &input)
   {
     if (kind == AddDeviceDlg::Simulated)
       return makeNodeEditor(GeneratorNode::kType, QString(), nullptr, tr("Simulated"));
+    if (kind == AddDeviceDlg::SimulatedPsu)
+      return makeNodeEditor(SimPsuNode::kType, QString(), nullptr, tr("Power supply"));
     if (kind == AddDeviceDlg::Integral)
       return makeNodeEditor(IntegralNode::kType, QString(), nullptr, QString(), input);
     return makeNodeEditor(FormulaNode::kType, QString(), nullptr, tr("Calculated"));
@@ -2239,9 +2241,10 @@ QList<FormulaNodeDlg::Choice> MainWindow::formulaChoices(const QString &id) cons
     std::unique_ptr<LogicNode> node = nodeOf(device.keys);
     // a node by its kind, as on the tiles of Add device
     if (node)
-      c.icon = node->type() == QLatin1String(IntegralNode::kType)    ? QStringLiteral("qtdmm-integration")
-               : node->type() == QLatin1String(GeneratorNode::kType) ? QStringLiteral("qtdmm-simulated")
-                                                                     : QStringLiteral("qtdmm-calculated");
+      c.icon = node->type() == QLatin1String(IntegralNode::kType) ? QStringLiteral("qtdmm-integration")
+               : node->type() == QLatin1String(GeneratorNode::kType) || node->type() == QLatin1String(SimPsuNode::kType)
+                 ? QStringLiteral("qtdmm-simulated")
+                 : QStringLiteral("qtdmm-calculated");
     const QList<LogicNode::Output> outputs = node ? node->outputs() : QList<LogicNode::Output>();
     const int count = ctl ? ctl->valueCount() : node ? int(outputs.size())
                                                      : qBound(1, MeterSetup::fromKeys(device.keys).valueCount, kMaxValues);
@@ -2305,6 +2308,18 @@ NodeEditor *MainWindow::makeNodeEditor(const QString &type, const QString &id, c
     return editor;
   }
 
+  if (type == QLatin1String(SimPsuNode::kType))
+  {
+    auto *editor = new SimPsuNodeEditor;
+    const auto *supply = dynamic_cast<const SimPsuNode *>(stored);
+    // no copy: the node keeps its supply
+    if (supply)
+      editor->load(name, *supply);
+    else
+      editor->load(name, SimPsuNode());
+    return editor;
+  }
+
   auto *editor = new FormulaNodeEditor;
   editor->setChoices(formulaChoices(id));
   editor->setCurrent([this](const ValueRef &ref) -> std::optional<Reading>
@@ -2346,11 +2361,14 @@ std::optional<QVariantMap> MainWindow::editNode(const QString &id, const QVarian
   if (!stored && LegacyNodes::isLegacy(keys))
     QMessageBox::warning(this, *name, tr("%1\nSet up its formula anew.").arg(why));
   const QString type = stored ? stored->type() : QString::fromLatin1(FormulaNode::kType);
-  const QString title = type == QLatin1String(IntegralNode::kType) ? tr("Integral")
+  const QString title = type == QLatin1String(IntegralNode::kType)    ? tr("Integral")
                         : type == QLatin1String(GeneratorNode::kType) ? tr("Simulated values")
+                        : type == QLatin1String(SimPsuNode::kType)    ? tr("Power supply")
                                                                        : tr("Calculated value");
   NodeDlg dlg(makeNodeEditor(type, id, stored.get(), *name), title, this);
-  dlg.resize(type == QLatin1String(GeneratorNode::kType) ? QSize(760, 360) : QSize(640, 480));
+  dlg.resize(type == QLatin1String(GeneratorNode::kType) ? QSize(760, 360)
+             : type == QLatin1String(SimPsuNode::kType) ? QSize(720, 560)
+                                                         : QSize(640, 480));
   if (dlg.exec() != QDialog::Accepted)
     return std::nullopt;
   *name = dlg.editor()->name();
@@ -2360,6 +2378,7 @@ std::optional<QVariantMap> MainWindow::editNode(const QString &id, const QVarian
 void MainWindow::addNode(const QString &type, const ValueRef &input)
 {
   addDevice(type == QLatin1String(GeneratorNode::kType) ? AddDeviceDlg::Simulated
+            : type == QLatin1String(SimPsuNode::kType)  ? AddDeviceDlg::SimulatedPsu
             : type == QLatin1String(IntegralNode::kType) ? AddDeviceDlg::Integral
                                                           : AddDeviceDlg::Calculated,
             input);
@@ -5255,7 +5274,7 @@ void MainWindow::updateControls()
   {
     // the keys below the LCD are part of its window
     FrontPanel *panel = panelOf(win);
-    m_arranger->setContentAspect(win, LcdWidget::kMinAspect, LcdWidget::kMaxAspect, panel->keysHeight());
+    m_arranger->setContentAspect(win, panel->minAspect(), panel->maxAspect(), panel->keysHeight());
     // the first time a panel's keys appear, the window grows for them
     if (panel->keysShown() && !m_grown.contains(panel))
     {

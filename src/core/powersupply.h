@@ -155,6 +155,8 @@ Q_SIGNALS:
   void    stateChanged(int ch);
   /// The settings of a channel changed (shown, colour, limits, steps).
   void    settingsChanged(int ch);
+  /// The setpoint read back changed (to store it with the entry).
+  void    setpointChanged(int ch);
 
 protected:
   /// @name The backend
