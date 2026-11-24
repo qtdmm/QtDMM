@@ -326,9 +326,11 @@ bool FunctionGenerator::requestOutput(int ch, bool on)
 
 void FunctionGenerator::allOff()
 {
+  // off is always safe: also while set from outside or not released for
+  // control (the emergency off, OutputRegistry)
   for (int ch : shownChannels())
-    if (valid(ch) && m_states[ch].connected && controlAllowed())
-      sendOutput(ch, false);   // even while external: off is always safe
+    if (valid(ch) && m_states[ch].connected)
+      sendOutput(ch, false);
 }
 
 void FunctionGenerator::expired(int ch)

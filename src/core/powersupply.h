@@ -138,7 +138,8 @@ public:
   bool    requestVoltage(int ch, double u);
   /// Switches the output; false when not sent (as requestVoltage()).
   bool    requestOutput(int ch, bool on);
-  /// Every shown channel's output off.
+  /// Every shown channel's output off, also one set from outside (EXT) or
+  /// while control is not allowed: off is always safe (the emergency off).
   void    allOff();
   /// Within this the device answers a request, else it failed (ms).
   int     confirmTimeout() const;
