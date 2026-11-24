@@ -37,7 +37,7 @@ bool MeterSetup::isGatt(const DmmDecoder::DMMInfo &info)
 bool MeterSetup::isBluetooth(const DmmDecoder::DMMInfo &info)
 {
 #ifdef QTDMM_WITH_BLE
-  return info.protocol == FrameFormat::VictronBLE || isGatt(info);
+  return info.protocol == FrameFormat::VictronBLE || info.protocol == FrameFormat::BTHome || isGatt(info);
 #else
   // no Bluetooth port in this build: still the Bluetooth group for these
   // models, with a hint instead of the serial settings they don't have
@@ -133,6 +133,8 @@ MeterSetup MeterSetup::fromKeys(const QVariantMap &keys, const QString &sigrokEx
   }
   else if (known && isGatt(info))
     s.device = "blegatt " + address;
+  else if (known && info.protocol == FrameFormat::BTHome)
+    s.device = "ble " + address;   // no key, the values are the sensor's own
   else if (known && isBluetooth(info))
   {
     const QStringList fields = victronFields(info.model, keys);

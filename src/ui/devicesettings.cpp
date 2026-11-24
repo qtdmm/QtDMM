@@ -132,7 +132,7 @@ bool DeviceSettings::isComplete() const
   if (isSigrokMeter())
     return !ui_sigrokDriver->text().trimmed().isEmpty();
   const QString address = ui_bleAddress->currentText().section(' ', 0, 0).trimmed();
-  if (isGatt())
+  if (isGatt() || isBtHome())
     return !address.isEmpty();
   if (isBluetooth())
     return !address.isEmpty() && VictronBle::keyFromHex(ui_bleKey->text()).size() == 16;
@@ -484,7 +484,7 @@ QVariantMap DeviceSettings::keys() const
   keys.insert("Port settings/ble-address", ui_bleAddress->currentText().trimmed());
   // only a Victron device has a key: another meter would carry it on into
   // its own entry of My devices
-  keys.insert("Port settings/ble-key", isBluetooth() && !isGatt() ? ui_bleKey->text().trimmed() : QString());
+  keys.insert("Port settings/ble-key", isBluetooth() && !isGatt() && !isBtHome() ? ui_bleKey->text().trimmed() : QString());
   keys.insert("Port settings/ble-main", ui_bleMain->currentData().toString());
   keys.insert("Port settings/ble-second", ui_bleSecond->currentData().toString());
   keys.insert("Port settings/ble-third", ui_bleThird->currentData().toString());
@@ -556,6 +556,11 @@ bool DeviceSettings::isGatt() const
   return ui_vendor->currentIndex() != 0 && MeterSetup::isGatt(m_dmmInfo);
 }
 
+bool DeviceSettings::isBtHome() const
+{
+  return ui_vendor->currentIndex() != 0 && m_dmmInfo.protocol == FrameFormat::BTHome;
+}
+
 // What a model's way of connecting shows: the port and its line settings,
 // the protocol, the Bluetooth or sigrok group, a microcontroller's units.
 void DeviceSettings::updateConnectionMode()
@@ -566,7 +571,8 @@ void DeviceSettings::updateConnectionMode()
   ui_serialBox->setVisible(!ble && !sigrok);
   m_unitsGroup->setVisible(ui_vendor->currentIndex() != 0 && m_dmmInfo.unitsChoosable() && !ble && !sigrok);
   ui_bleGroup->setVisible(ble);
-  const bool gatt = isGatt();
+  // neither key nor a choice of values: a GATT meter, a BTHome sensor
+  const bool gatt = isGatt() || isBtHome();
   for (QWidget *w : std::initializer_list<QWidget *>{ ui_bleKeyLabel, ui_bleKey, ui_bleMainLabel, ui_bleMain,
                                                       ui_bleSecondLabel, ui_bleSecond, ui_bleThirdLabel, ui_bleThird,
                                                       ui_bleFourthLabel, ui_bleFourth })
@@ -967,6 +973,12 @@ void DeviceSettings::updateBleHint()
     ui_bleHint->setText(hints.join(' '));
     return;
   }
+  if (isBtHome())
+  {
+    hints << tr("The board or sensor sends BTHome v2 without encryption; no key is needed. Its values come in the order it sends them.");
+    ui_bleHint->setText(hints.join(' '));
+    return;
+  }
   if (!keyOk)
     hints << tr("The key is the 32-digit \"Encryption key\" VictronConnect shows under Product info, Instant readout via Bluetooth.");
   ui_bleHint->setText(hints.join(' '));
@@ -978,14 +990,16 @@ void DeviceSettings::on_ui_bleScan_clicked()
 #ifdef QTDMM_WITH_BLE
   ui_bleScan->setEnabled(false);
   const bool gatt = isGatt();
+  const bool bthome = isBtHome();
   // a GATT meter may advertise seldom (HP-570C-APP)
   const int seconds = gatt ? 15 : 5;
-  ui_bleHint->setText(gatt ? tr("Scanning for %1 (%2 s)...").arg(m_dmmInfo.model.section(' ', 0, 0)).arg(seconds)
-                           : tr("Scanning for Victron devices (%1 s)...").arg(seconds));
+  ui_bleHint->setText(gatt     ? tr("Scanning for %1 (%2 s)...").arg(m_dmmInfo.model.section(' ', 0, 0)).arg(seconds)
+                      : bthome ? tr("Scanning for BTHome devices (%1 s)...").arg(seconds)
+                               : tr("Scanning for Victron devices (%1 s)...").arg(seconds));
   QCoreApplication::processEvents();
   QString error;
   const QStringList found = gatt ? BleGattDevice::scan(m_dmmInfo.protocol, seconds * 1000, &error)
-                                 : BleAdvertisementDevice::scan(seconds * 1000, &error);
+                                 : BleAdvertisementDevice::scan(seconds * 1000, &error, m_dmmInfo.protocol);
   const QString current = ui_bleAddress->currentText();
   ui_bleAddress->clear();
   ui_bleAddress->addItems(found);
@@ -999,8 +1013,9 @@ void DeviceSettings::on_ui_bleScan_clicked()
   }
   if (found.isEmpty())
   {
-    ui_bleHint->setText(gatt ? tr("No meter found. Is its Bluetooth switched on, and no other program connected to it?")
-                             : tr("No Victron device found. Is Bluetooth on, and Instant readout enabled on the device?"));
+    ui_bleHint->setText(gatt     ? tr("No meter found. Is its Bluetooth switched on, and no other program connected to it?")
+                        : bthome ? tr("No BTHome device found. Does the board send (BTHome v2, UUID 0xFCD2)?")
+                                 : tr("No Victron device found. Is Bluetooth on, and Instant readout enabled on the device?"));
     return;
   }
 #endif

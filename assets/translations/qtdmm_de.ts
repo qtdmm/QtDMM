@@ -931,6 +931,240 @@
     </message>
 </context>
 <context>
+    <name>BTHome</name>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="38"/>
+        <source>Packet id</source>
+        <translation>Paket-ID</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="39"/>
+        <source>Battery</source>
+        <translation>Batterie</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="40"/>
+        <location filename="../../src/device/decoders/bthome.cpp" line="71"/>
+        <location filename="../../src/device/decoders/bthome.cpp" line="89"/>
+        <location filename="../../src/device/decoders/bthome.cpp" line="90"/>
+        <source>Temperature</source>
+        <translation>Temperatur</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="41"/>
+        <location filename="../../src/device/decoders/bthome.cpp" line="59"/>
+        <source>Humidity</source>
+        <translation>Luftfeuchte</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="42"/>
+        <source>Pressure</source>
+        <translation>Luftdruck</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="43"/>
+        <source>Illuminance</source>
+        <translation>Beleuchtungsstärke</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="44"/>
+        <location filename="../../src/device/decoders/bthome.cpp" line="45"/>
+        <source>Mass</source>
+        <translation>Masse</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="46"/>
+        <source>Dew point</source>
+        <translation>Taupunkt</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="47"/>
+        <location filename="../../src/device/decoders/bthome.cpp" line="63"/>
+        <location filename="../../src/device/decoders/bthome.cpp" line="64"/>
+        <location filename="../../src/device/decoders/bthome.cpp" line="91"/>
+        <location filename="../../src/device/decoders/bthome.cpp" line="92"/>
+        <location filename="../../src/device/decoders/bthome.cpp" line="93"/>
+        <source>Count</source>
+        <translation>Zähler</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="48"/>
+        <location filename="../../src/device/decoders/bthome.cpp" line="79"/>
+        <source>Energy</source>
+        <translation>Energie</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="49"/>
+        <location filename="../../src/device/decoders/bthome.cpp" line="94"/>
+        <source>Power</source>
+        <translation>Leistung</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="50"/>
+        <location filename="../../src/device/decoders/bthome.cpp" line="76"/>
+        <source>Voltage</source>
+        <translation>Spannung</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="51"/>
+        <source>PM2.5</source>
+        <translation>PM2,5</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="52"/>
+        <source>PM10</source>
+        <translation>PM10</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="53"/>
+        <source>Generic</source>
+        <translation>Allgemein</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="54"/>
+        <source>Power on</source>
+        <translation>Eingeschaltet</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="55"/>
+        <source>Opening</source>
+        <translation>Geöffnet</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="56"/>
+        <source>CO2</source>
+        <translation>CO2</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="57"/>
+        <source>VOC</source>
+        <translation>VOC</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="58"/>
+        <location filename="../../src/device/decoders/bthome.cpp" line="60"/>
+        <source>Moisture</source>
+        <translation>Bodenfeuchte</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="61"/>
+        <source>Button</source>
+        <translation>Taster</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="62"/>
+        <source>Dimmer</source>
+        <translation>Dimmer</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="65"/>
+        <source>Rotation</source>
+        <translation>Drehung</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="66"/>
+        <location filename="../../src/device/decoders/bthome.cpp" line="67"/>
+        <source>Distance</source>
+        <translation>Abstand</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="68"/>
+        <source>Duration</source>
+        <translation>Dauer</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="69"/>
+        <location filename="../../src/device/decoders/bthome.cpp" line="95"/>
+        <source>Current</source>
+        <translation>Strom</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="70"/>
+        <source>Speed</source>
+        <translation>Geschwindigkeit</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="72"/>
+        <source>UV index</source>
+        <translation>UV-Index</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="73"/>
+        <location filename="../../src/device/decoders/bthome.cpp" line="74"/>
+        <location filename="../../src/device/decoders/bthome.cpp" line="80"/>
+        <location filename="../../src/device/decoders/bthome.cpp" line="87"/>
+        <source>Volume</source>
+        <translation>Volumen</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="75"/>
+        <source>Volume flow</source>
+        <translation>Durchfluss</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="77"/>
+        <location filename="../../src/device/decoders/bthome.cpp" line="78"/>
+        <source>Gas</source>
+        <translation>Gas</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="81"/>
+        <source>Water</source>
+        <translation>Wasser</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="82"/>
+        <source>Timestamp</source>
+        <translation>Zeitstempel</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="83"/>
+        <source>Acceleration</source>
+        <translation>Beschleunigung</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="84"/>
+        <source>Gyroscope</source>
+        <translation>Drehrate</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="85"/>
+        <source>Text</source>
+        <translation>Text</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="86"/>
+        <source>Raw</source>
+        <translation>Rohdaten</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="88"/>
+        <source>Conductivity</source>
+        <translation>Leitfähigkeit</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="96"/>
+        <source>Direction</source>
+        <translation>Richtung</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="97"/>
+        <source>Device type</source>
+        <translation>Gerätetyp</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="98"/>
+        <location filename="../../src/device/decoders/bthome.cpp" line="99"/>
+        <source>Firmware</source>
+        <translation>Firmware</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="108"/>
+        <source>State</source>
+        <translation>Zustand</translation>
+    </message>
+</context>
+<context>
     <name>BasketWidget</name>
     <message>
         <location filename="../../src/ui/views/basketwidget.cpp" line="122"/>
@@ -1190,22 +1424,22 @@
 <context>
     <name>BleAdvertisementDevice</name>
     <message>
-        <location filename="../../src/device/transports/ble.cpp" line="61"/>
+        <location filename="../../src/device/transports/ble.cpp" line="62"/>
         <source>No Bluetooth address configured.</source>
         <translation>Keine Bluetooth-Adresse eingestellt.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/ble.cpp" line="66"/>
+        <location filename="../../src/device/transports/ble.cpp" line="67"/>
         <source>The encryption key must be 32 hex digits (VictronConnect: Product info, Instant readout via Bluetooth).</source>
         <translation>Der Schlüssel muss aus 32 Hex-Ziffern bestehen (VictronConnect: Produktinfo, Sofortanzeige über Bluetooth).</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/ble.cpp" line="140"/>
+        <location filename="../../src/device/transports/ble.cpp" line="147"/>
         <source>The encryption key does not match %1.</source>
         <translation>Der Schlüssel passt nicht zu %1.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/ble.cpp" line="152"/>
+        <location filename="../../src/device/transports/ble.cpp" line="175"/>
         <source>Bluetooth receive buffer limit exceeded.</source>
         <translation>Bluetooth-Empfangspufferlimit überschritten.</translation>
     </message>
@@ -2052,6 +2286,19 @@
     </message>
 </context>
 <context>
+    <name>DecoderBTHome</name>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="211"/>
+        <source>Encrypted (a bindkey): not read yet</source>
+        <translation>Verschlüsselt (Bindkey): wird noch nicht gelesen</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/bthome.cpp" line="218"/>
+        <source>BTHome version %1: only version 2 is read</source>
+        <translation>BTHome-Version %1: nur Version 2 wird gelesen</translation>
+    </message>
+</context>
+<context>
     <name>DecoderDO3122</name>
     <message>
         <location filename="../../src/device/decoders/do3122.cpp" line="84"/>
@@ -2112,20 +2359,20 @@
 <context>
     <name>DeviceSession</name>
     <message>
-        <location filename="../../src/service/devicesession.cpp" line="201"/>
+        <location filename="../../src/service/devicesession.cpp" line="218"/>
         <source>%1: the recording was not saved, the new one replaces it</source>
         <translation>%1: Die Aufnahme war nicht gespeichert, die neue ersetzt sie</translation>
     </message>
     <message>
-        <location filename="../../src/service/devicesession.cpp" line="223"/>
+        <location filename="../../src/service/devicesession.cpp" line="240"/>
         <source>start ignored, the recording shown is not saved yet</source>
         <translation>Start ignoriert, die angezeigte Aufnahme ist noch nicht gespeichert</translation>
     </message>
     <message>
-        <location filename="../../src/service/devicesession.cpp" line="228"/>
-        <location filename="../../src/service/devicesession.cpp" line="371"/>
-        <location filename="../../src/service/devicesession.cpp" line="376"/>
-        <location filename="../../src/service/devicesession.cpp" line="395"/>
+        <location filename="../../src/service/devicesession.cpp" line="245"/>
+        <location filename="../../src/service/devicesession.cpp" line="388"/>
+        <location filename="../../src/service/devicesession.cpp" line="393"/>
+        <location filename="../../src/service/devicesession.cpp" line="412"/>
         <source>%1: %2</source>
         <translation>%1: %2</translation>
     </message>
@@ -2173,108 +2420,123 @@
         <translation>Wert %1 (%2):</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesettings.cpp" line="827"/>
+        <location filename="../../src/ui/devicesettings.cpp" line="833"/>
         <source>none</source>
         <translation>keiner</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesettings.cpp" line="896"/>
+        <location filename="../../src/ui/devicesettings.cpp" line="902"/>
         <source>%1 was not found or does not run. Install sigrok-cli, or set its path in the settings, page General.</source>
         <translation>%1 wurde nicht gefunden oder läuft nicht. sigrok-cli installieren oder den Pfad in den Einstellungen, Seite Allgemein, angeben.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesettings.cpp" line="899"/>
+        <location filename="../../src/ui/devicesettings.cpp" line="905"/>
         <source>%1 has no driver &quot;%2&quot;; see sigrok-cli --list-supported.</source>
         <translation>%1 hat keinen Treiber „%2&quot;; siehe sigrok-cli --list-supported.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesettings.cpp" line="901"/>
+        <location filename="../../src/ui/devicesettings.cpp" line="907"/>
         <source>%1 found.</source>
         <translation>%1 gefunden.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesettings.cpp" line="911"/>
+        <location filename="../../src/ui/devicesettings.cpp" line="917"/>
         <source>Running %1 --driver %2 --scan ...</source>
         <translation>%1 --driver %2 --scan läuft …</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesettings.cpp" line="933"/>
+        <location filename="../../src/ui/devicesettings.cpp" line="939"/>
         <source>No meter answered within 30 s (a serial port without a SCPI meter keeps sigrok-cli waiting).</source>
         <translation>Kein Messgerät hat innerhalb von 30 s geantwortet (an einer seriellen Schnittstelle ohne SCPI-Gerät wartet sigrok-cli endlos).</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesettings.cpp" line="935"/>
+        <location filename="../../src/ui/devicesettings.cpp" line="941"/>
         <source>Found: %1</source>
         <translation>Gefunden: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesettings.cpp" line="937"/>
+        <location filename="../../src/ui/devicesettings.cpp" line="943"/>
         <source>No meter answered.</source>
         <translation>Kein Messgerät hat geantwortet.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesettings.cpp" line="947"/>
+        <location filename="../../src/ui/devicesettings.cpp" line="953"/>
         <source>This QtDMM was built without Bluetooth support, so it cannot connect to this meter.</source>
         <translation>Dieses QtDMM wurde ohne Bluetooth-Unterstützung gebaut und kann sich daher nicht mit diesem Messgerät verbinden.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesettings.cpp" line="953"/>
+        <location filename="../../src/ui/devicesettings.cpp" line="959"/>
         <source>Search for the device (a few seconds)</source>
         <translation>Nach dem Gerät suchen (einige Sekunden)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesettings.cpp" line="963"/>
+        <location filename="../../src/ui/devicesettings.cpp" line="969"/>
         <source>Pick the device or type its Bluetooth address.</source>
         <translation>Gerät auswählen oder seine Bluetooth-Adresse eingeben.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesettings.cpp" line="966"/>
+        <location filename="../../src/ui/devicesettings.cpp" line="972"/>
         <source>Switch the meter&apos;s Bluetooth on (it shows the Bluetooth symbol) before scanning or connecting.</source>
         <translation>Schalte das Bluetooth des Messgeräts ein (das Bluetooth-Symbol erscheint), bevor du suchst oder verbindest.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesettings.cpp" line="971"/>
+        <location filename="../../src/ui/devicesettings.cpp" line="978"/>
+        <source>The board or sensor sends BTHome v2 without encryption; no key is needed. Its values come in the order it sends them.</source>
+        <translation>Die Platine oder der Sensor sendet BTHome v2 ohne Verschlüsselung; ein Schlüssel ist nicht nötig. Die Werte kommen in der Reihenfolge, in der er sie sendet.</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/devicesettings.cpp" line="983"/>
         <source>The key is the 32-digit &quot;Encryption key&quot; VictronConnect shows under Product info, Instant readout via Bluetooth.</source>
         <translation>Der Schlüssel ist der 32-stellige „Verschlüsselungsschlüssel&quot;, den VictronConnect unter Produktinfo, Sofortanzeige über Bluetooth zeigt.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesettings.cpp" line="983"/>
+        <location filename="../../src/ui/devicesettings.cpp" line="996"/>
         <source>Scanning for %1 (%2 s)...</source>
         <translation>Suche nach %1 (%2 s)...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesettings.cpp" line="984"/>
+        <location filename="../../src/ui/devicesettings.cpp" line="997"/>
+        <source>Scanning for BTHome devices (%1 s)...</source>
+        <translation>Suche nach BTHome-Geräten (%1 s)...</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/devicesettings.cpp" line="998"/>
         <source>Scanning for Victron devices (%1 s)...</source>
         <translation>Suche Victron-Geräte (%1 s)…</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesettings.cpp" line="997"/>
+        <location filename="../../src/ui/devicesettings.cpp" line="1011"/>
         <source>The search failed: %1</source>
         <translation>Die Suche ist fehlgeschlagen: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesettings.cpp" line="1002"/>
+        <location filename="../../src/ui/devicesettings.cpp" line="1016"/>
         <source>No meter found. Is its Bluetooth switched on, and no other program connected to it?</source>
         <translation>Kein Messgerät gefunden. Ist sein Bluetooth eingeschaltet und kein anderes Programm damit verbunden?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesettings.cpp" line="1003"/>
+        <location filename="../../src/ui/devicesettings.cpp" line="1017"/>
+        <source>No BTHome device found. Does the board send (BTHome v2, UUID 0xFCD2)?</source>
+        <translation>Kein BTHome-Gerät gefunden. Sendet die Platine (BTHome v2, UUID 0xFCD2)?</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/devicesettings.cpp" line="1018"/>
         <source>No Victron device found. Is Bluetooth on, and Instant readout enabled on the device?</source>
         <translation>Kein Victron-Gerät gefunden. Ist Bluetooth an und die Sofortanzeige am Gerät aktiviert?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesettings.cpp" line="1017"/>
+        <location filename="../../src/ui/devicesettings.cpp" line="1032"/>
         <source>Load DMM description</source>
         <translation>DMM Beschreibung laden</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesettings.cpp" line="1017"/>
-        <location filename="../../src/ui/devicesettings.cpp" line="1043"/>
+        <location filename="../../src/ui/devicesettings.cpp" line="1032"/>
+        <location filename="../../src/ui/devicesettings.cpp" line="1058"/>
         <source>DMM description (*.cfg)</source>
         <translation>DMM Beschreibung (*.cfg)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/devicesettings.cpp" line="1043"/>
+        <location filename="../../src/ui/devicesettings.cpp" line="1058"/>
         <source>Save DMM description</source>
         <translation>DMM Beschreibung speichern</translation>
     </message>
@@ -2666,82 +2928,82 @@
 <context>
     <name>DeviceType</name>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="195"/>
+        <location filename="../../src/device/devicetype.cpp" line="196"/>
         <source>Handheld multimeter</source>
         <translation>Hand-Multimeter</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="196"/>
+        <location filename="../../src/device/devicetype.cpp" line="197"/>
         <source>Bench multimeter</source>
         <translation>Tisch-Multimeter</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="197"/>
+        <location filename="../../src/device/devicetype.cpp" line="198"/>
         <source>Clamp meter</source>
         <translation>Zangenmessgerät</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="198"/>
+        <location filename="../../src/device/devicetype.cpp" line="199"/>
         <source>Thermometer</source>
         <translation>Thermometer</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="199"/>
+        <location filename="../../src/device/devicetype.cpp" line="200"/>
         <source>Luxmeter</source>
         <translation>Luxmeter</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="200"/>
+        <location filename="../../src/device/devicetype.cpp" line="201"/>
         <source>Air quality meter</source>
         <translation>Luftqualitätsmesser</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="201"/>
+        <location filename="../../src/device/devicetype.cpp" line="202"/>
         <source>Sound level meter</source>
         <translation>Schallpegelmesser</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="202"/>
+        <location filename="../../src/device/devicetype.cpp" line="203"/>
         <source>Anemometer</source>
         <translation>Anemometer</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="203"/>
+        <location filename="../../src/device/devicetype.cpp" line="204"/>
         <source>Tachometer</source>
         <translation>Drehzahlmesser</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="204"/>
+        <location filename="../../src/device/devicetype.cpp" line="205"/>
         <source>Microcontroller</source>
         <translation>Mikrocontroller</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="205"/>
+        <location filename="../../src/device/devicetype.cpp" line="206"/>
         <source>Battery monitor</source>
         <translation>Batteriewächter</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="206"/>
+        <location filename="../../src/device/devicetype.cpp" line="207"/>
         <source>Solar charge controller</source>
         <translation>Solarladeregler</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="207"/>
+        <location filename="../../src/device/devicetype.cpp" line="208"/>
         <source>Inverter</source>
         <translation>Wechselrichter</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="208"/>
+        <location filename="../../src/device/devicetype.cpp" line="209"/>
         <source>Power supply</source>
         <translation>Netzteil</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="209"/>
+        <location filename="../../src/device/devicetype.cpp" line="210"/>
         <source>Virtual meter</source>
         <translation>Virtuelles Messgerät</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="210"/>
+        <location filename="../../src/device/devicetype.cpp" line="211"/>
         <source>Generic</source>
         <translation>Allgemein</translation>
     </message>
@@ -2749,48 +3011,48 @@
 <context>
     <name>Discovery</name>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="113"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="114"/>
         <source>UNI-T UT61B+, UT61D+, UT61E+, UT161, UT171, UT181A, UT8802, UT8803 or Voltcraft VC-880, VC-890</source>
         <translation>UNI-T UT61B+, UT61D+, UT61E+, UT161, UT171, UT181A, UT8802, UT8803 oder Voltcraft VC-880, VC-890</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="114"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="115"/>
         <source>Switch the meter on; it sends as soon as the cable is plugged in. A UT171 or UT181A only with SETUP &gt; Communication ON, the UT181A again after every power-on; a Voltcraft VC-880 or VC-890 after its PC key.</source>
         <translation>Schalten Sie das Messgerät ein; es sendet, sobald das Kabel steckt. Ein UT171 oder UT181A nur mit SETUP &gt; Communication ON, das UT181A nach jedem Einschalten erneut; ein Voltcraft VC-880 oder VC-890 nach seiner PC-Taste.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="126"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="127"/>
         <source>UNI-T meter with the UT-D04 cable</source>
         <translation>UNI-T-Messgerät am Kabel UT-D04</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="127"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="128"/>
         <source>Press RS232 (or PC) on the meter, else it sends nothing.</source>
         <translation>Drücken Sie am Messgerät RS232 (oder PC), sonst sendet es nichts.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="136"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="137"/>
         <source>Brymen BM52x, BM82x or BM86x</source>
         <translation>Brymen BM52x, BM82x oder BM86x</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="137"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="138"/>
         <source>Put the IR adapter on the meter and switch its PC link on.</source>
         <translation>Setzen Sie den IR-Adapter auf das Messgerät und schalten Sie dessen PC-Verbindung ein.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="140"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="141"/>
         <source>TFA AIRCO2NTROL CO2 monitor</source>
         <translation>TFA AIRCO2NTROL CO2-Monitor</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="213"/>
-        <location filename="../../src/device/discovery/discovery.cpp" line="243"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="214"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="244"/>
         <source>No access: %1 belongs to %2:%3</source>
         <translation>Kein Zugriff: %1 gehört %2:%3</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="218"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="219"/>
         <source>A udev rule lets you open the cable. The packages of QtDMM install one; for the AppImage or Flatpak, put this line into /etc/udev/rules.d/70-qtdmm.rules:
 
 %1
@@ -2807,7 +3069,7 @@ laden Sie sie und stecken Sie das Kabel neu ein:
 sudo udevadm control --reload-rules &amp;&amp; sudo udevadm trigger</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="226"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="227"/>
         <source>Serial ports belong to the group %1. Add yourself to it:
 
 sudo usermod -aG %1 $USER
@@ -2820,7 +3082,7 @@ sudo usermod -aG %1 $USER
 und melden Sie sich danach ab und wieder an.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="244"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="245"/>
         <source>A udev rule lets you open USB-TMC instruments. The packages of QtDMM install one; for the AppImage or Flatpak, put this line into /etc/udev/rules.d/70-qtdmm.rules:
 
 %1
@@ -2837,93 +3099,113 @@ laden Sie sie und stecken Sie das Gerät neu ein:
 sudo udevadm control --reload-rules &amp;&amp; sudo udevadm trigger</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="277"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="278"/>
         <source>%1 cable · %2</source>
         <translation>Kabel %1 · %2</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="309"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="310"/>
         <source>USB-TMC instrument</source>
         <translation>USB-TMC-Gerät</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="312"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="313"/>
         <source>An instrument that speaks SCPI over USB. Choose its model.</source>
         <translation>Ein Gerät, das SCPI über USB spricht. Wählen Sie sein Modell.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="354"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="355"/>
         <source>Microcontroller board (%1)</source>
         <translation>Mikrocontroller-Board (%1)</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="355"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="356"/>
         <source>If it prints its values as text lines (Serial Plotter, Teleplot), choose the microcontroller.</source>
         <translation>Gibt es seine Werte als Textzeilen aus (Serial Plotter, Teleplot), wähle den Mikrocontroller.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="366"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="367"/>
         <source>A meter&apos;s cable or a microcontroller board, QtDMM cannot tell yet: choose the model.</source>
         <translation>Ein Messgerätekabel oder ein Mikrocontroller-Board, das kann QtDMM noch nicht erkennen: wähle das Modell.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="371"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="372"/>
         <source>Serial port</source>
         <translation>Serieller Port</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="365"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="366"/>
         <source>USB-serial adapter (%1)</source>
         <translation>USB-Seriell-Adapter (%1)</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="372"/>
-        <location filename="../../src/device/discovery/discovery.cpp" line="401"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="373"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="402"/>
         <source>Which meter is on it, QtDMM cannot tell yet: choose the model.</source>
         <translation>Welches Messgerät daran hängt, weiß QtDMM noch nicht: Wählen Sie das Modell.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="399"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="400"/>
         <source>qtdmm-bridge on %1</source>
         <translation>qtdmm-bridge auf %1</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="443"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="444"/>
         <source>No Bluetooth adapter found (or the Bluetooth service is not running).</source>
         <translation>Kein Bluetooth-Adapter gefunden (oder der Bluetooth-Dienst läuft nicht).</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="447"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="448"/>
         <source>Bluetooth is switched off.</source>
         <translation>Bluetooth ist ausgeschaltet.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="449"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="450"/>
         <source>This build of QtDMM has no Bluetooth.</source>
         <translation>Diese Version von QtDMM hat kein Bluetooth.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="488"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="491"/>
+        <source>BTHome device</source>
+        <translation>BTHome-Gerät</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/discovery/discovery.cpp" line="497"/>
+        <source>encrypted (not read yet)</source>
+        <translation>verschlüsselt (wird noch nicht gelesen)</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/discovery/discovery.cpp" line="502"/>
+        <source>Sends BTHome v2.</source>
+        <translation>Sendet BTHome v2.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/discovery/discovery.cpp" line="503"/>
+        <source>Sends BTHome v2: %1.</source>
+        <translation>Sendet BTHome v2: %1.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/discovery/discovery.cpp" line="507"/>
         <source>Victron device</source>
         <translation>Victron-Gerät</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="488"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="507"/>
         <source>Victron %1</source>
         <translation>Victron %1</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="489"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="508"/>
         <source>The device key is in the VictronConnect app: Product info, Instant readout.</source>
         <translation>Den Geräteschlüssel finden Sie in der App VictronConnect: Produktinfo, Instant Readout.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="515"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="534"/>
         <source>Bluetooth meter</source>
         <translation>Bluetooth-Messgerät</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="516"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="535"/>
         <source>Switch Bluetooth on at the meter.</source>
         <translation>Schalten Sie Bluetooth am Messgerät ein.</translation>
     </message>
@@ -3240,12 +3522,12 @@ sudo udevadm control --reload-rules &amp;&amp; sudo udevadm trigger</translation
 <context>
     <name>FrontPanel</name>
     <message>
-        <location filename="../../src/ui/frontpanel.cpp" line="198"/>
+        <location filename="../../src/ui/frontpanel.cpp" line="197"/>
         <source>PASS %1 · FAIL %2 (%3 %)</source>
         <translation>PASS %1 · FAIL %2 (%3 %)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/frontpanel.cpp" line="199"/>
+        <location filename="../../src/ui/frontpanel.cpp" line="198"/>
         <source>Readings judged since the limits were set or min/max was reset: %1 too high, %2 too low</source>
         <translation>Seit dem Setzen der Grenzen oder dem Zurücksetzen von Min/Max beurteilte Messwerte: %1 zu hoch, %2 zu niedrig</translation>
     </message>
@@ -5024,17 +5306,19 @@ Keine Berechtigung? Der Sensor braucht eine udev-Regel für die USB-ID %1:%2.</t
     </message>
     <message>
         <location filename="../../src/ui/instancewidget.cpp" line="418"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="4725"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4759"/>
         <source>nothing recorded</source>
         <translation>nichts aufgenommen</translation>
     </message>
     <message>
         <location filename="../../src/ui/instancewidget.cpp" line="505"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4734"/>
         <source>Clear deletes it.</source>
         <translation>Leeren löscht sie.</translation>
     </message>
     <message>
         <location filename="../../src/ui/instancewidget.cpp" line="505"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4735"/>
         <source>Clear without saving</source>
         <translation>Leeren ohne speichern</translation>
     </message>
@@ -5858,17 +6142,17 @@ Keine Berechtigung? Der Sensor braucht eine udev-Regel für die USB-ID %1:%2.</t
         <translation>&lt;h2&gt;QtDMM %1&lt;/h2&gt;&lt;p&gt;Anzeige und Transientenrekorder für digitale Multimeter.&lt;/p&gt;&lt;p&gt;Gebaut mit &lt;b&gt;Qt&lt;/b&gt; %2. Lizenziert unter der &lt;b&gt;GNU GPL 3 oder neuer&lt;/b&gt; (Versionen vor 0.9.0 unter GPL 2 oder neuer).&lt;/p&gt;&lt;p&gt;Ab 0.9.5: tuxmaster und Mitwirkende, siehe Datei AUTHORS.&lt;br&gt;0.9.3 und davor: &amp;copy; 2001-2016 M. Toussaint &amp;lt;&lt;a href=&apos;mailto:qtdmm@mtoussaint.de&apos;&gt;qtdmm@mtoussaint.de&lt;/a&gt;&amp;gt;&lt;/p&gt;&lt;p&gt;Website: &lt;a href=&apos;https://qtdmm.de&apos;&gt;qtdmm.de&lt;/a&gt; &amp;middot; Kontakt: &lt;a href=&apos;mailto:hello@qtdmm.de&apos;&gt;hello@qtdmm.de&lt;/a&gt;&lt;br&gt;Quellcode und Fehlermeldungen: &lt;a href=&apos;https://github.com/qtdmm/QtDMM&apos;&gt;github.com/qtdmm/QtDMM&lt;/a&gt;&lt;br&gt;Die Symbole stammen aus den Symbolthemen &lt;b&gt;Oxygen&lt;/b&gt; und &lt;b&gt;Breeze&lt;/b&gt; der KDE-Gemeinschaft (LGPL 3); die eigenen Symbole von QtDMM sind in seinem Stil gezeichnet.&lt;/p&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3248"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3253"/>
         <source>&amp;New graph</source>
         <translation>&amp;Neuer Graph</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4238"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4243"/>
         <source>Show the toolbar</source>
         <translation>Werkzeugleiste einblenden</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4238"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4243"/>
         <source>Hide the toolbar</source>
         <translation>Werkzeugleiste ausblenden</translation>
     </message>
@@ -5877,8 +6161,8 @@ Keine Berechtigung? Der Sensor braucht eine udev-Regel für die USB-ID %1:%2.</t
         <location filename="../../src/ui/mainwindow.cpp" line="675"/>
         <location filename="../../src/ui/mainwindow.cpp" line="1789"/>
         <location filename="../../src/ui/mainwindow.cpp" line="3084"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="3242"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="3259"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3247"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3264"/>
         <source>S&amp;ources...</source>
         <translation>&amp;Quellen ...</translation>
     </message>
@@ -5901,8 +6185,8 @@ Keine Berechtigung? Der Sensor braucht eine udev-Regel für die USB-ID %1:%2.</t
         <location filename="../../src/ui/mainwindow.cpp" line="1491"/>
         <location filename="../../src/ui/mainwindow.cpp" line="1621"/>
         <location filename="../../src/ui/mainwindow.cpp" line="1627"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="3829"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="4969"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3834"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5003"/>
         <source>%1: %2</source>
         <translation>%1: %2</translation>
     </message>
@@ -6150,7 +6434,7 @@ Keine Berechtigung? Der Sensor braucht eine udev-Regel für die USB-ID %1:%2.</t
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="3055"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="3200"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3205"/>
         <source>As in the &amp;settings</source>
         <translation>&amp;Wie in den Einstellungen</translation>
     </message>
@@ -6160,129 +6444,129 @@ Keine Berechtigung? Der Sensor braucht eine udev-Regel für die USB-ID %1:%2.</t
         <translation>&amp;Werte ...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3362"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3367"/>
         <source>&amp;Alarms...</source>
         <translation>Ala&amp;rme...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3686"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3691"/>
         <source>A front panel shows the values of its own device</source>
         <translation>Eine Frontplatte zeigt die Werte ihres eigenen Geräts</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3702"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3707"/>
         <source>New &amp;Poincaré plot</source>
         <translation>Neues &amp;Poincaré-Diagramm</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3705"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3710"/>
         <source>In the &amp;graph</source>
         <translation>Im &amp;Graph</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3840"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3845"/>
         <source>Value %1</source>
         <translation>Wert %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4104"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4109"/>
         <source>The changes connect it anew, which discards its recording, which is not saved.</source>
         <translation>Die Änderungen verbinden es neu; das verwirft seine Aufnahme, die nicht gespeichert ist.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4106"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4111"/>
         <source>%1: the changes take effect when it is connected next</source>
         <translation>%1: Die Änderungen gelten beim nächsten Verbinden</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4161"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4166"/>
         <source>Its port is in use by %1.</source>
         <translation>Sein Anschluss ist von %1 belegt.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4162"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4167"/>
         <source>Not connected. Connect takes it out of My devices.</source>
         <translation>Nicht verbunden. Verbinden holt es aus Meine Geräte.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4208"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4213"/>
         <source>%1 is connected already</source>
         <translation>%1 ist schon verbunden</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4209"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4214"/>
         <source>%1: its port is in use by %2</source>
         <translation>%1: sein Anschluss ist von %2 belegt</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4215"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4220"/>
         <source>%1: waiting for the device</source>
         <translation>%1: wartet auf das Gerät</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4217"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4222"/>
         <source>%1 connected</source>
         <translation>%1 verbunden</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4809"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4843"/>
         <source>Exported to %1</source>
         <translation>Exportiert nach %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4731"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="4811"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4765"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4845"/>
         <source>Export failed: %1</source>
         <translation>Export fehlgeschlagen: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4827"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4861"/>
         <source>Live in LabPlot: start a recording first</source>
         <translation>Live in LabPlot: zuerst eine Aufnahme starten</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4841"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4875"/>
         <source>live</source>
         <translation>live</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4859"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4893"/>
         <source>Live in LabPlot: the recording ended, the file has all of it</source>
         <translation>Live in LabPlot: Die Aufnahme ist zu Ende, die Datei enthält sie ganz</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4865"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="4871"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4899"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4905"/>
         <source>Live in LabPlot: %1</source>
         <translation>Live in LabPlot: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="5039"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5073"/>
         <source>Bench loaded</source>
         <translation>Messplatz geladen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="5050"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5084"/>
         <source>project %1 closed: the bench is not in it</source>
         <translation>Projekt %1 geschlossen: Der Messplatz liegt nicht darin</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="5051"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5085"/>
         <source>project %1 opened: the bench is in it</source>
         <translation>Projekt %1 geöffnet: Der Messplatz liegt darin</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="5054"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5088"/>
         <source>back in My devices: %1</source>
         <translation>wieder in Meine Geräte: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="5056"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5090"/>
         <source>the programs of their alarms were left out, set them again in Alarms...</source>
         <translation>die Programme ihrer Alarme wurden weggelassen, bitte unter Alarme... neu setzen</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="5058"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5092"/>
         <source>%1 without its key: enter it in the device settings</source>
         <translation>%1 ohne Schlüssel: bitte in den Geräte-Einstellungen eingeben</translation>
     </message>
@@ -6327,17 +6611,17 @@ Keine Berechtigung? Der Sensor braucht eine udev-Regel für die USB-ID %1:%2.</t
         <translation>&amp;Eigene (aus den Einstellungen)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3342"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3347"/>
         <source>PASS/FAIL &amp;test</source>
         <translation>PASS/FAIL-&amp;Test</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3357"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3362"/>
         <source>L&amp;imits...</source>
         <translation>&amp;Grenzen...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3271"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3276"/>
         <source>Meter &amp;style</source>
         <translation>&amp;Stil der Analoganzeige</translation>
     </message>
@@ -6601,52 +6885,52 @@ Die Formel bitte neu einrichten.</translation>
         <translation>Auf&amp;nahme</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3176"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3181"/>
         <source>Displa&amp;y</source>
         <translation>&amp;Darstellung</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3206"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3211"/>
         <source>A&amp;xis</source>
         <translation>&amp;Achse</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3190"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3195"/>
         <source>Colour &amp;variant</source>
         <translation>Farb&amp;variante</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3204"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3209"/>
         <source>&amp;Patterned lines</source>
         <translation>Ge&amp;musterte Linien</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3208"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3213"/>
         <source>Re&amp;ference line</source>
         <translation>&amp;Bezugslinie</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3212"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3217"/>
         <source>Outli&amp;ers</source>
         <translation>Aus&amp;reißer</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3184"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3189"/>
         <source>Overvie&amp;w</source>
         <translation>Übersich&amp;t</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3185"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3190"/>
         <source>Min/max &amp;band</source>
         <translation>Min/Max-Ban&amp;d</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3186"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3191"/>
         <source>&amp;Meter states</source>
         <translation>Gerät&amp;ezustände</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3187"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3192"/>
         <source>Stat&amp;istics</source>
         <translation>Stat&amp;istik</translation>
     </message>
@@ -6740,162 +7024,162 @@ Die Formel bitte neu einrichten.</translation>
         <translation>Zoom z&amp;urück</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3230"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3235"/>
         <source>Out&amp;put</source>
         <translation>Au&amp;sgabe</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3243"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3248"/>
         <source>&amp;Load recording...</source>
         <translation>Aufnahme &amp;laden...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3245"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3250"/>
         <source>Back to the &amp;device</source>
         <translation>Zurück zum &amp;Gerät</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3272"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3277"/>
         <source>&amp;Dark studio</source>
         <translation>&amp;Dunkles Studio</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3272"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3277"/>
         <source>Classic &amp;ivory</source>
         <translation>Klassisch &amp;Elfenbein</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3341"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3346"/>
         <source>Limits &amp;&amp; &amp;alarms</source>
         <translation>&amp;Grenzen &amp;&amp; Alarme</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3439"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3444"/>
         <source>off</source>
         <translation>aus</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3439"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3444"/>
         <source>failed</source>
         <translation>Fehler</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3440"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3445"/>
         <source>1 client</source>
         <translation>1 Client</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3440"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3445"/>
         <source>%1 clients</source>
         <translation>%1 Clients</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3442"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3447"/>
         <source>%1 could not start: %2. Double-click for its settings.</source>
         <translation>%1 konnte nicht starten: %2. Doppelklick öffnet die Einstellungen.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3444"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3449"/>
         <source>%1 is off. Double-click for its settings.</source>
         <translation>%1 ist aus. Doppelklick öffnet die Einstellungen.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3446"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3451"/>
         <source>HiSLIP for VISA (NI-VISA, LabVIEW, PyVISA): %1, %2 connected.</source>
         <translation>HiSLIP für VISA (NI-VISA, LabVIEW, PyVISA): %1, %2 verbunden.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3450"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3455"/>
         <source>Web view: %1, 1 browser watching. Double-click opens it.</source>
         <translation>Web-Ansicht: %1, 1 Browser schaut zu. Doppelklick öffnet sie.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3451"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3456"/>
         <source>Web view: %1, %2 browsers watching. Double-click opens it.</source>
         <translation>Web-Ansicht: %1, %2 Browser schauen zu. Doppelklick öffnet sie.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3453"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3458"/>
         <source>Announced as &quot;%1&quot; (without the link&apos;s secret).</source>
         <translation>Angekündigt als „%1“ (ohne das Geheimnis des Links).</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3456"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3461"/>
         <source>VXI-11 for VISA and lxi-tools: %1, %2 connected.</source>
         <translation>VXI-11 für VISA und lxi-tools: %1, %2 verbunden.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3458"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3463"/>
         <source>SCPI server (raw socket) on %1, %2 connected.</source>
         <translation>SCPI-Server (Raw-Socket) auf %1, %2 verbunden.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3471"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3476"/>
         <source>Web view</source>
         <translation>Web-Ansicht</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3481"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3486"/>
         <source>Scan it with a phone or tablet in the same network. Whoever has the link can watch.</source>
         <translation>Mit einem Handy oder Tablet im selben Netz scannen. Wer den Link hat, kann zusehen.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3542"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3547"/>
         <source>Readings table</source>
         <translation>Messwerttabelle</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3672"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3677"/>
         <source>A graph showing a loaded recording takes no values of a device: Back to the device in its menu</source>
         <translation>Ein Graph mit einer geladenen Aufnahme nimmt keine Werte eines Geräts: „Zurück zum Gerät“ in seinem Menü</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3701"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3706"/>
         <source>New &amp;needle meter</source>
         <translation>Neues &amp;Zeigerinstrument</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3703"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3708"/>
         <source>New &amp;histogram</source>
         <translation>Neues &amp;Histogramm</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3704"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3709"/>
         <source>New &amp;heatmap</source>
         <translation>Neue Heat&amp;map</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3706"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3711"/>
         <source>New g&amp;raph</source>
         <translation>Neuer G&amp;raph</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4169"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4174"/>
         <source>Not connected.</source>
         <translation>Nicht verbunden.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4170"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4175"/>
         <source>Connecting ...</source>
         <translation>Verbinde …</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4171"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4176"/>
         <source>Connected, but the meter sends nothing.</source>
         <translation>Verbunden, aber das Gerät sendet nichts.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4172"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4177"/>
         <source>The connection went away; QtDMM tries again.</source>
         <translation>Die Verbindung ist weg; QtDMM versucht es weiter.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4174"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4179"/>
         <source>Connected, readings are coming in.</source>
         <translation>Verbunden, Messwerte kommen.</translation>
     </message>
     <message numerus="yes">
-        <location filename="../../src/ui/mainwindow.cpp" line="4175"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4180"/>
         <source>Connected, no reading for %n s.</source>
         <translation>
             <numerusform>Verbunden, seit %n s kein Messwert.</numerusform>
@@ -6903,7 +7187,7 @@ Die Formel bitte neu einrichten.</translation>
         </translation>
     </message>
     <message numerus="yes">
-        <location filename="../../src/ui/mainwindow.cpp" line="4180"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4185"/>
         <source>Last reading %n s ago.</source>
         <translation>
             <numerusform>Letzter Messwert vor %n s.</numerusform>
@@ -6911,101 +7195,101 @@ Die Formel bitte neu einrichten.</translation>
         </translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4182"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4187"/>
         <source>The meter&apos;s battery is low.</source>
         <translation>Die Batterie des Geräts ist schwach.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4184"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4189"/>
         <source>The meter&apos;s battery is half full.</source>
         <translation>Die Batterie des Geräts ist halb voll.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4186"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4191"/>
         <source>The meter&apos;s battery is full.</source>
         <translation>Die Batterie des Geräts ist voll.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4677"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="4685"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4682"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4690"/>
         <source>Photo</source>
         <translation>Foto</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4703"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4708"/>
         <source>The photo %1 cannot be shown: not found in the open project.</source>
         <translation>Das Foto %1 lässt sich nicht zeigen: im offenen Projekt nicht gefunden.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4743"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4777"/>
         <source>Project: cannot write %1</source>
         <translation>Projekt: %1 kann nicht geschrieben werden</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4745"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="4881"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4779"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4915"/>
         <source>Into the project: %1</source>
         <translation>Ins Projekt: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4857"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4891"/>
         <source>Live in LabPlot: cannot write %1, stopped</source>
         <translation>Live in LabPlot: %1 lässt sich nicht schreiben, beendet</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4879"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4913"/>
         <source>Project: cannot write %1: %2</source>
         <translation>Projekt: %1 kann nicht geschrieben werden: %2</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4912"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4946"/>
         <source>Save bench</source>
         <translation>Messplatz speichern</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4913"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="4957"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4947"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4991"/>
         <source>QtDMM bench (*.%1)</source>
         <translation>QtDMM-Messplatz (*.%1)</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4937"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4971"/>
         <source>QtDMM: Save bench</source>
         <translation>QtDMM: Messplatz speichern</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4944"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4978"/>
         <source>Bench saved to %1</source>
         <translation>Messplatz gespeichert in %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4956"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4990"/>
         <source>Load bench</source>
         <translation>Messplatz laden</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4969"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="4986"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5003"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5020"/>
         <source>QtDMM: Load bench</source>
         <translation>QtDMM: Messplatz laden</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4987"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5021"/>
         <source>The bench closes %1, its recording is not saved.</source>
         <translation>Der Messplatz trennt %1, die Aufnahme ist nicht gespeichert.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="4937"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="4971"/>
         <source>Could not write %1.</source>
         <translation>%1 konnte nicht geschrieben werden.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="5170"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5204"/>
         <source>&amp;Clear list</source>
         <translation>Liste &amp;leeren</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="3305"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3310"/>
         <source>&amp;Color scheme</source>
         <translation>Farbschema</translation>
     </message>
@@ -7017,7 +7301,7 @@ Die Formel bitte neu einrichten.</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="3097"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="3171"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="3172"/>
         <source>&amp;Reset</source>
         <translation>&amp;Zurücksetzen</translation>
     </message>
@@ -7947,106 +8231,111 @@ Ist das DMM angeschlossen und eingeschaltet?</translation>
     </message>
     <message>
         <location filename="../../src/device/protocols.cpp" line="61"/>
+        <source>Bluetooth LE advertisements, BTHome v2 (ESP32 and other boards, sensors)</source>
+        <translation>Bluetooth-LE-Advertisements, BTHome v2 (ESP32 und andere Platinen, Sensoren)</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/protocols.cpp" line="62"/>
         <source>text lines from HID records, CO2/temperature/humidity (TFA AIRCO2NTROL)</source>
         <translation>Textzeilen aus HID-Datensätzen, CO2/Temperatur/Feuchte (TFA AIRCO2NTROL)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="62"/>
+        <location filename="../../src/device/protocols.cpp" line="63"/>
         <source>variable bytes ASCII, polled with CONF?/FETC? (Agilent/Keysight U12xx)</source>
         <translation>variable Länge ASCII, abgefragt mit CONF?/FETC? (Agilent/Keysight U12xx)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="63"/>
+        <location filename="../../src/device/protocols.cpp" line="64"/>
         <source>19 bytes ASCII, continuous after a start byte (UNI-T UT32x thermometers)</source>
         <translation>19 Bytes ASCII, kontinuierlich nach einem Startbyte (UNI-T-UT32x-Thermometer)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="64"/>
+        <location filename="../../src/device/protocols.cpp" line="65"/>
         <source>18 bytes binary, continuous, two values (MASTECH MS6514 thermometer)</source>
         <translation>18 Bytes binär, kontinuierlich, zwei Werte (MASTECH-MS6514-Thermometer)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="65"/>
+        <location filename="../../src/device/protocols.cpp" line="66"/>
         <source>17 bytes binary, polled (APPA 506/208, BENNING MM 12; APPA S, 150B, 170B over Bluetooth LE)</source>
         <translation>17 Bytes binär, abgefragt (APPA 506/208, BENNING MM 12; APPA S, 150B, 170B über Bluetooth LE)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="66"/>
+        <location filename="../../src/device/protocols.cpp" line="67"/>
         <source>59 bytes binary, polled (APPA 503/505, Voltcraft VC-930/950)</source>
         <translation>59 Bytes binär, abgefragt (APPA 503/505, Voltcraft VC-930/950)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="67"/>
+        <location filename="../../src/device/protocols.cpp" line="68"/>
         <source>33 bytes, continuous, lx or fc (UNI-T UT382 luxmeter)</source>
         <translation>33 Bytes, kontinuierlich, lx oder fc (UNI-T-UT382-Luxmeter)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="68"/>
+        <location filename="../../src/device/protocols.cpp" line="69"/>
         <source>8 bytes binary, continuous after a start command, lx and °C (Benetech GM1020)</source>
         <translation>8 Bytes binär, kontinuierlich nach einem Startbefehl, lx und °C (Benetech GM1020)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="69"/>
+        <location filename="../../src/device/protocols.cpp" line="70"/>
         <source>10 to 19 bytes, scrambled LCD segments, streamed over Bluetooth LE (ZOTEK, ANENG)</source>
         <translation>10 bis 19 Bytes, verschlüsselte LCD-Segmente, gesendet über Bluetooth LE (ZOTEK, ANENG)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="70"/>
+        <location filename="../../src/device/protocols.cpp" line="71"/>
         <source>14 bytes binary, streamed over Bluetooth LE (FS9721, HoldPeak HP-570C-APP)</source>
         <translation>14 Bytes binär, gesendet über Bluetooth LE (FS9721, HoldPeak HP-570C-APP)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="71"/>
+        <location filename="../../src/device/protocols.cpp" line="72"/>
         <source>6 bytes binary, streamed over Bluetooth LE (OWON B35T+, B41T+, OW18E, CM2100B)</source>
         <translation>6 Bytes binär, gesendet über Bluetooth LE (OWON B35T+, B41T+, OW18E, CM2100B)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="72"/>
+        <location filename="../../src/device/protocols.cpp" line="73"/>
         <source>15 bytes binary, streamed over Bluetooth LE (OWON CMS101, OW65B-OW69B, Voltcraft VC871-VC925 PV)</source>
         <translation>15 Byte binär, über Bluetooth LE gestreamt (OWON CMS101, OW65B-OW69B, Voltcraft VC871-VC925 PV)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="73"/>
+        <location filename="../../src/device/protocols.cpp" line="74"/>
         <source>AB CD frames of any length with float values, streamed once asked (UNI-T UT181A, UT-D09 cable or UT-D07B adapter)</source>
         <translation>AB-CD-Rahmen beliebiger Länge mit Gleitkommawerten, auf Anfrage gestreamt (UNI-T UT181A, Kabel UT-D09 oder Adapter UT-D07B)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="74"/>
+        <location filename="../../src/device/protocols.cpp" line="75"/>
         <source>39 bytes, streamed (Voltcraft VC-880, VC650BT, CP2110 USB cable)</source>
         <translation>39 Byte, gestreamt (Voltcraft VC-880, VC650BT, USB-Kabel mit CP2110)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="75"/>
+        <location filename="../../src/device/protocols.cpp" line="76"/>
         <source>66 bytes, polled (Voltcraft VC-890, CP2110 USB cable)</source>
         <translation>66 Byte, abgefragt (Voltcraft VC-890, USB-Kabel mit CP2110)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="76"/>
+        <location filename="../../src/device/protocols.cpp" line="77"/>
         <source>AB CD frames with float values, streamed after a connect command (UNI-T UT171A/B/C, UT-D09 cable or UT-D07B adapter)</source>
         <translation>AB-CD-Rahmen mit Gleitkommawerten, nach einem Verbindungsbefehl gestreamt (UNI-T UT171A/B/C, Kabel UT-D09 oder Adapter UT-D07B)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="77"/>
+        <location filename="../../src/device/protocols.cpp" line="78"/>
         <source>8 bytes from AC, BCD digits, no checksum (UNI-T UT8802 bench meter, CP2110 USB)</source>
         <translation>8 Bytes ab AC, BCD-Ziffern, ohne Prüfsumme (UNI-T UT8802 Tischmultimeter, CP2110 USB)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="78"/>
+        <location filename="../../src/device/protocols.cpp" line="79"/>
         <source>21 bytes from AB CD, ASCII display (UNI-T UT8803 bench meter with LCR, CP2110 USB)</source>
         <translation>21 Bytes ab AB CD, ASCII-Anzeige (UNI-T UT8803 Tischmultimeter mit LCR, CP2110 USB)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="79"/>
+        <location filename="../../src/device/protocols.cpp" line="80"/>
         <source>19 bytes from F2 with an XOR check, main and secondary display (EEVblog 121GW, Bluetooth LE)</source>
         <translation>19 Bytes ab F2 mit XOR-Prüfung, Haupt- und Nebenanzeige (EEVblog 121GW, Bluetooth LE)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="80"/>
+        <location filename="../../src/device/protocols.cpp" line="81"/>
         <source>32-byte reading packets with CRC-16 after a password login (Brymen BM788BT, BM787BT, Bluetooth LE)</source>
         <translation>32-Byte-Messwertpakete mit CRC-16 nach Passwort-Anmeldung (Brymen BM788BT, BM787BT, Bluetooth LE)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="81"/>
+        <location filename="../../src/device/protocols.cpp" line="82"/>
         <source>Unknown meter: bytes only, for a capture (Capture...)</source>
         <translation>Unbekanntes Gerät: nur Bytes, für einen Mitschnitt (Mitschnitt…)</translation>
     </message>

@@ -33,6 +33,7 @@ Meaning meaning(const QString &base, const QString &mode, FrameFormat::DataForma
 {
   const bool victron = format == FrameFormat::VictronBLE;
   const bool tfa = format == FrameFormat::TfaAirControl;
+  const bool bthome = format == FrameFormat::BTHome;
 
   if (mode == QLatin1String("DI"))
     return { Quantity::Voltage, QStringLiteral("V") };
@@ -101,6 +102,11 @@ Meaning meaning(const QString &base, const QString &mode, FrameFormat::DataForma
       if (victron && m.quantity == Quantity::Time)
         m.quantity = Quantity::TimeToGo;
       if (tfa && m.unit == QLatin1String("ppm"))   // the TFA sensor measures CO2
+        m.quantity = Quantity::CarbonDioxide;
+      // a BTHome sensor says what it is by the object: its battery, its CO2
+      if (bthome && mode == QLatin1String("BAT"))
+        m.quantity = Quantity::StateOfCharge;
+      if (bthome && mode == QLatin1String("CO2"))
         m.quantity = Quantity::CarbonDioxide;
       return m;
     }

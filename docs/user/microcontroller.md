@@ -7,6 +7,10 @@ lines the Arduino IDE's *Serial Plotter* or the *Teleplot* extension read
 are enough, and QtDMM shows them like a meter: display, recorder, export,
 XY diagram, alarms.
 
+Without a cable, a board with Bluetooth (ESP32) can broadcast its values
+as BTHome v2 instead - see [Bluetooth LE](bluetooth.md#bthome-v2-esp32-and-other-boards),
+with a sketch.
+
 ## Setting it up
 
 1. *Add device*, the maker **Generic**, the model **Microcontroller (text
