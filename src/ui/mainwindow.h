@@ -236,6 +236,10 @@ protected:
   /// The graph whose window is active, else pictureGraph(), else the first
   /// one: zoom, note, copy image and Sources... are for it.
   GraphView *currentGraph() const;
+  /// Reset in a graph's menu: the file it shows closes; outside a recording
+  /// the readings of the devices whose values it shows are cleared - that
+  /// graph's only; a recording under way goes as a whole (toolbar Clear).
+  void      resetGraph(GraphView *view);
   /// What Export writes for a graph (QCP): the file it shows, else the
   /// recording of its values. False: not written, said why.
   bool        writeGraphRecording(GraphView *view, const QString &path, bool everyReading);

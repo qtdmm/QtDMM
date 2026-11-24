@@ -122,6 +122,23 @@ void DeviceSession::clearRecording()
     ctl->recorder()->clear();
 }
 
+void DeviceSession::resetRecordings(const QStringList &sources)
+{
+  QList<MeterController *> done;
+  for (const QString &source : sources)
+  {
+    MeterController *ctl = controller(source);
+    if (!ctl || done.contains(ctl))
+      continue;
+    done << ctl;
+    RecordingStore *store = ctl->recorder();
+    if (store->state() == RecordingStore::View)
+      store->live();
+    else
+      store->clear();
+  }
+}
+
 bool DeviceSession::isRecording() const
 {
   const MeterController *ctl = lead();

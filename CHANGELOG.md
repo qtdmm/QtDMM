@@ -72,6 +72,7 @@
 
 ### Fixes
 
+- **Reset in a graph's menu** — with two graphs showing different devices, Reset in the second one emptied the first; it now clears the readings of the devices that graph shows (a file it shows closes; a running recording still goes as a whole).
 - **Needle meter: the scale fits the value** — a Victron's 13.23 V stood beyond a 0–10 V scale, a generator's scale jumped between 6 and 60 with its decimals; devices without ranges (generators, formulas, Victron, microcontroller boards) now get a scale that follows their values in 1-2-5 steps, and any meter whose value goes beyond its display count too. An end label that does not fit on the dial is left out instead of lying on the red zone.
 - **Graph: values without a unit are drawn** — a value with readings but no unit (a microcontroller's numbers) got no axis and stayed invisible, only the overview strip showed it; such values now share an axis of their own.
 - **Side plots and graph axes** — the heatmap counts each sample in the cell it is drawn in (it could be half a cell off) and its cells fill the axes; XY, histogram and heatmap keep their points when a reading without a number and unit comes; the histogram's crosshair gives the height of the bar under the mouse; the heatmap's colour scheme is saved in the workspace; a right axis on a narrow fixed range labels every tick (230.04 was left out); no light line at 0 in the XY diagram and histogram on dark designs (review R19-01, -02, -06, -08, -09, -11)

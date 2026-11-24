@@ -100,6 +100,10 @@ public:
   void        goLive();
   /// Clears the recording; one that runs goes on.
   void        clearRecording();
+  /// The recordings of the meters @p sources only (a graph's Reset: the
+  /// devices whose values it shows): each one cleared, one viewed back to
+  /// live. Clearing a running one, it goes on.
+  void        resetRecordings(const QStringList &sources);
   bool        isRecording() const;
   /// The meters whose recording is not saved (stopped and not exported, or
   /// still running), by name; @p id only that one of My devices.
