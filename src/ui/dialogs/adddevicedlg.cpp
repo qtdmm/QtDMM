@@ -13,6 +13,7 @@
 #include "ui/devicesymbol.h"
 #include "ui/dialogs/formulanodedlg.h"
 #include "ui/dialogs/generatornodedlg.h"
+#include "ui/dialogs/simgennodedlg.h"
 #include "ui/dialogs/simpsunodedlg.h"
 #include "ui/dialogs/integralnodedlg.h"
 #include "ui/tilebutton.h"
@@ -320,6 +321,12 @@ AddDeviceDlg::AddDeviceDlg(DeviceLibrary *library, QWidget *parent)
          "OUT for each channel. Each channel's voltage is a value as a meter's.</p>"
          "<p>Ideal at first; rise and fall time, overshoot, ripple, noise and drift make it a worse one.</p>"
          "<p><b>Example:</b> a dual supply to try a setup before the real one is there.</p>") },
+    { SimKinds, SimulatedGen, "qtdmm-simulated", tr("Simulate"), tr("Function generator"),
+      tr("<p>A function generator operated on its front: sine, square, ramp or pulse, knobs for frequency, "
+         "amplitude and offset, OUT. It gives what a meter at its output reads - RMS, peak to peak, "
+         "frequency, mean - and up to 0.5 Hz the voltage itself as a curve.</p>"
+         "<p>Ideal at first; frequency and amplitude errors, a cutoff and noise make it a worse one.</p>"
+         "<p><b>Example:</b> the generator of the OWON SDS215S before it is there.</p>") },
     { NodeKinds, Calculated, "qtdmm-calculated", tr("Calculate"), tr("Formula"),
       tr("<p>Computes up to four values from the readings of your devices with formulas of your own: "
          "a power from a voltage and a current, a resistance, a dew point.</p>"
@@ -425,6 +432,7 @@ bool AddDeviceDlg::offers(Connection connection, const DmmDecoder::DMMInfo &info
     case Sigrok:    return sigrok;
     case Simulated:
     case SimulatedPsu:
+    case SimulatedGen:
     case Calculated:
     case Integral:
     case NodeKinds:
@@ -442,7 +450,8 @@ bool AddDeviceDlg::hasPortPage(Connection connection)
 
 bool AddDeviceDlg::isNode(Connection connection)
 {
-  return connection == Simulated || connection == SimulatedPsu || connection == Calculated || connection == Integral;
+  return connection == Simulated || connection == SimulatedPsu || connection == SimulatedGen || connection == Calculated
+         || connection == Integral;
 }
 
 void AddDeviceDlg::chooseConnection(Connection connection)
@@ -480,6 +489,12 @@ void AddDeviceDlg::chooseConnection(Connection connection)
       {
         auto *e = new SimPsuNodeEditor;
         e->load(tr("Power supply"), SimPsuNode());
+        m_editor = e;
+      }
+      else if (connection == SimulatedGen)
+      {
+        auto *e = new SimGenNodeEditor;
+        e->load(tr("Function generator"), SimGenNode());
         m_editor = e;
       }
       else if (connection == Integral)
@@ -986,6 +1001,7 @@ void AddDeviceDlg::showPage(Page page)
     case NodePage:
       m_title->setText(m_connection == Simulated      ? tr("Which values to simulate?")
                        : m_connection == SimulatedPsu ? tr("Which power supply?")
+                       : m_connection == SimulatedGen ? tr("Which function generator?")
                        : m_connection == Integral     ? tr("Which value to integrate?")
                                                   : tr("What to calculate?"));
       break;

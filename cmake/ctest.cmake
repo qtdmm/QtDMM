@@ -78,6 +78,7 @@ if (BUILD_TESTING)
 	qtdmm_add_test(gen_panel test_gen_panel tests/test_gen_panel.cpp)
 	qtdmm_add_test(output_registry test_outputregistry tests/test_outputregistry.cpp)
 	qtdmm_add_test(sim_psu test_simpsu tests/test_simpsu.cpp)
+	qtdmm_add_test(sim_gen test_simgen tests/test_simgen.cpp)
 
 	## the meter's settings widget (DeviceSettings): keys in and out, "Advanced", groups per kind of meter
 	qtdmm_add_test(device_settings test_devicesettings tests/test_devicesettings.cpp)

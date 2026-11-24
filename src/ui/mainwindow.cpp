@@ -58,6 +58,7 @@
 #include "ui/dialogs/integralnodedlg.h"
 #include "logic/legacynodes.h"
 #include "ui/dialogs/generatornodedlg.h"
+#include "ui/dialogs/simgennodedlg.h"
 #include "ui/dialogs/simpsunodedlg.h"
 #include "ui/dialogs/limitdlg.h"
 #include "device/transport.h"
@@ -2217,6 +2218,8 @@ void MainWindow::addDevice(int start, const ValueRef &input)
       return makeNodeEditor(GeneratorNode::kType, QString(), nullptr, tr("Simulated"));
     if (kind == AddDeviceDlg::SimulatedPsu)
       return makeNodeEditor(SimPsuNode::kType, QString(), nullptr, tr("Power supply"));
+    if (kind == AddDeviceDlg::SimulatedGen)
+      return makeNodeEditor(SimGenNode::kType, QString(), nullptr, tr("Function generator"));
     if (kind == AddDeviceDlg::Integral)
       return makeNodeEditor(IntegralNode::kType, QString(), nullptr, QString(), input);
     return makeNodeEditor(FormulaNode::kType, QString(), nullptr, tr("Calculated"));
@@ -2271,6 +2274,7 @@ QList<FormulaNodeDlg::Choice> MainWindow::formulaChoices(const QString &id) cons
     if (node)
       c.icon = node->type() == QLatin1String(IntegralNode::kType) ? QStringLiteral("qtdmm-integration")
                : node->type() == QLatin1String(GeneratorNode::kType) || node->type() == QLatin1String(SimPsuNode::kType)
+                   || node->type() == QLatin1String(SimGenNode::kType)
                  ? QStringLiteral("qtdmm-simulated")
                  : QStringLiteral("qtdmm-calculated");
     const QList<LogicNode::Output> outputs = node ? node->outputs() : QList<LogicNode::Output>();
@@ -2348,6 +2352,18 @@ NodeEditor *MainWindow::makeNodeEditor(const QString &type, const QString &id, c
     return editor;
   }
 
+  if (type == QLatin1String(SimGenNode::kType))
+  {
+    auto *editor = new SimGenNodeEditor;
+    // no copy: the node keeps its generator
+    const auto *generator = dynamic_cast<const SimGenNode *>(stored);
+    if (generator)
+      editor->load(name, *generator);
+    else
+      editor->load(name, SimGenNode());
+    return editor;
+  }
+
   auto *editor = new FormulaNodeEditor;
   editor->setChoices(formulaChoices(id));
   editor->setCurrent([this](const ValueRef &ref) -> std::optional<Reading>
@@ -2392,10 +2408,12 @@ std::optional<QVariantMap> MainWindow::editNode(const QString &id, const QVarian
   const QString title = type == QLatin1String(IntegralNode::kType)    ? tr("Integral")
                         : type == QLatin1String(GeneratorNode::kType) ? tr("Simulated values")
                         : type == QLatin1String(SimPsuNode::kType)    ? tr("Power supply")
+                        : type == QLatin1String(SimGenNode::kType)    ? tr("Function generator")
                                                                        : tr("Calculated value");
   NodeDlg dlg(makeNodeEditor(type, id, stored.get(), *name), title, this);
   dlg.resize(type == QLatin1String(GeneratorNode::kType) ? QSize(760, 360)
              : type == QLatin1String(SimPsuNode::kType) ? QSize(720, 560)
+             : type == QLatin1String(SimGenNode::kType) ? QSize(820, 640)
                                                          : QSize(640, 480));
   if (dlg.exec() != QDialog::Accepted)
     return std::nullopt;
@@ -2407,6 +2425,7 @@ void MainWindow::addNode(const QString &type, const ValueRef &input)
 {
   addDevice(type == QLatin1String(GeneratorNode::kType) ? AddDeviceDlg::Simulated
             : type == QLatin1String(SimPsuNode::kType)  ? AddDeviceDlg::SimulatedPsu
+            : type == QLatin1String(SimGenNode::kType)  ? AddDeviceDlg::SimulatedGen
             : type == QLatin1String(IntegralNode::kType) ? AddDeviceDlg::Integral
                                                           : AddDeviceDlg::Calculated,
             input);

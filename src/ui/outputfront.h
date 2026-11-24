@@ -26,6 +26,8 @@ public:
   int     controlsHeight() const;
   /// An OUT key's LED: green while the output is on.
   static QIcon led(bool on);
+  /// The LCD on top (the subclass's, as an LcdPanel).
+  LcdPanel *lcd() const { return m_lcd; }
 
 Q_SIGNALS:
   /// The gear: the device's settings.

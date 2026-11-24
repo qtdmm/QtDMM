@@ -30,6 +30,7 @@
 #include "ui/mnemoniccheck.h"
 #include "ui/dialogs/formulanodedlg.h"
 #include "ui/dialogs/generatornodedlg.h"
+#include "ui/dialogs/simgennodedlg.h"
 #include "ui/dialogs/simpsunodedlg.h"
 #include "ui/dialogs/integralnodedlg.h"
 #include "ui/dialogs/adddevicedlg.h"
@@ -208,6 +209,8 @@ int main(int argc, char **argv)
     generator->load(QStringLiteral("Test"), GeneratorNode());
     auto *supply = new SimPsuNodeDlg(&mainWin);
     supply->load(QStringLiteral("Bench"), SimPsuNode());
+    auto *signal = new SimGenNodeDlg(&mainWin);
+    signal->load(QStringLiteral("Signal"), SimGenNode());
     auto *integral = new IntegralNodeDlg(&mainWin);
     integral->setState([] { return std::optional<Reading>(); }, [] {});
     integral->load(QStringLiteral("Energy"), IntegralNode());

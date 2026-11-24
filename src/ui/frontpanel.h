@@ -17,6 +17,8 @@ class PanelGear;
 class NodeBar;
 class LcdWidget;
 class MeterController;
+class GenFrontPanel;
+class OutputFront;
 class PsuFrontPanel;
 class ValueFeed;
 
@@ -31,10 +33,11 @@ class ValueFeed;
 /// The LCD takes the colour of its meter's raised alarm, under it
 /// the PASS/FAIL test's green or red, and the verdict on the value it shows.
 ///
-/// A logic node that is a power supply (LogicNode::powerSupply(), the
-/// simulated one) shows its own front instead of LCD and keys
-/// (PsuFrontPanel): its value k is block k, the verdict on it in that
-/// block; colours, alarm colour, staleness, gear and fold as here.
+/// A logic node that is a device with outputs shows its own front instead
+/// of LCD and keys (OutputFront): a power supply (LogicNode::powerSupply(),
+/// PsuFrontPanel; its value k is block k, the verdict on it in that block)
+/// or a function generator (LogicNode::functionGenerator(), GenFrontPanel);
+/// colours, alarm colour, staleness, gear and fold as here.
 class FrontPanel : public QWidget
 {
   Q_OBJECT
@@ -67,11 +70,14 @@ public:
   void        updateKeys();
   /// An alarm's colour blinks (Alarms/blink).
   void        setBlink(bool blink);
-  /// The power supply's front while the meter shown is one, else nullptr.
-  PsuFrontPanel *supplyPanel() const { return m_psu; }
-  /// The LCD's colours (display()'s) onto the supply's LCD too.
+  /// The front of a device with outputs while the meter shown is one, else
+  /// nullptr; as a power supply's or a generator's (else nullptr).
+  OutputFront *outputPanel() const { return m_output; }
+  PsuFrontPanel *supplyPanel() const;
+  GenFrontPanel *generatorPanel() const;
+  /// The LCD's colours (display()'s) onto the device's own LCD too.
   void        syncLook();
-  /// The width/height range of the LCD shown (the supply's has its own).
+  /// The width/height range of the LCD shown (a device's own has its own).
   double      minAspect() const;
   double      maxAspect() const;
 
@@ -103,8 +109,8 @@ private:
   void        showLimitCount(const LimitTest::Count &count);
   /// The alarm's colour (blinking if wanted) or the limit test's on the LCD.
   void        showAlert();
-  /// The supply's front for the meter now, or none: what is shown.
-  void        followSupply();
+  /// The front of the device with outputs now (supply, generator), or none.
+  void        followOutputs();
 
   ValueFeed  *m_feed;
   LcdWidget  *m_display;
@@ -112,7 +118,8 @@ private:
   FoldButton *m_fold;
   NodeBar    *m_nodeBar;
   PanelGear  *m_gear;
-  PsuFrontPanel *m_psu = nullptr;
+  OutputFront *m_output = nullptr;
+  QObject    *m_outputDevice = nullptr;   ///< the supply or generator m_output works on
   /// The bar under the LCD now: the meter's keys or the node's.
   QWidget    *bar() const;
   /// The gear at the right end of the LCD's name plate.
