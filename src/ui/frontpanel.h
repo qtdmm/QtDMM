@@ -17,6 +17,7 @@ class PanelGear;
 class NodeBar;
 class LcdWidget;
 class MeterController;
+class PsuFrontPanel;
 class ValueFeed;
 
 /// One meter's front: its LCD, the keys below it (ControlBar, for meters
@@ -29,6 +30,11 @@ class ValueFeed;
 /// goes to that meter. Each meter open in the process has one (MainWindow).
 /// The LCD takes the colour of its meter's raised alarm, under it
 /// the PASS/FAIL test's green or red, and the verdict on the value it shows.
+///
+/// A logic node that is a power supply (LogicNode::powerSupply(), the
+/// simulated one) shows its own front instead of LCD and keys
+/// (PsuFrontPanel): its value k is block k, the verdict on it in that
+/// block; colours, alarm colour, staleness, gear and fold as here.
 class FrontPanel : public QWidget
 {
   Q_OBJECT
@@ -61,6 +67,13 @@ public:
   void        updateKeys();
   /// An alarm's colour blinks (Alarms/blink).
   void        setBlink(bool blink);
+  /// The power supply's front while the meter shown is one, else nullptr.
+  PsuFrontPanel *supplyPanel() const { return m_psu; }
+  /// The LCD's colours (display()'s) onto the supply's LCD too.
+  void        syncLook();
+  /// The width/height range of the LCD shown (the supply's has its own).
+  double      minAspect() const;
+  double      maxAspect() const;
 
 Q_SIGNALS:
   /// Folded or unfolded by the user (the fold button).
@@ -71,6 +84,8 @@ Q_SIGNALS:
   void        keyFailed();
   /// The gear: the settings of the meter shown (its id in My devices).
   void        settingsRequested(const QString &id);
+  /// The LCD's context menu, at @p global (the supply's LCD's as well).
+  void        menuRequested(const QPoint &global);
 
 protected:
   /// Keeps the fold button in the LCD's top right corner.
@@ -88,6 +103,8 @@ private:
   void        showLimitCount(const LimitTest::Count &count);
   /// The alarm's colour (blinking if wanted) or the limit test's on the LCD.
   void        showAlert();
+  /// The supply's front for the meter now, or none: what is shown.
+  void        followSupply();
 
   ValueFeed  *m_feed;
   LcdWidget  *m_display;
@@ -95,6 +112,7 @@ private:
   FoldButton *m_fold;
   NodeBar    *m_nodeBar;
   PanelGear  *m_gear;
+  PsuFrontPanel *m_psu = nullptr;
   /// The bar under the LCD now: the meter's keys or the node's.
   QWidget    *bar() const;
   /// The gear at the right end of the LCD's name plate.

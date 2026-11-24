@@ -54,6 +54,11 @@ public:
   QColor faceColor() const { return m_face; }
   QColor segmentColor() const { return m_segment; }
   LcdVariant lcdVariant() const { return m_variant; }
+  /// The tint set for Custom (setFaceColor()), invalid when none.
+  QColor customFaceColor() const { return m_customFace; }
+  /// The width/height range the panel keeps (its layout's).
+  double minimumAspect() const { return minAspect(); }
+  double maximumAspect() const { return maxAspect(); }
   /// The values are too old to stand for the present (StaleRule): the
   /// segments fade, the panel stays.
   void setStale(bool stale);

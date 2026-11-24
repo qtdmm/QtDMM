@@ -13,6 +13,7 @@
 #include "ui/devicesymbol.h"
 #include "ui/dialogs/formulanodedlg.h"
 #include "ui/dialogs/generatornodedlg.h"
+#include "ui/dialogs/simpsunodedlg.h"
 #include "ui/dialogs/integralnodedlg.h"
 #include "ui/tilebutton.h"
 
@@ -126,8 +127,9 @@ AddDeviceDlg::AddDeviceDlg(DeviceLibrary *library, QWidget *parent)
       tr("A meter at another computer, through qtdmm-bridge or another RFC 2217 server") },
     { Sigrok,    "qtdmm-sigrok",                 tr("sig&rok") + '\n' + tr("Bench meters"),
       tr("A bench meter read through sigrok-cli") },
-    { Simulated, "qtdmm-simulated",              tr("&Simulated") + '\n' + tr("To try out, test signals"),
-      tr("Simulated values to try QtDMM without a meter: sine, square, noise or a formula over time") },
+    { SimKinds,  "qtdmm-simulated",              tr("&Simulated") + '\n' + tr("Test signals, power supply"),
+      tr("Simulated devices to try QtDMM without hardware: test signals (sine, square, noise, a formula over "
+         "time) or a power supply") },
     { NodeKinds, "qtdmm-calculated",             tr("C&alculated") + '\n' + tr("Formula, integral ..."),
       tr("Values calculated from those of your devices: a formula, an integral ...") },
   };
@@ -307,14 +309,24 @@ AddDeviceDlg::AddDeviceDlg(DeviceLibrary *library, QWidget *parent)
   m_kindList->setItemsExpandable(false);
   m_kindList->setIndentation(fontMetrics().height());
   m_kindList->setIconSize(QSize(24, 24));
-  const struct { Connection id; const char *icon; QString group; QString name; QString about; } nodeKinds[] = {
-    { Calculated, "qtdmm-calculated", tr("Calculate"), tr("Formula"),
+  // each kind with the tile that leads to it
+  const struct { Connection tile; Connection id; const char *icon; QString group; QString name; QString about; } nodeKinds[] = {
+    { SimKinds, Simulated, "qtdmm-simulated", tr("Simulate"), tr("Test signals"),
+      tr("<p>Up to four values on a clock, each a shape between a minimum and a maximum - sine, triangle, "
+         "square, sawtooth, random, a discharge - plus noise, or a formula over time.</p>"
+         "<p><b>Example:</b> a sine between 0 and 10 V every 20 s to try the graph and the alarms.</p>") },
+    { SimKinds, SimulatedPsu, "qtdmm-simulated", tr("Simulate"), tr("Power supply"),
+      tr("<p>A power supply with one to four channels, operated on its front: a knob for the voltage and "
+         "OUT for each channel. Each channel's voltage is a value as a meter's.</p>"
+         "<p>Ideal at first; rise and fall time, overshoot, ripple, noise and drift make it a worse one.</p>"
+         "<p><b>Example:</b> a dual supply to try a setup before the real one is there.</p>") },
+    { NodeKinds, Calculated, "qtdmm-calculated", tr("Calculate"), tr("Formula"),
       tr("<p>Computes up to four values from the readings of your devices with formulas of your own: "
          "a power from a voltage and a current, a resistance, a dew point.</p>"
          "<p><b>Inputs:</b> one or more devices, each with all its values (<tt>v1</tt>, <tt>v1.2</tt> ...).</p>"
          "<p><b>Example:</b> <tt>v1*v2</tt> in W - a supply's voltage times a load's current is the "
          "power the load takes.</p>") },
-    { Integral, "qtdmm-integration", tr("Calculate"), tr("Integral"),
+    { NodeKinds, Integral, "qtdmm-integration", tr("Calculate"), tr("Integral"),
       tr("<p>Sums one value up over time, from a start you choose: when a recording starts, when the value "
          "rises above a threshold, or by hand.</p>"
          "<p><b>Input:</b> one value of one device.</p>"
@@ -337,6 +349,7 @@ AddDeviceDlg::AddDeviceDlg(DeviceLibrary *library, QWidget *parent)
     item->setIcon(0, QIcon::fromTheme(kind.icon));
     item->setData(0, Qt::UserRole, int(kind.id));
     item->setData(0, Qt::UserRole + 1, kind.about);
+    item->setData(0, Qt::UserRole + 2, int(kind.tile));
   }
   m_kindList->expandAll();
   kindLayout->addWidget(m_kindList, 2);
@@ -374,6 +387,8 @@ AddDeviceDlg::AddDeviceDlg(DeviceLibrary *library, QWidget *parent)
   connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
   top->addWidget(buttons);
 
+  // the kinds of the tile Calculated until another one leads there
+  searchKinds(QString());
   showPage(ConnectionPage);
   resize(660, 560);
 }
@@ -409,9 +424,11 @@ bool AddDeviceDlg::offers(Connection connection, const DmmDecoder::DMMInfo &info
     case Bluetooth: return bluetooth;
     case Sigrok:    return sigrok;
     case Simulated:
+    case SimulatedPsu:
     case Calculated:
     case Integral:
-    case NodeKinds: return false;   // logic nodes, on the node page
+    case NodeKinds:
+    case SimKinds:  return false;   // logic nodes, on the node page
     case Cable:
     case Network:   return !bluetooth && !sigrok;   // the bridge passes a cable on
   }
@@ -425,14 +442,21 @@ bool AddDeviceDlg::hasPortPage(Connection connection)
 
 bool AddDeviceDlg::isNode(Connection connection)
 {
-  return connection == Simulated || connection == Calculated || connection == Integral;
+  return connection == Simulated || connection == SimulatedPsu || connection == Calculated || connection == Integral;
 }
 
 void AddDeviceDlg::chooseConnection(Connection connection)
 {
   m_connection = connection;
-  if (connection == NodeKinds)
+  if (connection == NodeKinds || connection == SimKinds)
   {
+    // the tile's kinds only; the search anew
+    if (m_kindTile != connection)
+    {
+      m_kindTile = connection;
+      m_kindSearch->clear();
+      searchKinds(QString());
+    }
     if (markedKind() == NodeKinds && !nodeKinds().isEmpty())
       markKind(nodeKinds().constFirst());
     showPage(KindPage);
@@ -450,6 +474,12 @@ void AddDeviceDlg::chooseConnection(Connection connection)
       {
         auto *e = new GeneratorNodeEditor;
         e->load(tr("Simulated"), GeneratorNode());
+        m_editor = e;
+      }
+      else if (connection == SimulatedPsu)
+      {
+        auto *e = new SimPsuNodeEditor;
+        e->load(tr("Power supply"), SimPsuNode());
         m_editor = e;
       }
       else if (connection == Integral)
@@ -826,8 +856,10 @@ void AddDeviceDlg::searchKinds(const QString &text)
       QTreeWidgetItem *item = group->child(i);
       QTextDocument about;
       about.setHtml(item->data(0, Qt::UserRole + 1).toString());
-      const bool shown = wanted.isEmpty() || item->text(0).contains(wanted, Qt::CaseInsensitive)
-                         || about.toPlainText().contains(wanted, Qt::CaseInsensitive);
+      // the kinds of the tile that led here, those the search finds
+      const bool shown = item->data(0, Qt::UserRole + 2).toInt() == int(m_kindTile)
+                         && (wanted.isEmpty() || item->text(0).contains(wanted, Qt::CaseInsensitive)
+                             || about.toPlainText().contains(wanted, Qt::CaseInsensitive));
       item->setHidden(!shown);
       any = any || shown;
     }
@@ -907,7 +939,7 @@ void AddDeviceDlg::back()
   if (page() == TargetPage)
     showPage(isNode(m_connection) ? NodePage : DevicePage);
   else if (page() == NodePage)
-    showPage(m_connection == Simulated ? ConnectionPage : KindPage);
+    showPage(KindPage);
   else if (page() == KindPage)
     showPage(ConnectionPage);
   else if (page() == DevicePage && hasPortPage(m_connection))
@@ -943,13 +975,16 @@ void AddDeviceDlg::showPage(Page page)
     case ConnectionPage:
       m_title->setText(tr("How is the meter connected?"));
       break;
-    case KindPage:       m_title->setText(tr("What is to be calculated?")); break;
+    case KindPage:
+      m_title->setText(m_kindTile == SimKinds ? tr("What is to be simulated?") : tr("What is to be calculated?"));
+      break;
     case PortPage:       m_title->setText(tr("Where is it connected?")); break;
     case DevicePage:     m_title->setText(tr("Which meter is it?")); break;
     case TargetPage:     m_title->setText(tr("Connect it now?")); break;
     case NodePage:
-      m_title->setText(m_connection == Simulated ? tr("Which values to simulate?")
-                       : m_connection == Integral ? tr("Which value to integrate?")
+      m_title->setText(m_connection == Simulated      ? tr("Which values to simulate?")
+                       : m_connection == SimulatedPsu ? tr("Which power supply?")
+                       : m_connection == Integral     ? tr("Which value to integrate?")
                                                   : tr("What to calculate?"));
       break;
   }

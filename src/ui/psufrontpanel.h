@@ -51,6 +51,8 @@ public:
   /// The controls folded away (the handle).
   void          setFolded(bool folded);
   bool          isFolded() const;
+  /// Pixels the controls and the handle take below the LCD.
+  int           controlsHeight() const;
 
 Q_SIGNALS:
   /// The gear: the supply's settings.

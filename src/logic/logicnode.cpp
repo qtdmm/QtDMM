@@ -4,6 +4,7 @@
 #include "logic/formulanode.h"
 #include "logic/generatornode.h"
 #include "logic/integralnode.h"
+#include "logic/simpsunode.h"
 
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -68,6 +69,8 @@ std::unique_ptr<LogicNode> LogicNode::create(const QString &type)
     return std::make_unique<GeneratorNode>();
   if (type == QLatin1String(IntegralNode::kType))
     return std::make_unique<IntegralNode>();
+  if (type == QLatin1String(SimPsuNode::kType))
+    return std::make_unique<SimPsuNode>();
   return nullptr;
 }
 

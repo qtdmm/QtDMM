@@ -38,7 +38,7 @@ side, one window each, and can be combined into calculated values.
   its values as text lines (Serial Plotter, Teleplot).
 - [Calculated values](calculated-values.md) — power from a voltage and a
   current meter: formulas over the values of your devices; simulated
-  values for demos without hardware.
+  values and a simulated power supply for demos without hardware.
 - [Bench meters through sigrok-cli](bench-meters.md) — Keysight, Agilent, HP
   and Siglent SCPI meters over USB-TMC, LAN or serial, with sigrok-cli doing
   the talking.
