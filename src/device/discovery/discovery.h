@@ -109,12 +109,24 @@ struct AccessProblem
   QString fix;
 };
 AccessProblem accessProblem(const QString &path, bool hid, quint16 vid = 0, quint16 pid = 0);
+/// The same for a USB-TMC instrument (/dev/usbtmcN): the udev rule of QtDMM.
+AccessProblem usbTmcAccessProblem(const QString &path);
 /// The udev rule that lets the logged-in user open the HID cables and
 /// sensors QtDMM knows (what the packages install).
 QString udevRules();
 
 /// USB-HID cables and sensors of the known families (hidapi).
 class UsbDiscoverer : public Discoverer
+{
+  Q_OBJECT
+public:
+  using Discoverer::Discoverer;
+  void        start() override;
+};
+
+/// Instruments on USB-TMC (Linux: /dev/usbtmcN of the kernel's driver),
+/// named by what they tell USB; nothing is sent to them.
+class UsbTmcDiscoverer : public Discoverer
 {
   Q_OBJECT
 public:

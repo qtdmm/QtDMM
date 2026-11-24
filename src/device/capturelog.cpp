@@ -162,6 +162,8 @@ QString CaptureLog::connectionName(Transport::PortType type)
   case Transport::PortType::Ble:
   case Transport::PortType::BleGatt:
     return "Bluetooth LE";
+  case Transport::PortType::UsbTmc:
+    return "USB-TMC";
   case Transport::PortType::None:
     break;
   }

@@ -95,7 +95,7 @@ public:
   /// /dev/serial/by-id name and its ttyUSB are the same place while the
   /// cable is plugged in), "hid <vid>:<pid>" (the hidraw number changes when
   /// it is plugged in again), "ble <address>", "rfc2217 <host:port>",
-  /// "sigrok <conn>", "calc <formula>". Empty when there is no place - also
+  /// "usbtmc <path>", "sigrok <conn>", "calc <formula>". Empty when there is no place - also
   /// for a simulated meter with a port left over in its keys.
   static QString place(const QVariantMap &keys);
   /// How a model connects when its name alone tells: "ble" (Victron),

@@ -14,14 +14,14 @@
 /// (SerialDevice), a USB HID cable (HIDSerialDevice), a Holtek HID sensor
 /// (HidHoltekDevice), a serial port shared
 /// over the network (RFC2217SerialDevice), sigrok-cli as a data source
-/// (SigrokDevice) and Bluetooth LE. MeterConnection only ever sees the QIODevice
+/// (SigrokDevice), Bluetooth LE and a USB-TMC instrument (UsbTmcDevice). MeterConnection only ever sees the QIODevice
 /// returned by port().
 class Transport : public QObject
 {
     Q_OBJECT
 public:
     /// The kinds of port; the settings file stores them by name (str2portType()).
-    enum class PortType { None, Serial, Hid, HidHoltek, Sigrok, RFC2217, Ble, BleGatt };
+    enum class PortType { None, Serial, Hid, HidHoltek, Sigrok, RFC2217, Ble, BleGatt, UsbTmc };
 
     explicit Transport(QObject *parent = nullptr) : QObject(parent) {}
     /// Creates the device object for @p type (closing any previous one). The
@@ -43,7 +43,7 @@ public:
     bool        init();
     bool        isOpen() const { return m_port != nullptr && m_port->isOpen(); };
 
-    /// "serial", "hid", "hidholtek", "sigrok", "rfc2217" or "ble" (case-insensitive) to PortType.
+    /// "serial", "hid", "hidholtek", "sigrok", "rfc2217", "ble", "blegatt" or "usbtmc" (case-insensitive) to PortType.
     static PortType str2portType(const QString str);
 private:
     QIODevice *m_port   = nullptr;

@@ -12,6 +12,7 @@
 #include "device/transports/hidpath.h"
 #include "device/transports/hidreader.h"   // hidapi
 #include "device/transports/serial.h"
+#include "device/transports/usbtmc.h"
 #include "service/mdnsbrowser.h"
 
 #ifdef QTDMM_WITH_BLE
@@ -195,6 +196,10 @@ QString udevRules()
            "KERNEL==\"hidraw*\", ENV{QTDMM_CABLE}==\"?*\", IMPORT{builtin}=\"path_id\"\n"
            "KERNEL==\"hidraw*\", ENV{QTDMM_CABLE}==\"?*\", ENV{ID_PATH_TAG}==\"?*\", "
            "SYMLINK+=\"qtdmm/$env{QTDMM_CABLE}-$env{ID_PATH_TAG}\"\n";
+  // instruments on USB-TMC (oscilloscopes, bench meters, generators): the
+  // kernel's usbtmc driver, any maker
+  rules += "\n# USB-TMC instruments (SCPI over USB) through the kernel's usbtmc driver\n"
+           "SUBSYSTEM==\"usbmisc\", KERNEL==\"usbtmc*\", TAG+=\"uaccess\"\n";
   return rules;
 }
 
@@ -224,6 +229,25 @@ AccessProblem accessProblem(const QString &path, bool hid, quint16 vid, quint16 
   }
 #else
   Q_UNUSED(path) Q_UNUSED(hid) Q_UNUSED(vid) Q_UNUSED(pid)
+#endif
+  return a;
+}
+
+AccessProblem usbTmcAccessProblem(const QString &path)
+{
+  AccessProblem a;
+#ifdef Q_OS_LINUX
+  const QFileInfo info(path);
+  if (!info.exists() || (info.isReadable() && info.isWritable()))
+    return a;
+  a.problem = QCoreApplication::translate("Discovery", "No access: %1 belongs to %2:%3").arg(path, info.owner(), info.group());
+  a.fix = QCoreApplication::translate("Discovery", "A udev rule lets you open USB-TMC instruments. The packages of QtDMM install one; for the "
+             "AppImage or Flatpak, put this line into /etc/udev/rules.d/70-qtdmm.rules:\n\n%1\n\n"
+             "then load it and plug the instrument in again:\n\n"
+             "sudo udevadm control --reload-rules && sudo udevadm trigger")
+            .arg(QStringLiteral("SUBSYSTEM==\"usbmisc\", KERNEL==\"usbtmc*\", TAG+=\"uaccess\""));
+#else
+  Q_UNUSED(path)
 #endif
   return a;
 }
@@ -262,6 +286,38 @@ void UsbDiscoverer::start()
       Q_EMIT found(c);
     }
     hid_free_enumeration(devs);
+    Q_EMIT finished();
+  });
+}
+
+// ---------------------------------------------------------------- USB-TMC
+
+void UsbTmcDiscoverer::start()
+{
+  QTimer::singleShot(0, this, [this]
+  {
+    QStringList ports;
+    UsbTmcDevice::availablePorts(ports);
+    for (const QString &entry : ports)
+    {
+      const QString path = UsbTmcDevice::pathForEntry(entry);
+      const UsbTmcDevice::Info info = UsbTmcDevice::info(path);
+      const QString name = QString("%1 %2").arg(info.manufacturer, info.product).trimmed();
+      Candidate c;
+      c.kind = Candidate::UsbCable;
+      c.key = path;
+      c.title = name.isEmpty() ? QCoreApplication::translate("Discovery", "USB-TMC instrument") : name;
+      c.detail = info.vid ? QString("USB-TMC %1:%2 · %3").arg(info.vid, 4, 16, QLatin1Char('0')).arg(info.pid, 4, 16, QLatin1Char('0')).arg(path)
+                          : QString("USB-TMC · %1").arg(path);
+      c.hint = QCoreApplication::translate("Discovery", "An instrument that speaks SCPI over USB. Choose its model.");
+      // the models whose protocol is SCPI lines, which USB-TMC carries
+      c.models = Families::preferByName(Families::models(FrameFormat::OwonSPM, true) + Families::models(FrameFormat::OpenOSC, true), name);
+      c.keys.insert("Port settings/device", entry);
+      const AccessProblem a = usbTmcAccessProblem(path);
+      c.problem = a.problem;
+      c.fix = a.fix;
+      Q_EMIT found(c);
+    }
     Q_EMIT finished();
   });
 }
