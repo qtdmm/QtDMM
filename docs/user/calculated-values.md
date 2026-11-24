@@ -120,6 +120,11 @@ front panel:
 - **OUT** switches the channel's output; its LED is green while it is on.
   **ALL OUT** switches every output off. The outputs are always off when
   the supply is opened; the setpoints stay as they were.
+- **ALL OFF**, red at the right end of the status line, is there while a
+  device with outputs is open: the emergency off. It switches every output
+  of every power supply (and generator) off at once, also one set by a
+  logic node (`EXT`); **Ctrl+Pause** does the same from every window of
+  QtDMM. Channels hidden in the settings stay untouched, as always.
 
 Each channel's measured voltage is a value as a meter's, `CH1 U` ... in V:
 in the graph, the table, alarms, the limit test (its verdict shows in the

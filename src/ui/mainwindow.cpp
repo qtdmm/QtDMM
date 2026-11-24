@@ -65,6 +65,7 @@
 #include "core/projectfolder.h"
 #include "service/webviewserver.h"
 #include "core/devicelibrary.h"
+#include "core/outputregistry.h"
 #include "core/sampletypes.h"
 #include "core/siprefix.h"
 #include "recording/labplotlive.h"
@@ -2022,6 +2023,15 @@ void MainWindow::createDesignMenu()
   }
 }
 
+void MainWindow::allOutputsOff()
+{
+  const int n = OutputRegistry::instance().allOff();
+  if (n == 1)
+    statusBar()->showMessage(tr("All outputs off"), 6000);
+  else if (n > 1)
+    statusBar()->showMessage(tr("All outputs off, %1 devices").arg(n), 6000);
+}
+
 // The readings dot, the connection and the info field, and what feeds them.
 void MainWindow::createStatusBar()
 {
@@ -2034,6 +2044,24 @@ void MainWindow::createStatusBar()
   m_info->setFrameStyle(QFrame::Panel | QFrame::Sunken);
   statusBar()->addWidget(m_info, 10);
   m_info->setLineWidth(1);
+
+  // the emergency off: red, at the right, while a device with outputs
+  // (power supply, generator) is open; Ctrl+Pause from every window
+  m_allOffButton = new QToolButton(statusBar());
+  m_allOffButton->setObjectName("allOffButton");
+  m_allOffButton->setText(tr("ALL OFF"));
+  m_allOffButton->setToolTip(tr("Every output off: all power supplies and generators, also those set by a logic node "
+                                "(Ctrl+Pause)"));
+  m_allOffButton->setStyleSheet(ControlBar::keyColour(QColor(0xc8, 0x20, 0x20), Qt::white)
+                                + QStringLiteral(" QToolButton { font-weight: bold; padding: 1px 8px; }"));
+  m_allOffButton->setVisible(OutputRegistry::instance().count() > 0);
+  statusBar()->addPermanentWidget(m_allOffButton);
+  connect(m_allOffButton, &QToolButton::clicked, this, &MainWindow::allOutputsOff);
+  connect(&OutputRegistry::instance(), &OutputRegistry::changed, m_allOffButton,
+          [this] { m_allOffButton->setVisible(OutputRegistry::instance().count() > 0); });
+  auto *allOff = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_Pause), this);
+  allOff->setContext(Qt::ApplicationShortcut);
+  connect(allOff, &QShortcut::activated, this, &MainWindow::allOutputsOff);
 
   // the toolbar on and off: the way back with the mouse, always there
   m_toolbarButton = new QToolButton(statusBar());

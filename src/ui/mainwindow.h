@@ -142,6 +142,8 @@ protected:
   QList<QAction *> createArrangeMenu();
   void      createDesignMenu();
   void      createStatusBar();
+  /// The emergency off: every output of every power supply and generator.
+  void      allOutputsOff();
   void      placeWindow();
   /// @}
 
@@ -327,6 +329,7 @@ protected:
   QMdiArea   *m_mdi;
   MdiArranger *m_arranger;
   QToolButton *m_toolbarButton = nullptr;   ///< toolbar on/off, at the end of the status line
+  QToolButton *m_allOffButton = nullptr;    ///< the emergency off, while a device with outputs is open
   QMdiSubWindow *m_meterWin;
   QMdiSubWindow *m_graphWin;
   QMdiSubWindow *m_readingsWin;

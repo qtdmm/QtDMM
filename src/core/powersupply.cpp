@@ -183,8 +183,11 @@ bool PowerSupply::requestOutput(int ch, bool on)
 
 void PowerSupply::allOff()
 {
+  // off is always safe: also while set from outside or not released for
+  // control (the emergency off, OutputRegistry)
   for (int ch : shownChannels())
-    requestOutput(ch, false);
+    if (valid(ch) && m_states[ch].connected)
+      sendOutput(ch, false);
 }
 
 void PowerSupply::expired(int ch)

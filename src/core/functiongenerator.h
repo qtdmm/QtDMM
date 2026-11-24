@@ -143,7 +143,8 @@ public:
   /// value the shape has not).
   bool    requestValue(int ch, Value v, double value);
   bool    requestOutput(int ch, bool on);
-  /// Every shown channel's output off.
+  /// Every shown channel's output off, also one set from outside (EXT) or
+  /// while control is not allowed: off is always safe (the emergency off).
   void    allOff();
   /// @p value of @p v as channel @p ch would set it (clamped, rounded).
   double  limited(int ch, Value v, double value) const;

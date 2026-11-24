@@ -9,6 +9,7 @@
 #include <QJsonObject>
 
 #include "core/devicelibrary.h"
+#include "core/outputregistry.h"
 #include "core/powersupply.h"
 #include "core/siprefix.h"
 #include "service/devicesession.h"
@@ -69,6 +70,8 @@ NodeRunner::NodeRunner(DeviceSession *session, MeterController *ctl, std::unique
   // moment after the knob stopped
   if (PowerSupply *supply = m_node->powerSupply())
   {
+    // open now: the emergency off reaches it
+    OutputRegistry::instance().add(supply);
     m_store.setSingleShot(true);
     m_store.setInterval(500);
     connect(&m_store, &QTimer::timeout, this, &NodeRunner::store);
@@ -94,7 +97,12 @@ void NodeRunner::store()
   library->update(m_ctl->deviceId(), keys);
 }
 
-NodeRunner::~NodeRunner() = default;
+NodeRunner::~NodeRunner()
+{
+  // closed: no longer a device with outputs
+  if (PowerSupply *supply = m_node->powerSupply())
+    OutputRegistry::instance().remove(supply);
+}
 
 QString NodeRunner::inputName(const ValueRef &ref) const
 {
