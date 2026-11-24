@@ -26,23 +26,19 @@
 
 #include <optional>
 
-#include <QWidget>
-#include <QColor>
-#include <QPixmap>
-
 #include "core/sampletypes.h"
 #include "core/limittest.h"
 #include "core/reading.h"
 #include "device/devicetype.h"   // complete for moc: a slot takes it (GCC 16 -Wsfinae-incomplete)
+#include "ui/views/lcdpanel.h"
 
-/// The digital display: an LCD panel in the same housing as the analog
-/// meter. Seven-segment digits, unit, annunciators (AUTO; AC, "+" for AC+DC,
-/// DC, diode, continuity, HOLD as an H in a square), the min/max memory, a
-/// bar graph and up to three secondary values are all drawn with QPainter
-/// and scale with the widget.
-/// Unlit segments and annunciators stay faintly visible, like on a real LCD.
+/// The digital display of a multimeter: the LcdPanel layout with the
+/// annunciator row (AUTO; AC, "+" for AC+DC, DC, diode, continuity, HOLD as
+/// an H in a square), the big value with its unit, the min/max memory, up
+/// to three secondary values, a bar graph and, with the limit test, the
+/// verdict's column. All drawn with QPainter, scaling with the widget.
 
-class LcdWidget : public QWidget
+class LcdWidget : public LcdPanel
 {
   Q_OBJECT
 public:
@@ -50,18 +46,6 @@ public:
   /// centred with room around it.
   static constexpr double kMinAspect = 1.8;
   static constexpr double kMaxAspect = 3.2;
-  /// The LCD's colours (context menu "LCD colours", Display/lcd). Custom is
-  /// the tint from the Appearance page, with dark segments, as before the
-  /// variants.
-  enum LcdVariant
-  {
-    Classic,        ///< yellow-green reflective LCD, the old default tint
-    BacklightBlue,  ///< negative LCD: light segments on a blue backlight
-    Amber,          ///< amber backlight, dark segments
-    HighContrast,   ///< black on white
-    Custom          ///< the tint from the settings (setFaceColor)
-  };
-
   LcdWidget(QWidget *parent = nullptr);
 
   /// Value text as the meter shows it; id 0 is the main display, 1..3 the
@@ -134,18 +118,6 @@ public:
   void setAuto(bool);
   void setManu(bool);
   /// @}
-  /// The tint for Custom (Appearance page); the others bring their own.
-  void setFaceColor(const QColor &);
-  void setLcdVariant(LcdVariant variant);
-  /// An alarm's colour for the face while it is raised (invalid: the
-  /// variant's own); the segments turn light or dark, whichever reads
-  /// better on it. The variant stays.
-  void setAlertColor(const QColor &color);
-  QColor alertColor() const { return m_alert; }
-  /// The face as painted now (the alarm's colour or the variant's).
-  QColor faceColor() const { return m_face; }
-  QColor segmentColor() const { return m_segment; }
-  LcdVariant lcdVariant() const { return m_variant; }
   /// The limit test is on: a column right of the big value with PASS or
   /// FAIL, HI or LO, and the deviation; the panel grows wider by
   /// kLimitWiden for it. Off, the LCD is as without the test.
@@ -155,27 +127,9 @@ public:
   void setVerdict(LimitTest::Verdict verdict, double deviation);
   LimitTest::Verdict verdict() const { return m_verdict; }
   static constexpr double kLimitWiden = 1.25;
-  /// The value is too old to stand for the present (StaleRule): the
-  /// segments fade, the panel stays.
-  void setStale(bool stale);
-  bool isStale() const { return m_stale; }
-  /// The device's name on the bezel above the face, like the model name on
-  /// an instrument; empty: none, the face takes the room.
-  void setCaption(const QString &caption);
-  /// Pixels kept free at the right end of the name (for a button there).
-  void setPlateReserve(double px);
-  /// Where the name is written (widget coordinates); empty without one.
-  QRectF plateBand() const;
-  /// The colour of the name's lettering: the manufacturer's (@p strong) or the model's.
-  QColor plateInk(bool strong) const;
   /// Words in place of the number while there is none ("Waiting for data",
   /// ValueFeed::notice()); empty: the number.
   void setNotice(const QString &notice);
-  /// "classic", "blue", "amber", "contrast", "custom"
-  static QString lcdVariantName(LcdVariant variant);
-  static LcdVariant lcdVariantFromName(const QString &name);
-  /// The Appearance page's default tint (Classic's face).
-  static QColor classicFace();
 
 public Q_SLOTS:
   /// @name Fed by the MeterController
@@ -193,10 +147,6 @@ public:
 
   QSize sizeHint() const override;
   QSize minimumSizeHint() const override;
-
-  /// Seven-segment bit mask for a character, 0 for unknown (blank).
-  /// Bits: 0 a (top), 1 b, 2 c, 3 d (bottom), 4 e, 5 f, 6 g (middle).
-  static int segmentsFor(QChar ch);
 
   /// Where the rows sit and how big their glyphs are - all sizes are
   /// derived from the row height *and* the width, so nothing overlaps on
@@ -219,8 +169,10 @@ public:
   double minMaxBlockWidth(double h) const;
 
 protected:
-  void paintEvent(QPaintEvent *) override;
-  void resizeEvent(QResizeEvent *) override;
+  double minAspect() const override;
+  double maxAspect() const override;
+  void paintStatic(QPainter &p) override;
+  void paintContent(QPainter &p) override;
 
 private:
   int numDigits() const;
@@ -228,28 +180,11 @@ private:
   int idAt(int line) const;
   // remembers a value with more digits than the display count
   void fitDigits(const QString &value);
-  void renderStatic();
   void drawFlags(QPainter &p, const Layout &l) const;
   void drawMain(QPainter &p, const Layout &l) const;
   void drawMinMax(QPainter &p, const Layout &l) const;
   void drawBar(QPainter &p, const Layout &l, bool staticPart) const;
   void drawExtra(QPainter &p, const Layout &l) const;
-  void drawVerdict(QPainter &p, const Layout &l) const;
-
-  /// Seven-segment rendering. Returns the width used.
-  double drawNumber(QPainter &p, const QPointF &origin, double h, const QString &text, int minDigits, bool lit) const;
-  void drawDigit(QPainter &p, const QPointF &origin, double h, int mask) const;
-  double drawUnit(QPainter &p, const QPointF &origin, double h, const QString &unit) const;
-  double numberWidth(double h, int digits) const;
-  void drawAnnunciator(QPainter &p, const QRectF &r, const QString &text, bool on, double fontPx) const;
-
-  QColor m_face;
-  QColor m_alert;   ///< an alarm's colour over the variant, invalid when none
-  QColor m_segment;
-  QColor m_customFace;             ///< setFaceColor()
-  LcdVariant m_variant = Classic;
-  void applyVariant();
-  QColor ghost() const;
 
   QString m_value[kMaxValues];
   QString m_unit[kMaxValues];
@@ -268,14 +203,8 @@ private:
   bool m_hold = false;
   Battery m_battery = Battery::Unknown;   ///< setBattery()
   bool m_auto = false;
-  bool m_stale = false;
-  QString m_caption;   ///< setCaption()
-  double  m_plateReserve = 0;   ///< setPlateReserve()
   QString m_notice;    ///< setNotice()
   bool m_limitOn = false;
   LimitTest::Verdict m_verdict = LimitTest::NoVerdict;
   double m_deviation = 0;   ///< NaN: none
-
-  QPixmap m_static;
-  bool m_staticDirty = true;
 };
