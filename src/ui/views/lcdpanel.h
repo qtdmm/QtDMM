@@ -76,6 +76,8 @@ public:
   /// Seven-segment bit mask for a character, 0 for unknown (blank).
   /// Bits: 0 a (top), 1 b, 2 c, 3 d (bottom), 4 e, 5 f, 6 g (middle).
   static int segmentsFor(QChar ch);
+  /// Light or dark segments, whichever reads better on @p face.
+  static QColor segmentsOn(const QColor &face);
   /// Annunciators drawn as a symbol rather than typed: the diode, HOLD (an
   /// H cut out of a square), the battery (a cell with up to three bars).
   /// Their leading \x01 keeps them apart from words.
@@ -110,8 +112,6 @@ protected:
   static QFont sansFont(double px, bool bold = true);
   /// The colour of an unlit segment or annunciator.
   QColor ghost() const;
-  /// Light or dark segments, whichever reads better on @p face.
-  static QColor segmentsOn(const QColor &face);
   /// Until resetInk() the kit draws with @p segment on @p face instead of
   /// the panel's colours, as on an alarm's colour (for one part of the
   /// panel: a power supply's channel). The face itself is the caller's to fill.

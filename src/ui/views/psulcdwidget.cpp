@@ -20,6 +20,7 @@ const QString kCv = QStringLiteral("CV");
 const QString kCc = QStringLiteral("CC");
 const QString kExt = QStringLiteral("EXT");
 const QString kSet = QStringLiteral("SET");
+const QString kErr = QStringLiteral("ERR");
 
 // the rows of a block, parts of its height
 constexpr double kFlagsRow = 0.17, kURow = 0.43, kIRow = 0.24, kPRow = 0.16;
@@ -140,6 +141,13 @@ void PsuLcdWidget::setChannelStale(int ch, bool stale)
   update();
 }
 
+void PsuLcdWidget::setChannelError(int ch, const QString &error)
+{
+  if (valid(ch))
+    m_ch[ch].error = error;
+  update();
+}
+
 void PsuLcdWidget::setChannelVerdict(int ch, bool on, LimitTest::Verdict verdict, double deviation)
 {
   if (!valid(ch))
@@ -197,10 +205,10 @@ double PsuLcdWidget::flagsWidth(double fontPx, bool current) const
   QStringList words = { kOut, kCv };
   if (current)
     words << kCc;
-  words << kExt << kSet;
+  words << kExt;
   for (const QString &t : words)
     w += fm.horizontalAdvance(t) + 2 + gap;
-  return w;
+  return w + qMax(fm.horizontalAdvance(kSet), fm.horizontalAdvance(kErr)) + 2;
 }
 
 QList<PsuLcdWidget::Block> PsuLcdWidget::layout() const
@@ -391,7 +399,9 @@ void PsuLcdWidget::drawFlags(QPainter &p, const Block &b, const State &s) const
   if (!b.i.isEmpty())
     flag(kCc, s.mode == Mode::CC);
   flag(kExt, s.ext);
-  const double setW = fm.horizontalAdvance(kSet);
-  drawAnnunciator(p, QRectF(r.right() - setW - 2, r.top(), setW + 2, r.height()), kSet,
-                  showsSetpoint(ch) && m_blinkOn, fontPx);
+  // SET at the right end; ERR in its place while a request failed
+  const QString &last = s.error.isEmpty() ? kSet : kErr;
+  const double lastW = fm.horizontalAdvance(last);
+  drawAnnunciator(p, QRectF(r.right() - lastW - 2, r.top(), lastW + 2, r.height()), last,
+                  !s.error.isEmpty() || (showsSetpoint(ch) && m_blinkOn), fontPx);
 }
