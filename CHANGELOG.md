@@ -80,6 +80,7 @@
 
 ### Meters
 
+- **OWON SPM series** — the power supply with a multimeter (SPM3051, SPM6053, SPM3103, SPM6103) over USB (SCPI): the output's voltage, current and power and the multimeter's reading (DC/AC volts and amps, resistance, continuity, diode, capacitance) as one device with four values; a tripped protection (OVP, OCP, over-temperature) in the status line. Read only, nothing is set. New kind of device *Power supply* with its own symbol. Made from OWON's programming manual, not tried on a device yet; protocol `OwonSPM`.
 - **ZOYI ZT-703S with the OpenOSC firmware** — read over USB (the meter's CDC serial port, SCPI `SYST:DMM:RES?`): DC and AC volts, millivolts, amps and milliamps, resistance, continuity, diode, capacitance and type K temperature, with the digits of the meter's range, overload, "no number", HOLD and REL; protocol `OpenOSC`. Thanks to the issue's author for the captures (#603).
 - **Graph menu shorter** — the right-click menu of a graph starts with what the click point means (note, cursors), then recording and picture; the switches and looks are under *Display*, pictures and files under *Output*; *Note now* is gone from the menu (N stays).
 - **Graph in a narrow window** — the legend wraps into more lines instead of covering the time buttons, and the graph keeps a minimum width for its row of buttons: the automatic arrangement makes the instruments or the table narrower instead.

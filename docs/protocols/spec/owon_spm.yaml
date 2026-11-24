@@ -1,0 +1,81 @@
+protocol: OwonSPM
+decoder: src/device/decoders/owon_spm.cpp
+devices: [OWON SPM3051 *, OWON SPM6053 *, OWON SPM3103 *, OWON SPM6103 *]
+frames_per_reading: 1
+sources:
+  - "OWON SPM Series Source Measuring Unit Programming Manual (files.owon.com.cn/software/Application/SPM_Series_programming_manual.pdf, fetched 24.11.2026)"
+  - "TestController device file Owon SPMxxxx.txt (TishSerg, tested on an SPM6103): USB CDC at 115200, the commands in use"
+  - "libsigrok src/hardware/scpi-pps/profiles.c: OWON SPE6103 (the same supply without the multimeter), 10 mV / 1 mA"
+
+# The SPM series is a one-channel bench power supply with a 4½-digit
+# multimeter in one box (SPM3051 30 V/5 A, SPM6053 60 V/5 A, SPM3103
+# 30 V/10 A, SPM6103 60 V/10 A). Its USB device port is a CDC serial port
+# that speaks SCPI; TestController uses 115200 baud.
+#
+# QtDMM only reads: it sends no SYST:REM (which would lock the keys) and
+# nothing that sets a value. Two questions in turn, one at a time, LF-ended:
+#
+# MEAS:ALL:INFO? -> "U I P NR1 NR2 NR3 NR4", separated by spaces:
+#   U, I, P   the output's voltage (V), current (A) and power (W), "1.000"
+#   NR1..NR3  over-voltage, over-current, over-temperature: 1|ON a fault,
+#             0|OFF none (the manual allows both spellings)
+#   NR4       0 standby (output off), 1 CV, 2 CC, 3 failure
+# The decoder gives U, I, P as the device's values 1-3 (ids 0, 1, 2), a
+# protection or a failure as the reading's error (OVP, OCP, OTP, Failure).
+#
+# CONF:ALL? -> "function,value,AUTO|Manual,range":
+#   function  VOLT:DC, VOLT:AC, CURR:DC, CURR:AC, RES, CAP, DIOD, CONT
+#   value     as the display shows it, with sign and unit: +0.0011V,
+#             +000.26Ohm, +000.00mA
+#   ranges    V DC 200 mV, 2, 20, 200, 1000 V; V AC up to 750 V; A 200 mA,
+#             10 A; Ohm 200 ... 100 MOhm; F 2 nF ... 10 mF (auto only)
+# The decoder gives the multimeter's value as value 4 (id 3).
+#
+# The manual's examples of MEAS:ALL:INFO? only show the field layout
+# ("2.000 5.000 10.000 NR1 NR2 NR3 NR4"); the supply lines below fill it in
+# as the manual describes each field. The CONF:ALL? lines are the manual's.
+#
+# Open until a device is tried: LF or CR LF (both taken), how an overload
+# shows in CONF:ALL? (a value with "OL" is taken as one), the unit's spelling
+# for kOhm/MOhm/µF, how fast the device answers, its USB VID/PID.
+vectors:
+  - source_line: "2.000 5.000 10.000 0 0 0 1"   # the manual's example: 2 V, 5 A, 10 W; CV, no protection
+    bytes: 32 2E 30 30 30 20 35 2E 30 30 30 20 31 30 2E 30 30 30 20 30 20 30 20 30 20 31 0A
+    reading: {value: "2.000", unit: "V", coupling: DC}
+    expect: {special: DC, val: "2.000", id: 0, val2: "5.000", unit2: "A", dval2: 5.0, id2: 1, error: ""}
+  - source_line: "12.000 0.500 6.000 OFF OFF OFF 1"   # the faults as ON/OFF
+    bytes: 31 32 2E 30 30 30 20 30 2E 35 30 30 20 36 2E 30 30 30 20 4F 46 46 20 4F 46 46 20 4F 46 46 20 31 0A
+    reading: {value: "12.000", unit: "V", coupling: DC}
+    expect: {val: "12.000", val2: "0.500", error: ""}
+  - source_line: "5.000 2.000 10.000 OFF OFF OFF 2"   # CC
+    bytes: 35 2E 30 30 30 20 32 2E 30 30 30 20 31 30 2E 30 30 30 20 4F 46 46 20 4F 46 46 20 4F 46 46 20 32 0A
+    reading: {value: "5.000", unit: "V", coupling: DC}
+    expect: {error: ""}
+  - source_line: "0.000 0.000 0.000 OFF OFF OFF 0"   # standby: output off
+    bytes: 30 2E 30 30 30 20 30 2E 30 30 30 20 30 2E 30 30 30 20 4F 46 46 20 4F 46 46 20 4F 46 46 20 30 0A
+    reading: {value: "0.000", unit: "V", coupling: DC}
+    expect: {error: ""}
+  - source_line: "0.000 0.000 0.000 ON OFF OFF 0"   # over-voltage protection tripped
+    bytes: 30 2E 30 30 30 20 30 2E 30 30 30 20 30 2E 30 30 30 20 4F 4E 20 4F 46 46 20 4F 46 46 20 30 0A
+    reading: {value: "0.000", unit: "V", coupling: DC}
+    expect: {error: "OVP"}
+  - source_line: "1.000 2.000 2.000 0 1 0 3"   # over-current and failure mode
+    bytes: 31 2E 30 30 30 20 32 2E 30 30 30 20 32 2E 30 30 30 20 30 20 31 20 30 20 33 0A
+    reading: {value: "1.000", unit: "V", coupling: DC}
+    expect: {error: "OCP Failure"}
+  - source_line: "2.000 5.000 10.000 0 0 0 1 (CR LF)"   # the line end not known yet: CR LF taken too
+    bytes: 32 2E 30 30 30 20 35 2E 30 30 30 20 31 30 2E 30 30 30 20 30 20 30 20 30 20 31 0D 0A
+    reading: {value: "2.000", unit: "V", coupling: DC}
+    expect: {val: "2.000"}
+  - source_line: "VOLT:DC,+0.0011V,AUTO,2V"   # the manual's example
+    bytes: 56 4F 4C 54 3A 44 43 2C 2B 30 2E 30 30 31 31 56 2C 41 55 54 4F 2C 32 56 0A
+    reading: {value: "0.0011", unit: "V", coupling: DC, range_mode: auto}
+    expect: {special: DC, val: "0.0011", id: 3}
+  - source_line: "RES,+000.26Ohm,AUTO,200Ohm"   # the manual's example
+    bytes: 52 45 53 2C 2B 30 30 30 2E 32 36 4F 68 6D 2C 41 55 54 4F 2C 32 30 30 4F 68 6D 0A
+    reading: {value: "0.26", unit: "Ohm", function: resistance, range_mode: auto}
+    expect: {special: OH, val: "0.26", id: 3}
+  - source_line: "CURR:DC,+000.00mA,Manual,200mA"   # the manual's example
+    bytes: 43 55 52 52 3A 44 43 2C 2B 30 30 30 2E 30 30 6D 41 2C 4D 61 6E 75 61 6C 2C 32 30 30 6D 41 0A
+    reading: {value: "0.00", unit: "mA", coupling: DC, range_mode: manual}
+    expect: {special: DC, val: "0.00", id: 3}

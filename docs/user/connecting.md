@@ -124,6 +124,21 @@ does not matter.
   mains or anything not referenced to the computer's ground while the USB
   cable is connected.
 
+### OWON SPM series (power supply with multimeter)
+
+The SPM3051, SPM6053, SPM3103 and SPM6103 are a one-channel power supply
+and a 4½-digit multimeter in one box. Their USB port at the back is a
+serial port (`/dev/ttyACM0`, `COM5`) that QtDMM asks for the readings
+(SCPI), at 115200 baud. Choose *OWON SPM6103* (or your model) and that
+port. QtDMM only reads, it sets nothing; the keys on the device stay usable.
+
+The device has four values: the output's voltage (the main value), current
+and power, and the multimeter's reading. A protection that tripped (OVP,
+OCP, over-temperature) shows in the status line.
+
+Made from OWON's programming manual; no device has been tried yet (the `*`
+in the model list).
+
 ## Connecting
 
 Click **Connect** (F3) in the toolbar. QtDMM connects on its own at

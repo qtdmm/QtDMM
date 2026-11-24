@@ -158,6 +158,7 @@ LcdWidget::Look LcdWidget::lookOf(DeviceType::Type type)
     case DeviceType::BatteryMonitor:
     case DeviceType::SolarCharger:
     case DeviceType::Inverter:
+    case DeviceType::PowerSupply:
       return { false, 0 };
     default:   // the multimeters, the Simulated meter: all of it
       return {};

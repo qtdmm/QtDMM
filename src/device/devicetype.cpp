@@ -81,6 +81,8 @@ Type ofProtocol(FrameFormat::DataFormat protocol)
       return Microcontroller;
     case FrameFormat::VictronBLE:
       return BatteryMonitor;
+    case FrameFormat::OwonSPM:
+      return PowerSupply;
     case FrameFormat::Invalid:
     case FrameFormat::EndOfList:
       return Generic;
@@ -182,7 +184,7 @@ QString id(Type type)
 {
   static const char *const ids[] = { "handheld_dmm", "bench_dmm", "clamp_meter", "thermometer", "luxmeter",
                                      "environment", "sound_level", "anemometer", "tachometer", "microcontroller", "battery_monitor",
-                                     "solar_charger", "inverter", "virtual", "generic" };
+                                     "solar_charger", "inverter", "power_supply", "virtual", "generic" };
   return QString::fromLatin1(ids[type]);
 }
 
@@ -203,6 +205,7 @@ QString displayName(Type type)
     case BatteryMonitor: return QCoreApplication::translate("DeviceType", "Battery monitor");
     case SolarCharger:   return QCoreApplication::translate("DeviceType", "Solar charge controller");
     case Inverter:       return QCoreApplication::translate("DeviceType", "Inverter");
+    case PowerSupply:    return QCoreApplication::translate("DeviceType", "Power supply");
     case Virtual:        return QCoreApplication::translate("DeviceType", "Virtual meter");
     case Generic:        return QCoreApplication::translate("DeviceType", "Generic");
   }

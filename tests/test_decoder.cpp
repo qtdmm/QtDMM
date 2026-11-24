@@ -288,6 +288,35 @@ int main(int argc, char **argv)
       if (!osc->decode("0,5.002,0,NAN,0,2,1,1,0,701,1300\n", 0) || !osc->decode("0,5.002,0,NAN,0,2,1,1,0,701,1300\n", 0))
         bad("a held reading (seq frozen) is dropped");
     }
+    // OWON SPM (programming manual): the supply's and the multimeter's
+    // question in turn; the supply's line gives three values, P third; an
+    // overload and a line with no number in the multimeter's; a kOhm unit
+    {
+      auto spm = DmmDecoder::getInstance(FrameFormat::OwonSPM);
+      auto bad = [&](const char *what)
+      {
+        qWarning() << "OwonSPM:" << what;
+        ++problems;
+      };
+      const QByteArray first = spm->pollRequest(), second = spm->pollRequest(), third = spm->pollRequest();
+      if (first != "MEAS:ALL:INFO?\n" || second != "CONF:ALL?\n" || third != first)
+        bad("not asked in turn");
+      const auto supply = spm->decode("12.000 0.500 6.000 0 0 1 1\n", 0);
+      if (!supply || supply->channels.size() != 3 || supply->channels[2].id != 2 || supply->channels[2].unit != "W"
+          || supply->channels[2].dval != 6.0 || supply->error != "OTP")
+        bad("supply: U, I, P with ids 0-2, OTP as the error");
+      const auto ol = spm->decode("RES,OL,AUTO,200Ohm\n", 0);
+      if (!ol || ol->main().val != "OL" || ol->main().unit != "Ohm" || ol->main().noValue)
+        bad("multimeter: OL is an overload");
+      const auto none = spm->decode("CAP,----,AUTO,2nF\n", 0);
+      if (!none || !none->main().noValue || none->main().unit != "F")
+        bad("multimeter: no number shown");
+      const auto kohm = spm->decode("RES,+1.2345KOhm,AUTO,2KOhm\n", 0);
+      if (!kohm || kohm->main().unit != "kOhm" || kohm->main().val != "1.2345" || std::fabs(kohm->main().dval - 1234.5) > 1e-9)
+        bad("multimeter: KOhm read as kOhm");
+      if (spm->decode("SPM6103 garbage\n", 0))
+        bad("a line that is no answer is read");
+    }
     // UT117C (synthetic frames, ut117c.md): the poll and the keys as the
     // app sends them, keys greyed out by function, NCV, µF and low
     // battery, both length conventions, a wrong sum

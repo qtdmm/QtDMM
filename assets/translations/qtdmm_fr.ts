@@ -2049,6 +2049,34 @@
     </message>
 </context>
 <context>
+    <name>DecoderOwonSPM</name>
+    <message>
+        <location filename="../../src/device/decoders/owon_spm.cpp" line="134"/>
+        <source>Voltage</source>
+        <translation>Tension</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/owon_spm.cpp" line="134"/>
+        <source>Current</source>
+        <translation>Courant</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/owon_spm.cpp" line="134"/>
+        <source>Power</source>
+        <translation>Puissance</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/owon_spm.cpp" line="161"/>
+        <source>Failure</source>
+        <translation>Défaut</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/decoders/owon_spm.cpp" line="174"/>
+        <source>Multimeter</source>
+        <translation>Multimètre</translation>
+    </message>
+</context>
+<context>
     <name>DecoderVC870</name>
     <message>
         <location filename="../../src/device/decoders/vc870.cpp" line="119"/>
@@ -2621,77 +2649,82 @@
 <context>
     <name>DeviceType</name>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="193"/>
+        <location filename="../../src/device/devicetype.cpp" line="195"/>
         <source>Handheld multimeter</source>
         <translation>Multimètre portable</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="194"/>
+        <location filename="../../src/device/devicetype.cpp" line="196"/>
         <source>Bench multimeter</source>
         <translation>Multimètre de table</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="195"/>
+        <location filename="../../src/device/devicetype.cpp" line="197"/>
         <source>Clamp meter</source>
         <translation>Pince ampèremétrique</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="196"/>
+        <location filename="../../src/device/devicetype.cpp" line="198"/>
         <source>Thermometer</source>
         <translation>Thermomètre</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="197"/>
+        <location filename="../../src/device/devicetype.cpp" line="199"/>
         <source>Luxmeter</source>
         <translation>Luxmètre</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="198"/>
+        <location filename="../../src/device/devicetype.cpp" line="200"/>
         <source>Air quality meter</source>
         <translation>Mesureur de qualité de l&apos;air</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="199"/>
+        <location filename="../../src/device/devicetype.cpp" line="201"/>
         <source>Sound level meter</source>
         <translation>Sonomètre</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="200"/>
+        <location filename="../../src/device/devicetype.cpp" line="202"/>
         <source>Anemometer</source>
         <translation>Anémomètre</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="201"/>
+        <location filename="../../src/device/devicetype.cpp" line="203"/>
         <source>Tachometer</source>
         <translation>Tachymètre</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="202"/>
+        <location filename="../../src/device/devicetype.cpp" line="204"/>
         <source>Microcontroller</source>
         <translation>Microcontrôleur</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="203"/>
+        <location filename="../../src/device/devicetype.cpp" line="205"/>
         <source>Battery monitor</source>
         <translation>Contrôleur de batterie</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="204"/>
+        <location filename="../../src/device/devicetype.cpp" line="206"/>
         <source>Solar charge controller</source>
         <translation>Régulateur de charge solaire</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="205"/>
+        <location filename="../../src/device/devicetype.cpp" line="207"/>
         <source>Inverter</source>
         <translation>Onduleur</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="206"/>
+        <location filename="../../src/device/devicetype.cpp" line="208"/>
+        <source>Power supply</source>
+        <translation>Alimentation</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/devicetype.cpp" line="209"/>
         <source>Virtual meter</source>
         <translation>Appareil virtuel</translation>
     </message>
     <message>
-        <location filename="../../src/device/devicetype.cpp" line="207"/>
+        <location filename="../../src/device/devicetype.cpp" line="210"/>
         <source>Generic</source>
         <translation>Générique</translation>
     </message>
@@ -5163,26 +5196,26 @@ Pas de permission ? Le capteur a besoin d’une règle udev pour l’ID USB %1:%
 <context>
     <name>LcdWidget</name>
     <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="320"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="321"/>
         <source>AUTO</source>
         <translation>AUTO</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="320"/>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="347"/>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="455"/>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="471"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="321"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="348"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="456"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="472"/>
         <source>MAX</source>
         <translation>MAX</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="321"/>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="470"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="322"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="471"/>
         <source>MIN</source>
         <translation>MIN</translation>
     </message>
     <message>
-        <location filename="../../src/ui/views/lcdwidget.cpp" line="321"/>
+        <location filename="../../src/ui/views/lcdwidget.cpp" line="322"/>
         <source>AVG</source>
         <translation>AVG</translation>
     </message>
@@ -7662,106 +7695,111 @@ Le multimètre est-il branché et allumé ?</translation>
     </message>
     <message>
         <location filename="../../src/device/protocols.cpp" line="60"/>
+        <source>variable bytes ASCII, SCPI polled over USB, power supply and multimeter (OWON SPM series)</source>
+        <translation>octets variables ASCII, SCPI interrogé par USB, alimentation et multimètre (série OWON SPM)</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/protocols.cpp" line="61"/>
         <source>text lines from HID records, CO2/temperature/humidity (TFA AIRCO2NTROL)</source>
         <translation>lignes de texte issues d’enregistrements HID, CO2/température/humidité (TFA AIRCO2NTROL)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="61"/>
+        <location filename="../../src/device/protocols.cpp" line="62"/>
         <source>variable bytes ASCII, polled with CONF?/FETC? (Agilent/Keysight U12xx)</source>
         <translation>octets variables ASCII, interrogé par CONF?/FETC? (Agilent/Keysight U12xx)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="62"/>
+        <location filename="../../src/device/protocols.cpp" line="63"/>
         <source>19 bytes ASCII, continuous after a start byte (UNI-T UT32x thermometers)</source>
         <translation>19 octets ASCII, continu après un octet de départ (thermomètres UNI-T UT32x)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="63"/>
+        <location filename="../../src/device/protocols.cpp" line="64"/>
         <source>18 bytes binary, continuous, two values (MASTECH MS6514 thermometer)</source>
         <translation>18 octets binaires, continu, deux valeurs (thermomètre MASTECH MS6514)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="64"/>
+        <location filename="../../src/device/protocols.cpp" line="65"/>
         <source>17 bytes binary, polled (APPA 506/208, BENNING MM 12; APPA S, 150B, 170B over Bluetooth LE)</source>
         <translation>17 octets binaires, interrogé (APPA 506/208, BENNING MM 12 ; APPA S, 150B, 170B par Bluetooth LE)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="65"/>
+        <location filename="../../src/device/protocols.cpp" line="66"/>
         <source>59 bytes binary, polled (APPA 503/505, Voltcraft VC-930/950)</source>
         <translation>59 octets binaires, interrogé (APPA 503/505, Voltcraft VC-930/950)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="66"/>
+        <location filename="../../src/device/protocols.cpp" line="67"/>
         <source>33 bytes, continuous, lx or fc (UNI-T UT382 luxmeter)</source>
         <translation>33 octets, continu, lx ou fc (luxmètre UNI-T UT382)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="67"/>
+        <location filename="../../src/device/protocols.cpp" line="68"/>
         <source>8 bytes binary, continuous after a start command, lx and °C (Benetech GM1020)</source>
         <translation>8 octets binaires, continu après une commande de départ, lx et °C (Benetech GM1020)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="68"/>
+        <location filename="../../src/device/protocols.cpp" line="69"/>
         <source>10 to 19 bytes, scrambled LCD segments, streamed over Bluetooth LE (ZOTEK, ANENG)</source>
         <translation>10 à 19 octets, segments LCD brouillés, envoyés par Bluetooth LE (ZOTEK, ANENG)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="69"/>
+        <location filename="../../src/device/protocols.cpp" line="70"/>
         <source>14 bytes binary, streamed over Bluetooth LE (FS9721, HoldPeak HP-570C-APP)</source>
         <translation>14 octets binaires, envoyés par Bluetooth LE (FS9721, HoldPeak HP-570C-APP)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="70"/>
+        <location filename="../../src/device/protocols.cpp" line="71"/>
         <source>6 bytes binary, streamed over Bluetooth LE (OWON B35T+, B41T+, OW18E, CM2100B)</source>
         <translation>6 octets binaires, envoyés par Bluetooth LE (OWON B35T+, B41T+, OW18E, CM2100B)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="71"/>
+        <location filename="../../src/device/protocols.cpp" line="72"/>
         <source>15 bytes binary, streamed over Bluetooth LE (OWON CMS101, OW65B-OW69B, Voltcraft VC871-VC925 PV)</source>
         <translation>15 octets binaires, diffusés par Bluetooth LE (OWON CMS101, OW65B-OW69B, Voltcraft VC871-VC925 PV)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="72"/>
+        <location filename="../../src/device/protocols.cpp" line="73"/>
         <source>AB CD frames of any length with float values, streamed once asked (UNI-T UT181A, UT-D09 cable or UT-D07B adapter)</source>
         <translation>Trames AB CD de longueur variable avec valeurs flottantes, diffusées sur demande (UNI-T UT181A, câble UT-D09 ou adaptateur UT-D07B)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="73"/>
+        <location filename="../../src/device/protocols.cpp" line="74"/>
         <source>39 bytes, streamed (Voltcraft VC-880, VC650BT, CP2110 USB cable)</source>
         <translation>39 octets, en flux continu (Voltcraft VC-880, VC650BT, câble USB CP2110)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="74"/>
+        <location filename="../../src/device/protocols.cpp" line="75"/>
         <source>66 bytes, polled (Voltcraft VC-890, CP2110 USB cable)</source>
         <translation>66 octets, interrogé (Voltcraft VC-890, câble USB CP2110)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="75"/>
+        <location filename="../../src/device/protocols.cpp" line="76"/>
         <source>AB CD frames with float values, streamed after a connect command (UNI-T UT171A/B/C, UT-D09 cable or UT-D07B adapter)</source>
         <translation>Trames AB CD avec valeurs flottantes, diffusées après une commande de connexion (UNI-T UT171A/B/C, câble UT-D09 ou adaptateur UT-D07B)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="76"/>
+        <location filename="../../src/device/protocols.cpp" line="77"/>
         <source>8 bytes from AC, BCD digits, no checksum (UNI-T UT8802 bench meter, CP2110 USB)</source>
         <translation>8 octets depuis AC, chiffres BCD, sans somme de contrôle (multimètre de table UNI-T UT8802, CP2110 USB)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="77"/>
+        <location filename="../../src/device/protocols.cpp" line="78"/>
         <source>21 bytes from AB CD, ASCII display (UNI-T UT8803 bench meter with LCR, CP2110 USB)</source>
         <translation>21 octets depuis AB CD, affichage ASCII (multimètre de table UNI-T UT8803 avec LCR, CP2110 USB)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="78"/>
+        <location filename="../../src/device/protocols.cpp" line="79"/>
         <source>19 bytes from F2 with an XOR check, main and secondary display (EEVblog 121GW, Bluetooth LE)</source>
         <translation>19 octets depuis F2 avec contrôle XOR, affichage principal et secondaire (EEVblog 121GW, Bluetooth LE)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="79"/>
+        <location filename="../../src/device/protocols.cpp" line="80"/>
         <source>32-byte reading packets with CRC-16 after a password login (Brymen BM788BT, BM787BT, Bluetooth LE)</source>
         <translation>Paquets de mesure de 32 octets avec CRC-16 après une connexion par mot de passe (Brymen BM788BT, BM787BT, Bluetooth LE)</translation>
     </message>
     <message>
-        <location filename="../../src/device/protocols.cpp" line="80"/>
+        <location filename="../../src/device/protocols.cpp" line="81"/>
         <source>Unknown meter: bytes only, for a capture (Capture...)</source>
         <translation>Appareil inconnu : octets seuls, pour une capture (Capture…)</translation>
     </message>

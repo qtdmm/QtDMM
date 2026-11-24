@@ -101,6 +101,7 @@ public:
     UniTUT219PV,
     TextLines,
     OpenOSC,
+    OwonSPM,
     EndOfList              // new stuff always before!
   };
 
