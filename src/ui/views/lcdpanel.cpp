@@ -105,22 +105,39 @@ void LcdPanel::applyVariant()
   }
   if (m_alert.isValid())
   {
-    // light or dark segments, whichever has more contrast on the colour
-    // (WCAG relative luminance: on the default alarm red light ones)
-    auto luminance = [](const QColor &c)
-    {
-      auto lin = [](double v) { return v <= 0.03928 ? v / 12.92 : std::pow((v + 0.055) / 1.055, 2.4); };
-      return 0.2126 * lin(c.redF()) + 0.7152 * lin(c.greenF()) + 0.0722 * lin(c.blueF());
-    };
-    const QColor light(0xf4, 0xf4, 0xf0), dark(0x16, 0x1e, 0x14);
-    const double l = luminance(m_alert);
-    const double onLight = (luminance(light) + 0.05) / (l + 0.05);
-    const double onDark = (l + 0.05) / (luminance(dark) + 0.05);
     m_face = m_alert;
-    m_segment = onLight >= onDark ? light : dark;
+    m_segment = segmentsOn(m_alert);
   }
   m_staticDirty = true;
   update();
+}
+
+QColor LcdPanel::segmentsOn(const QColor &face)
+{
+  // light or dark segments, whichever has more contrast on the colour
+  // (WCAG relative luminance: on the default alarm red light ones)
+  auto luminance = [](const QColor &c)
+  {
+    auto lin = [](double v) { return v <= 0.03928 ? v / 12.92 : std::pow((v + 0.055) / 1.055, 2.4); };
+    return 0.2126 * lin(c.redF()) + 0.7152 * lin(c.greenF()) + 0.0722 * lin(c.blueF());
+  };
+  const QColor light(0xf4, 0xf4, 0xf0), dark(0x16, 0x1e, 0x14);
+  const double l = luminance(face);
+  const double onLight = (luminance(light) + 0.05) / (l + 0.05);
+  const double onDark = (l + 0.05) / (luminance(dark) + 0.05);
+  return onLight >= onDark ? light : dark;
+}
+
+void LcdPanel::setInk(const QColor &face, const QColor &segment) const
+{
+  m_inkFace = face;
+  m_inkSegment = segment;
+}
+
+void LcdPanel::resetInk() const
+{
+  m_inkFace = QColor();
+  m_inkSegment = QColor();
 }
 
 QString LcdPanel::lcdVariantName(LcdVariant variant)
@@ -145,13 +162,13 @@ LcdPanel::LcdVariant LcdPanel::lcdVariantFromName(const QString &name)
 
 QColor LcdPanel::ghost() const
 {
-  QColor c = m_segment;
+  QColor c = ink();
   // light segments on a dark face (backlight blue) stand out much more:
   // their ghosts must stay fainter than dark ghosts on a light face
-  if (m_segment.lightness() > m_face.lightness())
+  if (ink().lightness() > inkFace().lightness())
     c.setAlpha(18);
   else
-    c.setAlpha(m_face.lightness() < 128 ? 40 : 26);
+    c.setAlpha(inkFace().lightness() < 128 ? 40 : 26);
   return c;
 }
 
@@ -234,26 +251,27 @@ void LcdPanel::drawDigit(QPainter &p, const QPointF &origin, double h, int mask)
   p.setPen(Qt::NoPen);
   for (int i = 0; i < 7; ++i)
   {
-    p.setBrush((mask & (1 << i)) ? m_segment : ghost());
+    p.setBrush((mask & (1 << i)) ? ink() : ghost());
     p.drawPolygon(segs[i]);
   }
   p.restore();
 }
 
-double LcdPanel::numberWidth(double h, int digits)
+double LcdPanel::numberWidth(double h, int digits, bool signCell)
 {
   // sign cell + digits + one decimal point
-  return (digits + 1) * h * kAdvance + h * kDpW;
+  return (digits + (signCell ? 1 : 0)) * h * kAdvance + h * kDpW;
 }
 
 // Draws a reading right-aligned in a field of minDigits digits: leading
 // cells stay ghosted, the sign has its own cell, the decimal point sits
 // between cells. Returns the field width.
-double LcdPanel::drawNumber(QPainter &p, const QPointF &origin, double h, const QString &text, int minDigits, bool lit) const
+double LcdPanel::drawNumber(QPainter &p, const QPointF &origin, double h, const QString &text, int minDigits, bool lit,
+                            bool signCell) const
 {
   const double adv = h * kAdvance;
   const double dpW = h * kDpW;
-  const double fieldW = numberWidth(h, minDigits);
+  const double fieldW = numberWidth(h, minDigits, signCell);
 
   QString s = text.trimmed();
   bool negative = false;
@@ -300,8 +318,11 @@ double LcdPanel::drawNumber(QPainter &p, const QPointF &origin, double h, const 
   // the minus always in the sign cell, in front of the field, wherever the
   // first digit is - as on the meter
   double x = origin.x();
-  drawDigit(p, QPointF(x, origin.y()), h, (negative && lit) ? G : 0);
-  x += adv;
+  if (signCell)
+  {
+    drawDigit(p, QPointF(x, origin.y()), h, (negative && lit) ? G : 0);
+    x += adv;
+  }
 
   // the decimal point takes its slot after the cell it follows; the field is
   // sized for exactly one point, so a value without one leaves the slot empty
@@ -315,7 +336,7 @@ double LcdPanel::drawNumber(QPainter &p, const QPointF &origin, double h, const 
     {
       const double r = h * kThick * 0.45;
       p.setPen(Qt::NoPen);
-      p.setBrush((dpAfter >= 0 && lit) ? m_segment : ghost());
+      p.setBrush((dpAfter >= 0 && lit) ? ink() : ghost());
       p.drawEllipse(QPointF(x - adv * 0.17 - h * kSlant * 0.5 + dpW * 0.35, origin.y() + h - r), r, r);
       x += dpW;
     }
@@ -331,7 +352,7 @@ double LcdPanel::drawUnit(QPainter &p, const QPointF &origin, double h, const QS
 
   const QFont f = sansFont(h * 0.62);
   p.setFont(f);
-  p.setPen(m_segment);
+  p.setPen(ink());
   const QFontMetricsF fm(f);
   const double w = fm.horizontalAdvance(text);
   p.drawText(QRectF(origin.x(), origin.y(), w + 2, h), Qt::AlignLeft | Qt::AlignBottom, text);
@@ -354,7 +375,7 @@ double LcdPanel::flagWidth(const QString &t, const QFontMetricsF &fm, double fon
 void LcdPanel::drawAnnunciator(QPainter &p, const QRectF &r, const QString &text, bool on, double fontPx,
                                int batteryBars) const
 {
-  const QColor c = on ? m_segment : ghost();
+  const QColor c = on ? ink() : ghost();
   if (text == kDiodeFlag)
   {
     const double h = fontPx * 0.72;                 // symbol height
@@ -418,7 +439,7 @@ void LcdPanel::drawAnnunciator(QPainter &p, const QRectF &r, const QString &text
     const double barGap = lineW;
     const double barW = (in.width() - 2 * barGap) / 3;
     for (int i = 0; i < 3; ++i)
-      p.fillRect(QRectF(in.left() + i * (barW + barGap), in.top(), barW, in.height()), on && i < batteryBars ? m_segment : ghost());
+      p.fillRect(QRectF(in.left() + i * (barW + barGap), in.top(), barW, in.height()), on && i < batteryBars ? ink() : ghost());
     p.restore();
     return;
   }
@@ -449,11 +470,11 @@ void LcdPanel::drawVerdict(QPainter &p, const QRectF &col, LimitTest::Verdict ve
     // on a face in the verdict's (or an alarm's) colour a red badge would
     // vanish: then it is drawn in the segments' colour, the text in the face's
     p.setPen(Qt::NoPen);
-    p.setBrush(m_alert.isValid() ? m_segment : fail ? QColor(0xc6, 0x28, 0x28) : QColor(0x1f, 0x8f, 0x3a));
+    p.setBrush(onAlert() ? ink() : fail ? QColor(0xc6, 0x28, 0x28) : QColor(0x1f, 0x8f, 0x3a));
   }
   p.drawRoundedRect(badge, h * 0.14, h * 0.14);
   p.setFont(sansFont(h * 0.58));
-  p.setPen(verdict == LimitTest::NoVerdict ? ghost() : m_alert.isValid() ? m_face : QColor(Qt::white));
+  p.setPen(verdict == LimitTest::NoVerdict ? ghost() : onAlert() ? inkFace() : QColor(Qt::white));
   p.drawText(badge, Qt::AlignCenter, fail ? tr("FAIL") : tr("PASS"));
   p.restore();
 
@@ -474,7 +495,7 @@ void LcdPanel::drawVerdict(QPainter &p, const QRectF &col, LimitTest::Verdict ve
     const double d = deviation;
     const QString text = QString("%1%2 %").arg(d >= 0 ? "+" : "\u2212").arg(qAbs(d), 0, 'f', qAbs(d) < 10 ? 1 : 0);
     p.setFont(sansFont(fpx));
-    p.setPen(m_segment);
+    p.setPen(ink());
     p.drawText(QRectF(badge.left(), y + h * 0.5, badge.width(), h * 0.55), Qt::AlignCenter, text);
   }
 }
