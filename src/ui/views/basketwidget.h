@@ -40,9 +40,11 @@ public:
   QAction    *newAction() const { return m_newAction; }
   QAction    *openAction() const { return m_openAction; }
   QAction    *closeAction() const { return m_closeAction; }
-  /// Asked before New, Open, Import and Close leave the open project;
-  /// false: it stays (the bench in use changed, the person cancelled).
-  void        setLeaveCheck(const std::function<bool()> &check) { m_leaveCheck = check; }
+  /// Why the open project is left.
+  enum class Leave { Open, New, Close };
+  /// Asked before New, Open and Close leave the open project; false: it
+  /// stays (the bench in use changed, the person cancelled).
+  void        setLeaveCheck(const std::function<bool(Leave)> &check) { m_leaveCheck = check; }
   /// Copies @p files into the basket (makes the folder first), or into its
   /// folder @p dir, under names not taken yet; returns the paths they got.
   /// Into the basket itself each goes into the folder of its kind
@@ -57,7 +59,12 @@ public:
   QStringList moveInto(const QStringList &paths, const QString &dir);
 
   /// Where newSLOT() proposes a new basket (settings: Basket/base-dir).
-  void        setBaseFolder(const QString &folder) { m_baseFolder = folder; }
+  void        setBaseFolder(const QString &folder);
+  /// The default project (ProjectFolder::defaultProject()) ready to open:
+  /// made when missing (@p make; else only one that is there is mended), a
+  /// new project file when its own is missing or broken (the broken one kept
+  /// beside, ".broken"). Its folder; empty when it cannot be made.
+  static QString ensureDefaultProject(bool make = true);
   /// Writes project.qtdmm into @p dir unless there is one: the basket's own
   /// file for what is not a file of its own (name, description, when it was
   /// made; later what an export of the project needs). False when it fails.
@@ -160,5 +167,5 @@ private:
   QLabel           *m_empty;
   QTreeView        *m_view;
   ProjectFileModel *m_model;
-  std::function<bool()> m_leaveCheck;   ///< setLeaveCheck()
+  std::function<bool(Leave)> m_leaveCheck;   ///< setLeaveCheck()
 };

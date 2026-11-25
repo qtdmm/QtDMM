@@ -119,10 +119,13 @@ BasketWidget::BasketWidget(QWidget *parent) :
   m_closeAction = new QAction(tr("&Close project"), this);
   connect(m_newAction, &QAction::triggered, this, &BasketWidget::newSLOT);
   connect(m_openAction, &QAction::triggered, this, &BasketWidget::openSLOT);
+  // [E 25.11.] closed is back in the default project, made anew when gone
   connect(m_closeAction, &QAction::triggered, this, [this]
   {
-    if (!m_leaveCheck || m_leaveCheck())
-      setFolder(QString());
+    if (m_leaveCheck && !m_leaveCheck(Leave::Close))
+      return;
+    setFolder(ensureDefaultProject());
+    Q_EMIT projectOpened();
   });
   m_describeAction = new QAction(tr("&Description..."), this);
   connect(m_describeAction, &QAction::triggered, this, &BasketWidget::describeSLOT);
@@ -314,7 +317,7 @@ void BasketWidget::setFolder(const QString &folder)
 
 void BasketWidget::newSLOT()
 {
-  if (m_leaveCheck && !m_leaveCheck())
+  if (m_leaveCheck && !m_leaveCheck(Leave::New))
     return;
   QDir().mkpath(m_baseFolder);
   // a folder to be made: folders only, no "All files (*)" [V 09.11.]
@@ -337,6 +340,35 @@ void BasketWidget::newSLOT()
   Q_EMIT projectOpened();
 }
 
+void BasketWidget::setBaseFolder(const QString &folder)
+{
+  m_baseFolder = folder;
+  ProjectFolder::setNewProjectsDir(folder);
+}
+
+QString BasketWidget::ensureDefaultProject(bool make)
+{
+  const QString dir = ProjectFolder::defaultProject();
+  if (dir.isEmpty())
+    return QString();
+  // not made before it is needed: only opened, nothing written
+  if (!make && !QFileInfo(dir).isDir())
+    return dir;
+  if (!QDir().mkpath(dir))
+    return QString();
+  // deleted or damaged by hand: a new, empty one; the person's files stay
+  bool ok = false;
+  readProject(dir, &ok);
+  const QString file = ProjectFolder::projectFile(dir);
+  if (QFileInfo::exists(file) && !ok)
+  {
+    const QString broken = file + QStringLiteral(".broken");
+    QFile::remove(broken);
+    QFile::rename(file, broken);
+  }
+  return writeProjectFile(dir) ? dir : QString();
+}
+
 bool BasketWidget::writeProjectFile(const QString &dir)
 {
   // one of before 27.1 counts (and is renamed on the next write)
@@ -353,6 +385,9 @@ bool BasketWidget::writeProjectFile(const QString &dir)
 
 QString BasketWidget::projectName(const QString &dir)
 {
+  // its folder is "default" in every language, its name is the program's
+  if (ProjectFolder::isDefault(dir))
+    return tr("Default");
   const QString name = readProject(dir).value("name").toString();
   return name.isEmpty() ? QFileInfo(dir).fileName() : name;
 }
@@ -615,7 +650,7 @@ bool BasketWidget::importProject(const QString &zipFile, const QString &baseDir,
 
 void BasketWidget::openSLOT()
 {
-  if (m_leaveCheck && !m_leaveCheck())
+  if (m_leaveCheck && !m_leaveCheck(Leave::Open))
     return;
   // [E 25.11.] one way in: the project's own file, or a project packed into one;
   // the folder for new projects made first, else the dialog takes it for a name
@@ -680,9 +715,11 @@ bool BasketWidget::openZip(const QString &zipFile)
 void BasketWidget::showFolder()
 {
   m_pages->setCurrentIndex(m_folder.isEmpty() ? 0 : 1);
+  // the default project is not closed: it is where closing goes
+  m_closeAction->setVisible(!m_folder.isEmpty() && !ProjectFolder::isDefault(m_folder));
   if (m_folder.isEmpty())
     return;
-  m_title->setText(QFileInfo(m_folder).fileName());
+  m_title->setText(projectName(m_folder));
   const QString description = readProject(m_folder).value("description").toString();
   m_description->setText(description);
   m_description->setVisible(!description.isEmpty());

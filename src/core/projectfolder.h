@@ -40,6 +40,14 @@ QString projectFileToWrite(const QString &project);
 /// Whether @p name (a file name, no folder) is a project file, new or old.
 bool    isProjectFile(const QString &name);
 
+/// The folder new projects go into (Settings → General; BasketWidget).
+void    setNewProjectsDir(const QString &dir);
+QString newProjectsDir();
+/// [E 25.11.] The default project: open while no project of one's own is,
+/// the folder "default" in newProjectsDir(), shown as "Default".
+QString defaultProject();
+bool    isDefault(const QString &project);
+
 /// The basket's folder, empty for none (BasketWidget::setFolder()).
 void    set(const QString &folder);
 /// The folder set, empty while no basket is open.
