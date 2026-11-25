@@ -375,13 +375,20 @@ QJsonObject BasketWidget::readProject(const QString &dir, bool *ok)
 
 bool BasketWidget::setProjectDescription(const QString &dir, const QString &text)
 {
+  return setProjectValue(dir, "description", text);
+}
+
+bool BasketWidget::setProjectValue(const QString &dir, const QString &key, const QJsonValue &value)
+{
   if (!writeProjectFile(dir))
     return false;
   bool ok = false;
   QJsonObject project = readProject(dir, &ok);
   if (!ok)
-    return false;   // broken by hand: kept, not overwritten with the description alone
-  project["description"] = text;
+    return false;   // broken by hand: kept, not overwritten with this key alone
+  if (project.value(key) == value)
+    return true;
+  project[key] = value;
   QSaveFile file(QDir(dir).filePath("project.json"));
   return file.open(QIODevice::WriteOnly) && file.write(QJsonDocument(project).toJson()) > 0 && file.commit();
 }

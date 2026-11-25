@@ -20,19 +20,28 @@ set under **Settings → General → Folder for new projects**
 
 The second button of the toolbar shows and hides the project's window;
 without an open project it makes a new one. Its arrow has **New
-project...**, **Open project...**, the projects opened last
-(the open one ticked) and **Close project**.
+project...**, **Open project...**, **Import project from file...**, the
+bench entries (once there is a device), the projects opened last (the open
+one ticked) and **Close project**.
 
-A project you make, open or import shows its window; a bench loaded
-from another project switches to it and leaves the windows as the bench
-has them. A window not yet placed goes to the right, like the readings
-table. The list leaves out `project.json`, the file in which QtDMM keeps
-the project's name and description.
+A project also opens without any device: the start page has **Open
+project...** and **Import project from file...** below *Add device*, and
+the projects opened last (up to five; a click opens one).
 
-Projects and benches need a device: while My devices is empty, the
-project button, the bench entries and the project in the sidebar are
-off. With devices but none connected, the project's window stands at
-the right beside the start page.
+A project you open, import or pick from the last ones loads a bench of
+its own when nothing is connected: the one used last in it (kept in
+`project.json`), else its only one. With more benches and none used last
+the start page lists them, a click loads one; without any it says so. The
+project's window does not open by itself; a new project made with the
+project button shows it. A bench in use stays when a project is opened. A
+bench loaded from another project switches to it and leaves the windows as
+the bench has them. A window not yet placed goes to the right, like the
+readings table. The list leaves out `project.json`, the file in which
+QtDMM keeps the project's name, description and the bench used last.
+
+With devices but none connected, the project's window stands at the
+right beside the start page. The project's node in the sidebar shows once
+there is a device.
 
 The window title shows the project and the bench, the bench only once
 it lies in the project's folder.

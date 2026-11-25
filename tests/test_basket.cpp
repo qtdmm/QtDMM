@@ -127,6 +127,10 @@ int main(int argc, char **argv)
   QJsonObject p = BasketWidget::readProject(dir.filePath("Bench"));
   check(p.value("description").toString() == "Ripple of the 12 V supply" && p.value("name").toString() == "mine",
         "description in, name kept");
+  check(BasketWidget::setProjectValue(dir.filePath("Bench"), "lastBench", "benches/Lab.qtdmm-workspace"), "a key set");
+  p = BasketWidget::readProject(dir.filePath("Bench"));
+  check(p.value("lastBench").toString() == "benches/Lab.qtdmm-workspace" && p.value("description").toString().startsWith("Ripple"),
+        "the bench used last in, the description kept");
   QDir().mkpath(dir.filePath("Other"));
   check(BasketWidget::setProjectDescription(dir.filePath("Other"), "x")
           && BasketWidget::readProject(dir.filePath("Other")).value("format").toInt() == 1, "made first when missing");

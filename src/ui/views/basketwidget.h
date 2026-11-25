@@ -9,6 +9,7 @@
 
 class ProjectFileModel;
 class QJsonObject;
+class QJsonValue;
 class QModelIndex;
 class QAction;
 class QLabel;
@@ -71,6 +72,9 @@ public:
   /// Sets the description in project.json of @p dir (made first when missing),
   /// the other keys stay. False when it cannot be written.
   static bool setProjectDescription(const QString &dir, const QString &text);
+  /// Sets @p key in project.json of @p dir (made first when missing), the
+  /// other keys stay. False when it cannot be written.
+  static bool setProjectValue(const QString &dir, const QString &key, const QJsonValue &value);
   /// Packs the basket in @p dir into the ZIP @p zipFile: every file under a
   /// folder named like the basket, project.json extended by "export" (date,
   /// QtDMM version, each file with size and SHA-256). Hidden files and
