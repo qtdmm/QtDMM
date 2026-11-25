@@ -533,6 +533,7 @@ void MainWindow::createViews()
   // made, opened or imported: its window shows (a bench switching the
   // project leaves the windows as the bench has them)
   connect(m_basket, &BasketWidget::projectOpened, this, [this] { m_basketAction->setChecked(true); });
+  m_basket->setLeaveCheck([this] { return leaveProject(); });
   connect(m_basket, &BasketWidget::openRequested, this, [this](const QString &path)
   {
     // a bench is loaded, a recording of QtDMM goes into the graph, anything
@@ -1726,6 +1727,8 @@ void MainWindow::fillViewToolbar()
       a->setEnabled(QFileInfo(dir).isDir());
       connect(a, &QAction::triggered, this, [this, dir]
       {
+        if (dir != m_basket->folder() && !leaveProject())
+          return;
         m_basket->setFolder(dir);
         m_basketAction->setChecked(true);
       });
@@ -1996,6 +1999,14 @@ QList<QAction *> MainWindow::createArrangeMenu()
                           "windows are shown with which values, the arrangement, "
                           "title bars, toolbar, design and the size of the main window.</p></body></html>"));
   connect(saveWs, &QAction::triggered, this, [this] { saveWorkspace(); });
+  QAction *newBench = new QAction(QIcon::fromTheme("document-new"), tr("New &empty bench"), this);
+  newBench->setObjectName("action_NewEmptyBench");
+  newBench->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">New empty bench</span></p>"
+                            "<p>Switches the outputs of supplies and generators off, closes every device and "
+                            "starts the windows anew; an open project stays open. A changed bench and "
+                            "recordings not saved are asked about first. <i>Save bench</i> then asks for the "
+                            "new bench's name.</p></body></html>"));
+  connect(newBench, &QAction::triggered, this, &MainWindow::newEmptyBench);
   m_benchIntoProject = new QAction(tr("Put the bench into a new &project..."), this);
   m_benchIntoProject->setObjectName("action_BenchIntoProject");
   m_benchIntoProject->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">Put the bench into a "
@@ -2003,11 +2014,11 @@ QList<QAction *> MainWindow::createArrangeMenu()
                                       "into its folder: the way from a single bench to a project of several."
                                       "</p></body></html>"));
   connect(m_benchIntoProject, &QAction::triggered, this, &MainWindow::benchIntoNewProject);
-  m_benchMenuActions = { m_saveBench, saveWs, nullptr, loadWs, m_recentMenu->menuAction(), nullptr, m_benchIntoProject };
+  m_benchMenuActions = { m_saveBench, saveWs, newBench, nullptr, loadWs, m_recentMenu->menuAction(), nullptr, m_benchIntoProject };
   // the same at the sidebar's Recent benches and its node Bench
   m_sidebar->setWorkspaceActions({ loadWs, saveWs, m_benchIntoProject });
   m_sidebar->setBenchActions(m_benchMenuActions);
-  m_benchActions << loadWs << m_saveBench << saveWs << m_benchIntoProject << m_recentMenu->menuAction();
+  m_benchActions << loadWs << m_saveBench << saveWs << newBench << m_benchIntoProject << m_recentMenu->menuAction();
   m_autoSaveLayout = m_arrangeMenu->addAction(tr("Save layout on e&xit"));
   m_autoSaveLayout->setCheckable(true);
   m_autoSaveLayout->setChecked(true);
@@ -2023,7 +2034,7 @@ QList<QAction *> MainWindow::createArrangeMenu()
   toolBarMenu->insertAction(action_Menu, arrangeButton);
   if (auto *button = qobject_cast<QToolButton *>(toolBarMenu->widgetForAction(arrangeButton)))
     button->setPopupMode(QToolButton::InstantPopup);
-  return { m_saveBench, saveWs, loadWs, m_benchIntoProject };
+  return { m_saveBench, saveWs, newBench, loadWs, m_benchIntoProject };
 }
 
 // Design: the colour designs of the window.
@@ -2562,7 +2573,12 @@ void MainWindow::createActions()
   });
   connect(actionConfigureRecorder, &QAction::triggered, m_wid, &InstanceWidget::configRecorderSLOT);
   connect(action_Quit, &QAction::triggered, this, &MainWindow::storeDisplaySLOT);
-  connect(action_Quit, &QAction::triggered, m_wid, &InstanceWidget::quitSLOT);
+  // through closeEvent(): its question comes once
+  connect(action_Quit, &QAction::triggered, this, [this]
+  {
+    if (close())
+      qApp->quit();
+  });
   connect(action_Direct_help, &QAction::triggered, m_wid, &InstanceWidget::helpSLOT);
 
 
@@ -2896,6 +2912,12 @@ void MainWindow::on_action_Menu_triggered()
 
 void MainWindow::closeEvent(QCloseEvent *ev)
 {
+  // one question for the bench and the recordings; closeWin() asks no more
+  if (!leaveBench(tr("QtDMM: Quit"), m_session->unsavedRecordings(), tr("Quit without saving")))
+  {
+    ev->ignore();
+    return;
+  }
   storeDisplaySLOT();
   // the settings dialog saves "Show display" as well: without auto-save it
   // keeps the start layout's
@@ -2905,7 +2927,7 @@ void MainWindow::closeEvent(QCloseEvent *ev)
   saveWindows();
   m_wid->settings()->setInt("ReadingLog/max-rows", m_readings->maxRows());
 
-  if (m_wid->closeWin())
+  if (m_wid->closeWin(false))
     ev->accept();
   else
     ev->ignore();
@@ -5047,7 +5069,7 @@ void MainWindow::updateBenchChanged()
   if (!m_pendingOpen.isEmpty() || !m_pendingLayout.isEmpty())
     return;
   bool changed = false;
-  if (!m_benchSaved.isEmpty())
+  if (!m_benchSaved.isEmpty() || m_benchBaseline)
   {
     QVariantMap keys;
     storeWorkspace([&keys](const QString &key, const QVariant &value) { keys.insert(key, value); });
@@ -5056,6 +5078,9 @@ void MainWindow::updateBenchChanged()
       if (const std::optional<MyDevice> d = m_wid->devices()->find(id))
         devices << *d;
     const QMap<QString, QString> now = benchState(keys, devices);
+    // a new bench: as it stands now is unchanged
+    if (std::exchange(m_benchBaseline, false))
+      m_benchSaved = now;
     // what the file has: a key it lacks (a file from before the key) is no change
     for (auto it = m_benchSaved.cbegin(); it != m_benchSaved.cend() && !changed; ++it)
       changed = now.value(it.key()) != it.value();
@@ -5064,6 +5089,75 @@ void MainWindow::updateBenchChanged()
     return;
   m_benchChanged = changed;
   m_sidebar->setBenchChanged(changed);
+}
+
+bool MainWindow::leaveBench(const QString &title, const QStringList &unsaved, const QString &discard)
+{
+  updateBenchChanged();
+  const bool bench = m_benchChanged;
+  const QStringList recordings = m_wid->alertsUnsavedData() ? unsaved : QStringList();
+  if (!bench && recordings.isEmpty())
+    return true;
+  QStringList text;
+  if (bench)
+    text << (m_benchNew || m_workspaceName.isEmpty()
+               ? tr("The new bench has been changed. Save it?")
+               : tr("The bench \u201c%1\u201d has been changed. Save it?").arg(m_workspaceName).toHtmlEscaped());
+  if (!recordings.isEmpty())
+    text << tr("Not saved: the recording of %1. It is lost unless exported.").arg(recordings.join(", ")).toHtmlEscaped();
+  QMessageBox question(QMessageBox::Question, title, "<p>" + text.join("</p><p>") + "</p>",
+                       QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel, this);
+  question.setDefaultButton(QMessageBox::Save);
+  question.setEscapeButton(QMessageBox::Cancel);
+  // one answer for both: save the bench, then the recordings
+  question.button(QMessageBox::Save)->setText(!bench ? tr("Export data first")
+                                              : recordings.isEmpty() ? tr("&Save") : tr("&Save and export..."));
+  question.button(QMessageBox::Discard)->setText(discard);
+  const int answer = question.exec();
+  if (answer == QMessageBox::Cancel)
+    return false;
+  if (answer == QMessageBox::Discard)
+    return true;
+  if (bench)
+  {
+    saveBench();
+    if (m_benchChanged || m_workspaceFile.isEmpty())
+      return false;   // not saved: cancelled or failed
+  }
+  if (!recordings.isEmpty())
+  {
+    // a recording still running stopped first, so it goes into the file
+    if (m_session->isRecording())
+      m_session->stopRecording();
+    if (!m_wid->exportRecording())
+      return false;
+  }
+  return true;
+}
+
+void MainWindow::newEmptyBench()
+{
+  if (!leaveBench(tr("QtDMM: New empty bench"), m_session->unsavedRecordings(), tr("Discard")))
+    return;
+  // the outputs off first, as the emergency off: nothing left driving the set-up
+  OutputRegistry::instance().allOff();
+  for (const MeterController *ctl : m_session->controllers())
+    m_session->close(ctl->deviceId());
+  // the windows as at a first start
+  applyWorkspace([](const QString &, const QVariant &def) { return def; });
+  setCurrentWorkspace(QString());
+  m_benchNew = true;
+  m_benchBaseline = true;
+  m_sidebar->setCurrentWorkspace(QString(), QString(), true);
+  updateEmptyStart();
+}
+
+bool MainWindow::leaveProject()
+{
+  // the bench stays in the window: not saving loses nothing yet
+  if (m_benchIntoProjectRuns || m_basket->folder().isEmpty())
+    return true;
+  return leaveBench(tr("QtDMM: Project"), {}, tr("&Don't save"));
 }
 
 void MainWindow::loadWorkspace()
@@ -5104,10 +5198,7 @@ bool MainWindow::loadWorkspaceFile(const QString &file)
   for (const MeterController *ctl : std::as_const(closing))
     if (ctl->recorder()->state() == RecordingStore::View && ctl->recorder()->dirty())
       unsaved << ctl->deviceName();
-  if (!unsaved.isEmpty()
-      && QMessageBox::question(this, tr("QtDMM: Load bench"),
-                               tr("The bench closes %1, its recording is not saved.").arg(unsaved.join(", ")),
-                               QMessageBox::Discard | QMessageBox::Cancel, QMessageBox::Cancel) != QMessageBox::Discard)
+  if (!leaveBench(tr("QtDMM: Load bench"), unsaved, tr("Discard")))
     return false;
   // a device gone from My devices comes back from the copy, under its id:
   // the views name it so. A file may come from anyone: its alarms run no
@@ -5194,6 +5285,8 @@ void MainWindow::setCurrentWorkspace(const QString &file)
   // in the constructor the windows are not all there yet)
   m_benchSaved = ws ? benchState(ws->keys, ws->devices) : QMap<QString, QString>();
   m_benchChanged = false;
+  m_benchNew = false;
+  m_benchBaseline = false;
   m_sidebar->setBenchChanged(false);
   updateWindowTitle();
   updateProjectSidebar();
@@ -5202,7 +5295,11 @@ void MainWindow::setCurrentWorkspace(const QString &file)
 void MainWindow::benchIntoNewProject()
 {
   const QString before = m_basket->folder();
-  m_basket->newAction()->trigger();
+  {
+    // the bench goes along into the new project: no question about it
+    const QScopedValueRollback<bool> runs(m_benchIntoProjectRuns, true);
+    m_basket->newAction()->trigger();
+  }
   const QString project = m_basket->folder();
   if (project.isEmpty() || project == before)
     return;   // no new project made

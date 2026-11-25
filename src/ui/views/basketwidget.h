@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
 
+#include <functional>
+
 #include <QStringList>
 #include <QWidget>
 
@@ -38,6 +40,9 @@ public:
   QAction    *openAction() const { return m_openAction; }
   QAction    *closeAction() const { return m_closeAction; }
   QAction    *importAction() const { return m_importAction; }
+  /// Asked before New, Open, Import and Close leave the open project;
+  /// false: it stays (the bench in use changed, the person cancelled).
+  void        setLeaveCheck(const std::function<bool()> &check) { m_leaveCheck = check; }
   /// Copies @p files into the basket (makes the folder first), or into its
   /// folder @p dir, under names not taken yet; returns the paths they got.
   /// Into the basket itself each goes into the folder of its kind
@@ -147,4 +152,5 @@ private:
   QLabel           *m_empty;
   QTreeView        *m_view;
   ProjectFileModel *m_model;
+  std::function<bool()> m_leaveCheck;   ///< setLeaveCheck()
 };

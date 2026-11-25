@@ -596,6 +596,17 @@ protected:
   static QMap<QString, QString> benchState(const QVariantMap &keys, const QList<MyDevice> &devices);
   /// The star of the bench in use: the set-up against its file.
   void        updateBenchChanged();
+  /// Before the bench in use goes (another loaded, a new one, the project
+  /// left, quit): one question for a changed bench and the recordings
+  /// @p unsaved names (devices) that would be lost - save (the bench, then
+  /// export the recordings), @p discard or cancel. True: go on.
+  bool        leaveBench(const QString &title, const QStringList &unsaved, const QString &discard);
+  /// New empty bench: outputs off, every device closed, the windows as at
+  /// a first start; the project stays open. Save bench then asks its name.
+  void        newEmptyBench();
+  /// Before the open project is left (closed, another one): the question
+  /// of leaveBench() for a changed bench; true: go on.
+  bool        leaveProject();
   /// The project's node in the sidebar: its benches, the one in use.
   void        updateProjectSidebar();
   /// The way from no project to one: a new project, opened, and the bench
@@ -634,6 +645,9 @@ protected:
   QString     m_workspaceDescription;
   QMap<QString, QString> m_benchSaved;  ///< benchState() of the file in use; empty: none
   bool        m_benchChanged = false;   ///< updateBenchChanged()
+  bool        m_benchNew = false;       ///< newEmptyBench(), not saved yet
+  bool        m_benchBaseline = false;  ///< the next updateBenchChanged() takes the state as unchanged
+  bool        m_benchIntoProjectRuns = false;   ///< benchIntoNewProject() runs: leaving the project asks nothing
   QAction    *m_saveBench = nullptr;
   QList<QAction *> m_benchMenuActions;  ///< the node Bench's menu, nullptr a separator
   /// @}

@@ -67,9 +67,15 @@ public:
   ///                    set up from this window's settings
   /// @param parent      the MainWindow
   InstanceWidget(QString instanceId, QString configPath, DeviceSession *session, QWidget *parent = nullptr);
-  /// Saves the settings and asks about unsaved data. Returns false when the
-  /// user cancels; MainWindow then ignores the close event.
-  bool        closeWin();
+  /// Saves the settings and asks about unsaved data (@p ask false: the
+  /// caller asked already). Returns false when the user cancels;
+  /// MainWindow then ignores the close event.
+  bool        closeWin(bool ask = true);
+  /// Export with a file dialog: the session's recording with every meter
+  /// that recorded; false when cancelled or failed.
+  bool        exportRecording();
+  /// Whether the settings ask before unsaved readings are lost.
+  bool        alertsUnsavedData() const;
   /// Asks about unsaved readings before they are lost (@p text says how,
   /// @p discard is the button that drops them): export first, drop or
   /// cancel. True when the caller may go on - nothing unsaved, exported or
@@ -207,9 +213,6 @@ protected:
   /// The meters' values by name: the recording's choice of trigger value.
   void        updateValueNames();
   Settings    *m_settings;
-  /// Export with a file dialog: the session's recording with every meter
-  /// that recorded; false when cancelled or failed.
-  bool        exportRecording();
   DeviceLibrary *m_devices;
   QString     m_instanceId;
   QString     m_configPath;   ///< --config-dir, passed on to new instances

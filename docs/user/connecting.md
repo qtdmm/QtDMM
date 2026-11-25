@@ -332,6 +332,9 @@ of the project button:
   asks for its name first, as *Save bench as*.
 - **Save bench as...** asks for a name and a description, shows the
   picture of the windows that goes into the file, then for the file.
+- **New empty bench** switches the outputs of supplies and generators off,
+  closes every device and starts the windows anew, as **Bench (new)**; an
+  open project stays open. *Save bench* then asks for its name.
 - **Load bench...** and **Recent benches** load one.
 - **Put the bench into a new project...**, see
   [Project](project-basket.md).
@@ -344,9 +347,17 @@ turned while it runs is no change: the setpoints of a supply or a
 generator, its outputs on or off, an integral's HOLD. Saving or loading
 takes the star away.
 
+Before a changed bench goes - another one loaded, a new empty one, the
+project closed or another one opened, QtDMM quit - one question asks:
+**Save** (the bench; one not saved yet asks for its name), **Discard** or
+**Cancel**, which leaves everything as it is. Recordings not saved that
+would be lost are named in the same question; *Save and export...* then
+saves the bench and exports them. A bench never loaded or saved (QtDMM's
+own set-up from the last start) is not asked about.
+
 Loading a bench connects its devices; devices connected now that it
 does not have are closed (with
-a question when one has a recording not saved). The file keeps a copy of
+the question above when one has a recording not saved). The file keeps a copy of
 each device's entry in My devices, with its alarms and PASS/FAIL test: an
 entry that is there wins (a port changed since), one that is missing - on
 another computer, or deleted - is added back from the copy. Its alarms
