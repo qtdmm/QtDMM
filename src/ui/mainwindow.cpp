@@ -386,18 +386,12 @@ void MainWindow::createViews()
   m_emptyConnect = new QPushButton(tr("&Connect a device from My devices"));
   m_emptyConnect->setObjectName("ui_emptyConnect");
   m_emptyConnect->setIcon(QIcon::fromTheme("network-connect"));
-  // a project, also without a device [E 25.11.]: open (its project.qtdmm or
-  // a packed one), the last ones; with one open its benches (fillEmptyProject())
+  // the open project's benches and the last projects (fillEmptyProject());
+  // a project is opened with the project button [E 25.11.]
   m_emptyProject = new QWidget(m_emptyStart);
   auto *projectLayout = new QVBoxLayout(m_emptyProject);
   projectLayout->setContentsMargins(0, 0, 0, 0);
-  auto *projectKeys = new QHBoxLayout;
-  auto *openProject = new QPushButton(QIcon::fromTheme("document-open"), tr("Open &project..."), m_emptyProject);
-  openProject->setObjectName("ui_emptyOpenProject");
-  projectKeys->addWidget(openProject);
   projectLayout->addWidget(m_emptyConnect, 0, Qt::AlignHCenter);
-  projectLayout->addLayout(projectKeys);
-  connect(openProject, &QPushButton::clicked, this, [this] { m_basket->openAction()->trigger(); });
   emptyLayout->addWidget(m_emptyProject, 1, 0, Qt::AlignHCenter | Qt::AlignTop);
   emptyLayout->setRowStretch(0, 1);
   emptyLayout->setRowStretch(1, 1);
@@ -5614,13 +5608,12 @@ void MainWindow::openProjectBench()
 void MainWindow::fillEmptyProject()
 {
   auto *layout = static_cast<QVBoxLayout *>(m_emptyProject->layout());
-  while (QLayoutItem *item = layout->takeAt(2))
+  while (QLayoutItem *item = layout->takeAt(1))
   {
     delete item->widget();
     delete item;
   }
-  // a link-like button for each: a click opens it
-  // buttons as "Open project...": seen as something to click, with a symbol
+  // a button for each: seen as something to click, with a symbol
   auto entry = [this, layout](const QIcon &icon, const QString &text, const QString &tip, const std::function<void()> &open)
   {
     auto *b = new QPushButton(icon, QString(text).replace('&', "&&"), m_emptyProject);

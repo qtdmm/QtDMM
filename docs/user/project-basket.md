@@ -31,9 +31,9 @@ its arrow has **New project...**, **Open project...** (its
 device), the projects opened last (the open one ticked) and **Close
 project**.
 
-The start page has **Open project...** below *Add device* (a
-`project.qtdmm` or a packed project), the benches of the open project and
-the other projects opened last (up to five; a click opens one).
+The start page lists the benches of the open project and, once there is
+a project besides the default one, the other projects opened last (up to
+five; a click opens one). A project is opened with the project button.
 
 **Switching the project** - open, one of the last, close - closes the
 bench of the project left: the question to save it comes only when it
