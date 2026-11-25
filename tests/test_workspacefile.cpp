@@ -150,6 +150,26 @@ int main(int argc, char **argv)
           "oversized thumbnail dimensions are refused: " + error);
   }
 
+  // a device of another configuration renamed to the one here
+  {
+    WorkspaceFile ws;
+    MyDevice d;
+    d.id = "1a2b3c4d";
+    d.name = "UT61E";
+    ws.devices << d;
+    ws.windowDevice = "1a2b3c4d";
+    ws.keys.insert("Windows/open-devices", "1a2b3c4d ffff0000");
+    ws.keys.insert("Windows/panel-1a2b3c4d-value", "device:1a2b3c4d/0");
+    ws.keys.insert("Windows/other", "x1a2b3c4dx");
+    ws.renameDevice("1a2b3c4d", "99887766");
+    check(ws.devices.first().id == "99887766" && ws.windowDevice == "99887766", "renamed: the entry and the window's device");
+    check(ws.keys.value("Windows/open-devices").toString() == "99887766 ffff0000"
+            && ws.keys.value("Windows/panel-99887766-value").toString() == "device:99887766/0"
+            && !ws.keys.contains("Windows/panel-1a2b3c4d-value"),
+          "renamed: in key names and texts");
+    check(ws.keys.value("Windows/other").toString() == "x1a2b3c4dx", "renamed: only as a whole word");
+  }
+
   if (failed)
   {
     qWarning() << failed << "workspace file check(s) failed";

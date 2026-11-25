@@ -21,6 +21,8 @@
 #include <QTemporaryDir>
 #include <QTest>
 #include <QTreeView>
+
+#include "core/workspacefile.h"
 #include <QFileSystemModel>
 
 #include "core/photostore.h"
@@ -559,6 +561,23 @@ int main(int argc, char **argv)
     }
     else
       check(false, "project window: the photo button");
+  }
+
+  // a bench name once in a project
+  {
+    QTemporaryDir tmp;
+    const QDir dir(tmp.path());
+    dir.mkpath("benches/sub");
+    WorkspaceFile ws;
+    ws.name = "Labor 1";
+    ws.write(dir.filePath("benches/a.qtdmm-workspace"));
+    ws.name = "Labor 1 (2)";
+    ws.write(dir.filePath("benches/sub/b.qtdmm-workspace"));
+    ws.name.clear();
+    ws.write(dir.filePath("benches/Nameless.qtdmm-workspace"));
+    check(BasketWidget::freeBenchName(tmp.path(), "Labor 2") == "Labor 2", "bench name: a free one stays");
+    check(BasketWidget::freeBenchName(tmp.path(), "labor 1") == "labor 1 (3)", "bench name: taken, also in a subfolder");
+    check(BasketWidget::freeBenchName(tmp.path(), "Nameless") == "Nameless (2)", "bench name: a file's name counts");
   }
 
   if (failed == 0)

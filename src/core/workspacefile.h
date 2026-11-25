@@ -49,4 +49,7 @@ public:
 
   /// The entry @p id among devices(), or nothing.
   std::optional<MyDevice> device(const QString &id) const;
+  /// The device @p from is @p to from now on: its entry in devices, the
+  /// window's device and every key (name or text) that names it as a whole word.
+  void        renameDevice(const QString &from, const QString &to);
 };

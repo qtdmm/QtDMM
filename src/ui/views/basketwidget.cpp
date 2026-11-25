@@ -3,6 +3,7 @@
 #include "ui/views/basketwidget.h"
 
 #include "core/projectfolder.h"
+#include "core/workspacefile.h"
 #include "recording/zipfile.h"
 
 #include <algorithm>
@@ -33,6 +34,7 @@
 #include <QMimeData>
 #include <QPushButton>
 #include <QSaveFile>
+#include <QSet>
 #include <QRegularExpression>
 #include <QStackedWidget>
 #include <QStyle>
@@ -289,6 +291,25 @@ QString BasketWidget::freeName(const QString &dir, const QString &name)
     if (!QFileInfo::exists(candidate))
       return candidate;
   }
+}
+
+QString BasketWidget::freeBenchName(const QString &project, const QString &name)
+{
+  QSet<QString> taken;
+  if (!project.isEmpty())
+  {
+    QDirIterator it(project, { "*.qtdmm-workspace" }, QDir::Files, QDirIterator::Subdirectories);
+    while (it.hasNext())
+    {
+      const QString file = it.next();
+      const std::optional<WorkspaceFile> ws = WorkspaceFile::read(file);
+      taken << (ws && !ws->name.isEmpty() ? ws->name : QFileInfo(file).completeBaseName()).toLower();
+    }
+  }
+  QString free = name;
+  for (int n = 2; taken.contains(free.toLower()); ++n)
+    free = QString("%1 (%2)").arg(name).arg(n);
+  return free;
 }
 
 QString BasketWidget::projectOf(const QString &file, const QString &open)

@@ -104,6 +104,9 @@ public:
   static QString projectOf(const QString &file, const QString &open = QString());
   /// @p name in @p dir if free, else "name (2).ext", "name (3).ext" ...
   static QString freeName(const QString &dir, const QString &name);
+  /// @p name if no bench in the project @p project has it (its name, else
+  /// its file's), else "name (2)", "name (3)" ... (case does not count).
+  static QString freeBenchName(const QString &project, const QString &name);
   /// The symbol of a file in the project's list by its suffix ("text-csv",
   /// "image-x-generic" ...), "folder" for a folder; empty: Qt's own.
   static QString fileIconName(const QString &fileName, bool dir);
