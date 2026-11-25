@@ -131,9 +131,10 @@ static void testModel()
 
   int allChanged = 0;
   QObject::connect(&model, &GraphModel::followAllChanged, [&] { allChanged++; });
-  model.setFollowAll(true);
-  model.setFollowAll(true);
-  check(model.followAll() && allChanged == 1, "\"All\" changes once");
+  check(model.followAll(), "\"All\" in a new graph");
+  model.setFollowAll(false);
+  model.setFollowAll(false);
+  check(!model.followAll() && allChanged == 1, "\"All\" changes once");
 
   // the window of "All", as GraphModel::allTarget() counts
   check(GraphModel::allTarget(3, false, 0) == 10, "at least 10 s");
@@ -288,7 +289,7 @@ static void testModelSettings()
   GraphModel empty;
   empty.readSettings([](const QString &, const QVariant &def) { return def; }, "Windows/graphView-3");
   check(empty.values().isEmpty() && empty.minimapVisible() && empty.statesVisible() && !empty.envelopeVisible()
-          && empty.crossingsVisible() && !empty.outliers().active() && !empty.followAll()
+          && empty.crossingsVisible() && !empty.outliers().active() && empty.followAll()
           && empty.windowSeconds() == GraphModel::kDefaultWindowSeconds, "the defaults");
 }
 
@@ -343,6 +344,7 @@ static void testThinning()
   GraphWidget graph;
   graph.resize(640, 400);
   graph.show();
+  graph.setFollowAll(false);   // a window of its own, not All (the default)
   graph.setWindowSeconds(600);
   graph.setStore(&store);
   for (int i = 0; i < 6000; ++i)

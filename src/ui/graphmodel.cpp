@@ -261,7 +261,7 @@ void GraphModel::readSettings(const Get &get, const QString &key)
   setOutliersSetting(get(key + "-outliers", QString()).toString());
   if (const int seconds = get(key + "-window", 0).toInt(); seconds > 0)
     setWindowSeconds(seconds);
-  setFollowAll(get(key + "-all", false).toBool());
+  setFollowAll(get(key + "-all", true).toBool());
 }
 
 void GraphModel::writeSettings(const Set &set, const QString &key) const
