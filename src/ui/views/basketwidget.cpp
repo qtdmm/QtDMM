@@ -29,6 +29,7 @@
 #include <QLabel>
 #include <QLocale>
 #include <QMenu>
+#include <QMessageBox>
 #include <QMimeData>
 #include <QPushButton>
 #include <QSaveFile>
@@ -42,7 +43,7 @@
 #include <QVBoxLayout>
 
 /// The files of the basket; the folders of a kind directly in it show the
-/// name project.json has for them in the language of the program.
+/// name project.qtdmm has for them in the language of the program.
 class ProjectFileModel : public QFileSystemModel
 {
 public:
@@ -80,8 +81,8 @@ private:
     const QString project = rootPath();
     if (filePath(index.parent()) != project)
       return QString();
-    // project.json read again only when it changed
-    const QDateTime changed = QFileInfo(QDir(project).filePath("project.json")).lastModified();
+    // project.qtdmm read again only when it changed
+    const QDateTime changed = QFileInfo(ProjectFolder::projectFile(project)).lastModified();
     if (project != m_project || changed != m_changed)
     {
       m_project = project;
@@ -127,8 +128,6 @@ BasketWidget::BasketWidget(QWidget *parent) :
   connect(m_describeAction, &QAction::triggered, this, &BasketWidget::describeSLOT);
   m_exportAction = new QAction(tr("E&xport project as file..."), this);
   connect(m_exportAction, &QAction::triggered, this, &BasketWidget::exportSLOT);
-  m_importAction = new QAction(tr("&Import project from file..."), this);
-  connect(m_importAction, &QAction::triggered, this, &BasketWidget::importSLOT);
 
   // no basket open: what it is and how to get one
   auto *none = new QWidget(m_pages);
@@ -139,15 +138,12 @@ BasketWidget::BasketWidget(QWidget *parent) :
   what->setAlignment(Qt::AlignCenter);
   auto *create = new QPushButton(m_newAction->text(), none);
   auto *choose = new QPushButton(m_openAction->text(), none);
-  auto *unpack = new QPushButton(m_importAction->text(), none);
   connect(create, &QPushButton::clicked, m_newAction, &QAction::trigger);
   connect(choose, &QPushButton::clicked, m_openAction, &QAction::trigger);
-  connect(unpack, &QPushButton::clicked, m_importAction, &QAction::trigger);
   noneLayout->addStretch();
   noneLayout->addWidget(what);
   noneLayout->addWidget(create, 0, Qt::AlignCenter);
   noneLayout->addWidget(choose, 0, Qt::AlignCenter);
-  noneLayout->addWidget(unpack, 0, Qt::AlignCenter);
   noneLayout->addStretch();
   m_pages->addWidget(none);
 
@@ -167,7 +163,7 @@ BasketWidget::BasketWidget(QWidget *parent) :
   baskets->addSeparator();
   baskets->addActions({ m_newAction, m_openAction });
   baskets->addSeparator();
-  baskets->addActions({ m_importAction, m_exportAction });
+  baskets->addAction(m_exportAction);
   baskets->addSeparator();
   baskets->addAction(m_closeAction);
   m_title->setMenu(baskets);
@@ -245,9 +241,9 @@ BasketWidget::BasketWidget(QWidget *parent) :
   {
     if (m_folder.isEmpty())
       return;
-    const QModelIndex file = m_model->index(QDir(m_folder).filePath("project.json"));
-    if (file.isValid())
-      m_view->setRowHidden(file.row(), file.parent(), true);
+    for (const char *name : { ProjectFolder::kProjectFile, ProjectFolder::kOldProjectFile })
+      if (const QModelIndex file = m_model->index(QDir(m_folder).filePath(QString::fromLatin1(name))); file.isValid())
+        m_view->setRowHidden(file.row(), file.parent(), true);
   };
   connect(m_model, &QFileSystemModel::directoryLoaded, this, hideProjectFile);
   connect(m_model, &QAbstractItemModel::rowsInserted, this, hideProjectFile);
@@ -298,7 +294,7 @@ QString BasketWidget::projectOf(const QString &file, const QString &open)
   QDir dir = QFileInfo(file).absoluteDir();
   while (true)
   {
-    if (dir.absolutePath() == openDir || dir.exists("project.json"))
+    if (dir.absolutePath() == openDir || dir.exists(ProjectFolder::kProjectFile) || dir.exists(ProjectFolder::kOldProjectFile))
       return dir.absolutePath();
     if (!dir.cdUp())
       return QString();
@@ -343,7 +339,8 @@ void BasketWidget::newSLOT()
 
 bool BasketWidget::writeProjectFile(const QString &dir)
 {
-  QFile file(QDir(dir).filePath("project.json"));
+  // one of before 27.1 counts (and is renamed on the next write)
+  QFile file(ProjectFolder::projectFile(dir));
   if (file.exists())
     return true;
   const QJsonObject project{ { "format", 1 },
@@ -364,7 +361,7 @@ QJsonObject BasketWidget::readProject(const QString &dir, bool *ok)
 {
   if (ok)
     *ok = true;
-  QFile file(QDir(dir).filePath("project.json"));
+  QFile file(ProjectFolder::projectFile(dir));
   if (!file.open(QIODevice::ReadOnly))
     return {};
   const QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
@@ -375,14 +372,21 @@ QJsonObject BasketWidget::readProject(const QString &dir, bool *ok)
 
 bool BasketWidget::setProjectDescription(const QString &dir, const QString &text)
 {
+  return setProjectValue(dir, "description", text);
+}
+
+bool BasketWidget::setProjectValue(const QString &dir, const QString &key, const QJsonValue &value)
+{
   if (!writeProjectFile(dir))
     return false;
   bool ok = false;
   QJsonObject project = readProject(dir, &ok);
   if (!ok)
-    return false;   // broken by hand: kept, not overwritten with the description alone
-  project["description"] = text;
-  QSaveFile file(QDir(dir).filePath("project.json"));
+    return false;   // broken by hand: kept, not overwritten with this key alone
+  if (project.value(key) == value)
+    return true;
+  project[key] = value;
+  QSaveFile file(ProjectFolder::projectFileToWrite(dir));
   return file.open(QIODevice::WriteOnly) && file.write(QJsonDocument(project).toJson()) > 0 && file.commit();
 }
 
@@ -396,7 +400,7 @@ void BasketWidget::describeSLOT()
     return;
   if (!setProjectDescription(m_folder, text.trimmed()))
     Q_EMIT error(tr("Project: cannot write %1")
-                   .arg(QDir::toNativeSeparators(QDir(m_folder).filePath("project.json"))));
+                   .arg(QDir::toNativeSeparators(ProjectFolder::projectFile(m_folder))));
   showFolder();
 }
 
@@ -421,7 +425,7 @@ bool BasketWidget::exportProject(const QString &dir, const QString &zipFile, QSt
     const QString path = it.next();
     const QString name = root.relativeFilePath(path);
     // hidden folders (.git, a file manager's) and the archive itself stay out
-    if (path == target || name == "project.json" || name.startsWith('.') || name.contains("/."))
+    if (path == target || ProjectFolder::isProjectFile(name) || name.startsWith('.') || name.contains("/."))
       continue;
     files << name;
   }
@@ -453,7 +457,8 @@ bool BasketWidget::exportProject(const QString &dir, const QString &zipFile, QSt
   project["export"] = QJsonObject{ { "date", QDateTime::currentDateTime().toString(Qt::ISODate) },
                                    { "qtdmm", QCoreApplication::applicationVersion() },
                                    { "files", manifest } };
-  if (!zip.add((top + "/project.json").toUtf8(), QJsonDocument(project).toJson(), false, QDateTime::currentDateTime()))
+  if (!zip.add((top + '/' + QString::fromLatin1(ProjectFolder::kProjectFile)).toUtf8(), QJsonDocument(project).toJson(), false,
+               QDateTime::currentDateTime()))
     return fail(tr("the project is too large for a ZIP file (4 GB)"));
 
   QSaveFile out(zipFile);
@@ -469,8 +474,8 @@ void BasketWidget::exportSLOT()
   // next to the basket, not in it
   const QFileInfo folder(m_folder);
   const QString zipFile = QFileDialog::getSaveFileName(this, tr("Export project as file"),
-                                                       folder.absoluteDir().filePath(folder.fileName() + ".zip"),
-                                                       tr("ZIP archives (*.zip)"));
+                                                       folder.absoluteDir().filePath(folder.fileName() + '.' + ProjectFolder::kPackedSuffix),
+                                                       tr("QtDMM project (*.%1)").arg(ProjectFolder::kPackedSuffix));
   if (zipFile.isEmpty())
     return;
   QApplication::setOverrideCursor(Qt::WaitCursor);
@@ -479,6 +484,34 @@ void BasketWidget::exportSLOT()
   QApplication::restoreOverrideCursor();
   if (!ok)
     Q_EMIT error(tr("Export project: %1").arg(why));
+}
+
+namespace
+{
+/// The one folder all of @p files lie in (as exportProject() packs them),
+/// empty when they lie in more or at the top.
+QString zipTop(const QList<ZipFileEntry> &files)
+{
+  if (files.isEmpty())
+    return QString();
+  const QString top = files.first().name.section('/', 0, 0);
+  for (const ZipFileEntry &f : files)
+    if (!f.name.startsWith(top + '/'))
+      return QString();
+  return top;
+}
+}
+
+QString BasketWidget::zipProjectName(const QString &zipFile)
+{
+  QFile in(zipFile);
+  if (!in.open(QIODevice::ReadOnly))
+    return QString();
+  const std::optional<QList<ZipFileEntry>> files = zipFiles(in.readAll(), qint64(4) << 30);
+  if (!files || files->isEmpty())
+    return QString();
+  const QString top = zipTop(*files);
+  return top.isEmpty() ? QFileInfo(zipFile).completeBaseName() : top;
 }
 
 bool BasketWidget::importProject(const QString &zipFile, const QString &baseDir, QString *folder, QString *failed)
@@ -515,24 +548,23 @@ bool BasketWidget::importProject(const QString &zipFile, const QString &baseDir,
       return fail(tr("%1 has a file outside its folder: %2").arg(QDir::toNativeSeparators(zipFile), f.name));
   }
   // one folder at the top (as exportProject() packs it): the basket's name
-  QString top = files->first().name.section('/', 0, 0);
-  for (const ZipFileEntry &f : std::as_const(*files))
-    if (!f.name.startsWith(top + '/'))
-      top.clear();
-  if (top.isEmpty())
-    top = QFileInfo(zipFile).completeBaseName();
-  else
-    for (ZipFileEntry &f : *files)
+  const QString top = zipTop(*files);
+  for (ZipFileEntry &f : *files)
+    if (!top.isEmpty())
       f.name = f.name.mid(top.size() + 1);
+  const QString name = top.isEmpty() ? QFileInfo(zipFile).completeBaseName() : top;
 
   QJsonObject project;
   qsizetype projectIndex = -1;
   for (qsizetype i = 0; i < files->size(); ++i)
-    if (files->at(i).name == QLatin1String("project.json"))
+    if (ProjectFolder::isProjectFile(files->at(i).name))
     {
       project = QJsonDocument::fromJson(files->at(i).data).object();
       projectIndex = i;
     }
+  // [E 25.11.] a project's ZIP only: any other is not unpacked
+  if (projectIndex < 0)
+    return fail(tr("%1 is no QtDMM project: it has no project file").arg(QDir::toNativeSeparators(zipFile)));
   // what the export listed is there, unchanged
   QStringList wrong;
   for (const QJsonValue &v : project.value("export").toObject().value("files").toArray())
@@ -549,16 +581,17 @@ bool BasketWidget::importProject(const QString &zipFile, const QString &baseDir,
   project.remove("export");
 
   // a folder of its own, beside any of the same name
-  QString target = QDir(baseDir).filePath(top);
+  QString target = QDir(baseDir).filePath(name);
   for (int n = 2; QFileInfo::exists(target); ++n)
-    target = QDir(baseDir).filePath(QString("%1 (%2)").arg(top).arg(n));
+    target = QDir(baseDir).filePath(QString("%1 %2").arg(name).arg(n));
   if (!QDir().mkpath(target))
     return fail(tr("cannot make the folder %1").arg(QDir::toNativeSeparators(target)));
   const QDir dir(target);
   for (qsizetype i = 0; i < files->size(); ++i)
   {
     const ZipFileEntry &f = files->at(i);
-    QFile out(QDir::cleanPath(dir.absoluteFilePath(f.name)));
+    // an export of before 27.1 has project.json: unpacked as project.qtdmm
+    QFile out(QDir::cleanPath(dir.absoluteFilePath(i == projectIndex ? QString::fromLatin1(ProjectFolder::kProjectFile) : f.name)));
     // checked above already; the last word before writing
     if (!out.fileName().startsWith(dir.absolutePath() + '/'))
     {
@@ -572,43 +605,72 @@ bool BasketWidget::importProject(const QString &zipFile, const QString &baseDir,
       return fail(tr("cannot write %1").arg(QDir::toNativeSeparators(out.fileName())));
     }
   }
-  writeProjectFile(target);   // a ZIP of any files: it is a basket now
   if (folder)
     *folder = target;
   return true;
-}
-
-void BasketWidget::importSLOT()
-{
-  if (m_leaveCheck && !m_leaveCheck())
-    return;
-  const QString zipFile = QFileDialog::getOpenFileName(this, tr("Import project from file"), m_baseFolder,
-                                                       tr("ZIP archives (*.zip)"));
-  if (zipFile.isEmpty())
-    return;
-  QDir().mkpath(m_baseFolder);
-  QApplication::setOverrideCursor(Qt::WaitCursor);
-  QString folder, why;
-  const bool ok = importProject(zipFile, m_baseFolder, &folder, &why);
-  QApplication::restoreOverrideCursor();
-  if (!ok)
-  {
-    Q_EMIT error(tr("Import project: %1").arg(why));
-    return;
-  }
-  setFolder(folder);
-  Q_EMIT projectOpened();
 }
 
 void BasketWidget::openSLOT()
 {
   if (m_leaveCheck && !m_leaveCheck())
     return;
-  const QString dir = QFileDialog::getExistingDirectory(this, tr("Open project"), m_folder);
-  if (dir.isEmpty())
+  // [E 25.11.] one way in: the project's own file, or a project packed into one;
+  // the folder for new projects made first, else the dialog takes it for a name
+  QDir().mkpath(m_baseFolder);
+  const QString file = QFileDialog::getOpenFileName(this, tr("Open project"), m_folder.isEmpty() ? m_baseFolder : m_folder,
+                                                    tr("QtDMM project (%1 %2 *.%3 *.zip)")
+                                                      .arg(ProjectFolder::kProjectFile, ProjectFolder::kOldProjectFile, ProjectFolder::kPackedSuffix));
+  if (file.isEmpty())
     return;
-  setFolder(dir);
+  // a packed one (*.qtdmm-project, an export before 27.1 as *.zip)
+  const QString suffix = QFileInfo(file).suffix();
+  if (suffix.compare("zip", Qt::CaseInsensitive) == 0 || suffix == QLatin1String(ProjectFolder::kPackedSuffix))
+  {
+    if (!openZip(file))
+      return;
+  }
+  else
+    setFolder(QFileInfo(file).absolutePath());
   Q_EMIT projectOpened();
+}
+
+bool BasketWidget::openZip(const QString &zipFile)
+{
+  // one of the same name there: never overwritten
+  const QString name = zipProjectName(zipFile);
+  const QString existing = name.isEmpty() ? QString() : QDir(m_baseFolder).filePath(name);
+  if (!existing.isEmpty() && QFileInfo::exists(existing))
+  {
+    QString copy = existing;
+    for (int n = 2; QFileInfo::exists(copy); ++n)
+      copy = QDir(m_baseFolder).filePath(QString("%1 %2").arg(name).arg(n));
+    QMessageBox question(QMessageBox::Question, tr("Open project"),
+                         tr("A project \u201c%1\u201d is there already:\n%2").arg(name, QDir::toNativeSeparators(existing)),
+                         QMessageBox::Cancel, this);
+    QPushButton *open = question.addButton(tr("Open &that one"), QMessageBox::AcceptRole);
+    QPushButton *unpack = question.addButton(tr("Unpack as &copy (%1)").arg(QFileInfo(copy).fileName()), QMessageBox::ActionRole);
+    question.setDefaultButton(open);
+    question.exec();
+    if (question.clickedButton() == open)
+    {
+      setFolder(existing);
+      return true;
+    }
+    if (question.clickedButton() != unpack)
+      return false;
+  }
+  QApplication::setOverrideCursor(Qt::WaitCursor);
+  QString folder, why;
+  const bool ok = importProject(zipFile, m_baseFolder, &folder, &why);
+  QApplication::restoreOverrideCursor();
+  if (!ok)
+  {
+    Q_EMIT error(tr("Open project: %1").arg(why));
+    return false;
+  }
+  setFolder(folder);
+  Q_EMIT error(tr("Project unpacked to %1").arg(QDir::toNativeSeparators(folder)));
+  return true;
 }
 
 void BasketWidget::showFolder()
@@ -632,10 +694,10 @@ void BasketWidget::showFolder()
 void BasketWidget::updateEmpty()
 {
   const bool there = !m_folder.isEmpty() && QFileInfo(m_folder).isDir();
-  // project.json alone is empty to the person: it is not listed
+  // the project file alone is empty to the person: it is not listed
   const QStringList entries = there ? QDir(m_folder).entryList(QDir::AllEntries | QDir::NoDotAndDotDot)
                                     : QStringList();
-  m_empty->setVisible(entries.isEmpty() || entries == QStringList { "project.json" });
+  m_empty->setVisible(std::all_of(entries.cbegin(), entries.cend(), ProjectFolder::isProjectFile));
 }
 
 QStringList BasketWidget::addFiles(const QStringList &files, const QString &dir)

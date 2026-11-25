@@ -427,6 +427,7 @@ protected:
   QString     projectTip() const;
   QWidget    *m_emptyStart = nullptr;   ///< covers the area, with the buttons
   QPushButton *m_emptyConnect = nullptr;   ///< "Connect a device from My devices"
+  QWidget    *m_emptyProject = nullptr;    ///< the start page's projects (fillEmptyProject())
   QAction    *m_arrangeTop;
   QAction    *m_arrangeLeft;
   QAction    *m_arrangeFixed;
@@ -608,6 +609,16 @@ protected:
   bool        leaveProject();
   /// The project's node in the sidebar: its benches, the one in use.
   void        updateProjectSidebar();
+  /// The benches of the project in @p project (its folder and the folders
+  /// under it), by name.
+  QList<DeviceSidebar::Workspace> projectBenches(const QString &project) const;
+  /// A project just opened (made, imported, chosen): with nothing on the
+  /// bench its bench used last there, else its only one; more without one
+  /// used last: the start page lists them. A bench in use stays.
+  void        openProjectBench();
+  /// The start page's projects: open, import, the last ones; with a project
+  /// open its name and benches.
+  void        fillEmptyProject();
   /// The way from no project to one: a new project, opened, and the bench
   /// in use saved into it (Save bench, proposed in the project's folder).
   void        benchIntoNewProject();

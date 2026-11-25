@@ -112,41 +112,54 @@ int main(int argc, char **argv)
     basket.setFolder(dir.filePath("Bench"));
   }
 
-  // project.json: written once, never over the user's
-  check(BasketWidget::writeProjectFile(dir.filePath("Bench")), "project.json written");
-  QFile project(dir.filePath("Bench/project.json"));
+  // project.qtdmm: written once, never over the user's
+  check(BasketWidget::writeProjectFile(dir.filePath("Bench")), "project.qtdmm written");
+  QFile project(dir.filePath("Bench/project.qtdmm"));
   check(project.open(QIODevice::ReadOnly) && project.readAll().contains("\"name\": \"Bench\""), "it names the project");
   project.close();
-  write(dir.filePath("Bench/project.json"), "{\"name\": \"mine\"}");
-  check(BasketWidget::writeProjectFile(dir.filePath("Bench")), "project.json there: fine");
+  write(dir.filePath("Bench/project.qtdmm"), "{\"name\": \"mine\"}");
+  check(BasketWidget::writeProjectFile(dir.filePath("Bench")), "project.qtdmm there: fine");
   check(project.open(QIODevice::ReadOnly) && project.readAll().contains("mine"), "and left as it was");
   project.close();   // Windows keeps an open file from being replaced
 
-  // the description: set, the other keys stay; a basket without project.json gets one
+  // the description: set, the other keys stay; a basket without project.qtdmm gets one
   check(BasketWidget::setProjectDescription(dir.filePath("Bench"), "Ripple of the 12 V supply"), "description set");
   QJsonObject p = BasketWidget::readProject(dir.filePath("Bench"));
   check(p.value("description").toString() == "Ripple of the 12 V supply" && p.value("name").toString() == "mine",
         "description in, name kept");
+  check(BasketWidget::setProjectValue(dir.filePath("Bench"), "lastBench", "benches/Lab.qtdmm-workspace"), "a key set");
+  p = BasketWidget::readProject(dir.filePath("Bench"));
+  check(p.value("lastBench").toString() == "benches/Lab.qtdmm-workspace" && p.value("description").toString().startsWith("Ripple"),
+        "the bench used last in, the description kept");
   QDir().mkpath(dir.filePath("Other"));
   check(BasketWidget::setProjectDescription(dir.filePath("Other"), "x")
           && BasketWidget::readProject(dir.filePath("Other")).value("format").toInt() == 1, "made first when missing");
-  check(BasketWidget::readProject(dir.filePath("none")).isEmpty(), "no project.json: empty");
+  check(BasketWidget::readProject(dir.filePath("none")).isEmpty(), "no project.qtdmm: empty");
   // broken by hand: neither the description nor anything else overwrites it (R19-07)
   QDir().mkpath(dir.filePath("Broken"));
   const QByteArray broken = "{\"name\": \"mine\", \"created\": \"2026\",}";
-  write(dir.filePath("Broken/project.json"), broken);
+  write(dir.filePath("Broken/project.qtdmm"), broken);
   bool parsed = true;
   BasketWidget::readProject(dir.filePath("Broken"), &parsed);
   check(!parsed && !BasketWidget::setProjectDescription(dir.filePath("Broken"), "x"),
-        "broken project.json: description refused");
+        "broken project.qtdmm: description refused");
   {
-    QFile f(dir.filePath("Broken/project.json"));
+    QFile f(dir.filePath("Broken/project.qtdmm"));
     check(f.open(QIODevice::ReadOnly) && f.readAll() == broken, "and the file left as it was");
   }
-  check(BasketWidget::projectName(dir.filePath("Bench")) == "mine", "shown by the name in project.json");
+  check(BasketWidget::projectName(dir.filePath("Bench")) == "mine", "shown by the name in project.qtdmm");
   check(BasketWidget::projectName(dir.filePath("none")) == "none", "without one by its folder");
+  // a project of before 27.1: project.json read, renamed on the first write
+  QDir().mkpath(dir.filePath("Legacy"));
+  write(dir.filePath("Legacy/project.json"), "{\"name\": \"old one\"}");
+  check(BasketWidget::projectName(dir.filePath("Legacy")) == "old one" && BasketWidget::projectOf(dir.filePath("Legacy/x.csv")) == dir.filePath("Legacy"),
+        "project.json of before 27.1 read, the folder a project");
+  check(BasketWidget::setProjectValue(dir.filePath("Legacy"), "lastBench", "a.qtdmm-workspace")
+          && QFileInfo::exists(dir.filePath("Legacy/project.qtdmm")) && !QFileInfo::exists(dir.filePath("Legacy/project.json"))
+          && BasketWidget::readProject(dir.filePath("Legacy")).value("name").toString() == "old one",
+        "written: renamed to project.qtdmm, its keys kept");
 
-  // project.json is QtDMM's: not listed, and alone it leaves the project empty
+  // project.qtdmm is QtDMM's: not listed, and alone it leaves the project empty
   {
     basket.setFolder(dir.filePath("Other"));
     auto *view = basket.findChild<QTreeView *>();
@@ -158,23 +171,23 @@ int main(int argc, char **argv)
     check(model && empty, "the list and the empty note are there");
     if (model && empty)
     {
-      const QModelIndex file = model->index(dir.filePath("Other/project.json"));
+      const QModelIndex file = model->index(dir.filePath("Other/project.qtdmm"));
       for (int i = 0; i < 100 && model->rowCount(file.parent()) == 0; ++i)
         QTest::qWait(20);
-      check(view->isRowHidden(file.row(), file.parent()), "project.json not listed");
-      check(!empty->isHidden(), "project.json alone: empty");
+      check(view->isRowHidden(file.row(), file.parent()), "project.qtdmm not listed");
+      check(!empty->isHidden(), "project.qtdmm alone: empty");
       write(dir.filePath("Other/a.csv"), "1");
       for (int i = 0; i < 150 && !empty->isHidden(); ++i)
         QTest::qWait(20);
       check(empty->isHidden(), "a file in it: not empty");
-      const QModelIndex again = model->index(dir.filePath("Other/project.json"));
-      check(view->isRowHidden(again.row(), again.parent()), "project.json stays unlisted with a file next to it");
+      const QModelIndex again = model->index(dir.filePath("Other/project.qtdmm"));
+      check(view->isRowHidden(again.row(), again.parent()), "project.qtdmm stays unlisted with a file next to it");
     }
     basket.setFolder(dir.filePath("Bench"));
   }
 
   // the project as a ZIP: every file under the basket's name, hidden ones
-  // and the archive itself left out, project.json with the file list
+  // and the archive itself left out, project.qtdmm with the file list
   QDir().mkpath(dir.filePath("Bench/pictures"));
   QDir().mkpath(dir.filePath("Bench/.git"));
   write(dir.filePath("Bench/pictures/graph.png"), "not really a PNG");
@@ -196,8 +209,8 @@ int main(int argc, char **argv)
   check(!zipEntry(zip, "Bench/.git/HEAD", qint64(4) << 30) && !zipEntry(zip, "Bench/.directory", qint64(4) << 30)
           && !zipEntry(zip, "Bench/Bench.zip", qint64(4) << 30),
         "hidden files and the archive itself stay out");
-  const QJsonObject manifest = QJsonDocument::fromJson(zipEntry(zip, "Bench/project.json", qint64(4) << 30).value_or("")).object();
-  check(manifest.value("description").toString() == "Ripple of the 12 V supply", "project.json keeps its keys");
+  const QJsonObject manifest = QJsonDocument::fromJson(zipEntry(zip, "Bench/project.qtdmm", qint64(4) << 30).value_or("")).object();
+  check(manifest.value("description").toString() == "Ripple of the 12 V supply", "project.qtdmm keeps its keys");
   const QJsonObject exported = manifest.value("export").toObject();
   const QJsonArray files = exported.value("files").toArray();
   QStringList paths;
@@ -240,17 +253,18 @@ int main(int argc, char **argv)
         "the files where they were");
   const QJsonObject back = BasketWidget::readProject(dir.filePath("base/Bench"));
   check(back.value("description").toString() == "Ripple of the 12 V supply" && !back.contains("export"),
-        "project.json without the export part");
+        "project.qtdmm without the export part");
   check(BasketWidget::importProject(dir.filePath("Bench/Bench.zip"), dir.filePath("base"), &folder, &why)
-          && folder == dir.filePath("base/Bench (2)"),
-        "the name taken: Bench (2), got " + folder);
+          && folder == dir.filePath("base/Bench 2"),
+        "the name taken: Bench 2, got " + folder);
+  check(BasketWidget::zipProjectName(dir.filePath("Bench/Bench.zip")) == "Bench", "the name before a clash: Bench");
   // a file changed after the export: refused, nothing written
-  const QByteArray exportedProject = zipEntry(zip, "Bench/project.json", qint64(4) << 30).value_or("");
-  const QString tampered = zipOf("changed.zip", { { "Bench/project.json", exportedProject }, { "Bench/a.csv", "2" },
+  const QByteArray exportedProject = zipEntry(zip, "Bench/project.qtdmm", qint64(4) << 30).value_or("");
+  const QString tampered = zipOf("changed.zip", { { "Bench/project.qtdmm", exportedProject }, { "Bench/a.csv", "2" },
                                                   { "Bench/a (2).csv", "1" },
                                                   { "Bench/pictures/graph.png", "not really a PNG" } });
   check(!BasketWidget::importProject(tampered, dir.filePath("base"), &folder, &why) && why.contains("a.csv")
-          && !QFileInfo::exists(dir.filePath("base/Bench (3)")),
+          && !QFileInfo::exists(dir.filePath("base/Bench 3")),
         "a changed file: refused, nothing written: " + why);
   // no way out of the folder
   const QString slip = zipOf("slip.zip", { { "Bench/../../evil.txt", "x" } });
@@ -268,18 +282,31 @@ int main(int argc, char **argv)
   check(!BasketWidget::importProject(zipOf("drive.zip", { { "Bench/ok.csv", "1" }, { "Bench/C:/evil.txt", "x" } }),
                                      dir.filePath("base"), &folder, &why),
         "Bench/C:/...: refused");
-  // any ZIP without one top folder: named like the file, a basket then
-  check(BasketWidget::importProject(zipOf("Loose files.zip", { { "x.csv", "1" }, { "sub/y.txt", "2" } }),
+  // [E 25.11.] a ZIP without a project file: refused, nothing written
+  check(!BasketWidget::importProject(zipOf("Loose files.zip", { { "x.csv", "1" }, { "sub/y.txt", "2" } }),
+                                     dir.filePath("base"), &folder, &why)
+          && why.contains("project file") && !QFileInfo::exists(dir.filePath("base/Loose files")),
+        "no project file: refused: " + why);
+  // a project without one top folder: named like the file
+  check(BasketWidget::importProject(zipOf("Flat.zip", { { "project.qtdmm", "{\"format\": 1}" }, { "sub/y.txt", "2" } }),
                                     dir.filePath("base"), &folder, &why)
-          && folder == dir.filePath("base/Loose files") && read(dir.filePath("base/Loose files/sub/y.txt")) == "2"
-          && BasketWidget::readProject(folder).value("format").toInt() == 1,
-        "loose files: a basket named like the ZIP: " + why);
+          && folder == dir.filePath("base/Flat") && read(dir.filePath("base/Flat/sub/y.txt")) == "2"
+          && BasketWidget::zipProjectName(dir.filePath("Flat.zip")) == "Flat",
+        "project.qtdmm at the top: named like the ZIP: " + why);
+  // an export of before 27.1: project.json in it, unpacked as project.qtdmm
+  check(BasketWidget::importProject(zipOf("Old export.zip", { { "Old export/project.json", "{\"name\": \"old\"}" },
+                                                              { "Old export/a.csv", "1" } }),
+                                    dir.filePath("base"), &folder, &why)
+          && QFileInfo::exists(dir.filePath("base/Old export/project.qtdmm"))
+          && !QFileInfo::exists(dir.filePath("base/Old export/project.json"))
+          && BasketWidget::projectName(folder) == "old",
+        "an old export: project.json becomes project.qtdmm: " + why);
   write(dir.filePath("nozip.zip"), "plain text");
   check(!BasketWidget::importProject(dir.filePath("nozip.zip"), dir.filePath("base"), &folder, &why) && !why.isEmpty(),
         "no ZIP: an error");
 
   // a bench belongs to the project in whose folder it lies, subfolders too;
-  // the open one counts without a project.json (made before 08.11.)
+  // the open one counts without a project.qtdmm (made before 08.11.)
   {
     QDir().mkpath(dir.filePath("P/sub/deeper"));
     BasketWidget::writeProjectFile(dir.filePath("P"));
@@ -293,12 +320,12 @@ int main(int argc, char **argv)
           "outside: not a project of its own");
     const QString old = QDir(dir.filePath("Old")).absolutePath();
     check(BasketWidget::projectOf(dir.filePath("Old/benches/d.qtdmm-ws"), old) == old,
-          "the open project without project.json");
-    check(BasketWidget::projectOf(dir.filePath("Old/benches/d.qtdmm-ws")) != old, "not open, no project.json: none");
+          "the open project without project.qtdmm");
+    check(BasketWidget::projectOf(dir.filePath("Old/benches/d.qtdmm-ws")) != old, "not open, no project.qtdmm: none");
   }
 
   // folders of a kind: English on disk, made with the first file, the names
-  // in each language in project.json
+  // in each language in project.qtdmm
   {
     ProjectFolder::setByType(true);
     const QString proj = QDir(dir.filePath("Kinds")).absolutePath();
@@ -318,14 +345,14 @@ int main(int argc, char **argv)
     const QJsonObject names = BasketWidget::readProject(proj).value("folders").toObject().value("recordings").toObject();
     check(names.value("de").toString() == "Aufzeichnungen" && names.value("pl").toString() == "Nagrania"
             && BasketWidget::readProject(proj).value("name").toString() == "Kinds",
-          "project.json: its names, the other keys stay");
+          "project.qtdmm: its names, the other keys stay");
     check(ProjectFolder::dirFor(proj, ProjectFolder::Root) == proj, "Root: the project");
     {
       const QString brokenDir = QDir(dir.filePath("Broken")).absolutePath();
       ProjectFolder::dirFor(brokenDir, ProjectFolder::Images);
-      QFile f(brokenDir + "/project.json");
+      QFile f(brokenDir + "/project.qtdmm");
       check(QFileInfo(brokenDir + "/images").isDir() && f.open(QIODevice::ReadOnly) && f.readAll() == broken,
-            "a folder of a kind in a broken project: project.json left as it was");
+            "a folder of a kind in a broken project: project.qtdmm left as it was");
     }
     ProjectFolder::setByType(false);
     check(ProjectFolder::dirFor(proj, ProjectFolder::Images) == proj && !QFileInfo::exists(proj + "/images"),
@@ -348,10 +375,10 @@ int main(int argc, char **argv)
           "onto a folder: into it");
 
     // a save dialog's folder: kept with a file, gone again without one; only
-    // a folder with a file is named in project.json
+    // a folder with a file is named in project.qtdmm
     auto named = [&proj](const char *folder)
     {
-      QFile f(proj + "/project.json");
+      QFile f(proj + "/project.qtdmm");
       return f.open(QIODevice::ReadOnly)
              && QJsonDocument::fromJson(f.readAll()).object().value("folders").toObject().contains(folder);
     };
@@ -380,7 +407,7 @@ int main(int argc, char **argv)
         ProjectFolder::Proposal where("y.png", ProjectFolder::Images);
         write(other + "/images/y.png", "png");
       }
-      QFile f(other + "/project.json");
+      QFile f(other + "/project.qtdmm");
       check(f.open(QIODevice::ReadOnly)
               && QJsonDocument::fromJson(f.readAll()).object().value("folders").toObject().contains("images"),
             "a file written while the dialog's proposal lives: named");
@@ -433,7 +460,7 @@ int main(int argc, char **argv)
     QFile saved(first);
     check(saved.open(QIODevice::ReadOnly) && saved.readAll() == png, "photo: kept as it came");
     check(BasketWidget::readProject(proj).value("folders").toObject().value("photos").toObject().value("de").toString() == "Fotos",
-          "photo: the folder's names in project.json");
+          "photo: the folder's names in project.qtdmm");
     check(PhotoStore::save(proj, "no picture", when, &why).isEmpty() && !why.isEmpty(), "photo: no picture, not saved");
     check(PhotoStore::relative(proj, first) == "photos/photo_2026-11-22_14-03-12.png"
             && PhotoStore::absolute(proj, "photos/photo_2026-11-22_14-03-12.png") == first

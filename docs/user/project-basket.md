@@ -20,19 +20,28 @@ set under **Settings → General → Folder for new projects**
 
 The second button of the toolbar shows and hides the project's window;
 without an open project it makes a new one. Its arrow has **New
-project...**, **Open project...**, the projects opened last
-(the open one ticked) and **Close project**.
+project...**, **Open project...** (its `project.qtdmm` or a packed project), the
+bench entries (once there is a device), the projects opened last (the open
+one ticked) and **Close project**.
 
-A project you make, open or import shows its window; a bench loaded
-from another project switches to it and leaves the windows as the bench
-has them. A window not yet placed goes to the right, like the readings
-table. The list leaves out `project.json`, the file in which QtDMM keeps
-the project's name and description.
+A project also opens without any device: the start page has **Open
+project...** below *Add device* (a `project.qtdmm` or a packed project), and
+the projects opened last (up to five; a click opens one).
 
-Projects and benches need a device: while My devices is empty, the
-project button, the bench entries and the project in the sidebar are
-off. With devices but none connected, the project's window stands at
-the right beside the start page.
+A project you open (also a packed one) or pick from the last ones loads a bench of
+its own when nothing is connected: the one used last in it (kept in
+`project.qtdmm`), else its only one. With more benches and none used last
+the start page lists them, a click loads one; without any it says so. The
+project's window does not open by itself; a new project made with the
+project button shows it. A bench in use stays when a project is opened. A
+bench loaded from another project switches to it and leaves the windows as
+the bench has them. A window not yet placed goes to the right, like the
+readings table. The list leaves out `project.qtdmm`, the file in which
+QtDMM keeps the project's name, description and the bench used last.
+
+With devices but none connected, the project's window stands at the
+right beside the start page. The project's node in the sidebar shows once
+there is a device.
 
 The window title shows the project and the bench, the bench only once
 it lies in the project's folder.
@@ -55,7 +64,7 @@ A bench belongs to the project in whose folder it lies, also in a
 subfolder of it. Loading a bench opens its project; a bench that lies in
 no project closes the open one. The status bar says so, nothing asks.
 
-A project is a plain folder. QtDMM puts a `project.json` into a new one,
+A project is a plain folder. QtDMM puts a `project.qtdmm` into a new one,
 with its name, a description and when it was made; it is kept for what a
 project needs beyond its files.
 
@@ -161,7 +170,7 @@ The files of a project sort themselves into folders:
 
 A folder is made with the first file of its kind, a new project starts
 empty. On disk the folders are always named in English, so a project passed
-on works in any language; `project.json` keeps their names in each language,
+on works in any language; `project.qtdmm` keeps their names in each language,
 and the window shows them in yours (*Aufzeichnungen* in German). A folder
 you rename is a folder of your own from then on; the next file of its kind
 makes the English one again.
@@ -183,38 +192,45 @@ are never moved, either way.
 | **Open folder** (the folder at the top) | Shows the project in the file manager |
 
 The list shows the names, newest first; folders open with the arrow or a
-double click. `project.json`, QtDMM's own file, is not listed.
+double click. `project.qtdmm`, QtDMM's own file, is not listed.
 
 ## Exporting the project
 
 **Export project as file...** in the menu at the project's name packs the whole
-project into one ZIP file, to pass it on or to keep it. The file is
-offered next to the project, `<name>.zip`. Inside, everything lies in a
-folder with the project's name, so unpacking it gives the project back.
+project into one file, to pass it on or to keep it. The file is
+offered next to the project, `<name>.qtdmm-project`. It is a ZIP: inside,
+everything lies in a folder with the project's name, so unpacking it (also
+with any ZIP program) gives the project back.
 
-The `project.json` in the ZIP gets an `export` part: the date, the QtDMM
+The `project.qtdmm` in the file gets an `export` part: the date, the QtDMM
 version and every file with its size and SHA-256 checksum, to check that
-nothing went missing or changed on the way. The `project.json` in the
+nothing went missing or changed on the way. The `project.qtdmm` in the
 project itself stays as it is.
 
 Hidden files and folders (names beginning with a dot, such as `.git`) stay
-out, as does the ZIP itself when it is saved into the project. A ZIP holds
+out, as does the file itself when it is saved into the project. It holds
 at most 4 GB.
 
-## Importing a project
+## Opening a packed project
 
-**Import project from file...** (in the menu at the project's name, or as a button
-while no project is open) unpacks a project ZIP into a new project in the
-folder for new projects and opens it. It is named like the folder in the
-ZIP, `Bench (2)` when that name is taken; a project that is there already
-is never written into.
+**Open project...** takes a project's `project.qtdmm` or a packed project
+(`.qtdmm-project`, see above): the dialog shows both. A packed one is unpacked into a
+new project in the folder for new projects and opened; the status line
+says where. It is named like the folder in it. When a project of that
+name is there already, QtDMM asks: **Open that one**, **Unpack as copy**
+(`Bench 2`) or **Cancel** - a project that is there is never written into.
 
-Before anything is unpacked, QtDMM checks the ZIP: every file the `export`
-part of its `project.json` lists must be there with the same size and
+Before anything is unpacked, QtDMM checks the file: every file the `export`
+part of its `project.qtdmm` lists must be there with the same size and
 SHA-256 checksum, and no file may lie outside its folder (a path with
 `..`). If something is missing or changed, nothing is written and the
 message names the files. The `export` part goes again; the project's
-`project.json` is as it was before the export.
+`project.qtdmm` is as it was before the export.
 
-Any other ZIP works too: its files become a project named like the ZIP
-file.
+A ZIP without a `project.qtdmm` is no project: QtDMM says so and unpacks
+nothing. One with `project.qtdmm` at the top, without a folder around, is
+named like the ZIP file.
+
+Projects made before 27.1 have `project.json` instead of `project.qtdmm`;
+QtDMM reads it and renames it the next time it writes the file. Their
+exports (`.zip`) open as well.

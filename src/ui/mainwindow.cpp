@@ -379,10 +379,22 @@ void MainWindow::createViews()
   addButton->setMinimumSize(260, 160);
   emptyLayout->addWidget(addButton, 0, 0, Qt::AlignCenter);
   // with entries in My devices: one of them, from the sidebar
-  m_emptyConnect = new QPushButton(tr("&Connect a device from My devices"), m_emptyStart);
+  m_emptyConnect = new QPushButton(tr("&Connect a device from My devices"));
   m_emptyConnect->setObjectName("ui_emptyConnect");
   m_emptyConnect->setIcon(QIcon::fromTheme("network-connect"));
-  emptyLayout->addWidget(m_emptyConnect, 1, 0, Qt::AlignHCenter | Qt::AlignTop);
+  // a project, also without a device [E 25.11.]: open (its project.qtdmm or
+  // a packed one), the last ones; with one open its benches (fillEmptyProject())
+  m_emptyProject = new QWidget(m_emptyStart);
+  auto *projectLayout = new QVBoxLayout(m_emptyProject);
+  projectLayout->setContentsMargins(0, 0, 0, 0);
+  auto *projectKeys = new QHBoxLayout;
+  auto *openProject = new QPushButton(QIcon::fromTheme("document-open"), tr("Open &project..."), m_emptyProject);
+  openProject->setObjectName("ui_emptyOpenProject");
+  projectKeys->addWidget(openProject);
+  projectLayout->addWidget(m_emptyConnect, 0, Qt::AlignHCenter);
+  projectLayout->addLayout(projectKeys);
+  connect(openProject, &QPushButton::clicked, this, [this] { m_basket->openAction()->trigger(); });
+  emptyLayout->addWidget(m_emptyProject, 1, 0, Qt::AlignHCenter | Qt::AlignTop);
   emptyLayout->setRowStretch(0, 1);
   emptyLayout->setRowStretch(1, 1);
   // the entries to choose one from, connected at once; the sidebar opens
@@ -518,6 +530,7 @@ void MainWindow::createViews()
       recentProjects().add(folder);
     updateWindowTitle();
     updateProjectSidebar();
+    fillEmptyProject();
     // without a basket everything is as before
     for (QAction *a : { m_graphToBasket, m_tableToBasket })
       a->setVisible(!folder.isEmpty());
@@ -532,7 +545,8 @@ void MainWindow::createViews()
   connect(m_basket, &BasketWidget::photoRequested, this, &MainWindow::photoSetup);
   // made, opened or imported: its window shows (a bench switching the
   // project leaves the windows as the bench has them)
-  connect(m_basket, &BasketWidget::projectOpened, this, [this] { m_basketAction->setChecked(true); });
+  // made, opened or imported: its bench, not its window over the views
+  connect(m_basket, &BasketWidget::projectOpened, this, &MainWindow::openProjectBench);
   m_basket->setLeaveCheck([this] { return leaveProject(); });
   connect(m_basket, &BasketWidget::openRequested, this, [this](const QString &path)
   {
@@ -1694,13 +1708,16 @@ void MainWindow::fillViewToolbar()
   // [E 09.11.] with a project its window, without one a new project (whose
   // window then shows); pressed while the window shows
   m_projectAction->setCheckable(true);
-  m_benchActions << m_projectAction << m_basketAction << m_basket->newAction() << m_basket->openAction()
-                 << m_basket->importAction();
   connect(m_basketAction, &QAction::toggled, this, &MainWindow::updateEmptyStart);
   connect(m_projectAction, &QAction::triggered, this, [this]
   {
     if (m_basket->folder().isEmpty())
-      m_basket->newAction()->trigger();   // a new one shows its window (projectOpened)
+    {
+      // a new one: asked for with this button, its window shows
+      m_basket->newAction()->trigger();
+      if (!m_basket->folder().isEmpty())
+        m_basketAction->setChecked(true);
+    }
     else
       m_basketAction->toggle();
     m_projectAction->setChecked(m_basketAction->isChecked());
@@ -1712,13 +1729,17 @@ void MainWindow::fillViewToolbar()
   {
     menu->addAction(m_basket->newAction());
     menu->addAction(m_basket->openAction());
-    menu->addSeparator();
-    // the bench, as in the sidebar's menu of its node
-    for (QAction *a : std::as_const(m_benchMenuActions))
-      if (a)
-        menu->addAction(a);
-      else
-        menu->addSeparator();
+    // the bench, as in the sidebar's menu of its node; without a device
+    // only the project [E 25.11.]
+    if (!m_wid->devices()->list().isEmpty())
+    {
+      menu->addSeparator();
+      for (QAction *a : std::as_const(m_benchMenuActions))
+        if (a)
+          menu->addAction(a);
+        else
+          menu->addSeparator();
+    }
     const QStringList dirs = recentProjects().list().mid(0, 10);
     if (!dirs.isEmpty())
       menu->addSeparator();
@@ -1734,10 +1755,15 @@ void MainWindow::fillViewToolbar()
       a->setEnabled(QFileInfo(dir).isDir());
       connect(a, &QAction::triggered, this, [this, dir]
       {
-        if (dir != m_basket->folder() && !leaveProject())
+        if (dir == m_basket->folder())
+        {
+          m_basketAction->setChecked(true);
+          return;
+        }
+        if (!leaveProject())
           return;
         m_basket->setFolder(dir);
-        m_basketAction->setChecked(true);
+        openProjectBench();
       });
     }
     if (!m_basket->folder().isEmpty())
@@ -2203,7 +2229,7 @@ void MainWindow::updateEmptyStart()
     updateProjectSidebar();
     updateRecentWorkspaces();
   }
-  m_projectAction->setToolTip(noDevices ? tr("Project and bench: add a device first") : projectTip());
+  fillEmptyProject();
   // the project's window stays at hand beside the start page
   m_basketBeside = empty && !noDevices && !m_basketWin->isHidden();
   if (empty)
@@ -5291,6 +5317,10 @@ void MainWindow::setCurrentWorkspace(const QString &file)
   m_workspaceName = ws ? ws->name : QString();
   m_workspaceDescription = ws ? ws->description : QString();
   m_wid->settings()->setString("Windows/workspace-current", m_workspaceFile);
+  // the project it lies in keeps it as the one used last (openProjectBench())
+  if (ws && m_basket)
+    if (const QString project = BasketWidget::projectOf(file, m_basket->folder()); !project.isEmpty())
+      BasketWidget::setProjectValue(project, "lastBench", QDir(project).relativeFilePath(file));
   m_sidebar->setCurrentWorkspace(m_workspaceName, ws ? workspaceTooltip(file, *ws) : QString());
   // just loaded or saved: no star; the clock compares from now on (here
   // in the constructor the windows are not all there yet)
@@ -5327,8 +5357,15 @@ void MainWindow::updateProjectSidebar()
     m_sidebar->setProject(QString(), {}, QString());
     return;
   }
-  // its benches: the bench files in its folder and the folders under it
+  m_sidebar->setProject(BasketWidget::projectName(project), projectBenches(project), m_workspaceFile);
+}
+
+QList<DeviceSidebar::Workspace> MainWindow::projectBenches(const QString &project) const
+{
+  // the bench files in its folder and the folders under it
   QList<DeviceSidebar::Workspace> benches;
+  if (project.isEmpty() || !QFileInfo(project).isDir())
+    return benches;
   QDirIterator it(project, { QString("*.") + kWorkspaceSuffix }, QDir::Files, QDirIterator::Subdirectories);
   while (it.hasNext())
   {
@@ -5342,7 +5379,79 @@ void MainWindow::updateProjectSidebar()
     const QString nb = b.name.isEmpty() ? QFileInfo(b.file).completeBaseName() : b.name;
     return na.localeAwareCompare(nb) < 0;
   });
-  m_sidebar->setProject(BasketWidget::projectName(project), benches, m_workspaceFile);
+  return benches;
+}
+
+void MainWindow::openProjectBench()
+{
+  const QString project = m_basket->folder();
+  fillEmptyProject();
+  // a set-up in use stays: the project goes along with it
+  if (project.isEmpty() || !m_session->controllers().isEmpty())
+    return;
+  const QList<DeviceSidebar::Workspace> benches = projectBenches(project);
+  const QString last = BasketWidget::readProject(project).value("lastBench").toString();
+  QString file = last.isEmpty() ? QString() : QDir(project).filePath(last);
+  if (!QFileInfo::exists(file))
+    file = benches.size() == 1 ? benches.constFirst().file : QString();
+  // none: the start page lists them
+  if (!file.isEmpty())
+    loadWorkspaceFile(file);
+}
+
+void MainWindow::fillEmptyProject()
+{
+  auto *layout = static_cast<QVBoxLayout *>(m_emptyProject->layout());
+  while (QLayoutItem *item = layout->takeAt(2))
+  {
+    delete item->widget();
+    delete item;
+  }
+  // a link-like button for each: a click opens it
+  auto entry = [this, layout](const QString &text, const QString &tip, const std::function<void()> &open)
+  {
+    auto *b = new QPushButton(QString(text).replace('&', "&&"), m_emptyProject);
+    b->setFlat(true);
+    b->setCursor(Qt::PointingHandCursor);
+    b->setToolTip(tip);
+    connect(b, &QPushButton::clicked, this, open);
+    layout->addWidget(b, 0, Qt::AlignHCenter);
+  };
+  auto heading = [this, layout](const QString &text)
+  {
+    auto *l = new QLabel(text, m_emptyProject);
+    l->setAlignment(Qt::AlignHCenter);
+    layout->addSpacing(8);
+    layout->addWidget(l);
+  };
+  const QString project = m_basket->folder();
+  if (!project.isEmpty())
+  {
+    const QList<DeviceSidebar::Workspace> benches = projectBenches(project);
+    const QString name = BasketWidget::projectName(project);
+    heading(benches.isEmpty() ? tr("Project \u201c%1\u201d: no bench yet").arg(name)
+                              : tr("Benches in project \u201c%1\u201d:").arg(name));
+    for (const DeviceSidebar::Workspace &ws : benches)
+    {
+      const QString file = ws.file;
+      entry(ws.name.isEmpty() ? QFileInfo(file).completeBaseName() : ws.name, ws.tooltip,
+            [this, file] { loadWorkspaceFile(file); });
+    }
+    return;
+  }
+  QStringList dirs;
+  for (const QString &dir : recentProjects().list())
+    if (QFileInfo(dir).isDir() && dirs.size() < 5)
+      dirs << dir;
+  if (dirs.isEmpty())
+    return;
+  heading(tr("Recent projects:"));
+  for (const QString &dir : std::as_const(dirs))
+    entry(BasketWidget::projectName(dir), QDir::toNativeSeparators(dir), [this, dir]
+    {
+      m_basket->setFolder(dir);
+      openProjectBench();
+    });
 }
 
 QString MainWindow::workspaceTooltip(const QString &file, const WorkspaceFile &ws)
