@@ -246,6 +246,8 @@ DeviceSidebar::DeviceSidebar(DeviceLibrary *library, QWidget *parent)
       Q_EMIT addDeviceRequested();
     else if (item == m_newBenchItem)
       Q_EMIT newBenchRequested();
+    else if (item == m_newProjectItem)
+      Q_EMIT newProjectRequested();
     else if (item->parent() == m_workspaces && column == kShown)
       Q_EMIT favoriteRequested(item->data(0, Qt::UserRole).toString(), !item->data(0, Qt::UserRole + 1).toBool());
     else if (column == kShown && !item->data(kShown, kMarks).isNull())
@@ -473,17 +475,20 @@ void DeviceSidebar::setServices(const QList<Service> &services)
 
 QString DeviceSidebar::workspaceOf(const QTreeWidgetItem *item) const
 {
-  if (!item || (item->parent() != m_workspaces && item->parent() != m_project) || item == m_newBenchItem)
+  if (!item || (item->parent() != m_workspaces && item->parent() != m_project) || item == m_newBenchItem
+      || item == m_newProjectItem)
     return QString();
   const QString file = item->data(0, Qt::UserRole).toString();
   return QFileInfo::exists(file) ? file : QString();
 }
 
-void DeviceSidebar::setWorkspaces(const QList<Workspace> &workspaces)
+void DeviceSidebar::setWorkspaces(const QList<Workspace> &workspaces, bool offerNewBench)
 {
   m_workspaceList = workspaces;
+  m_offerNewBench = offerNewBench;
   m_filling = true;
   qDeleteAll(m_workspaces->takeChildren());
+  m_newBenchItem = nullptr;
   const QColor grey = palette().color(QPalette::Disabled, QPalette::WindowText);
   for (const Workspace &ws : workspaces)
   {
@@ -505,7 +510,15 @@ void DeviceSidebar::setWorkspaces(const QList<Workspace> &workspaces)
       item->setToolTip(0, tr("%1 (not found)").arg(path));
     }
   }
-  m_workspaces->setHidden(workspaces.isEmpty());
+  if (offerNewBench)
+  {
+    m_newBenchItem = new QTreeWidgetItem(m_workspaces, { tr("+ New bench...") });
+    m_newBenchItem->setFlags(Qt::ItemIsEnabled);
+    m_newBenchItem->setFirstColumnSpanned(true);
+    m_newBenchItem->setForeground(0, grey);
+    m_newBenchItem->setToolTip(0, tr("A new empty bench: outputs off, every device closed"));
+  }
+  m_workspaces->setHidden(workspaces.isEmpty() && !offerNewBench);
   m_filling = false;
 }
 
@@ -513,7 +526,7 @@ void DeviceSidebar::setProject(const QString &name, const QList<Workspace> &benc
 {
   m_filling = true;
   qDeleteAll(m_project->takeChildren());
-  m_newBenchItem = nullptr;
+  m_newProjectItem = nullptr;
   m_project->setHidden(name.isEmpty());
   if (name.isEmpty())
   {
@@ -537,11 +550,11 @@ void DeviceSidebar::setProject(const QString &name, const QList<Workspace> &benc
       item->setFont(0, f);
     }
   }
-  m_newBenchItem = new QTreeWidgetItem(m_project, { tr("+ New bench...") });
-  m_newBenchItem->setFlags(Qt::ItemIsEnabled);
-  m_newBenchItem->setFirstColumnSpanned(true);
-  m_newBenchItem->setForeground(0, palette().color(QPalette::Disabled, QPalette::WindowText));
-  m_newBenchItem->setToolTip(0, tr("Save the devices and windows as they are as a new bench of the project"));
+  m_newProjectItem = new QTreeWidgetItem(m_project, { tr("+ New project...") });
+  m_newProjectItem->setFlags(Qt::ItemIsEnabled);
+  m_newProjectItem->setFirstColumnSpanned(true);
+  m_newProjectItem->setForeground(0, palette().color(QPalette::Disabled, QPalette::WindowText));
+  m_newProjectItem->setToolTip(0, tr("Make another project and open it"));
   m_project->setExpanded(true);
   m_filling = false;
 }
@@ -774,7 +787,7 @@ void DeviceSidebar::changeEvent(QEvent *event)
   m_addItem->setForeground(0, palette().color(QPalette::Disabled, QPalette::WindowText));
   setOpenDevices(m_openList);
   setServices(m_serviceList);
-  setWorkspaces(m_workspaceList);
+  setWorkspaces(m_workspaceList, m_offerNewBench);
 }
 
 void DeviceSidebar::keyPressEvent(QKeyEvent *event)
@@ -865,7 +878,7 @@ void DeviceSidebar::openMenu(QTreeWidgetItem *item, const QPoint &pos)
 void DeviceSidebar::contextMenuEvent(QContextMenuEvent *event)
 {
   QTreeWidgetItem *item = itemAt(event->pos());
-  if (item && item->parent() == m_workspaces)
+  if (item && item->parent() == m_workspaces && item != m_newBenchItem)
   {
     workspaceMenu(item, event->globalPos());
     return;

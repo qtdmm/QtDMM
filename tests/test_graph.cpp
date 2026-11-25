@@ -1287,9 +1287,11 @@ static void shot()
 static void testReferenceRules()
 {
   using namespace GraphReference;
-  for (const QString &text : { QString(), QString("mean"), QString("min"), QString("max"), QString("off"), QString("alarm 2.5"), QString("-0.75") })
+  for (const QString &text : { QString(), QString("0"), QString("mean"), QString("min"), QString("max"), QString("alarm 2.5"), QString("-0.75") })
     check(setting(fromSetting(text)) == text, "the reference as read: '" + text + "' -> '" + setting(fromSetting(text)) + "'");
-  check(fromSetting("nonsense").kind == Zero && fromSetting("0").kind == Zero, "nothing readable and 0: at 0");
+  check(fromSetting("nonsense").kind == Off && fromSetting("off").kind == Off && fromSetting("").kind == Off
+          && fromSetting("0").kind == Zero,
+        "none by default, also unreadable and the old off; 0: at 0");
   check(fromSetting("alarm 2.5").kind == Alarm && fromSetting("alarm 2.5").value == 2.5, "an alarm threshold keeps its value");
   check(line(Mean, 3) == line(Mean, 7) && !(line(Value, 3) == line(Value, 7)), "only Value and Alarm differ by their value");
   check(linesFromSetting("1.2 x 2.5 0 0.5 0.7") == QList<double>({ 1.2, 2.5, 0, 0.5 }), "added lines: the numbers, four at most");
@@ -1320,7 +1322,9 @@ static void testReferenceRules()
   GraphModel model;
   int changed = 0;
   QObject::connect(&model, &GraphModel::referenceChanged, [&] { changed++; });
-  check(model.referenceSetting().isEmpty() && model.crossingsVisible() && model.referenceLines().isEmpty(), "a new model: the line at 0, crossings on");
+  check(model.referenceSetting().isEmpty() && model.reference().kind == GraphReference::Off && model.crossingsVisible()
+          && model.referenceLines().isEmpty(),
+        "a new model: no line, crossings on");
   model.setReferenceSetting("mean");
   model.setReferenceSetting("mean");
   model.setReferenceLinesSetting("1.5 -2");
@@ -1348,8 +1352,9 @@ static void testLevels()
   graph.setFixedRanges({ { "V", { -1.0, 3.0 } } });
   graph.refreshNow();
   check(graph.leftValue() == ValueRef(0, "device:a"), "the left value is the first one's");
-  check(graph.reference().kind == GraphReference::Zero && graph.referenceValue() == 0 && graph.referenceLabel().startsWith("0 V"),
-        "the reference line at 0 by default: " + graph.referenceLabel());
+  check(graph.reference().kind == GraphReference::Off && std::isnan(graph.referenceValue()), "no reference line by default");
+  graph.setReference(GraphReference::line(GraphReference::Zero));
+  check(graph.referenceValue() == 0 && graph.referenceLabel().startsWith("0 V"), "the line at 0: " + graph.referenceLabel());
 
   int changed = 0;
   QObject::connect(&graph, &GraphWidget::referenceChanged, [&] { changed++; });

@@ -284,6 +284,8 @@ void FrontPanel::followOutputs()
     Q_EMIT foldToggled(folded);
     Q_EMIT keysChanged();
   });
+  // folded or back for the room the window has: the window's share follows
+  connect(m_output, &OutputFront::controlsShownChanged, this, &FrontPanel::keysChanged);
   m_output->lcd()->setContextMenuPolicy(Qt::CustomContextMenu);
   connect(m_output->lcd(), &QWidget::customContextMenuRequested, this, [this](const QPoint &pos)
   {
@@ -380,6 +382,8 @@ bool FrontPanel::isFolded() const
 
 bool FrontPanel::keysShown() const
 {
+  if (m_output)
+    return m_output->controlsShown();
   return m_keysSupported && !isFolded();
 }
 
