@@ -19,9 +19,12 @@ class OutputFront : public QWidget
 public:
   /// The device's name on the LCD's bezel.
   void    setCaption(const QString &caption);
-  /// The controls folded away (the handle).
+  /// The controls folded away by the person (the handle); what is kept.
   void    setFolded(bool folded);
-  bool    isFolded() const;
+  bool    isFolded() const { return m_userFolded; }
+  /// The controls shown: not folded by the person, and the window has room
+  /// for them (too low it folds them itself, back with room).
+  bool    controlsShown() const { return !m_userFolded && !m_autoFolded; }
   /// Pixels the controls and the handle take below the LCD.
   int     controlsHeight() const;
   /// An OUT key's LED: green while the output is on.
@@ -33,6 +36,8 @@ Q_SIGNALS:
   /// The gear: the device's settings.
   void    settingsRequested();
   void    foldToggled(bool folded);
+  /// controlsShown() changed by the room the window has.
+  void    controlsShownChanged();
 
 protected:
   explicit OutputFront(QWidget *parent = nullptr);
@@ -42,12 +47,20 @@ protected:
   QWidget *controls() const { return m_controls; }
   bool    eventFilter(QObject *watched, QEvent *event) override;
   void    resizeEvent(QResizeEvent *event) override;
+  /// The LCD at its smallest and the handle: lower, the controls fold.
+  QSize   minimumSizeHint() const override;
 
 private:
   void    placeCorner();
+  /// The controls and the handle as controlsShown() says.
+  void    showControls();
+  /// Folded by itself while the LCD would get less than its smallest size.
+  void    fitControls();
 
   LcdPanel   *m_lcd = nullptr;
   QWidget    *m_controls;
   FoldButton *m_fold;
   PanelGear  *m_gear = nullptr;
+  bool        m_userFolded = false;
+  bool        m_autoFolded = false;
 };

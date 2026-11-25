@@ -14,6 +14,7 @@ OutputFront::OutputFront(QWidget *parent) : QWidget(parent), m_controls(new QWid
 {
   connect(m_fold, &FoldButton::toggled, this, [this](bool folded)
   {
+    // the handle wants them shown: also while folded for lack of room
     setFolded(folded);
     Q_EMIT foldToggled(folded);
   });
@@ -25,13 +26,17 @@ void OutputFront::setDisplay(LcdPanel *display)
   auto *layout = new QVBoxLayout(this);
   layout->setContentsMargins(0, 0, 0, 0);
   layout->setSpacing(4);
+  // no minimum from the controls: too low a window folds them (fitControls())
+  layout->setSizeConstraint(QLayout::SetNoConstraint);
   // the LCD takes the room up to the height its width fills (resizeEvent());
   // more goes above and below: LCD and controls stay together
+  // more goes above and below them: LCD and controls stay together, the
+  // handle stays at the bottom edge
   layout->addStretch(1);
   layout->addWidget(m_lcd, 100);
   layout->addWidget(m_controls);
-  layout->addWidget(m_fold, 0, Qt::AlignHCenter);
   layout->addStretch(1);
+  layout->addWidget(m_fold, 0, Qt::AlignHCenter);
 
   m_gear = new PanelGear(m_lcd);
   m_gear->setInk(m_lcd->plateInk(false), m_lcd->plateInk(true));
@@ -48,19 +53,47 @@ void OutputFront::setCaption(const QString &caption)
 
 void OutputFront::setFolded(bool folded)
 {
-  m_fold->setFolded(folded);
-  m_controls->setVisible(!folded);
+  m_userFolded = folded;
+  m_autoFolded = false;
+  showControls();
 }
 
-bool OutputFront::isFolded() const
+void OutputFront::showControls()
 {
-  return m_fold->isFolded();
+  m_fold->setFolded(!controlsShown());
+  m_controls->setVisible(controlsShown());
+}
+
+QSize OutputFront::minimumSizeHint() const
+{
+  if (!m_lcd)
+    return QWidget::minimumSizeHint();
+  const int spacing = layout() ? layout()->spacing() : 0;
+  const QSize lcd = m_lcd->minimumSizeHint();
+  return QSize(qMax(lcd.width(), m_controls->minimumSizeHint().width()), lcd.height() + m_fold->sizeHint().height() + spacing);
+}
+
+void OutputFront::fitControls()
+{
+  if (!m_lcd || m_userFolded)
+    return;
+  // the LCD at its smallest, the controls, the handle; a few pixels more
+  // to come back, so a window at the edge does not flicker
+  const int spacing = layout() ? layout()->spacing() : 0;
+  const int need = m_lcd->minimumSizeHint().height() + m_controls->sizeHint().height() + m_fold->sizeHint().height()
+                   + 2 * spacing;
+  const bool fold = m_autoFolded ? height() < need + 8 : height() < need;
+  if (fold == m_autoFolded)
+    return;
+  m_autoFolded = fold;
+  showControls();
+  Q_EMIT controlsShownChanged();
 }
 
 int OutputFront::controlsHeight() const
 {
   const int spacing = layout() ? layout()->spacing() : 0;
-  return (isFolded() ? 0 : m_controls->sizeHint().height() + spacing) + m_fold->sizeHint().height() + spacing;
+  return (controlsShown() ? m_controls->sizeHint().height() + spacing : 0) + m_fold->sizeHint().height() + spacing;
 }
 
 QIcon OutputFront::led(bool on)
@@ -89,6 +122,7 @@ void OutputFront::resizeEvent(QResizeEvent *event)
   // painted empty room above and below itself
   if (m_lcd)
     m_lcd->setMaximumHeight(qMax(m_lcd->minimumHeight(), int(width() / m_lcd->minimumAspect()) + 2));
+  fitControls();
 }
 
 void OutputFront::placeCorner()
