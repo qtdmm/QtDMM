@@ -336,7 +336,7 @@ of the project button:
   closes every device and starts the windows anew, as **Bench (new)**; an
   open project stays open. *Save bench* then asks for its name.
 - **Load bench...** and **Recent benches** load one.
-- **Move bench to project...**, see
+- **Move bench to project** (once there is a second project), see
   [Project](project-basket.md).
 
 A star after the bench's name (**Bench · Lab 1 \***) says the set-up

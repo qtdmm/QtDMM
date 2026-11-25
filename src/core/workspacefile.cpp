@@ -10,6 +10,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QRegularExpression>
 #include <QSaveFile>
 #include <QSettings>
 
@@ -196,6 +197,28 @@ std::optional<MyDevice> WorkspaceFile::device(const QString &id) const
     if (d.id == id)
       return d;
   return std::nullopt;
+}
+
+void WorkspaceFile::renameDevice(const QString &from, const QString &to)
+{
+  if (from.isEmpty() || from == to)
+    return;
+  // ids are 8 hex digits: as a word they name nothing else ("panel-<id>", "device:<id>")
+  const QRegularExpression word("\\b" + QRegularExpression::escape(from) + "\\b");
+  for (MyDevice &d : devices)
+    if (d.id == from)
+      d.id = to;
+  if (windowDevice == from)
+    windowDevice = to;
+  QVariantMap renamed;
+  for (auto it = keys.cbegin(); it != keys.cend(); ++it)
+  {
+    QVariant value = it.value();
+    if (value.typeId() == QMetaType::QString)
+      value = value.toString().replace(word, to);
+    renamed.insert(QString(it.key()).replace(word, to), value);
+  }
+  keys = renamed;
 }
 
 std::optional<WorkspaceFile> WorkspaceFile::read(const QString &path, QString *error)

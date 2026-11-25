@@ -350,7 +350,7 @@ protected:
   QAction    *m_graphToBasket = nullptr;   ///< the recording and the graph into the project basket
   QAction    *m_labPlotLive = nullptr;     ///< Live in LabPlot, while it records
   QAction    *m_projectAction = nullptr;   ///< the toolbar's project button: its window or a new one, the arrow the rest
-  QAction    *m_benchIntoProject = nullptr;   ///< "Put the bench into a new project..."
+  QAction    *m_benchIntoProject = nullptr;   ///< "Move bench to project", the menu of fillMoveBenchMenu()
   QList<QAction *> m_benchActions;   ///< bench and project: off while My devices is empty
   bool        m_basketBeside = false;   ///< the project's window beside the start page
   QPointer<LabPlotLive> m_live;            ///< the recording live in LabPlot, while it goes on
@@ -600,7 +600,11 @@ protected:
   /// left, quit): one question for a changed bench and the recordings
   /// @p unsaved names (devices) that would be lost - save (the bench, then
   /// export the recordings), @p discard or cancel. True: go on.
-  bool        leaveBench(const QString &title, const QStringList &unsaved, const QString &discard);
+  /// @p moveInto, when given (the name of the bench): the same question
+  /// offers first to move the bench along (Leave::New); asked then also for
+  /// a bench unchanged, true and @p moved when it moves.
+  bool        leaveBench(const QString &title, const QStringList &unsaved, const QString &discard,
+                         const QString &moveInto = QString(), bool *moved = nullptr);
   /// New empty bench: outputs off, every device closed, the windows as at
   /// a first start; the project stays open. Save bench then asks its name.
   void        newEmptyBench();
@@ -609,12 +613,19 @@ protected:
   bool        leaveProject(BasketWidget::Leave why);
   /// Closes the bench in use: the question of leaveBench(), the outputs off,
   /// every device closed, the windows as at a first start. False: cancelled.
-  bool        closeBench(const QString &title);
+  /// Not @p ask: asked already, it closes.
+  bool        closeBench(const QString &title, bool ask = true);
   /// The bench into @p project: its file moved there (benches/), one never
   /// saved goes along; @p project is the open one then.
   void        moveBenchTo(const QString &project);
-  /// "Move bench to project...": a new project, one of the last, another.
-  void        moveBenchMenu();
+  /// The bench @p file (read as @p ws, @p changed: ws differs from the file)
+  /// copied, or moved (@p move), into the benches of @p project under a file
+  /// and a bench name no bench there has (BasketWidget::freeBenchName()).
+  /// The new path; empty when it failed (a message said so).
+  QString     placeBench(const QString &file, WorkspaceFile ws, bool changed, const QString &project, bool move);
+  /// The submenu "Move bench to project": the last projects (the default
+  /// one too) but the open one, a new project, another one.
+  void        fillMoveBenchMenu(QMenu *menu);
   /// [E 25.11.] The open project shows by its name once there is more than
   /// the default project (one of the last projects is another).
   bool        projectShown() const;

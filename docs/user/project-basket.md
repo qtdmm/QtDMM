@@ -41,9 +41,10 @@ changed, the outputs of supplies and generators go off first. Then the
 project you open loads a bench of its own: the one used last in it (kept
 in `project.qtdmm`), else its only one. With more benches and none used
 last the start page lists them, a click loads one; without any it says
-so. **New project...** with a bench running asks whether to **move** the
-bench into the new project (the default), not to move it (then it closes
-as above), or to cancel. The project's window does not open by itself; a
+so. **New project...** with a bench running asks once whether to **move**
+the bench into the new project (the default) or not, or to cancel; a
+changed bench not moved is saved or discarded with the same answer
+(**Don't move, save** / **Don't move, discard**) before it closes. The project's window does not open by itself; a
 new project made with the project button shows it. A window not yet
 placed goes to the right, like the readings table. The list leaves out
 `project.qtdmm`, the file in which QtDMM keeps the project's name,
@@ -69,19 +70,26 @@ the devices and windows as they are as a new bench of the project use
 folder); *Save bench* (Ctrl+S) of a bench whose file lies outside asks
 where in the project, it never writes outside unasked.
 
-**Move bench to project...** (in the menu of the node Bench and at Recent
-benches in the sidebar, at the project button's arrow) moves the bench
-into a new project, one of the last ones or another: its file goes into
-that project's benches - no copy stays behind - and that project opens
-with the bench running. A bench not saved yet goes along and is saved
-there.
+**Move bench to project** (a submenu in the menu of the node Bench and at
+Recent benches in the sidebar, at the project button's arrow; there once
+you have a second project) moves the bench into one of the last projects
+(the default one too), a **New project...** or an **Other project...**:
+its file goes into that project's benches - no copy stays behind - and
+that project opens with the bench running. A bench not saved yet goes
+along and is saved there.
+
+A bench name is there once in a project: a bench moved or copied into a
+project that has one of the same name gets the next free one, "Lab 1 (2)",
+in its file and as its file name.
 
 A bench belongs to the project in whose folder it lies, also in a
 subfolder of it. Loading a bench that lies outside the open project -
 saved anywhere, or in another project - asks: **Copy** it into the project
 (the copy is loaded, the file stays where it is), **Only open** it where it
 lies (*Save bench* then proposes the project), or cancel. The project
-never switches by itself.
+never switches by itself. A bench saved with another configuration (another
+computer, another user) takes a device of the same name and model from
+*My devices* instead of adding it a second time.
 
 A project is a plain folder. QtDMM puts a `project.qtdmm` into a new one,
 with its name, a description and when it was made; it is kept for what a
