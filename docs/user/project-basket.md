@@ -51,8 +51,9 @@ restarts.
 
 While a project is open, the sidebar shows **Project: name** at the top
 with its benches (the one in use in bold; a double click loads one) and
-**+ New bench...**, which saves the devices and windows as they are as a
-new bench of the project.
+**+ New project...**, which makes another project and opens it. To save
+the devices and windows as they are as a new bench of the project use
+**Save bench as...** (menu of the node Bench).
 
 **Put the bench into a new project...** (in the menu of the node Bench
 and at Recent benches in the sidebar, at the project button's arrow) is the way from a

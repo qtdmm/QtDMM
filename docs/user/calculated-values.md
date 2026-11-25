@@ -121,6 +121,10 @@ front panel:
   **All OUT off** (with more than one channel) switches every output of
   this supply off. The outputs are always off when
   the supply is opened; the setpoints stay as they were.
+- The handle at the lower edge folds the knobs and keys away and back
+  (also **Hide controls** in the right-click menu). In a window too low
+  for them they fold away by themselves and come back with room; folded
+  with the handle they stay folded. The generator's front does the same.
 - **ALL OFF**, red at the right end of the status line, is there while a
   device with outputs is open: the emergency off. It switches every output
   of every power supply (and generator) off at once, also one set by a

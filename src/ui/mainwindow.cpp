@@ -1665,7 +1665,8 @@ void MainWindow::createSidebar()
   });
   connect(m_sidebar, &DeviceSidebar::serviceCodeRequested, this, &MainWindow::showWebViewCode);
   connect(m_sidebar, &DeviceSidebar::workspaceRequested, this, &MainWindow::loadWorkspaceFile);
-  connect(m_sidebar, &DeviceSidebar::newBenchRequested, this, [this] { saveWorkspace(true); });
+  connect(m_sidebar, &DeviceSidebar::newBenchRequested, this, &MainWindow::newEmptyBench);
+  connect(m_sidebar, &DeviceSidebar::newProjectRequested, m_basket->newAction(), &QAction::trigger);
   connect(m_sidebar, &DeviceSidebar::removeWorkspaceRequested, this, [this](const QString &file)
   {
     recentWorkspaces().remove(file);
@@ -4990,15 +4991,14 @@ void MainWindow::tableToBasket()
     Q_EMIT m_wid->error(tr("Into the project: %1").arg(QFileInfo(csv).fileName()));
 }
 
-void MainWindow::saveWorkspace(bool asNew)
+void MainWindow::saveWorkspace()
 {
   Settings *cfg = m_wid->settings();
   // the picture: the windows as they stand
   const QPixmap shot = m_mdi->grab().scaledToWidth(480, Qt::SmoothTransformation);
-  // a new one starts without the name and file of the one in use
-  const QString currentName = asNew ? QString() : m_workspaceName;
-  const QString currentFile = asNew ? QString() : m_workspaceFile;
-  WorkspaceDlg dlg(currentName, asNew ? QString() : m_workspaceDescription, shot, this);
+  const QString currentName = m_workspaceName;
+  const QString currentFile = m_workspaceFile;
+  WorkspaceDlg dlg(currentName, m_workspaceDescription, shot, this);
   if (dlg.exec() != QDialog::Accepted)
     return;
   // a project basket open: the bench goes into it
@@ -5490,7 +5490,7 @@ void MainWindow::updateRecentWorkspaces()
     rows.append({ file, ws ? ws->name : QString(), ws ? workspaceTooltip(file, *ws) : QString(), favorites.contains(file) });
   }
   const bool noDevices = m_wid->devices()->list().isEmpty();
-  m_sidebar->setWorkspaces(noDevices ? QList<DeviceSidebar::Workspace>() : rows);
+  m_sidebar->setWorkspaces(noDevices ? QList<DeviceSidebar::Workspace>() : rows, !noDevices);
   m_recentMenu->clear();
   for (int i = 0; i < rows.size(); ++i)
   {

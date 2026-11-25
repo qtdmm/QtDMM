@@ -272,6 +272,28 @@ int main(int argc, char **argv)
     f.confirmVoltage(0, 4.5);
     check(qFuzzyCompare(knob->value(), 4.5), "the setpoint read back: the knob follows, " + QString::number(knob->value()));
 
+    // too low a window folds the controls itself, with room they come back;
+    // folded by the person they stay folded
+    {
+      int changed = 0;
+      QObject::connect(&panel, &OutputFront::controlsShownChanged, [&] { ++changed; });
+      const QSize was = panel.size();
+      panel.show();   // resize events come to a widget shown
+      panel.resize(600, 600);
+      check(panel.controlsShown(), "room: the controls shown");
+      panel.resize(600, 60);
+      check(!panel.controlsShown() && !panel.isFolded() && changed == 1, "too low: folded by itself, not by the person");
+      panel.resize(600, 600);
+      check(panel.controlsShown() && changed == 2, "room again: shown again");
+      panel.setFolded(true);
+      panel.resize(600, 60);
+      panel.resize(600, 600);
+      check(!panel.controlsShown() && panel.isFolded(), "folded by the person: stays folded");
+      panel.setFolded(false);
+      panel.resize(was);
+      panel.hide();
+    }
+
     // OUT and ALL OUT
     panel.outputKey(1)->click();
     check(f.state(1).output && !f.state(0).output, "OUT: that channel on");
