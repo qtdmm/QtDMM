@@ -40,7 +40,8 @@ SimPsuNodeEditor::SimPsuNodeEditor(QWidget *parent) : NodeEditor(parent), m_node
   auto *faults = new QGroupBox(tr("A worse supply"), this);
   auto *faultsForm = new QFormLayout(faults);
   auto *hint = new QLabel(tr("All 0: an ideal supply. A new value comes every 250 ms, too seldom for a 100 Hz hum: "
-                             "the ripple shows as a band of random values, not as a sine."),
+                             "the ripple shows as a band of random values, not as a sine. An overshoot needs a "
+                             "rise time of a few seconds to be seen: within 500 ms it falls between two values."),
                           faults);
   hint->setWordWrap(true);
   faultsForm->addRow(hint);

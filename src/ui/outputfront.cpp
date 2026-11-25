@@ -25,9 +25,13 @@ void OutputFront::setDisplay(LcdPanel *display)
   auto *layout = new QVBoxLayout(this);
   layout->setContentsMargins(0, 0, 0, 0);
   layout->setSpacing(4);
-  layout->addWidget(m_lcd, 1);
+  // the LCD takes the room up to the height its width fills (resizeEvent());
+  // more goes above and below: LCD and controls stay together
+  layout->addStretch(1);
+  layout->addWidget(m_lcd, 100);
   layout->addWidget(m_controls);
   layout->addWidget(m_fold, 0, Qt::AlignHCenter);
+  layout->addStretch(1);
 
   m_gear = new PanelGear(m_lcd);
   m_gear->setInk(m_lcd->plateInk(false), m_lcd->plateInk(true));
@@ -76,6 +80,15 @@ bool OutputFront::eventFilter(QObject *watched, QEvent *event)
   if (watched == m_lcd && event->type() == QEvent::Resize)
     placeCorner();
   return QWidget::eventFilter(watched, event);
+}
+
+void OutputFront::resizeEvent(QResizeEvent *event)
+{
+  QWidget::resizeEvent(event);
+  // taller than the width fills at its narrowest shape, the LCD only
+  // painted empty room above and below itself
+  if (m_lcd)
+    m_lcd->setMaximumHeight(qMax(m_lcd->minimumHeight(), int(width() / m_lcd->minimumAspect()) + 2));
 }
 
 void OutputFront::placeCorner()

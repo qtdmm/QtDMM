@@ -148,9 +148,10 @@ void PsuFrontPanel::rebuild()
   if (shown.size() > 1)
   {
     m_allOff = new QToolButton(controls());
-    m_allOff->setText(tr("ALL OUT"));
-    m_allOff->setToolTip(tr("Every output shown off"));
-    m_allOff->setStyleSheet(ControlBar::keyColour(QColor(0xb0, 0x30, 0x30), Qt::white));
+    // not red: that is the emergency off of all devices in the status bar
+    m_allOff->setText(tr("All OUT off"));
+    m_allOff->setToolTip(tr("Every output of this device shown off"));
+    m_allOff->setStyleSheet(ControlBar::keyColour(QColor(0x4a, 0x4d, 0x52), QColor(0xee, 0xee, 0xee)));
     // below the channels, at the right: the controls stay under their blocks
     m_grid->addWidget(m_allOff, (int(shown.size()) + columns - 1) / columns, 0, 1, columns, Qt::AlignRight);
     connect(m_allOff, &QToolButton::clicked, this, [this]

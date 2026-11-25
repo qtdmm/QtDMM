@@ -128,7 +128,7 @@ AddDeviceDlg::AddDeviceDlg(DeviceLibrary *library, QWidget *parent)
       tr("A meter at another computer, through qtdmm-bridge or another RFC 2217 server") },
     { Sigrok,    "qtdmm-sigrok",                 tr("sig&rok") + '\n' + tr("Bench meters"),
       tr("A bench meter read through sigrok-cli") },
-    { SimKinds,  "qtdmm-simulated",              tr("&Simulated") + '\n' + tr("Test signals, power supply"),
+    { SimKinds,  "qtdmm-simulated",              tr("&Simulated") + '\n' + tr("Test signals, power supply, generator"),
       tr("Simulated devices to try QtDMM without hardware: test signals (sine, square, noise, a formula over "
          "time) or a power supply") },
     { NodeKinds, "qtdmm-calculated",             tr("C&alculated") + '\n' + tr("Formula, integral ..."),

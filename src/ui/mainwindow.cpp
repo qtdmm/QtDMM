@@ -745,9 +745,15 @@ void MainWindow::createViews()
     for (GraphView *view : std::as_const(m_graphViews))
       if (view->model()->values().isEmpty())
         view->model()->setValues(plotted);
+    // a supply or a generator is set and read on its front panel: no needle
+    // meter for it; the one with nothing to show yet goes
+    const NodeRunner *runner = NodeRunner::of(ctl);
+    const bool outputs = runner && (runner->node()->powerSupply() || runner->node()->functionGenerator());
     for (MeterView *meter : m_wid->meters())
-      if (free(meter->value()))
+      if (free(meter->value()) && !outputs)
         meter->setValue(ValueRef(0, ctl->source()));
+    if (outputs && m_meterAction->isChecked() && free(meterViewOf(m_meterWin)->value()))
+      m_meterAction->setChecked(false);
     for (PoincareView *plot : m_wid->poincares())
       if (free(plot->value()))
         plot->setValue(ValueRef(0, ctl->source()));
@@ -5094,12 +5100,17 @@ void MainWindow::updateBenchChanged()
 bool MainWindow::leaveBench(const QString &title, const QStringList &unsaved, const QString &discard)
 {
   updateBenchChanged();
-  const bool bench = m_benchChanged;
+  // a bench never saved nor loaded, built by hand: asked once it has a
+  // device [E 25.11.]; the empty one at the start goes without a question
+  const bool neverSaved = m_workspaceFile.isEmpty() && !m_benchNew && !m_session->controllers().isEmpty();
+  const bool bench = m_benchChanged || neverSaved;
   const QStringList recordings = m_wid->alertsUnsavedData() ? unsaved : QStringList();
   if (!bench && recordings.isEmpty())
     return true;
   QStringList text;
-  if (bench)
+  if (neverSaved)
+    text << tr("The bench has not been saved yet. Save it?");
+  else if (bench)
     text << (m_benchNew || m_workspaceName.isEmpty()
                ? tr("The new bench has been changed. Save it?")
                : tr("The bench \u201c%1\u201d has been changed. Save it?").arg(m_workspaceName).toHtmlEscaped());

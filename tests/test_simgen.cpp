@@ -62,7 +62,7 @@ int main(int argc, char **argv)
           "made by its type: a generator, on the clock of 250 ms");
     const QList<LogicNode::Output> out = made->outputs();
     check(out.size() == 4 && out[0].name == "CH1 Vrms" && out[0].coupling == "AC" && out[1].unit == "Hz"
-            && out[2].name == "CH1 mean" && out[2].coupling == "DC" && out[3].name == "CH1 u",
+            && out[2].name == "CH1 Vavg" && out[2].coupling == "DC" && out[3].name == "CH1 u",
           "one channel by default: Vrms, f, mean, u");
     auto *gen = dynamic_cast<SimGenNode *>(made.get());
     gen->setChannels(2);
@@ -71,7 +71,7 @@ int main(int argc, char **argv)
             && two[3].name == "CH2 f",
           "two channels by default: Vrms and f of each");
     gen->setGiven(0, { true, true, true, true, true });
-    check(gen->outputs().size() == kMaxValues && gen->outputs().last().name == "CH1 mean",
+    check(gen->outputs().size() == kMaxValues && gen->outputs().last().name == "CH1 Vavg",
           "more than four chosen: the rest left out");
   }
 
