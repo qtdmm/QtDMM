@@ -546,11 +546,12 @@ void DeviceSidebar::setProject(const QString &name, const QList<Workspace> &benc
   m_filling = false;
 }
 
-void DeviceSidebar::setCurrentWorkspace(const QString &name, const QString &tooltip)
+void DeviceSidebar::setCurrentWorkspace(const QString &name, const QString &tooltip, bool isNew)
 {
   // after the node of the devices it is about, in the name's own cell: in a
   // column of its own it widened that for every row
   m_benchName = name;
+  m_benchNew = isNew;
   setBenchChanged(m_benchChanged);
   m_open->setToolTip(0, tooltip.isEmpty() ? tr("The devices this window reads: each has its front panel and records with the others.")
                                           : tooltip);
@@ -559,7 +560,9 @@ void DeviceSidebar::setCurrentWorkspace(const QString &name, const QString &tool
 void DeviceSidebar::setBenchChanged(bool changed)
 {
   m_benchChanged = changed;
-  const QString text = m_benchName.isEmpty() ? tr("Bench") : tr("Bench · %1").arg(m_benchName);
+  const QString text = m_benchNew              ? tr("Bench (new)")
+                       : m_benchName.isEmpty() ? tr("Bench")
+                                               : tr("Bench · %1").arg(m_benchName);
   m_open->setText(0, changed ? text + " *" : text);
 }
 

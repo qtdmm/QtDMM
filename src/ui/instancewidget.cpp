@@ -227,11 +227,16 @@ void InstanceWidget::setReadingLog(ReadingsModel *log)
   m_readingLog = log;
 }
 
-bool InstanceWidget::closeWin()
+bool InstanceWidget::closeWin(bool ask)
 {
   m_configDlg->setWinRect(parentRect());
   m_configDlg->on_ui_buttonBox_accepted();
-  return keepUnsavedData(tr("If you quit now it will be lost."), tr("Quit without saving"));
+  return !ask || keepUnsavedData(tr("If you quit now it will be lost."), tr("Quit without saving"));
+}
+
+bool InstanceWidget::alertsUnsavedData() const
+{
+  return m_configDlg->generalPage()->alertUnsavedData();
 }
 
 bool InstanceWidget::keepUnsavedData(const QString &reason, const QString &discard)

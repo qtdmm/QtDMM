@@ -131,7 +131,8 @@ public:
   /// any. A file that is gone is grey and loads no more.
   void        setWorkspaces(const QList<Workspace> &workspaces);
   /// The name of the workspace in use, after "Bench"; empty: none.
-  void        setCurrentWorkspace(const QString &name, const QString &tooltip = QString());
+  /// @p isNew: a new empty bench not saved yet, "Bench (new)".
+  void        setCurrentWorkspace(const QString &name, const QString &tooltip = QString(), bool isNew = false);
   /// The bench in use differs from its file: a star after its name.
   void        setBenchChanged(bool changed);
   /// The node "Workspaces".
@@ -245,5 +246,6 @@ private:
   QList<QAction *> m_benchActions;       ///< setBenchActions()
   QString     m_benchName;               ///< setCurrentWorkspace()
   bool        m_benchChanged = false;    ///< setBenchChanged()
+  bool        m_benchNew = false;        ///< setCurrentWorkspace()
   bool             m_filling = false;
 };
