@@ -78,37 +78,21 @@ const Function *function(int code)
 enum Status { Ok = 0, Overload = 6, NoReading = 14 };
 }   // namespace
 
-bool DecoderOpenOSC::checkFormat(const char *data, size_t idx)
+DecoderOpenOSC::DecoderOpenOSC(FrameFormat::DataFormat df) : DecoderScpi(df, { { "SYST:DMM:RES?" } })
 {
-  // a line ends with LF (CR LF taken too); the frame starts at index 0. A
-  // line that is no result (an answer to something else, "NAN") stays in
-  // the buffer and comes before the next one, which decode() takes.
-  if (data[idx] != '\n')
-    return false;
-  size_t start = idx;
-  while (start > 0 && data[start - 1] != '\n')
-    --start;
-  int commas = 0;
-  for (size_t i = start; i < idx; ++i)
-    commas += data[i] == ',';
-  return commas == 10 && data[start] >= '0' && data[start] <= '9';
+  m_name = "OpenOSC";
 }
 
-std::optional<DmmDecoder::DmmResponse> DecoderOpenOSC::decode(const QByteArray &data, int id)
+std::optional<DmmDecoder::DmmResponse> DecoderOpenOSC::parseAnswer(const Asked &asked, const QString &line, int id)
 {
+  Q_UNUSED(asked);   // one question only
   m_result = {};
   m_result.main().id = id;
   m_repeated = false;
 
-  // the last line with the 11 fields
-  QStringList fields;
-  for (const QByteArray &line : data.split('\n'))
-  {
-    const QStringList f = QString::fromLatin1(line).trimmed().split(',');
-    if (f.size() == 11)
-      fields = f;
-  }
-  if (fields.isEmpty())
+  // the 11 fields; another line (an answer to something else, "NAN") gives nothing
+  const QStringList fields = line.split(',');
+  if (fields.size() != 11 || fields[0].isEmpty() || !fields[0].front().isDigit())
     return std::nullopt;
   // polled faster than the meter measures: the same reading again. Not
   // while HOLD, which freezes seq too: the held display still counts

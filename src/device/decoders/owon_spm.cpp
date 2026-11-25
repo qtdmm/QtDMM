@@ -86,39 +86,28 @@ QString unitOf(QString unit)
 }
 }   // namespace
 
-QByteArray DecoderOwonSPM::pollRequest() const
+DecoderOwonSPM::DecoderOwonSPM(FrameFormat::DataFormat df)
+  : DecoderScpi(df, { { "MEAS:ALL:INFO?" }, { "CONF:ALL?" } })   // in turn, one at a time
 {
-  // asked only when it is sent (FrameReader): one in turn
-  return m_requests++ % 2 == 0 ? QByteArrayLiteral("MEAS:ALL:INFO?\n") : QByteArrayLiteral("CONF:ALL?\n");
+  m_name = "OwonSPM";
 }
 
-bool DecoderOwonSPM::checkFormat(const char *data, size_t idx)
+bool DecoderOwonSPM::isFrame(QByteArrayView line) const
 {
-  // a line ends with LF (CR LF taken too); the frame starts at index 0. A
-  // line that is no answer of the two stays in the buffer and comes before
-  // the next one, which decode() takes
-  if (data[idx] != '\n')
-    return false;
-  size_t start = idx;
-  while (start > 0 && data[start - 1] != '\n')
-    --start;
-  const QString line = QString::fromLatin1(data + start, int(idx - start)).trimmed();
-  return isSupply(supplyFields(line)) || isMultimeter(line.split(','));
+  const QString text = QString::fromLatin1(line);
+  return isSupply(supplyFields(text)) || isMultimeter(text.split(','));
 }
 
-std::optional<DmmDecoder::DmmResponse> DecoderOwonSPM::decode(const QByteArray &data, int id)
+std::optional<DmmDecoder::DmmResponse> DecoderOwonSPM::parseAnswer(const Asked &asked, const QString &line, int id)
 {
+  Q_UNUSED(asked);
   Q_UNUSED(id);
-  // the last line that is an answer
-  const QList<QByteArray> lines = data.split('\n');
-  for (auto it = lines.crbegin(); it != lines.crend(); ++it)
-  {
-    const QString line = QString::fromLatin1(*it).trimmed();
-    if (const QStringList f = supplyFields(line); isSupply(f))
-      return decodeSupply(f);
-    if (const QStringList f = line.split(','); isMultimeter(f))
-      return decodeMultimeter(f);
-  }
+  // the answers tell what they are; a line that is neither (an echo, an
+  // error, before the answer in the frame) gives nothing
+  if (const QStringList f = supplyFields(line); isSupply(f))
+    return decodeSupply(f);
+  if (const QStringList f = line.split(','); isMultimeter(f))
+    return decodeMultimeter(f);
   return std::nullopt;
 }
 

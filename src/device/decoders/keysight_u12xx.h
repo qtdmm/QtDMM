@@ -2,9 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
 
-#include <atomic>
-
-#include "device/dmmdecoder.h"
+#include "device/scpi/decoderscpi.h"
 
 /// Agilent/Keysight U1230/U1240/U1250/U1270/U1280 handheld meters over their
 /// IR-USB cable (U1173A/U1173B, a serial port at 9600 8N1). Polled with SCPI
@@ -22,28 +20,32 @@
 /// the rotary switch arrives unasked as `*<n>`; the function is unknown
 /// until the next `CONF?`.
 ///
-/// A frame is the line with the value (getPacketLength() 0, as Fluke45):
-/// the `CONF?` answer before it stays in the reader's buffer, so decode()
-/// gets both and reads them in order. pollRequest() asks `CONF?` first,
-/// once after a switch and every 50th time, otherwise `FETC?`. Polled every
-/// 200 ms (pollInterval()): the meters measure 5 times a second (the U128x
-/// up to 40 in its high-speed mode, not used); after `CONF?`, which has no
-/// frame of its own, FrameReader asks `FETC?` two ticks later.
+/// A frame is the line with the value, not every line (isFrame()): the
+/// `CONF?` answer before it stays in the reader's buffer, so decode() gets
+/// both and reads them in order; the answers tell what they are (a quoted
+/// `CONF?`, an NR3 `FETC?`). The plan (DecoderScpi) asks `CONF?` first,
+/// then every 50th round and once more after a switch (askSoon()),
+/// otherwise `FETC?`. Polled every 200 ms (pollInterval()): the meters
+/// measure 5 times a second (the U128x up to 40 in its high-speed mode,
+/// not used); after `CONF?`, which has no frame of its own, FrameReader
+/// asks `FETC?` two ticks later.
 ///
 /// Not read: STAT? (hold, min/max, the U123x temperature and continuity
 /// modes, which `CONF?` reports as MV and RES), the second display and
 /// logged data. Source: libsigrok `agilent-dmm` (GPL-3.0-or-later).
-class DecoderKeysightU12xx : public DmmDecoder
+class DecoderKeysightU12xx : public DecoderScpi
 {
   Q_OBJECT
 public:
-  DecoderKeysightU12xx(FrameFormat::DataFormat df) : DmmDecoder(df) { m_name = "KeysightU12xx"; }
+  DecoderKeysightU12xx(FrameFormat::DataFormat df);
 
-  std::optional<DmmDecoder::DmmResponse> decode(const QByteArray &data, int id) override;
-  QByteArray pollRequest() const override;
-  bool checkFormat(const char *data, size_t idx) override;
-  size_t getPacketLength() override { return 0; }
   int pollInterval() const override { return 200; }
+
+protected:
+  bool isFrame(QByteArrayView line) const override;
+  std::optional<DmmResponse> parseAnswer(const Asked &asked, const QString &line, int id) override;
+  /// "*3", the rotary switch turned; "*E", an error.
+  bool isUnasked(const QString &line) const override { return line.startsWith('*'); }
 
 private:
   /// What `CONF?` said; empty unit: not known (yet), no value is shown.
@@ -57,7 +59,4 @@ private:
   static bool parseConf(const QString &conf, Function *f);
 
   Function m_function;
-  // the reader thread asks pollRequest(), the decoder runs in the connection's
-  mutable std::atomic<int> m_polls{ 0 };
-  mutable std::atomic<bool> m_needConf{ true };
 };
