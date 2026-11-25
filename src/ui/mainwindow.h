@@ -40,6 +40,7 @@
 #include "core/recentfiles.h"
 #include "core/valueref.h"
 #include "ui/devicesidebar.h"
+#include "ui/views/basketwidget.h"
 #include "ui/valuemenu.h"
 
 class NodeEditor;
@@ -57,7 +58,6 @@ class LogDlg;
 class AnalogMeter;
 class MeterView;
 class PoincareView;
-class BasketWidget;
 class ReadingsWidget;
 class PoincarePlot;
 class XYPlot;
@@ -606,7 +606,18 @@ protected:
   void        newEmptyBench();
   /// Before the open project is left (closed, another one): the question
   /// of leaveBench() for a changed bench; true: go on.
-  bool        leaveProject();
+  bool        leaveProject(BasketWidget::Leave why);
+  /// Closes the bench in use: the question of leaveBench(), the outputs off,
+  /// every device closed, the windows as at a first start. False: cancelled.
+  bool        closeBench(const QString &title);
+  /// The bench into @p project: its file moved there (benches/), one never
+  /// saved goes along; @p project is the open one then.
+  void        moveBenchTo(const QString &project);
+  /// "Move bench to project...": a new project, one of the last, another.
+  void        moveBenchMenu();
+  /// [E 25.11.] The open project shows by its name once there is more than
+  /// the default project (one of the last projects is another).
+  bool        projectShown() const;
   /// The project's node in the sidebar: its benches, the one in use.
   void        updateProjectSidebar();
   /// The benches of the project in @p project (its folder and the folders
@@ -619,9 +630,6 @@ protected:
   /// The start page's projects: open, import, the last ones; with a project
   /// open its name and benches.
   void        fillEmptyProject();
-  /// The way from no project to one: a new project, opened, and the bench
-  /// in use saved into it (Save bench, proposed in the project's folder).
-  void        benchIntoNewProject();
   /// The recording as CSV and the graph as PNG, into the project basket.
   void        graphToBasket();
   /// The same for a graph (QCP): its values' recording, its picture.
@@ -657,8 +665,11 @@ protected:
   bool        m_benchChanged = false;   ///< updateBenchChanged()
   bool        m_benchNew = false;       ///< newEmptyBench(), not saved yet
   bool        m_benchBaseline = false;  ///< the next updateBenchChanged() takes the state as unchanged
-  bool        m_benchIntoProjectRuns = false;   ///< benchIntoNewProject() runs: leaving the project asks nothing
+  bool        m_benchIntoProjectRuns = false;   ///< moveBenchTo() runs: leaving the project asks nothing
+  bool        m_moveBenchPending = false;       ///< a new project takes the bench along (leaveProject())
   QAction    *m_saveBench = nullptr;
+  QAction    *m_saveBenchAs = nullptr;
+  QAction    *m_newBench = nullptr;
   QList<QAction *> m_benchMenuActions;  ///< the node Bench's menu, nullptr a separator
   /// @}
   /// Applies a colour design (Designs::Design) to the window and the views.

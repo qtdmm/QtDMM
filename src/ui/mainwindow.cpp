@@ -88,6 +88,8 @@
 #include "ui/views/basketwidget.h"
 
 static const char *kWorkspaceSuffix = "qtdmm-workspace";
+// the project's window shown: kept with the window, not in a bench file
+static const char *kBasketKey = "Windows/basket";
 #include "ui/views/readingswidget.h"
 #include "ui/dialogs/capturedlg.h"
 #include "ui/dialogs/photodlg.h"
@@ -501,12 +503,6 @@ void MainWindow::createViews()
   // the files of a project, a folder; it stays open until another is
   m_basket = new BasketWidget(this);
   m_basketWin = addView(m_basket, m_basket->windowTitle(), MdiArranger::Table, "basket");
-  const QString basketDir = m_wid->settings()->getString("Basket/folder");
-  if (QFileInfo(basketDir).isDir())
-  {
-    m_basket->setFolder(basketDir);
-    recentProjects().add(basketDir);   // the one open at the start is one of the last ones too
-  }
   auto basketBase = [this]
   {
     const QString base = m_wid->settings()->getString("Basket/base-dir");
@@ -514,6 +510,16 @@ void MainWindow::createViews()
     ProjectFolder::setByType(m_wid->settings()->getBool("Basket/by-type", true));
   };
   basketBase();
+  // [E 25.11.] always a project: the one open last, else the default one
+  // (made anew when gone or broken)
+  const QString basketDir = m_wid->settings()->getString("Basket/folder");
+  if (QFileInfo(basketDir).isDir() && !ProjectFolder::isDefault(basketDir))
+  {
+    m_basket->setFolder(basketDir);
+    recentProjects().add(basketDir);   // the one open at the start is one of the last ones too
+  }
+  else
+    m_basket->setFolder(BasketWidget::ensureDefaultProject(false));   // made once needed
   connect(m_wid, &InstanceWidget::configChanged, this, basketBase);
   connect(m_basket, &BasketWidget::folderChanged, this, [this](const QString &folder)
   {
@@ -547,7 +553,7 @@ void MainWindow::createViews()
   // project leaves the windows as the bench has them)
   // made, opened or imported: its bench, not its window over the views
   connect(m_basket, &BasketWidget::projectOpened, this, &MainWindow::openProjectBench);
-  m_basket->setLeaveCheck([this] { return leaveProject(); });
+  m_basket->setLeaveCheck([this](BasketWidget::Leave why) { return leaveProject(why); });
   connect(m_basket, &BasketWidget::openRequested, this, [this](const QString &path)
   {
     // a bench is loaded, a recording of QtDMM goes into the graph, anything
@@ -1740,7 +1746,11 @@ void MainWindow::fillViewToolbar()
         else
           menu->addSeparator();
     }
-    const QStringList dirs = recentProjects().list().mid(0, 10);
+    // the default project among them only once there are others
+    QStringList dirs = recentProjects().list();
+    if (!projectShown())
+      dirs.clear();
+    dirs = dirs.mid(0, 10);
     if (!dirs.isEmpty())
       menu->addSeparator();
     for (int i = 0; i < dirs.size(); ++i)
@@ -1760,13 +1770,14 @@ void MainWindow::fillViewToolbar()
           m_basketAction->setChecked(true);
           return;
         }
-        if (!leaveProject())
+        if (!leaveProject(BasketWidget::Leave::Open))
           return;
         m_basket->setFolder(dir);
         openProjectBench();
       });
     }
-    if (!m_basket->folder().isEmpty())
+    // closing goes back to the default project: none to close there
+    if (!m_basket->folder().isEmpty() && !ProjectFolder::isDefault(m_basket->folder()))
     {
       menu->addSeparator();
       menu->addAction(m_basket->closeAction());
@@ -2024,7 +2035,7 @@ QList<QAction *> MainWindow::createArrangeMenu()
                                "as</i>. A star after the bench's name in the sidebar: it differs from its "
                                "file.</p></body></html>"));
   connect(m_saveBench, &QAction::triggered, this, &MainWindow::saveBench);
-  QAction *saveWs = new QAction(QIcon::fromTheme("document-save-as"), tr("Save bench &as..."), this);
+  QAction *saveWs = m_saveBenchAs = new QAction(QIcon::fromTheme("document-save-as"), tr("Save bench &as..."), this);
   saveWs->setObjectName("action_SaveWorkspace");
   saveWs->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">Save bench as</span></p>"
                           "<p>Writes the set-up to a file, under a name and a description, with a picture of "
@@ -2032,7 +2043,7 @@ QList<QAction *> MainWindow::createArrangeMenu()
                           "windows are shown with which values, the arrangement, "
                           "title bars, toolbar, design and the size of the main window.</p></body></html>"));
   connect(saveWs, &QAction::triggered, this, [this] { saveWorkspace(); });
-  QAction *newBench = new QAction(QIcon::fromTheme("document-new"), tr("New &empty bench"), this);
+  QAction *newBench = m_newBench = new QAction(QIcon::fromTheme("document-new"), tr("New &empty bench"), this);
   newBench->setObjectName("action_NewEmptyBench");
   newBench->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">New empty bench</span></p>"
                             "<p>Switches the outputs of supplies and generators off, closes every device and "
@@ -2040,13 +2051,13 @@ QList<QAction *> MainWindow::createArrangeMenu()
                             "recordings not saved are asked about first. <i>Save bench</i> then asks for the "
                             "new bench's name.</p></body></html>"));
   connect(newBench, &QAction::triggered, this, &MainWindow::newEmptyBench);
-  m_benchIntoProject = new QAction(tr("Put the bench into a new &project..."), this);
+  m_benchIntoProject = new QAction(tr("Move bench to &project..."), this);
   m_benchIntoProject->setObjectName("action_BenchIntoProject");
-  m_benchIntoProject->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">Put the bench into a "
-                                      "new project</span></p><p>Makes a new project, opens it and saves the bench "
-                                      "into its folder: the way from a single bench to a project of several."
-                                      "</p></body></html>"));
-  connect(m_benchIntoProject, &QAction::triggered, this, &MainWindow::benchIntoNewProject);
+  m_benchIntoProject->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">Move bench to "
+                                      "project</span></p><p>Moves the bench into a new project or another one and "
+                                      "opens that: its file goes into the project's benches (no copy stays); a bench "
+                                      "not saved yet goes along and is saved there.</p></body></html>"));
+  connect(m_benchIntoProject, &QAction::triggered, this, &MainWindow::moveBenchMenu);
   m_benchMenuActions = { m_saveBench, saveWs, newBench, nullptr, loadWs, m_recentMenu->menuAction(), nullptr, m_benchIntoProject };
   // the same at the sidebar's Recent benches and its node Bench
   m_sidebar->setWorkspaceActions({ loadWs, saveWs, m_benchIntoProject });
@@ -2229,6 +2240,9 @@ void MainWindow::updateEmptyStart()
     updateProjectSidebar();
     updateRecentWorkspaces();
   }
+  // nothing connected: nothing to save or move as a bench; loading stays
+  for (QAction *a : { m_saveBench, m_saveBenchAs, m_newBench, m_benchIntoProject })
+    a->setEnabled(!noDevices && !m_session->controllers().isEmpty());
   fillEmptyProject();
   // the project's window stays at hand beside the start page
   m_basketBeside = empty && !noDevices && !m_basketWin->isHidden();
@@ -2531,7 +2545,7 @@ void MainWindow::updateWindowTitle()
     title += QString(" [%1]").arg(m_configId);
   QStringList where;
   const QString project = m_basket ? m_basket->folder() : QString();
-  if (!project.isEmpty())
+  if (!project.isEmpty() && projectShown())
     where << BasketWidget::projectName(project);
   // a bench without a name of its own by its file, as the sidebar has it;
   // with a project only one of it (in its folder), until saved there [V 09.11.]
@@ -4501,7 +4515,7 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
   m_xyAction->setChecked(get("Windows/xy", false).toBool());
   m_histogramAction->setChecked(get("Windows/histogram", false).toBool());
   m_heatmapAction->setChecked(get("Windows/heatmap", false).toBool());
-  m_basketAction->setChecked(get("Windows/basket", false).toBool());
+  m_basketAction->setChecked(get(kBasketKey, false).toBool());
   // "1@device:ab12cd34" (ValueRef)
   meterViewOf(m_meterWin)->setValue(valueOf(get("Windows/meter-value", 0).toString()));
   poincareViewOf(m_poincareWin)->setValue(valueOf(get("Windows/poincare-value", 0).toString()));
@@ -4645,7 +4659,7 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
   set("Windows/xy", m_xyAction->isChecked());
   set("Windows/histogram", m_histogramAction->isChecked());
   set("Windows/heatmap", m_heatmapAction->isChecked());
-  set("Windows/basket", m_basketAction->isChecked());
+  set(kBasketKey, m_basketAction->isChecked());
   set("MainWindow/show-graph", action_Graph->isChecked());
   set("Windows/meter-value", meterViewOf(m_meterWin)->value().toString());
   const auto styleText = [](int style) { return style < 0 ? QString() : QString::number(style); };
@@ -4994,6 +5008,9 @@ void MainWindow::tableToBasket()
 void MainWindow::saveWorkspace()
 {
   Settings *cfg = m_wid->settings();
+  // the default project deleted meanwhile: there again, empty
+  if (ProjectFolder::isDefault(m_basket->folder()))
+    BasketWidget::ensureDefaultProject();
   // the picture: the windows as they stand
   const QPixmap shot = m_mdi->grab().scaledToWidth(480, Qt::SmoothTransformation);
   const QString currentName = m_workspaceName;
@@ -5029,7 +5046,9 @@ void MainWindow::saveWorkspace()
 
 void MainWindow::saveBench()
 {
-  if (m_workspaceFile.isEmpty())
+  // [E 25.11.] into the open project only: a file outside it asks where
+  const QString project = m_basket->folder();
+  if (m_workspaceFile.isEmpty() || (!project.isEmpty() && BasketWidget::projectOf(m_workspaceFile, project) != project))
     saveWorkspace();
   else
     writeWorkspace(m_workspaceFile, m_workspaceName.isEmpty() ? QFileInfo(m_workspaceFile).completeBaseName() : m_workspaceName,
@@ -5046,6 +5065,7 @@ bool MainWindow::writeWorkspace(const QString &file, const QString &name, const 
   ws.width = width();
   ws.height = height();
   storeWorkspace([&ws](const QString &key, const QVariant &value) { ws.keys.insert(key, value); });
+  ws.keys.remove(kBasketKey);   // the project's window: the window's, not the bench's
   // the devices as My devices has them: a copy goes with the file
   const DeviceLibrary *lib = m_wid->devices();
   for (const QString &id : ws.keys.value("Windows/open-devices").toString().split(' '))
@@ -5073,7 +5093,8 @@ QMap<QString, QString> MainWindow::benchState(const QVariantMap &keys, const QLi
 {
   QMap<QString, QString> state;
   for (auto it = keys.cbegin(); it != keys.cend(); ++it)
-    state.insert(it.key(), it.value().toString());
+    if (it.key() != QLatin1String(kBasketKey))   // no part of a bench
+      state.insert(it.key(), it.value().toString());
   // the devices come in as they connect: their order is none
   QStringList open = state.value("Windows/open-devices").split(' ', Qt::SkipEmptyParts);
   open.sort();
@@ -5174,8 +5195,53 @@ bool MainWindow::leaveBench(const QString &title, const QStringList &unsaved, co
 
 void MainWindow::newEmptyBench()
 {
-  if (!leaveBench(tr("QtDMM: New empty bench"), m_session->unsavedRecordings(), tr("Discard")))
+  if (!closeBench(tr("QtDMM: New empty bench")))
     return;
+  m_benchNew = true;
+  m_benchBaseline = true;
+  m_sidebar->setCurrentWorkspace(QString(), QString(), true);
+  updateEmptyStart();
+}
+
+bool MainWindow::leaveProject(BasketWidget::Leave why)
+{
+  m_moveBenchPending = false;
+  // the bench moves along by itself (moveBenchTo())
+  if (m_benchIntoProjectRuns)
+    return true;
+  // nothing running: nothing to ask, the bench of before is none any more
+  if (m_session->controllers().isEmpty())
+  {
+    if (why != BasketWidget::Leave::New)
+      setCurrentWorkspace(QString());
+    return true;
+  }
+  // [E 25.11.] a new project may take the bench along
+  if (why == BasketWidget::Leave::New)
+  {
+    const QString name = m_benchNew || m_workspaceName.isEmpty() ? tr("new") : m_workspaceName;
+    QMessageBox question(QMessageBox::Question, tr("QtDMM: New project"),
+                         tr("Move the bench \u201c%1\u201d into the new project?").arg(name), QMessageBox::Cancel, this);
+    QPushButton *move = question.addButton(tr("&Move"), QMessageBox::AcceptRole);
+    QPushButton *keep = question.addButton(tr("Do&n't move"), QMessageBox::DestructiveRole);
+    question.setDefaultButton(move);
+    question.exec();
+    if (question.clickedButton() == move)
+    {
+      m_moveBenchPending = true;   // openProjectBench() moves it once the project is there
+      return true;
+    }
+    if (question.clickedButton() != keep)
+      return false;
+  }
+  // the bench belongs to the project left: it goes with it
+  return closeBench(tr("QtDMM: Project"));
+}
+
+bool MainWindow::closeBench(const QString &title)
+{
+  if (!leaveBench(title, m_session->unsavedRecordings(), tr("Discard")))
+    return false;
   // the outputs off first, as the emergency off: nothing left driving the set-up
   OutputRegistry::instance().allOff();
   for (const MeterController *ctl : m_session->controllers())
@@ -5183,18 +5249,81 @@ void MainWindow::newEmptyBench()
   // the windows as at a first start
   applyWorkspace([](const QString &, const QVariant &def) { return def; });
   setCurrentWorkspace(QString());
-  m_benchNew = true;
-  m_benchBaseline = true;
-  m_sidebar->setCurrentWorkspace(QString(), QString(), true);
   updateEmptyStart();
+  return true;
 }
 
-bool MainWindow::leaveProject()
+void MainWindow::moveBenchTo(const QString &project)
 {
-  // the bench stays in the window: not saving loses nothing yet
-  if (m_benchIntoProjectRuns || m_basket->folder().isEmpty())
-    return true;
-  return leaveBench(tr("QtDMM: Project"), {}, tr("&Don't save"));
+  // a bench with a file: the file moves (no doubles); one never saved goes
+  // along as it is and is saved into the project later
+  QString file = m_workspaceFile;
+  if (!file.isEmpty() && QFileInfo::exists(file) && BasketWidget::projectOf(file, project) != project)
+  {
+    const QString target = BasketWidget::freeName(ProjectFolder::dirFor(project, ProjectFolder::Benches),
+                                                  QFileInfo(file).fileName());
+    if (QFile::rename(file, target) || (QFile::copy(file, target) && QFile::remove(file)))
+    {
+      RecentFiles recent = recentWorkspaces();
+      recent.remove(file);
+      recent.add(target);
+      file = target;
+    }
+    else
+      QMessageBox::warning(this, tr("QtDMM: Move bench"), tr("Could not move %1 to %2.")
+                                                            .arg(QDir::toNativeSeparators(file), QDir::toNativeSeparators(target)));
+  }
+  {
+    const QScopedValueRollback<bool> runs(m_benchIntoProjectRuns, true);
+    m_basket->setFolder(project);
+  }
+  if (file != m_workspaceFile)
+    setCurrentWorkspace(file);
+  updateRecentWorkspaces();
+  updateWindowTitle();
+}
+
+void MainWindow::moveBenchMenu()
+{
+  // where to: a new project, one of the last ones, another one
+  QMenu menu(this);
+  QAction *made = menu.addAction(QIcon::fromTheme("folder-new"), tr("&New project..."));
+  menu.addSeparator();
+  const QString current = m_basket->folder();
+  for (const QString &dir : recentProjects().list())
+    if (dir != current && QFileInfo(dir).isDir())
+    {
+      QAction *a = menu.addAction(QIcon::fromTheme("folder"), QString(BasketWidget::projectName(dir)).replace('&', "&&"));
+      a->setData(dir);
+      a->setToolTip(QDir::toNativeSeparators(dir));
+    }
+  menu.addSeparator();
+  QAction *other = menu.addAction(tr("&Other project..."));
+  menu.setToolTipsVisible(true);
+  QAction *chosen = menu.exec(QCursor::pos());
+  if (!chosen)
+    return;
+  QString target = chosen->data().toString();
+  if (chosen == made)
+  {
+    {
+      const QScopedValueRollback<bool> runs(m_benchIntoProjectRuns, true);
+      m_basket->newAction()->trigger();
+    }
+    target = m_basket->folder();
+    if (target == current)
+      return;   // none made
+  }
+  else if (chosen == other)
+  {
+    const QString file = QFileDialog::getOpenFileName(this, tr("Move bench to project"), ProjectFolder::newProjectsDir(),
+                                                      tr("QtDMM project (%1 %2)").arg(ProjectFolder::kProjectFile, ProjectFolder::kOldProjectFile));
+    if (file.isEmpty())
+      return;
+    target = QFileInfo(file).absolutePath();
+  }
+  if (!target.isEmpty() && target != current)
+    moveBenchTo(target);
 }
 
 void MainWindow::loadWorkspace()
@@ -5212,9 +5341,10 @@ void MainWindow::loadWorkspace()
     loadWorkspaceFile(file);
 }
 
-bool MainWindow::loadWorkspaceFile(const QString &file)
+bool MainWindow::loadWorkspaceFile(const QString &path)
 {
   Settings *cfg = m_wid->settings();
+  QString file = path;
   QString error;
   const std::optional<WorkspaceFile> ws = WorkspaceFile::read(file, &error);
   if (!ws)
@@ -5235,8 +5365,40 @@ bool MainWindow::loadWorkspaceFile(const QString &file)
   for (const MeterController *ctl : std::as_const(closing))
     if (ctl->recorder()->state() == RecordingStore::View && ctl->recorder()->dirty())
       unsaved << ctl->deviceName();
+  // [E 25.11.] a bench outside the open project (loose, or another
+  // project's): copied into it or opened where it lies; never a silent switch
+  const QString project = m_basket->folder();
+  bool copy = false;
+  if (!project.isEmpty() && BasketWidget::projectOf(file, project) != project)
+  {
+    const QString name = ws->name.isEmpty() ? QFileInfo(file).completeBaseName() : ws->name;
+    QMessageBox question(QMessageBox::Question, tr("QtDMM: Load bench"),
+                         projectShown() ? tr("\u201c%1\u201d is not in the project \u201c%2\u201d. Copy it into the project?")
+                                            .arg(name, BasketWidget::projectName(project))
+                                        : tr("\u201c%1\u201d is not with your benches. Copy it there?").arg(name),
+                         QMessageBox::Cancel, this);
+    QPushButton *copyButton = question.addButton(tr("&Copy"), QMessageBox::AcceptRole);
+    QPushButton *openButton = question.addButton(tr("&Only open"), QMessageBox::ActionRole);
+    question.setDefaultButton(copyButton);
+    question.exec();
+    if (question.clickedButton() != copyButton && question.clickedButton() != openButton)
+      return false;
+    copy = question.clickedButton() == copyButton;
+  }
   if (!leaveBench(tr("QtDMM: Load bench"), unsaved, tr("Discard")))
     return false;
+  if (copy)
+  {
+    // beside the project's benches, a free name; the file itself stays
+    const QString dir = ProjectFolder::dirFor(project, ProjectFolder::Benches);
+    const QString target = BasketWidget::freeName(dir, QFileInfo(file).fileName());
+    if (!QFile::copy(file, target))
+    {
+      QMessageBox::warning(this, tr("QtDMM: Load bench"), tr("Could not write %1.").arg(QDir::toNativeSeparators(target)));
+      return false;
+    }
+    file = target;
+  }
   // a device gone from My devices comes back from the copy, under its id:
   // the views name it so. A file may come from anyone: its alarms run no
   // program here (and keep the port open), the user sets them again
@@ -5268,8 +5430,12 @@ bool MainWindow::loadWorkspaceFile(const QString &file)
     m_userSized = true;   // a size chosen on purpose: no growing
   }
   const QVariantMap keys = ws->keys;
-  applyWorkspace([&keys](const QString &key, const QVariant &def) -> QVariant
+  const bool basketShown = m_basketAction->isChecked();
+  applyWorkspace([&keys, basketShown](const QString &key, const QVariant &def) -> QVariant
   {
+    // the project's window is no part of a bench (files before 27.1 have it)
+    if (key == QLatin1String(kBasketKey))
+      return basketShown;
     const QVariant v = keys.value(key, def);
     return def.typeId() == QMetaType::Bool ? QVariant(v.toBool()) : QVariant(v.toString());
   });
@@ -5287,19 +5453,8 @@ bool MainWindow::loadWorkspaceFile(const QString &file)
   updateRecentWorkspaces();
   // the note first, the path in the tooltip (second line) [V 09.11.]
   QString text = tr("Bench loaded");
-  // the bench belongs to the project in whose folder it lies: loading it
-  // opens that one, or closes the open one when it lies outside; no
-  // question, the status bar says so
-  const QString before = m_basket->folder();
-  const QString project = BasketWidget::projectOf(file, before);
-  if (project != before)
-  {
-    m_basket->setFolder(project);
-    text += "; "
-            + (project.isEmpty()
-                 ? tr("project %1 closed: the bench is not in it").arg(BasketWidget::projectName(before))
-                 : tr("project %1 opened: the bench is in it").arg(BasketWidget::projectName(project)));
-  }
+  if (copy)
+    text += "; " + tr("a copy of it in the project");
   if (!restored.isEmpty())
     text += "; " + tr("back in My devices: %1").arg(restored.join(", "));
   if (programsLeft)
@@ -5333,31 +5488,28 @@ void MainWindow::setCurrentWorkspace(const QString &file)
   updateProjectSidebar();
 }
 
-void MainWindow::benchIntoNewProject()
-{
-  const QString before = m_basket->folder();
-  {
-    // the bench goes along into the new project: no question about it
-    const QScopedValueRollback<bool> runs(m_benchIntoProjectRuns, true);
-    m_basket->newAction()->trigger();
-  }
-  const QString project = m_basket->folder();
-  if (project.isEmpty() || project == before)
-    return;   // no new project made
-  // the bench into it: its name and file proposed, now in the project's folder
-  saveWorkspace();
-}
 
 void MainWindow::updateProjectSidebar()
 {
   const QString project = m_basket ? m_basket->folder() : QString();
-  // without a device no project or bench either [E 09.11.]
-  if (project.isEmpty() || !QFileInfo(project).isDir() || m_wid->devices()->list().isEmpty())
+  // without a device no project or bench either [E 09.11.]; the default
+  // project alone is no project to see [E 25.11.]
+  if (project.isEmpty() || !QFileInfo(project).isDir() || m_wid->devices()->list().isEmpty() || !projectShown())
   {
     m_sidebar->setProject(QString(), {}, QString());
     return;
   }
   m_sidebar->setProject(BasketWidget::projectName(project), projectBenches(project), m_workspaceFile);
+}
+
+bool MainWindow::projectShown() const
+{
+  const QString open = m_basket ? m_basket->folder() : QString();
+  if (!open.isEmpty() && !ProjectFolder::isDefault(open))
+    return true;
+  const QStringList dirs = recentProjects().list();
+  return std::any_of(dirs.cbegin(), dirs.cend(), [](const QString &dir)
+                     { return !ProjectFolder::isDefault(dir) && QFileInfo(dir).isDir(); });
 }
 
 QList<DeviceSidebar::Workspace> MainWindow::projectBenches(const QString &project) const
@@ -5385,6 +5537,12 @@ QList<DeviceSidebar::Workspace> MainWindow::projectBenches(const QString &projec
 void MainWindow::openProjectBench()
 {
   const QString project = m_basket->folder();
+  // a new project asked to take the bench along (leaveProject())
+  if (std::exchange(m_moveBenchPending, false) && !project.isEmpty())
+  {
+    moveBenchTo(project);
+    return;
+  }
   fillEmptyProject();
   // a set-up in use stays: the project goes along with it
   if (project.isEmpty() || !m_session->controllers().isEmpty())
@@ -5408,12 +5566,12 @@ void MainWindow::fillEmptyProject()
     delete item;
   }
   // a link-like button for each: a click opens it
-  auto entry = [this, layout](const QString &text, const QString &tip, const std::function<void()> &open)
+  // buttons as "Open project...": seen as something to click, with a symbol
+  auto entry = [this, layout](const QIcon &icon, const QString &text, const QString &tip, const std::function<void()> &open)
   {
-    auto *b = new QPushButton(QString(text).replace('&', "&&"), m_emptyProject);
-    b->setFlat(true);
-    b->setCursor(Qt::PointingHandCursor);
+    auto *b = new QPushButton(icon, QString(text).replace('&', "&&"), m_emptyProject);
     b->setToolTip(tip);
+    b->setMinimumWidth(220);
     connect(b, &QPushButton::clicked, this, open);
     layout->addWidget(b, 0, Qt::AlignHCenter);
   };
@@ -5424,31 +5582,40 @@ void MainWindow::fillEmptyProject()
     layout->addSpacing(8);
     layout->addWidget(l);
   };
+  // the open project's benches; the default project alone without its name
   const QString project = m_basket->folder();
+  const bool shown = projectShown();
   if (!project.isEmpty())
   {
     const QList<DeviceSidebar::Workspace> benches = projectBenches(project);
     const QString name = BasketWidget::projectName(project);
-    heading(benches.isEmpty() ? tr("Project \u201c%1\u201d: no bench yet").arg(name)
-                              : tr("Benches in project \u201c%1\u201d:").arg(name));
+    if (shown)
+      heading(benches.isEmpty() ? tr("Project \u201c%1\u201d: no bench yet").arg(name)
+                                : tr("Benches in project \u201c%1\u201d:").arg(name));
+    else if (!benches.isEmpty())
+      heading(tr("Benches:"));
     for (const DeviceSidebar::Workspace &ws : benches)
     {
       const QString file = ws.file;
-      entry(ws.name.isEmpty() ? QFileInfo(file).completeBaseName() : ws.name, ws.tooltip,
+      entry(QIcon::fromTheme("qtdmm-arrange"), ws.name.isEmpty() ? QFileInfo(file).completeBaseName() : ws.name, ws.tooltip,
             [this, file] { loadWorkspaceFile(file); });
     }
-    return;
   }
+  // the other projects opened last, once there are any
   QStringList dirs;
-  for (const QString &dir : recentProjects().list())
-    if (QFileInfo(dir).isDir() && dirs.size() < 5)
-      dirs << dir;
+  if (shown)
+    for (const QString &dir : recentProjects().list())
+      if (dir != project && QFileInfo(dir).isDir() && dirs.size() < 5)
+        dirs << dir;
   if (dirs.isEmpty())
     return;
   heading(tr("Recent projects:"));
   for (const QString &dir : std::as_const(dirs))
-    entry(BasketWidget::projectName(dir), QDir::toNativeSeparators(dir), [this, dir]
+    entry(QIcon::fromTheme("folder", style()->standardIcon(QStyle::SP_DirIcon)), BasketWidget::projectName(dir),
+          QDir::toNativeSeparators(dir), [this, dir]
     {
+      if (!leaveProject(BasketWidget::Leave::Open))
+        return;
       m_basket->setFolder(dir);
       openProjectBench();
     });

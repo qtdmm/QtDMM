@@ -5,43 +5,53 @@ recordings, pictures of the graph, data sheets as PDF, LabPlot projects,
 notes - any file. One project can have several benches, one for each
 measuring set-up.
 
-The project is optional. As long as none is open, QtDMM works as before.
+There is always a project. Until you make or open one of your own it is
+the **default project**: the folder `default` in the folder for new
+projects (shown as *Default*). It is made when it is first needed - the
+first bench saved, the first file into the project - and made anew,
+empty, when it was deleted or its `project.qtdmm` is broken (that one
+stays beside as `project.qtdmm.broken`, the other files stay). As long as
+it is the only project, QtDMM does not speak of projects at all: the
+start page, the sidebar and the window title show the benches only. The
+project's name appears once a second project was made or opened.
 
 Switch the window on with **Project** in the menu (Ctrl+6).
 
 ## Making or opening a project
 
-Without a project the window offers **New project...** and **Open
-project...**; later the project's name at the top of the window has
-the same and **Close project**, which also hides the window. New
-projects are made in the folder
-set under **Settings → General → Folder for new projects**
+The project's name at the top of the window has **New project...**,
+**Open project...** and **Close project**, which goes back to the default
+project (the default project itself is not closed). New projects are made
+in the folder set under **Settings → General → Folder for new projects**
 (Documents/QtDMM at first).
 
 The second button of the toolbar shows and hides the project's window;
-without an open project it makes a new one. Its arrow has **New
-project...**, **Open project...** (its `project.qtdmm` or a packed project), the
-bench entries (once there is a device), the projects opened last (the open
-one ticked) and **Close project**.
+its arrow has **New project...**, **Open project...** (its
+`project.qtdmm` or a packed project), the bench entries (once there is a
+device), the projects opened last (the open one ticked) and **Close
+project**.
 
-A project also opens without any device: the start page has **Open
-project...** below *Add device* (a `project.qtdmm` or a packed project), and
-the projects opened last (up to five; a click opens one).
+The start page has **Open project...** below *Add device* (a
+`project.qtdmm` or a packed project), the benches of the open project and
+the other projects opened last (up to five; a click opens one).
 
-A project you open (also a packed one) or pick from the last ones loads a bench of
-its own when nothing is connected: the one used last in it (kept in
-`project.qtdmm`), else its only one. With more benches and none used last
-the start page lists them, a click loads one; without any it says so. The
-project's window does not open by itself; a new project made with the
-project button shows it. A bench in use stays when a project is opened. A
-bench loaded from another project switches to it and leaves the windows as
-the bench has them. A window not yet placed goes to the right, like the
-readings table. The list leaves out `project.qtdmm`, the file in which
-QtDMM keeps the project's name, description and the bench used last.
+**Switching the project** - open, one of the last, close - closes the
+bench of the project left: the question to save it comes only when it
+changed, the outputs of supplies and generators go off first. Then the
+project you open loads a bench of its own: the one used last in it (kept
+in `project.qtdmm`), else its only one. With more benches and none used
+last the start page lists them, a click loads one; without any it says
+so. **New project...** with a bench running asks whether to **move** the
+bench into the new project (the default), not to move it (then it closes
+as above), or to cancel. The project's window does not open by itself; a
+new project made with the project button shows it. A window not yet
+placed goes to the right, like the readings table. The list leaves out
+`project.qtdmm`, the file in which QtDMM keeps the project's name,
+description and the bench used last.
 
 With devices but none connected, the project's window stands at the
 right beside the start page. The project's node in the sidebar shows once
-there is a device.
+there is a device and a project of your own.
 
 The window title shows the project and the bench, the bench only once
 it lies in the project's folder.
@@ -55,14 +65,23 @@ with its benches (the one in use in bold; a double click loads one) and
 the devices and windows as they are as a new bench of the project use
 **Save bench as...** (menu of the node Bench).
 
-**Put the bench into a new project...** (in the menu of the node Bench
-and at Recent benches in the sidebar, at the project button's arrow) is the way from a
-single bench to a project: it makes a new project, opens it and saves the
-bench into its folder.
+**Saving** a bench always puts it into the open project (its `benches`
+folder); *Save bench* (Ctrl+S) of a bench whose file lies outside asks
+where in the project, it never writes outside unasked.
+
+**Move bench to project...** (in the menu of the node Bench and at Recent
+benches in the sidebar, at the project button's arrow) moves the bench
+into a new project, one of the last ones or another: its file goes into
+that project's benches - no copy stays behind - and that project opens
+with the bench running. A bench not saved yet goes along and is saved
+there.
 
 A bench belongs to the project in whose folder it lies, also in a
-subfolder of it. Loading a bench opens its project; a bench that lies in
-no project closes the open one. The status bar says so, nothing asks.
+subfolder of it. Loading a bench that lies outside the open project -
+saved anywhere, or in another project - asks: **Copy** it into the project
+(the copy is loaded, the file stays where it is), **Only open** it where it
+lies (*Save bench* then proposes the project), or cancel. The project
+never switches by itself.
 
 A project is a plain folder. QtDMM puts a `project.qtdmm` into a new one,
 with its name, a description and when it was made; it is kept for what a

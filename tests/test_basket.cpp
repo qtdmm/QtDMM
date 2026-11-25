@@ -149,6 +149,28 @@ int main(int argc, char **argv)
   }
   check(BasketWidget::projectName(dir.filePath("Bench")) == "mine", "shown by the name in project.qtdmm");
   check(BasketWidget::projectName(dir.filePath("none")) == "none", "without one by its folder");
+  // [E 25.11.] the default project: in the folder for new projects, made
+  // once needed, made anew when gone or broken
+  {
+    QDir().mkpath(dir.filePath("newbase"));
+    basket.setBaseFolder(dir.filePath("newbase"));
+    const QString def = QDir(dir.filePath("newbase/default")).absolutePath();
+    check(ProjectFolder::defaultProject() == def && ProjectFolder::isDefault(dir.filePath("newbase/default"))
+            && !ProjectFolder::isDefault(dir.filePath("Bench")),
+          "the default project: default in the folder for new projects");
+    check(BasketWidget::ensureDefaultProject(false) == def && !QFileInfo::exists(def), "not made before it is needed");
+    check(BasketWidget::ensureDefaultProject() == def && QFileInfo::exists(def + "/project.qtdmm"), "made when needed");
+    check(BasketWidget::projectName(def) == "Default", "shown as Default, not by its folder");
+    write(def + "/project.qtdmm", "{ broken");
+    write(def + "/a.csv", "1");
+    check(BasketWidget::ensureDefaultProject(false) == def && QFileInfo::exists(def + "/project.qtdmm.broken")
+            && BasketWidget::readProject(def).value("format").toInt() == 1 && QFileInfo::exists(def + "/a.csv"),
+          "broken: a new project file, the broken one kept beside, the files stay");
+    QDir(def).removeRecursively();
+    check(BasketWidget::ensureDefaultProject() == def && BasketWidget::readProject(def).value("format").toInt() == 1,
+          "deleted: made anew, empty");
+  }
+
   // a project of before 27.1: project.json read, renamed on the first write
   QDir().mkpath(dir.filePath("Legacy"));
   write(dir.filePath("Legacy/project.json"), "{\"name\": \"old one\"}");
@@ -255,8 +277,8 @@ int main(int argc, char **argv)
   check(back.value("description").toString() == "Ripple of the 12 V supply" && !back.contains("export"),
         "project.qtdmm without the export part");
   check(BasketWidget::importProject(dir.filePath("Bench/Bench.zip"), dir.filePath("base"), &folder, &why)
-          && folder == dir.filePath("base/Bench 2"),
-        "the name taken: Bench 2, got " + folder);
+          && folder == dir.filePath("base/Bench 2") && BasketWidget::projectName(folder) == "Bench 2",
+        "the name taken: Bench 2, also in its project file, got " + folder);
   check(BasketWidget::zipProjectName(dir.filePath("Bench/Bench.zip")) == "Bench", "the name before a clash: Bench");
   // a file changed after the export: refused, nothing written
   const QByteArray exportedProject = zipEntry(zip, "Bench/project.qtdmm", qint64(4) << 30).value_or("");

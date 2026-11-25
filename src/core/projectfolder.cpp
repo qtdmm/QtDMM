@@ -110,6 +110,31 @@ QString ProjectFolder::projectFileToWrite(const QString &project)
   return file;
 }
 
+namespace
+{
+QString s_newProjectsDir;
+}
+
+void ProjectFolder::setNewProjectsDir(const QString &dir)
+{
+  s_newProjectsDir = dir;
+}
+
+QString ProjectFolder::newProjectsDir()
+{
+  return s_newProjectsDir;
+}
+
+QString ProjectFolder::defaultProject()
+{
+  return s_newProjectsDir.isEmpty() ? QString() : QDir(s_newProjectsDir).absoluteFilePath(QStringLiteral("default"));
+}
+
+bool ProjectFolder::isDefault(const QString &project)
+{
+  return !project.isEmpty() && QDir(project).absolutePath() == defaultProject();
+}
+
 bool ProjectFolder::isProjectFile(const QString &name)
 {
   return name == QLatin1String(kProjectFile) || name == QLatin1String(kOldProjectFile);
