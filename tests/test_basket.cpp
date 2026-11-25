@@ -255,8 +255,8 @@ int main(int argc, char **argv)
   check(back.value("description").toString() == "Ripple of the 12 V supply" && !back.contains("export"),
         "project.qtdmm without the export part");
   check(BasketWidget::importProject(dir.filePath("Bench/Bench.zip"), dir.filePath("base"), &folder, &why)
-          && folder == dir.filePath("base/Bench 2"),
-        "the name taken: Bench 2, got " + folder);
+          && folder == dir.filePath("base/Bench 2") && BasketWidget::projectName(folder) == "Bench 2",
+        "the name taken: Bench 2, also in its project file, got " + folder);
   check(BasketWidget::zipProjectName(dir.filePath("Bench/Bench.zip")) == "Bench", "the name before a clash: Bench");
   // a file changed after the export: refused, nothing written
   const QByteArray exportedProject = zipEntry(zip, "Bench/project.qtdmm", qint64(4) << 30).value_or("");

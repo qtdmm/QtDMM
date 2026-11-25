@@ -88,6 +88,8 @@
 #include "ui/views/basketwidget.h"
 
 static const char *kWorkspaceSuffix = "qtdmm-workspace";
+// the project's window shown: kept with the window, not in a bench file
+static const char *kBasketKey = "Windows/basket";
 #include "ui/views/readingswidget.h"
 #include "ui/dialogs/capturedlg.h"
 #include "ui/dialogs/photodlg.h"
@@ -2024,7 +2026,7 @@ QList<QAction *> MainWindow::createArrangeMenu()
                                "as</i>. A star after the bench's name in the sidebar: it differs from its "
                                "file.</p></body></html>"));
   connect(m_saveBench, &QAction::triggered, this, &MainWindow::saveBench);
-  QAction *saveWs = new QAction(QIcon::fromTheme("document-save-as"), tr("Save bench &as..."), this);
+  QAction *saveWs = m_saveBenchAs = new QAction(QIcon::fromTheme("document-save-as"), tr("Save bench &as..."), this);
   saveWs->setObjectName("action_SaveWorkspace");
   saveWs->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">Save bench as</span></p>"
                           "<p>Writes the set-up to a file, under a name and a description, with a picture of "
@@ -2032,7 +2034,7 @@ QList<QAction *> MainWindow::createArrangeMenu()
                           "windows are shown with which values, the arrangement, "
                           "title bars, toolbar, design and the size of the main window.</p></body></html>"));
   connect(saveWs, &QAction::triggered, this, [this] { saveWorkspace(); });
-  QAction *newBench = new QAction(QIcon::fromTheme("document-new"), tr("New &empty bench"), this);
+  QAction *newBench = m_newBench = new QAction(QIcon::fromTheme("document-new"), tr("New &empty bench"), this);
   newBench->setObjectName("action_NewEmptyBench");
   newBench->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">New empty bench</span></p>"
                             "<p>Switches the outputs of supplies and generators off, closes every device and "
@@ -2229,6 +2231,9 @@ void MainWindow::updateEmptyStart()
     updateProjectSidebar();
     updateRecentWorkspaces();
   }
+  // nothing connected: nothing to save or move as a bench; loading stays
+  for (QAction *a : { m_saveBench, m_saveBenchAs, m_newBench, m_benchIntoProject })
+    a->setEnabled(!noDevices && !m_session->controllers().isEmpty());
   fillEmptyProject();
   // the project's window stays at hand beside the start page
   m_basketBeside = empty && !noDevices && !m_basketWin->isHidden();
@@ -4501,7 +4506,7 @@ void MainWindow::applyWorkspace(const WorkspaceGet &get)
   m_xyAction->setChecked(get("Windows/xy", false).toBool());
   m_histogramAction->setChecked(get("Windows/histogram", false).toBool());
   m_heatmapAction->setChecked(get("Windows/heatmap", false).toBool());
-  m_basketAction->setChecked(get("Windows/basket", false).toBool());
+  m_basketAction->setChecked(get(kBasketKey, false).toBool());
   // "1@device:ab12cd34" (ValueRef)
   meterViewOf(m_meterWin)->setValue(valueOf(get("Windows/meter-value", 0).toString()));
   poincareViewOf(m_poincareWin)->setValue(valueOf(get("Windows/poincare-value", 0).toString()));
@@ -4645,7 +4650,7 @@ void MainWindow::storeWorkspace(const WorkspaceSet &set)
   set("Windows/xy", m_xyAction->isChecked());
   set("Windows/histogram", m_histogramAction->isChecked());
   set("Windows/heatmap", m_heatmapAction->isChecked());
-  set("Windows/basket", m_basketAction->isChecked());
+  set(kBasketKey, m_basketAction->isChecked());
   set("MainWindow/show-graph", action_Graph->isChecked());
   set("Windows/meter-value", meterViewOf(m_meterWin)->value().toString());
   const auto styleText = [](int style) { return style < 0 ? QString() : QString::number(style); };
@@ -5046,6 +5051,7 @@ bool MainWindow::writeWorkspace(const QString &file, const QString &name, const 
   ws.width = width();
   ws.height = height();
   storeWorkspace([&ws](const QString &key, const QVariant &value) { ws.keys.insert(key, value); });
+  ws.keys.remove(kBasketKey);   // the project's window: the window's, not the bench's
   // the devices as My devices has them: a copy goes with the file
   const DeviceLibrary *lib = m_wid->devices();
   for (const QString &id : ws.keys.value("Windows/open-devices").toString().split(' '))
@@ -5073,7 +5079,8 @@ QMap<QString, QString> MainWindow::benchState(const QVariantMap &keys, const QLi
 {
   QMap<QString, QString> state;
   for (auto it = keys.cbegin(); it != keys.cend(); ++it)
-    state.insert(it.key(), it.value().toString());
+    if (it.key() != QLatin1String(kBasketKey))   // no part of a bench
+      state.insert(it.key(), it.value().toString());
   // the devices come in as they connect: their order is none
   QStringList open = state.value("Windows/open-devices").split(' ', Qt::SkipEmptyParts);
   open.sort();
@@ -5268,8 +5275,12 @@ bool MainWindow::loadWorkspaceFile(const QString &file)
     m_userSized = true;   // a size chosen on purpose: no growing
   }
   const QVariantMap keys = ws->keys;
-  applyWorkspace([&keys](const QString &key, const QVariant &def) -> QVariant
+  const bool basketShown = m_basketAction->isChecked();
+  applyWorkspace([&keys, basketShown](const QString &key, const QVariant &def) -> QVariant
   {
+    // the project's window is no part of a bench (files before 27.1 have it)
+    if (key == QLatin1String(kBasketKey))
+      return basketShown;
     const QVariant v = keys.value(key, def);
     return def.typeId() == QMetaType::Bool ? QVariant(v.toBool()) : QVariant(v.toString());
   });
@@ -5408,12 +5419,12 @@ void MainWindow::fillEmptyProject()
     delete item;
   }
   // a link-like button for each: a click opens it
-  auto entry = [this, layout](const QString &text, const QString &tip, const std::function<void()> &open)
+  // buttons as "Open project...": seen as something to click, with a symbol
+  auto entry = [this, layout](const QIcon &icon, const QString &text, const QString &tip, const std::function<void()> &open)
   {
-    auto *b = new QPushButton(QString(text).replace('&', "&&"), m_emptyProject);
-    b->setFlat(true);
-    b->setCursor(Qt::PointingHandCursor);
+    auto *b = new QPushButton(icon, QString(text).replace('&', "&&"), m_emptyProject);
     b->setToolTip(tip);
+    b->setMinimumWidth(220);
     connect(b, &QPushButton::clicked, this, open);
     layout->addWidget(b, 0, Qt::AlignHCenter);
   };
@@ -5434,7 +5445,7 @@ void MainWindow::fillEmptyProject()
     for (const DeviceSidebar::Workspace &ws : benches)
     {
       const QString file = ws.file;
-      entry(ws.name.isEmpty() ? QFileInfo(file).completeBaseName() : ws.name, ws.tooltip,
+      entry(QIcon::fromTheme("qtdmm-arrange"), ws.name.isEmpty() ? QFileInfo(file).completeBaseName() : ws.name, ws.tooltip,
             [this, file] { loadWorkspaceFile(file); });
     }
     return;
@@ -5447,7 +5458,8 @@ void MainWindow::fillEmptyProject()
     return;
   heading(tr("Recent projects:"));
   for (const QString &dir : std::as_const(dirs))
-    entry(BasketWidget::projectName(dir), QDir::toNativeSeparators(dir), [this, dir]
+    entry(QIcon::fromTheme("folder", style()->standardIcon(QStyle::SP_DirIcon)), BasketWidget::projectName(dir),
+          QDir::toNativeSeparators(dir), [this, dir]
     {
       m_basket->setFolder(dir);
       openProjectBench();

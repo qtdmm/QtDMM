@@ -659,6 +659,8 @@ protected:
   bool        m_benchBaseline = false;  ///< the next updateBenchChanged() takes the state as unchanged
   bool        m_benchIntoProjectRuns = false;   ///< benchIntoNewProject() runs: leaving the project asks nothing
   QAction    *m_saveBench = nullptr;
+  QAction    *m_saveBenchAs = nullptr;
+  QAction    *m_newBench = nullptr;
   QList<QAction *> m_benchMenuActions;  ///< the node Bench's menu, nullptr a separator
   /// @}
   /// Applies a colour design (Designs::Design) to the window and the views.

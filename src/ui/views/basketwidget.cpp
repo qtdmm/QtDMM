@@ -584,6 +584,9 @@ bool BasketWidget::importProject(const QString &zipFile, const QString &baseDir,
   QString target = QDir(baseDir).filePath(name);
   for (int n = 2; QFileInfo::exists(target); ++n)
     target = QDir(baseDir).filePath(QString("%1 %2").arg(name).arg(n));
+  // a copy beside one of the same name is called as its folder ("Bench 2")
+  if (QFileInfo(target).fileName() != name)
+    project["name"] = QFileInfo(target).fileName();
   if (!QDir().mkpath(target))
     return fail(tr("cannot make the folder %1").arg(QDir::toNativeSeparators(target)));
   const QDir dir(target);
@@ -665,7 +668,8 @@ bool BasketWidget::openZip(const QString &zipFile)
   QApplication::restoreOverrideCursor();
   if (!ok)
   {
-    Q_EMIT error(tr("Open project: %1").arg(why));
+    // in a dialog: the status line is easily missed after a file dialog
+    QMessageBox::warning(this, tr("Open project"), tr("Open project: %1").arg(why));
     return false;
   }
   setFolder(folder);
