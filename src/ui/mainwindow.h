@@ -581,9 +581,8 @@ protected:
   void        loadWorkspace();
   /// Loads the workspace @p file; false (with a message) when it is none.
   bool        loadWorkspaceFile(const QString &file);
-  /// Saves the set-up as a bench; @p asNew: a new one (no name, not the
-  /// file in use), as "+ New bench..." of the project in the sidebar.
-  void        saveWorkspace(bool asNew = false);
+  /// Save bench as: the set-up under a name and a description, into a file.
+  void        saveWorkspace();
   /// Save bench: into the file of the bench in use, without a question;
   /// none yet: saveWorkspace().
   void        saveBench();

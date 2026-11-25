@@ -471,26 +471,36 @@ int main(int argc, char **argv)
     sidebar.setCurrentItem(node->child(0));
     QTest::keyClick(&sidebar, Qt::Key_Return);
     check(loaded.size() == 2, "Enter loads");
-    // the open project: its benches, the one in use in bold, "+ New bench..."
+    // the open project: its benches, the one in use in bold, "+ New project..."
     QTreeWidgetItem *project = sidebar.projectNode();
     sidebar.setProject("Ripple", { { file.fileName(), "Bench test", {} }, { gone, {}, {} } }, file.fileName());
     check(!project->isHidden() && project->text(0).contains("Ripple") && project->childCount() == 3
             && project->child(0)->font(0).bold() && !project->child(1)->font(0).bold(),
-          "the project's benches, the one in use bold, then New bench: " + project->text(0));
-    int newBench = 0;
+          "the project's benches, the one in use bold, then New project: " + project->text(0));
+    int newBench = 0, newProject = 0;
     QObject::connect(&sidebar, &DeviceSidebar::newBenchRequested, [&] { ++newBench; });
+    QObject::connect(&sidebar, &DeviceSidebar::newProjectRequested, [&] { ++newProject; });
     Q_EMIT sidebar.itemClicked(project->child(2), 0);
-    check(newBench == 1, "+ New bench... asks for a new bench");
+    check(newProject == 1 && newBench == 0, "+ New project... asks for a new project");
     const qsizetype before = loaded.size();
     Q_EMIT sidebar.itemDoubleClicked(project->child(0), 0);
     Q_EMIT sidebar.itemDoubleClicked(project->child(2), 0);
     check(loaded.size() == before + 1 && loaded.last() == file.fileName(),
-          "a double click loads a bench of the project, not New bench");
+          "a double click loads a bench of the project, not New project");
     loaded.removeLast();
     sidebar.setProject(QString(), {}, QString());
     check(project->isHidden() && project->childCount() == 0, "no project: no node");
     Q_EMIT sidebar.itemClicked(node->child(0), 0);
     check(loaded.size() == 2, "a single click does nothing");
+    // "+ New bench..." after the recent ones: a new empty bench
+    sidebar.setWorkspaces({ { file.fileName(), {}, {} } }, true);
+    check(node->childCount() == 2 && node->child(1)->text(0) == "+ New bench...", "+ New bench... at the end");
+    Q_EMIT sidebar.itemClicked(node->child(1), 2);   // the star column of the others
+    check(newBench == 1, "+ New bench... asks for a new bench, not to be a favourite");
+    Q_EMIT sidebar.itemDoubleClicked(node->child(1), 0);
+    check(loaded.size() == 2, "+ New bench... loads nothing");
+    sidebar.setWorkspaces({}, true);
+    check(!node->isHidden() && node->childCount() == 1, "with only + New bench... shown");
     sidebar.setWorkspaces({});
     check(node->isHidden() && node->childCount() == 0, "hidden again");
   }

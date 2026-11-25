@@ -127,9 +127,10 @@ public:
   /// The node "Services".
   QTreeWidgetItem *servicesNode() const { return m_services; }
 
-  /// The workspaces used last, newest first; the node is hidden without
-  /// any. A file that is gone is grey and loads no more.
-  void        setWorkspaces(const QList<Workspace> &workspaces);
+  /// The workspaces used last, newest first; @p offerNewBench: "+ New
+  /// bench..." after them. The node is hidden without either. A file that
+  /// is gone is grey and loads no more.
+  void        setWorkspaces(const QList<Workspace> &workspaces, bool offerNewBench = false);
   /// The name of the workspace in use, after "Bench"; empty: none.
   /// @p isNew: a new empty bench not saved yet, "Bench (new)".
   void        setCurrentWorkspace(const QString &name, const QString &tooltip = QString(), bool isNew = false);
@@ -192,8 +193,10 @@ Q_SIGNALS:
   void        valueMenuRequested(const ValueRef &value, const QPoint &globalPos);
   /// Load the workspace file @p path.
   void        workspaceRequested(const QString &path);
-  /// "+ New bench..." of the project: save the set-up as a new bench in it.
+  /// "+ New bench..." at Recent benches: a new empty bench.
   void        newBenchRequested();
+  /// "+ New project..." in the project's node.
+  void        newProjectRequested();
   /// Take @p path off the list of workspaces used last.
   void        removeWorkspaceRequested(const QString &path);
   /// Make @p path a favourite (@p on) or no more: its star, its menu.
@@ -234,7 +237,9 @@ private:
 
   DeviceLibrary   *m_library = nullptr;
   QTreeWidgetItem *m_project = nullptr;
-  QTreeWidgetItem *m_newBenchItem = nullptr;
+  QTreeWidgetItem *m_newBenchItem = nullptr;     ///< "+ New bench..." at Recent benches
+  QTreeWidgetItem *m_newProjectItem = nullptr;   ///< "+ New project..." in the project's node
+  bool        m_offerNewBench = false;           ///< setWorkspaces()
   QTreeWidgetItem *m_workspaces = nullptr;
   QTreeWidgetItem *m_devices = nullptr;
   QTreeWidgetItem *m_open = nullptr;

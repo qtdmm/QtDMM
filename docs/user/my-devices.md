@@ -69,7 +69,9 @@ Above My devices, folded at the start, the node **Recent benches** lists the
 benches loaded or saved last by their names (the one in use stands after
 **Bench**, as *Bench · Lab*);
 a double click loads one (see
-[Window layout](connecting.md#window-layout)). Without any it is hidden.
+[Window layout](connecting.md#window-layout)). **+ New bench...** at its end
+starts a new empty bench, as *New empty bench*. Without any device it is
+hidden.
 The star at the right of one (or *Favourite* in its context menu) makes it
 a favourite: favourites stand first, do not count to the number of recent
 benches shown and never drop off the list; *Remove from list* takes one off
