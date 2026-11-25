@@ -352,8 +352,10 @@ project closed or another one opened, QtDMM quit - one question asks:
 **Save** (the bench; one not saved yet asks for its name), **Discard** or
 **Cancel**, which leaves everything as it is. Recordings not saved that
 would be lost are named in the same question; *Save and export...* then
-saves the bench and exports them. A bench never loaded or saved (QtDMM's
-own set-up from the last start) is not asked about.
+saves the bench and exports them. A bench never loaded or saved - built
+by hand, or QtDMM's own set-up from the last start - is asked about as
+soon as it has a device; *Save* then asks for its name (into the project
+when one is open). Without a device it goes without a question.
 
 Loading a bench connects its devices; devices connected now that it
 does not have are closed (with

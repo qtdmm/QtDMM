@@ -6191,7 +6191,7 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
         <location filename="../../src/ui/mainwindow.cpp" line="1628"/>
         <location filename="../../src/ui/mainwindow.cpp" line="1634"/>
         <location filename="../../src/ui/mainwindow.cpp" line="3883"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="5191"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5196"/>
         <source>%1: %2</source>
         <translation>%1: %2</translation>
     </message>
@@ -6541,32 +6541,32 @@ No permission? The sensor needs a udev rule for USB ID %1:%2.</source>
         <translation>En vivo en LabPlot: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="5258"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5263"/>
         <source>Bench loaded</source>
         <translation>Puesto de medida cargado</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="5269"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5274"/>
         <source>project %1 closed: the bench is not in it</source>
         <translation>proyecto %1 cerrado: el puesto de medida no está en él</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="5270"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5275"/>
         <source>project %1 opened: the bench is in it</source>
         <translation>proyecto %1 abierto: el puesto de medida está en él</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="5273"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5278"/>
         <source>back in My devices: %1</source>
         <translation>de nuevo en Mis aparatos: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="5275"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5280"/>
         <source>the programs of their alarms were left out, set them again in Alarms...</source>
         <translation>los programas de sus alarmas se han omitido, vuelva a definirlos en Alarmas...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="5277"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5282"/>
         <source>%1 without its key: enter it in the device settings</source>
         <translation>%1 sin su clave: introdúzcala en los ajustes del aparato</translation>
     </message>
@@ -7283,7 +7283,7 @@ Vuelve a configurar su fórmula.</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.cpp" line="4996"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="5179"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5184"/>
         <source>QtDMM bench (*.%1)</source>
         <translation>Puesto de medida de QtDMM (*.%1)</translation>
     </message>
@@ -7298,64 +7298,69 @@ Vuelve a configurar su fórmula.</translation>
         <translation>Puesto de medida guardado en %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="5110"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5112"/>
+        <source>The bench has not been saved yet. Save it?</source>
+        <translation>El puesto de medida aún no se ha guardado. ¿Guardarlo?</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/mainwindow.cpp" line="5115"/>
         <source>The new bench has been changed. Save it?</source>
         <translation>El nuevo puesto de medida ha cambiado. ¿Guardarlo?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="5111"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5116"/>
         <source>The bench “%1” has been changed. Save it?</source>
         <translation>El puesto de medida «%1» ha cambiado. ¿Guardarlo?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="5113"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5118"/>
         <source>Not saved: the recording of %1. It is lost unless exported.</source>
         <translation>Sin guardar: la grabación de %1. Se pierde si no se exporta.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="5119"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5124"/>
         <source>Export data first</source>
         <translation>Exportar primero</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="5120"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5125"/>
         <source>&amp;Save</source>
         <translation>&amp;Guardar</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="5120"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5125"/>
         <source>&amp;Save and export...</source>
         <translation>&amp;Guardar y exportar...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="5146"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5151"/>
         <source>QtDMM: New empty bench</source>
         <translation>QtDMM: Nuevo puesto de medida vacío</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="5146"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="5207"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5151"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5212"/>
         <source>Discard</source>
         <translation>Descartar</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="5166"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5171"/>
         <source>QtDMM: Project</source>
         <translation>QtDMM: Proyecto</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="5166"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5171"/>
         <source>&amp;Don&apos;t save</source>
         <translation>&amp;No guardar</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="5178"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5183"/>
         <source>Load bench</source>
         <translation>Cargar puesto de medida</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="5191"/>
-        <location filename="../../src/ui/mainwindow.cpp" line="5207"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5196"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5212"/>
         <source>QtDMM: Load bench</source>
         <translation>QtDMM: Cargar puesto de medida</translation>
     </message>
@@ -7365,7 +7370,7 @@ Vuelve a configurar su fórmula.</translation>
         <translation>No se pudo escribir %1.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/mainwindow.cpp" line="5400"/>
+        <location filename="../../src/ui/mainwindow.cpp" line="5405"/>
         <source>&amp;Clear list</source>
         <translation>&amp;Vaciar lista</translation>
     </message>
