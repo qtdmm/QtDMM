@@ -98,7 +98,8 @@ public:
   /// The time the graph shows, seconds; at least 1.
   int         windowSeconds() const { return m_windowSeconds; }
   void        setWindowSeconds(int seconds);
-  /// "All": the window is the whole recording and grows with it.
+  /// "All": the window is the whole recording and grows with it; on in a
+  /// new graph.
   bool        followAll() const { return m_followAll; }
   void        setFollowAll(bool on);
   /// The window "All" takes for @p recordedSeconds of recording, seconds:
@@ -144,5 +145,5 @@ private:
   bool        m_crossings = true;
   GraphOutliers::Rule m_outliers;
   int         m_windowSeconds = kDefaultWindowSeconds;
-  bool        m_followAll = false;
+  bool        m_followAll = true;    ///< [E 25.11.] a new graph shows all
 };

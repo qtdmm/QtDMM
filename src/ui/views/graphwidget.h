@@ -685,7 +685,7 @@ private:
   qint64      m_bucket = 1;      ///< the bucket the points were thinned with, ms
   bool        m_dirty = true;    ///< the points are to be built anew
   int         m_windowSeconds = 600;
-  bool        m_followAll = false;
+  bool        m_followAll = true;
   bool        m_followEnd = true;   ///< the window ends at the newest reading
   qint64      m_start = 0;          ///< its start while it does not, ms
   /// A frame was zoomed on: the axes keep its values (Axis::zoomMin), and the window before.
