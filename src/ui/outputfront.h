@@ -41,6 +41,7 @@ protected:
   /// The widget the controls go into, below the LCD.
   QWidget *controls() const { return m_controls; }
   bool    eventFilter(QObject *watched, QEvent *event) override;
+  void    resizeEvent(QResizeEvent *event) override;
 
 private:
   void    placeCorner();

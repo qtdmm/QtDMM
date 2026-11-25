@@ -118,7 +118,8 @@ front panel:
   shows the setpoint with `SET` blinking, two seconds after the last turn
   the measured voltage again.
 - **OUT** switches the channel's output; its LED is green while it is on.
-  **ALL OUT** switches every output off. The outputs are always off when
+  **All OUT off** (with more than one channel) switches every output of
+  this supply off. The outputs are always off when
   the supply is opened; the setpoints stay as they were.
 - **ALL OFF**, red at the right end of the status line, is there while a
   device with outputs is open: the emergency off. It switches every output
@@ -177,9 +178,9 @@ QtDMM reads every 250 ms and cannot show a 1 kHz sine. So the generator
 gives what a meter at its output would read, as values like a meter's -
 at most four in all, chosen in its settings under **Values**:
 `CH1 Vrms` (the AC part's RMS, as a true RMS meter), `CH1 Vpp`, `CH1 f`,
-`CH1 mean` (the DC part: the offset, a pulse's mean with its duty cycle)
+`CH1 Vavg` (the mean, the DC part: the offset, a pulse's mean with its duty cycle)
 and `CH1 u`, the voltage at this moment - up to 0.5 Hz only, where the
-graph then shows the real curve. With one channel Vrms, f, mean and u are
+graph then shows the real curve. With one channel Vrms, f, Vavg and u are
 given at first, with two Vrms and f of each. An output off gives 0 V; the
 frequency stays.
 

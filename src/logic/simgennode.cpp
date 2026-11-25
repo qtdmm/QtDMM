@@ -213,6 +213,12 @@ QString SimGenNode::quantityName(Quantity q)
   return QString::fromLatin1(names[q]);
 }
 
+QString SimGenNode::quantitySymbol(Quantity q)
+{
+  static const char *const symbols[kQuantities] = { "Vrms", "Vpp", "f", "Vavg", "u" };
+  return QString::fromLatin1(symbols[q]);
+}
+
 SimGenNode::Given SimGenNode::defaultGiven(int channels)
 {
   if (channels <= 1)
@@ -263,7 +269,7 @@ QList<LogicNode::Output> SimGenNode::outputs() const
       if (m_ch[ch].given[q] && list.size() < kMaxValues)
       {
         Output o;
-        o.name = QStringLiteral("CH%1 ").arg(ch + 1) + quantityName(Quantity(q));
+        o.name = QStringLiteral("CH%1 ").arg(ch + 1) + quantitySymbol(Quantity(q));
         o.unit = QString::fromLatin1(units[q]);
         o.coupling = QString::fromLatin1(couplings[q]);
         list << o;

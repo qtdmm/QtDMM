@@ -25,7 +25,7 @@ public:
     info.uMin = 0;
     info.uMax = SimPsuNode::kMaxVoltage;
     info.uDecimals = SimPsuNode::kDecimals;
-    info.caps = SetVoltage;
+    info.caps = SetVoltage | Regulation;
     return info;
   }
   /// The channels changed: states and settings follow, the setpoints as
@@ -36,7 +36,7 @@ public:
     for (int ch = 0; ch < channelCount(); ++ch)
     {
       confirmVoltage(ch, m_node->setpoint(ch));
-      confirmOutput(ch, m_node->output(ch));
+      outputAsIs(ch);
     }
   }
   void measured(int ch, double u) { setMeasured(ch, u); }
@@ -50,10 +50,18 @@ protected:
   void sendOutput(int ch, bool on) override
   {
     m_node->switchOutput(ch, on);
-    confirmOutput(ch, m_node->output(ch));
+    outputAsIs(ch);
   }
 
 private:
+  /// The output as the node has it; on, without a load, it regulates the
+  /// voltage: CV.
+  void outputAsIs(int ch)
+  {
+    confirmOutput(ch, m_node->output(ch));
+    setMode(ch, m_node->output(ch) ? Mode::CV : Mode::None);
+  }
+
   SimPsuNode *m_node;
 };
 

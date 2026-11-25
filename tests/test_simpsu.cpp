@@ -65,6 +65,7 @@ int main(int argc, char **argv)
     check(first(node, Sample::now()) == 0, "output off: 0 V");
     psu->requestOutput(0, true);
     check(psu->state(0).output && first(node, Sample::now()) == 5, "output on: the setpoint, exactly");
+    check(psu->state(0).mode == PowerSupply::Mode::CV, "output on, no load: CV");
     check(psu->state(0).u == 5, "the front gets the measured value");
     psu->requestVoltage(0, 50);
     check(node.setpoint(0) == SimPsuNode::kMaxVoltage, "above the device's 30 V: 30 V");
@@ -91,6 +92,7 @@ int main(int argc, char **argv)
     // switched off: on the node's clock, after its last computation at t0 + 1200
     const qint64 t1 = t0 + 1200;
     psu->requestOutput(0, false);
+    check(psu->state(0).mode == PowerSupply::Mode::None, "output off: no CV");
     const double mid = first(node, t1 + 200);
     check(mid > 3 && mid < 7, QString("fall: half way after half the fall time, %1 V").arg(mid));
     check(first(node, t1 + 500) == 0, "fall: 0 V after the fall time");

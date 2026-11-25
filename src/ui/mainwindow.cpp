@@ -745,9 +745,15 @@ void MainWindow::createViews()
     for (GraphView *view : std::as_const(m_graphViews))
       if (view->model()->values().isEmpty())
         view->model()->setValues(plotted);
+    // a supply or a generator is set and read on its front panel: no needle
+    // meter for it; the one with nothing to show yet goes
+    const NodeRunner *runner = NodeRunner::of(ctl);
+    const bool outputs = runner && (runner->node()->powerSupply() || runner->node()->functionGenerator());
     for (MeterView *meter : m_wid->meters())
-      if (free(meter->value()))
+      if (free(meter->value()) && !outputs)
         meter->setValue(ValueRef(0, ctl->source()));
+    if (outputs && m_meterAction->isChecked() && free(meterViewOf(m_meterWin)->value()))
+      m_meterAction->setChecked(false);
     for (PoincareView *plot : m_wid->poincares())
       if (free(plot->value()))
         plot->setValue(ValueRef(0, ctl->source()));

@@ -52,8 +52,11 @@ public:
   enum Quantity { Rms, PeakToPeak, Frequency, Mean, Now };
   static constexpr int kQuantities = 5;
   using Given = std::array<bool, kQuantities>;
-  /// "Vrms", "Vpp", "f", "mean", "u": in the values' names.
+  /// "Vrms", "Vpp", "f", "mean", "u": its key in the stored entry.
   static QString quantityName(Quantity q);
+  /// "Vrms", "Vpp", "f", "Vavg", "u": in the values' names, symbols as a
+  /// meter's, no words to translate.
+  static QString quantitySymbol(Quantity q);
   /// What each of @p channels gives by default.
   static Given defaultGiven(int channels);
 
