@@ -4,9 +4,13 @@
 // The SCPI text rules (device/scpi/scpi.h): numbers with their special
 // values and the handheld meters' OL, lists with quoted strings, *IDN?
 // and SYST:ERR? answers, which lines are queries, numbers for commands.
+// The base of the SCPI decoders (DecoderScpi): its frames, the plan's
+// order with rounds, channels and commands before, askSoon(), which
+// answer belongs to which question, unasked lines, missed answers.
 
 #include <cmath>
 
+#include "device/scpi/decoderscpi.h"
 #include "device/scpi/scpi.h"
 #include "testutil.h"
 
@@ -120,6 +124,101 @@ void formats()
   check(Scpi::format(NAN) == "9.91E37", "NaN");
   check(Scpi::number(QString::fromLatin1(Scpi::format(2.5e-7))).value == 2.5e-7, "formatted reads back");
 }
+
+/// Records what it was asked and answered; "*" lines come unasked.
+class PlanDecoder : public DecoderScpi
+{
+public:
+  explicit PlanDecoder(const QList<Step> &plan, const QByteArray &terminator = "\n") : DecoderScpi(FrameFormat::OpenOSC, plan, terminator) {}
+  int channels = 1;
+  QList<QPair<QByteArray, QString>> answers;   ///< query (empty: none), line
+  using DecoderScpi::askSoon;
+
+protected:
+  std::optional<DmmResponse> parseAnswer(const Asked &asked, const QString &line, int id) override
+  {
+    answers.append({ asked.isValid() ? asked.query : QByteArray(), line });
+    m_result = {};
+    m_result.main().id = id;
+    m_result.main().val = line;
+    return m_result;
+  }
+  bool isUnasked(const QString &line) const override { return line.startsWith('*'); }
+  int  planChannels() const override { return channels; }
+};
+
+QList<QByteArray> polls(const DecoderScpi &d, int n)
+{
+  QList<QByteArray> out;
+  for (int i = 0; i < n; ++i)
+    out << d.pollRequest();
+  return out;
+}
+
+bool framed(DecoderScpi &d, const QByteArray &bytes)
+{
+  return d.checkFormat(bytes.constData(), size_t(bytes.size() - 1));
+}
+
+void plans()
+{
+  PlanDecoder turn({ { "A?" }, { "B?" } });
+  check(polls(turn, 4) == QList<QByteArray>({ "A?\n", "B?\n", "A?\n", "B?\n" }), "two steps in turn");
+
+  PlanDecoder every({ { .query = "ERR?", .every = 3 }, { .query = "V?" } }, "\r\n");
+  check(polls(every, 6) == QList<QByteArray>({ "ERR?\r\n", "V?\r\n", "V?\r\n", "V?\r\n", "ERR?\r\n", "V?\r\n" }),
+        "every 3rd round, the terminator");
+
+  PlanDecoder chans({ { .query = "MEAS:VOLT? (@{ch})", .perChannel = true }, { .query = "STAT?" } });
+  chans.channels = 3;
+  check(polls(chans, 5) == QList<QByteArray>({ "MEAS:VOLT? (@1)\n", "MEAS:VOLT? (@2)\n", "MEAS:VOLT? (@3)\n", "STAT?\n", "MEAS:VOLT? (@1)\n" }),
+        "{ch} for each channel");
+
+  PlanDecoder before({ { .query = "MEAS:VOLT?", .before = "INST:SEL CH{ch}", .perChannel = true } });
+  before.channels = 2;
+  check(polls(before, 2) == QList<QByteArray>({ "INST:SEL CH1\nMEAS:VOLT?\n", "INST:SEL CH2\nMEAS:VOLT?\n" }), "a command before the question");
+
+  PlanDecoder soon({ { .query = "CONF?", .every = 50 }, { .query = "FETC?" } });
+  polls(soon, 3);
+  soon.askSoon(0);
+  check(polls(soon, 2) == QList<QByteArray>({ "CONF?\n", "FETC?\n" }), "askSoon() once before the plan");
+}
+
+void pairing()
+{
+  PlanDecoder d({ { "A?" }, { "B?" } });
+  check(!framed(d, "\r\n") && !framed(d, "  \n"), "an empty line is no frame");
+  check(!framed(d, "1.5"), "no LF, no frame");
+  check(framed(d, "\r\n1.5\r\n"), "a line after an empty one");
+
+  d.pollRequest();
+  d.decode("*3\r\n", 0);
+  d.decode("1\r\n", 0);
+  d.pollRequest();
+  const auto r = d.decode("2\r\n", 0);
+  check(r && r->main().val == u"2", "the reading of the line");
+  d.decode("3\n", 0);   // nothing asked
+  check(d.answers.size() == 4, "every line read");
+  if (d.answers.size() == 4)
+  {
+    check(d.answers[0].first.isEmpty() && d.answers[0].second == u"*3", "an unasked line answers nothing");
+    check(d.answers[1].first == "A?", "the answer to A?");
+    check(d.answers[2].first == "B?", "the answer to B?");
+    check(d.answers[3].first.isEmpty(), "a line without a question");
+  }
+
+  d.answers.clear();
+  check(d.missedAnswers() == 0, "nothing missed yet");
+  d.pollRequest();   // A?, no answer
+  d.pollRequest();   // B?
+  check(d.missedAnswers() == 1, "a question without an answer counts");
+  d.decode("x\ny\n", 0);
+  check(d.answers.size() == 2 && d.answers[0].first.isEmpty() && d.answers[1].first == "B?", "two lines: the last answers");
+  d.answers.clear();
+  d.pollRequest();
+  d.decode("1\n*3\n", 0);
+  check(d.answers.size() == 2 && d.answers[0].first == "A?", "an unasked line after the answer");
+}
 }
 
 int main()
@@ -130,5 +229,7 @@ int main()
   errors();
   queries();
   formats();
+  plans();
+  pairing();
   return failed == 0 ? 0 : 1;
 }

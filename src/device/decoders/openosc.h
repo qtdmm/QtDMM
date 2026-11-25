@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
 
-#include "device/dmmdecoder.h"
+#include "device/scpi/decoderscpi.h"
 
 /// The multimeter of a ZOYI ZT-703S running OpenOSC, the free firmware
 /// (github.com/bve/OpenOSC, GPL-3.0), over its USB CDC serial port; the
@@ -26,18 +26,19 @@
 /// 200 ms, a line with the seq of the one before is that reading again and
 /// dropped (not while HOLD, which freezes seq).
 ///
-/// Frames are variable-length lines (getPacketLength() 0).
-class DecoderOpenOSC : public DmmDecoder
+/// Frames and polling come from DecoderScpi (isFrame()).
+class DecoderOpenOSC : public DecoderScpi
 {
   Q_OBJECT
 public:
-  DecoderOpenOSC(FrameFormat::DataFormat df) : DmmDecoder(df) { m_name = "OpenOSC"; }
+  DecoderOpenOSC(FrameFormat::DataFormat df);
 
-  std::optional<DmmDecoder::DmmResponse> decode(const QByteArray &data, int id) override;
-  QByteArray pollRequest() const override { return QByteArrayLiteral("SYST:DMM:RES?\n"); }
-  bool checkFormat(const char *data, size_t idx) override;
-  size_t getPacketLength() override { return 0; }
   int pollInterval() const override { return 200; }
+
+protected:
+  /// A line of 11 fields; another one ("NAN", an answer to something else) comes with the next.
+  bool isFrame(QByteArrayView line) const override { return line.count(',') == 10 && line[0] >= '0' && line[0] <= '9'; }
+  std::optional<DmmResponse> parseAnswer(const Asked &asked, const QString &line, int id) override;
 
 private:
   QString m_lastSeq;   ///< field 10 of the last line decoded

@@ -3,6 +3,7 @@
 #include "device/decoders/keysight_u12xx.h"
 
 #include "core/siprefix.h"
+#include "device/scpi/scpi.h"
 
 // The models libsigrok's agilent-dmm knows; no meter at hand, so "*", but
 // the U1282A is confirmed by a user (issue #603).
@@ -33,38 +34,24 @@ static const bool registered = []() {
   return true;
 }();
 
-QByteArray DecoderKeysightU12xx::pollRequest() const
-{
+DecoderKeysightU12xx::DecoderKeysightU12xx(FrameFormat::DataFormat df)
   // the function now and then even without a switch message, in case one
-  // got lost (every 10 s at 5 Hz); the terminator as libsigrok sends it. Its answer is no frame
-  // of its own (it comes with the next value), so asking once is enough.
-  const int n = m_polls++;
-  if (m_needConf.exchange(false) || n % 50 == 0)
-    return QByteArrayLiteral("CONF?\n\r\n");
-  return QByteArrayLiteral("FETC?\n\r\n");
+  // got lost (every 10 s at 5 Hz); the terminator as libsigrok sends it
+  : DecoderScpi(df, { { .query = "CONF?", .every = 50 }, { .query = "FETC?" } }, QByteArrayLiteral("\n\r\n"))
+{
+  m_name = "KeysightU12xx";
 }
 
-bool DecoderKeysightU12xx::checkFormat(const char *data, size_t idx)
+bool DecoderKeysightU12xx::isFrame(QByteArrayView line) const
 {
-  // A frame ends with the line of a FETC? answer, an NR3 number. Other lines
-  // (the CONF? answer, a switch message "*3", an error "*E") stay in the
-  // buffer and come with the next value; the frame starts at index 0.
-  if (data[idx] != '\n')
-    return false;
-  size_t end = idx;
-  if (end > 0 && data[end - 1] == '\r')
-    --end;
-  size_t start = end;
-  while (start > 0 && data[start - 1] != '\n')
-    --start;
-  if (end - start < 6)
-    return false;
-  if (data[start] != '+' && data[start] != '-')
+  // Not every line: a frame ends with the line of a FETC? answer, an NR3
+  // number. Other lines (the CONF? answer, a switch message "*3", an error
+  // "*E") stay in the buffer and come with the next value.
+  if (line.size() < 6 || (line[0] != '+' && line[0] != '-'))
     return false;
   bool exponent = false;
-  for (size_t i = start + 1; i < end; ++i)
+  for (const char c : line.sliced(1))
   {
-    const char c = data[i];
     if (c == 'E')
       exponent = true;
     else if (!(c >= '0' && c <= '9') && c != '.' && c != '+' && c != '-')
@@ -169,41 +156,35 @@ bool DecoderKeysightU12xx::parseConf(const QString &conf, Function *f)
   return true;
 }
 
-std::optional<DmmDecoder::DmmResponse> DecoderKeysightU12xx::decode(const QByteArray &data, int id)
+std::optional<DmmDecoder::DmmResponse> DecoderKeysightU12xx::parseAnswer(const Asked &asked, const QString &line, int id)
 {
-  QString value;
-  for (const QByteArray &raw : data.split('\n'))
+  Q_UNUSED(asked);   // the answers tell what they are
+  if (line.startsWith('*'))
   {
-    const QString line = QString::fromLatin1(raw).trimmed();
-    if (line.isEmpty())
-      continue;
-    if (line.startsWith('*'))
+    // "*3": the rotary switch turned - another function, unknown until
+    // CONF? says it; "*E": an error, nothing to read
+    if (line.size() > 1 && line.at(1).isDigit())
     {
-      // "*3": the rotary switch turned - another function, unknown until
-      // CONF? says it; "*E": an error, nothing to read
-      if (line.size() > 1 && line.at(1).isDigit())
-      {
-        m_function = Function();
-        m_needConf = true;
-      }
-      continue;
+      m_function = Function();
+      askSoon(0);
     }
-    if (line.startsWith('"') && line.endsWith('"') && line.size() > 2)
-    {
-      const QString conf = line.mid(1, line.size() - 2);
-      // STAT? would answer digits only; CONF? starts with a letter
-      if (conf.at(0).isLetter())
-      {
-        // an unknown function (square wave out, NCV) shows nothing until
-        // the switch turns again
-        parseConf(conf, &m_function);
-        m_needConf = false;
-      }
-      continue;
-    }
-    value = line;
+    return std::nullopt;
   }
-  if (value.isEmpty() || m_function.unit.isEmpty())
+  if (line.startsWith('"') && line.endsWith('"') && line.size() > 2)
+  {
+    const QString conf = Scpi::unquote(line);
+    // STAT? would answer digits only; CONF? starts with a letter. An
+    // unknown function (square wave out, NCV) shows nothing until the
+    // switch turns again
+    if (conf.at(0).isLetter())
+      parseConf(conf, &m_function);
+    return std::nullopt;
+  }
+  if (m_function.unit.isEmpty())
+    return std::nullopt;
+  // FETC?: an NR3 number alone, ±9.9E37 for overload
+  const Scpi::Number n = Scpi::number(line);
+  if ((n.kind != Scpi::Number::Kind::Value && n.kind != Scpi::Number::Kind::Overload) || !n.suffix.isEmpty())
     return std::nullopt;
 
   m_result = {};
@@ -211,17 +192,14 @@ std::optional<DmmDecoder::DmmResponse> DecoderKeysightU12xx::decode(const QByteA
   m_result.showBar = true;
   m_result.main().special = m_function.special;
 
-  if (value == "+9.90000000E+37" || value == "-9.90000000E+37")
+  if (n.kind == Scpi::Number::Kind::Overload)
   {
-    m_result.main().val = value.startsWith('-') ? "-OL" : "OL";
+    m_result.main().val = n.negative() ? "-OL" : "OL";
     m_result.main().unit = m_function.unit;
     m_result.main().dval = 0;
     return m_result;
   }
-  bool ok = false;
-  const double v = value.toDouble(&ok) * m_function.scale;
-  if (!ok)
-    return std::nullopt;
+  const double v = n.value * m_function.scale;
   m_result.main().dval = v;
   // temperatures and percentages without a prefix, a diode in volts as
   // the meter shows it

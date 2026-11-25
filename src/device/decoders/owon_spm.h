@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
 
-#include "device/dmmdecoder.h"
+#include "device/scpi/decoderscpi.h"
 
 /// The OWON SPM series (SPM3051, SPM6053, SPM3103, SPM6103): a one-channel
 /// power supply with a 4½-digit multimeter in one box, over its USB port (a
@@ -30,18 +30,14 @@
 /// looks like in CONF:ALL? (a value with "OL" is taken as one), how fast it
 /// answers.
 ///
-/// Frames are variable-length lines (getPacketLength() 0).
-class DecoderOwonSPM : public DmmDecoder
+/// Frames, the plan of the two questions and which answer is which come
+/// from DecoderScpi; the answers tell themselves what they are.
+class DecoderOwonSPM : public DecoderScpi
 {
   Q_OBJECT
 public:
-  DecoderOwonSPM(FrameFormat::DataFormat df) : DmmDecoder(df) { m_name = "OwonSPM"; }
+  DecoderOwonSPM(FrameFormat::DataFormat df);
 
-  std::optional<DmmDecoder::DmmResponse> decode(const QByteArray &data, int id) override;
-  /// MEAS:ALL:INFO? and CONF:ALL? in turn, one per request sent.
-  QByteArray pollRequest() const override;
-  bool checkFormat(const char *data, size_t idx) override;
-  size_t getPacketLength() override { return 0; }
   /// One answer of the two every 250 ms: the supply's values and the
   /// multimeter's each twice a second.
   int pollInterval() const override { return 250; }
@@ -49,9 +45,12 @@ public:
   /// The ids of the device's values.
   enum Value { Voltage = 0, Current = 1, Power = 2, Multimeter = 3 };
 
+protected:
+  /// One of the two answers; another line (an echo, an error) comes with the next.
+  bool isFrame(QByteArrayView line) const override;
+  std::optional<DmmResponse> parseAnswer(const Asked &asked, const QString &line, int id) override;
+
 private:
   std::optional<DmmResponse> decodeSupply(const QStringList &fields);
   std::optional<DmmResponse> decodeMultimeter(const QStringList &fields);
-
-  mutable int m_requests = 0;   ///< sent so far: even ones ask for the supply
 };
