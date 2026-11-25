@@ -132,6 +132,8 @@ public:
   void        setWorkspaces(const QList<Workspace> &workspaces);
   /// The name of the workspace in use, after "Bench"; empty: none.
   void        setCurrentWorkspace(const QString &name, const QString &tooltip = QString());
+  /// The bench in use differs from its file: a star after its name.
+  void        setBenchChanged(bool changed);
   /// The node "Workspaces".
   QTreeWidgetItem *workspacesNode() const { return m_workspaces; }
   /// The open project: the node "Project: @p name" at the top with its
@@ -142,6 +144,8 @@ public:
   QTreeWidgetItem *projectNode() const { return m_project; }
   /// The context menu of the node: load and save a bench, as in Arrange.
   void        setWorkspaceActions(const QList<QAction *> &actions) { m_workspaceActions = actions; }
+  /// The context menu of the node "Bench": save, load, a new one.
+  void        setBenchActions(const QList<QAction *> &actions) { m_benchActions = actions; }
 
   /// Shown at the start: as the user left it (@p stored, invalid when never
   /// set), else with two devices or more.
@@ -238,5 +242,8 @@ private:
   QList<Service>   m_serviceList;
   QList<Workspace> m_workspaceList;
   QList<QAction *> m_workspaceActions;   ///< setWorkspaceActions()
+  QList<QAction *> m_benchActions;       ///< setBenchActions()
+  QString     m_benchName;               ///< setCurrentWorkspace()
+  bool        m_benchChanged = false;    ///< setBenchChanged()
   bool             m_filling = false;
 };

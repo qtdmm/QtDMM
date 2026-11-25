@@ -62,6 +62,7 @@ public:
   void    reset() override;
   QJsonObject parameters() const override;
   void    setParameters(const QJsonObject &p) override;
+  QJsonObject setUpParameters() const override;
   PowerSupply *powerSupply() override;
 
   int     channels() const { return int(m_ch.size()); }

@@ -159,6 +159,17 @@ int main(int argc, char **argv)
     check(!psu->requestOutput(1, true) && !node.output(1), "a channel not shown: never switched");
   }
 
+  // a changed bench: setpoints and HOLD are none, the channels are
+  {
+    SimPsuNode node;
+    const QString setUp = node.setUpText();
+    node.powerSupply()->requestVoltage(0, 7);
+    node.setOn(!node.isOn());
+    check(node.setUpText() == setUp, "set-up: a setpoint turned is no change");
+    node.setChannels(2);
+    check(node.setUpText() != setUp, "set-up: the channels are");
+  }
+
   // stored and loaded
   {
     SimPsuNode node;

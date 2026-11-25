@@ -91,6 +91,14 @@ QString LogicNode::toJsonText() const
   return QString::fromUtf8(QJsonDocument(toJson()).toJson(QJsonDocument::Compact));
 }
 
+QString LogicNode::setUpText() const
+{
+  QJsonObject o = toJson();
+  o.remove("on");
+  o["parameters"] = setUpParameters();
+  return QString::fromUtf8(QJsonDocument(o).toJson(QJsonDocument::Compact));
+}
+
 QString LogicNode::canonicalUnit(const QString &unit)
 {
   QString u = unit.trimmed();

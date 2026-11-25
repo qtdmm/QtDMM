@@ -74,7 +74,8 @@ The star at the right of one (or *Favourite* in its context menu) makes it
 a favourite: favourites stand first, do not count to the number of recent
 benches shown and never drop off the list; *Remove from list* takes one off
 all the same, *Clear list* keeps them. The context menu of the node itself
-loads or saves a bench, as **Arrange** does.
+loads or saves a bench, as the node **Bench** does; a star after the
+bench's name there says it differs from its file.
 
 ### The meter's values
 

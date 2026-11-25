@@ -343,6 +343,17 @@ QJsonObject SimGenNode::parameters() const
                       { "generator", m_generator->settingsJson() } };
 }
 
+QJsonObject SimGenNode::setUpParameters() const
+{
+  // each channel's waveform is turned while it runs, which values it gives not
+  QJsonObject p = parameters();
+  QJsonArray settings;
+  for (const QJsonValue &c : p.value("settings").toArray())
+    settings.append(QJsonObject{ { "given", c.toObject().value("given") } });
+  p["settings"] = settings;
+  return p;
+}
+
 void SimGenNode::setParameters(const QJsonObject &p)
 {
   m_faults = Faults::fromJson(p.value("faults").toObject());

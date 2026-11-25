@@ -120,6 +120,9 @@ public:
   /// common ones (inputs, leading, max age, period, on) are the runner's.
   virtual QJsonObject parameters() const { return {}; }
   virtual void setParameters(const QJsonObject &p) { Q_UNUSED(p); }
+  /// parameters() without what is turned while it runs (a supply's
+  /// setpoints, a generator's waveform): what a changed bench is told by.
+  virtual QJsonObject setUpParameters() const { return parameters(); }
 
   /// @name The common form
   /// @{
@@ -154,6 +157,9 @@ public:
   /// Node/json); null when it does not read or its type is unknown.
   static std::unique_ptr<LogicNode> fromJsonText(const QString &text);
   QString     toJsonText() const;
+  /// toJson() without on and with setUpParameters(), as compact JSON text:
+  /// equal for two set-ups that differ only in what is turned while it runs.
+  QString     setUpText() const;
 
   /// Would a node with @p source taking @p inputs close a loop? @p inputsOf
   /// gives the inputs of any other node's source (empty for a device). A

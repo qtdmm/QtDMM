@@ -550,9 +550,17 @@ void DeviceSidebar::setCurrentWorkspace(const QString &name, const QString &tool
 {
   // after the node of the devices it is about, in the name's own cell: in a
   // column of its own it widened that for every row
-  m_open->setText(0, name.isEmpty() ? tr("Bench") : tr("Bench · %1").arg(name));
+  m_benchName = name;
+  setBenchChanged(m_benchChanged);
   m_open->setToolTip(0, tooltip.isEmpty() ? tr("The devices this window reads: each has its front panel and records with the others.")
                                           : tooltip);
+}
+
+void DeviceSidebar::setBenchChanged(bool changed)
+{
+  m_benchChanged = changed;
+  const QString text = m_benchName.isEmpty() ? tr("Bench") : tr("Bench · %1").arg(m_benchName);
+  m_open->setText(0, changed ? text + " *" : text);
 }
 
 void DeviceSidebar::workspaceMenu(QTreeWidgetItem *item, const QPoint &pos)
@@ -865,6 +873,20 @@ void DeviceSidebar::contextMenuEvent(QContextMenuEvent *event)
     {
       QMenu menu(this);
       menu.addActions(m_workspaceActions);
+      menu.exec(event->globalPos());
+    }
+    return;
+  }
+  if (item && item == m_open)
+  {
+    if (!m_benchActions.isEmpty())
+    {
+      QMenu menu(this);
+      for (QAction *a : std::as_const(m_benchActions))
+        if (a)
+          menu.addAction(a);
+        else
+          menu.addSeparator();
       menu.exec(event->globalPos());
     }
     return;
