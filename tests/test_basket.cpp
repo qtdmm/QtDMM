@@ -246,15 +246,16 @@ int main(int argc, char **argv)
   check(back.value("description").toString() == "Ripple of the 12 V supply" && !back.contains("export"),
         "project.json without the export part");
   check(BasketWidget::importProject(dir.filePath("Bench/Bench.zip"), dir.filePath("base"), &folder, &why)
-          && folder == dir.filePath("base/Bench (2)"),
-        "the name taken: Bench (2), got " + folder);
+          && folder == dir.filePath("base/Bench 2"),
+        "the name taken: Bench 2, got " + folder);
+  check(BasketWidget::zipProjectName(dir.filePath("Bench/Bench.zip")) == "Bench", "the name before a clash: Bench");
   // a file changed after the export: refused, nothing written
   const QByteArray exportedProject = zipEntry(zip, "Bench/project.json", qint64(4) << 30).value_or("");
   const QString tampered = zipOf("changed.zip", { { "Bench/project.json", exportedProject }, { "Bench/a.csv", "2" },
                                                   { "Bench/a (2).csv", "1" },
                                                   { "Bench/pictures/graph.png", "not really a PNG" } });
   check(!BasketWidget::importProject(tampered, dir.filePath("base"), &folder, &why) && why.contains("a.csv")
-          && !QFileInfo::exists(dir.filePath("base/Bench (3)")),
+          && !QFileInfo::exists(dir.filePath("base/Bench 3")),
         "a changed file: refused, nothing written: " + why);
   // no way out of the folder
   const QString slip = zipOf("slip.zip", { { "Bench/../../evil.txt", "x" } });
@@ -272,12 +273,17 @@ int main(int argc, char **argv)
   check(!BasketWidget::importProject(zipOf("drive.zip", { { "Bench/ok.csv", "1" }, { "Bench/C:/evil.txt", "x" } }),
                                      dir.filePath("base"), &folder, &why),
         "Bench/C:/...: refused");
-  // any ZIP without one top folder: named like the file, a basket then
-  check(BasketWidget::importProject(zipOf("Loose files.zip", { { "x.csv", "1" }, { "sub/y.txt", "2" } }),
+  // [E 25.11.] a ZIP without project.json: refused, nothing written
+  check(!BasketWidget::importProject(zipOf("Loose files.zip", { { "x.csv", "1" }, { "sub/y.txt", "2" } }),
+                                     dir.filePath("base"), &folder, &why)
+          && why.contains("project.json") && !QFileInfo::exists(dir.filePath("base/Loose files")),
+        "no project.json: refused: " + why);
+  // a project without one top folder: named like the file
+  check(BasketWidget::importProject(zipOf("Flat.zip", { { "project.json", "{\"format\": 1}" }, { "sub/y.txt", "2" } }),
                                     dir.filePath("base"), &folder, &why)
-          && folder == dir.filePath("base/Loose files") && read(dir.filePath("base/Loose files/sub/y.txt")) == "2"
-          && BasketWidget::readProject(folder).value("format").toInt() == 1,
-        "loose files: a basket named like the ZIP: " + why);
+          && folder == dir.filePath("base/Flat") && read(dir.filePath("base/Flat/sub/y.txt")) == "2"
+          && BasketWidget::zipProjectName(dir.filePath("Flat.zip")) == "Flat",
+        "project.json at the top: named like the ZIP: " + why);
   write(dir.filePath("nozip.zip"), "plain text");
   check(!BasketWidget::importProject(dir.filePath("nozip.zip"), dir.filePath("base"), &folder, &why) && !why.isEmpty(),
         "no ZIP: an error");

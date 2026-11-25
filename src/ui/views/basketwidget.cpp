@@ -29,6 +29,7 @@
 #include <QLabel>
 #include <QLocale>
 #include <QMenu>
+#include <QMessageBox>
 #include <QMimeData>
 #include <QPushButton>
 #include <QSaveFile>
@@ -127,8 +128,6 @@ BasketWidget::BasketWidget(QWidget *parent) :
   connect(m_describeAction, &QAction::triggered, this, &BasketWidget::describeSLOT);
   m_exportAction = new QAction(tr("E&xport project as file..."), this);
   connect(m_exportAction, &QAction::triggered, this, &BasketWidget::exportSLOT);
-  m_importAction = new QAction(tr("&Import project from file..."), this);
-  connect(m_importAction, &QAction::triggered, this, &BasketWidget::importSLOT);
 
   // no basket open: what it is and how to get one
   auto *none = new QWidget(m_pages);
@@ -139,15 +138,12 @@ BasketWidget::BasketWidget(QWidget *parent) :
   what->setAlignment(Qt::AlignCenter);
   auto *create = new QPushButton(m_newAction->text(), none);
   auto *choose = new QPushButton(m_openAction->text(), none);
-  auto *unpack = new QPushButton(m_importAction->text(), none);
   connect(create, &QPushButton::clicked, m_newAction, &QAction::trigger);
   connect(choose, &QPushButton::clicked, m_openAction, &QAction::trigger);
-  connect(unpack, &QPushButton::clicked, m_importAction, &QAction::trigger);
   noneLayout->addStretch();
   noneLayout->addWidget(what);
   noneLayout->addWidget(create, 0, Qt::AlignCenter);
   noneLayout->addWidget(choose, 0, Qt::AlignCenter);
-  noneLayout->addWidget(unpack, 0, Qt::AlignCenter);
   noneLayout->addStretch();
   m_pages->addWidget(none);
 
@@ -167,7 +163,7 @@ BasketWidget::BasketWidget(QWidget *parent) :
   baskets->addSeparator();
   baskets->addActions({ m_newAction, m_openAction });
   baskets->addSeparator();
-  baskets->addActions({ m_importAction, m_exportAction });
+  baskets->addAction(m_exportAction);
   baskets->addSeparator();
   baskets->addAction(m_closeAction);
   m_title->setMenu(baskets);
@@ -488,6 +484,34 @@ void BasketWidget::exportSLOT()
     Q_EMIT error(tr("Export project: %1").arg(why));
 }
 
+namespace
+{
+/// The one folder all of @p files lie in (as exportProject() packs them),
+/// empty when they lie in more or at the top.
+QString zipTop(const QList<ZipFileEntry> &files)
+{
+  if (files.isEmpty())
+    return QString();
+  const QString top = files.first().name.section('/', 0, 0);
+  for (const ZipFileEntry &f : files)
+    if (!f.name.startsWith(top + '/'))
+      return QString();
+  return top;
+}
+}
+
+QString BasketWidget::zipProjectName(const QString &zipFile)
+{
+  QFile in(zipFile);
+  if (!in.open(QIODevice::ReadOnly))
+    return QString();
+  const std::optional<QList<ZipFileEntry>> files = zipFiles(in.readAll(), qint64(4) << 30);
+  if (!files || files->isEmpty())
+    return QString();
+  const QString top = zipTop(*files);
+  return top.isEmpty() ? QFileInfo(zipFile).completeBaseName() : top;
+}
+
 bool BasketWidget::importProject(const QString &zipFile, const QString &baseDir, QString *folder, QString *failed)
 {
   auto fail = [failed](const QString &why)
@@ -522,15 +546,11 @@ bool BasketWidget::importProject(const QString &zipFile, const QString &baseDir,
       return fail(tr("%1 has a file outside its folder: %2").arg(QDir::toNativeSeparators(zipFile), f.name));
   }
   // one folder at the top (as exportProject() packs it): the basket's name
-  QString top = files->first().name.section('/', 0, 0);
-  for (const ZipFileEntry &f : std::as_const(*files))
-    if (!f.name.startsWith(top + '/'))
-      top.clear();
-  if (top.isEmpty())
-    top = QFileInfo(zipFile).completeBaseName();
-  else
-    for (ZipFileEntry &f : *files)
+  const QString top = zipTop(*files);
+  for (ZipFileEntry &f : *files)
+    if (!top.isEmpty())
       f.name = f.name.mid(top.size() + 1);
+  const QString name = top.isEmpty() ? QFileInfo(zipFile).completeBaseName() : top;
 
   QJsonObject project;
   qsizetype projectIndex = -1;
@@ -540,6 +560,9 @@ bool BasketWidget::importProject(const QString &zipFile, const QString &baseDir,
       project = QJsonDocument::fromJson(files->at(i).data).object();
       projectIndex = i;
     }
+  // [E 25.11.] a project's ZIP only: any other is not unpacked
+  if (projectIndex < 0)
+    return fail(tr("%1 is no QtDMM project: it has no project.json").arg(QDir::toNativeSeparators(zipFile)));
   // what the export listed is there, unchanged
   QStringList wrong;
   for (const QJsonValue &v : project.value("export").toObject().value("files").toArray())
@@ -556,9 +579,9 @@ bool BasketWidget::importProject(const QString &zipFile, const QString &baseDir,
   project.remove("export");
 
   // a folder of its own, beside any of the same name
-  QString target = QDir(baseDir).filePath(top);
+  QString target = QDir(baseDir).filePath(name);
   for (int n = 2; QFileInfo::exists(target); ++n)
-    target = QDir(baseDir).filePath(QString("%1 (%2)").arg(top).arg(n));
+    target = QDir(baseDir).filePath(QString("%1 %2").arg(name).arg(n));
   if (!QDir().mkpath(target))
     return fail(tr("cannot make the folder %1").arg(QDir::toNativeSeparators(target)));
   const QDir dir(target);
@@ -579,43 +602,69 @@ bool BasketWidget::importProject(const QString &zipFile, const QString &baseDir,
       return fail(tr("cannot write %1").arg(QDir::toNativeSeparators(out.fileName())));
     }
   }
-  writeProjectFile(target);   // a ZIP of any files: it is a basket now
   if (folder)
     *folder = target;
   return true;
-}
-
-void BasketWidget::importSLOT()
-{
-  if (m_leaveCheck && !m_leaveCheck())
-    return;
-  const QString zipFile = QFileDialog::getOpenFileName(this, tr("Import project from file"), m_baseFolder,
-                                                       tr("ZIP archives (*.zip)"));
-  if (zipFile.isEmpty())
-    return;
-  QDir().mkpath(m_baseFolder);
-  QApplication::setOverrideCursor(Qt::WaitCursor);
-  QString folder, why;
-  const bool ok = importProject(zipFile, m_baseFolder, &folder, &why);
-  QApplication::restoreOverrideCursor();
-  if (!ok)
-  {
-    Q_EMIT error(tr("Import project: %1").arg(why));
-    return;
-  }
-  setFolder(folder);
-  Q_EMIT projectOpened();
 }
 
 void BasketWidget::openSLOT()
 {
   if (m_leaveCheck && !m_leaveCheck())
     return;
-  const QString dir = QFileDialog::getExistingDirectory(this, tr("Open project"), m_folder);
-  if (dir.isEmpty())
+  // [E 25.11.] one way in: the project's own file, or a ZIP of a project;
+  // the folder for new projects made first, else the dialog takes it for a name
+  QDir().mkpath(m_baseFolder);
+  const QString file = QFileDialog::getOpenFileName(this, tr("Open project"), m_folder.isEmpty() ? m_baseFolder : m_folder,
+                                                    tr("QtDMM project (project.json *.zip)"));
+  if (file.isEmpty())
     return;
-  setFolder(dir);
+  if (QFileInfo(file).suffix().compare("zip", Qt::CaseInsensitive) == 0)
+  {
+    if (!openZip(file))
+      return;
+  }
+  else
+    setFolder(QFileInfo(file).absolutePath());
   Q_EMIT projectOpened();
+}
+
+bool BasketWidget::openZip(const QString &zipFile)
+{
+  // one of the same name there: never overwritten
+  const QString name = zipProjectName(zipFile);
+  const QString existing = name.isEmpty() ? QString() : QDir(m_baseFolder).filePath(name);
+  if (!existing.isEmpty() && QFileInfo::exists(existing))
+  {
+    QString copy = existing;
+    for (int n = 2; QFileInfo::exists(copy); ++n)
+      copy = QDir(m_baseFolder).filePath(QString("%1 %2").arg(name).arg(n));
+    QMessageBox question(QMessageBox::Question, tr("Open project"),
+                         tr("A project \u201c%1\u201d is there already:\n%2").arg(name, QDir::toNativeSeparators(existing)),
+                         QMessageBox::Cancel, this);
+    QPushButton *open = question.addButton(tr("Open &that one"), QMessageBox::AcceptRole);
+    QPushButton *unpack = question.addButton(tr("Unpack as &copy (%1)").arg(QFileInfo(copy).fileName()), QMessageBox::ActionRole);
+    question.setDefaultButton(open);
+    question.exec();
+    if (question.clickedButton() == open)
+    {
+      setFolder(existing);
+      return true;
+    }
+    if (question.clickedButton() != unpack)
+      return false;
+  }
+  QApplication::setOverrideCursor(Qt::WaitCursor);
+  QString folder, why;
+  const bool ok = importProject(zipFile, m_baseFolder, &folder, &why);
+  QApplication::restoreOverrideCursor();
+  if (!ok)
+  {
+    Q_EMIT error(tr("Open project: %1").arg(why));
+    return false;
+  }
+  setFolder(folder);
+  Q_EMIT error(tr("Project unpacked to %1").arg(QDir::toNativeSeparators(folder)));
+  return true;
 }
 
 void BasketWidget::showFolder()

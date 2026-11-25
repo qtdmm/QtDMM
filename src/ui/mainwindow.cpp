@@ -382,22 +382,18 @@ void MainWindow::createViews()
   m_emptyConnect = new QPushButton(tr("&Connect a device from My devices"));
   m_emptyConnect->setObjectName("ui_emptyConnect");
   m_emptyConnect->setIcon(QIcon::fromTheme("network-connect"));
-  // a project, also without a device [E 25.11.]: open, import, the last
-  // ones; with one open its benches (fillEmptyProject())
+  // a project, also without a device [E 25.11.]: open (its project.json or
+  // a ZIP of it), the last ones; with one open its benches (fillEmptyProject())
   m_emptyProject = new QWidget(m_emptyStart);
   auto *projectLayout = new QVBoxLayout(m_emptyProject);
   projectLayout->setContentsMargins(0, 0, 0, 0);
   auto *projectKeys = new QHBoxLayout;
   auto *openProject = new QPushButton(QIcon::fromTheme("document-open"), tr("Open &project..."), m_emptyProject);
   openProject->setObjectName("ui_emptyOpenProject");
-  auto *importProject = new QPushButton(QIcon::fromTheme("document-import"), tr("&Import project from file..."), m_emptyProject);
-  importProject->setObjectName("ui_emptyImportProject");
   projectKeys->addWidget(openProject);
-  projectKeys->addWidget(importProject);
   projectLayout->addWidget(m_emptyConnect, 0, Qt::AlignHCenter);
   projectLayout->addLayout(projectKeys);
   connect(openProject, &QPushButton::clicked, this, [this] { m_basket->openAction()->trigger(); });
-  connect(importProject, &QPushButton::clicked, this, [this] { m_basket->importAction()->trigger(); });
   emptyLayout->addWidget(m_emptyProject, 1, 0, Qt::AlignHCenter | Qt::AlignTop);
   emptyLayout->setRowStretch(0, 1);
   emptyLayout->setRowStretch(1, 1);
@@ -1732,7 +1728,6 @@ void MainWindow::fillViewToolbar()
   {
     menu->addAction(m_basket->newAction());
     menu->addAction(m_basket->openAction());
-    menu->addAction(m_basket->importAction());
     // the bench, as in the sidebar's menu of its node; without a device
     // only the project [E 25.11.]
     if (!m_wid->devices()->list().isEmpty())

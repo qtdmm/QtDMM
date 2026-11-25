@@ -40,7 +40,6 @@ public:
   QAction    *newAction() const { return m_newAction; }
   QAction    *openAction() const { return m_openAction; }
   QAction    *closeAction() const { return m_closeAction; }
-  QAction    *importAction() const { return m_importAction; }
   /// Asked before New, Open, Import and Close leave the open project;
   /// false: it stays (the bench in use changed, the person cancelled).
   void        setLeaveCheck(const std::function<bool()> &check) { m_leaveCheck = check; }
@@ -80,15 +79,18 @@ public:
   /// QtDMM version, each file with size and SHA-256). Hidden files and
   /// @p zipFile itself stay out. On failure false and the reason in @p failed.
   static bool exportProject(const QString &dir, const QString &zipFile, QString *failed = nullptr);
-  /// Unpacks the project ZIP @p zipFile (exportProject(), or any ZIP) into a
-  /// new folder in @p baseDir: named like its top folder, else like the ZIP,
-  /// "name (2)" when taken. Checked before anything is written: no path
-  /// out of the folder, every file the "export" part of project.json lists
-  /// there with its size and SHA-256. project.json loses that part again.
-  /// The folder in @p folder; on failure false, nothing written and the
-  /// reason in @p failed.
+  /// Unpacks the project ZIP @p zipFile (exportProject(), or any ZIP with a
+  /// project.json) into a new folder in @p baseDir: named like its top
+  /// folder (zipProjectName()), "name 2" when taken. Checked before anything
+  /// is written: a project.json, no path out of the folder, every file the
+  /// "export" part of project.json lists there with its size and SHA-256.
+  /// project.json loses that part again. The folder in @p folder; on
+  /// failure false, nothing written and the reason in @p failed.
   static bool importProject(const QString &zipFile, const QString &baseDir, QString *folder,
                             QString *failed = nullptr);
+  /// The folder name importProject() gives @p zipFile's project before a
+  /// clash: its top folder, else the ZIP's name; empty when it is no ZIP.
+  static QString zipProjectName(const QString &zipFile);
   /// The project @p file lies in: the nearest folder above it that is the
   /// open project @p open or has a project.json (subfolders count); empty
   /// when it lies in none. A bench belongs to that project.
@@ -116,15 +118,14 @@ public Q_SLOTS:
   void        addSLOT();
   /// Asks for a new folder and opens it as the basket.
   void        newSLOT();
-  /// Asks for a folder and opens it as the basket.
+  /// Asks for a project - its project.json, or a ZIP of one - and opens
+  /// it; a ZIP is unpacked into the folder for new projects first
+  /// (openZip()).
   void        openSLOT();
   /// Asks for the description of the open basket's project.
   void        describeSLOT();
   /// Asks where to and exports the open basket as a ZIP (exportProject()).
   void        exportSLOT();
-  /// Asks for a project ZIP, unpacks it into the folder for new baskets
-  /// (importProject()) and opens it.
-  void        importSLOT();
   /// Opens @p path with the program the system has for it.
   void        openWithSystem(const QString &path);
 
@@ -134,6 +135,10 @@ protected:
   void        dropEvent(QDropEvent *event) override;
 
 private:
+  /// openSLOT() for a ZIP: unpacked into the folder for new projects and
+  /// opened; one of the same name there: open that one, unpack a copy, or
+  /// nothing. False: nothing opened.
+  bool        openZip(const QString &zipFile);
   void        showFolder();
   void        contextMenu(const QPoint &pos);
   QString     pathAt(const QModelIndex &index) const;
@@ -150,7 +155,6 @@ private:
   QAction          *m_closeAction;
   QAction          *m_describeAction;
   QAction          *m_exportAction;
-  QAction          *m_importAction;
   QLabel           *m_description;   ///< of the project, shown under the name
   QToolButton      *m_title;
   QLabel           *m_empty;

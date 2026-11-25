@@ -20,15 +20,15 @@ set under **Settings → General → Folder for new projects**
 
 The second button of the toolbar shows and hides the project's window;
 without an open project it makes a new one. Its arrow has **New
-project...**, **Open project...**, **Import project from file...**, the
+project...**, **Open project...** (its `project.json` or a ZIP), the
 bench entries (once there is a device), the projects opened last (the open
 one ticked) and **Close project**.
 
 A project also opens without any device: the start page has **Open
-project...** and **Import project from file...** below *Add device*, and
+project...** below *Add device* (a `project.json` or a ZIP), and
 the projects opened last (up to five; a click opens one).
 
-A project you open, import or pick from the last ones loads a bench of
+A project you open (also from a ZIP) or pick from the last ones loads a bench of
 its own when nothing is connected: the one used last in it (kept in
 `project.json`), else its only one. With more benches and none used last
 the start page lists them, a click loads one; without any it says so. The
@@ -209,13 +209,14 @@ Hidden files and folders (names beginning with a dot, such as `.git`) stay
 out, as does the ZIP itself when it is saved into the project. A ZIP holds
 at most 4 GB.
 
-## Importing a project
+## Opening a project from a ZIP
 
-**Import project from file...** (in the menu at the project's name, or as a button
-while no project is open) unpacks a project ZIP into a new project in the
-folder for new projects and opens it. It is named like the folder in the
-ZIP, `Bench (2)` when that name is taken; a project that is there already
-is never written into.
+**Open project...** takes a project's `project.json` or a ZIP of a project
+(an export, see above): the dialog shows both. A ZIP is unpacked into a
+new project in the folder for new projects and opened; the status line
+says where. It is named like the folder in the ZIP. When a project of that
+name is there already, QtDMM asks: **Open that one**, **Unpack as copy**
+(`Bench 2`) or **Cancel** - a project that is there is never written into.
 
 Before anything is unpacked, QtDMM checks the ZIP: every file the `export`
 part of its `project.json` lists must be there with the same size and
@@ -224,5 +225,6 @@ SHA-256 checksum, and no file may lie outside its folder (a path with
 message names the files. The `export` part goes again; the project's
 `project.json` is as it was before the export.
 
-Any other ZIP works too: its files become a project named like the ZIP
-file.
+A ZIP without a `project.json` is no project: QtDMM says so and unpacks
+nothing. One with `project.json` at the top, without a folder around, is
+named like the ZIP file.
