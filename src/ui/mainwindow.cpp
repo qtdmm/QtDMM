@@ -382,8 +382,8 @@ void MainWindow::createViews()
   m_emptyConnect = new QPushButton(tr("&Connect a device from My devices"));
   m_emptyConnect->setObjectName("ui_emptyConnect");
   m_emptyConnect->setIcon(QIcon::fromTheme("network-connect"));
-  // a project, also without a device [E 25.11.]: open (its project.json or
-  // a ZIP of it), the last ones; with one open its benches (fillEmptyProject())
+  // a project, also without a device [E 25.11.]: open (its project.qtdmm or
+  // a packed one), the last ones; with one open its benches (fillEmptyProject())
   m_emptyProject = new QWidget(m_emptyStart);
   auto *projectLayout = new QVBoxLayout(m_emptyProject);
   projectLayout->setContentsMargins(0, 0, 0, 0);

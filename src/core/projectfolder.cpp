@@ -32,7 +32,7 @@ struct KindNames
   const char *de, *fr, *es, *pl;
 };
 
-// fixed, not tr(): project.json carries every language, so a project passed
+// fixed, not tr(): project.qtdmm carries every language, so a project passed
 // on shows the names of the one who opens it [E 09.11.]
 const KindNames kNames[] = {
   { ProjectFolder::Benches, "benches", "Messplätze", "Bancs de mesure", "Puestos de medida", "Stanowiska pomiarowe" },
@@ -43,11 +43,11 @@ const KindNames kNames[] = {
   { ProjectFolder::Photos, "photos", "Fotos", "Photos", "Fotos", "Zdjęcia" },
 };
 
-// project.json, empty when there is none; none when it is no JSON object
+// project.qtdmm, empty when there is none; none when it is no JSON object
 // (edited by hand and broken: not overwritten with what could be read)
 std::optional<QJsonObject> readJson(const QString &project)
 {
-  QFile file(QDir(project).filePath("project.json"));
+  QFile file(ProjectFolder::projectFile(project));
   if (!file.open(QIODevice::ReadOnly))
     return QJsonObject();
   const QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
@@ -56,7 +56,7 @@ std::optional<QJsonObject> readJson(const QString &project)
   return doc.object();
 }
 
-// enters the folder's names in project.json (made when missing)
+// enters the folder's names in project.qtdmm (made when missing)
 void enterFolder(const QString &project, const KindNames &k)
 {
   const std::optional<QJsonObject> read = readJson(project);
@@ -72,7 +72,7 @@ void enterFolder(const QString &project, const KindNames &k)
                                  { "es", QString::fromUtf8(k.es) },
                                  { "pl", QString::fromUtf8(k.pl) } };
   json["folders"] = folders;
-  QSaveFile file(QDir(project).filePath("project.json"));
+  QSaveFile file(ProjectFolder::projectFileToWrite(project));
   if (file.open(QIODevice::WriteOnly) && file.write(QJsonDocument(json).toJson()) > 0)
     file.commit();
 }
@@ -88,6 +88,31 @@ const KindNames *namesOf(ProjectFolder::Kind kind)
       return &k;
   return nullptr;
 }
+}
+
+QString ProjectFolder::projectFile(const QString &project)
+{
+  const QDir dir(project);
+  const QString file = dir.filePath(QString::fromLatin1(kProjectFile));
+  if (QFileInfo::exists(file))
+    return file;
+  const QString old = dir.filePath(QString::fromLatin1(kOldProjectFile));
+  return QFileInfo::exists(old) ? old : file;
+}
+
+QString ProjectFolder::projectFileToWrite(const QString &project)
+{
+  const QDir dir(project);
+  const QString file = dir.filePath(QString::fromLatin1(kProjectFile));
+  const QString old = dir.filePath(QString::fromLatin1(kOldProjectFile));
+  if (!QFileInfo::exists(file) && QFileInfo::exists(old))
+    QFile::rename(old, file);
+  return file;
+}
+
+bool ProjectFolder::isProjectFile(const QString &name)
+{
+  return name == QLatin1String(kProjectFile) || name == QLatin1String(kOldProjectFile);
 }
 
 void ProjectFolder::set(const QString &dir)
@@ -167,7 +192,7 @@ ProjectFolder::Proposal::Proposal(const QString &proposal, Kind kind) :
     const QString dir = QDir(project).filePath(k->name);
     if (QFileInfo(dir).isDir())
       target = dirFor(project, kind);
-    // made for the dialog only: project.json names it once a file is in it,
+    // made for the dialog only: project.qtdmm names it once a file is in it,
     // a dialog cancelled leaves the project as it was
     else if (QDir().mkpath(dir))
     {

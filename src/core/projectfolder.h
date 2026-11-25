@@ -10,7 +10,7 @@
 ///
 /// Files go into a folder of their kind in it (benches, recordings, images,
 /// analysis, documents) while that is on (setByType(), default): made with
-/// the first file of the kind, named in English on disk; project.json keeps
+/// the first file of the kind, named in English on disk; project.qtdmm keeps
 /// the name in each language for the project view ("folders").
 namespace ProjectFolder
 {
@@ -25,6 +25,21 @@ enum Kind
   Photos        ///< photos of the setup (PhotoStore), not by suffix
 };
 
+/// The project's own file in its folder: name, description, folders, the
+/// bench used last (JSON) [E 25.11.]. Projects before 27.1 have
+/// kOldProjectFile; it is read, and renamed on the first write.
+inline constexpr char kProjectFile[] = "project.qtdmm";
+inline constexpr char kOldProjectFile[] = "project.json";
+/// The suffix of a project packed into one file (a ZIP inside).
+inline constexpr char kPackedSuffix[] = "qtdmm-project";
+/// The project file in @p project: project.qtdmm, else an old project.json
+/// that is there; project.qtdmm when there is neither.
+QString projectFile(const QString &project);
+/// projectFile() to write: an old project.json renamed to project.qtdmm first.
+QString projectFileToWrite(const QString &project);
+/// Whether @p name (a file name, no folder) is a project file, new or old.
+bool    isProjectFile(const QString &name);
+
 /// The basket's folder, empty for none (BasketWidget::setFolder()).
 void    set(const QString &folder);
 /// The folder set, empty while no basket is open.
@@ -37,7 +52,7 @@ Kind    kindOf(const QString &file);
 /// The folder's name on disk ("recordings"), empty for Root.
 QString folderName(Kind kind);
 /// The folder for @p kind in the project @p project: made when missing and
-/// entered in project.json with its names. The project itself while
+/// entered in project.qtdmm with its names. The project itself while
 /// byType() is off, for Root and when it cannot be made.
 QString dirFor(const QString &project, Kind kind);
 /// Where a save dialog starts: with a basket open the file name of
@@ -47,7 +62,7 @@ QString proposal(const QString &proposal);
 
 /// A save dialog's proposal in the folder of its kind: the folder is made for
 /// the dialog and removed again when it stays empty (cancelled, or the file
-/// went elsewhere). project.json names a folder made so only once a file is
+/// went elsewhere). project.qtdmm names a folder made so only once a file is
 /// in it (keep(), or when it goes). Keep it until the file is written.
 class Proposal
 {
@@ -59,7 +74,7 @@ public:
   /// The path to propose.
   QString path() const { return m_path; }
   /// The file chosen in the dialog, written later: its folder stays and is
-  /// named in project.json.
+  /// named in project.qtdmm.
   void    keep(const QString &chosen);
 
 private:
