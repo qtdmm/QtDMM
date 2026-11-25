@@ -31,9 +31,10 @@ QString setting(const Line &line)
     case Max:   return QStringLiteral("max");
     case Alarm: return QStringLiteral("alarm ") + QString::number(line.value, 'g', 12);
     case Value: return QString::number(line.value, 'g', 12);
-    case Off:   return QStringLiteral("off");
-    case Zero:  break;
+    case Zero:  return QStringLiteral("0");
+    case Off:   break;
   }
+  // none, the default: "" (before 27.1 "" was the line at 0)
   return QString();
 }
 
@@ -47,13 +48,13 @@ Line fromSetting(const QString &text)
     return line(Min);
   if (t == QLatin1String("max"))
     return line(Max);
-  if (t == QLatin1String("off"))
+  if (t.isEmpty() || t == QLatin1String("off"))
     return line(Off);
   if (const double v = t.section(' ', 1).toDouble(&ok); t.startsWith(QLatin1String("alarm ")) && ok && std::isfinite(v))
     return line(Alarm, v);
   if (const double v = t.toDouble(&ok); ok && std::isfinite(v))
     return line(Value, v);
-  return line(Zero);
+  return line(Off);
 }
 
 QList<double> lines(const QList<double> &values)

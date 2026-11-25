@@ -13,12 +13,12 @@ namespace GraphReference
 {
 /// What the line stands at: 0, a value of its own (dragged there), the
 /// mean, minimum or maximum of the time shown - those follow the readings -
-/// or an alarm threshold; or no line.
+/// or an alarm threshold; or no line, the default [E 25.11.].
 enum Kind { Zero = 0, Value, Mean, Min, Max, Alarm, Off };
 
 struct Line
 {
-  Kind   kind = Zero;
+  Kind   kind = Off;
   double value = 0;     ///< base unit; of Value and Alarm (the others get theirs from the readings)
 
   /// Mean, Min, Max: the line moves with the readings.

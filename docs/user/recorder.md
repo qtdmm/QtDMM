@@ -242,16 +242,17 @@ were; the integration curve carries on across a gap.
 - Hovering shows a crosshair with the time as the axis counts it (to the
   millisecond; the clock time is in the tooltip) and the value on the left
   axis of the reading at the cursor.
-- The **reference line** runs across the graph at 0 whenever 0 lies inside
-  the vertical scale, with its value small at the right end (`0 A`): a
-  current that charges and discharges, or a voltage around zero, reads
-  against it at a glance. The phosphor colours draw it with their fine
-  scale.
+- The **reference line** is off at first. The right-click menu,
+  **Reference line**, puts it across the graph, at 0 for instance: it shows
+  whenever 0 lies inside the vertical scale, with its value small at the
+  right end (`0 A`), so a current that charges and discharges, or a voltage
+  around zero, reads against it at a glance. The phosphor colours draw it
+  with their fine scale.
   Drag the line to move it: it snaps to 0, to the mean, minimum and
   maximum of what the graph shows, to the thresholds of the alarms and to
   the limits of the [PASS/FAIL test](limit-test.md); in
-  between it takes the value where you let go. The right-click menu,
-  **Reference line**, chooses the same, and **Off** hides the line. On the mean, minimum or maximum the
+  between it takes the value where you let go. The menu chooses the same,
+  and **Off** hides the line again. On the mean, minimum or maximum the
   line follows the readings and says what it is (`mean 1.83 A`). Where it
   stands is kept with the window layout and in a saved bench.
   **Add a line at ...** in the same menu adds up to four more lines at
