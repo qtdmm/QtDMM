@@ -1659,6 +1659,7 @@ void MainWindow::createSidebar()
   m_openTimer = new QTimer(this);
   m_openTimer->setInterval(1000);
   connect(m_openTimer, &QTimer::timeout, this, &MainWindow::updateOpenDevices);
+  connect(m_openTimer, &QTimer::timeout, this, &MainWindow::updateBenchChanged);
   m_openTimer->start();
 }
 
@@ -1703,7 +1704,13 @@ void MainWindow::fillViewToolbar()
   {
     menu->addAction(m_basket->newAction());
     menu->addAction(m_basket->openAction());
-    menu->addAction(m_benchIntoProject);
+    menu->addSeparator();
+    // the bench, as in the sidebar's menu of its node
+    for (QAction *a : std::as_const(m_benchMenuActions))
+      if (a)
+        menu->addAction(a);
+      else
+        menu->addSeparator();
     const QStringList dirs = recentProjects().list().mid(0, 10);
     if (!dirs.isEmpty())
       menu->addSeparator();
@@ -1957,7 +1964,9 @@ QList<QAction *> MainWindow::createArrangeMenu()
   m_arrangeMenu->addSeparator();
   m_arrangeMenu->addAction(m_titleBars);
   m_arrangeMenu->addSeparator();
-  QAction *loadWs = m_arrangeMenu->addAction(QIcon::fromTheme("document-open"), tr("L&oad bench..."));
+  // the bench's file: in the sidebar's menu of the node Bench and in the
+  // Project menu; Arrange keeps the arranging
+  QAction *loadWs = new QAction(QIcon::fromTheme("document-open"), tr("&Load bench..."), this);
   loadWs->setObjectName("action_LoadWorkspace");
   loadWs->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">Load bench</span></p>"
                           "<p>Takes a set-up saved with <i>Save bench</i>: the devices connected (others "
@@ -1966,27 +1975,39 @@ QList<QAction *> MainWindow::createArrangeMenu()
                           "missing in My devices is added back from the file.</p></body></html>"));
   connect(loadWs, &QAction::triggered, this, &MainWindow::loadWorkspace);
   // filled from the file each time: another QtDMM may have added one
-  m_recentMenu = m_arrangeMenu->addMenu(QIcon::fromTheme("document-open-recent"), tr("&Recent benches"));
+  m_recentMenu = new QMenu(tr("&Recent benches"), this);
+  m_recentMenu->setIcon(QIcon::fromTheme("document-open-recent"));
   m_recentMenu->setObjectName("menu_RecentWorkspaces");
   connect(m_recentMenu, &QMenu::aboutToShow, this, &MainWindow::updateRecentWorkspaces);
-  QAction *saveWs = m_arrangeMenu->addAction(QIcon::fromTheme("document-save-as"), tr("&Save bench..."));
+  m_saveBench = new QAction(QIcon::fromTheme("document-save"), tr("&Save bench"), this);
+  m_saveBench->setObjectName("action_SaveBench");
+  m_saveBench->setShortcut(QKeySequence::Save);
+  m_saveBench->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">Save bench</span></p>"
+                               "<p>Writes the set-up into the file of the bench in use, with a new picture of the "
+                               "windows; a bench not saved yet asks for its name first, as <i>Save bench "
+                               "as</i>. A star after the bench's name in the sidebar: it differs from its "
+                               "file.</p></body></html>"));
+  connect(m_saveBench, &QAction::triggered, this, &MainWindow::saveBench);
+  QAction *saveWs = new QAction(QIcon::fromTheme("document-save-as"), tr("Save bench &as..."), this);
   saveWs->setObjectName("action_SaveWorkspace");
-  saveWs->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">Save bench</span></p>"
+  saveWs->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">Save bench as</span></p>"
                           "<p>Writes the set-up to a file, under a name and a description, with a picture of "
                           "the windows: the devices connected (a copy of their entries in My devices), which "
                           "windows are shown with which values, the arrangement, "
                           "title bars, toolbar, design and the size of the main window.</p></body></html>"));
   connect(saveWs, &QAction::triggered, this, [this] { saveWorkspace(); });
-  m_benchIntoProject = m_arrangeMenu->addAction(tr("Put the bench into a &new project..."));
+  m_benchIntoProject = new QAction(tr("Put the bench into a new &project..."), this);
   m_benchIntoProject->setObjectName("action_BenchIntoProject");
   m_benchIntoProject->setWhatsThis(tr("<html><head/><body><p><span style=\" font-weight:600;\">Put the bench into a "
                                       "new project</span></p><p>Makes a new project, opens it and saves the bench "
                                       "into its folder: the way from a single bench to a project of several."
                                       "</p></body></html>"));
   connect(m_benchIntoProject, &QAction::triggered, this, &MainWindow::benchIntoNewProject);
-  // the same at the sidebar's Recent benches
+  m_benchMenuActions = { m_saveBench, saveWs, nullptr, loadWs, m_recentMenu->menuAction(), nullptr, m_benchIntoProject };
+  // the same at the sidebar's Recent benches and its node Bench
   m_sidebar->setWorkspaceActions({ loadWs, saveWs, m_benchIntoProject });
-  m_benchActions << loadWs << saveWs << m_benchIntoProject << m_recentMenu->menuAction();
+  m_sidebar->setBenchActions(m_benchMenuActions);
+  m_benchActions << loadWs << m_saveBench << saveWs << m_benchIntoProject << m_recentMenu->menuAction();
   m_autoSaveLayout = m_arrangeMenu->addAction(tr("Save layout on e&xit"));
   m_autoSaveLayout->setCheckable(true);
   m_autoSaveLayout->setChecked(true);
@@ -2002,7 +2023,7 @@ QList<QAction *> MainWindow::createArrangeMenu()
   toolBarMenu->insertAction(action_Menu, arrangeButton);
   if (auto *button = qobject_cast<QToolButton *>(toolBarMenu->widgetForAction(arrangeButton)))
     button->setPopupMode(QToolButton::InstantPopup);
-  return { loadWs, saveWs };
+  return { m_saveBench, saveWs, loadWs, m_benchIntoProject };
 }
 
 // Design: the colour designs of the window.
@@ -4949,10 +4970,25 @@ void MainWindow::saveWorkspace(bool asNew)
     return;
   if (QFileInfo(file).suffix().isEmpty())
     file += QString(".") + kWorkspaceSuffix;
+  writeWorkspace(file, dlg.name().isEmpty() ? QFileInfo(file).completeBaseName() : dlg.name(), dlg.description());
+}
 
+void MainWindow::saveBench()
+{
+  if (m_workspaceFile.isEmpty())
+    saveWorkspace();
+  else
+    writeWorkspace(m_workspaceFile, m_workspaceName.isEmpty() ? QFileInfo(m_workspaceFile).completeBaseName() : m_workspaceName,
+                   m_workspaceDescription);
+}
+
+bool MainWindow::writeWorkspace(const QString &file, const QString &name, const QString &description)
+{
+  // the picture: the windows as they stand
+  const QPixmap shot = m_mdi->grab().scaledToWidth(480, Qt::SmoothTransformation);
   WorkspaceFile ws;
-  ws.name = dlg.name().isEmpty() ? QFileInfo(file).completeBaseName() : dlg.name();
-  ws.description = dlg.description();
+  ws.name = name;
+  ws.description = description;
   ws.width = width();
   ws.height = height();
   storeWorkspace([&ws](const QString &key, const QVariant &value) { ws.keys.insert(key, value); });
@@ -4969,13 +5005,65 @@ void MainWindow::saveWorkspace(bool asNew)
   if (!ws.write(file, &error))
   {
     QMessageBox::warning(this, tr("QtDMM: Save bench"), tr("Could not write %1.").arg(QDir::toNativeSeparators(file)));
-    return;
+    return false;
   }
-  cfg->setString("Windows/workspace-dir", QFileInfo(file).absolutePath());
+  m_wid->settings()->setString("Windows/workspace-dir", QFileInfo(file).absolutePath());
   recentWorkspaces().add(file);
   setCurrentWorkspace(file);
   updateRecentWorkspaces();
   Q_EMIT m_wid->error(tr("Bench saved to %1").arg(QDir::toNativeSeparators(file)));
+  return true;
+}
+
+QMap<QString, QString> MainWindow::benchState(const QVariantMap &keys, const QList<MyDevice> &devices)
+{
+  QMap<QString, QString> state;
+  for (auto it = keys.cbegin(); it != keys.cend(); ++it)
+    state.insert(it.key(), it.value().toString());
+  // the devices come in as they connect: their order is none
+  QStringList open = state.value("Windows/open-devices").split(' ', Qt::SkipEmptyParts);
+  open.sort();
+  state.insert("Windows/open-devices", open.join(' '));
+  for (const MyDevice &d : devices)
+  {
+    const QString prefix = "device/" + d.id + "/";
+    state.insert(prefix + "name", d.name);
+    for (auto it = d.keys.cbegin(); it != d.keys.cend(); ++it)
+    {
+      QString value = it.value().toString();
+      // a supply's setpoints and its HOLD change while it runs: no change
+      if (it.key() == QLatin1String("Node/json"))
+        if (const std::unique_ptr<LogicNode> node = LogicNode::fromJsonText(value))
+          value = node->setUpText();
+      state.insert(prefix + it.key(), value);
+    }
+  }
+  return state;
+}
+
+void MainWindow::updateBenchChanged()
+{
+  // devices still to open (at the start, after loading): not there yet is no change
+  if (!m_pendingOpen.isEmpty() || !m_pendingLayout.isEmpty())
+    return;
+  bool changed = false;
+  if (!m_benchSaved.isEmpty())
+  {
+    QVariantMap keys;
+    storeWorkspace([&keys](const QString &key, const QVariant &value) { keys.insert(key, value); });
+    QList<MyDevice> devices;
+    for (const QString &id : keys.value("Windows/open-devices").toString().split(' ', Qt::SkipEmptyParts))
+      if (const std::optional<MyDevice> d = m_wid->devices()->find(id))
+        devices << *d;
+    const QMap<QString, QString> now = benchState(keys, devices);
+    // what the file has: a key it lacks (a file from before the key) is no change
+    for (auto it = m_benchSaved.cbegin(); it != m_benchSaved.cend() && !changed; ++it)
+      changed = now.value(it.key()) != it.value();
+  }
+  if (changed == m_benchChanged)
+    return;
+  m_benchChanged = changed;
+  m_sidebar->setBenchChanged(changed);
 }
 
 void MainWindow::loadWorkspace()
@@ -5102,6 +5190,11 @@ void MainWindow::setCurrentWorkspace(const QString &file)
   m_workspaceDescription = ws ? ws->description : QString();
   m_wid->settings()->setString("Windows/workspace-current", m_workspaceFile);
   m_sidebar->setCurrentWorkspace(m_workspaceName, ws ? workspaceTooltip(file, *ws) : QString());
+  // just loaded or saved: no star; the clock compares from now on (here
+  // in the constructor the windows are not all there yet)
+  m_benchSaved = ws ? benchState(ws->keys, ws->devices) : QMap<QString, QString>();
+  m_benchChanged = false;
+  m_sidebar->setBenchChanged(false);
   updateWindowTitle();
   updateProjectSidebar();
 }

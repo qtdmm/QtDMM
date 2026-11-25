@@ -47,6 +47,7 @@ class LabPlotLive;
 class InstanceWidget;
 class DeviceSession;
 class WorkspaceFile;
+struct MyDevice;
 class MeterController;
 class RecordingStore;
 class LcdWidget;
@@ -583,6 +584,18 @@ protected:
   /// Saves the set-up as a bench; @p asNew: a new one (no name, not the
   /// file in use), as "+ New bench..." of the project in the sidebar.
   void        saveWorkspace(bool asNew = false);
+  /// Save bench: into the file of the bench in use, without a question;
+  /// none yet: saveWorkspace().
+  void        saveBench();
+  /// Writes the set-up, a picture of the windows and the devices' entries
+  /// into @p file as the bench in use; false (with a message) when it fails.
+  bool        writeWorkspace(const QString &file, const QString &name, const QString &description);
+  /// The set-up a changed bench is told by, as text by key: the window's
+  /// @p keys and the entries of @p devices without what is turned while
+  /// they run (LogicNode::setUpText()).
+  static QMap<QString, QString> benchState(const QVariantMap &keys, const QList<MyDevice> &devices);
+  /// The star of the bench in use: the set-up against its file.
+  void        updateBenchChanged();
   /// The project's node in the sidebar: its benches, the one in use.
   void        updateProjectSidebar();
   /// The way from no project to one: a new project, opened, and the bench
@@ -619,6 +632,10 @@ protected:
   QString     m_workspaceFile;          ///< setCurrentWorkspace()
   QString     m_workspaceName;
   QString     m_workspaceDescription;
+  QMap<QString, QString> m_benchSaved;  ///< benchState() of the file in use; empty: none
+  bool        m_benchChanged = false;   ///< updateBenchChanged()
+  QAction    *m_saveBench = nullptr;
+  QList<QAction *> m_benchMenuActions;  ///< the node Bench's menu, nullptr a separator
   /// @}
   /// Applies a colour design (Designs::Design) to the window and the views.
   void        setDesign(int design);

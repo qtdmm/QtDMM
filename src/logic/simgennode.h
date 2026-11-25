@@ -86,6 +86,7 @@ public:
   Values  evaluate(const Context &ctx) override;
   QJsonObject parameters() const override;
   void    setParameters(const QJsonObject &p) override;
+  QJsonObject setUpParameters() const override;
   FunctionGenerator *functionGenerator() override;
 
   int     channels() const { return int(m_ch.size()); }

@@ -319,14 +319,30 @@ dropped elsewhere it goes back. A layout changed like this is remembered.
 In *Displays on top* and *on the left* it lasts until a window is shown or
 hidden; then the windows are placed by the rule again.
 
-**Load bench...** and **Save bench...** in the same menu keep a
-measuring set-up in a file (`*.qtdmm-workspace`): the devices connected
-with their front panels, which windows are shown with
+A **bench** keeps a measuring set-up in a file (`*.qtdmm-workspace`): the
+devices connected with their front panels, which windows are shown with
 which values, the arrangement with its dividers, the title bars, the
 toolbar, the design and the size of the main window - for instance one
-set-up for the bench and one for the battery in the van. *Save bench*
-first asks for a name and a description and shows the picture of the
-windows that goes into the file.
+set-up for the bench and one for the battery in the van. Its commands are
+in the context menu of the node **Bench** in the sidebar and at the arrow
+of the project button:
+
+- **Save bench** (Ctrl+S) writes into the file of the bench in use, without
+  a question, with a new picture of the windows. A bench not saved yet
+  asks for its name first, as *Save bench as*.
+- **Save bench as...** asks for a name and a description, shows the
+  picture of the windows that goes into the file, then for the file.
+- **Load bench...** and **Recent benches** load one.
+- **Put the bench into a new project...**, see
+  [Project](project-basket.md).
+
+A star after the bench's name (**Bench · Lab 1 \***) says the set-up
+differs from its file: a device added or removed, a window shown or
+hidden, other values in a window, the arrangement, design, title bars or
+toolbar, a device's settings - a supply's channels and limits, say. What is
+turned while it runs is no change: the setpoints of a supply or a
+generator, its outputs on or off, an integral's HOLD. Saving or loading
+takes the star away.
 
 Loading a bench connects its devices; devices connected now that it
 does not have are closed (with
@@ -345,7 +361,7 @@ the layout it had when it was closed. Switched off, it starts with the
 layout it had when the option was switched off, or with the bench
 loaded last.
 
-**Recent benches** in the same menu lists the benches loaded or saved
+**Recent benches** lists the benches loaded or saved
 last by their names, favourites first, then newest first; the tooltip shows
 the description, the picture and the file. **Clear list** empties it but for
 the favourites. The node **Recent benches** at

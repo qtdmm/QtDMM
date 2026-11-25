@@ -180,6 +180,14 @@ int main(int argc, char **argv)
     check(loaded && !loaded->output(1) && !loaded->functionGenerator()->state(1).output
             && loaded->functionGenerator()->state(1).get(Value::Duty) == 20,
           "loaded: the outputs off, the duty on the front");
+    // a changed bench: the waveform turned is none, a setting is
+    const QString setUp = node.setUpText();
+    gen->requestValue(1, Value::Frequency, 100);
+    gen->requestShape(1, Shape::Sine);
+    check(node.setUpText() == setUp && node.toJsonText() != back->toJsonText(), "set-up: the waveform turned is no change");
+    s.ampMax = 2;
+    gen->setSettings(1, s);
+    check(node.setUpText() != setUp, "set-up: a channel's setting is");
   }
 
   // the editor

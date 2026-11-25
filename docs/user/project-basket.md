@@ -45,8 +45,8 @@ with its benches (the one in use in bold; a double click loads one) and
 **+ New bench...**, which saves the devices and windows as they are as a
 new bench of the project.
 
-**Put the bench into a new project...** (in Arrange, at Recent benches
-in the sidebar and at the project button's arrow) is the way from a
+**Put the bench into a new project...** (in the menu of the node Bench
+and at Recent benches in the sidebar, at the project button's arrow) is the way from a
 single bench to a project: it makes a new project, opens it and saves the
 bench into its folder.
 
@@ -75,8 +75,8 @@ is about; the window shows it under the name.
 - **Live in LabPlot** writes its CSV and LabPlot project into `analysis`.
 - **Export...** (Ctrl+E) can write any format into the project, see
   [Export and import](recorder.md#export-and-import).
-- **Save bench...** and **Load bench...** start in the project while one is
-  open.
+- **Save bench as...** and **Load bench...** start in the project while one
+  is open.
 - Every other save dialog starts in the project too while one is open, in
   the folder of the file's kind: the graph's *Export* and the readings
   table's export in `recordings`, *Export image* and the Poincaré plot's

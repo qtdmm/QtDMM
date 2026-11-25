@@ -232,6 +232,13 @@ QJsonObject SimPsuNode::parameters() const
                       { "psu", m_supply->settingsJson() } };
 }
 
+QJsonObject SimPsuNode::setUpParameters() const
+{
+  QJsonObject p = parameters();
+  p.remove("setpoints");
+  return p;
+}
+
 void SimPsuNode::setParameters(const QJsonObject &p)
 {
   m_faults = Faults::fromJson(p.value("faults").toObject());
