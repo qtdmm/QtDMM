@@ -1,0 +1,13 @@
+# Copyright (c) 2026 The QtDMM developers
+# SPDX-License-Identifier: GPL-3.0-or-later
+# PyYAML for the docs_generated test of the macOS workflow, pinned with hashes
+# (macOS arm64 wheels, CPython 3.10-3.15)
+pyyaml==6.0.4 \
+    --hash=sha256:e39017e1cef43d03b2ba427f60213e4b36dbc6fb092235fa3de3a510ce064d3c \
+    --hash=sha256:730788375056c43d3ac15bd894c9cd2fb7a931a38b302f408620c64b3ef176ed \
+    --hash=sha256:4d30c2f186612bd2f9f07c08a4c96721af59cfc8da3ec7cb27dfa2834e8bb019 \
+    --hash=sha256:9d4211f080920629a90c9e31c51e326fb70cfae38f18d4128b9913c23642bace \
+    --hash=sha256:7335809813ec838d9cd334b1744cda33deb141c9ef23a9c0df371c37980d3851 \
+    --hash=sha256:93da48af92c84c4236578e330a514ca324362c0bb62894d8d2343363ed57ff03 \
+    --hash=sha256:070c22b6f490d6cc30912be9fb9ab1af9c752769b39b53616f6510c3f038ee6a \
+    --hash=sha256:18ea9bda247857fc0de05181675dc116b54c1b04ca3db71de5d2108c882823b7

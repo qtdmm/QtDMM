@@ -61,7 +61,7 @@ jobs:
 
     - name: Install PyYAML
       run: |
-        python3 -m pip install --only-binary :all: pyyaml
+        python3 -m pip install --require-hashes --only-binary :all: -r .github/requirements-macos.txt
 
     - name: Configure
       run: >
