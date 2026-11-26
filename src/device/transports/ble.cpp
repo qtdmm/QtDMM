@@ -1,6 +1,7 @@
 // Copyright (c) 2026 The QtDMM developers
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "device/transports/ble.h"
+#include "device/transports/bleid.h"
 
 #include <QBluetoothAddress>
 #include <QBluetoothDeviceDiscoveryAgent>
@@ -57,7 +58,7 @@ BleAdvertisementDevice::~BleAdvertisementDevice()
 
 bool BleAdvertisementDevice::open(OpenMode mode)
 {
-  if (QBluetoothAddress(m_address).isNull())
+  if (!isValidBleId(m_address))
   {
     setErrorString(tr("No Bluetooth address configured."));
     return false;
@@ -125,7 +126,7 @@ void BleAdvertisementDevice::close()
 
 void BleAdvertisementDevice::onDevice(const QBluetoothDeviceInfo &info)
 {
-  if (m_failed || info.address().toString().toUpper() != m_address)
+  if (m_failed || bleDeviceId(info) != m_address)
     return;
   if (m_protocol == FrameFormat::BTHome)
   {
@@ -207,7 +208,7 @@ QStringList BleAdvertisementDevice::scan(int ms, QString *error, FrameFormat::Da
                          ? !info.serviceData(QBluetoothUuid(quint16(DecoderBTHome::kServiceUuid))).isEmpty()
                          : info.manufacturerIds().contains(VictronBle::CompanyId);
     if (match)
-      found[info.address().toString()] = info.name();
+      found[bleDeviceId(info)] = info.name();
   });
   agent.setLowEnergyDiscoveryTimeout(ms);
   agent.start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);

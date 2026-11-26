@@ -30,6 +30,8 @@
 	<string>${MACOSX_BUNDLE_BUNDLE_VERSION}</string>
 	<key>CSResourcesFileMapped</key>
 	<true/>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>QtDMM scans for Bluetooth LE meters and reads their measurements.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>QtDMM takes photos of the measurement setup with the camera (Photo of the setup, Webcam tab).</string>
 	<key>NSHumanReadableCopyright</key>
