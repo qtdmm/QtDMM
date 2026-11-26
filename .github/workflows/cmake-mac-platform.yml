@@ -59,6 +59,9 @@ jobs:
         HOMEBREW_NO_AUTO_UPDATE: 1
       run: brew install ninja ccache
 
+    - name: Install PyYAML
+      run: python3 -m pip install pyyaml
+
     - name: Configure
       run: >
         cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON -DQTDMM_WERROR=ON
