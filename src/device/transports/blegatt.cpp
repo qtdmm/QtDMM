@@ -242,10 +242,8 @@ bool BleGattDevice::open(OpenMode mode)
   // look for the meter first: BlueZ connects only to a device it has seen
   // lately. Seen, it connects at once; not seen within kFindMs, the connect
   // is tried anyway (another stack, a meter BlueZ still knows)
-#ifndef Q_OS_MACOS
   QBluetoothDeviceInfo bare(QBluetoothAddress(m_address), QString(), 0);
   bare.setCoreConfigurations(QBluetoothDeviceInfo::LowEnergyCoreConfiguration);
-#endif
   m_finder = new QBluetoothDeviceDiscoveryAgent(this);
   m_finder->setLowEnergyDiscoveryTimeout(kFindMs);
   auto seen = [this](const QBluetoothDeviceInfo &info)
@@ -260,16 +258,16 @@ bool BleGattDevice::open(OpenMode mode)
   connect(m_finder, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered, this, seen);
   connect(m_finder, &QBluetoothDeviceDiscoveryAgent::deviceUpdated, this,
           [seen](const QBluetoothDeviceInfo &info, QBluetoothDeviceInfo::Fields) { seen(info); });
-  auto notSeen = [this
-#ifndef Q_OS_MACOS
-                  , bare
-#endif
-  ]
+  auto notSeen = [this, bare]
   {
     if (!m_controller && isOpen())
     {
 #ifdef Q_OS_MACOS
-      fail(tr("Meter %1 not found during Bluetooth scan.").arg(m_address));
+      // CoreBluetooth connects only to a peripheral it has seen; the UUID is
+      // one of this Mac, a meter set up on another computer has another one
+      Q_UNUSED(bare)
+      fail(tr("Meter %1 not found during Bluetooth scan. Set up on another computer? Search for it again here.")
+             .arg(m_address));
 #else
       qCDebug(lcBle) << m_address << "not seen in the scan, connecting anyway";
       connectTo(bare);

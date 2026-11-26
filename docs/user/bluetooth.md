@@ -344,4 +344,6 @@ Bluetooth address; QtDMM instead identifies devices by the UUID reported by
 Qt. Allow Bluetooth access when macOS asks. Brymen BM78xBT is not supported:
 its login protocol requires the real Bluetooth address. The UUID is local to
 a Mac, so do not transfer a QtDMM configuration containing BLE devices to a
-different Mac; scan for and configure the meters again there.
+different Mac; scan for and configure the meters again there. A bench
+from another computer cannot find its Bluetooth meters on the Mac for the same
+reason; QtDMM says so when connecting.

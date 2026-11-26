@@ -530,7 +530,12 @@ void AddDeviceDlg::chooseConnection(Connection connection)
   if (hasPortPage(connection))
   {
     m_port->clear();
-    m_port->setPlaceholderText(connection == Bluetooth ? tr("Bluetooth address, e.g. AA:BB:CC:DD:EE:FF")
+#ifdef Q_OS_MACOS
+    const QString bluetooth = tr("Device UUID, e.g. 5A1C3E2B-8F4D-4C6A-9B7E-1D2F3A4B5C6D");
+#else
+    const QString bluetooth = tr("Bluetooth address, e.g. AA:BB:CC:DD:EE:FF");
+#endif
+    m_port->setPlaceholderText(connection == Bluetooth ? bluetooth
                                : connection == Network ? tr("host:port, e.g. 192.168.1.20:4711")
                                                        : tr("e.g. /dev/ttyUSB0 or COM3"));
     showPage(PortPage);

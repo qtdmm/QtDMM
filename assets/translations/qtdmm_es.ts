@@ -192,82 +192,87 @@
         <translation>Calculado</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="559"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="534"/>
+        <source>Device UUID, e.g. 5A1C3E2B-8F4D-4C6A-9B7E-1D2F3A4B5C6D</source>
+        <translation>UUID del dispositivo, p. ej. 5A1C3E2B-8F4D-4C6A-9B7E-1D2F3A4B5C6D</translation>
+    </message>
+    <message>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="564"/>
         <source>Bluetooth cannot be used: %1</source>
         <translation>No se puede usar Bluetooth: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="682"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="687"/>
         <source>Listening to the meter: its first reading tells which model it is ...</source>
         <translation>Escuchando el multímetro: su primera lectura dice qué modelo es ...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="690"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="695"/>
         <source>No reading came, so the model is not known: choose it on the next page.</source>
         <translation>No llegó ninguna lectura, el modelo no se conoce: elíjalo en la página siguiente.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="701"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="706"/>
         <source>Its first reading says: %1.</source>
         <translation>Su primera lectura dice: %1.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="701"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="706"/>
         <source> or </source>
         <translation> o </translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="765"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="770"/>
         <source>The search failed (%1). Or type the address.</source>
         <translation>La búsqueda ha fallado (%1). O escriba la dirección.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="891"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="896"/>
         <source>Nothing found for &quot;%1&quot;.</source>
         <translation>No se encontró nada para «%1».</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="996"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="1001"/>
         <source>What is to be calculated?</source>
         <translation>¿Qué se va a calcular?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="996"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="1001"/>
         <source>What is to be simulated?</source>
         <translation>¿Qué se va a simular?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="1000"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="1005"/>
         <source>Connect it now?</source>
         <translation>¿Conectarlo ahora?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="1002"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="1007"/>
         <source>Which values to simulate?</source>
         <translation>¿Qué valores simular?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="1003"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="1008"/>
         <source>Which power supply?</source>
         <translation>¿Qué fuente de alimentación?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="1004"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="1009"/>
         <source>Which function generator?</source>
         <translation>¿Qué generador de funciones?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="1005"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="1010"/>
         <source>Which value to integrate?</source>
         <translation>¿Qué valor integrar?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="1006"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="1011"/>
         <source>What to calculate?</source>
         <translation>¿Qué calcular?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="1038"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="1043"/>
         <source>Simulated meter</source>
         <translation>Dispositivo simulado</translation>
     </message>
@@ -358,72 +363,72 @@
         <translation>Si&amp;guiente &gt;</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="533"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="536"/>
         <source>Bluetooth address, e.g. AA:BB:CC:DD:EE:FF</source>
         <translation>Dirección Bluetooth, p. ej. AA:BB:CC:DD:EE:FF</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="534"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="539"/>
         <source>host:port, e.g. 192.168.1.20:4711</source>
         <translation>equipo:puerto, p. ej. 192.168.1.20:4711</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="535"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="540"/>
         <source>e.g. /dev/ttyUSB0 or COM3</source>
         <translation>p. ej. /dev/ttyUSB0 o COM3</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="629"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="634"/>
         <source>Already in My devices: %1</source>
         <translation>Ya en Mis dispositivos: %1</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="758"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="763"/>
         <source>This is &quot;%1&quot; of My devices: the next page changes it, no second entry.</source>
         <translation>Es «%1» de Mis dispositivos: la página siguiente lo modifica, sin una segunda entrada.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="763"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="768"/>
         <source>Searching ...</source>
         <translation>Buscando ...</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="768"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="773"/>
         <source>Nothing found. Is the meter&apos;s Bluetooth on and no other program connected to it? Or type its address.</source>
         <translation>No se encontró nada. ¿Está activado el Bluetooth del multímetro y ningún otro programa conectado a él? O escriba su dirección.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="771"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="776"/>
         <source>No bridge found. Is qtdmm-bridge running with --mdns in this network? Or type host:port of the bridge or another RFC 2217 server.</source>
         <translation>No se encontró ningún puente. ¿Está qtdmm-bridge ejecutándose con --mdns en esta red? O escriba equipo:puerto del puente o de otro servidor RFC 2217.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="773"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="778"/>
         <source>Nothing found. Is the meter switched on and its cable plugged in? Or type the port.</source>
         <translation>No se encontró nada. ¿Está encendido el multímetro y conectado su cable? O escriba el puerto.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="775"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="780"/>
         <source>Choose where the meter is, or type the port.</source>
         <translation>Elija dónde está el multímetro o escriba el puerto.</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="993"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="998"/>
         <source>How is the meter connected?</source>
         <translation>¿Cómo está conectado el multímetro?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="998"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="1003"/>
         <source>Where is it connected?</source>
         <translation>¿Dónde está conectado?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="999"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="1004"/>
         <source>Which meter is it?</source>
         <translation>¿Qué multímetro es?</translation>
     </message>
     <message>
-        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="1037"/>
+        <location filename="../../src/ui/dialogs/adddevicedlg.cpp" line="1042"/>
         <source>Meter</source>
         <translation>Multímetro</translation>
     </message>
@@ -1452,22 +1457,22 @@
 <context>
     <name>BleAdvertisementDevice</name>
     <message>
-        <location filename="../../src/device/transports/ble.cpp" line="62"/>
+        <location filename="../../src/device/transports/ble.cpp" line="63"/>
         <source>No Bluetooth address configured.</source>
         <translation>No hay dirección Bluetooth configurada.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/ble.cpp" line="67"/>
+        <location filename="../../src/device/transports/ble.cpp" line="68"/>
         <source>The encryption key must be 32 hex digits (VictronConnect: Product info, Instant readout via Bluetooth).</source>
         <translation>La clave de cifrado debe tener 32 dígitos hexadecimales (VictronConnect: Información del producto, Lectura instantánea por Bluetooth).</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/ble.cpp" line="147"/>
+        <location filename="../../src/device/transports/ble.cpp" line="148"/>
         <source>The encryption key does not match %1.</source>
         <translation>La clave de cifrado no coincide con %1.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/ble.cpp" line="180"/>
+        <location filename="../../src/device/transports/ble.cpp" line="181"/>
         <source>Bluetooth receive buffer limit exceeded.</source>
         <translation>Se superó el límite del búfer de recepción Bluetooth.</translation>
     </message>
@@ -1475,57 +1480,67 @@
 <context>
     <name>BleGattDevice</name>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="205"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="206"/>
         <source>No Bluetooth address configured.</source>
         <translation>No hay dirección Bluetooth configurada.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="210"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="211"/>
         <source>This meter does not use a Bluetooth LE connection.</source>
         <translation>Este multímetro no usa una conexión Bluetooth LE.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="294"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="310"/>
         <source>The meter %1 closed the Bluetooth connection.</source>
         <translation>El multímetro %1 cerró la conexión Bluetooth.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="298"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="314"/>
         <source>Bluetooth: %1</source>
         <translation>Bluetooth: %1</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="225"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="233"/>
         <source>No answer from %1 - is the meter on and its Bluetooth switched on?</source>
         <translation>Sin respuesta de %1 - ¿está el multímetro encendido y su Bluetooth activado?</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="360"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="217"/>
+        <source>Brymen BM78xBT Bluetooth LE is not supported on macOS because its login requires the Bluetooth address.</source>
+        <translation>El Bluetooth LE del Brymen BM78xBT no funciona en macOS: su inicio de sesión necesita la dirección Bluetooth.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/transports/blegatt.cpp" line="269"/>
+        <source>Meter %1 not found during Bluetooth scan. Set up on another computer? Search for it again here.</source>
+        <translation>No se encontró el medidor %1 en la búsqueda Bluetooth. ¿Configurado en otro ordenador? Búsquelo de nuevo aquí.</translation>
+    </message>
+    <message>
+        <location filename="../../src/device/transports/blegatt.cpp" line="376"/>
         <source>%1 does not offer the expected Bluetooth service - is it the right meter?</source>
         <translation>%1 no ofrece el servicio Bluetooth esperado - ¿es el multímetro correcto?</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="366"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="382"/>
         <source>Could not open the Bluetooth service of %1.</source>
         <translation>No se pudo abrir el servicio Bluetooth de %1.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="393"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="409"/>
         <source>Bluetooth service error %1 on %2.</source>
         <translation>Error %1 del servicio Bluetooth en %2.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="414"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="430"/>
         <source>%1 has no notify characteristic.</source>
         <translation>%1 no tiene característica de notificación.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="428"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="444"/>
         <source>%1 has no writable characteristic.</source>
         <translation>%1 no tiene característica escribible.</translation>
     </message>
     <message>
-        <location filename="../../src/device/transports/blegatt.cpp" line="378"/>
+        <location filename="../../src/device/transports/blegatt.cpp" line="394"/>
         <source>Bluetooth receive buffer limit exceeded.</source>
         <translation>Se superó el límite del búfer de recepción Bluetooth.</translation>
     </message>
@@ -3054,48 +3069,48 @@
 <context>
     <name>Discovery</name>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="114"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="115"/>
         <source>UNI-T UT61B+, UT61D+, UT61E+, UT161, UT171, UT181A, UT8802, UT8803 or Voltcraft VC-880, VC-890</source>
         <translation>UNI-T UT61B+, UT61D+, UT61E+, UT161, UT171, UT181A, UT8802, UT8803 o Voltcraft VC-880, VC-890</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="115"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="116"/>
         <source>Switch the meter on; it sends as soon as the cable is plugged in. A UT171 or UT181A only with SETUP &gt; Communication ON, the UT181A again after every power-on; a Voltcraft VC-880 or VC-890 after its PC key.</source>
         <translation>Encienda el medidor; envía en cuanto el cable está conectado. Un UT171 o UT181A solo con SETUP &gt; Communication ON, el UT181A de nuevo tras cada encendido; un Voltcraft VC-880 o VC-890 tras su tecla PC.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="127"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="128"/>
         <source>UNI-T meter with the UT-D04 cable</source>
         <translation>Medidor UNI-T con el cable UT-D04</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="128"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="129"/>
         <source>Press RS232 (or PC) on the meter, else it sends nothing.</source>
         <translation>Pulse RS232 (o PC) en el medidor; si no, no envía nada.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="137"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="138"/>
         <source>Brymen BM52x, BM82x or BM86x</source>
         <translation>Brymen BM52x, BM82x o BM86x</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="138"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="139"/>
         <source>Put the IR adapter on the meter and switch its PC link on.</source>
         <translation>Ponga el adaptador IR en el medidor y active su enlace con el PC.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="141"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="142"/>
         <source>TFA AIRCO2NTROL CO2 monitor</source>
         <translation>Monitor de CO2 TFA AIRCO2NTROL</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="214"/>
-        <location filename="../../src/device/discovery/discovery.cpp" line="244"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="215"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="245"/>
         <source>No access: %1 belongs to %2:%3</source>
         <translation>Sin acceso: %1 pertenece a %2:%3</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="219"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="220"/>
         <source>A udev rule lets you open the cable. The packages of QtDMM install one; for the AppImage or Flatpak, put this line into /etc/udev/rules.d/70-qtdmm.rules:
 
 %1
@@ -3112,7 +3127,7 @@ cárguela y vuelva a conectar el cable:
 sudo udevadm control --reload-rules &amp;&amp; sudo udevadm trigger</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="227"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="228"/>
         <source>Serial ports belong to the group %1. Add yourself to it:
 
 sudo usermod -aG %1 $USER
@@ -3125,7 +3140,7 @@ sudo usermod -aG %1 $USER
 y cierre la sesión y vuelva a entrar.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="245"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="246"/>
         <source>A udev rule lets you open USB-TMC instruments. The packages of QtDMM install one; for the AppImage or Flatpak, put this line into /etc/udev/rules.d/70-qtdmm.rules:
 
 %1
@@ -3142,113 +3157,113 @@ luego cárguela y vuelva a conectar el instrumento:
 sudo udevadm control --reload-rules &amp;&amp; sudo udevadm trigger</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="278"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="279"/>
         <source>%1 cable · %2</source>
         <translation>Cable %1 · %2</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="310"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="311"/>
         <source>USB-TMC instrument</source>
         <translation>Instrumento USB-TMC</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="313"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="314"/>
         <source>An instrument that speaks SCPI over USB. Choose its model.</source>
         <translation>Un instrumento que habla SCPI por USB. Elija su modelo.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="355"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="356"/>
         <source>Microcontroller board (%1)</source>
         <translation>Placa de microcontrolador (%1)</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="356"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="357"/>
         <source>If it prints its values as text lines (Serial Plotter, Teleplot), choose the microcontroller.</source>
         <translation>Si envía sus valores como líneas de texto (Serial Plotter, Teleplot), elige el microcontrolador.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="367"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="368"/>
         <source>A meter&apos;s cable or a microcontroller board, QtDMM cannot tell yet: choose the model.</source>
         <translation>Un cable de multímetro o una placa de microcontrolador, QtDMM aún no lo distingue: elige el modelo.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="372"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="373"/>
         <source>Serial port</source>
         <translation>Puerto serie</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="366"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="367"/>
         <source>USB-serial adapter (%1)</source>
         <translation>Adaptador USB-serie (%1)</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="373"/>
-        <location filename="../../src/device/discovery/discovery.cpp" line="402"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="374"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="403"/>
         <source>Which meter is on it, QtDMM cannot tell yet: choose the model.</source>
         <translation>QtDMM aún no sabe qué medidor está conectado: elija el modelo.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="400"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="401"/>
         <source>qtdmm-bridge on %1</source>
         <translation>qtdmm-bridge en %1</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="444"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="445"/>
         <source>No Bluetooth adapter found (or the Bluetooth service is not running).</source>
         <translation>No se ha encontrado ningún adaptador Bluetooth (o el servicio Bluetooth no está en marcha).</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="448"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="449"/>
         <source>Bluetooth is switched off.</source>
         <translation>Bluetooth está apagado.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="450"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="451"/>
         <source>This build of QtDMM has no Bluetooth.</source>
         <translation>Esta versión de QtDMM no tiene Bluetooth.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="491"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="492"/>
         <source>BTHome device</source>
         <translation>Aparato BTHome</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="497"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="498"/>
         <source>encrypted (not read yet)</source>
         <translation>cifrado (aún no se lee)</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="502"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="503"/>
         <source>Sends BTHome v2.</source>
         <translation>Envía BTHome v2.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="503"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="504"/>
         <source>Sends BTHome v2: %1.</source>
         <translation>Envía BTHome v2: %1.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="507"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="508"/>
         <source>Victron device</source>
         <translation>Dispositivo Victron</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="507"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="508"/>
         <source>Victron %1</source>
         <translation>Victron %1</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="508"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="509"/>
         <source>The device key is in the VictronConnect app: Product info, Instant readout.</source>
         <translation>La clave del dispositivo está en la app VictronConnect: Información del producto, Instant readout.</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="534"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="535"/>
         <source>Bluetooth meter</source>
         <translation>Medidor Bluetooth</translation>
     </message>
     <message>
-        <location filename="../../src/device/discovery/discovery.cpp" line="535"/>
+        <location filename="../../src/device/discovery/discovery.cpp" line="536"/>
         <source>Switch Bluetooth on at the meter.</source>
         <translation>Active el Bluetooth en el medidor.</translation>
     </message>
