@@ -49,7 +49,7 @@ jobs:
       uses: jurplel/install-qt-action@a9c63c7c123f3069cff414e7e482d95dfa9d8125 # v4
       with:
         version: '6.11.*'
-        modules: 'qtserialport qtmultimedia'
+        modules: 'qtserialport qtmultimedia qtconnectivity'
         cache: true
 
     # ccache: no cache is kept between runs, but the tests compile many
@@ -64,6 +64,18 @@ jobs:
         cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON -DQTDMM_WERROR=ON
         -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0 -DCMAKE_OSX_ARCHITECTURES=arm64
         -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+
+    - name: Verify BLE support is built
+      run: |
+        if grep -E 'Qt6Bluetooth_DIR:PATH=.*NOTFOUND' build/CMakeCache.txt; then
+          echo "::error::Qt6 Bluetooth not found - BLE would silently be left out"
+          exit 1
+        fi
+        cmake --build build --target help | grep -qi qtdmm \
+          || { echo "::error::target missing"; exit 1; }
+        grep -rq 'blegatt' build/CMakeFiles 2>/dev/null \
+          || grep -rq 'blegatt' build/build.ninja 2>/dev/null \
+          || { echo "::error::blegatt not part of the build"; exit 1; }
 
     - name: Build
       # one job per core: with make a bare --parallel had no limit and
