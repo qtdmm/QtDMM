@@ -19,6 +19,7 @@
 #include <QBluetoothDeviceDiscoveryAgent>
 #include <QBluetoothLocalDevice>
 #include "device/transports/ble.h"
+#include "device/transports/bleid.h"
 #include "device/transports/blegatt.h"
 #include "device/decoders/bthome.h"
 #include "device/victronble.h"
@@ -461,7 +462,7 @@ void BleDiscoverer::start()
   d->agent->setLowEnergyDiscoveryTimeout(20000);
   auto take = [this](const QBluetoothDeviceInfo &info)
   {
-    const QString address = info.address().toString().toUpper();
+    const QString address = bleDeviceId(info);
     if (d->seen.contains(address))
       return;
     // every device as Qt sees it, when it changes (QT_LOGGING_RULES

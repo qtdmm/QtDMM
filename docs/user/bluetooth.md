@@ -338,7 +338,10 @@ not need root. Windows builds include Bluetooth as well. Without the module
 the Bluetooth models are listed but cannot be connected; the settings page
 says so.
 
-**macOS:** not supported yet. macOS does not tell programs the Bluetooth
-address of a device, and QtDMM finds and addresses the meters by that
-address, so the macOS build leaves Bluetooth out (`QTDMM_WITH_BLE` is off by
-default there).
+**macOS:** Bluetooth LE is supported when Qt's Bluetooth module is available
+(`QTDMM_WITH_BLE` is on by default). CoreBluetooth does not expose a device's
+Bluetooth address; QtDMM instead identifies devices by the UUID reported by
+Qt. Allow Bluetooth access when macOS asks. Brymen BM78xBT is not supported:
+its login protocol requires the real Bluetooth address. The UUID is local to
+a Mac, so do not transfer a QtDMM configuration containing BLE devices to a
+different Mac; scan for and configure the meters again there.

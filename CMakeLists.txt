@@ -154,14 +154,8 @@ message(STATUS "Qt ${Qt6_VERSION}: ${Qt6_DIR}")
 
 ## Bluetooth LE (Victron Instant Readout) needs Qt6::Bluetooth; without it
 ## the BLE port is left out and everything else builds as before.
-## Off by default on macOS: CoreBluetooth hides device addresses (Qt reports a
-## device UUID instead), but both BLE ports find and address meters by their
-## MAC address, and the bundle carries no NSBluetoothAlwaysUsageDescription.
-if (APPLE)
-	set(QTDMM_WITH_BLE_DEFAULT OFF)
-else()
-	set(QTDMM_WITH_BLE_DEFAULT ON)
-endif()
+## CoreBluetooth identifies devices by UUID, which the BLE ports use on macOS.
+set(QTDMM_WITH_BLE_DEFAULT ON)
 
 option(QTDMM_WITH_BLE "Bluetooth LE port (needs Qt6 Bluetooth)" ${QTDMM_WITH_BLE_DEFAULT})
 

@@ -9,6 +9,7 @@
 #include "device/decoders/uni_t_ut325f.h"
 #include "device/decoders/uni_t_ut382a.h"
 #include "device/transports/ble.h"
+#include "device/transports/bleid.h"
 
 #include <QBluetoothAddress>
 #include <QBluetoothDeviceDiscoveryAgent>
@@ -200,7 +201,7 @@ BleGattDevice::~BleGattDevice()
 
 bool BleGattDevice::open(OpenMode mode)
 {
-  if (QBluetoothAddress(m_address).isNull())
+  if (!isValidBleId(m_address))
   {
     setErrorString(tr("No Bluetooth address configured."));
     return false;
@@ -210,6 +211,13 @@ bool BleGattDevice::open(OpenMode mode)
     setErrorString(tr("This meter does not use a Bluetooth LE connection."));
     return false;
   }
+#ifdef Q_OS_MACOS
+  if (m_profile->helloFor)
+  {
+    setErrorString(tr("Brymen BM78xBT Bluetooth LE is not supported on macOS because its login requires the Bluetooth address."));
+    return false;
+  }
+#endif
   if (!lcBle().isDebugEnabled())
     QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth.bluez.warning=false\nqt.bluetooth.bluez.info=false"));
 
@@ -234,13 +242,15 @@ bool BleGattDevice::open(OpenMode mode)
   // look for the meter first: BlueZ connects only to a device it has seen
   // lately. Seen, it connects at once; not seen within kFindMs, the connect
   // is tried anyway (another stack, a meter BlueZ still knows)
+#ifndef Q_OS_MACOS
   QBluetoothDeviceInfo bare(QBluetoothAddress(m_address), QString(), 0);
   bare.setCoreConfigurations(QBluetoothDeviceInfo::LowEnergyCoreConfiguration);
+#endif
   m_finder = new QBluetoothDeviceDiscoveryAgent(this);
   m_finder->setLowEnergyDiscoveryTimeout(kFindMs);
   auto seen = [this](const QBluetoothDeviceInfo &info)
   {
-    if (m_finder && !m_controller && info.address().toString().compare(m_address, Qt::CaseInsensitive) == 0)
+    if (m_finder && !m_controller && bleDeviceId(info) == m_address)
     {
       qCDebug(lcBle) << m_address << "seen as" << info.name() << "rssi" << info.rssi();
       m_finder->stop();
@@ -250,12 +260,20 @@ bool BleGattDevice::open(OpenMode mode)
   connect(m_finder, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered, this, seen);
   connect(m_finder, &QBluetoothDeviceDiscoveryAgent::deviceUpdated, this,
           [seen](const QBluetoothDeviceInfo &info, QBluetoothDeviceInfo::Fields) { seen(info); });
-  auto notSeen = [this, bare]
+  auto notSeen = [this
+#ifndef Q_OS_MACOS
+                  , bare
+#endif
+  ]
   {
     if (!m_controller && isOpen())
     {
+#ifdef Q_OS_MACOS
+      fail(tr("Meter %1 not found during Bluetooth scan.").arg(m_address));
+#else
       qCDebug(lcBle) << m_address << "not seen in the scan, connecting anyway";
       connectTo(bare);
+#endif
     }
   };
   connect(m_finder, &QBluetoothDeviceDiscoveryAgent::finished, this, notSeen);
@@ -510,7 +528,7 @@ QStringList BleGattDevice::scan(FrameFormat::DataFormat format, int ms, QString 
   QSet<QString> seen;
   auto take = [&](const QBluetoothDeviceInfo &info)
   {
-    const QString address = info.address().toString().toUpper();
+    const QString address = bleDeviceId(info);
     if (seen.contains(address))
       return;
     if (!p->matches(info.name(), info.serviceUuids(), info.manufacturerIds()))
